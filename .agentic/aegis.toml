@@ -1,0 +1,68 @@
+# AEGIS configuration. Written once by `aegis init` and yours from
+# then on - upgrades never overwrite this file.
+
+schema = 1
+
+[commands]
+# `aegis test` runs `test`; `aegis check --run` runs every entry here.
+test = "uv run pytest -q"
+test_impacted = "uv run pytest -q {tests}"  # {tests} = the focused regression set
+lint = "uv run ruff check ."
+workdir = "05_Software"
+# timeout = 0                           # seconds allowed per command; 0 or
+#                                       # absent means no limit at all
+# workdir = "app"                       # run commands here, not at the root
+#
+# Set `workdir` when your application lives below the repository root, and
+# never put a directory change inside a command: paths substituted into
+# `{tests}` are repository-relative, so a command that moves itself would
+# resolve them a second time and find nothing. With `workdir` set, those
+# paths are rewritten to match before the command runs.
+
+[timeouts]
+# Seconds allowed for one named command, overriding [commands] timeout.
+# Nothing here by default: a command is stopped only when you ask for it,
+# because a limit short enough to cut off a healthy suite would report a
+# failure that never happened. A stopped command is reported as proving
+# nothing - never as a failure.
+# test = 5400
+# lint = 120
+
+[layout]
+# Globs used by the traceability heuristics of `aegis check`.
+source = ["05_Software/electronics_ai_assistant/"]
+tests = ["05_Software/tests/"]
+docs = [
+    "README.md",
+    "00_Planning/",
+    "01_Documentation/",
+    "02_Tools/",
+    "03_Hardware/",
+    "04_HardwareDocu/",
+    "06_SoftwareDocu/",
+    "07_Delivery/",
+    "09_Others/",
+]
+
+[zones]
+# What each stage may write besides `.agentic/`, which every stage may
+# always write. Values name the globs above: "source", "tests". A stage
+# left out entirely may write anywhere - that is why build, validate, and
+# deliver are not listed. Deliver is publish-only by instruction, but the
+# merge-base diff cannot attribute an edit to one stage without false hits.
+# Advisory like everything else: check reports an edit
+# outside the zone, it never stops one. The defaults are shown; uncomment
+# and change a line to widen or narrow one stage.
+# frame = []
+# specify = []
+# design = []
+# survey = []
+# components = ["tests"]
+# close = []
+
+[check]
+secret_patterns_extra = []
+ignore = []
+strict_promote = []
+# run = ["test", "lint"]   # restrict what `check --run` executes; without
+#                          # this, side-effect-looking names are skipped
