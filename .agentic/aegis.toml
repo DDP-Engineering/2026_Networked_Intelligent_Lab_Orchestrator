@@ -30,7 +30,7 @@ workdir = "05_Software"
 
 [layout]
 # Globs used by the traceability heuristics of `aegis check`.
-source = ["05_Software/electronics_ai_assistant/"]
+source = ["05_Software/nilo_assistant/"]
 tests = ["05_Software/tests/"]
 docs = [
     "README.md",
