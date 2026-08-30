@@ -730,12 +730,14 @@ Each message has a unique `message_id`; responses and events copy the initiating
 - Create: `05_Software/integration_sdk/python/tests/test_models.py`
 - Create: `05_Software/integration_sdk/python/tests/test_server.py`
 - Create: `05_Software/integration_sdk/python/README.md`
+- Modify: `05_Software/scripts/aegis_test.py`
+- Modify: `05_Software/scripts/tests/test_aegis_test.py`
 
 **Consumes:** Protocol-v1 NDJSON on stdin and an integration implementation supplied by a package.
 
 **Produces:** Validated Pydantic models, an async integration interface, and a protocol server that reserves stdout for messages.
 
-- [ ] Pin the Python project:
+- [x] Pin the Python project:
 
 ```toml
 [project]
@@ -752,9 +754,9 @@ requires = ["uv_build==0.11.25"]
 build-backend = "uv_build"
 ```
 
-- [ ] Write failing async tests that feed a hello and describe request through in-memory streams, reject extra fields and oversized input, verify one terminal response, and ensure an integration `print()` cannot corrupt protocol stdout.
+- [x] Write failing async tests that feed a hello and describe request through in-memory streams, reject extra fields and oversized input, verify one terminal response, and ensure an integration `print()` cannot corrupt protocol stdout.
 
-- [ ] Run from `05_Software/integration_sdk/python`:
+- [x] Run from `05_Software/integration_sdk/python`:
 
 ```powershell
 uv sync --all-groups
@@ -763,7 +765,7 @@ uv run pytest -q
 
 Expected: FAIL because package models/server do not exist.
 
-- [ ] Define the integration interface:
+- [x] Define the integration interface:
 
 ```python
 class Integration(Protocol):
@@ -776,11 +778,11 @@ class Integration(Protocol):
     async def safe_shutdown(self) -> None: ...
 ```
 
-- [ ] Make all Pydantic models `extra="forbid"`, validate protocol equality, enforce the 1 MiB line bound, and serialize one compact JSON object per newline. `server.py` captures the original stdout buffer for protocol writes, redirects `sys.stdout` to stderr for integration diagnostics, and serializes writes through one `asyncio.Lock`.
+- [x] Make all Pydantic models `extra="forbid"`, validate protocol equality, enforce the 1 MiB line bound, and serialize one compact JSON object per newline. `server.py` captures the original stdout buffer for protocol writes, redirects `sys.stdout` to stderr for integration diagnostics, and serializes writes through one `asyncio.Lock`.
 
-- [ ] Ensure malformed messages return typed protocol errors when an ID is recoverable; otherwise write a bounded diagnostic to stderr and terminate nonzero. Never treat EOF during a running operation as success.
+- [x] Ensure malformed messages return typed protocol errors when an ID is recoverable; otherwise write a bounded diagnostic to stderr and terminate nonzero. Never treat EOF during a running operation as success.
 
-- [ ] Run:
+- [x] Run:
 
 ```powershell
 uv run pytest -q
@@ -790,7 +792,9 @@ uv run ruff format --check .
 
 Then run the Go protocol golden tests against the same fixture directory.
 
-- [ ] Record Task 11 evidence, then commit only Task 11 files with message `feat: add Python integration SDK` for task review; do not push.
+- [x] Record Task 11 evidence, then commit only Task 11 files with message `feat: add Python integration SDK` for task review; do not push.
+
+Scope correction: the generic AEGIS suite router now detects UV-managed integration projects and executes them through `uv run pytest -q`, preserving their pinned dependencies rather than attempting host-Python `unittest` discovery.
 
 ---
 

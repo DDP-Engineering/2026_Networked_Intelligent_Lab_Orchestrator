@@ -18,7 +18,7 @@ title = "Provide Python integration SDK"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
-status = "draft"
+status = "active"
 
 # Self-contained prose: a reader with no other context must be able to
 # understand and check it. No ticket numbers, no run IDs, no references
@@ -58,7 +58,14 @@ affected_paths = [
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
-linked_tests = []
+linked_tests = [
+    "05_Software/integration_sdk/python/tests/test_models.py::test_hello_request_rejects_extra_fields",
+    "05_Software/integration_sdk/python/tests/test_models.py::test_shared_golden_fixture_validates_and_round_trips",
+    "05_Software/integration_sdk/python/tests/test_server.py::test_server_handles_each_non_execute_lifecycle_method_after_hello",
+    "05_Software/integration_sdk/python/tests/test_server.py::test_execute_does_not_block_correlated_cancel",
+    "05_Software/integration_sdk/python/tests/test_server.py::test_server_emits_events_then_one_execute_terminal_response",
+    "05_Software/integration_sdk/python/tests/test_server.py::test_server_answers_hello_and_describe_without_diagnostic_stdout",
+]
 
 # --- optional below this line ---
 
