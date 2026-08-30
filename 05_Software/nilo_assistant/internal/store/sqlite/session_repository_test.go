@@ -48,6 +48,93 @@ func TestSessionRepositoryUsesCompareAndSwapAndExclusiveLeases(t *testing.T) {
 	}
 }
 
+func TestSessionRepositoryTerminalTransitionRollsBackWhenLeaseReleaseFails(t *testing.T) {
+	ctx := context.Background()
+	database := openTemporaryDatabase(t)
+	repository := NewSessionRepository(database)
+	now := time.Date(2026, time.August, 30, 12, 0, 0, 0, time.UTC)
+	value := createStoredSession(t, ctx, repository, domain.Queued, now)
+	if _, err := repository.Transition(ctx, value.ID, domain.Queued, domain.Running, now.Add(time.Second)); err != nil {
+		t.Fatalf("Transition queued to running error = %v", err)
+	}
+	resource := "018f3d8d-8d2c-7c20-8e0c-000000000201/oscilloscope/bench-a"
+	if err := repository.AcquireLeases(ctx, value.ID, []string{resource}, now.Add(time.Second)); err != nil {
+		t.Fatalf("AcquireLeases() error = %v", err)
+	}
+	if _, err := database.SQL().ExecContext(ctx, `
+		CREATE TRIGGER fail_session_lease_release
+		BEFORE UPDATE OF released_at ON resource_leases
+		WHEN NEW.released_at IS NOT NULL
+		BEGIN SELECT RAISE(ABORT, 'injected lease release failure'); END
+	`); err != nil {
+		t.Fatalf("create failing lease trigger: %v", err)
+	}
+
+	if _, err := repository.TransitionAndRelease(ctx, value.ID, domain.Running, domain.Completed, now.Add(2*time.Second)); err == nil {
+		t.Fatal("TransitionAndRelease() succeeded despite an injected lease release failure")
+	}
+	stored, err := repository.Get(ctx, value.ID)
+	if err != nil {
+		t.Fatalf("Get() error = %v", err)
+	}
+	if stored.State != domain.Running {
+		t.Fatalf("state after failed terminal operation = %q, want %q", stored.State, domain.Running)
+	}
+	if activeLeaseCount(t, database, value.ID) != 1 {
+		t.Fatalf("active leases after failed terminal operation = %d, want 1", activeLeaseCount(t, database, value.ID))
+	}
+}
+
+func TestSessionRepositoryRejectsTransitionTimeBeforePersistedUpdate(t *testing.T) {
+	ctx := context.Background()
+	database := openTemporaryDatabase(t)
+	repository := NewSessionRepository(database)
+	now := time.Date(2026, time.August, 30, 12, 0, 0, 0, time.UTC)
+	value := createStoredSession(t, ctx, repository, domain.Queued, now)
+
+	_, err := repository.Transition(ctx, value.ID, domain.Queued, domain.Running, now.Add(-time.Nanosecond))
+	if !errors.Is(err, session.ErrSessionTimeRegression) {
+		t.Fatalf("Transition() error = %v, want ErrSessionTimeRegression", err)
+	}
+	stored, err := repository.Get(ctx, value.ID)
+	if err != nil {
+		t.Fatalf("Get() error = %v", err)
+	}
+	if stored.State != domain.Queued || !stored.UpdatedAt.Equal(now) {
+		t.Fatalf("stored state/time = %q/%s, want queued/%s", stored.State, stored.UpdatedAt, now)
+	}
+}
+
+func TestSessionRepositoryRejectsBackwardStartupReconciliationWithoutPartialRepair(t *testing.T) {
+	ctx := context.Background()
+	database := openTemporaryDatabase(t)
+	repository := NewSessionRepository(database)
+	now := time.Date(2026, time.August, 30, 12, 0, 0, 0, time.UTC)
+	value := createStoredSession(t, ctx, repository, domain.Queued, now)
+	if _, err := repository.Transition(ctx, value.ID, domain.Queued, domain.Running, now.Add(time.Second)); err != nil {
+		t.Fatalf("Transition queued to running error = %v", err)
+	}
+	resource := "018f3d8d-8d2c-7c20-8e0c-000000000201/oscilloscope/bench-a"
+	if err := repository.AcquireLeases(ctx, value.ID, []string{resource}, now.Add(time.Second)); err != nil {
+		t.Fatalf("AcquireLeases() error = %v", err)
+	}
+
+	err := repository.ReconcileStartup(ctx, now)
+	if !errors.Is(err, session.ErrSessionTimeRegression) {
+		t.Fatalf("ReconcileStartup() error = %v, want ErrSessionTimeRegression", err)
+	}
+	stored, err := repository.Get(ctx, value.ID)
+	if err != nil {
+		t.Fatalf("Get() error = %v", err)
+	}
+	if stored.State != domain.Running || !stored.UpdatedAt.Equal(now.Add(time.Second)) {
+		t.Fatalf("stored state/time = %q/%s, want running/%s", stored.State, stored.UpdatedAt, now.Add(time.Second))
+	}
+	if activeLeaseCount(t, database, value.ID) != 1 {
+		t.Fatalf("active leases after failed reconciliation = %d, want 1", activeLeaseCount(t, database, value.ID))
+	}
+}
+
 func TestSessionRepositoryReconcilesOnlyPersistedRunningSessionsAfterRestart(t *testing.T) {
 	ctx := context.Background()
 	path := filepath.Join(t.TempDir(), "nilo.sqlite")
@@ -149,4 +236,15 @@ func createStoredSession(t *testing.T, ctx context.Context, repository *SessionR
 		t.Fatalf("Create() error = %v", err)
 	}
 	return value
+}
+
+func activeLeaseCount(t *testing.T, database *DB, sessionID domain.SessionID) int {
+	t.Helper()
+	var count int
+	if err := database.SQL().QueryRowContext(context.Background(), `
+		SELECT COUNT(*) FROM resource_leases WHERE session_id = ? AND released_at IS NULL
+	`, sessionID.String()).Scan(&count); err != nil {
+		t.Fatalf("count active leases: %v", err)
+	}
+	return count
 }

@@ -77,11 +77,33 @@ func TestServiceReleasesLeasesAfterTerminalTransition(t *testing.T) {
 	if repository.released != value.ID {
 		t.Fatalf("released session = %s, want %s", repository.released, value.ID)
 	}
+	if repository.atomicTransitions != 1 {
+		t.Fatalf("atomic terminal transitions = %d, want 1", repository.atomicTransitions)
+	}
+}
+
+func TestRehydrateSessionRejectsNonVersionSevenRequestIdentity(t *testing.T) {
+	t.Parallel()
+
+	sessionID, err := domain.NewSessionID()
+	if err != nil {
+		t.Fatalf("NewSessionID() error = %v", err)
+	}
+	requestID, err := domain.ParseRequestID("550e8400-e29b-41d4-a716-446655440000")
+	if err != nil {
+		t.Fatalf("ParseRequestID() error = %v", err)
+	}
+	now := time.Date(2026, time.August, 30, 12, 0, 0, 0, time.UTC)
+
+	if _, err := domain.RehydrateSession(sessionID, requestID, domain.Queued, now, now, nil); err == nil {
+		t.Fatal("RehydrateSession() accepted a non-version-seven request ID")
+	}
 }
 
 type memoryRepository struct {
-	sessions map[domain.SessionID]domain.Session
-	released domain.SessionID
+	sessions          map[domain.SessionID]domain.Session
+	released          domain.SessionID
+	atomicTransitions int
 }
 
 func (repository *memoryRepository) Create(_ context.Context, value domain.Session) error {
@@ -129,6 +151,18 @@ func (repository *memoryRepository) ReleaseLeases(_ context.Context, id domain.S
 	return nil
 }
 
+func (repository *memoryRepository) TransitionAndRelease(ctx context.Context, id domain.SessionID, from, to domain.SessionState, at time.Time) (domain.Session, error) {
+	repository.atomicTransitions++
+	value, err := repository.Transition(ctx, id, from, to, at)
+	if err != nil {
+		return domain.Session{}, err
+	}
+	if err := repository.ReleaseLeases(ctx, id, at); err != nil {
+		return domain.Session{}, err
+	}
+	return value, nil
+}
+
 func (repository *memoryRepository) ListInterrupted(context.Context) ([]domain.Session, error) {
 	return nil, nil
 }
@@ -167,3 +201,4 @@ func rehydratedRequest(t *testing.T, id domain.RequestID, now time.Time) domain.
 }
 
 var _ session.Repository = (*memoryRepository)(nil)
+var _ session.TerminalTransitioner = (*memoryRepository)(nil)

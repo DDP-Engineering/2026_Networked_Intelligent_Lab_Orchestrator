@@ -58,16 +58,14 @@ func (service *service) Create(ctx context.Context, request domain.OperationRequ
 
 func (service *service) Transition(ctx context.Context, id domain.SessionID, from, to domain.SessionState) (domain.Session, error) {
 	at := service.now()
-	value, err := service.repository.Transition(ctx, id, from, to, at)
-	if err != nil {
-		return domain.Session{}, err
-	}
 	if isTerminalState(to) {
-		if err := service.repository.ReleaseLeases(ctx, id, at); err != nil {
-			return domain.Session{}, err
+		transitioner, ok := service.repository.(TerminalTransitioner)
+		if !ok {
+			return domain.Session{}, ErrAtomicTerminalTransition
 		}
+		return transitioner.TransitionAndRelease(ctx, id, from, to, at)
 	}
-	return value, nil
+	return service.repository.Transition(ctx, id, from, to, at)
 }
 
 func (service *service) ReconcileStartup(ctx context.Context) error {

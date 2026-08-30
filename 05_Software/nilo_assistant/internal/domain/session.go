@@ -63,7 +63,9 @@ func RehydrateSession(id SessionID, requestID RequestID, state SessionState, cre
 
 func (session Session) Validate() error {
 	parsedSessionID := uuid.UUID(session.ID)
-	if parsedSessionID == uuid.Nil || parsedSessionID.Version() != uuid.Version(7) || session.RequestID.isZero() {
+	parsedRequestID := uuid.UUID(session.RequestID)
+	if parsedSessionID == uuid.Nil || parsedSessionID.Version() != uuid.Version(7) ||
+		parsedRequestID == uuid.Nil || parsedRequestID.Version() != uuid.Version(7) {
 		return fmt.Errorf("%w: session and request identities are required UUID-v7 values", ErrInvalidSession)
 	}
 	if !isKnownSessionState(session.State) {

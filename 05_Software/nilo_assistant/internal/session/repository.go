@@ -17,8 +17,10 @@ var (
 	ErrSessionNotFound          = errors.New("session not found")
 	ErrSessionAlreadyExists     = errors.New("session already exists")
 	ErrSessionStateConflict     = errors.New("session state compare-and-swap conflict")
+	ErrSessionTimeRegression    = errors.New("session update time precedes persisted state")
 	ErrInvalidResourceClaim     = errors.New("invalid resource claim")
 	ErrStartupReconciliationAPI = errors.New("repository does not support atomic startup reconciliation")
+	ErrAtomicTerminalTransition = errors.New("repository does not support atomic terminal transition")
 )
 
 var resourceKindPattern = regexp.MustCompile(`^[a-z][a-z0-9_-]*$`)
@@ -46,6 +48,12 @@ type Repository interface {
 // that share the session, lease, and audit transaction boundary.
 type StartupReconciler interface {
 	ReconcileStartup(ctx context.Context, at time.Time) error
+}
+
+// TerminalTransitioner performs a terminal compare-and-swap and release of
+// that session's active leases in one durable transaction.
+type TerminalTransitioner interface {
+	TransitionAndRelease(ctx context.Context, id domain.SessionID, from, to domain.SessionState, at time.Time) (domain.Session, error)
 }
 
 // NormalizeResourceClaims validates, canonicalizes, sorts, and deduplicates

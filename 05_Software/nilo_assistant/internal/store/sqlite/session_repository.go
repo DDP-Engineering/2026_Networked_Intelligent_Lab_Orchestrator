@@ -70,11 +70,71 @@ func (repository *SessionRepository) Transition(ctx context.Context, id domain.S
 	if at.IsZero() || at.Location() != time.UTC {
 		return domain.Session{}, fmt.Errorf("transition time must be UTC")
 	}
+	transaction, err := repository.database.SQL().BeginTx(ctx, nil)
+	if err != nil {
+		return domain.Session{}, fmt.Errorf("begin session transition: %w", err)
+	}
+	defer transaction.Rollback()
+	value, err := repository.transition(ctx, transaction, id, from, to, at)
+	if err != nil {
+		return domain.Session{}, err
+	}
+	if err := transaction.Commit(); err != nil {
+		return domain.Session{}, fmt.Errorf("commit session transition: %w", err)
+	}
+	return value, nil
+}
+
+// TransitionAndRelease is the terminal transition boundary used by Service.
+// It never exposes a committed terminal state with that session's leases still
+// active: either both writes commit or neither does.
+func (repository *SessionRepository) TransitionAndRelease(ctx context.Context, id domain.SessionID, from, to domain.SessionState, at time.Time) (domain.Session, error) {
+	if err := repository.validateDatabase(); err != nil {
+		return domain.Session{}, err
+	}
+	if !isTerminalSessionState(to) {
+		return domain.Session{}, fmt.Errorf("atomic transition requires a terminal state")
+	}
+	if err := domain.ValidateTransition(from, to); err != nil {
+		return domain.Session{}, err
+	}
+	if at.IsZero() || at.Location() != time.UTC {
+		return domain.Session{}, fmt.Errorf("transition time must be UTC")
+	}
+	transaction, err := repository.database.SQL().BeginTx(ctx, nil)
+	if err != nil {
+		return domain.Session{}, fmt.Errorf("begin terminal session transition: %w", err)
+	}
+	defer transaction.Rollback()
+	value, err := repository.transition(ctx, transaction, id, from, to, at)
+	if err != nil {
+		return domain.Session{}, err
+	}
+	if err := releaseLeases(ctx, transaction, id, at); err != nil {
+		return domain.Session{}, err
+	}
+	if err := transaction.Commit(); err != nil {
+		return domain.Session{}, fmt.Errorf("commit terminal session transition: %w", err)
+	}
+	return value, nil
+}
+
+func (repository *SessionRepository) transition(ctx context.Context, transaction *sql.Tx, id domain.SessionID, from, to domain.SessionState, at time.Time) (domain.Session, error) {
+	current, err := repository.get(ctx, transaction, id)
+	if err != nil {
+		return domain.Session{}, err
+	}
+	if current.State != from {
+		return domain.Session{}, session.ErrSessionStateConflict
+	}
+	if at.Before(current.UpdatedAt) {
+		return domain.Session{}, fmt.Errorf("%w: %s before %s", session.ErrSessionTimeRegression, at, current.UpdatedAt)
+	}
 	var terminalAt any
 	if isTerminalSessionState(to) {
 		terminalAt = at.UTC().Format(time.RFC3339Nano)
 	}
-	result, err := repository.database.SQL().ExecContext(ctx, `
+	result, err := transaction.ExecContext(ctx, `
 		UPDATE sessions SET state = ?, updated_at = ?, terminal_at = ?
 		WHERE id = ? AND state = ?
 	`, string(to), at.UTC().Format(time.RFC3339Nano), terminalAt, id.String(), string(from))
@@ -86,14 +146,18 @@ func (repository *SessionRepository) Transition(ctx context.Context, id domain.S
 		return domain.Session{}, fmt.Errorf("inspect session transition result: %w", err)
 	}
 	if affected == 0 {
-		if _, err := repository.Get(ctx, id); errors.Is(err, session.ErrSessionNotFound) {
-			return domain.Session{}, session.ErrSessionNotFound
-		} else if err != nil {
-			return domain.Session{}, err
-		}
 		return domain.Session{}, session.ErrSessionStateConflict
 	}
-	return repository.Get(ctx, id)
+	var terminal *time.Time
+	if isTerminalSessionState(to) {
+		terminalValue := at
+		terminal = &terminalValue
+	}
+	value, err := domain.RehydrateSession(id, current.RequestID, to, current.CreatedAt, at, terminal)
+	if err != nil {
+		return domain.Session{}, fmt.Errorf("validate transitioned session: %w", err)
+	}
+	return value, nil
 }
 
 func (repository *SessionRepository) AcquireLeases(ctx context.Context, id domain.SessionID, resources []string, at time.Time) error {
@@ -156,7 +220,15 @@ func (repository *SessionRepository) ReleaseLeases(ctx context.Context, id domai
 	if at.IsZero() || at.Location() != time.UTC {
 		return errors.New("lease release time must be UTC")
 	}
-	_, err := repository.database.SQL().ExecContext(ctx, `
+	return releaseLeases(ctx, repository.database.SQL(), id, at)
+}
+
+type leaseExecutor interface {
+	ExecContext(context.Context, string, ...any) (sql.Result, error)
+}
+
+func releaseLeases(ctx context.Context, executor leaseExecutor, id domain.SessionID, at time.Time) error {
+	_, err := executor.ExecContext(ctx, `
 		UPDATE resource_leases SET released_at = ? WHERE session_id = ? AND released_at IS NULL
 	`, at.UTC().Format(time.RFC3339Nano), id.String())
 	if err != nil {
@@ -215,6 +287,9 @@ func (repository *SessionRepository) ReconcileStartup(ctx context.Context, at ti
 		return fmt.Errorf("allocate reconciliation audit sequence: %w", err)
 	}
 	for _, value := range interrupted {
+		if at.Before(value.UpdatedAt) {
+			return fmt.Errorf("%w: %s before %s", session.ErrSessionTimeRegression, at, value.UpdatedAt)
+		}
 		result, err := transaction.ExecContext(ctx, `
 			UPDATE sessions SET state = ?, updated_at = ?, terminal_at = ? WHERE id = ? AND state = ?
 		`, string(domain.Incomplete), at.UTC().Format(time.RFC3339Nano), at.UTC().Format(time.RFC3339Nano), value.ID.String(), string(domain.Running))
@@ -228,9 +303,7 @@ func (repository *SessionRepository) ReconcileStartup(ctx context.Context, at ti
 		if affected != 1 {
 			return errors.New("reconcile interrupted session compare-and-swap conflict")
 		}
-		if _, err := transaction.ExecContext(ctx, `
-			UPDATE resource_leases SET released_at = ? WHERE session_id = ? AND released_at IS NULL
-		`, at.UTC().Format(time.RFC3339Nano), value.ID.String()); err != nil {
+		if err := releaseLeases(ctx, transaction, value.ID, at); err != nil {
 			return fmt.Errorf("release interrupted session leases: %w", err)
 		}
 		nextSequence++
@@ -346,3 +419,4 @@ func isTerminalSessionState(state domain.SessionState) bool {
 
 var _ session.Repository = (*SessionRepository)(nil)
 var _ session.StartupReconciler = (*SessionRepository)(nil)
+var _ session.TerminalTransitioner = (*SessionRepository)(nil)
