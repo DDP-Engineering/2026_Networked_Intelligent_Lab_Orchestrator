@@ -29,7 +29,7 @@ var builtinSchemaFS embed.FS
 // Load validates the package manifest and every referenced local schema. All
 // returned file paths are resolved beneath packageRoot.
 func Load(packageRoot string) (Manifest, error) {
-	root, err := filepath.Abs(packageRoot)
+	root, err := canonicalPackageRoot(packageRoot)
 	if err != nil {
 		return Manifest{}, fmt.Errorf("%w: package root: %v", ErrInvalidManifest, err)
 	}
@@ -53,6 +53,25 @@ func Load(packageRoot string) (Manifest, error) {
 		return Manifest{}, err
 	}
 	return result, nil
+}
+
+func canonicalPackageRoot(packageRoot string) (string, error) {
+	absRoot, err := filepath.Abs(packageRoot)
+	if err != nil {
+		return "", err
+	}
+	physicalRoot, err := filepath.EvalSymlinks(absRoot)
+	if err != nil {
+		return "", err
+	}
+	info, err := os.Stat(physicalRoot)
+	if err != nil {
+		return "", err
+	}
+	if !info.IsDir() {
+		return "", fmt.Errorf("package root is not a directory")
+	}
+	return physicalRoot, nil
 }
 
 func validateManifestDocument(document []byte) error {

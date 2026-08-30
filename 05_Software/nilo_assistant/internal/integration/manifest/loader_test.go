@@ -28,6 +28,40 @@ func TestLoadAcceptsValidPackage(t *testing.T) {
 	}
 }
 
+func TestCanonicalPackageRootUsesPhysicalPath(t *testing.T) {
+	root := writePackage(t, nil)
+	want, err := filepath.EvalSymlinks(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := canonicalPackageRoot(root)
+	if err != nil {
+		t.Fatalf("canonicalPackageRoot() error = %v", err)
+	}
+	if got != want {
+		t.Fatalf("canonicalPackageRoot() = %q, want %q", got, want)
+	}
+}
+
+func TestLoadAcceptsPackageOpenedThroughSymlink(t *testing.T) {
+	root := writePackage(t, nil)
+	if err := os.WriteFile(filepath.Join(root, "schemas", "child.json"), []byte(`{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "schemas", "input.json"), []byte(`{"$schema":"https://json-schema.org/draft/2020-12/schema","$ref":"child.json"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(t.TempDir(), "package-link")
+	if err := os.Symlink(root, link); err != nil {
+		t.Skipf("symlink capability unavailable: os.Symlink(%q, %q): %v", root, link, err)
+	}
+
+	if _, err := Load(link); err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+}
+
 func TestLoadRejectsInvalidManifestContracts(t *testing.T) {
 	tests := []struct {
 		name   string
