@@ -375,6 +375,8 @@ class ProtocolServer:
             return False
         if method not in _RESPONSE_MODELS:
             return False
+        if method == "hello":
+            return False
         await self._send_error(message_id, method, "invalid_request", self._error_text(error))
         return True
 

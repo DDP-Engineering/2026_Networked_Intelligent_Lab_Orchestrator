@@ -705,3 +705,22 @@ async def test_cancelling_run_cancels_and_awaits_internal_reader_tasks() -> None
         await asyncio.sleep(0)
 
     assert server.cancelled.is_set()
+
+
+@pytest.mark.asyncio
+async def test_malformed_hello_is_connection_fatal_not_a_control_error() -> None:
+    reader = asyncio.StreamReader()
+    reader.feed_data(
+        request("hello-1", "hello", {"type": "hello", "client": "nilo", "unexpected": True})
+    )
+    reader.feed_eof()
+    protocol_output = io.BytesIO()
+    diagnostics = io.StringIO()
+
+    exit_code = await ProtocolServer(
+        PrintingIntegration(), protocol_output=protocol_output, diagnostic_output=diagnostics
+    ).run(reader)
+
+    assert exit_code != 0
+    assert protocol_output.getvalue() == b""
+    assert "protocol error" in diagnostics.getvalue()
