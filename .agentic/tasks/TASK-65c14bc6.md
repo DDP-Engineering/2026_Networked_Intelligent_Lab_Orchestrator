@@ -159,11 +159,20 @@ opened: 2026-08-30
 - 2026-08-30 build: Task 4 impacted routing passed all seventeen linked references and the complete discovered Python and Go suites.
 - 2026-08-30 build: AEGIS evolution reports 21 added and 7 modified expected cumulative paths with no removals after Task 4.
 - 2026-08-30 build: DEVIATION the post-Task 4 AEGIS check reports 53 stale-path warnings only for later Increment 1 paths, reduced from 54 with no error, note, or new warning class, so the known staged-build warnings remain accepted.
+- 2026-08-30 build: DEVIATION the first Task 4 reviewer-template read exited 1 because it used the obsolete `code-reviewer.md` filename; repository search immediately resolved the installed template as `task-reviewer-prompt.md` before reviewer dispatch.
+- 2026-08-30 build: DEVIATION the first review-package command passed the task number as an obsolete positional argument and exited 1 with `bad BASE: 4`; its usage output confirmed the current three-argument contract before regeneration.
+- 2026-08-30 build: The independent Task 4 reviewer found one Important test gap: the table test proved every required table existed but did not reject extra non-internal tables, so the explicitly bound exact-set claim remains open pending a focused fix and scoped re-review.
+- 2026-08-30 build: Task 4 fix round 1 commit `bf5348c80284cea18c0015b626b1da729d4f6850` replaced the subset assertion with a complete ordered table query; focused, full, and portable-core checks passed with CGO disabled.
+- 2026-08-30 build: The scoped re-review kept the finding open because SQL `LIKE 'sqlite_%'` treats `_` as a wildcard and could hide a valid non-internal table such as `sqliteXunexpected`; fix round 2 must use a literal `sqlite_` prefix exclusion and prove the distinction.
+- 2026-08-30 build: Task 4 fix round 2 commit `38b9e95` adds the discriminating `sqliteXunexpected` fixture and changes the helper to literal-prefix `NOT GLOB 'sqlite_*'`; focused, full, and portable-core checks passed with CGO disabled.
+- 2026-08-30 build: The same reviewer found the exact-table-set finding addressed and reported no new Critical, Important, Minor, or out-of-scope issue in the fix diff.
+- 2026-08-30 build: Final controller focused, full, portable-core, and seventeen-reference AEGIS impacted checks passed; refreshed evolution remains 21 added and 7 modified expected paths with no removals, and AEGIS check remains errors=0 warnings=53 known future paths notes=0.
 - 2026-08-30 test: test --impacted (2 test ref(s)) exit 0 (0.7s)
 - 2026-08-30 test: test --impacted (7 test ref(s)) exit 0 (0.7s)
 - 2026-08-30 test: test --impacted (13 test ref(s)) exit 0 (0.8s)
 - 2026-08-30 test: test --impacted (14 test ref(s)) exit 0 (0.8s)
 - 2026-08-30 test: test --impacted (17 test ref(s)) exit 0 (0.9s)
+- 2026-08-30 test: test --impacted (17 test ref(s)) exit 0 (1.0s)
 
 ## Design
 
@@ -187,7 +196,7 @@ stage: build
 result: in_progress
 current: build
 changed: Tasks 1 through 3 remain review-approved; Task 4 adds a pure-Go transactional SQLite foundation, digest-verified migration ledger, thirteen Increment 1 tables, enforced durable connection settings, foreign keys, and exclusive active-resource indexing
-evidence: Task 4 valid red exited 1 for missing Open/DB; commit c259a66; focused, full, portable-core, direct three-target SQLite package compilation, and 17-reference AEGIS impacted passed with CGO disabled; evolution 21 added and 7 modified with no removals; check errors=0 warnings=53 known future paths notes=0
+evidence: Task 4 valid red exited 1 for missing Open/DB; commits c259a66, bf5348c, and 38b9e95; focused, full, portable-core, direct three-target SQLite package compilation, and final 17-reference AEGIS impacted passed with CGO disabled; evolution 21 added and 7 modified with no removals; check errors=0 warnings=53 known future paths notes=0; scoped fix round 2 re-review cleared the Important exact-table-set finding
 issues: two generated Python cache directories and twelve compile-only Task 2/3/4 binaries remain outside commits after policy-blocked cleanup; later requirement slices and affected paths remain pending; push, merge, PR publication, and release remain unauthorized
-next: commit Task 4 governance evidence, generate the scoped review package from 2331e00, and dispatch a fresh independent reviewer before closing Task 4 or applying any finding
+next: commit the Task 4 review verdict, generate the Task 5 brief, and dispatch a fresh implementer to the authentication red boundary
 needs_user: no - approved implementation continues continuously in build and stops only for a named safety or authority boundary
