@@ -5,9 +5,9 @@ schema = 1
 
 [commands]
 # `aegis test` runs `test`; `aegis check --run` runs every entry here.
-test = "uv run pytest -q"
-test_impacted = "uv run pytest -q {tests}"  # {tests} = the focused regression set
-lint = "uv run ruff check ."
+test = "python scripts/aegis_test.py full"
+test_impacted = "python scripts/aegis_test.py impacted {tests}"  # {tests} = the focused regression set
+lint = "python scripts/aegis_test.py lint"
 workdir = "05_Software"
 # timeout = 0                           # seconds allowed per command; 0 or
 #                                       # absent means no limit at all

@@ -1,5 +1,9 @@
 # Networked Intelligent Lab Orchestrator
 
-NILO Assistant is a Python-first platform for exposing controlled hardware capabilities to AI clients through MCP.
+NILO Assistant is a Go Bench Core with external Python integrations for
+controlled laboratory hardware. Increment 1 establishes the portable core,
+integration boundary, and verification foundation; it does not add hardware
+behavior or an MCP service.
 
-Planned tooling: `uv` for Python environments and dependencies; Ruff for linting and formatting.
+Linux ARM64 is the first release target. Linux x86_64 and Windows x86_64 are
+portable compile targets for later delivery.
