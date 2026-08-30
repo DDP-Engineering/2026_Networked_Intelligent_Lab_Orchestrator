@@ -21,6 +21,11 @@ archive version and verify its published checksum before extraction. They must
 not change the system-wide `PATH`; environment helpers set it only for the
 command they launch.
 
+The current development runtime is Go 1.27.0 at
+`runtime/go/1.27.0/go/`. Use `env/with-go.ps1 <command> [args...]` on Windows
+or `env/with-go.sh <command> [args...]` on POSIX to run a command with that
+toolchain first on `PATH`.
+
 Do not commit compiler binaries or downloaded archives. Commit the bootstrap,
 environment, and verification scripts plus their version/checksum metadata so
 another developer can recreate the same runtime.
