@@ -128,8 +128,19 @@ opened: 2026-08-30
 - 2026-08-30 build: DEVIATION the post-Task 2 AEGIS check reports 55 stale-path warnings only for later Increment 1 paths, reduced from 58 with no error, note, or new warning class, so the known staged-build warnings remain accepted.
 - 2026-08-30 build: Independent Task 2 review approved specification compliance and code quality with no critical, important, or minor finding.
 - 2026-08-30 build: Controller confirmed REQ-NFR-6b5de8e9 and REQ-NFR-c4c70f53 remain draft while retaining all five Task 2 linked test selectors, exactly matching the staged-delivery ruling.
+- 2026-08-30 build: DEVIATION the first Task 3 red test contained an inconsistent oversized-fixture variable name, so the test-only typo was corrected before evidence was accepted and no production implementation had begun.
+- 2026-08-30 build: Task 3 RED command `go test ./internal/domain` exited 1 solely because the session state, transition, typed identity, and operation-request API were undefined, proving the REQ-FUNC-880eac8d domain slice and REQ-NFR-6b5de8e9 request-validation slice were absent before implementation.
+- 2026-08-30 build: DEVIATION Task 3 is the first task to import the Go dependencies declared in Task 1, so the approved plan now explicitly adds the required `go.sum` checksum file that its original file list omitted.
+- 2026-08-30 build: Task 3 commit `e4158040beeff9cb8d13e09ed26ded8b899141e8` adds the checksum file and four planned domain files, and focused, full, portable-core, plus direct linux/arm64, linux/amd64, and windows/amd64 domain test-package compilations passed.
+- 2026-08-30 build: DEVIATION the Task 3 compile-only cleanup wrapper was rejected by host policy, so three known domain test binaries remain only in the system temporary directory and no repository artifact was created or committed.
+- 2026-08-30 build: Task 3 links its identity, transition, stable-operation-name, immutable-byte-copy, and invalid-request tests to REQ-FUNC-880eac8d and REQ-NFR-6b5de8e9 while both requirements remain draft for later orchestration and parser-boundary slices.
+- 2026-08-30 build: Task 3 impacted routing passed all thirteen linked references and the complete discovered Python and Go suites.
+- 2026-08-30 build: AEGIS evolution reports 17 added and 6 modified expected cumulative paths with no removals after Task 3, including the deliberate implementation-plan checksum-file correction.
+- 2026-08-30 build: DEVIATION the post-Task 3 AEGIS check reports 54 stale-path warnings only for later Increment 1 paths, reduced from 55 with no error, note, or new warning class, so the known staged-build warnings remain accepted.
+- 2026-08-30 build: DEVIATION the first read-only Task 3 plan check exited non-zero because PowerShell interpreted Markdown backticks in the search expression, so a literal fixed-string check replaces it before staging.
 - 2026-08-30 test: test --impacted (2 test ref(s)) exit 0 (0.7s)
 - 2026-08-30 test: test --impacted (7 test ref(s)) exit 0 (0.7s)
+- 2026-08-30 test: test --impacted (13 test ref(s)) exit 0 (0.8s)
 
 ## Design
 
@@ -152,8 +163,8 @@ opened: 2026-08-30
 stage: build
 result: in_progress
 current: build
-changed: Task 1 remains review-approved; Task 2 adds validated immutable runtime configuration, Windows and Unix default discovery, component-based confined path resolution, and linked configuration/path tests
-evidence: Task 2 red exited 1 for missing symbols; commits d05ddc8, af27477, and 3bcba9c; focused, full, portable-core, direct three-target config package compilation, and AEGIS impacted passed; evolution 12 added and 5 modified with no removals; check errors=0 warnings=55 known future paths notes=0; independent review approved with no findings
-issues: two generated Python cache directories remain untracked and three Task 2 test binaries remain in system temp after policy-blocked cleanup; later requirement slices and affected paths remain pending; push, merge, PR publication, and release remain unauthorized
-next: commit the Task 2 review verdict, then generate the Task 3 brief and dispatch a fresh implementer to its red boundary
+changed: Tasks 1 and 2 remain review-approved; Task 3 adds UUID-v7 typed identities, validated copied operation requests, the exact session states, and authoritative transition validation
+evidence: Task 3 valid red exited 1 for missing domain symbols; commit e415804; focused, full, portable-core, direct three-target domain package compilation, and AEGIS impacted passed; evolution 17 added and 6 modified with no removals; check errors=0 warnings=54 known future paths notes=0
+issues: two generated Python cache directories and six compile-only Task 2/3 binaries remain outside commits after policy-blocked cleanup; later requirement slices and affected paths remain pending; push, merge, PR publication, and release remain unauthorized
+next: commit Task 3 plan correction, requirement links, and AEGIS evidence; generate the native Task 3 review package; then dispatch an independent reviewer
 needs_user: no - approved implementation continues continuously in build and stops only for a named safety or authority boundary

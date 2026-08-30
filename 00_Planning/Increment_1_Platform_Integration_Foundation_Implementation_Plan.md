@@ -291,6 +291,7 @@ Expected: validation tests and all portable builds pass.
 
 **Files:**
 
+- Create: `05_Software/nilo_assistant/go.sum`
 - Create: `05_Software/nilo_assistant/internal/domain/ids.go`
 - Create: `05_Software/nilo_assistant/internal/domain/operation.go`
 - Create: `05_Software/nilo_assistant/internal/domain/session.go`
