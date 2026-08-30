@@ -183,18 +183,19 @@ class ProtocolServer:
     async def _read_line_or_fatal(self, reader: asyncio.StreamReader) -> bytes | None:
         read_task = asyncio.create_task(self._read_line(reader))
         fatal_task = asyncio.create_task(self._fatal_event.wait())
-        done, pending = await asyncio.wait(
-            {read_task, fatal_task}, return_when=asyncio.FIRST_COMPLETED
-        )
-        for task in pending:
-            task.cancel()
-        if pending:
-            await asyncio.gather(*pending, return_exceptions=True)
-        if fatal_task in done:
-            raise ProtocolViolation(
-                self._fatal_error or "connection protocol output failed", reply=False
-            )
-        return read_task.result()
+        tasks = (read_task, fatal_task)
+        try:
+            done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+            if fatal_task in done:
+                raise ProtocolViolation(
+                    self._fatal_error or "connection protocol output failed", reply=False
+                )
+            return read_task.result()
+        finally:
+            for task in tasks:
+                if not task.done():
+                    task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
 
     def _accept_request(self, envelope: Envelope) -> None:
         if envelope.message_id in self._message_ids:
@@ -280,6 +281,12 @@ class ProtocolServer:
                 request.closing = True
             raise
         except Exception as error:  # noqa: BLE001 - integration failure must become terminal evidence
+            if request.envelope.method == "hello":
+                self._record_request_failure(request, error)
+                return
+            if isinstance(error, ProtocolViolation) and not error.reply:
+                self._record_request_failure(request, error)
+                return
             try:
                 await self._deliver_error(request, error)
             except Exception as delivery_error:  # noqa: BLE001 - writer failure is connection-fatal
@@ -382,6 +389,10 @@ class ProtocolServer:
         self, kind: Kind, request_id: str, method: Method, payload: dict[str, Any]
     ) -> None:
         async with self._write_lock:
+            if self._fatal_event.is_set():
+                raise ProtocolViolation(
+                    self._fatal_error or "connection protocol output failed", reply=False
+                )
             try:
                 json.dumps(payload, allow_nan=False)
             except (TypeError, ValueError) as error:
@@ -406,10 +417,14 @@ class ProtocolServer:
             if len(encoded) > MAX_LINE_BYTES:
                 raise ProtocolViolation("generated message exceeds one MiB line limit")
             self._message_ids.add(message_id)
-            written = self._protocol_output.write(encoded)
-            if written is not None and written != len(encoded):
-                raise ProtocolViolation("short protocol output write", reply=False)
-            self._protocol_output.flush()
+            try:
+                written = self._protocol_output.write(encoded)
+                if written is not None and written != len(encoded):
+                    raise OSError("short protocol output write")
+                self._protocol_output.flush()
+            except Exception as error:
+                self._record_fatal(f"protocol output fault: {self._error_text(error)}")
+                raise ProtocolViolation("protocol output write failed", reply=False) from error
 
     def _record_request_failure(self, request: _Request, error: Exception) -> None:
         request.closing = True

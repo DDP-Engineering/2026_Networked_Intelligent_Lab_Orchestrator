@@ -140,8 +140,43 @@ class FailSecondWrite(io.BytesIO):
         return super().write(data)
 
 
+class TransientSecondWrite(io.BytesIO):
+    def __init__(self) -> None:
+        super().__init__()
+        self.writes = 0
+
+    def write(self, data: bytes) -> int:
+        self.writes += 1
+        if self.writes == 2:
+            raise OSError("transient protocol pipe fault")
+        return super().write(data)
+
+
+class ShortSecondWrite(io.BytesIO):
+    def __init__(self) -> None:
+        super().__init__()
+        self.writes = 0
+
+    def write(self, data: bytes) -> int:
+        self.writes += 1
+        if self.writes == 2:
+            partial = data[:-1]
+            super().write(partial)
+            return len(partial)
+        return super().write(data)
+
+
 class ResultIntegration(PrintingIntegration):
     async def execute(self, request, events):  # type: ignore[no-untyped-def]
+        return ExecuteResult(status="completed", data={})
+
+
+class CatchesEventWriteFailureIntegration(PrintingIntegration):
+    async def execute(self, request, events):  # type: ignore[no-untyped-def]
+        try:
+            await events.emit(Progress(fraction=0.5, message="write this"))
+        except ProtocolViolation:
+            pass
         return ExecuteResult(status="completed", data={})
 
 
@@ -159,6 +194,26 @@ class BlockingDescribeIntegration(PrintingIntegration):
             self.cancelled.set()
             raise
         return DescribeResult(status="ok")
+
+
+class InvalidHelloIntegration(PrintingIntegration):
+    name = " "
+
+
+class TrackingReadServer(ProtocolServer):
+    def __init__(self) -> None:
+        super().__init__(PrintingIntegration(), protocol_output=io.BytesIO())
+        self.started = asyncio.Event()
+        self.released = asyncio.Event()
+        self.cancelled = asyncio.Event()
+
+    async def _read_line(self, reader):  # type: ignore[no-untyped-def]
+        self.started.set()
+        try:
+            await self.released.wait()
+        except asyncio.CancelledError:
+            self.cancelled.set()
+            raise
 
 
 def request(message_id: str, method: str, payload: dict[str, object]) -> bytes:
@@ -588,3 +643,65 @@ async def test_cancelling_server_cancels_and_awaits_running_requests() -> None:
     with pytest.raises(asyncio.CancelledError):
         await server_task
     assert integration.execute_cancelled.is_set()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("output_type", [TransientSecondWrite, ShortSecondWrite])
+async def test_terminal_write_fault_is_connection_fatal(output_type) -> None:  # type: ignore[no-untyped-def]
+    reader = asyncio.StreamReader()
+    reader.feed_data(request("hello-1", "hello", {"type": "hello", "client": "nilo"}))
+    reader.feed_data(
+        request("execute-1", "execute", {"type": "execute", "operation": "write", "parameters": {}})
+    )
+    server_task = asyncio.create_task(
+        ProtocolServer(ResultIntegration(), protocol_output=output_type()).run(reader)
+    )
+
+    assert await asyncio.wait_for(server_task, timeout=0.2) != 0
+
+
+@pytest.mark.asyncio
+async def test_caught_event_write_fault_still_terminates_connection() -> None:
+    reader = asyncio.StreamReader()
+    reader.feed_data(request("hello-1", "hello", {"type": "hello", "client": "nilo"}))
+    reader.feed_data(
+        request("execute-1", "execute", {"type": "execute", "operation": "event", "parameters": {}})
+    )
+    server_task = asyncio.create_task(
+        ProtocolServer(
+            CatchesEventWriteFailureIntegration(), protocol_output=TransientSecondWrite()
+        ).run(reader)
+    )
+
+    assert await asyncio.wait_for(server_task, timeout=0.2) != 0
+
+
+@pytest.mark.asyncio
+async def test_invalid_hello_terminates_without_unlocking_operational_methods() -> None:
+    reader = asyncio.StreamReader()
+    reader.feed_data(request("hello-1", "hello", {"type": "hello", "client": "nilo"}))
+    reader.feed_data(request("describe-1", "describe", {"type": "describe"}))
+    reader.feed_eof()
+
+    exit_code = await ProtocolServer(InvalidHelloIntegration(), protocol_output=io.BytesIO()).run(
+        reader
+    )
+
+    assert exit_code != 0
+
+
+@pytest.mark.asyncio
+async def test_cancelling_run_cancels_and_awaits_internal_reader_tasks() -> None:
+    server = TrackingReadServer()
+    runner = asyncio.create_task(server.run(asyncio.StreamReader()))
+    await server.started.wait()
+    runner.cancel()
+
+    try:
+        with pytest.raises(asyncio.CancelledError):
+            await runner
+    finally:
+        server.released.set()
+        await asyncio.sleep(0)
+
+    assert server.cancelled.is_set()
