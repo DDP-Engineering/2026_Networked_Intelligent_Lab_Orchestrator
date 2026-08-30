@@ -61,7 +61,10 @@ affected_paths = [
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
-linked_tests = []
+linked_tests = [
+    "05_Software/nilo_assistant/internal/config/paths_test.go::TestResolveWithinAcceptsConfinedCandidates",
+    "05_Software/nilo_assistant/internal/config/paths_test.go::TestResolveWithinRejectsUnconfinedCandidates",
+]
 
 # --- optional below this line ---
 

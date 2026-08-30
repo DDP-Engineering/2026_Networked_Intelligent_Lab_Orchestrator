@@ -118,7 +118,16 @@ opened: 2026-08-30
 - 2026-08-30 build: Commit `9d64ab1becc3e67bf8560398c986a7c6ea989f81` adds a portable subprocess test for exact version JSON and invalid-invocation exit code 2, with focused, full, and cross-target checks passing.
 - 2026-08-30 build: The same reviewer re-reviewed the fix-only range and found the sole finding addressed with no new breakage or out-of-scope observation.
 - 2026-08-30 build: Final Task 1 evolution reports 6 added and 5 modified expected paths with no removals, and the final impacted run passes the router, CLI, and build-information suites.
+- 2026-08-30 build: Task 2 RED command `go test ./internal/config` exited 1 because `Load`, `Inputs`, `Config`, `ErrDataDirNotAbsolute`, and `ResolveWithin` were undefined, proving the REQ-NFR-6b5de8e9 configuration-validation and REQ-NFR-c4c70f53 path-confinement slices were absent before implementation.
+- 2026-08-30 build: Task 2 commit `d05ddc88434817f61685a2ece8cd4ad77b8486d6` adds the six planned configuration and platform-path files, and focused, full, portable-core, plus direct linux/arm64, linux/amd64, and windows/amd64 config test-package compilations passed.
+- 2026-08-30 build: DEVIATION the combined Task 2 cross-compile cleanup command was rejected by host policy, so three known test binaries remain only in the system temporary directory and no repository artifact was created or committed.
+- 2026-08-30 build: Controller self-review found a forbidden string-prefix containment check and a prefix-confusion fixture that exercised only absolute-path rejection, so commit `af2747728a7bb6595c3b723947b7f033446acf2d` replaced the check with a leading relative-path component decision and made the fixture a sibling escape.
+- 2026-08-30 build: Task 2 links its configuration and path tests to REQ-NFR-6b5de8e9 and REQ-NFR-c4c70f53 while both requirements remain draft because later schema, manifest, supervisor, and artifact boundary slices are not yet implemented.
+- 2026-08-30 build: Task 2 impacted routing passed all seven linked references and the complete discovered Python and Go suites.
+- 2026-08-30 build: AEGIS evolution reports 12 added and 5 modified expected cumulative paths with no removals after Task 2.
+- 2026-08-30 build: DEVIATION the post-Task 2 AEGIS check reports 55 stale-path warnings only for later Increment 1 paths, reduced from 58 with no error, note, or new warning class, so the known staged-build warnings remain accepted.
 - 2026-08-30 test: test --impacted (2 test ref(s)) exit 0 (0.7s)
+- 2026-08-30 test: test --impacted (7 test ref(s)) exit 0 (0.7s)
 
 ## Design
 
@@ -141,8 +150,8 @@ opened: 2026-08-30
 stage: build
 result: in_progress
 current: build
-changed: Task 1 portable Go core, version CLI, polyglot AEGIS router, portable verification scripts, truthful documentation, layout classification, and active linked platform requirement
-evidence: anchor 2997e73e9a5a363a; Task 1 commits 13fb808, 056f329, 2b85551, and 9d64ab1; reviewer approved and fix re-review cleared the sole minor; impacted tests exit 0; evolution 6 added and 5 modified with no removals; AEGIS errors=0 warnings=58 known future paths notes=0
-issues: two generated Python cache directories remain untracked after policy-blocked cleanup; future affected paths remain until later tasks create them; push, merge, PR publication, and release remain unauthorized
-next: commit the final Task 1 review and evolution evidence, then generate the Task 2 brief and dispatch its fresh implementer to the next AEGIS red boundary
+changed: Task 1 remains review-approved; Task 2 adds validated immutable runtime configuration, Windows and Unix default discovery, component-based confined path resolution, and linked configuration/path tests
+evidence: Task 2 red exited 1 for missing symbols; commits d05ddc8 and af27477; focused, full, portable-core, direct three-target config package compilation, and AEGIS impacted passed; evolution 12 added and 5 modified with no removals; check errors=0 warnings=55 known future paths notes=0
+issues: two generated Python cache directories remain untracked and three Task 2 test binaries remain in system temp after policy-blocked cleanup; later requirement slices and affected paths remain pending; push, merge, PR publication, and release remain unauthorized
+next: commit Task 2 requirement and AEGIS evidence, generate the native Task 2 review package, then dispatch an independent reviewer
 needs_user: no - approved implementation continues continuously in build and stops only for a named safety or authority boundary
