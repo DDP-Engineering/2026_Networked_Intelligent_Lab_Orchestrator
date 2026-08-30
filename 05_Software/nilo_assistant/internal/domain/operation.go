@@ -24,16 +24,16 @@ type OperationRequestInput struct {
 }
 
 type OperationRequest struct {
-	ID                    RequestID
-	Actor                 Actor
-	IntegrationID         IntegrationID
-	OperationName         string
-	DeviceID              DeviceID
-	CanonicalParameters   json.RawMessage
-	ConfigurationSnapshot SnapshotID
-	PolicySnapshot        SnapshotID
-	Deadline              time.Time
-	CreatedAt             time.Time
+	id                    RequestID
+	actor                 Actor
+	integrationID         IntegrationID
+	operationName         string
+	deviceID              DeviceID
+	canonicalParameters   json.RawMessage
+	configurationSnapshot SnapshotID
+	policySnapshot        SnapshotID
+	deadline              time.Time
+	createdAt             time.Time
 }
 
 func NewOperationRequest(input OperationRequestInput, createdAt time.Time) (OperationRequest, error) {
@@ -54,15 +54,39 @@ func NewOperationRequest(input OperationRequestInput, createdAt time.Time) (Oper
 	}
 
 	return OperationRequest{
-		ID:                    input.ID,
-		Actor:                 input.Actor,
-		IntegrationID:         input.IntegrationID,
-		OperationName:         input.OperationName,
-		DeviceID:              input.DeviceID,
-		CanonicalParameters:   append(json.RawMessage(nil), input.CanonicalParameters...),
-		ConfigurationSnapshot: input.ConfigurationSnapshot,
-		PolicySnapshot:        input.PolicySnapshot,
-		Deadline:              input.Deadline,
-		CreatedAt:             createdAt,
+		id:                    input.ID,
+		actor:                 input.Actor,
+		integrationID:         input.IntegrationID,
+		operationName:         input.OperationName,
+		deviceID:              input.DeviceID,
+		canonicalParameters:   append(json.RawMessage(nil), input.CanonicalParameters...),
+		configurationSnapshot: input.ConfigurationSnapshot,
+		policySnapshot:        input.PolicySnapshot,
+		deadline:              input.Deadline,
+		createdAt:             createdAt,
 	}, nil
 }
+
+func (request OperationRequest) ID() RequestID { return request.id }
+
+func (request OperationRequest) Actor() Actor { return request.actor }
+
+func (request OperationRequest) IntegrationID() IntegrationID { return request.integrationID }
+
+func (request OperationRequest) OperationName() string { return request.operationName }
+
+func (request OperationRequest) DeviceID() DeviceID { return request.deviceID }
+
+func (request OperationRequest) CanonicalParameters() json.RawMessage {
+	return append(json.RawMessage(nil), request.canonicalParameters...)
+}
+
+func (request OperationRequest) ConfigurationSnapshot() SnapshotID {
+	return request.configurationSnapshot
+}
+
+func (request OperationRequest) PolicySnapshot() SnapshotID { return request.policySnapshot }
+
+func (request OperationRequest) Deadline() time.Time { return request.deadline }
+
+func (request OperationRequest) CreatedAt() time.Time { return request.createdAt }

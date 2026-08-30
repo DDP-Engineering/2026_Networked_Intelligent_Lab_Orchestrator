@@ -179,10 +179,51 @@ func TestNewOperationRequestKeepsStableValidatedOperationNames(t *testing.T) {
 			if err != nil {
 				t.Fatalf("NewOperationRequest(%q) error = %v", name, err)
 			}
-			if request.OperationName != name {
-				t.Fatalf("OperationName = %q, want %q", request.OperationName, name)
+			if request.OperationName() != name {
+				t.Fatalf("OperationName() = %q, want %q", request.OperationName(), name)
 			}
 		})
+	}
+}
+
+func TestNewOperationRequestExposesValueGetters(t *testing.T) {
+	now := time.Date(2026, time.August, 30, 12, 0, 0, 0, time.UTC)
+	input := validOperationRequestInput(t, now)
+
+	request, err := NewOperationRequest(input, now)
+	if err != nil {
+		t.Fatalf("NewOperationRequest() error = %v", err)
+	}
+
+	if got, want := request.ID(), input.ID; got != want {
+		t.Fatalf("ID() = %v, want %v", got, want)
+	}
+	if got, want := request.Actor(), input.Actor; got != want {
+		t.Fatalf("Actor() = %v, want %v", got, want)
+	}
+	if got, want := request.IntegrationID(), input.IntegrationID; got != want {
+		t.Fatalf("IntegrationID() = %v, want %v", got, want)
+	}
+	if got, want := request.OperationName(), input.OperationName; got != want {
+		t.Fatalf("OperationName() = %q, want %q", got, want)
+	}
+	if got, want := request.DeviceID(), input.DeviceID; got != want {
+		t.Fatalf("DeviceID() = %v, want %v", got, want)
+	}
+	if got, want := string(request.CanonicalParameters()), string(input.CanonicalParameters); got != want {
+		t.Fatalf("CanonicalParameters() = %q, want %q", got, want)
+	}
+	if got, want := request.ConfigurationSnapshot(), input.ConfigurationSnapshot; got != want {
+		t.Fatalf("ConfigurationSnapshot() = %v, want %v", got, want)
+	}
+	if got, want := request.PolicySnapshot(), input.PolicySnapshot; got != want {
+		t.Fatalf("PolicySnapshot() = %v, want %v", got, want)
+	}
+	if got, want := request.Deadline(), input.Deadline; !got.Equal(want) {
+		t.Fatalf("Deadline() = %s, want %s", got, want)
+	}
+	if got := request.CreatedAt(); !got.Equal(now) {
+		t.Fatalf("CreatedAt() = %s, want %s", got, now)
 	}
 }
 
@@ -232,11 +273,17 @@ func TestNewOperationRequestCopiesCanonicalParameters(t *testing.T) {
 	}
 
 	input.CanonicalParameters[2] = 'X'
-	if got, want := string(request.CanonicalParameters), `{"mode":"fast"}`; got != want {
-		t.Fatalf("CanonicalParameters = %q after caller mutation, want %q", got, want)
+	firstRead := request.CanonicalParameters()
+	if got, want := string(firstRead), `{"mode":"fast"}`; got != want {
+		t.Fatalf("CanonicalParameters() = %q after caller mutation, want %q", got, want)
 	}
-	if !request.CreatedAt.Equal(now) {
-		t.Fatalf("CreatedAt = %s, want %s", request.CreatedAt, now)
+
+	firstRead[2] = 'Y'
+	if got, want := string(request.CanonicalParameters()), `{"mode":"fast"}`; got != want {
+		t.Fatalf("CanonicalParameters() = %q after accessor result mutation, want %q", got, want)
+	}
+	if !request.CreatedAt().Equal(now) {
+		t.Fatalf("CreatedAt() = %s, want %s", request.CreatedAt(), now)
 	}
 }
 
