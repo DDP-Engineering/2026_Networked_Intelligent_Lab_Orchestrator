@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 
@@ -30,7 +31,30 @@ def _is_ignored(path: Path) -> bool:
 
 def _run(command: list[str], cwd: Path) -> int:
     print(f"[{cwd}] {' '.join(command)}", flush=True)
-    return subprocess.run(command, cwd=cwd, check=False).returncode
+    try:
+        return subprocess.run(command, cwd=cwd, check=False).returncode
+    except FileNotFoundError:
+        print(f"error: required command not found: {command[0]}", file=sys.stderr, flush=True)
+        return 127
+
+
+def _uses_uv_environment(suite_root: Path) -> bool:
+    """Return whether a Python project's declared build environment is uv."""
+    if (suite_root / "uv.lock").is_file():
+        return True
+    try:
+        metadata = tomllib.loads((suite_root / "pyproject.toml").read_text(encoding="utf-8"))
+    except (OSError, tomllib.TOMLDecodeError):
+        return False
+    build_system = metadata.get("build-system", {})
+    return isinstance(build_system, dict) and build_system.get("build-backend") == "uv_build"
+
+
+def _python_test_command(suite_root: Path) -> list[str]:
+    """Choose the test runner declared by a Python suite's project metadata."""
+    if _uses_uv_environment(suite_root):
+        return ["uv", "run", "pytest", "-q"]
+    return [sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py", "-v"]
 
 
 def _run_full(root: Path) -> int:
@@ -49,10 +73,7 @@ def _run_full(root: Path) -> int:
         else:
             tests = suite_root / "tests"
             if tests.is_dir():
-                result = _run(
-                    [sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py", "-v"],
-                    suite_root,
-                )
+                result = _run(_python_test_command(suite_root), suite_root)
             else:
                 print(f"[{suite_root}] no tests directory; compiling Python sources", flush=True)
                 result = _run([sys.executable, "-m", "compileall", "-q", "."], suite_root)
