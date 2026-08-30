@@ -74,6 +74,17 @@ func TestOpenIsIdempotentForAnAlreadyMigratedDatabase(t *testing.T) {
 	}
 }
 
+func TestNonInternalTableNamesIncludesSQLitePrefixWithoutInternalUnderscore(t *testing.T) {
+	db := openTemporaryDatabase(t)
+	const tableName = "sqliteXunexpected"
+	if _, err := db.SQL().ExecContext(context.Background(), "CREATE TABLE sqliteXunexpected (id TEXT PRIMARY KEY)"); err != nil {
+		t.Fatalf("create discriminating non-internal SQLite table: %v", err)
+	}
+	if !slices.Contains(nonInternalTableNames(t, db.SQL()), tableName) {
+		t.Fatalf("non-internal table names omitted %q", tableName)
+	}
+}
+
 func TestOpenRejectsChangedRecordedMigrationDigest(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "nilo.sqlite")
 	db, err := Open(context.Background(), path)
@@ -184,7 +195,7 @@ func nonInternalTableNames(t *testing.T, db *sql.DB) []string {
 	t.Helper()
 	rows, err := db.QueryContext(
 		context.Background(),
-		"SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
+		"SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT GLOB 'sqlite_*' ORDER BY name",
 	)
 	if err != nil {
 		t.Fatalf("list non-internal SQLite tables: %v", err)
