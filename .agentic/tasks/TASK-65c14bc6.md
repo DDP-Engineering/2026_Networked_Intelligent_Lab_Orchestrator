@@ -181,6 +181,14 @@ opened: 2026-08-30
 - 2026-08-30 build: Task 5 fix commit `627085a` bounds the complete PHC shape before splitting and exact salt/hash encoded sizes before decoding; focused, full, and portable-core checks passed with CGO disabled.
 - 2026-08-30 build: The same reviewer found the unbounded-parser defect addressed with no new Critical, Important, or out-of-scope issue in the fix diff.
 - 2026-08-30 build: Final controller focused, full, portable-core, and AEGIS impacted checks passed; refreshed evolution remains 28 added and 7 modified paths with no removals and check remains errors=0 warnings=48 accepted staged-path/test-fixture warnings notes=0.
+- 2026-08-30 build: DEVIATION the Task 6 preflight attempted to read a nonexistent optional `REQ-SEC-50599a7e.md` spec and exited 1 for that file while successfully reading the authoritative requirement and existing policy spec; repository search confirmed no missing referenced spec contract.
+- 2026-08-30 build: Task 6 RED `CGO_ENABLED=0 go test ./internal/policy` exited 1 with only expected missing policy enums and resolver symbols after the approved matrix test was added.
+- 2026-08-30 build: DEVIATION Task 6 exposed that the Task 4 foundation schema omitted a dedicated `policy_snapshots` table even though operation requests carry policy snapshot IDs; persistence paused before misusing `config_versions`, and the plan now adds digest-verified migration 002 plus the exact table-set update.
+- 2026-08-30 build: Task 6 independent review found four Important gaps: numeric canonicalization preserved equivalent spelling differences, caller-controlled request IDs broke the changed-request identity guarantee, the migration accepted malformed `Z` timestamps, and model/schema operation-name limits differed. The plan is expanded with domain creation/rehydration correction; the implementer resumes for one focused fix round.
+- 2026-08-30 build: Task 6 fix `0456a8c` rejects noncanonical equivalent number spellings, allocates request IDs only at public creation with separate rehydration, enforces canonical policy-snapshot UTC timestamps, and aligns the operation-name boundary at 128 bytes; focused, full, portable, cross-target, and vet checks passed.
+- 2026-08-30 build: The scoped Task 6 re-review found all four Important findings addressed with no new Critical, Important, or out-of-scope issue.
+- 2026-08-30 build: REQ-SEC-035a8f94, REQ-SEC-50599a7e, and REQ-SEC-ae30d292 are active with complete Task 6 linked tests; 38-reference AEGIS impacted passed with CGO disabled.
+- 2026-08-30 build: AEGIS evolution reports 35 added and 7 modified expected cumulative paths with no removals after Task 6; check has errors=0 warnings=42 (41 planned later-path warnings plus the known deterministic password-fixture scanner warning) and notes=0.
 - 2026-08-30 test: test --impacted (2 test ref(s)) exit 0 (0.7s)
 - 2026-08-30 test: test --impacted (7 test ref(s)) exit 0 (0.7s)
 - 2026-08-30 test: test --impacted (13 test ref(s)) exit 0 (0.8s)
@@ -190,6 +198,7 @@ opened: 2026-08-30
 - 2026-08-30 test: test --impacted (27 test ref(s)) exit 0 (1.3s)
 - 2026-08-30 test: test --impacted (27 test ref(s)) exit 0 (1.4s)
 - 2026-08-30 test: test --impacted (29 test ref(s)) exit 0 (1.2s)
+- 2026-08-30 test: test --impacted (38 test ref(s)) exit 0 (0.6s)
 
 ## Design
 
@@ -212,8 +221,8 @@ opened: 2026-08-30
 stage: build
 result: in_progress
 current: build
-changed: Tasks 1 through 4 remain review-approved; Task 5 adds bounded Argon2id PHC password verification and verifier-only durable MCP token creation, authentication, reload, and revocation
-evidence: Task 5 missing-implementation, narrowed-persistence API, and oversized-PHC reds exited 1 as intended; commits aeecc76 and 627085a; focused, full, portable-core, direct three-target affected-package compilation, and final AEGIS impacted passed with CGO disabled; evolution 28 added and 7 modified with no removals; check errors=0 warnings=48 accepted staged-path and deterministic-fixture warnings notes=0; scoped fix re-review cleared the Important unbounded-parser finding
+changed: Tasks 1 through 5 remain review-approved; Task 6 adds exact policy resolution, immutable policy snapshots, canonical request digests, request-bound approval records, and a dedicated policy snapshot migration
+evidence: Task 6 resolver/persistence and four invariant reds exited 1 as intended; commits b7a9a48 and 0456a8c; focused, full, portable-core, direct three-target affected-package compilation, vet, and final 38-reference AEGIS impacted passed with CGO disabled; evolution 35 added and 7 modified with no removals; check errors=0 warnings=42 accepted later-path/test-fixture warnings notes=0; scoped re-review cleared all four Important findings
 issues: two generated Python cache directories and twelve compile-only Task 2/3/4 binaries remain outside commits after policy-blocked cleanup; later requirement slices and affected paths remain pending; push, merge, PR publication, and release remain unauthorized
-next: commit the Task 5 review verdict, generate the Task 6 brief, and dispatch a fresh implementer to the permission and approval red boundary
+next: commit the Task 6 review verdict and governance evidence, then generate the Task 7 brief for append-only audit and integrity-checked artifact persistence
 needs_user: no - approved implementation continues continuously in build and stops only for a named safety or authority boundary

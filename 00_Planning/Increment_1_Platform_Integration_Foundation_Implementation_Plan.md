@@ -471,6 +471,11 @@ Encode plaintext as `nilo_` plus unpadded base64url. Store only SHA-256 verifier
 - Create: `05_Software/nilo_assistant/internal/policy/resolver.go`
 - Create: `05_Software/nilo_assistant/internal/policy/resolver_test.go`
 - Create: `05_Software/nilo_assistant/internal/policy/repository.go`
+- Modify: `05_Software/nilo_assistant/internal/domain/operation.go`
+- Modify: `05_Software/nilo_assistant/internal/domain/session_test.go`
+- Modify: `05_Software/nilo_assistant/internal/store/sqlite/migrations.go`
+- Create: `05_Software/nilo_assistant/internal/store/sqlite/migrations/002_policy_snapshots.sql`
+- Modify: `05_Software/nilo_assistant/internal/store/sqlite/db_test.go`
 - Create: `05_Software/nilo_assistant/internal/store/sqlite/policy_repository.go`
 - Create: `05_Software/nilo_assistant/internal/store/sqlite/policy_repository_test.go`
 
@@ -501,6 +506,10 @@ cases := []struct{ policy OperationPolicy; mode AppMode; want DecisionKind }{
 6. Return a snapshot containing every input and the decision reason.
 
 - [ ] Canonicalize the immutable request and calculate `SHA-256(request canonical JSON)`. Approval records bind to this digest and expire at their stored deadline. A changed parameter set necessarily has a different request ID and digest.
+
+- [ ] The public request-creation boundary must allocate a fresh UUID-v7 request ID itself; any distinct accepted request therefore has a distinct identity. Keep an explicit, separately named validated rehydration path only for durable stored requests. Canonical parameter JSON must either normalize equivalent numeric spellings to one JSON number representation or reject noncanonical spellings before a digest is computed.
+
+- [ ] Add migration 002 for a dedicated `policy_snapshots` table. Do not reuse `config_versions`: configuration and policy snapshots are distinct immutable audit domains. Persist the snapshot ID, integration, operation, device, known/unknown inputs, nullable override and device mode, effective mode and policy, decision, bounded reason, and UTC resolution time with enum/boolean/nullability checks. Update the exact non-internal table-set regression to include `policy_snapshots`; migration digest verification and idempotent reopen remain mandatory.
 
 - [ ] Add repository methods:
 
