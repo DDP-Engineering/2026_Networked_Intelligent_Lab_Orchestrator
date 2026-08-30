@@ -146,6 +146,7 @@ opened: 2026-08-30
 - 2026-08-30 build: DEVIATION the fix-round compile-only artifacts use three additional system-temporary filenames after cleanup remained policy-blocked, so nine Task 2/3 test binaries now remain outside the repository and every commit.
 - 2026-08-30 build: The immutable-request fix impacted run passed all fourteen linked references and the complete discovered Python and Go suites.
 - 2026-08-30 build: Refreshed AEGIS evolution retains 17 added and 6 modified expected cumulative paths with no removals, and check retains only the 54 previously accepted future-path warnings.
+- 2026-08-30 build: The same Task 3 reviewer found the immutable-request finding addressed by private state, value getters, defensive-copy access, and mutation-isolation tests with no new breakage or out-of-scope observation.
 - 2026-08-30 test: test --impacted (2 test ref(s)) exit 0 (0.7s)
 - 2026-08-30 test: test --impacted (7 test ref(s)) exit 0 (0.7s)
 - 2026-08-30 test: test --impacted (13 test ref(s)) exit 0 (0.8s)
@@ -173,7 +174,7 @@ stage: build
 result: in_progress
 current: build
 changed: Tasks 1 and 2 remain review-approved; Task 3 adds UUID-v7 typed identities, validated copied operation requests, the exact session states, and authoritative transition validation
-evidence: Task 3 valid red and immutability-fix red each exited 1 for intended missing behavior; commits e415804 and 4406647; focused, full, portable-core, direct three-target domain package compilation, and refreshed AEGIS impacted passed; evolution 17 added and 6 modified with no removals; check errors=0 warnings=54 known future paths notes=0
+evidence: Task 3 valid red and immutability-fix red each exited 1 for intended missing behavior; commits e415804, 1abb899, 4406647, and e53edb1; focused, full, portable-core, direct three-target domain package compilation, and refreshed AEGIS impacted passed; evolution 17 added and 6 modified with no removals; check errors=0 warnings=54 known future paths notes=0; scoped re-review cleared the important finding
 issues: two generated Python cache directories and nine compile-only Task 2/3 binaries remain outside commits after policy-blocked cleanup; later requirement slices and affected paths remain pending; push, merge, PR publication, and release remain unauthorized
-next: commit the immutable-request plan/spec ruling, linked test, journal, and evolution evidence; generate a scoped fix review package; then send it to the same Task 3 reviewer
+next: commit the Task 3 review verdict, then generate the Task 4 brief and dispatch a fresh implementer to its red boundary
 needs_user: no - approved implementation continues continuously in build and stops only for a named safety or authority boundary
