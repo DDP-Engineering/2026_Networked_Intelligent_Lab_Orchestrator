@@ -65,6 +65,7 @@ linked_tests = [
     "05_Software/nilo_assistant/internal/domain/session_test.go::TestSessionTransitionsRejectUndefinedEdges",
     "05_Software/nilo_assistant/internal/domain/session_test.go::TestRuntimeIdentityConstructorsGenerateVersionSevenUUIDsAndParsersRejectInvalidUUIDs",
     "05_Software/nilo_assistant/internal/domain/session_test.go::TestNewOperationRequestKeepsStableValidatedOperationNames",
+    "05_Software/nilo_assistant/internal/domain/session_test.go::TestNewOperationRequestExposesValueGetters",
     "05_Software/nilo_assistant/internal/domain/session_test.go::TestNewOperationRequestCopiesCanonicalParameters",
 ]
 

@@ -329,20 +329,20 @@ func TestSessionTransitions(t *testing.T) {
 
 ```go
 type OperationRequest struct {
-    ID                    RequestID
-    Actor                 Actor
-    IntegrationID         IntegrationID
-    OperationName         string
-    DeviceID              DeviceID
-    CanonicalParameters   json.RawMessage
-    ConfigurationSnapshot SnapshotID
-    PolicySnapshot        SnapshotID
-    Deadline              time.Time
-    CreatedAt             time.Time
+    id                    RequestID
+    actor                 Actor
+    integrationID         IntegrationID
+    operationName         string
+    deviceID              DeviceID
+    canonicalParameters   json.RawMessage
+    configurationSnapshot SnapshotID
+    policySnapshot        SnapshotID
+    deadline              time.Time
+    createdAt             time.Time
 }
 ```
 
-Do not expose setters. Construct through `NewOperationRequest`, which rejects empty identity, invalid canonical JSON, non-future deadline, and parameter payloads over 1 MiB.
+Do not expose fields or setters. Construct through `NewOperationRequest`, which rejects empty identity, invalid canonical JSON, non-future deadline, and parameter payloads over 1 MiB. Expose value-returning getters for every field; `CanonicalParameters()` must return a fresh defensive copy on every call so neither constructor input nor accessor output can mutate the accepted request.
 
 - [ ] Define exact states: `pending_approval`, `queued`, `running`, `completed`, `failed`, `cancelled`, and `incomplete`. Rejected or expired approvals remain approval records and do not create a new runner state.
 

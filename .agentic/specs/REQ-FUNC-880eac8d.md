@@ -17,7 +17,7 @@ pending_approval -> queued -> running -> completed
 
 ## Data / interface
 
-Runtime identities use strongly typed UUID values. Operation descriptor IDs use stable validated strings rather than runtime UUIDs. Canonical parameter JSON is copied when the request is constructed and is limited to 1 MiB.
+Runtime identities use strongly typed UUID values. Operation descriptor IDs use stable validated strings rather than runtime UUIDs. The accepted request stores all authoritative fields privately and exposes value-returning getters only; canonical parameter JSON is copied when the request is constructed, copied again for every accessor result, and limited to 1 MiB.
 
 The orchestration boundary is:
 

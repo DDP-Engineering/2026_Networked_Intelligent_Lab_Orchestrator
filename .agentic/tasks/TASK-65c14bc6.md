@@ -138,9 +138,18 @@ opened: 2026-08-30
 - 2026-08-30 build: AEGIS evolution reports 17 added and 6 modified expected cumulative paths with no removals after Task 3, including the deliberate implementation-plan checksum-file correction.
 - 2026-08-30 build: DEVIATION the post-Task 3 AEGIS check reports 54 stale-path warnings only for later Increment 1 paths, reduced from 55 with no error, note, or new warning class, so the known staged-build warnings remain accepted.
 - 2026-08-30 build: DEVIATION the first read-only Task 3 plan check exited non-zero because PowerShell interpreted Markdown backticks in the search expression, so a literal fixed-string check replaces it before staging.
+- 2026-08-30 build: Independent Task 3 review found one important plan-mandated immutability conflict because exported request fields allowed post-validation mutation, while all identity, validation, state, test, and portability work otherwise matched the task.
+- 2026-08-30 build: DEVIATION the Task 3 exported-field sketch contradicted the approved immutable-request invariant, so the plan and REQ-FUNC-880eac8d specification now require private authoritative fields, value getters, and a defensive copy from every canonical-parameter accessor.
+- 2026-08-30 build: DEVIATION the first controller inspection of the Task 3 immutability red used the module directory for a repository-relative report path and emitted an unrelated missing-path error, so that mixed output is discarded and a focused test-only rerun replaces it.
+- 2026-08-30 build: Task 3 immutability-fix RED command `go test ./internal/domain` exited 1 because the newly specified value getters and defensive canonical-parameter accessor did not exist while public fields still did, exactly proving the reviewer finding before the fix.
+- 2026-08-30 build: Task 3 fix commit `44066472f127f3c5200fdba5fb0f561295cb9e23` makes every accepted-request field private, exposes value getters, returns a fresh canonical-parameter copy per call, and passes focused, full, portable-core, plus direct three-target domain compilation.
+- 2026-08-30 build: DEVIATION the fix-round compile-only artifacts use three additional system-temporary filenames after cleanup remained policy-blocked, so nine Task 2/3 test binaries now remain outside the repository and every commit.
+- 2026-08-30 build: The immutable-request fix impacted run passed all fourteen linked references and the complete discovered Python and Go suites.
+- 2026-08-30 build: Refreshed AEGIS evolution retains 17 added and 6 modified expected cumulative paths with no removals, and check retains only the 54 previously accepted future-path warnings.
 - 2026-08-30 test: test --impacted (2 test ref(s)) exit 0 (0.7s)
 - 2026-08-30 test: test --impacted (7 test ref(s)) exit 0 (0.7s)
 - 2026-08-30 test: test --impacted (13 test ref(s)) exit 0 (0.8s)
+- 2026-08-30 test: test --impacted (14 test ref(s)) exit 0 (0.8s)
 
 ## Design
 
@@ -164,7 +173,7 @@ stage: build
 result: in_progress
 current: build
 changed: Tasks 1 and 2 remain review-approved; Task 3 adds UUID-v7 typed identities, validated copied operation requests, the exact session states, and authoritative transition validation
-evidence: Task 3 valid red exited 1 for missing domain symbols; commit e415804; focused, full, portable-core, direct three-target domain package compilation, and AEGIS impacted passed; evolution 17 added and 6 modified with no removals; check errors=0 warnings=54 known future paths notes=0
-issues: two generated Python cache directories and six compile-only Task 2/3 binaries remain outside commits after policy-blocked cleanup; later requirement slices and affected paths remain pending; push, merge, PR publication, and release remain unauthorized
-next: commit Task 3 plan correction, requirement links, and AEGIS evidence; generate the native Task 3 review package; then dispatch an independent reviewer
+evidence: Task 3 valid red and immutability-fix red each exited 1 for intended missing behavior; commits e415804 and 4406647; focused, full, portable-core, direct three-target domain package compilation, and refreshed AEGIS impacted passed; evolution 17 added and 6 modified with no removals; check errors=0 warnings=54 known future paths notes=0
+issues: two generated Python cache directories and nine compile-only Task 2/3 binaries remain outside commits after policy-blocked cleanup; later requirement slices and affected paths remain pending; push, merge, PR publication, and release remain unauthorized
+next: commit the immutable-request plan/spec ruling, linked test, journal, and evolution evidence; generate a scoped fix review package; then send it to the same Task 3 reviewer
 needs_user: no - approved implementation continues continuously in build and stops only for a named safety or authority boundary
