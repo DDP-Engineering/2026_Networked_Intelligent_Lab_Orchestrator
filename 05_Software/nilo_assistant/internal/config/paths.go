@@ -27,7 +27,8 @@ func ResolveWithin(root, candidate string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if relative == "." || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) || filepath.IsAbs(relative) {
+	components := strings.Split(relative, string(filepath.Separator))
+	if relative == "." || filepath.IsAbs(relative) || components[0] == ".." {
 		return "", errors.New("path candidate escapes root")
 	}
 

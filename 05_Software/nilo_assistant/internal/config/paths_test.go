@@ -39,7 +39,7 @@ func TestResolveWithinRejectsUnconfinedCandidates(t *testing.T) {
 		{name: "equality", candidate: "."},
 		{name: "absolute escape", candidate: outside},
 		{name: "traversal", candidate: filepath.Join("..", "result.json")},
-		{name: "prefix confusion", candidate: root + "-outside"},
+		{name: "prefix confusion", candidate: filepath.Join("..", "artifacts-outside", "result.json")},
 	} {
 		t.Run(candidate.name, func(t *testing.T) {
 			if got, err := ResolveWithin(root, candidate.candidate); err == nil {
