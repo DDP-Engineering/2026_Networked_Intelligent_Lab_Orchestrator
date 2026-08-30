@@ -1,0 +1,2 @@
+{"protocol":"nilo.integration/1","kind":"request","message_id":"request-hello-1","request_id":"","method":"hello","timestamp":"2026-08-30T10:00:00Z","payload":{"client":"nilo"}}
+{"protocol":"nilo.integration/1","kind":"response","message_id":"response-hello-1","request_id":"request-hello-1","method":"hello","timestamp":"2026-08-30T10:00:01Z","payload":{"integration":"sigrok-cli"}}
