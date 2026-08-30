@@ -16,6 +16,15 @@ const (
 	minPasswordBytes = 12
 	maxPasswordBytes = 1024
 	argon2Version    = 19
+
+	argon2SaltBytes        = 16
+	argon2KeyBytes         = 32
+	argon2SaltEncodedChars = (argon2SaltBytes*8 + 5) / 6
+	argon2KeyEncodedChars  = (argon2KeyBytes*8 + 5) / 6
+	argon2PHCPrefixLength  = len("$argon2id$v=19$m=65536,t=3,p=2$")
+	// The maximum is the fixed PHC prefix, 16-byte raw-base64 salt, separator,
+	// and 32-byte raw-base64 key. Reject it before splitting attacker input.
+	argon2PHCMaxLength = argon2PHCPrefixLength + argon2SaltEncodedChars + 1 + argon2KeyEncodedChars
 )
 
 // Argon2Params are the explicit parameters recorded in password PHC strings.
@@ -31,8 +40,8 @@ var defaultArgon2Params = Argon2Params{
 	MemoryKiB: 65536,
 	Time:      3,
 	Threads:   2,
-	SaltBytes: 16,
-	KeyBytes:  32,
+	SaltBytes: argon2SaltBytes,
+	KeyBytes:  argon2KeyBytes,
 }
 
 // HashPassword returns a versioned Argon2id PHC verifier for password.
@@ -85,6 +94,9 @@ func derivePasswordKey(password, salt []byte, params Argon2Params) []byte {
 }
 
 func parsePasswordPHC(encoded string) (Argon2Params, []byte, []byte, error) {
+	if len(encoded) > argon2PHCMaxLength {
+		return Argon2Params{}, nil, nil, errors.New("Argon2id PHC exceeds maximum length")
+	}
 	parts := strings.Split(encoded, "$")
 	if len(parts) != 6 || parts[0] != "" || parts[1] != "argon2id" {
 		return Argon2Params{}, nil, nil, errors.New("invalid Argon2id PHC encoding")
@@ -100,9 +112,15 @@ func parsePasswordPHC(encoded string) (Argon2Params, []byte, []byte, error) {
 	if params != defaultArgon2Params {
 		return Argon2Params{}, nil, nil, errors.New("unsupported Argon2id PHC parameters")
 	}
+	if len(parts[4]) != argon2SaltEncodedChars {
+		return Argon2Params{}, nil, nil, errors.New("invalid Argon2id PHC salt encoded length")
+	}
 	salt, err := base64.RawStdEncoding.Strict().DecodeString(parts[4])
 	if err != nil || len(salt) != int(params.SaltBytes) {
 		return Argon2Params{}, nil, nil, errors.New("invalid Argon2id PHC salt")
+	}
+	if len(parts[5]) != argon2KeyEncodedChars {
+		return Argon2Params{}, nil, nil, errors.New("invalid Argon2id PHC hash encoded length")
 	}
 	hash, err := base64.RawStdEncoding.Strict().DecodeString(parts[5])
 	if err != nil || len(hash) != int(params.KeyBytes) {

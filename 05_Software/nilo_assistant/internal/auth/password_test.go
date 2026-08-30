@@ -98,3 +98,44 @@ func TestVerifyPasswordRejectsMalformedAndUnsupportedPHCInputs(t *testing.T) {
 		})
 	}
 }
+
+func TestVerifyPasswordRejectsOversizedPHCInputBeforeParsing(t *testing.T) {
+	encoded := "$argon2id$v=19$m=65536,t=3,p=2$" + strings.Repeat("A", 1<<20) + "$" + strings.Repeat("A", 43)
+
+	_, err := auth.VerifyPassword(encoded, []byte("correct horse battery staple"))
+	if err == nil || !strings.Contains(err.Error(), "maximum length") {
+		t.Fatalf("VerifyPassword oversized PHC error = %v, want maximum-length rejection", err)
+	}
+}
+
+func TestVerifyPasswordRejectsOversizedPHCComponentsBeforeDecode(t *testing.T) {
+	cases := []struct {
+		name    string
+		encoded string
+		want    string
+	}{
+		{
+			name:    "salt",
+			encoded: "$argon2id$v=19$m=65536,t=3,p=2$" + strings.Repeat("A", 23) + "$" + strings.Repeat("A", 42),
+			want:    "salt encoded length",
+		},
+		{
+			name:    "hash",
+			encoded: "$argon2id$v=19$m=65536,t=3,p=2$" + strings.Repeat("A", 22) + "$" + strings.Repeat("A", 44),
+			want:    "maximum length",
+		},
+		{
+			name:    "short hash",
+			encoded: "$argon2id$v=19$m=65536,t=3,p=2$" + strings.Repeat("A", 22) + "$" + strings.Repeat("A", 42),
+			want:    "hash encoded length",
+		},
+	}
+	for _, test := range cases {
+		t.Run(test.name, func(t *testing.T) {
+			_, err := auth.VerifyPassword(test.encoded, []byte("correct horse battery staple"))
+			if err == nil || !strings.Contains(err.Error(), test.want) {
+				t.Fatalf("VerifyPassword oversized %s error = %v, want %q", test.name, err, test.want)
+			}
+		})
+	}
+}
