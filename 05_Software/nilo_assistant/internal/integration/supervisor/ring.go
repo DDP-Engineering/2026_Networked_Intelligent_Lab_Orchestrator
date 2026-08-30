@@ -31,15 +31,16 @@ func (ring *diagnosticRing) String() string {
 
 func sanitizeDiagnostics(value string) string {
 	value = strings.ToValidUTF8(value, "?")
+	runes := []rune(value)
 	var sanitized strings.Builder
-	for index := 0; index < len(value); {
-		runeValue := rune(value[index])
+	for index := 0; index < len(runes); {
+		runeValue := runes[index]
 		if runeValue == '\x1b' {
 			index++
-			if index < len(value) && value[index] == '[' {
+			if index < len(runes) && runes[index] == '[' {
 				index++
-				for index < len(value) {
-					character := value[index]
+				for index < len(runes) {
+					character := runes[index]
 					index++
 					if character >= '@' && character <= '~' {
 						break
@@ -48,11 +49,11 @@ func sanitizeDiagnostics(value string) string {
 			}
 			continue
 		}
-		if runeValue < 0x20 && runeValue != '\n' && runeValue != '\t' {
+		if (runeValue < 0x20 && runeValue != '\n' && runeValue != '\t') || runeValue == 0x7f || (runeValue >= 0x80 && runeValue <= 0x9f) {
 			index++
 			continue
 		}
-		sanitized.WriteByte(value[index])
+		sanitized.WriteRune(runeValue)
 		index++
 	}
 	value = sanitized.String()

@@ -44,10 +44,14 @@ func main() {
 		return
 	}
 	if mode == "stderr-control" {
-		fmt.Fprint(os.Stderr, "\x1b[31msecret\r\x00END")
+		fmt.Fprint(os.Stderr, "\x1b[31msecret\r\x00\x7f\u0085END")
 		return
 	}
 	if mode == "exit" {
+		return
+	}
+	if mode == "stall-stdin" {
+		time.Sleep(time.Hour)
 		return
 	}
 	second, err := reader.ReadBytes('\n')
@@ -67,6 +71,11 @@ func main() {
 		waitForSafeShutdown(reader, marker)
 		return
 	}
+	if mode == "describe-unread" && execute.Method == protocol.Describe {
+		mark(marker, "describe-ready")
+		time.Sleep(time.Hour)
+		return
+	}
 	if execute.Method != protocol.Execute {
 		return
 	}
@@ -81,6 +90,11 @@ func main() {
 	if mode == "event-hang" {
 		write(protocol.Event, "progress-event", execute.MessageID, protocol.Execute, map[string]any{"type": "progress", "fraction": 0.5, "message": "blocked sink"})
 		time.Sleep(time.Hour)
+	}
+	if mode == "event-then-result" {
+		write(protocol.Event, "progress-event", execute.MessageID, protocol.Execute, map[string]any{"type": "progress", "fraction": 0.5, "message": "sink fails"})
+		write(protocol.Response, "execute-response", execute.MessageID, protocol.Execute, map[string]any{"type": "result", "status": "completed", "data": map[string]any{}})
+		return
 	}
 	if mode == "cooperative-cancel" {
 		mark(marker, execute.MessageID)

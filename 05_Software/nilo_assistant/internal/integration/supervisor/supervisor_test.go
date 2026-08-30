@@ -72,7 +72,7 @@ func TestSupervisorSanitizesControlCharactersInStderr(t *testing.T) {
 	if err == nil {
 		t.Fatal("Execute() error = nil, want runner crash")
 	}
-	if diagnostics := Diagnostics(err); strings.ContainsAny(diagnostics, "\x00\r\x1b") {
+	if diagnostics := Diagnostics(err); strings.ContainsAny(diagnostics, "\x00\r\x1b\x7f\u0085") {
 		t.Fatalf("Diagnostics() = %q, contains unsanitized control characters", diagnostics)
 	}
 }
@@ -163,6 +163,116 @@ func TestSupervisorDeadlineIsNotDefeatedByBlockedEventSink(t *testing.T) {
 		}
 	case <-time.After(time.Second):
 		t.Fatal("blocked event sink defeated Execute deadline")
+	}
+}
+
+func TestSupervisorPreservesWriteDeadlineAndCancellationClassifications(t *testing.T) {
+	largeRequest := protocol.ExecuteRequest{Type: "execute", Operation: "capture", Parameters: json.RawMessage(`"` + strings.Repeat("x", protocol.MaxLineBytes-1024) + `"`)}
+	t.Run("deadline", func(t *testing.T) {
+		supervisor := newTestSupervisor(t, "stall-stdin")
+		deadlineContext, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+		defer cancel()
+		_, err := supervisor.Execute(deadlineContext, largeRequest, eventSinkFunc(func(context.Context, protocol.Envelope) error { return nil }))
+		if !errors.Is(err, ErrRunnerTimeout) {
+			t.Fatalf("Execute() error = %v, want %v", err, ErrRunnerTimeout)
+		}
+	})
+	t.Run("cancellation", func(t *testing.T) {
+		supervisor := newTestSupervisor(t, "stall-stdin")
+		cancellationContext, cancel := context.WithCancel(context.Background())
+		go func() {
+			time.Sleep(50 * time.Millisecond)
+			cancel()
+		}()
+		_, err := supervisor.Execute(cancellationContext, largeRequest, eventSinkFunc(func(context.Context, protocol.Envelope) error { return nil }))
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("Execute() error = %v, want context.Canceled", err)
+		}
+	})
+}
+
+func TestSupervisorShutdownIsSafeWhileRunnersStartConcurrently(t *testing.T) {
+	supervisor := newTestSupervisor(t, "describe-hang", filepath.Join(t.TempDir(), "unused-marker"))
+	contexts := make([]context.CancelFunc, 12)
+	completed := make(chan struct{}, len(contexts))
+	for index := range contexts {
+		requestContext, cancel := context.WithCancel(context.Background())
+		contexts[index] = cancel
+		go func() {
+			_, _ = supervisor.Describe(requestContext, "test.integration")
+			completed <- struct{}{}
+		}()
+	}
+	shutdownContext, cancelShutdown := context.WithTimeout(context.Background(), time.Second)
+	defer cancelShutdown()
+	_ = supervisor.Shutdown(shutdownContext)
+	for _, cancel := range contexts {
+		cancel()
+	}
+	for range contexts {
+		select {
+		case <-completed:
+		case <-time.After(time.Second):
+			t.Fatal("concurrently started Describe() did not finish")
+		}
+	}
+}
+
+func TestShutdownClosesAdmissionAndUsesOneDeadlineBudget(t *testing.T) {
+	marker := filepath.Join(t.TempDir(), "unread-marker")
+	supervisor := newTestSupervisorWithGrace(t, 100*time.Millisecond, "describe-unread", marker)
+	var group sync.WaitGroup
+	for range 4 {
+		group.Add(1)
+		go func() {
+			defer group.Done()
+			context, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			_, _ = supervisor.Describe(context, "test.integration")
+		}()
+	}
+	waitMarker(t, marker, func(value string) bool { return strings.Count(value, "describe-ready") == 4 })
+	shutdownContext, cancelShutdown := context.WithTimeout(context.Background(), 80*time.Millisecond)
+	defer cancelShutdown()
+	started := time.Now()
+	err := supervisor.Shutdown(shutdownContext)
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("Shutdown() error = %v, want context deadline", err)
+	}
+	if elapsed := time.Since(started); elapsed > 250*time.Millisecond {
+		t.Fatalf("Shutdown() took %s, exceeded one global deadline budget", elapsed)
+	}
+	_, err = supervisor.Describe(context.Background(), "test.integration")
+	if !errors.Is(err, ErrSupervisorClosed) {
+		t.Fatalf("Describe() after Shutdown() error = %v, want %v", err, ErrSupervisorClosed)
+	}
+	group.Wait()
+}
+
+func TestEventSinkFailureIsNotARunnerCrash(t *testing.T) {
+	supervisor := newTestSupervisor(t, "event-then-result")
+	_, err := supervisor.Execute(context.Background(), executeRequest(), eventSinkFunc(func(context.Context, protocol.Envelope) error {
+		return errors.New("storage unavailable")
+	}))
+	if !errors.Is(err, ErrEventSink) {
+		t.Fatalf("Execute() error = %v, want %v", err, ErrEventSink)
+	}
+	if errors.Is(err, ErrRunnerCrashed) {
+		t.Fatalf("sink failure = %v, must not be a runner crash", err)
+	}
+}
+
+func TestNewProcessSupervisorRejectsCanonicalDuplicateEnvironmentKeys(t *testing.T) {
+	root := t.TempDir()
+	binary := copyTestHelper(t, root)
+	_, err := NewProcessSupervisor(ProcessConfig{
+		PackageID:   "test.integration",
+		PackageRoot: root,
+		Runner:      manifest.Runner{Executable: filepath.Base(binary), Arguments: []string{"success"}},
+		Environment: map[string]string{"TZ": "UTC", "tz": "Europe/Bucharest"},
+	})
+	if !errors.Is(err, ErrInvalidProcessConfig) {
+		t.Fatalf("NewProcessSupervisor() error = %v, want invalid duplicate environment config", err)
 	}
 }
 
@@ -305,6 +415,10 @@ func executeRequest() protocol.ExecuteRequest {
 }
 
 func newTestSupervisor(t *testing.T, mode string, arguments ...string) *ProcessSupervisor {
+	return newTestSupervisorWithGrace(t, 25*time.Millisecond, mode, arguments...)
+}
+
+func newTestSupervisorWithGrace(t *testing.T, grace time.Duration, mode string, arguments ...string) *ProcessSupervisor {
 	t.Helper()
 	root := t.TempDir()
 	binary := copyTestHelper(t, root)
@@ -316,7 +430,7 @@ func newTestSupervisor(t *testing.T, mode string, arguments ...string) *ProcessS
 			Executable: filepath.Base(binary),
 			Arguments:  runnerArguments,
 		},
-		GracePeriod: 25 * time.Millisecond,
+		GracePeriod: grace,
 	})
 	if err != nil {
 		t.Fatalf("NewProcessSupervisor() error = %v", err)

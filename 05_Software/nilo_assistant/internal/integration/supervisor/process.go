@@ -29,6 +29,8 @@ var (
 	ErrRunnerTimeout        = errors.New("integration runner timed out")
 	ErrRunnerProtocol       = errors.New("integration runner protocol failure")
 	ErrRunnerRemote         = errors.New("integration runner reported an execution error")
+	ErrSupervisorClosed     = errors.New("integration supervisor is shut down")
+	ErrEventSink            = errors.New("integration event sink failed")
 )
 
 // ProcessConfig is the already validated package launch contract. Environment
@@ -62,6 +64,7 @@ type ProcessSupervisor struct {
 	mu      sync.Mutex
 	active  map[string]*runnerProcess
 	runners map[*runnerProcess]struct{}
+	closed  bool
 }
 
 func NewProcessSupervisor(config ProcessConfig) (*ProcessSupervisor, error) {
@@ -87,22 +90,33 @@ func NewProcessSupervisor(config ProcessConfig) (*ProcessSupervisor, error) {
 	config.PackageRoot = root
 	config.Runner.Executable = executable
 	config.Runner.Arguments = append([]string(nil), config.Runner.Arguments...)
-	config.Environment = cloneEnvironment(config.Environment)
+	environment, err := canonicalEnvironment(config.Environment)
+	if err != nil {
+		return nil, err
+	}
+	config.Environment = environment
 	if config.GracePeriod <= 0 {
 		config.GracePeriod = 2 * time.Second
 	}
 	return &ProcessSupervisor{config: config, active: make(map[string]*runnerProcess), runners: make(map[*runnerProcess]struct{})}, nil
 }
 
-func cloneEnvironment(source map[string]string) map[string]string {
+func canonicalEnvironment(source map[string]string) (map[string]string, error) {
 	if source == nil {
-		return nil
+		return nil, nil
 	}
-	copy := make(map[string]string, len(source))
+	canonical := make(map[string]string, len(source))
 	for key, value := range source {
-		copy[key] = value
+		name := strings.ToUpper(strings.TrimSpace(key))
+		if name == "" || strings.ContainsRune(name, '=') || strings.ContainsRune(value, '\x00') {
+			return nil, fmt.Errorf("%w: invalid environment entry", ErrInvalidProcessConfig)
+		}
+		if _, exists := canonical[name]; exists {
+			return nil, fmt.Errorf("%w: duplicate environment key %q", ErrInvalidProcessConfig, name)
+		}
+		canonical[name] = value
 	}
-	return copy
+	return canonical, nil
 }
 
 func resolveExecutable(root, executable string) (string, error) {
@@ -139,7 +153,10 @@ func (supervisor *ProcessSupervisor) Describe(ctx context.Context, packageID str
 	defer supervisor.release(runner)
 	messageID, err := runner.send(ctx, protocol.Describe, protocol.ControlPayload{Type: "describe"})
 	if err != nil {
-		return protocol.DescribeResult{}, runner.protocolError(err)
+		if ctx.Err() != nil {
+			_ = runner.stop(context.Background())
+		}
+		return protocol.DescribeResult{}, runner.classify(ctx, err)
 	}
 	message, err := runner.receive(ctx)
 	if err != nil {
@@ -174,9 +191,6 @@ func (supervisor *ProcessSupervisor) Execute(ctx context.Context, request protoc
 		runner.close()
 		return protocol.ExecuteResult{}, fmt.Errorf("create request ID: %w", err)
 	}
-	supervisor.mu.Lock()
-	supervisor.active[requestID.String()] = runner
-	supervisor.mu.Unlock()
 	runner.setExecuteMessageID(requestID.String())
 	supervisor.mu.Lock()
 	supervisor.active[requestID.String()] = runner
@@ -185,7 +199,10 @@ func (supervisor *ProcessSupervisor) Execute(ctx context.Context, request protoc
 
 	messageID, err := runner.sendWithID(ctx, protocol.Execute, request, requestID.String())
 	if err != nil {
-		return protocol.ExecuteResult{}, runner.protocolError(err)
+		if ctx.Err() != nil {
+			_ = runner.stop(context.Background())
+		}
+		return protocol.ExecuteResult{}, runner.classify(ctx, err)
 	}
 	for {
 		message, err := runner.receive(ctx)
@@ -198,6 +215,9 @@ func (supervisor *ProcessSupervisor) Execute(ctx context.Context, request protoc
 		switch message.Kind {
 		case protocol.Event:
 			if err := runner.emit(ctx, sink, message); err != nil {
+				if errors.Is(err, ErrEventSink) {
+					return protocol.ExecuteResult{}, err
+				}
 				return protocol.ExecuteResult{}, runner.classify(ctx, err)
 			}
 		case protocol.Response:
@@ -231,14 +251,24 @@ func (supervisor *ProcessSupervisor) Cancel(ctx context.Context, packageID strin
 
 func (supervisor *ProcessSupervisor) Shutdown(ctx context.Context) error {
 	supervisor.mu.Lock()
+	supervisor.closed = true
 	runners := make([]*runnerProcess, 0, len(supervisor.runners))
 	for runner := range supervisor.runners {
 		runners = append(runners, runner)
 	}
 	supervisor.mu.Unlock()
-	var result error
+	results := make(chan error, len(runners))
 	for _, runner := range runners {
-		result = errors.Join(result, runner.stop(ctx))
+		go func() { results <- runner.stop(ctx) }()
+	}
+	var result error
+	for range runners {
+		select {
+		case err := <-results:
+			result = errors.Join(result, err)
+		case <-ctx.Done():
+			return errors.Join(result, ctx.Err())
+		}
 	}
 	return result
 }
@@ -286,13 +316,19 @@ func (supervisor *ProcessSupervisor) start(ctx context.Context) (*runnerProcess,
 		grace:       supervisor.config.GracePeriod,
 		wait:        make(chan error, 1),
 	}
-	supervisor.mu.Lock()
-	supervisor.runners[runner] = struct{}{}
-	supervisor.mu.Unlock()
 	registry := protocol.NewRegistry()
 	runner.encoder = protocol.NewEncoderWithRegistry(stdin, registry)
 	runner.decoder = protocol.NewDecoderWithRegistry(stdout, registry)
 	go func() { runner.wait <- command.Wait() }()
+	supervisor.mu.Lock()
+	if supervisor.closed {
+		supervisor.mu.Unlock()
+		_ = terminateProcess(command)
+		runner.close()
+		return nil, ErrSupervisorClosed
+	}
+	supervisor.runners[runner] = struct{}{}
+	supervisor.mu.Unlock()
 	if err := runner.handshake(ctx); err != nil {
 		runner.close()
 		supervisor.unregister(runner)
@@ -445,7 +481,7 @@ func (runner *runnerProcess) control(ctx context.Context, method protocol.Method
 	if deadline <= 0 {
 		deadline = time.Millisecond
 	}
-	controlContext, cancel := context.WithTimeout(context.Background(), deadline)
+	controlContext, cancel := context.WithTimeout(ctx, deadline)
 	defer cancel()
 	_, err := runner.send(controlContext, method, payload)
 	return err
@@ -496,6 +532,10 @@ func (runner *runnerProcess) emit(ctx context.Context, sink protocol.EventSink, 
 	go func() { completed <- sink.Emit(ctx, message) }()
 	select {
 	case err := <-completed:
+		if err != nil {
+			_ = runner.stop(context.Background())
+			return fmt.Errorf("%w: %w", ErrEventSink, err)
+		}
 		return err
 	case <-ctx.Done():
 		_ = runner.stop(context.Background())
