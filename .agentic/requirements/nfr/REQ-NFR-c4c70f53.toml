@@ -64,6 +64,10 @@ affected_paths = [
 linked_tests = [
     "05_Software/nilo_assistant/internal/config/paths_test.go::TestResolveWithinAcceptsConfinedCandidates",
     "05_Software/nilo_assistant/internal/config/paths_test.go::TestResolveWithinRejectsUnconfinedCandidates",
+    "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go::TestInvalidCommandFixtureIsRejected",
+    "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go::TestLoadRejectsPackageSchemaReferenceEscape",
+    "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go::TestLoadRejectsPhysicalPathEscapes",
+    "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go::TestLoadRejectsSymlinkedSchemaDirectory",
 ]
 
 # --- optional below this line ---

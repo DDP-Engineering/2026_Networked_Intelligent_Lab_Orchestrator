@@ -629,12 +629,17 @@ Normalize resource claims as `<integration-id>/<resource-kind>/<stable-device-id
 
 **Files:**
 
+- Modify: `05_Software/nilo_assistant/go.mod`
+- Modify: `05_Software/nilo_assistant/go.sum`
 - Create: `05_Software/schemas/integration/v1/manifest.schema.json`
 - Create: `05_Software/schemas/integration/v1/operation.schema.json`
 - Create: `05_Software/schemas/integration/v1/event.schema.json`
 - Create: `05_Software/nilo_assistant/internal/integration/manifest/model.go`
 - Create: `05_Software/nilo_assistant/internal/integration/manifest/loader.go`
 - Create: `05_Software/nilo_assistant/internal/integration/manifest/loader_test.go`
+- Create: `05_Software/nilo_assistant/internal/integration/manifest/schemas/manifest.schema.json`
+- Create: `05_Software/nilo_assistant/internal/integration/manifest/schemas/operation.schema.json`
+- Create: `05_Software/nilo_assistant/internal/integration/manifest/schemas/event.schema.json`
 - Create: `05_Software/nilo_assistant/internal/integration/manifest/testdata/valid/manifest.json`
 - Create: `05_Software/nilo_assistant/internal/integration/manifest/testdata/invalid-command/manifest.json`
 
@@ -642,11 +647,11 @@ Normalize resource claims as `<integration-id>/<resource-kind>/<stable-device-id
 
 **Produces:** A validated manifest model with resolved files confined to the package root.
 
-- [ ] Write failing loader tests for a valid package, unsupported protocol, duplicate operation ID, missing policy, unsupported platform, schema path escape, absolute runner path, and a runner represented as a raw shell command.
+- [x] Write failing loader tests for a valid package, unsupported protocol, duplicate operation ID, missing policy, unsupported platform, schema path escape, absolute runner path, and a runner represented as a raw shell command.
 
-- [ ] Run `go test ./internal/integration/manifest`; expect compile failure.
+- [x] Run `go test ./internal/integration/manifest`; expect compile failure.
 
-- [ ] Define `manifest.schema.json` with `additionalProperties: false` and these required fields: package ID/version/publisher/integrity, protocol range, OS/architecture matrix, runner executable plus argument array, app configuration schema, operation descriptors, resource claims, timeout bounds, cancellation/safe-shutdown declarations, event/artifact declarations, health checks, and contract fixtures.
+- [x] Define `manifest.schema.json` with `additionalProperties: false` and these required fields: package ID/version/publisher/integrity, protocol range, OS/architecture matrix, runner executable plus argument array, app configuration schema, operation descriptors, resource claims, timeout bounds, cancellation/safe-shutdown declarations, event/artifact declarations, health checks, and contract fixtures.
 
 - [ ] Model the runner as executable plus argument array, never a concatenated command:
 
@@ -657,13 +662,13 @@ type Runner struct {
 }
 ```
 
-- [ ] Use `jsonschema/v6` with JSON Schema 2020-12. Limit manifest and each loaded schema to 1 MiB, reject remote `$ref`, resolve referenced files with `config.ResolveWithin`, and check `nilo.integration/1` compatibility.
+- [x] Use `jsonschema/v6` with JSON Schema 2020-12. Limit manifest and each loaded schema to 1 MiB, reject remote `$ref`, resolve referenced files with `config.ResolveWithin`, and check `nilo.integration/1` compatibility.
 
 - [ ] Map each operation to the Task 6 policy enum and require a nonempty input schema, result schema, timeout, cancellability flag, state-change flag, and normalized resource claims.
 
-- [ ] Run focused tests, `go test ./...`, schema fixture checks, and portable compilation.
+- [x] Run focused tests, `go test ./...`, schema fixture checks, and portable compilation.
 
-- [ ] Record Task 9 evidence, then commit only Task 9 files with message `feat: define integration package manifests` for task review; do not push.
+- [x] Record Task 9 evidence, then commit only Task 9 files with message `feat: define integration package manifests` for task review; do not push.
 
 ---
 

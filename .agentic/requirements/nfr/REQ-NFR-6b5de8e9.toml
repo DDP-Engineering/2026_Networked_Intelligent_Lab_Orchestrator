@@ -67,6 +67,9 @@ linked_tests = [
     "05_Software/nilo_assistant/internal/config/config_test.go::TestLoadRejectsRelativeDataDir",
     "05_Software/nilo_assistant/internal/config/config_test.go::TestLoadRejectsMissingBindAddress",
     "05_Software/nilo_assistant/internal/domain/session_test.go::TestNewOperationRequestRejectsInvalidInput",
+    "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go::TestLoadRejectsInvalidManifestContracts",
+    "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go::TestLoadRejectsRemoteReferenceInPackageSchema",
+    "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go::TestLoadRejectsOversizedReferencedSchema",
 ]
 
 # --- optional below this line ---
