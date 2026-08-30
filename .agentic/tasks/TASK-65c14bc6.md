@@ -175,6 +175,12 @@ opened: 2026-08-30
 - 2026-08-30 build: Task 5 impacted routing passed all twenty-seven linked references and the complete discovered Python and Go suites.
 - 2026-08-30 build: AEGIS evolution reports 28 added and 7 modified expected cumulative paths with no removals after Task 5.
 - 2026-08-30 build: DEVIATION the post-Task 5 AEGIS check reports 47 stale-path warnings only for later Increment 1 paths plus one `secret-in-diff` warning for the deterministic public password phrase in `password_test.go`; the fixture is not a credential or secret, so both warning classes are accepted with errors=0 and notes=0.
+- 2026-08-30 build: The independent Task 5 reviewer found one accepted Important product defect: PHC parsing can split and decode attacker-sized input before rejecting its decoded length, so total and component encoded sizes require pre-allocation bounds and regression tests.
+- 2026-08-30 build: Ruling: Task 5's two requirement files, task journal, and evolution snapshot are controller-owned AEGIS evidence explicitly required by the combined workflow, not an implementer violation of the seven-file product boundary; they remain as separate governance commits.
+- 2026-08-30 build: Task 5 reviewer minors for early malformed-token rejection and symmetric VerifyPassword buffer-immutability coverage are deferred to the final branch review ledger because current production behavior is correct and neither blocks the Task 5 contract.
+- 2026-08-30 build: Task 5 fix commit `627085a` bounds the complete PHC shape before splitting and exact salt/hash encoded sizes before decoding; focused, full, and portable-core checks passed with CGO disabled.
+- 2026-08-30 build: The same reviewer found the unbounded-parser defect addressed with no new Critical, Important, or out-of-scope issue in the fix diff.
+- 2026-08-30 build: Final controller focused, full, portable-core, and AEGIS impacted checks passed; refreshed evolution remains 28 added and 7 modified paths with no removals and check remains errors=0 warnings=48 accepted staged-path/test-fixture warnings notes=0.
 - 2026-08-30 test: test --impacted (2 test ref(s)) exit 0 (0.7s)
 - 2026-08-30 test: test --impacted (7 test ref(s)) exit 0 (0.7s)
 - 2026-08-30 test: test --impacted (13 test ref(s)) exit 0 (0.8s)
@@ -182,6 +188,8 @@ opened: 2026-08-30
 - 2026-08-30 test: test --impacted (17 test ref(s)) exit 0 (0.9s)
 - 2026-08-30 test: test --impacted (17 test ref(s)) exit 0 (1.0s)
 - 2026-08-30 test: test --impacted (27 test ref(s)) exit 0 (1.3s)
+- 2026-08-30 test: test --impacted (27 test ref(s)) exit 0 (1.4s)
+- 2026-08-30 test: test --impacted (29 test ref(s)) exit 0 (1.2s)
 
 ## Design
 
@@ -205,7 +213,7 @@ stage: build
 result: in_progress
 current: build
 changed: Tasks 1 through 4 remain review-approved; Task 5 adds bounded Argon2id PHC password verification and verifier-only durable MCP token creation, authentication, reload, and revocation
-evidence: Task 5 missing-implementation and narrowed-persistence API reds exited 1 as intended; commit aeecc76; focused, full, portable-core, direct three-target affected-package compilation, and 27-reference AEGIS impacted passed with CGO disabled; evolution 28 added and 7 modified with no removals; check errors=0 warnings=48 accepted staged-path and deterministic-fixture warnings notes=0; independent review pending
+evidence: Task 5 missing-implementation, narrowed-persistence API, and oversized-PHC reds exited 1 as intended; commits aeecc76 and 627085a; focused, full, portable-core, direct three-target affected-package compilation, and final AEGIS impacted passed with CGO disabled; evolution 28 added and 7 modified with no removals; check errors=0 warnings=48 accepted staged-path and deterministic-fixture warnings notes=0; scoped fix re-review cleared the Important unbounded-parser finding
 issues: two generated Python cache directories and twelve compile-only Task 2/3/4 binaries remain outside commits after policy-blocked cleanup; later requirement slices and affected paths remain pending; push, merge, PR publication, and release remain unauthorized
-next: run Task 5 AEGIS impacted/evolution/check gates, commit linked requirement evidence, and dispatch an independent security-focused reviewer
+next: commit the Task 5 review verdict, generate the Task 6 brief, and dispatch a fresh implementer to the permission and approval red boundary
 needs_user: no - approved implementation continues continuously in build and stops only for a named safety or authority boundary

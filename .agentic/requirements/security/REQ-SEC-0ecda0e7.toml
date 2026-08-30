@@ -66,6 +66,8 @@ linked_tests = [
     "05_Software/nilo_assistant/internal/auth/password_test.go::TestHashPasswordUsesDistinctSalts",
     "05_Software/nilo_assistant/internal/auth/password_test.go::TestPasswordFunctionsRejectOutOfBoundsByteLengths",
     "05_Software/nilo_assistant/internal/auth/password_test.go::TestVerifyPasswordRejectsMalformedAndUnsupportedPHCInputs",
+    "05_Software/nilo_assistant/internal/auth/password_test.go::TestVerifyPasswordRejectsOversizedPHCInputBeforeParsing",
+    "05_Software/nilo_assistant/internal/auth/password_test.go::TestVerifyPasswordRejectsOversizedPHCComponentsBeforeDecode",
 ]
 
 # --- optional below this line ---
