@@ -1,0 +1,123 @@
+{
+  "anchor_id": "2997e73e9a5a363a",
+  "categories": {
+    "00_Planning/Increment_1_Platform_Integration_Foundation_Implementation_Plan.md": "other",
+    "00_Planning/Overview.md": "other",
+    "00_Planning/README.md": "other",
+    "00_Planning/Remote_Bench_MVP_PRD.md": "other",
+    "01_Documentation/README.md": "other",
+    "02_Tools/README.md": "other",
+    "03_Hardware/README.md": "other",
+    "04_HardwareDocu/README.md": "other",
+    "05_Software/README.md": "other",
+    "05_Software/nilo_assistant/README.md": "source",
+    "05_Software/nilo_assistant/go.mod": "source",
+    "05_Software/nilo_assistant/internal/buildinfo/buildinfo_test.go": "source",
+    "05_Software/scripts/tests/test_aegis_test.py": "other",
+    "05_Software/tests/README.md": "tests",
+    "06_SoftwareDocu/README.md": "other",
+    "07_Delivery/README.md": "other",
+    "09_Others/README.md": "other",
+    "AGENTS.md": "other",
+    "CLAUDE.md": "other",
+    "QWEN.md": "other",
+    "README.md": "other"
+  },
+  "created_at": "2026-08-30T13:05:28.553100Z",
+  "files": {
+    "00_Planning/Increment_1_Platform_Integration_Foundation_Implementation_Plan.md": {
+      "kind": "file",
+      "sha256": "a53dcec1dd156b7df813f3e6dc21209a6697b4f481409ed7a79c76eb5f362226"
+    },
+    "00_Planning/Overview.md": {
+      "kind": "file",
+      "sha256": "cac96c9c18ec89829e30e0f08571f258d2acf00e735b89f157576c19a7513645"
+    },
+    "00_Planning/README.md": {
+      "kind": "file",
+      "sha256": "d0d2176dd6d3036864515b9a285afbf2a9f111fe8119c0847df4eec83b4dd001"
+    },
+    "00_Planning/Remote_Bench_MVP_PRD.md": {
+      "kind": "file",
+      "sha256": "91bead4245f9f53e4ec5cbd80c55c84c9b52df3d3535de9eb2e44f937f144190"
+    },
+    "01_Documentation/README.md": {
+      "kind": "file",
+      "sha256": "29cf0a26b1e7c35478e344400bb060ad4d7081519fe6d7f2dd56a9ecb0324cfc"
+    },
+    "02_Tools/README.md": {
+      "kind": "file",
+      "sha256": "b394215998c7e8efa80d49897031a2208aecbe41fac0242f2d315bfe5719c9ae"
+    },
+    "03_Hardware/README.md": {
+      "kind": "file",
+      "sha256": "429f25dbedbe998d974bb61e80a066a317b68ee25309e99da9f972cb6668f4d1"
+    },
+    "04_HardwareDocu/README.md": {
+      "kind": "file",
+      "sha256": "5874ddfcb3bf0d3f391be7694deb4ae0a67ea3ef36e39932743584ef05f642ee"
+    },
+    "05_Software/README.md": {
+      "kind": "file",
+      "sha256": "762f6ffecab93c88e95493d0d42cc4ec61f3d241e70a73a3b4966a53303d47c8"
+    },
+    "05_Software/nilo_assistant/README.md": {
+      "kind": "file",
+      "sha256": "b21c3b3debf201c9e00bbf9cfc7b5dcbb36bb2f6dfeb8d0c9e12e9c5869646d4"
+    },
+    "05_Software/nilo_assistant/go.mod": {
+      "kind": "file",
+      "sha256": "7326cc213d43dfde24b987c9a7f0e45867bef6f1d3c29b613c7e5814ebe8c113"
+    },
+    "05_Software/nilo_assistant/internal/buildinfo/buildinfo_test.go": {
+      "kind": "file",
+      "sha256": "a25a7361434b1fb6fd248b39e713d783514aa43bd363b1f45f4d3742458c949a"
+    },
+    "05_Software/scripts/tests/test_aegis_test.py": {
+      "kind": "file",
+      "sha256": "2c32ef302a844fb257ecb68f7821615933037523b1171361980577390866e599"
+    },
+    "05_Software/tests/README.md": {
+      "kind": "file",
+      "sha256": "a72ea3d4530d5080aa9ad8f7f804bfc82407cf7c8c8cc2abe246bb903c426ae8"
+    },
+    "06_SoftwareDocu/README.md": {
+      "kind": "file",
+      "sha256": "47af51649015c386a3a8fab2290362f6675c2bbb76530eeaf2d37cd2d3eece55"
+    },
+    "07_Delivery/README.md": {
+      "kind": "file",
+      "sha256": "fe1edacaca2ce5db836c1933fbd704681a42f4bf897b969f55a6ab687f5fcc96"
+    },
+    "09_Others/README.md": {
+      "kind": "file",
+      "sha256": "63b12bdf7152279f3f3f95259e31e210f3de706f833914ab43f4ad923c9df01f"
+    },
+    "AGENTS.md": {
+      "kind": "file",
+      "sha256": "94e327435adcdac2d2dd342490c9391715e26fc222392d2453a5e37ad7250398"
+    },
+    "CLAUDE.md": {
+      "kind": "file",
+      "sha256": "09ea95c802c322629462dde170a08ee4d97110430c0d414ec7beb719e4f31ea9"
+    },
+    "QWEN.md": {
+      "kind": "file",
+      "sha256": "f8205b6221d7e2003bcf4de609dd38b7dd8072957df4ab4553c2f995ac4d75bf"
+    },
+    "README.md": {
+      "kind": "file",
+      "sha256": "ed4ff095d5ed6f3aeff8aeb9b7e71966499985fd8bff93b6f1e9483f26aaf2e7"
+    }
+  },
+  "head": "421438da83649d3ca1dfc5895d373f6666a635d7",
+  "schema": 1,
+  "source_globs": [
+    "05_Software/nilo_assistant/"
+  ],
+  "stage": "build",
+  "task": "TASK-65c14bc6",
+  "test_globs": [
+    "05_Software/tests/"
+  ]
+}

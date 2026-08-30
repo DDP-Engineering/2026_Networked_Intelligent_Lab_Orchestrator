@@ -1,0 +1,160 @@
+{
+  "reports": [
+    {
+      "anchor_created_at": "2026-08-30T13:05:28.553100Z",
+      "anchor_head": "421438da83649d3ca1dfc5895d373f6666a635d7",
+      "anchor_id": "2997e73e9a5a363a",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "e8715dd418452774eb6c6621ea49cdc33e318c9278d74c7bde968c02496e10af"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "762f6ffecab93c88e95493d0d42cc4ec61f3d241e70a73a3b4966a53303d47c8"
+          },
+          "path": "05_Software/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d4056699189e4f447746a11a9ef3528a5712d2e761970d4953123ab9df602b28"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "b21c3b3debf201c9e00bbf9cfc7b5dcbb36bb2f6dfeb8d0c9e12e9c5869646d4"
+          },
+          "path": "05_Software/nilo_assistant/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "338a97d4efcc9c7e2c2a5bd4ee7caed6f7af8b1f4d99536f46eeaf6d30b8ce5a"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/cmd/nilo/main.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "69bcee1f10f5e2c68f277821d8bebe1677fd786d64df165383941f28895e763c"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/buildinfo/buildinfo.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "907dc2f13aaae0543c6976374ff944a328205be1ca8cb5e751e5ac00ab32a08f"
+          },
+          "area": "other",
+          "before": null,
+          "path": "05_Software/scripts/aegis_test.py",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "f5bcd42adc0b4f6a78753e7cfae829d16554f0eb7ec2fc5283be30d15756c0f3"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "2c32ef302a844fb257ecb68f7821615933037523b1171361980577390866e599"
+          },
+          "path": "05_Software/scripts/tests/test_aegis_test.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "a47ef1184e53f01669eca56996890ddac29a4df0f3bf9ba92d2cf3448f5a1853"
+          },
+          "area": "other",
+          "before": null,
+          "path": "05_Software/scripts/verify-portable-core.ps1",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "0f99edf0476daf0b9d4f4a3932a11af037c90f679b108caed0872869311599b1"
+          },
+          "area": "other",
+          "before": null,
+          "path": "05_Software/scripts/verify-portable-core.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "2ed17583bbd0441e14776084c81be69d655958ef1bd404c446863d071a7d3735"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "a72ea3d4530d5080aa9ad8f7f804bfc82407cf7c8c8cc2abe246bb903c426ae8"
+          },
+          "path": "05_Software/tests/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "f498c9f690ff89d83039890b98cc4d19c8c1fb0f1db5eae5ccf0b2da05f2fdc3"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "ed4ff095d5ed6f3aeff8aeb9b7e71966499985fd8bff93b6f1e9483f26aaf2e7"
+          },
+          "path": "README.md",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 3,
+            "modified": 3,
+            "removed": 0,
+            "unchanged": 14
+          },
+          "source": {
+            "added": 2,
+            "modified": 1,
+            "removed": 0,
+            "unchanged": 2
+          },
+          "tests": {
+            "added": 0,
+            "modified": 1,
+            "removed": 0,
+            "unchanged": 0
+          }
+        },
+        "status": {
+          "added": 5,
+          "modified": 5,
+          "removed": 0,
+          "unchanged": 16
+        }
+      },
+      "current_head": "13fb80857fc58be498443af2682584558f4b4371",
+      "evolution_stage": "build",
+      "evolved_at": "2026-08-30T13:13:14.382350Z"
+    }
+  ],
+  "schema": 1,
+  "task": "TASK-65c14bc6"
+}

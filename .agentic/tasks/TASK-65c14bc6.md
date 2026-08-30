@@ -96,6 +96,23 @@ opened: 2026-08-30
 - 2026-08-30 build: DEVIATION the replacement requirement check exited non-zero because its word-boundary regex was over-escaped, so the result is discarded and a direct case-insensitive token count replaces it.
 - 2026-08-30 build: DEVIATION the replacement placeholder scan exited non-zero because PowerShell removed quoting inside the regex and made it invalid, so a single-quoted expression replaces it.
 - 2026-08-30 build: DEVIATION the first compact AEGIS JSON parser inspected nonexistent top-level finding arrays and falsely printed zero findings, so its evidence is discarded and the actual JSON structure will be inspected before summarizing it.
+- 2026-08-30 build: DEVIATION the first portable Go setup command exited non-zero after verifying the official archive because constrained PowerShell blocked Expand-Archive, so native tar extraction replaces it without changing system configuration.
+- 2026-08-30 build: DEVIATION the native extraction run emitted a constrained-mode path-canonicalization error while still extracting successfully and returning Go 1.27.0, so a clean Resolve-Path and version check replaces the mixed evidence.
+- 2026-08-30 build: The clean prerequisite check confirmed Go 1.27.0 windows/amd64, Python 3.12.10, and uv 0.11.25 with no system installation or persistent PATH change.
+- 2026-08-30 build: DEVIATION the first read-only Superpowers reviewer-template lookup exited non-zero because the assumed filename did not exist, so the installed skill directory is searched for the authoritative template before review.
+- 2026-08-30 build: Task 1 RED command `go test ./internal/buildinfo` from `05_Software/nilo_assistant` exited 1 because `Current` was undefined, exactly proving the missing build-information contract before implementation.
+- 2026-08-30 build: Task 1 RED command `python -m unittest discover -s scripts/tests -p test_aegis_test.py -v` from `05_Software` exited 1 because `scripts/aegis_test.py` was absent, exactly proving the missing polyglot suite-discovery router before implementation.
+- 2026-08-30 build: REQ-PLAT-93e1b194 RED command `CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ./cmd/nilo` from `05_Software/nilo_assistant` exited 1 because `cmd/nilo` did not exist, exactly proving the portable target was absent before implementation.
+- 2026-08-30 build: AEGIS anchor `2997e73e9a5a363a` captured 21 files at governance baseline commit `421438da83649d3ca1dfc5895d373f6666a635d7` after the Task 1 red tests and before implementation.
+- 2026-08-30 build: DEVIATION the first Task 1 Python GREEN attempt exited 1 because the test called nonexistent `importlib.util.module_from_specification`, so the test-only typo was corrected to `module_from_spec` and the same focused command then passed.
+- 2026-08-30 build: DEVIATION the first PowerShell portable-core verification exited 1 because constrained mode blocked `System.IO.Path.GetTempPath`, so the script switched to `New-TemporaryFile` and the complete host plus three-target check then passed.
+- 2026-08-30 build: Task 1 final verification passed the focused Go and Python tests, `go test ./...`, AEGIS full, impacted, and lint routes, CLI version output, PowerShell host build, CGO-disabled linux/arm64, linux/amd64, and windows/amd64 builds, Bash syntax, and repository artifact absence.
+- 2026-08-30 build: Task 1 implementation commit `13fb80857fc58be498443af2682584558f4b4371` contains only the thirteen planned implementation and documentation files and was not pushed.
+- 2026-08-30 build: DEVIATION the host policy rejected removal of two verified in-worktree Python cache directories before execution, so they remain generated, untracked, and excluded from commits and review ranges.
+- 2026-08-30 test: test --impacted (2 test ref(s)) exit 0 (0.8s)
+- 2026-08-30 build: AEGIS evolution for anchor `2997e73e9a5a363a` reported 5 added and 5 modified expected Task 1 paths with no removals or unexpected architecture change.
+- 2026-08-30 build: The first post-Task 1 check exposed five outside-layout warnings for the new scripts and software README, so `.agentic/aegis.toml` now classifies scripts as test infrastructure and the README as documentation in commit `056f3295ae01f632c9cd0db6b23cdc93ce2e5bb0`.
+- 2026-08-30 build: DEVIATION the corrected AEGIS check reports 58 stale-path warnings only because later Increment 1 tasks have not yet created their declared paths, so these known warnings remain accepted during staged implementation.
 
 ## Design
 
@@ -118,8 +135,8 @@ opened: 2026-08-30
 stage: build
 result: in_progress
 current: build
-changed: governance baseline prepared with the approved PRD, implementation plan, 22 requirements, 4 specifications, and build-stage journal
-evidence: design has 13 nonempty lines and cites all 22 requirements; structural checks are green; aegis check errors=0 warnings=61 comprising 60 future paths and 1 pre-product scope-drift warning, notes=1 missing pre-build anchor
-issues: Go is not installed and must be supplied before Task 1; future affected paths and pre-product scope drift remain until build creates linked files; push, merge, PR publication, and release remain unauthorized
-next: commit the governance baseline, supply a portable official Go 1.26 or newer toolchain, then dispatch Task 1 and stop at its observed red test for the AEGIS anchor
+changed: Task 1 portable Go core, version CLI, polyglot AEGIS router, portable verification scripts, truthful documentation, layout classification, and active linked platform requirement
+evidence: anchor 2997e73e9a5a363a; implementation commits 13fb808 and 056f329; impacted tests exit 0; evolution 5 added and 5 modified with no removals; AEGIS errors=0 warnings=58 known future paths notes=0
+issues: two generated Python cache directories remain untracked after policy-blocked cleanup; future affected paths remain until later tasks create them; push, merge, PR publication, and release remain unauthorized
+next: commit Task 1 requirement and AEGIS evidence, generate the native commit-range review package, and dispatch an independent Task 1 reviewer
 needs_user: no - approved implementation continues continuously in build and stops only for a named safety or authority boundary
