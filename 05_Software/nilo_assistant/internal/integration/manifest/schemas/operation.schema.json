@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "operation.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "policy", "input_schema", "result_schema", "timeout", "cancellable", "state_changing", "resources"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+    "policy": {"type": "string", "enum": ["auto_eligible", "full_only", "always_prompt", "denied"]},
+    "input_schema": {"type": "string", "minLength": 1},
+    "result_schema": {"type": "string", "minLength": 1},
+    "timeout": {"type": "string", "minLength": 1, "maxLength": 32},
+    "cancellable": {"type": "boolean"},
+    "state_changing": {"type": "boolean"},
+    "resources": {"type": "array", "items": {"type": "string", "minLength": 1}}
+  }
+}

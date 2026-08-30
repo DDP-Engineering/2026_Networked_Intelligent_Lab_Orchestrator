@@ -13,7 +13,7 @@
         "id": {"type": "string", "pattern": "^[a-z][a-z0-9_-]*$"},
         "version": {"type": "string", "minLength": 1},
         "publisher": {"type": "string", "minLength": 1},
-        "integrity": {"type": "string", "pattern": "^sha256:[0-9a-fA-F]+$"}
+        "integrity": {"type": "string", "pattern": "^sha256:[0-9a-fA-F]{64}$"}
       }
     },
     "protocol": {"type": "string", "minLength": 1},
@@ -60,7 +60,7 @@
         "required": ["id", "timeout"],
         "properties": {
           "id": {"type": "string", "minLength": 1},
-          "timeout": {"type": "string", "minLength": 1}
+          "timeout": {"type": "string", "minLength": 1, "maxLength": 32}
         }
       }
     },

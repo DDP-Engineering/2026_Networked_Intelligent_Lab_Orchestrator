@@ -2,12 +2,13 @@ package manifest
 
 import (
 	"bytes"
+	"embed"
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"path/filepath"
-	"runtime"
 	"slices"
 	"strings"
 	"time"
@@ -16,12 +17,23 @@ import (
 	"nilo.local/nilo/internal/config"
 )
 
-const maxDocumentBytes = 1 << 20
+const (
+	maxDocumentBytes      = 1 << 20
+	maxOperationTimeout   = time.Hour
+	maxHealthCheckTimeout = time.Minute
+)
+
+//go:embed schemas/*.json
+var builtinSchemaFS embed.FS
 
 // Load validates the package manifest and every referenced local schema. All
 // returned file paths are resolved beneath packageRoot.
 func Load(packageRoot string) (Manifest, error) {
-	manifestPath, err := config.ResolveWithin(packageRoot, "manifest.json")
+	root, err := filepath.Abs(packageRoot)
+	if err != nil {
+		return Manifest{}, fmt.Errorf("%w: package root: %v", ErrInvalidManifest, err)
+	}
+	manifestPath, err := config.ResolveWithin(root, "manifest.json")
 	if err != nil {
 		return Manifest{}, fmt.Errorf("%w: manifest path: %v", ErrInvalidManifest, err)
 	}
@@ -37,7 +49,7 @@ func Load(packageRoot string) (Manifest, error) {
 	if err := validateManifestDocument(document); err != nil {
 		return Manifest{}, err
 	}
-	if err := validateManifest(&result, packageRoot); err != nil {
+	if err := validateManifest(&result, root); err != nil {
 		return Manifest{}, err
 	}
 	return result, nil
@@ -56,28 +68,24 @@ func validateManifestDocument(document []byte) error {
 
 	compiler := jsonschema.NewCompiler()
 	compiler.DefaultDraft(jsonschema.Draft2020)
+	compiler.UseLoader(denySchemaLoader{})
 	for _, name := range []string{"manifest.schema.json", "operation.schema.json", "event.schema.json"} {
-		path, err := installedSchemaPath(name)
+		schemaDocument, err := builtinSchemaFS.ReadFile("schemas/" + name)
 		if err != nil {
-			return err
+			return fmt.Errorf("%w: read embedded schema %s: %v", ErrInvalidManifest, name, err)
 		}
-		schemaDocument, err := readJSONDocument(path)
-		if err != nil {
-			return err
+		if len(schemaDocument) > maxDocumentBytes {
+			return fmt.Errorf("%w: embedded schema %s", ErrDocumentTooLarge, name)
 		}
 		var schemaValue any
 		if err := json.Unmarshal(schemaDocument, &schemaValue); err != nil {
 			return fmt.Errorf("%w: parse built-in schema %s: %v", ErrInvalidManifest, name, err)
 		}
-		if err := compiler.AddResource(path, schemaValue); err != nil {
+		if err := compiler.AddResource(builtinSchemaURL(name), schemaValue); err != nil {
 			return fmt.Errorf("%w: add built-in schema %s: %v", ErrInvalidManifest, name, err)
 		}
 	}
-	path, err := installedSchemaPath("manifest.schema.json")
-	if err != nil {
-		return err
-	}
-	schema, err := compiler.Compile(path)
+	schema, err := compiler.Compile(builtinSchemaURL("manifest.schema.json"))
 	if err != nil {
 		return fmt.Errorf("%w: compile manifest schema: %v", ErrInvalidManifest, err)
 	}
@@ -113,7 +121,7 @@ func validateManifest(manifest *Manifest, root string) error {
 		if err := operation.Policy.Validate(); err != nil {
 			return fmt.Errorf("%w: operation %q policy: %v", ErrInvalidManifest, operation.ID, err)
 		}
-		if duration, err := time.ParseDuration(operation.Timeout); err != nil || duration <= 0 {
+		if duration, err := time.ParseDuration(operation.Timeout); err != nil || duration <= 0 || duration > maxOperationTimeout {
 			return fmt.Errorf("%w: operation %q timeout", ErrInvalidManifest, operation.ID)
 		}
 		if err := resolveSchema(root, &operation.InputSchema); err != nil {
@@ -122,11 +130,16 @@ func validateManifest(manifest *Manifest, root string) error {
 		if err := resolveSchema(root, &operation.ResultSchema); err != nil {
 			return fmt.Errorf("%w: operation %q result schema: %w", ErrInvalidManifest, operation.ID, err)
 		}
+		seenResources := make(map[ResourceClaim]struct{}, len(operation.Resources))
 		for resourceIndex, resource := range operation.Resources {
 			normalized := ResourceClaim(strings.ToLower(strings.TrimSpace(string(resource))))
 			if !validResourceClaim(normalized) {
 				return fmt.Errorf("%w: operation %q resource claim %q", ErrInvalidManifest, operation.ID, resource)
 			}
+			if _, exists := seenResources[normalized]; exists {
+				return fmt.Errorf("%w: operation %q has duplicate resource claim %q", ErrInvalidManifest, operation.ID, normalized)
+			}
+			seenResources[normalized] = struct{}{}
 			operation.Resources[resourceIndex] = normalized
 		}
 		slices.Sort(operation.Resources)
@@ -147,7 +160,7 @@ func validateManifest(manifest *Manifest, root string) error {
 		}
 	}
 	for _, healthCheck := range manifest.HealthChecks {
-		if duration, err := time.ParseDuration(healthCheck.Timeout); err != nil || duration <= 0 {
+		if duration, err := time.ParseDuration(healthCheck.Timeout); err != nil || duration <= 0 || duration > maxHealthCheckTimeout {
 			return fmt.Errorf("%w: health check %q timeout", ErrInvalidManifest, healthCheck.ID)
 		}
 	}
@@ -163,56 +176,25 @@ func resolveSchema(root string, path *string) error {
 	if err := resolvePath(root, path, true); err != nil {
 		return err
 	}
-	compiler := jsonschema.NewCompiler()
-	compiler.DefaultDraft(jsonschema.Draft2020)
-	schemas := make(map[string]any)
-	if err := collectLocalSchemas(root, *path, schemas); err != nil {
-		return err
-	}
-	for schemaPath, value := range schemas {
-		if err := compiler.AddResource(schemaPath, value); err != nil {
-			return fmt.Errorf("%w: add schema: %v", ErrInvalidManifest, err)
-		}
-	}
-	if _, err := compiler.Compile(*path); err != nil {
-		return fmt.Errorf("%w: compile schema: %v", ErrInvalidManifest, err)
-	}
-	return nil
-}
-
-func collectLocalSchemas(root, path string, schemas map[string]any) error {
-	if _, exists := schemas[path]; exists {
-		return nil
-	}
-	document, err := readJSONDocument(path)
+	document, err := readJSONDocument(*path)
 	if err != nil {
 		return err
 	}
-	var value any
-	if err := json.Unmarshal(document, &value); err != nil {
+	value, err := decodeJSONDocument(document)
+	if err != nil {
 		return fmt.Errorf("%w: schema is not JSON: %v", ErrInvalidManifest, err)
 	}
-	schemas[path] = value
-	for _, reference := range schemaReferences(value) {
-		if isRemoteReference(reference) {
-			return fmt.Errorf("%w: %q", ErrRemoteReference, reference)
-		}
-		referencePath, _, _ := strings.Cut(reference, "#")
-		if referencePath == "" {
-			continue
-		}
-		candidate := filepath.Join(filepath.Dir(path), filepath.FromSlash(referencePath))
-		relative, err := filepath.Rel(root, candidate)
-		if err != nil {
-			return fmt.Errorf("%w: schema reference %q: %v", ErrInvalidManifest, reference, err)
-		}
-		resolved, err := config.ResolveWithin(root, relative)
-		if err != nil {
-			return fmt.Errorf("%w: schema reference %q: %v", ErrInvalidManifest, reference, err)
-		}
-		if err := collectLocalSchemas(root, resolved, schemas); err != nil {
-			return fmt.Errorf("%w: schema reference %q: %w", ErrInvalidManifest, reference, err)
-		}
+	if err := validateSchemaURIs(root, *path, value); err != nil {
+		return err
+	}
+	compiler := jsonschema.NewCompiler()
+	compiler.DefaultDraft(jsonschema.Draft2020)
+	compiler.UseLoader(confinedSchemaLoader{root: root})
+	if err := compiler.AddResource(*path, value); err != nil {
+		return fmt.Errorf("%w: add schema: %v", ErrInvalidManifest, err)
+	}
+	if _, err := compiler.Compile(*path); err != nil {
+		return fmt.Errorf("%w: compile schema: %w", ErrInvalidManifest, err)
 	}
 	return nil
 }
@@ -222,8 +204,12 @@ func resolvePath(root string, path *string, requireFile bool) error {
 	if err != nil {
 		return fmt.Errorf("%w: path %q: %v", ErrInvalidManifest, *path, err)
 	}
+	physical, err := physicalPathWithin(root, resolved, requireFile)
+	if err != nil {
+		return fmt.Errorf("%w: path %q: %v", ErrInvalidManifest, *path, err)
+	}
 	if requireFile {
-		info, err := os.Stat(resolved)
+		info, err := os.Stat(physical)
 		if err != nil {
 			return fmt.Errorf("%w: path %q: %v", ErrInvalidManifest, *path, err)
 		}
@@ -231,7 +217,7 @@ func resolvePath(root string, path *string, requireFile bool) error {
 			return fmt.Errorf("%w: path %q is a directory", ErrInvalidManifest, *path)
 		}
 	}
-	*path = resolved
+	*path = physical
 	return nil
 }
 
@@ -252,34 +238,151 @@ func readJSONDocument(path string) ([]byte, error) {
 	return document, nil
 }
 
-func schemaReferences(value any) []string {
-	var references []string
-	collectSchemaReferences(value, &references)
-	return references
+func physicalPathWithin(root, candidate string, requireFile bool) (string, error) {
+	physicalRoot, err := filepath.EvalSymlinks(root)
+	if err != nil {
+		return "", err
+	}
+	physicalCandidate, err := filepath.EvalSymlinks(candidate)
+	if err != nil && !requireFile {
+		physicalCandidate, err = filepath.Abs(candidate)
+	}
+	if err != nil {
+		return "", err
+	}
+	if err := requireWithin(physicalRoot, physicalCandidate); err != nil {
+		return "", err
+	}
+	return physicalCandidate, nil
 }
 
-func collectSchemaReferences(value any, references *[]string) {
+func requireWithin(root, candidate string) error {
+	relative, err := filepath.Rel(root, candidate)
+	if err != nil {
+		return err
+	}
+	components := strings.Split(relative, string(filepath.Separator))
+	if relative == ".." || filepath.IsAbs(relative) || components[0] == ".." {
+		return fmt.Errorf("path escapes package root")
+	}
+	return nil
+}
+
+func validateSchemaURIs(root, path string, value any) error {
 	switch current := value.(type) {
 	case map[string]any:
 		for key, child := range current {
-			if key == "$ref" {
+			if key == "$ref" || key == "$dynamicRef" || key == "$id" {
 				if reference, ok := child.(string); ok {
-					*references = append(*references, reference)
+					if err := validateSchemaURI(root, path, reference); err != nil {
+						return err
+					}
 				}
 			}
-			collectSchemaReferences(child, references)
+			if err := validateSchemaURIs(root, path, child); err != nil {
+				return err
+			}
 		}
 	case []any:
 		for _, child := range current {
-			collectSchemaReferences(child, references)
+			if err := validateSchemaURIs(root, path, child); err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }
 
-func isRemoteReference(reference string) bool {
-	lower := strings.ToLower(reference)
-	return strings.HasPrefix(lower, "http:") || strings.HasPrefix(lower, "https:") || strings.HasPrefix(lower, "//") || strings.HasPrefix(lower, "file:")
+func validateSchemaURI(root, currentPath, reference string) error {
+	referencePath, _, _ := strings.Cut(reference, "#")
+	if referencePath == "" {
+		return nil
+	}
+	parsed, err := url.Parse(referencePath)
+	if err != nil {
+		return fmt.Errorf("%w: invalid schema URI %q", ErrInvalidManifest, reference)
+	}
+	if parsed.Scheme != "" && parsed.Scheme != "file" {
+		return fmt.Errorf("%w: %q", ErrRemoteReference, reference)
+	}
+	if parsed.Scheme == "file" && parsed.Host != "" && parsed.Host != "localhost" {
+		return fmt.Errorf("%w: %q", ErrRemoteReference, reference)
+	}
+	candidate := filepath.Join(filepath.Dir(currentPath), filepath.FromSlash(referencePath))
+	if parsed.Scheme == "file" {
+		candidate, err = fileURLPath(referencePath)
+		if err != nil {
+			return err
+		}
+	}
+	physicalParent, err := filepath.EvalSymlinks(filepath.Dir(candidate))
+	if err != nil {
+		return fmt.Errorf("%w: schema URI %q: %v", ErrInvalidManifest, reference, err)
+	}
+	physicalCandidate := filepath.Join(physicalParent, filepath.Base(candidate))
+	if err := requireWithin(root, physicalCandidate); err != nil {
+		return fmt.Errorf("%w: schema URI %q: %v", ErrInvalidManifest, reference, err)
+	}
+	return nil
 }
+
+type denySchemaLoader struct{}
+
+func (denySchemaLoader) Load(rawURL string) (any, error) {
+	return nil, fmt.Errorf("%w: embedded schema attempted to load %q", ErrInvalidManifest, rawURL)
+}
+
+type confinedSchemaLoader struct{ root string }
+
+func (loader confinedSchemaLoader) Load(rawURL string) (any, error) {
+	path, err := fileURLPath(rawURL)
+	if err != nil {
+		return nil, err
+	}
+	physical, err := physicalPathWithin(loader.root, path, true)
+	if err != nil {
+		return nil, fmt.Errorf("%w: schema URL %q: %v", ErrInvalidManifest, rawURL, err)
+	}
+	document, err := readJSONDocument(physical)
+	if err != nil {
+		return nil, err
+	}
+	value, err := decodeJSONDocument(document)
+	if err != nil {
+		return nil, fmt.Errorf("%w: schema URL %q: %v", ErrInvalidManifest, rawURL, err)
+	}
+	if err := validateSchemaURIs(loader.root, physical, value); err != nil {
+		return nil, err
+	}
+	return value, nil
+}
+
+func fileURLPath(rawURL string) (string, error) {
+	parsed, err := url.Parse(rawURL)
+	if err != nil || parsed.Scheme != "file" || (parsed.Host != "" && parsed.Host != "localhost") {
+		return "", fmt.Errorf("%w: unsupported schema URL %q", ErrInvalidManifest, rawURL)
+	}
+	path := parsed.Path
+	if filepath.Separator == '\\' {
+		path = strings.TrimPrefix(path, "/")
+	}
+	return filepath.FromSlash(path), nil
+}
+
+func decodeJSONDocument(document []byte) (any, error) {
+	decoder := json.NewDecoder(bytes.NewReader(document))
+	decoder.UseNumber()
+	var value any
+	if err := decoder.Decode(&value); err != nil {
+		return nil, err
+	}
+	if err := requireEOF(decoder); err != nil {
+		return nil, err
+	}
+	return value, nil
+}
+
+func builtinSchemaURL(name string) string { return "nilo://schemas/" + name }
 
 func supportedPlatform(platform Platform) bool {
 	if platform.OS != "linux" && platform.OS != "windows" {
@@ -299,14 +402,6 @@ func validResourceClaim(resource ResourceClaim) bool {
 		return false
 	}
 	return resource[0] >= 'a' && resource[0] <= 'z'
-}
-
-func installedSchemaPath(name string) (string, error) {
-	_, sourceFile, _, ok := runtime.Caller(0)
-	if !ok {
-		return "", fmt.Errorf("%w: locate built-in schema", ErrInvalidManifest)
-	}
-	return filepath.Join(filepath.Dir(sourceFile), "..", "..", "..", "..", "schemas", "integration", "v1", name), nil
 }
 
 func requireEOF(decoder *json.Decoder) error {

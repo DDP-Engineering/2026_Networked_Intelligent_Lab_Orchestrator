@@ -1,5 +1,5 @@
 {
-  "package": {"id": "invalid-command", "version": "1.0.0", "publisher": "NILO Labs", "integrity": "sha256:7e7a9bda2b4d3a1c"},
+  "package": {"id": "invalid-command", "version": "1.0.0", "publisher": "NILO Labs", "integrity": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
   "protocol": "nilo.integration/1",
   "platforms": [{"os": "linux", "architecture": "arm64"}],
   "runner": "sigrok-cli --driver hantek-dso",

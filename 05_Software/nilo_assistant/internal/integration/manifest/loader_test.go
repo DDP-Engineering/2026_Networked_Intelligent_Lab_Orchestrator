@@ -3,6 +3,7 @@ package manifest
 import (
 	"encoding/json"
 	"errors"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -61,6 +62,34 @@ func TestLoadRejectsInvalidManifestContracts(t *testing.T) {
 			name: "nonpositive timeout",
 			mutate: func(_ *testing.T, manifest map[string]any) {
 				manifest["operations"].([]any)[0].(map[string]any)["timeout"] = "-1s"
+			},
+			want: ErrInvalidManifest,
+		},
+		{
+			name: "operation timeout exceeds maximum",
+			mutate: func(_ *testing.T, manifest map[string]any) {
+				manifest["operations"].([]any)[0].(map[string]any)["timeout"] = "2h"
+			},
+			want: ErrInvalidManifest,
+		},
+		{
+			name: "health check timeout exceeds maximum",
+			mutate: func(_ *testing.T, manifest map[string]any) {
+				manifest["health_checks"].([]any)[0].(map[string]any)["timeout"] = "2m"
+			},
+			want: ErrInvalidManifest,
+		},
+		{
+			name: "short integrity digest",
+			mutate: func(_ *testing.T, manifest map[string]any) {
+				manifest["package"].(map[string]any)["integrity"] = "sha256:abc"
+			},
+			want: ErrInvalidManifest,
+		},
+		{
+			name: "colliding resource claims",
+			mutate: func(_ *testing.T, manifest map[string]any) {
+				manifest["operations"].([]any)[0].(map[string]any)["resources"] = []any{"usb_bus", " USB_BUS "}
 			},
 			want: ErrInvalidManifest,
 		},
@@ -147,6 +176,90 @@ func TestLoadRejectsPackageSchemaReferenceEscape(t *testing.T) {
 	}
 }
 
+func TestLoadRejectsDynamicReferenceEscape(t *testing.T) {
+	root := writePackage(t, nil)
+	escapePath := filepath.Join(t.TempDir(), "escape.json")
+	if err := os.WriteFile(escapePath, []byte(`{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	inputSchema := filepath.Join(root, "schemas", "input.json")
+	if err := os.WriteFile(inputSchema, []byte(`{"$schema":"https://json-schema.org/draft/2020-12/schema","$dynamicRef":`+jsonString(fileURL(escapePath))+`}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := Load(root); !errors.Is(err, ErrInvalidManifest) {
+		t.Fatalf("Load() error = %v, want ErrInvalidManifest", err)
+	}
+}
+
+func TestLoadRejectsChangedSchemaIDOutsidePackage(t *testing.T) {
+	root := writePackage(t, nil)
+	escapeDirectory := t.TempDir()
+	if err := os.WriteFile(filepath.Join(escapeDirectory, "child.json"), []byte(`{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "schemas", "child.json"), []byte(`{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	inputSchema := filepath.Join(root, "schemas", "input.json")
+	changedID := fileURL(filepath.Join(escapeDirectory, "base.json"))
+	if err := os.WriteFile(inputSchema, []byte(`{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":`+jsonString(changedID)+`,"$ref":"child.json"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := Load(root); !errors.Is(err, ErrInvalidManifest) {
+		t.Fatalf("Load() error = %v, want ErrInvalidManifest", err)
+	}
+}
+
+func TestLoadRejectsPhysicalPathEscapes(t *testing.T) {
+	tests := []struct {
+		name      string
+		candidate func(root string) string
+		contents  []byte
+	}{
+		{name: "runner", candidate: func(root string) string { return filepath.Join(root, "bin", "sigrok-cli") }, contents: []byte("outside runner")},
+		{name: "schema", candidate: func(root string) string { return filepath.Join(root, "schemas", "input.json") }, contents: []byte(`{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object"}`)},
+		{name: "fixture", candidate: func(root string) string { return filepath.Join(root, "fixtures", "capture.json") }, contents: []byte(`{"outside":true}`)},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			root := writePackage(t, nil)
+			target := filepath.Join(t.TempDir(), test.name)
+			if err := os.WriteFile(target, test.contents, 0o600); err != nil {
+				t.Fatal(err)
+			}
+			replaceWithSymlink(t, test.candidate(root), target)
+
+			if _, err := Load(root); !errors.Is(err, ErrInvalidManifest) {
+				t.Fatalf("Load() error = %v, want ErrInvalidManifest", err)
+			}
+		})
+	}
+}
+
+func TestLoadRejectsSymlinkedSchemaDirectory(t *testing.T) {
+	root := writePackage(t, nil)
+	outside := t.TempDir()
+	for _, name := range []string{"input.json", "result.json", "config.json"} {
+		if err := os.WriteFile(filepath.Join(outside, name), []byte(`{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object"}`), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	replaceWithSymlink(t, filepath.Join(root, "schemas"), outside)
+
+	if _, err := Load(root); !errors.Is(err, ErrInvalidManifest) {
+		t.Fatalf("Load() error = %v, want ErrInvalidManifest", err)
+	}
+}
+
+func TestLoadUsesEmbeddedSchemasWithTrimpath(t *testing.T) {
+	root := writePackage(t, nil)
+	if _, err := Load(root); err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+}
+
 func TestLoadRejectsOversizedReferencedSchema(t *testing.T) {
 	root := writePackage(t, nil)
 	inputSchema := filepath.Join(root, "schemas", "input.json")
@@ -227,4 +340,26 @@ func sameClaims(got, want []ResourceClaim) bool {
 		}
 	}
 	return true
+}
+
+func replaceWithSymlink(t *testing.T, candidate, target string) {
+	t.Helper()
+	if err := os.RemoveAll(candidate); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(target, candidate); err != nil {
+		t.Skipf("symlink capability unavailable: os.Symlink(%q, %q): %v", target, candidate, err)
+	}
+}
+
+func fileURL(path string) string {
+	return (&url.URL{Scheme: "file", Path: filepath.ToSlash(path)}).String()
+}
+
+func jsonString(value string) string {
+	encoded, err := json.Marshal(value)
+	if err != nil {
+		panic(err)
+	}
+	return string(encoded)
 }
