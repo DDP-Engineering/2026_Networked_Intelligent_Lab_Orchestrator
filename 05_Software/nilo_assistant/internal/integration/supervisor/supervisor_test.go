@@ -196,15 +196,17 @@ func TestSupervisorShutdownStopsAllConcurrentStarts(t *testing.T) {
 	supervisor := newTestSupervisor(t, "describe-hang", marker)
 	const runners = 12
 	completed := make(chan error, runners)
+	start := make(chan struct{})
 	for range runners {
-		requestContext, cancel := context.WithCancel(context.Background())
 		go func() {
+			<-start
+			requestContext, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 			defer cancel()
 			_, err := supervisor.Describe(requestContext, "test.integration")
 			completed <- err
 		}()
 	}
-	waitMarker(t, marker, func(value string) bool { return strings.Count(value, "describe-ready") == runners })
+	close(start)
 	shutdownContext, cancelShutdown := context.WithTimeout(context.Background(), time.Second)
 	defer cancelShutdown()
 	if err := supervisor.Shutdown(shutdownContext); err != nil {
@@ -212,11 +214,52 @@ func TestSupervisorShutdownStopsAllConcurrentStarts(t *testing.T) {
 	}
 	for range runners {
 		select {
-		case <-completed:
+		case err := <-completed:
+			if err != nil && !errors.Is(err, ErrSupervisorClosed) && !errors.Is(err, ErrRunnerCrashed) && !errors.Is(err, ErrRunnerProtocol) {
+				t.Fatalf("concurrent Describe() error = %v, want stopped or closed admission", err)
+			}
 		case <-time.After(time.Second):
 			t.Fatal("concurrently started Describe() did not finish")
 		}
 	}
+	supervisor.mu.Lock()
+	remainingRunners, remainingRequests := len(supervisor.runners), len(supervisor.active)
+	supervisor.mu.Unlock()
+	if remainingRunners != 0 || remainingRequests != 0 {
+		t.Fatalf("Shutdown() left runners=%d activeRequests=%d", remainingRunners, remainingRequests)
+	}
+}
+
+func TestSupervisorClassifiesPreCancelledLaunchContext(t *testing.T) {
+	tests := []struct {
+		name string
+		ctx  context.Context
+		want error
+	}{
+		{name: "canceled", ctx: canceledContext(), want: context.Canceled},
+		{name: "deadline", ctx: expiredContext(), want: ErrRunnerTimeout},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			_, err := newTestSupervisor(t, "success").Describe(test.ctx, "test.integration")
+			if !errors.Is(err, test.want) {
+				t.Fatalf("Describe() error = %v, want %v", err, test.want)
+			}
+		})
+	}
+}
+
+func canceledContext() context.Context {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	return ctx
+}
+
+func expiredContext() context.Context {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Nanosecond)
+	defer cancel()
+	<-ctx.Done()
+	return ctx
 }
 
 func TestSupervisorDoesNotLaunchRunnerAfterShutdown(t *testing.T) {

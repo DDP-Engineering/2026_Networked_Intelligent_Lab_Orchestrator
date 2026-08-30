@@ -296,12 +296,20 @@ func (supervisor *ProcessSupervisor) start(ctx context.Context) (*runnerProcess,
 	// and safe_shutdown. The CommandContext watcher remains as a final guard.
 	command.Cancel = func() error { return nil }
 	command.WaitDelay = supervisor.config.GracePeriod * 2
+	supervisor.mu.Lock()
+	if supervisor.closed {
+		supervisor.mu.Unlock()
+		return nil, ErrSupervisorClosed
+	}
 	stdin, err := command.StdinPipe()
 	if err != nil {
+		supervisor.mu.Unlock()
 		return nil, err
 	}
 	stdout, err := command.StdoutPipe()
 	if err != nil {
+		_ = stdin.Close()
+		supervisor.mu.Unlock()
 		return nil, err
 	}
 	diagnostics := &diagnosticRing{}
@@ -316,14 +324,11 @@ func (supervisor *ProcessSupervisor) start(ctx context.Context) (*runnerProcess,
 	registry := protocol.NewRegistry()
 	runner.encoder = protocol.NewEncoderWithRegistry(stdin, registry)
 	runner.decoder = protocol.NewDecoderWithRegistry(stdout, registry)
-	supervisor.mu.Lock()
-	if supervisor.closed {
-		supervisor.mu.Unlock()
-		return nil, ErrSupervisorClosed
-	}
 	if err := command.Start(); err != nil {
 		supervisor.mu.Unlock()
-		return nil, fmt.Errorf("%w: start: %v", ErrRunnerCrashed, err)
+		_ = stdin.Close()
+		_ = stdout.Close()
+		return nil, classifyLaunch(ctx, err)
 	}
 	go func() { runner.wait <- command.Wait() }()
 	supervisor.runners[runner] = struct{}{}
@@ -334,6 +339,16 @@ func (supervisor *ProcessSupervisor) start(ctx context.Context) (*runnerProcess,
 		return nil, runner.classify(ctx, err)
 	}
 	return runner, nil
+}
+
+func classifyLaunch(ctx context.Context, cause error) error {
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		return &RunnerError{Kind: ErrRunnerTimeout, Cause: ctx.Err()}
+	}
+	if errors.Is(ctx.Err(), context.Canceled) {
+		return &RunnerError{Kind: context.Canceled, Cause: ctx.Err()}
+	}
+	return &RunnerError{Kind: ErrRunnerCrashed, Cause: cause}
 }
 
 func (supervisor *ProcessSupervisor) release(runner *runnerProcess) {
