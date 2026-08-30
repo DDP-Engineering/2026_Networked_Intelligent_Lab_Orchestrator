@@ -60,7 +60,10 @@ affected_paths = [
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
-linked_tests = []
+linked_tests = [
+    "05_Software/nilo_assistant/internal/store/sqlite/session_repository_test.go::TestSessionRepositoryRejectsBackwardStartupReconciliationWithoutPartialRepair",
+    "05_Software/nilo_assistant/internal/store/sqlite/session_repository_test.go::TestSessionRepositoryReconcilesOnlyPersistedRunningSessionsAfterRestart",
+]
 
 # --- optional below this line ---
 

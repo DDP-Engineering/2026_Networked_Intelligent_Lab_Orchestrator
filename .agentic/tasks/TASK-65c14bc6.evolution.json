@@ -9,7 +9,7 @@
         {
           "after": {
             "kind": "file",
-            "sha256": "965b2299f20fb7f6ed84993d30f2a3ab70f832de475f9cec4bcba434b82481d4"
+            "sha256": "3f6cb7c978c65d6cefe0599d4fe8cd0a40c2065193deb87f6b736679243b31df"
           },
           "area": "other",
           "before": {
@@ -301,7 +301,7 @@
         {
           "after": {
             "kind": "file",
-            "sha256": "28d19816b4eeb0dcff5d6bfbe17520747aa860db242de7512cf7de307dabcd75"
+            "sha256": "a9b26dc9a23b0431613c748836e63703540fc0141ae07790a5bca6027f6636f6"
           },
           "area": "source",
           "before": null,
@@ -356,6 +356,36 @@
           "area": "source",
           "before": null,
           "path": "05_Software/nilo_assistant/internal/policy/resolver_test.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "49ab0b65c924cc333f685f13e0cf01f83179a856462a83f06ae1213867a21638"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/session/repository.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "436a04dea918459477f7fe0f28223b36113ee67384758ed6c8e9fb85e6d94c69"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/session/service.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ce33894eb27fe81cdedb16da50cffee74025eee642cfb07b19fb98a6d79cf4d4"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/session/service_test.go",
           "status": "added"
         },
         {
@@ -471,6 +501,26 @@
         {
           "after": {
             "kind": "file",
+            "sha256": "0b205c16a6e0d12df9d420cb00e5713613b43c7563474ba9b920aeaa0fca0b07"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/session_repository.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "939e6c152839bd3462d22b435fd59593511fba77973e01061e3a756a8c342eee"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/session_repository_test.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
             "sha256": "907dc2f13aaae0543c6976374ff944a328205be1ca8cb5e751e5ac00ab32a08f"
           },
           "area": "other",
@@ -547,7 +597,7 @@
             "unchanged": 13
           },
           "source": {
-            "added": 41,
+            "added": 46,
             "modified": 2,
             "removed": 0,
             "unchanged": 1
@@ -560,15 +610,15 @@
           }
         },
         "status": {
-          "added": 44,
+          "added": 49,
           "modified": 7,
           "removed": 0,
           "unchanged": 14
         }
       },
-      "current_head": "db47219851806f4d5bdba84bcc33c774e4293175",
+      "current_head": "af0e2e06f4d84735714519b6e361b34dc02debbd",
       "evolution_stage": "build",
-      "evolved_at": "2026-08-30T17:12:59.237504Z"
+      "evolved_at": "2026-08-30T17:33:39.235266Z"
     }
   ],
   "schema": 1,

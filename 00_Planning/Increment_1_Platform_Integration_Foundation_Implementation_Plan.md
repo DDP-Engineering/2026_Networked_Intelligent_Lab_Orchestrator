@@ -583,6 +583,7 @@ There is intentionally no normal audit mutation/deletion method.
 
 **Files:**
 
+- Modify: `05_Software/nilo_assistant/internal/domain/session.go`
 - Create: `05_Software/nilo_assistant/internal/session/repository.go`
 - Create: `05_Software/nilo_assistant/internal/session/service.go`
 - Create: `05_Software/nilo_assistant/internal/session/service_test.go`
@@ -593,11 +594,13 @@ There is intentionally no normal audit mutation/deletion method.
 
 **Produces:** Durable sessions, compare-and-swap state changes, exclusive resource leases, and deterministic restart reconciliation.
 
-- [ ] Write failing tests for creating a pending/queued session, CAS transition conflict, double lease conflict, terminal lease release, and restart conversion of `running` to `incomplete`.
+Extend the existing domain package with the `domain.Session` value required by the repository contract. It carries a UUID-v7 session ID, owning request ID, state, UTC creation and update timestamps, and optional UTC terminal timestamp; construction and rehydration validate identifiers, timestamps, and terminal-state consistency without weakening the existing transition invariant.
 
-- [ ] Run `go test ./internal/session ./internal/store/sqlite`; expect compile failures.
+- [x] Write failing tests for creating a pending/queued session, CAS transition conflict, double lease conflict, terminal lease release, and restart conversion of `running` to `incomplete`.
 
-- [ ] Implement the repository contract:
+- [x] Run `go test ./internal/session ./internal/store/sqlite`; expect compile failures.
+
+- [x] Implement the repository contract:
 
 ```go
 type Repository interface {
@@ -612,13 +615,13 @@ type Repository interface {
 
 Normalize resource claims as `<integration-id>/<resource-kind>/<stable-device-id>`; sort and deduplicate before one transaction acquires all claims. A conflict returns a typed `ResourceBusyError` with the owning session ID but no secret data.
 
-- [ ] Implement `ReconcileStartup`: list only sessions persisted as `running`; in one transaction mark each `incomplete`, append an audit event, and release leases owned by that session. Never delete a lease merely because it is old.
+- [x] Implement `ReconcileStartup`: list only sessions persisted as `running`; in one transaction mark each `incomplete`, append an audit event, and release leases owned by that session. Never delete a lease merely because it is old.
 
-- [ ] Test process restart by closing and reopening a temporary SQLite DB. Verify completed sessions remain unchanged and queued sessions retain their state.
+- [x] Test process restart by closing and reopening a temporary SQLite DB. Verify completed sessions remain unchanged and queued sessions retain their state.
 
-- [ ] Run focused tests, `go test ./...`, and portable compilation.
+- [x] Run focused tests, `go test ./...`, and portable compilation.
 
-- [ ] Record Task 8 evidence, then commit only Task 8 files with message `feat: add sessions leases and reconciliation` for task review; do not push.
+- [x] Record Task 8 evidence, then commit only Task 8 files with message `feat: add sessions leases and reconciliation` for task review; do not push.
 
 ---
 

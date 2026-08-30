@@ -18,7 +18,7 @@ title = "Enforce exclusive resource leases"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
-status = "draft"
+status = "active"
 
 # Self-contained prose: a reader with no other context must be able to
 # understand and check it. No ticket numbers, no run IDs, no references
@@ -62,6 +62,9 @@ affected_paths = [
 # these select the impacted regression set.
 linked_tests = [
     "05_Software/nilo_assistant/internal/store/sqlite/db_test.go::TestDatabaseRejectsSecondActiveLeaseForTheSameResource",
+    "05_Software/nilo_assistant/internal/store/sqlite/session_repository_test.go::TestSessionRepositoryUsesCompareAndSwapAndExclusiveLeases",
+    "05_Software/nilo_assistant/internal/store/sqlite/session_repository_test.go::TestSessionRepositoryTerminalTransitionRollsBackWhenLeaseReleaseFails",
+    "05_Software/nilo_assistant/internal/session/service_test.go::TestServiceReleasesLeasesAfterTerminalTransition",
 ]
 
 # --- optional below this line ---

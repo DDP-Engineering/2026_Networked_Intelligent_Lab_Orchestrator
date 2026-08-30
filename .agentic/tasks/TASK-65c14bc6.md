@@ -184,6 +184,10 @@ opened: 2026-08-30
 - 2026-08-30 build: DEVIATION the Task 6 preflight attempted to read a nonexistent optional `REQ-SEC-50599a7e.md` spec and exited 1 for that file while successfully reading the authoritative requirement and existing policy spec; repository search confirmed no missing referenced spec contract.
 - 2026-08-30 build: Task 6 RED `CGO_ENABLED=0 go test ./internal/policy` exited 1 with only expected missing policy enums and resolver symbols after the approved matrix test was added.
 - 2026-08-30 build: DEVIATION Task 7 brief required `domain.Artifact` while the existing domain defined only `ArtifactID`; before product edits, scope was corrected to add the missing domain value, preserving the specified Store interface rather than weakening it to an artifact-package type.
+- 2026-08-30 build: DEVIATION Task 8 brief requires `domain.Session` while the existing domain currently defines only `SessionState`; before product edits, scope is corrected to modify `internal/domain/session.go` with the validated session value rather than introducing a competing session-package type.
+- 2026-08-30 build: Task 8 commits `2a722be` and `af0e2e0` add sessions, exclusive leases, atomic terminal lease release, and restart reconciliation. Initial review found three Important state/lease/timestamp/UUID invariant defects; the focused fix and re-review cleared all three with no new issue.
+- 2026-08-30 build: REQ-DATA-4357c6f2 is active with complete lease tests. REQ-REL-32b81ca8 keeps Task 8 reconciliation tests but remains draft until a later application-composition task invokes reconciliation during actual Bench Core startup.
+- 2026-08-30 build: Controller focused, full, vet, portable-core, and 54-reference AEGIS impacted checks passed with CGO disabled; evolution is 49 added and 7 modified with no removals; check errors=0 warnings=28 (27 future paths plus deterministic password-fixture scanner) notes=0.
 - 2026-08-30 build: Task 7 independent review found five Important artifact-store defects: destination overwrite race, missing post-rename directory durability, pathname-only cleanup ownership, lexical root disjointness, and Open handle race. The plan now adds Unix/Windows filesystem primitives and a focused fix round.
 - 2026-08-30 build: Ruling: portable Unix/Windows APIs lack atomic pathname compare-and-delete, so Task 7 post-placement metadata failure preserves a verified unregistered artifact for later reconciliation rather than risking deletion of a concurrent replacement. Cost if wrong: an orphan consumes artifact-root space until reconciliation, but unrelated evidence is never destructively removed.
 - 2026-08-30 build: Task 7 implementation commits `354214b`, `ecc4513`, and `db47219` provide append-only audit persistence plus bounded, digest-verified artifact registration with atomic no-replace placement, directory durability where supported, physical-root confinement, and opened-handle identity validation.
@@ -207,6 +211,7 @@ opened: 2026-08-30
 - 2026-08-30 test: test --impacted (29 test ref(s)) exit 0 (1.2s)
 - 2026-08-30 test: test --impacted (38 test ref(s)) exit 0 (0.6s)
 - 2026-08-30 test: test --impacted (49 test ref(s)) exit 0 (0.9s)
+- 2026-08-30 test: test --impacted (54 test ref(s)) exit 0 (0.8s)
 
 ## Design
 
@@ -229,8 +234,8 @@ opened: 2026-08-30
 stage: build
 result: in_progress
 current: build
-changed: Tasks 1 through 6 remain review-approved; Task 7 adds append-only audit persistence and durable integrity-checked artifact registration with platform-specific filesystem safety primitives
-evidence: Task 7 REDs established missing audit/artifact APIs; commits 354214b, ecc4513, and db47219; focused, full, portable-core, affected-package cross-target checks, and final 49-reference AEGIS impacted passed with CGO disabled; evolution 44 added and 7 modified with no removals; check errors=0 warnings=34 accepted later-path/test-fixture warnings notes=0; two fix-round re-review cleared all five Important findings
+changed: Tasks 1 through 7 remain review-approved; Task 8 adds validated durable sessions, all-or-nothing exclusive leases, atomic terminal cleanup, and deterministic restart reconciliation
+evidence: Task 8 RED established missing session APIs; commits 2a722be and af0e2e0; focused, full, vet, portable-core, cross-target, and final 54-reference AEGIS impacted passed with CGO disabled; evolution 49 added and 7 modified with no removals; check errors=0 warnings=28 accepted future-path/test-fixture warnings notes=0; re-review cleared all three Important findings
 issues: two generated Python cache directories and twelve compile-only Task 2/3/4 binaries remain outside commits after policy-blocked cleanup; later requirement slices and affected paths remain pending; push, merge, PR publication, and release remain unauthorized
-next: commit Task 7 governance evidence, then generate the Task 8 brief for sessions, exclusive leases, and restart reconciliation
+next: commit Task 8 governance evidence, then generate the Task 9 brief for integration manifests and operation schemas
 needs_user: no - approved implementation continues continuously in build and stops only for a named safety or authority boundary
