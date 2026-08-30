@@ -2,6 +2,7 @@
 package protocol
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -118,6 +119,18 @@ func (value HelloResponse) Validate() error {
 type ControlPayload struct {
 	Type   PayloadType `json:"type"`
 	Status string      `json:"status,omitempty"`
+}
+
+// DescribeResult is the typed terminal payload for a describe request.
+// It remains separate from the wire envelope so callers cannot construct a
+// response with a mismatched method accidentally.
+type DescribeResult struct {
+	Type   PayloadType `json:"type"`
+	Status string      `json:"status"`
+}
+
+func (value DescribeResult) Validate() error {
+	return ControlPayload{Type: value.Type, Status: value.Status}.Validate(payloadDescribe, true)
 }
 
 func (value ControlPayload) Validate(expected PayloadType, response bool) error {
@@ -260,6 +273,22 @@ func (value Result) Validate() error {
 		return fmt.Errorf("%w: invalid result", ErrInvalidMessage)
 	}
 	return nil
+}
+
+// ExecuteResult is the typed terminal payload for an execute request.
+type ExecuteResult = Result
+
+// EventSink receives already validated execute event envelopes. Implementors
+// must not retain an envelope after Emit returns unless they copy it.
+type EventSink interface {
+	Emit(context.Context, Envelope) error
+}
+
+// EventSinkFunc adapts a function to EventSink.
+type EventSinkFunc func(context.Context, Envelope) error
+
+func (sink EventSinkFunc) Emit(ctx context.Context, event Envelope) error {
+	return sink(ctx, event)
 }
 
 type Error struct {
