@@ -9,7 +9,7 @@
         {
           "after": {
             "kind": "file",
-            "sha256": "7b78b89ab2593143c73f30bb8e9f9b995f1ff1efd8108b2305712b9869a24226"
+            "sha256": "965b2299f20fb7f6ed84993d30f2a3ab70f832de475f9cec4bcba434b82481d4"
           },
           "area": "other",
           "before": {
@@ -86,6 +86,66 @@
           "area": "source",
           "before": null,
           "path": "05_Software/nilo_assistant/go.sum",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "f201a3666d38854fd76bbf8a7d007b307ae609aad46e62129a6c028d03a5be0c"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/artifact/store.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "1dda3b50bda6ef8156c7513dc180519f3247094f365a7ff12f2eff4d2fa6a6b1"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/artifact/store_test.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "89bf1e25a54780faf3e07926691a504ac6353a5128b03fe9e6c289fbf60bc002"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/artifact/store_unix.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "55420543d00ffeb62d9b64aeedeb52cf2185f049bce84145fa862372b049be1c"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/artifact/store_windows.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "c7a14dce3a3727c7c56dd3bcc0156e2c857ccdc629714102b269d7629d53f71e"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/audit/audit.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "34b51bc9dc601ebaff40ba248096a3fe840fb5dd10c9dd5a3b6cc3479c65d6db"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/audit/audit_test.go",
           "status": "added"
         },
         {
@@ -211,6 +271,16 @@
         {
           "after": {
             "kind": "file",
+            "sha256": "b65bbc3dc5dc33ea270de7bb33efc489c604da779908082611d6ed758692063c"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/domain/artifact.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
             "sha256": "963973dbacddf83597747ffc0eb0b94c5dbb22622cc01c3662c46f447caabb10"
           },
           "area": "source",
@@ -286,6 +356,26 @@
           "area": "source",
           "before": null,
           "path": "05_Software/nilo_assistant/internal/policy/resolver_test.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "95accafe852fc974457961989e68c5d07eb24a2cf699283f48fed12260b6f4eb"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/artifact_repository.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "72545f8cb76a0cdb989eb67cc5b8e0da62c75dfce28d856153a5cb3c7f922f18"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/audit_repository.go",
           "status": "added"
         },
         {
@@ -457,7 +547,7 @@
             "unchanged": 13
           },
           "source": {
-            "added": 32,
+            "added": 41,
             "modified": 2,
             "removed": 0,
             "unchanged": 1
@@ -470,15 +560,15 @@
           }
         },
         "status": {
-          "added": 35,
+          "added": 44,
           "modified": 7,
           "removed": 0,
           "unchanged": 14
         }
       },
-      "current_head": "0456a8ce2ce3983e50ca367c15c7270570b042c0",
+      "current_head": "db47219851806f4d5bdba84bcc33c774e4293175",
       "evolution_stage": "build",
-      "evolved_at": "2026-08-30T16:33:29.862047Z"
+      "evolved_at": "2026-08-30T17:12:59.237504Z"
     }
   ],
   "schema": 1,

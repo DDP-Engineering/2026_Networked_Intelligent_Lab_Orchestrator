@@ -533,8 +533,11 @@ FindValidApproval(ctx context.Context, requestID domain.RequestID, digest [32]by
 
 - Create: `05_Software/nilo_assistant/internal/audit/audit.go`
 - Create: `05_Software/nilo_assistant/internal/audit/audit_test.go`
+- Create: `05_Software/nilo_assistant/internal/domain/artifact.go`
 - Create: `05_Software/nilo_assistant/internal/artifact/store.go`
 - Create: `05_Software/nilo_assistant/internal/artifact/store_test.go`
+- Create: `05_Software/nilo_assistant/internal/artifact/store_unix.go`
+- Create: `05_Software/nilo_assistant/internal/artifact/store_windows.go`
 - Create: `05_Software/nilo_assistant/internal/store/sqlite/audit_repository.go`
 - Create: `05_Software/nilo_assistant/internal/store/sqlite/artifact_repository.go`
 
@@ -542,9 +545,11 @@ FindValidApproval(ctx context.Context, requestID domain.RequestID, digest [32]by
 
 **Produces:** Append-only audit rows and content-verified artifacts stored beneath the configured root.
 
-- [ ] Write failing tests for audit sequence order, missing actor/action rejection, artifact traversal rejection, wrong declared size/digest, successful atomic move, and metadata persistence.
+The `domain.Artifact` value contains its UUID-v7 artifact ID; producing request, session, device, and integration IDs; media type; fixed SHA-256 digest; verified size; terminal `domain.SessionState`; copied presentation hints; and UTC creation time. The artifact store owns construction and validates the terminal-state subset.
 
-- [ ] Run `go test ./internal/audit ./internal/artifact`; expect compile failures.
+- [x] Write failing tests for audit sequence order, missing actor/action rejection, artifact traversal rejection, wrong declared size/digest, successful atomic move, and metadata persistence.
+
+- [x] Run `go test ./internal/audit ./internal/artifact`; expect compile failures.
 
 - [ ] Implement the interfaces:
 
@@ -562,13 +567,15 @@ type Store interface {
 
 There is intentionally no normal audit mutation/deletion method.
 
-- [ ] `Register` must open the staged file without following a caller-provided destination, stream at most the configured maximum, calculate SHA-256 and size, compare declarations, fsync the completed file, atomically rename it under `<root>/<session-id>/<artifact-id>`, then insert metadata transactionally. On metadata failure, remove only the newly created verified destination.
+- [x] `Register` must open the staged file without following a caller-provided destination, stream at most the configured maximum, calculate SHA-256 and size, compare declarations, fsync the completed file, atomically place it under `<root>/<session-id>/<artifact-id>`, then insert metadata transactionally. On metadata failure, retain the verified unregistered destination for reconciliation when ownership cannot be atomically proved.
 
-- [ ] Store media type, digest, size, producing request/session/device/integration, created timestamp, terminal-state label, and presentation hints. Reject symlinks and paths escaping the operation staging directory.
+- [x] Placement must be atomic no-replace: a colliding destination returns a typed already-registered error and cannot overwrite bytes. After placement, durably synchronize the containing directory on platforms that support directory sync before metadata insertion. A portable pathname compare-and-delete is not atomic; therefore post-placement metadata failure must never delete a final artifact pathname unless an OS-specific primitive proves it still identifies the created file. In its absence, preserve the verified unregistered file for later reconciliation rather than risk deleting replacement evidence. Compare staging and artifact roots by physical identity and reject aliases that collapse the separation. Open must validate the opened handle's regular-file identity, not only a prior pathname stat. Keep Unix/Windows filesystem-specific primitives behind build-tagged files.
 
-- [ ] Run focused tests, `go test ./...`, and cross-target compilation.
+- [x] Store media type, digest, size, producing request/session/device/integration, created timestamp, terminal-state label, and presentation hints. Reject symlinks and paths escaping the operation staging directory.
 
-- [ ] Record Task 7 evidence, then commit only Task 7 files with message `feat: add durable audit and artifact stores` for task review; do not push.
+- [x] Run focused tests, `go test ./...`, and cross-target compilation.
+
+- [x] Record Task 7 evidence, then commit only Task 7 files with message `feat: add durable audit and artifact stores` for task review; do not push.
 
 ---
 

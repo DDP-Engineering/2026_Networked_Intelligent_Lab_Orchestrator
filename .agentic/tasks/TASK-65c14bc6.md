@@ -183,6 +183,13 @@ opened: 2026-08-30
 - 2026-08-30 build: Final controller focused, full, portable-core, and AEGIS impacted checks passed; refreshed evolution remains 28 added and 7 modified paths with no removals and check remains errors=0 warnings=48 accepted staged-path/test-fixture warnings notes=0.
 - 2026-08-30 build: DEVIATION the Task 6 preflight attempted to read a nonexistent optional `REQ-SEC-50599a7e.md` spec and exited 1 for that file while successfully reading the authoritative requirement and existing policy spec; repository search confirmed no missing referenced spec contract.
 - 2026-08-30 build: Task 6 RED `CGO_ENABLED=0 go test ./internal/policy` exited 1 with only expected missing policy enums and resolver symbols after the approved matrix test was added.
+- 2026-08-30 build: DEVIATION Task 7 brief required `domain.Artifact` while the existing domain defined only `ArtifactID`; before product edits, scope was corrected to add the missing domain value, preserving the specified Store interface rather than weakening it to an artifact-package type.
+- 2026-08-30 build: Task 7 independent review found five Important artifact-store defects: destination overwrite race, missing post-rename directory durability, pathname-only cleanup ownership, lexical root disjointness, and Open handle race. The plan now adds Unix/Windows filesystem primitives and a focused fix round.
+- 2026-08-30 build: Ruling: portable Unix/Windows APIs lack atomic pathname compare-and-delete, so Task 7 post-placement metadata failure preserves a verified unregistered artifact for later reconciliation rather than risking deletion of a concurrent replacement. Cost if wrong: an orphan consumes artifact-root space until reconciliation, but unrelated evidence is never destructively removed.
+- 2026-08-30 build: Task 7 implementation commits `354214b`, `ecc4513`, and `db47219` provide append-only audit persistence plus bounded, digest-verified artifact registration with atomic no-replace placement, directory durability where supported, physical-root confinement, and opened-handle identity validation.
+- 2026-08-30 build: Task 7 independent review initially found five Important artifact-store defects; fix round one addressed four and fix round two removed the remaining cleanup ownership race. The final verdict approves `db47219` with no new Critical, Important, Minor, or out-of-scope issue.
+- 2026-08-30 build: DEVIATION the physical-root alias regression is skipped on this Windows host when directory-symlink privilege is unavailable; Unix and Windows implementations compile, but that Windows alias behavior remains runtime-unverified on this host.
+- 2026-08-30 build: REQ-DATA-f9b0b55d and REQ-DATA-9608cfd8 are active with complete Task 7 linked tests. Controller focused, full, portable-core, and 49-reference AEGIS impacted checks passed with CGO disabled; evolution is 44 added and 7 modified with no removals; check has errors=0 warnings=34 (33 planned later-path warnings and one deterministic password-fixture scanner warning) and notes=0.
 - 2026-08-30 build: DEVIATION Task 6 exposed that the Task 4 foundation schema omitted a dedicated `policy_snapshots` table even though operation requests carry policy snapshot IDs; persistence paused before misusing `config_versions`, and the plan now adds digest-verified migration 002 plus the exact table-set update.
 - 2026-08-30 build: Task 6 independent review found four Important gaps: numeric canonicalization preserved equivalent spelling differences, caller-controlled request IDs broke the changed-request identity guarantee, the migration accepted malformed `Z` timestamps, and model/schema operation-name limits differed. The plan is expanded with domain creation/rehydration correction; the implementer resumes for one focused fix round.
 - 2026-08-30 build: Task 6 fix `0456a8c` rejects noncanonical equivalent number spellings, allocates request IDs only at public creation with separate rehydration, enforces canonical policy-snapshot UTC timestamps, and aligns the operation-name boundary at 128 bytes; focused, full, portable, cross-target, and vet checks passed.
@@ -199,6 +206,7 @@ opened: 2026-08-30
 - 2026-08-30 test: test --impacted (27 test ref(s)) exit 0 (1.4s)
 - 2026-08-30 test: test --impacted (29 test ref(s)) exit 0 (1.2s)
 - 2026-08-30 test: test --impacted (38 test ref(s)) exit 0 (0.6s)
+- 2026-08-30 test: test --impacted (49 test ref(s)) exit 0 (0.9s)
 
 ## Design
 
@@ -221,8 +229,8 @@ opened: 2026-08-30
 stage: build
 result: in_progress
 current: build
-changed: Tasks 1 through 5 remain review-approved; Task 6 adds exact policy resolution, immutable policy snapshots, canonical request digests, request-bound approval records, and a dedicated policy snapshot migration
-evidence: Task 6 resolver/persistence and four invariant reds exited 1 as intended; commits b7a9a48 and 0456a8c; focused, full, portable-core, direct three-target affected-package compilation, vet, and final 38-reference AEGIS impacted passed with CGO disabled; evolution 35 added and 7 modified with no removals; check errors=0 warnings=42 accepted later-path/test-fixture warnings notes=0; scoped re-review cleared all four Important findings
+changed: Tasks 1 through 6 remain review-approved; Task 7 adds append-only audit persistence and durable integrity-checked artifact registration with platform-specific filesystem safety primitives
+evidence: Task 7 REDs established missing audit/artifact APIs; commits 354214b, ecc4513, and db47219; focused, full, portable-core, affected-package cross-target checks, and final 49-reference AEGIS impacted passed with CGO disabled; evolution 44 added and 7 modified with no removals; check errors=0 warnings=34 accepted later-path/test-fixture warnings notes=0; two fix-round re-review cleared all five Important findings
 issues: two generated Python cache directories and twelve compile-only Task 2/3/4 binaries remain outside commits after policy-blocked cleanup; later requirement slices and affected paths remain pending; push, merge, PR publication, and release remain unauthorized
-next: commit the Task 6 review verdict and governance evidence, then generate the Task 7 brief for append-only audit and integrity-checked artifact persistence
+next: commit Task 7 governance evidence, then generate the Task 8 brief for sessions, exclusive leases, and restart reconciliation
 needs_user: no - approved implementation continues continuously in build and stops only for a named safety or authority boundary
