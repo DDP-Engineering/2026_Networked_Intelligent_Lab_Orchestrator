@@ -113,6 +113,12 @@ opened: 2026-08-30
 - 2026-08-30 build: AEGIS evolution for anchor `2997e73e9a5a363a` reported 5 added and 5 modified expected Task 1 paths with no removals or unexpected architecture change.
 - 2026-08-30 build: The first post-Task 1 check exposed five outside-layout warnings for the new scripts and software README, so `.agentic/aegis.toml` now classifies scripts as test infrastructure and the README as documentation in commit `056f3295ae01f632c9cd0db6b23cdc93ce2e5bb0`.
 - 2026-08-30 build: DEVIATION the corrected AEGIS check reports 58 stale-path warnings only because later Increment 1 tasks have not yet created their declared paths, so these known warnings remain accepted during staged implementation.
+- 2026-08-30 build: Independent Task 1 review approved specification compliance and code quality with no critical or important findings and one minor missing CLI regression test.
+- 2026-08-30 build: DEVIATION the reviewer-requested CLI regression test could not demonstrate a pre-implementation red because the required behavior already existed, so it was added as post-implementation coverage without changing production behavior.
+- 2026-08-30 build: Commit `9d64ab1becc3e67bf8560398c986a7c6ea989f81` adds a portable subprocess test for exact version JSON and invalid-invocation exit code 2, with focused, full, and cross-target checks passing.
+- 2026-08-30 build: The same reviewer re-reviewed the fix-only range and found the sole finding addressed with no new breakage or out-of-scope observation.
+- 2026-08-30 build: Final Task 1 evolution reports 6 added and 5 modified expected paths with no removals, and the final impacted run passes the router, CLI, and build-information suites.
+- 2026-08-30 test: test --impacted (2 test ref(s)) exit 0 (0.7s)
 
 ## Design
 
@@ -136,7 +142,7 @@ stage: build
 result: in_progress
 current: build
 changed: Task 1 portable Go core, version CLI, polyglot AEGIS router, portable verification scripts, truthful documentation, layout classification, and active linked platform requirement
-evidence: anchor 2997e73e9a5a363a; implementation commits 13fb808 and 056f329; impacted tests exit 0; evolution 5 added and 5 modified with no removals; AEGIS errors=0 warnings=58 known future paths notes=0
+evidence: anchor 2997e73e9a5a363a; Task 1 commits 13fb808, 056f329, 2b85551, and 9d64ab1; reviewer approved and fix re-review cleared the sole minor; impacted tests exit 0; evolution 6 added and 5 modified with no removals; AEGIS errors=0 warnings=58 known future paths notes=0
 issues: two generated Python cache directories remain untracked after policy-blocked cleanup; future affected paths remain until later tasks create them; push, merge, PR publication, and release remain unauthorized
-next: commit Task 1 requirement and AEGIS evidence, generate the native commit-range review package, and dispatch an independent Task 1 reviewer
+next: commit the final Task 1 review and evolution evidence, then generate the Task 2 brief and dispatch its fresh implementer to the next AEGIS red boundary
 needs_user: no - approved implementation continues continuously in build and stops only for a named safety or authority boundary
