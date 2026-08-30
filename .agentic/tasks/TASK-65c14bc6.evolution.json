@@ -9,7 +9,7 @@
         {
           "after": {
             "kind": "file",
-            "sha256": "853f9696233b534f8f143445037f6a07fa5a4443f180da0380f3689e52329107"
+            "sha256": "593d701d70470e78995fa7f5c0a30598d73d8f2afeec87cf8781637d5655cc11"
           },
           "area": "other",
           "before": {
@@ -68,7 +68,20 @@
         {
           "after": {
             "kind": "file",
-            "sha256": "0bc3ed6c0782aa9090e414e133f44c5f4cb8bc2ff942b89fc3298c52eee332fd"
+            "sha256": "46cebdbf4ab9654d76712bd2530e637e7eb6c6673c92f9ce42d7128a3e4d194c"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "7326cc213d43dfde24b987c9a7f0e45867bef6f1d3c29b613c7e5814ebe8c113"
+          },
+          "path": "05_Software/nilo_assistant/go.mod",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "5e4ec1b1158a0708ee4616b8fd696b7a5790ef01ae51f78b861b8134addc7745"
           },
           "area": "source",
           "before": null,
@@ -188,6 +201,46 @@
         {
           "after": {
             "kind": "file",
+            "sha256": "27ff477265f22f3464817eddab35d73143afc562f944c9a399f8db9fdaf1f15e"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/db.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "a5e4102ce337155909e4610e3890f5b65ccab09b5d956596577eada3101300a9"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/db_test.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "e8f6ce4e9e7a9a05c1c735ba1f0f79172614ff737d12227245d32701ae606e72"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/migrations.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "79fbdad8bdf9d4df05e35dcc30325ea83a28143666dc281e22dd9d9aacfb7578"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/migrations/001_initial.sql",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
             "sha256": "907dc2f13aaae0543c6976374ff944a328205be1ca8cb5e751e5ac00ab32a08f"
           },
           "area": "other",
@@ -264,10 +317,10 @@
             "unchanged": 13
           },
           "source": {
-            "added": 14,
-            "modified": 1,
+            "added": 18,
+            "modified": 2,
             "removed": 0,
-            "unchanged": 2
+            "unchanged": 1
           },
           "tests": {
             "added": 0,
@@ -277,15 +330,15 @@
           }
         },
         "status": {
-          "added": 17,
-          "modified": 6,
+          "added": 21,
+          "modified": 7,
           "removed": 0,
-          "unchanged": 15
+          "unchanged": 14
         }
       },
-      "current_head": "44066472f127f3c5200fdba5fb0f561295cb9e23",
+      "current_head": "c259a669462e546aaec609660a4022ee69e37589",
       "evolution_stage": "build",
-      "evolved_at": "2026-08-30T13:59:37.520815Z"
+      "evolved_at": "2026-08-30T14:20:21.335603Z"
     }
   ],
   "schema": 1,

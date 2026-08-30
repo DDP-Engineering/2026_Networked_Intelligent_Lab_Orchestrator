@@ -147,10 +147,23 @@ opened: 2026-08-30
 - 2026-08-30 build: The immutable-request fix impacted run passed all fourteen linked references and the complete discovered Python and Go suites.
 - 2026-08-30 build: Refreshed AEGIS evolution retains 17 added and 6 modified expected cumulative paths with no removals, and check retains only the 54 previously accepted future-path warnings.
 - 2026-08-30 build: The same Task 3 reviewer found the immutable-request finding addressed by private state, value getters, defensive-copy access, and mutation-isolation tests with no new breakage or out-of-scope observation.
+- 2026-08-30 build: DEVIATION Task 4 is the first task to import the declared modernc SQLite driver, so the implementation plan now explicitly includes the required `go.sum` checksum modification that its original file list omitted.
+- 2026-08-30 build: Task 4 RED command `CGO_ENABLED=0 go test ./internal/store/sqlite` exited 1 solely because `Open` and `DB` were undefined, proving the transactional schema, exact PRAGMAs, migration integrity, foreign keys, and active-lease uniqueness foundation was absent before implementation.
+- 2026-08-30 build: DEVIATION the first Task 4 GREEN attempt exited 1 before tests because Go 1.27 required module-graph updates that the then-current brief forbade, so implementation paused without a commit for root-cause analysis.
+- 2026-08-30 build: Read-only `go mod tidy -diff` exited 1 with the exact unapplied delta while identical before/after `go.mod` hashes proved no mutation; it identified eight SQLite runtime indirect requirements and showed that tidying would wrongly remove two planned future direct dependencies.
+- 2026-08-30 build: DEVIATION Task 4 now explicitly permits the necessary `go.mod` indirect additions while preserving the four Task 1 direct requirements, correcting the plan-level dependency conflict without authorizing a blind tidy.
+- 2026-08-30 build: DEVIATION an independent Task 4 inspection used a repository-relative test-file path from the module directory and produced a non-terminating `Get-Content` path error; the verification commands in the same shell passed and the file inspection was immediately repeated from its owning directory.
+- 2026-08-30 build: Task 4 commit `c259a669462e546aaec609660a4022ee69e37589` adds the pure-Go single-connection SQLite store, exact durable PRAGMAs, `BEGIN IMMEDIATE` digest-verified migration execution, all thirteen foundation tables, foreign keys, and the partial unique active-resource lease index.
+- 2026-08-30 build: Independent focused and full Go suites plus portable-core verification passed with `CGO_ENABLED=0`; the implementer also compiled the SQLite test package for linux/arm64, linux/amd64, and windows/amd64 without creating repository artifacts.
+- 2026-08-30 build: REQ-DATA-b2e24314 and REQ-DATA-4357c6f2 now link the Task 4 persistence-foundation and active-lease conflict tests but remain draft until the later repository behaviors complete their acceptance clauses.
+- 2026-08-30 build: Task 4 impacted routing passed all seventeen linked references and the complete discovered Python and Go suites.
+- 2026-08-30 build: AEGIS evolution reports 21 added and 7 modified expected cumulative paths with no removals after Task 4.
+- 2026-08-30 build: DEVIATION the post-Task 4 AEGIS check reports 53 stale-path warnings only for later Increment 1 paths, reduced from 54 with no error, note, or new warning class, so the known staged-build warnings remain accepted.
 - 2026-08-30 test: test --impacted (2 test ref(s)) exit 0 (0.7s)
 - 2026-08-30 test: test --impacted (7 test ref(s)) exit 0 (0.7s)
 - 2026-08-30 test: test --impacted (13 test ref(s)) exit 0 (0.8s)
 - 2026-08-30 test: test --impacted (14 test ref(s)) exit 0 (0.8s)
+- 2026-08-30 test: test --impacted (17 test ref(s)) exit 0 (0.9s)
 
 ## Design
 
@@ -173,8 +186,8 @@ opened: 2026-08-30
 stage: build
 result: in_progress
 current: build
-changed: Tasks 1 and 2 remain review-approved; Task 3 adds UUID-v7 typed identities, validated copied operation requests, the exact session states, and authoritative transition validation
-evidence: Task 3 valid red and immutability-fix red each exited 1 for intended missing behavior; commits e415804, 1abb899, 4406647, and e53edb1; focused, full, portable-core, direct three-target domain package compilation, and refreshed AEGIS impacted passed; evolution 17 added and 6 modified with no removals; check errors=0 warnings=54 known future paths notes=0; scoped re-review cleared the important finding
-issues: two generated Python cache directories and nine compile-only Task 2/3 binaries remain outside commits after policy-blocked cleanup; later requirement slices and affected paths remain pending; push, merge, PR publication, and release remain unauthorized
-next: commit the Task 3 review verdict, then generate the Task 4 brief and dispatch a fresh implementer to its red boundary
+changed: Tasks 1 through 3 remain review-approved; Task 4 adds a pure-Go transactional SQLite foundation, digest-verified migration ledger, thirteen Increment 1 tables, enforced durable connection settings, foreign keys, and exclusive active-resource indexing
+evidence: Task 4 valid red exited 1 for missing Open/DB; commit c259a66; focused, full, portable-core, direct three-target SQLite package compilation, and 17-reference AEGIS impacted passed with CGO disabled; evolution 21 added and 7 modified with no removals; check errors=0 warnings=53 known future paths notes=0
+issues: two generated Python cache directories and twelve compile-only Task 2/3/4 binaries remain outside commits after policy-blocked cleanup; later requirement slices and affected paths remain pending; push, merge, PR publication, and release remain unauthorized
+next: commit Task 4 governance evidence, generate the scoped review package from 2331e00, and dispatch a fresh independent reviewer before closing Task 4 or applying any finding
 needs_user: no - approved implementation continues continuously in build and stops only for a named safety or authority boundary

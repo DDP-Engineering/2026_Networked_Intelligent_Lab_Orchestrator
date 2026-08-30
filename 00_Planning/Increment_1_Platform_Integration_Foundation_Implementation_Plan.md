@@ -356,6 +356,8 @@ Do not expose fields or setters. Construct through `NewOperationRequest`, which 
 
 **Files:**
 
+- Modify: `05_Software/nilo_assistant/go.mod`
+- Modify: `05_Software/nilo_assistant/go.sum`
 - Create: `05_Software/nilo_assistant/internal/store/sqlite/db.go`
 - Create: `05_Software/nilo_assistant/internal/store/sqlite/migrations.go`
 - Create: `05_Software/nilo_assistant/internal/store/sqlite/migrations/001_initial.sql`
@@ -388,6 +390,8 @@ func (db *DB) Close() error
 ```
 
 Use driver `modernc.org/sqlite`. On every connection enforce `foreign_keys=ON`, `journal_mode=WAL`, `busy_timeout=5000`, and `synchronous=FULL`. Limit the pool to one writer connection for Increment 1.
+
+Update `go.mod` only with the indirect runtime requirements needed by `modernc.org/sqlite v1.57.0`; preserve the four planned direct requirements even when later tasks have not imported all of them yet. Do not use `go mod tidy` to remove those future-task dependencies.
 
 - [ ] Make migration 001 create the required tables with UUID text primary keys, UTC RFC3339-nanosecond timestamps, foreign keys, a partial unique index on resource name where `released_at IS NULL`, and CHECK constraints for known policy/session values. `audit_events` must have no update/delete repository method.
 
