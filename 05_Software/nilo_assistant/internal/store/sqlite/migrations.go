@@ -18,8 +18,12 @@ type migration struct {
 //go:embed migrations/001_initial.sql
 var initialMigration string
 
+//go:embed migrations/002_policy_snapshots.sql
+var policySnapshotsMigration string
+
 var migrations = []migration{
 	{version: "001_initial", sql: initialMigration},
+	{version: "002_policy_snapshots", sql: policySnapshotsMigration},
 }
 
 func applyMigrations(ctx context.Context, database *sql.DB) (err error) {

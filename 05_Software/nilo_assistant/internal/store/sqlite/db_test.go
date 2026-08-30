@@ -42,7 +42,7 @@ func TestOpenConfiguresDurableDatabaseAndMigratesAllFoundationTables(t *testing.
 	wantTables := []string{
 		"app_policies", "approval_records", "artifacts", "audit_events",
 		"config_versions", "device_policies", "mcp_tokens", "operation_policy_overrides",
-		"operation_requests", "resource_leases", "schema_migrations", "sessions",
+		"operation_requests", "policy_snapshots", "resource_leases", "schema_migrations", "sessions",
 		"users",
 	}
 	if gotTables := nonInternalTableNames(t, db.SQL()); !slices.Equal(gotTables, wantTables) {
@@ -69,8 +69,8 @@ func TestOpenIsIdempotentForAnAlreadyMigratedDatabase(t *testing.T) {
 			t.Errorf("second close: %v", err)
 		}
 	})
-	if got := queryInt(t, second.SQL(), "SELECT COUNT(*) FROM schema_migrations"); got != 1 {
-		t.Fatalf("schema_migrations count = %d, want 1 after reopen", got)
+	if got := queryInt(t, second.SQL(), "SELECT COUNT(*) FROM schema_migrations"); got != 2 {
+		t.Fatalf("schema_migrations count = %d, want 2 after reopen", got)
 	}
 }
 
@@ -104,6 +104,53 @@ func TestOpenRejectsChangedRecordedMigrationDigest(t *testing.T) {
 	}
 	if !strings.Contains(strings.ToLower(err.Error()), "digest") {
 		t.Fatalf("Open error = %v, want migration digest rejection", err)
+	}
+}
+
+func TestPolicySnapshotsEnforceEnumBooleanAndNullabilityChecks(t *testing.T) {
+	tests := []struct {
+		name   string
+		mutate func(*policySnapshotRow)
+	}{
+		{name: "app known boolean", mutate: func(row *policySnapshotRow) { row.appKnown = 2 }},
+		{name: "app mode enum", mutate: func(row *policySnapshotRow) { row.appMode = "operator" }},
+		{name: "manifest policy enum", mutate: func(row *policySnapshotRow) { row.manifestPolicy = "permit" }},
+		{name: "override enum", mutate: func(row *policySnapshotRow) { row.operationOverride = "permit" }},
+		{name: "device known boolean", mutate: func(row *policySnapshotRow) { row.deviceKnown = 2 }},
+		{name: "known device requires mode", mutate: func(row *policySnapshotRow) { row.deviceMode = nil }},
+		{name: "unknown device forbids mode", mutate: func(row *policySnapshotRow) { row.deviceKnown = 0 }},
+		{name: "effective mode enum", mutate: func(row *policySnapshotRow) { row.effectiveMode = "operator" }},
+		{name: "effective policy enum", mutate: func(row *policySnapshotRow) { row.effectivePolicy = "permit" }},
+		{name: "decision enum", mutate: func(row *policySnapshotRow) { row.decision = "maybe" }},
+		{name: "bounded reason enum", mutate: func(row *policySnapshotRow) { row.reason = strings.Repeat("x", 65) }},
+		{name: "UTC resolution time", mutate: func(row *policySnapshotRow) { row.resolvedAt = "2026-08-30T15:04:05+03:00" }},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			db := openTemporaryDatabase(t)
+			row := validPolicySnapshotRow()
+			test.mutate(&row)
+			_, err := db.SQL().ExecContext(context.Background(), `
+				INSERT INTO policy_snapshots (
+					id, integration_id, operation_name, device_id,
+					app_known, app_mode, manifest_policy, operation_override,
+					device_known, device_mode, effective_mode, effective_policy,
+					decision, reason, resolved_at
+				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			`,
+				row.id, row.integrationID, row.operationName, row.deviceID,
+				row.appKnown, row.appMode, row.manifestPolicy, row.operationOverride,
+				row.deviceKnown, row.deviceMode, row.effectiveMode, row.effectivePolicy,
+				row.decision, row.reason, row.resolvedAt,
+			)
+			if err == nil {
+				t.Fatal("policy_snapshots accepted an invalid checked value")
+			}
+			if !strings.Contains(strings.ToLower(err.Error()), "constraint") {
+				t.Fatalf("insert error = %v, want constraint rejection", err)
+			}
+		})
 	}
 }
 
@@ -214,4 +261,32 @@ func nonInternalTableNames(t *testing.T, db *sql.DB) []string {
 		t.Fatalf("iterate SQLite table names: %v", err)
 	}
 	return names
+}
+
+type policySnapshotRow struct {
+	id, integrationID, operationName, deviceID              string
+	appKnown, deviceKnown                                   int
+	appMode, manifestPolicy, effectiveMode, effectivePolicy string
+	operationOverride, deviceMode                           any
+	decision, reason, resolvedAt                            string
+}
+
+func validPolicySnapshotRow() policySnapshotRow {
+	return policySnapshotRow{
+		id:                "018f3d8d-8d2c-7c20-8e0c-000000000301",
+		integrationID:     "018f3d8d-8d2c-7c20-8e0c-000000000302",
+		operationName:     "capture",
+		deviceID:          "018f3d8d-8d2c-7c20-8e0c-000000000303",
+		appKnown:          1,
+		appMode:           "auto",
+		manifestPolicy:    "auto_eligible",
+		operationOverride: nil,
+		deviceKnown:       1,
+		deviceMode:        "auto",
+		effectiveMode:     "auto",
+		effectivePolicy:   "auto_eligible",
+		decision:          "allow",
+		reason:            "policy_matrix_applied",
+		resolvedAt:        "2026-08-30T12:04:05.123456789Z",
+	}
 }
