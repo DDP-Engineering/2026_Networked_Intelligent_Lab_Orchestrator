@@ -146,7 +146,7 @@ type ExecuteRequest struct {
 }
 
 func (value ExecuteRequest) Validate() error {
-	if value.Type != payloadExecute || strings.TrimSpace(value.Operation) == "" || !validJSONObject(value.Parameters) {
+	if value.Type != payloadExecute || strings.TrimSpace(value.Operation) == "" || !validJSONValue(value.Parameters) {
 		return fmt.Errorf("%w: invalid execute request", ErrInvalidMessage)
 	}
 	return nil
@@ -201,7 +201,7 @@ type DomainEvent struct {
 }
 
 func (value DomainEvent) Validate() error {
-	if value.Type != payloadDomainEvent || strings.TrimSpace(value.Name) == "" || !validJSONObject(value.Data) {
+	if value.Type != payloadDomainEvent || strings.TrimSpace(value.Name) == "" || !validJSONValue(value.Data) {
 		return fmt.Errorf("%w: invalid domain event", ErrInvalidMessage)
 	}
 	return validateUTCTimestamp(value.Timestamp)
@@ -256,7 +256,7 @@ type Result struct {
 }
 
 func (value Result) Validate() error {
-	if value.Type != payloadResult || strings.TrimSpace(value.Status) == "" || !validJSONObject(value.Data) {
+	if value.Type != payloadResult || strings.TrimSpace(value.Status) == "" || !validJSONValue(value.Data) {
 		return fmt.Errorf("%w: invalid result", ErrInvalidMessage)
 	}
 	return nil
@@ -286,3 +286,4 @@ func validJSONObject(value json.RawMessage) bool {
 	var object map[string]json.RawMessage
 	return len(value) > 0 && json.Unmarshal(value, &object) == nil && object != nil
 }
+func validJSONValue(value json.RawMessage) bool { return len(value) > 0 && json.Valid(value) }

@@ -154,6 +154,20 @@ func TestDecoderRejectsUnknownEnvelopeFieldAndPayloadShapes(t *testing.T) {
 	}
 }
 
+func TestPayloadOuterObjectAllowsTypedSchemaValues(t *testing.T) {
+	input := wire(Request, "execute-1", "", Execute, `{"type":"execute","operation":"set_level","parameters":[1,2]}`) +
+		wire(Response, "result-1", "execute-1", Execute, `{"type":"result","status":"completed","data":42}`) +
+		wire(Request, "execute-2", "", Execute, `{"type":"execute","operation":"observe","parameters":{}}`) +
+		wire(Event, "event-1", "execute-2", Execute, `{"type":"domain_event","name":"sample","data":true,"timestamp":"2026-08-30T10:00:00Z"}`) +
+		wire(Response, "result-2", "execute-2", Execute, `{"type":"result","status":"completed","data":{}}`)
+	decoder := NewDecoder(strings.NewReader(input))
+	for index := 0; index < 5; index++ {
+		if _, err := decoder.Decode(); err != nil {
+			t.Fatalf("Decode(%d) error = %v", index, err)
+		}
+	}
+}
+
 func TestDecoderRejectsMalformedJSONMissingNewlineAndOversizedLine(t *testing.T) {
 	for _, test := range []struct {
 		name, input string
