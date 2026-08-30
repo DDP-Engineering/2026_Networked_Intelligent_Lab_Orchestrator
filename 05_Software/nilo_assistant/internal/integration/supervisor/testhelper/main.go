@@ -17,6 +17,9 @@ func main() {
 	if len(os.Args) > 2 {
 		marker = os.Args[2]
 	}
+	if mode == "launch-marker" {
+		mark(marker, "launched")
+	}
 	reader := bufio.NewReader(os.Stdin)
 	first, err := reader.ReadBytes('\n')
 	if err != nil {

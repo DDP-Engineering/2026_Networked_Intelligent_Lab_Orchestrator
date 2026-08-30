@@ -188,7 +188,7 @@ func (supervisor *ProcessSupervisor) Execute(ctx context.Context, request protoc
 	}
 	requestID, err := domain.NewRequestID()
 	if err != nil {
-		runner.close()
+		supervisor.release(runner)
 		return protocol.ExecuteResult{}, fmt.Errorf("create request ID: %w", err)
 	}
 	runner.setExecuteMessageID(requestID.String())
@@ -306,9 +306,6 @@ func (supervisor *ProcessSupervisor) start(ctx context.Context) (*runnerProcess,
 	}
 	diagnostics := &diagnosticRing{}
 	command.Stderr = diagnostics
-	if err := command.Start(); err != nil {
-		return nil, fmt.Errorf("%w: start: %v", ErrRunnerCrashed, err)
-	}
 	runner := &runnerProcess{
 		cmd:         command,
 		stdin:       stdin,
@@ -319,14 +316,16 @@ func (supervisor *ProcessSupervisor) start(ctx context.Context) (*runnerProcess,
 	registry := protocol.NewRegistry()
 	runner.encoder = protocol.NewEncoderWithRegistry(stdin, registry)
 	runner.decoder = protocol.NewDecoderWithRegistry(stdout, registry)
-	go func() { runner.wait <- command.Wait() }()
 	supervisor.mu.Lock()
 	if supervisor.closed {
 		supervisor.mu.Unlock()
-		_ = terminateProcess(command)
-		runner.close()
 		return nil, ErrSupervisorClosed
 	}
+	if err := command.Start(); err != nil {
+		supervisor.mu.Unlock()
+		return nil, fmt.Errorf("%w: start: %v", ErrRunnerCrashed, err)
+	}
+	go func() { runner.wait <- command.Wait() }()
 	supervisor.runners[runner] = struct{}{}
 	supervisor.mu.Unlock()
 	if err := runner.handshake(ctx); err != nil {

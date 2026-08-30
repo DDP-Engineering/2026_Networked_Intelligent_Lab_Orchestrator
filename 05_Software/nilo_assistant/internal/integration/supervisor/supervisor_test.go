@@ -191,30 +191,55 @@ func TestSupervisorPreservesWriteDeadlineAndCancellationClassifications(t *testi
 	})
 }
 
-func TestSupervisorShutdownIsSafeWhileRunnersStartConcurrently(t *testing.T) {
-	supervisor := newTestSupervisor(t, "describe-hang", filepath.Join(t.TempDir(), "unused-marker"))
-	contexts := make([]context.CancelFunc, 12)
-	completed := make(chan struct{}, len(contexts))
-	for index := range contexts {
+func TestSupervisorShutdownStopsAllConcurrentStarts(t *testing.T) {
+	marker := filepath.Join(t.TempDir(), "concurrent-marker")
+	supervisor := newTestSupervisor(t, "describe-hang", marker)
+	const runners = 12
+	completed := make(chan error, runners)
+	for range runners {
 		requestContext, cancel := context.WithCancel(context.Background())
-		contexts[index] = cancel
 		go func() {
-			_, _ = supervisor.Describe(requestContext, "test.integration")
-			completed <- struct{}{}
+			defer cancel()
+			_, err := supervisor.Describe(requestContext, "test.integration")
+			completed <- err
 		}()
 	}
+	waitMarker(t, marker, func(value string) bool { return strings.Count(value, "describe-ready") == runners })
 	shutdownContext, cancelShutdown := context.WithTimeout(context.Background(), time.Second)
 	defer cancelShutdown()
-	_ = supervisor.Shutdown(shutdownContext)
-	for _, cancel := range contexts {
-		cancel()
+	if err := supervisor.Shutdown(shutdownContext); err != nil {
+		t.Fatalf("Shutdown() error = %v", err)
 	}
-	for range contexts {
+	for range runners {
 		select {
 		case <-completed:
 		case <-time.After(time.Second):
 			t.Fatal("concurrently started Describe() did not finish")
 		}
+	}
+}
+
+func TestSupervisorDoesNotLaunchRunnerAfterShutdown(t *testing.T) {
+	marker := filepath.Join(t.TempDir(), "launch-marker")
+	supervisor := newTestSupervisor(t, "launch-marker", marker)
+	if err := supervisor.Shutdown(context.Background()); err != nil {
+		t.Fatalf("Shutdown() error = %v", err)
+	}
+	_, err := supervisor.Describe(context.Background(), "test.integration")
+	if !errors.Is(err, ErrSupervisorClosed) {
+		t.Fatalf("Describe() error = %v, want %v", err, ErrSupervisorClosed)
+	}
+	time.Sleep(100 * time.Millisecond)
+	if value, readErr := os.ReadFile(marker); readErr == nil || len(value) != 0 {
+		t.Fatalf("runner marker = %q, want no helper launch", value)
+	}
+	// A missing executable converts any accidental post-shutdown Command.Start
+	// into a deterministic startup error. A closed supervisor must reject it
+	// before reaching the external launcher.
+	supervisor.config.Runner.Executable = filepath.Join(t.TempDir(), "must-not-launch")
+	_, err = supervisor.Describe(context.Background(), "test.integration")
+	if !errors.Is(err, ErrSupervisorClosed) {
+		t.Fatalf("Describe() with unavailable runner after Shutdown() error = %v, want %v", err, ErrSupervisorClosed)
 	}
 }
 
