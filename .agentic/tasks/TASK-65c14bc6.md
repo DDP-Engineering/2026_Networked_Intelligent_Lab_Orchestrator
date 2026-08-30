@@ -167,12 +167,21 @@ opened: 2026-08-30
 - 2026-08-30 build: Task 4 fix round 2 commit `38b9e95` adds the discriminating `sqliteXunexpected` fixture and changes the helper to literal-prefix `NOT GLOB 'sqlite_*'`; focused, full, and portable-core checks passed with CGO disabled.
 - 2026-08-30 build: The same reviewer found the exact-table-set finding addressed and reported no new Critical, Important, Minor, or out-of-scope issue in the fix diff.
 - 2026-08-30 build: Final controller focused, full, portable-core, and seventeen-reference AEGIS impacted checks passed; refreshed evolution remains 21 added and 7 modified expected paths with no removals, and AEGIS check remains errors=0 warnings=53 known future paths notes=0.
+- 2026-08-30 build: Task 5 RED command `CGO_ENABLED=0 go test ./internal/auth ./internal/store/sqlite` exited 1 because the password, token, and repository production APIs were absent; a second test-first API-boundary red exited 1 because persistence still accepted `CreatedToken` containing plaintext.
+- 2026-08-30 build: Task 5 commit `aeecc76` adds Argon2id PHC password verifiers, bounded password validation, UUID-v7 one-time MCP tokens, SHA-256 verifier-only persistence, constant-time candidate comparison, typed token outcomes, and durable SQLite revocation.
+- 2026-08-30 build: Independent focused and full Go suites plus portable-core verification passed with `CGO_ENABLED=0`; implementer compile checks also passed for both affected packages on linux/arm64, linux/amd64, and windows/amd64.
+- 2026-08-30 build: DEVIATION the implementer's first temporary-output cross-target compilation attempt was rejected by host command policy before execution, so it used Go's no-op executor to compile both test packages for all three targets without running foreign binaries or creating repository artifacts.
+- 2026-08-30 build: REQ-SEC-0ecda0e7 and REQ-SEC-f9fd49ff are active with Task 5 linked tests because their complete password-verifier and token create/authenticate/reload/revoke behaviors are implemented and passing; network routes remain outside these requirements and deferred to Increment 3.
+- 2026-08-30 build: Task 5 impacted routing passed all twenty-seven linked references and the complete discovered Python and Go suites.
+- 2026-08-30 build: AEGIS evolution reports 28 added and 7 modified expected cumulative paths with no removals after Task 5.
+- 2026-08-30 build: DEVIATION the post-Task 5 AEGIS check reports 47 stale-path warnings only for later Increment 1 paths plus one `secret-in-diff` warning for the deterministic public password phrase in `password_test.go`; the fixture is not a credential or secret, so both warning classes are accepted with errors=0 and notes=0.
 - 2026-08-30 test: test --impacted (2 test ref(s)) exit 0 (0.7s)
 - 2026-08-30 test: test --impacted (7 test ref(s)) exit 0 (0.7s)
 - 2026-08-30 test: test --impacted (13 test ref(s)) exit 0 (0.8s)
 - 2026-08-30 test: test --impacted (14 test ref(s)) exit 0 (0.8s)
 - 2026-08-30 test: test --impacted (17 test ref(s)) exit 0 (0.9s)
 - 2026-08-30 test: test --impacted (17 test ref(s)) exit 0 (1.0s)
+- 2026-08-30 test: test --impacted (27 test ref(s)) exit 0 (1.3s)
 
 ## Design
 
@@ -195,8 +204,8 @@ opened: 2026-08-30
 stage: build
 result: in_progress
 current: build
-changed: Tasks 1 through 3 remain review-approved; Task 4 adds a pure-Go transactional SQLite foundation, digest-verified migration ledger, thirteen Increment 1 tables, enforced durable connection settings, foreign keys, and exclusive active-resource indexing
-evidence: Task 4 valid red exited 1 for missing Open/DB; commits c259a66, bf5348c, and 38b9e95; focused, full, portable-core, direct three-target SQLite package compilation, and final 17-reference AEGIS impacted passed with CGO disabled; evolution 21 added and 7 modified with no removals; check errors=0 warnings=53 known future paths notes=0; scoped fix round 2 re-review cleared the Important exact-table-set finding
+changed: Tasks 1 through 4 remain review-approved; Task 5 adds bounded Argon2id PHC password verification and verifier-only durable MCP token creation, authentication, reload, and revocation
+evidence: Task 5 missing-implementation and narrowed-persistence API reds exited 1 as intended; commit aeecc76; focused, full, portable-core, direct three-target affected-package compilation, and 27-reference AEGIS impacted passed with CGO disabled; evolution 28 added and 7 modified with no removals; check errors=0 warnings=48 accepted staged-path and deterministic-fixture warnings notes=0; independent review pending
 issues: two generated Python cache directories and twelve compile-only Task 2/3/4 binaries remain outside commits after policy-blocked cleanup; later requirement slices and affected paths remain pending; push, merge, PR publication, and release remain unauthorized
-next: commit the Task 4 review verdict, generate the Task 5 brief, and dispatch a fresh implementer to the authentication red boundary
+next: run Task 5 AEGIS impacted/evolution/check gates, commit linked requirement evidence, and dispatch an independent security-focused reviewer
 needs_user: no - approved implementation continues continuously in build and stops only for a named safety or authority boundary

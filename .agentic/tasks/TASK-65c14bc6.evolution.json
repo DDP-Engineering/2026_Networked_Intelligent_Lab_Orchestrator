@@ -91,6 +91,56 @@
         {
           "after": {
             "kind": "file",
+            "sha256": "605db507d6d3b0018d4a99d9630a6a414dece73da035fbbbd8add2c7dc6d2ac6"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/auth/password.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "7b329352e82b13e2f11637327c6efc1a3a9c5256973d9fd3738120738df91d71"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/auth/password_test.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "4237108e60fdcb09842b60db726452c1dd4f51a1554b0575abac28cd699538b2"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/auth/repository.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "a71d0de99dad5d61e472f8ab07d731d99b2cdfaa42be34178ba1dd8d22a4796f"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/auth/token.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "4f681c3482d62dafed5793ad255109371f628cf10cba82262babd40f6eaafa67"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/auth/token_test.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
             "sha256": "69bcee1f10f5e2c68f277821d8bebe1677fd786d64df165383941f28895e763c"
           },
           "area": "source",
@@ -196,6 +246,26 @@
           "area": "source",
           "before": null,
           "path": "05_Software/nilo_assistant/internal/domain/session_test.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "f04a1a36e523abfc00d4780d74d1c04f8aeb89965ed18ae80940d684f9cdb096"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/auth_repository.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "4e9b3deaddf3b8aede433fd12392b586a058c731aadac4770138d4f122e509e1"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/auth_repository_test.go",
           "status": "added"
         },
         {
@@ -317,7 +387,7 @@
             "unchanged": 13
           },
           "source": {
-            "added": 18,
+            "added": 25,
             "modified": 2,
             "removed": 0,
             "unchanged": 1
@@ -330,15 +400,15 @@
           }
         },
         "status": {
-          "added": 21,
+          "added": 28,
           "modified": 7,
           "removed": 0,
           "unchanged": 14
         }
       },
-      "current_head": "38b9e95a51175c9468fcd674376ca4e2745cb503",
+      "current_head": "aeecc764eeb606b4c390fdafdbc7d258db0f291c",
       "evolution_stage": "build",
-      "evolved_at": "2026-08-30T14:31:50.961373Z"
+      "evolved_at": "2026-08-30T14:41:34.971134Z"
     }
   ],
   "schema": 1,
