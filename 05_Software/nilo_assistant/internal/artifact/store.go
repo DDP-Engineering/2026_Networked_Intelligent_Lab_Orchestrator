@@ -204,13 +204,14 @@ func (storage *store) Register(ctx context.Context, input RegisterInput) (domain
 	destinationInfo, err := artifactRoot.Lstat(destinationRelative)
 	if err != nil || destinationInfo.Mode()&os.ModeSymlink != 0 || !destinationInfo.Mode().IsRegular() ||
 		!os.SameFile(createdInfo, destinationInfo) {
-		_, cleanupErr := removeCreatedDestination(artifactRoot, destinationRelative, createdInfo)
-		return domain.Artifact{}, fmt.Errorf("verify placed artifact identity: %v (cleanup: %v)", err, cleanupErr)
+		return domain.Artifact{}, fmt.Errorf("verify placed artifact identity: %v", err)
 	}
 	if err := syncContainingDirectory(artifactRoot, sessionRelative); err != nil {
-		_, cleanupErr := removeCreatedDestination(artifactRoot, destinationRelative, createdInfo)
-		return domain.Artifact{}, fmt.Errorf("sync artifact directory after placement: %w (cleanup: %v)", err, cleanupErr)
+		return domain.Artifact{}, fmt.Errorf("sync artifact directory after placement: %w", err)
 	}
+	// There is no portable atomic compare-and-unlink operation. Once the final
+	// name is published, an error leaves the verified file for reconciliation;
+	// a pathname Remove after any identity check could delete a replacement.
 
 	value := domain.Artifact{
 		ID: artifactID, RequestID: input.RequestID, SessionID: input.SessionID,
@@ -219,17 +220,9 @@ func (storage *store) Register(ctx context.Context, input RegisterInput) (domain
 		PresentationHints: append([]byte(nil), input.PresentationHints...), CreatedAt: storage.now().UTC(),
 	}
 	if value.CreatedAt.IsZero() {
-		_, _ = removeCreatedDestination(artifactRoot, destinationRelative, createdInfo)
 		return domain.Artifact{}, fmt.Errorf("%w: clock returned zero time", ErrInvalidArtifact)
 	}
 	if err := storage.repository.Save(ctx, value); err != nil {
-		removed, removeErr := removeCreatedDestination(artifactRoot, destinationRelative, createdInfo)
-		if removed && removeErr == nil {
-			removeErr = syncContainingDirectory(artifactRoot, sessionRelative)
-		}
-		if removeErr != nil {
-			return domain.Artifact{}, fmt.Errorf("save artifact metadata: %w (cleanup destination: %v)", err, removeErr)
-		}
 		return domain.Artifact{}, fmt.Errorf("save artifact metadata: %w", err)
 	}
 	_ = stagingRoot.Remove(stagedRelative)
@@ -373,35 +366,6 @@ func rejectSymlinkComponents(root *os.Root, relative string) (os.FileInfo, error
 		}
 	}
 	return info, nil
-}
-
-func removeCreatedDestination(root *os.Root, relative string, created os.FileInfo) (bool, error) {
-	pathInfo, err := root.Lstat(relative)
-	if errors.Is(err, os.ErrNotExist) {
-		return false, nil
-	}
-	if err != nil {
-		return false, err
-	}
-	if pathInfo.Mode()&os.ModeSymlink != 0 || !pathInfo.Mode().IsRegular() || !os.SameFile(created, pathInfo) {
-		return false, nil
-	}
-	file, err := root.Open(relative)
-	if err != nil {
-		return false, err
-	}
-	defer file.Close()
-	openedInfo, err := file.Stat()
-	if err != nil {
-		return false, err
-	}
-	if !openedInfo.Mode().IsRegular() || !os.SameFile(created, openedInfo) || !os.SameFile(pathInfo, openedInfo) {
-		return false, nil
-	}
-	if err := root.Remove(relative); err != nil {
-		return false, err
-	}
-	return true, nil
 }
 
 func samePath(left, right string) bool {

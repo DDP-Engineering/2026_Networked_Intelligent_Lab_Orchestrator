@@ -389,7 +389,7 @@ func TestRegisterAtomicallyMovesVerifiedBytesAndPersistsMetadata(t *testing.T) {
 	}
 }
 
-func TestRegisterRemovesOnlyItsNewDestinationWhenMetadataSaveFails(t *testing.T) {
+func TestRegisterMetadataFailureLeavesVerifiedDestinationForSafeReconciliation(t *testing.T) {
 	t.Parallel()
 
 	fixture := newArtifactFixture(t, []byte("measurement"))
@@ -407,7 +407,10 @@ func TestRegisterRemovesOnlyItsNewDestinationWhenMetadataSaveFails(t *testing.T)
 	if _, err := store.Register(context.Background(), fixture.registerInput(fixture.stagedPath)); !errors.Is(err, repositoryFailure) {
 		t.Fatalf("Register() error = %v, want metadata failure", err)
 	}
-	assertNoArtifactDestination(t, fixture)
+	destination := filepath.Join(fixture.artifactRoot, fixture.sessionID.String(), fixture.artifactID.String())
+	if contents, err := os.ReadFile(destination); err != nil || !bytes.Equal(contents, fixture.contents) {
+		t.Fatalf("verified destination for reconciliation = %q, error = %v", contents, err)
+	}
 	if contents, err := os.ReadFile(unrelatedPath); err != nil || string(contents) != "keep" {
 		t.Fatalf("unrelated file = %q, error = %v", contents, err)
 	}
