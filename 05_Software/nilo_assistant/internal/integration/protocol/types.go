@@ -279,7 +279,10 @@ func (value Result) Validate() error {
 type ExecuteResult = Result
 
 // EventSink receives already validated execute event envelopes. Implementors
-// must not retain an envelope after Emit returns unless they copy it.
+// must return when the supplied context is cancelled; the supervisor waits for
+// emission asynchronously so an unresponsive sink cannot hold a runner past
+// its deadline. Implementors must not retain an envelope after Emit returns
+// unless they copy it.
 type EventSink interface {
 	Emit(context.Context, Envelope) error
 }

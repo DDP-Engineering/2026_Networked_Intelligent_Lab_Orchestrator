@@ -2,7 +2,12 @@
 
 package supervisor
 
-import "os/exec"
+import (
+	"errors"
+	"os"
+	"os/exec"
+	"syscall"
+)
 
 func configureProcess(command *exec.Cmd) {}
 
@@ -13,5 +18,9 @@ func terminateProcess(command *exec.Cmd) error {
 	if command.Process == nil {
 		return nil
 	}
-	return command.Process.Kill()
+	err := command.Process.Kill()
+	if err == nil || errors.Is(err, os.ErrProcessDone) || errors.Is(err, syscall.EINVAL) {
+		return nil
+	}
+	return err
 }
