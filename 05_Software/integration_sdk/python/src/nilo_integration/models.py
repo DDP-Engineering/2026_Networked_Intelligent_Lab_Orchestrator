@@ -242,6 +242,24 @@ _REQUEST_MODELS: dict[str, type[StrictModel]] = {
     "safe_shutdown": ControlRequest,
 }
 
+_EVENT_MODELS: dict[str, type[StrictModel]] = {
+    "progress": Progress,
+    "measurement": Measurement,
+    "domain_event": DomainEvent,
+    "warning": WarningEvent,
+    "log_reference": LogReference,
+    "artifact": ArtifactDeclaration,
+}
+
+_CONTROL_RESPONSE_MODELS: dict[str, type[StrictModel]] = {
+    "describe": DescribeResult,
+    "discover": DiscoverResult,
+    "health": HealthResult,
+    "configure": ConfigureResult,
+    "cancel": CancelResult,
+    "safe_shutdown": SafeShutdownResult,
+}
+
 
 def parse_request_payload(method: Method, payload: dict[str, Any]) -> RequestPayload:
     """Validate a request payload against the only model allowed for its method."""
@@ -251,3 +269,31 @@ def parse_request_payload(method: Method, payload: dict[str, Any]) -> RequestPay
     if result.type != method:
         raise ValueError(f"payload type {result.type!r} does not match method {method!r}")
     return result  # type: ignore[return-value]
+
+
+def parse_event_payload(payload: dict[str, Any]) -> EventPayload:
+    """Validate a runner event against its discriminated protocol model."""
+
+    event_type = payload.get("type")
+    if not isinstance(event_type, str) or event_type not in _EVENT_MODELS:
+        raise ValueError("event payload has an unsupported type")
+    return _EVENT_MODELS[event_type].model_validate(payload)  # type: ignore[return-value]
+
+
+def validate_envelope_payload(envelope: Envelope) -> StrictModel:
+    """Validate the payload matrix for an already strict envelope."""
+
+    if envelope.kind == "request":
+        return parse_request_payload(envelope.method, envelope.payload)
+    if envelope.kind == "event":
+        return parse_event_payload(envelope.payload)
+    if envelope.method == "hello":
+        return HelloResponse.model_validate(envelope.payload)
+    if envelope.method == "execute":
+        terminal_type = envelope.payload.get("type")
+        if terminal_type == "result":
+            return ExecuteResult.model_validate(envelope.payload)
+        if terminal_type == "error":
+            return ErrorResult.model_validate(envelope.payload)
+        raise ValueError("execute response has an unsupported terminal type")
+    return _CONTROL_RESPONSE_MODELS[envelope.method].model_validate(envelope.payload)

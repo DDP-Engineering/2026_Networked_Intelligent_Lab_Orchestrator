@@ -1,9 +1,11 @@
+import json
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
-from nilo_integration.models import Envelope, HelloRequest, Measurement
+from nilo_integration.models import Envelope, HelloRequest, Measurement, validate_envelope_payload
 
 
 def test_hello_request_rejects_extra_fields() -> None:
@@ -33,4 +35,25 @@ def test_measurement_rejects_non_finite_value() -> None:
             value=float("inf"),
             unit="V",
             timestamp=datetime.now(UTC),
+        )
+
+
+def test_shared_golden_fixture_validates_and_round_trips() -> None:
+    fixture = (
+        Path(__file__).parents[3]
+        / "tests"
+        / "contract"
+        / "fixtures"
+        / "protocol-v1"
+        / "hello.ndjson"
+    )
+
+    for line in fixture.read_bytes().splitlines():
+        source = json.loads(line)
+        envelope = Envelope.model_validate(source)
+        validate_envelope_payload(envelope)
+
+        assert (
+            json.loads(json.dumps(envelope.model_dump(mode="json"), separators=(",", ":")))
+            == source
         )
