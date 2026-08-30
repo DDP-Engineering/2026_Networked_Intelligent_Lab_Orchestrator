@@ -809,18 +809,19 @@ Scope correction: the generic AEGIS suite router now detects UV-managed integrat
 - Create: `05_Software/nilo_assistant/internal/integration/supervisor/supervisor.go`
 - Create: `05_Software/nilo_assistant/internal/integration/supervisor/supervisor_test.go`
 - Create: `05_Software/nilo_assistant/internal/integration/supervisor/testhelper/main.go`
+- Modify: `05_Software/nilo_assistant/internal/integration/protocol/types.go`
 
 **Consumes:** A validated manifest, package root, context deadline, protocol request, and event sink.
 
 **Produces:** A handshaken runner process, validated events/results, cancellation, bounded diagnostics, and typed crash/protocol/timeout errors.
 
-- [ ] Write failing tests using the Go test-helper process for: successful handshake/execute, wrong protocol version, malformed stdout, 1 MiB overflow, stderr truncation to the last 64 KiB, timeout, cancellation, exit-before-result, and two concurrent writes.
+- [x] Write failing tests using the Go test-helper process for: successful handshake/execute, wrong protocol version, malformed stdout, 1 MiB overflow, stderr truncation to the last 64 KiB, timeout, cancellation, exit-before-result, and two concurrent writes.
 
-- [ ] Run `go test ./internal/integration/supervisor`; expect compile failure.
+- [x] Run `go test ./internal/integration/supervisor`; expect compile failure.
 
-- [ ] Implement the process boundary with argument arrays and `exec.CommandContext`; set working directory to the validated package root; construct an allowlisted environment rather than inheriting secrets indiscriminately.
+- [x] Implement the process boundary with argument arrays and `exec.CommandContext`; set working directory to the validated package root; construct an allowlisted environment rather than inheriting secrets indiscriminately.
 
-- [ ] Implement:
+- [x] Implement:
 
 ```go
 type Supervisor interface {
@@ -833,13 +834,13 @@ type Supervisor interface {
 
 Require a successful `hello` before any other method. Validate every response/event, reject mismatched IDs, and accept exactly one terminal result.
 
-- [ ] Unix cancellation sends a protocol `cancel`, waits the configured grace period, attempts `safe_shutdown`, then terminates the process group. Windows uses the same protocol sequence and a platform adapter that kills the direct process in Increment 1; Windows Job Object ownership is a later delivery requirement and must be recorded in the adapter documentation.
+- [x] Unix cancellation sends a protocol `cancel`, waits the configured grace period, attempts `safe_shutdown`, then terminates the process group. Windows uses the same protocol sequence and a platform adapter that kills the direct process in Increment 1; Windows Job Object ownership is a later delivery requirement and must be recorded in the adapter documentation.
 
-- [ ] Capture stderr in a concurrency-safe 64 KiB ring buffer; include only bounded sanitized text in typed errors. A runner crash never panics Bench Core.
+- [x] Capture stderr in a concurrency-safe 64 KiB ring buffer; include only bounded sanitized text in typed errors. A runner crash never panics Bench Core.
 
-- [ ] Run focused tests with `-race` on the host where supported, `go test ./...`, and all three target builds.
+- [x] Run focused tests with `-race` on the host where supported, `go test ./...`, and all three target builds.
 
-- [ ] Record Task 12 evidence, then commit only Task 12 files with message `feat: supervise external integration runners` for task review; do not push.
+- [x] Record Task 12 evidence, then commit only Task 12 files with message `feat: supervise external integration runners` for task review; do not push.
 
 ---
 

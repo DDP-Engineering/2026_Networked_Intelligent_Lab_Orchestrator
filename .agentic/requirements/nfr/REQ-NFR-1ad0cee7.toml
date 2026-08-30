@@ -18,7 +18,7 @@ title = "Isolate integration runner processes"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
-status = "draft"
+status = "active"
 
 # Self-contained prose: a reader with no other context must be able to
 # understand and check it. No ticket numbers, no run IDs, no references
@@ -58,7 +58,11 @@ affected_paths = [
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
-linked_tests = []
+linked_tests = [
+    "05_Software/nilo_assistant/internal/integration/supervisor/supervisor_test.go::TestSupervisorContainsInvalidRunnerOutput",
+    "05_Software/nilo_assistant/internal/integration/supervisor/supervisor_test.go::TestSupervisorKeepsOnlyLast64KiBOfStderr",
+    "05_Software/nilo_assistant/internal/integration/supervisor/supervisor_test.go::TestSupervisorTimeoutAndCancellationTerminateRunner",
+]
 
 # --- optional below this line ---
 
