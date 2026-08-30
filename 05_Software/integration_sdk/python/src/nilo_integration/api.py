@@ -24,7 +24,12 @@ class EventSink(Protocol):
 
 
 class Integration(Protocol):
-    """An async implementation that is run behind the NILO protocol server."""
+    """An async implementation that is run behind the NILO protocol server.
+
+    Each handler owns every child task it creates: it must await or cancel those
+    tasks before returning. The server can cancel and await its direct handler
+    tasks during teardown, but cannot safely discover arbitrary plugin tasks.
+    """
 
     name: str
 

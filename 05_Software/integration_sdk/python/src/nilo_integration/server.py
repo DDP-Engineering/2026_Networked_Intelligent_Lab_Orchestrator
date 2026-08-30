@@ -62,17 +62,19 @@ class ProtocolViolation(ValueError):
 
 
 @dataclass
-class _Execution:
-    request: Envelope
+class _Request:
+    envelope: Envelope
     terminal: bool = False
+    closing: bool = False
+    failure: str | None = None
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     task: asyncio.Task[None] | None = None
 
 
 class _ServerEventSink(EventSink):
-    def __init__(self, server: ProtocolServer, execution: _Execution) -> None:
+    def __init__(self, server: ProtocolServer, request: _Request) -> None:
         self._server = server
-        self._execution = execution
+        self._request = request
 
     async def emit(self, event: EventPayload) -> None:
         if not hasattr(event, "model_dump"):
@@ -81,12 +83,12 @@ class _ServerEventSink(EventSink):
             event = parse_event_payload(event.model_dump(mode="json"))
         except (ValidationError, ValueError, TypeError) as error:
             raise ProtocolViolation("emitted event is not a valid protocol event") from error
-        async with self._execution.lock:
-            if self._execution.terminal:
+        async with self._request.lock:
+            if self._request.closing or self._request.terminal:
                 raise ProtocolViolation("cannot emit an event after terminal execute response")
             await self._server._send(
                 "event",
-                self._execution.request.message_id,
+                self._request.envelope.message_id,
                 "execute",
                 event.model_dump(mode="json"),
             )
@@ -96,7 +98,8 @@ class ProtocolServer:
     """Serve a strict protocol-v1 request stream for one integration process.
 
     The original stdout buffer is captured for protocol records. While the server
-    runs, regular and background integration diagnostics are redirected to stderr.
+    and its tracked integration requests run, ordinary stdout is redirected to
+    diagnostics.
     """
 
     def __init__(
@@ -111,28 +114,31 @@ class ProtocolServer:
         self._diagnostic_output = diagnostic_output or sys.stderr
         self._write_lock = asyncio.Lock()
         self._message_ids: set[str] = set()
-        self._executions: dict[str, _Execution] = {}
+        self._requests: dict[str, _Request] = {}
         self._hello_complete = False
+        self._fatal_event = asyncio.Event()
+        self._fatal_error: str | None = None
 
     async def run(self, reader: asyncio.StreamReader) -> int:
         """Handle requests until clean EOF, returning a process-style status code."""
 
         with contextlib.redirect_stdout(self._diagnostic_output):
-            return await self._run(reader)
+            try:
+                return await self._run(reader)
+            finally:
+                await self._abort_requests()
 
     async def _run(self, reader: asyncio.StreamReader) -> int:
         while True:
             try:
-                line = await self._read_line(reader)
+                line = await self._read_line_or_fatal(reader)
             except ProtocolViolation as error:
-                await self._abort_executions()
                 self._diagnose(error)
                 return 2
             if line is None:
                 await asyncio.sleep(0)
-                if self._active_executions():
-                    await self._abort_executions()
-                    self._diagnose("EOF during active execute operation")
+                if self._active_requests():
+                    self._diagnose("EOF during active integration request")
                     return 2
                 return 0
 
@@ -148,19 +154,47 @@ class ProtocolServer:
                 payload = parse_request_payload(envelope.method, envelope.payload)
                 if not self._hello_complete and envelope.method != "hello":
                     raise ProtocolViolation("hello is required before operational requests")
-                await self._handle(envelope, payload)
+                request = self._start_request(envelope, payload)
                 if envelope.method == "hello":
+                    await request.task
+                    if not request.terminal:
+                        raise ProtocolViolation(
+                            self._fatal_error or "hello response was not delivered", reply=False
+                        )
                     self._hello_complete = True
             except (ValidationError, ProtocolViolation, ValueError, TypeError) as error:
-                if await self._reply_if_recoverable(raw, error):
+                try:
+                    replied = await self._reply_if_recoverable(raw, error)
+                except Exception as delivery_error:  # noqa: BLE001 - protocol writer failure
+                    self._record_fatal(
+                        f"failed to deliver protocol error: {self._error_text(delivery_error)}"
+                    )
+                    self._diagnose(self._fatal_error)
+                    return 2
+                if replied:
                     continue
-                await self._abort_executions()
                 self._diagnose(error)
                 return 2
             except Exception as error:  # noqa: BLE001 - process boundary must not crash
-                await self._abort_executions()
-                self._diagnose(f"unexpected server error: {type(error).__name__}")
+                self._record_fatal(f"unexpected server error: {type(error).__name__}")
+                self._diagnose(self._fatal_error)
                 return 2
+
+    async def _read_line_or_fatal(self, reader: asyncio.StreamReader) -> bytes | None:
+        read_task = asyncio.create_task(self._read_line(reader))
+        fatal_task = asyncio.create_task(self._fatal_event.wait())
+        done, pending = await asyncio.wait(
+            {read_task, fatal_task}, return_when=asyncio.FIRST_COMPLETED
+        )
+        for task in pending:
+            task.cancel()
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
+        if fatal_task in done:
+            raise ProtocolViolation(
+                self._fatal_error or "connection protocol output failed", reply=False
+            )
+        return read_task.result()
 
     def _accept_request(self, envelope: Envelope) -> None:
         if envelope.message_id in self._message_ids:
@@ -169,25 +203,26 @@ class ProtocolServer:
             )
         self._message_ids.add(envelope.message_id)
 
-    def _active_executions(self) -> list[_Execution]:
-        return [
-            execution
-            for execution in self._executions.values()
-            if execution.task and not execution.task.done()
-        ]
+    def _start_request(self, envelope: Envelope, payload: RequestPayload) -> _Request:
+        request = _Request(envelope=envelope)
+        self._requests[envelope.message_id] = request
+        request.task = asyncio.create_task(self._run_request(request, payload))
+        return request
 
-    async def _abort_executions(self) -> None:
-        executions = self._active_executions()
-        for execution in executions:
-            async with execution.lock:
-                execution.terminal = True
-            if execution.task is not None:
-                execution.task.cancel()
-        if executions:
-            await asyncio.gather(
-                *(execution.task for execution in executions if execution.task is not None),
-                return_exceptions=True,
-            )
+    def _active_requests(self) -> list[_Request]:
+        return [request for request in self._requests.values() if not request.terminal]
+
+    async def _abort_requests(self) -> None:
+        requests = self._active_requests()
+        for request in requests:
+            async with request.lock:
+                request.closing = True
+            if request.task is not None and not request.task.done():
+                request.task.cancel()
+        tasks = [request.task for request in requests if request.task is not None]
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
+        self._requests.clear()
 
     async def _read_line(self, reader: asyncio.StreamReader) -> bytes | None:
         """Read a line without retaining more than the full 1 MiB frame limit."""
@@ -236,67 +271,80 @@ class ProtocolServer:
             value[key] = item
         return value
 
-    async def _handle(self, envelope: Envelope, payload: RequestPayload) -> None:
+    async def _run_request(self, request: _Request, payload: RequestPayload) -> None:
+        try:
+            result = await self._invoke(payload, request)
+            await self._deliver_result(request, result)
+        except asyncio.CancelledError:
+            async with request.lock:
+                request.closing = True
+            raise
+        except Exception as error:  # noqa: BLE001 - integration failure must become terminal evidence
+            try:
+                await self._deliver_error(request, error)
+            except Exception as delivery_error:  # noqa: BLE001 - writer failure is connection-fatal
+                self._record_request_failure(request, delivery_error)
+        finally:
+            if request.terminal:
+                self._requests.pop(request.envelope.message_id, None)
+
+    async def _invoke(self, payload: RequestPayload, request: _Request) -> Any:
         if isinstance(payload, HelloRequest):
             name = getattr(self._integration, "name", type(self._integration).__name__)
-            await self._respond(envelope, HelloResponse(integration=name))
-            return
+            return HelloResponse(integration=name)
         if isinstance(payload, ControlRequest):
-            if envelope.method == "describe":
-                await self._respond(envelope, await self._call(self._integration.describe()))
-            elif envelope.method == "discover":
-                await self._respond(envelope, await self._call(self._integration.discover()))
-            elif envelope.method == "health":
-                await self._respond(envelope, await self._call(self._integration.health()))
-            else:
-                await self._call(self._integration.safe_shutdown())
-                await self._respond(envelope, SafeShutdownResult())
-            return
+            if request.envelope.method == "describe":
+                return await self._integration.describe()
+            if request.envelope.method == "discover":
+                return await self._integration.discover()
+            if request.envelope.method == "health":
+                return await self._integration.health()
+            await self._integration.safe_shutdown()
+            return SafeShutdownResult()
         if isinstance(payload, ConfigureRequest):
-            await self._respond(envelope, await self._call(self._integration.configure(payload)))
-            return
+            return await self._integration.configure(payload)
         if isinstance(payload, CancelRequest):
-            execution = self._executions.get(payload.target_request_id)
-            if execution is None or execution.task is None or execution.task.done():
+            target = self._requests.get(payload.target_request_id)
+            if target is None or target.envelope.method != "execute" or target.terminal:
                 raise ProtocolViolation("cancel target is not an active execute request")
             try:
                 target_request_id = UUID(payload.target_request_id)
             except ValueError as error:
                 raise ProtocolViolation("cancel target_request_id must be a UUID") from error
-            await self._call(self._integration.cancel(target_request_id))
-            await self._respond(envelope, CancelResult())
-            return
+            await self._integration.cancel(target_request_id)
+            return CancelResult()
         if isinstance(payload, ExecuteRequest):
-            execution = _Execution(request=envelope)
-            self._executions[envelope.message_id] = execution
-            execution.task = asyncio.create_task(self._execute(payload, execution))
-            return
+            return await self._integration.execute(payload, _ServerEventSink(self, request))
         raise ProtocolViolation("unsupported request payload")
 
-    async def _execute(self, request: ExecuteRequest, execution: _Execution) -> None:
-        try:
-            result = await self._call(
-                self._integration.execute(request, _ServerEventSink(self, execution))
-            )
-            async with execution.lock:
-                execution.terminal = True
-                await self._respond(execution.request, result)
-        except asyncio.CancelledError:
-            async with execution.lock:
-                execution.terminal = True
-            raise
-        except Exception as error:  # noqa: BLE001 - integration must not crash its runner
-            async with execution.lock:
-                if not execution.terminal:
-                    execution.terminal = True
-                    await self._send_error(
-                        execution.request.message_id, "execute", "execution_failed", str(error)
-                    )
-        finally:
-            self._executions.pop(execution.request.message_id, None)
+    async def _deliver_result(self, request: _Request, result: Any) -> None:
+        async with request.lock:
+            request.closing = True
+            try:
+                await self._respond(request.envelope, result)
+            except Exception:
+                request.closing = False
+                raise
+            request.terminal = True
+            request.closing = False
 
-    async def _call(self, awaitable: Any) -> Any:
-        return await awaitable
+    async def _deliver_error(self, request: _Request, error: Exception) -> None:
+        async with request.lock:
+            if request.terminal:
+                return
+            request.closing = True
+            try:
+                await self._send_error(
+                    request.envelope.message_id,
+                    request.envelope.method,
+                    "execution_failed",
+                    self._error_text(error),
+                )
+            except Exception:
+                request.closing = False
+                raise
+            request.terminal = True
+            request.closing = False
 
     async def _respond(self, request: Envelope, result: Any) -> None:
         if not hasattr(result, "model_dump"):
@@ -320,7 +368,7 @@ class ProtocolServer:
             return False
         if method not in _RESPONSE_MODELS:
             return False
-        await self._send_error(message_id, method, "invalid_request", str(error))
+        await self._send_error(message_id, method, "invalid_request", self._error_text(error))
         return True
 
     async def _send_error(self, request_id: str, method: Method, code: str, message: str) -> None:
@@ -363,16 +411,28 @@ class ProtocolServer:
                 raise ProtocolViolation("short protocol output write", reply=False)
             self._protocol_output.flush()
 
+    def _record_request_failure(self, request: _Request, error: Exception) -> None:
+        request.closing = True
+        request.failure = self._error_text(error)
+        self._record_fatal(f"terminal response delivery failed: {request.failure}")
+
+    def _record_fatal(self, message: str) -> None:
+        if self._fatal_error is None:
+            self._fatal_error = message
+        self._fatal_event.set()
+
+    @staticmethod
+    def _error_text(error: Exception | str) -> str:
+        message = str(error).strip() or type(error).__name__
+        return message.encode("utf-8", "replace")[:MAX_DIAGNOSTIC_BYTES].decode("utf-8", "replace")
+
     def _new_message_id(self) -> str:
         message_id = str(uuid4())
         while message_id in self._message_ids:
             message_id = str(uuid4())
         return message_id
 
-    def _diagnose(self, error: Exception | str) -> None:
-        message = str(error).replace("\n", " ").replace("\r", " ")
-        bounded = message.encode("utf-8", "replace")[:MAX_DIAGNOSTIC_BYTES].decode(
-            "utf-8", "replace"
-        )
-        self._diagnostic_output.write(f"nilo integration protocol error: {bounded}\n")
+    def _diagnose(self, error: Exception | str | None) -> None:
+        message = self._error_text(error or "integration protocol failure")
+        self._diagnostic_output.write(f"nilo integration protocol error: {message}\n")
         self._diagnostic_output.flush()

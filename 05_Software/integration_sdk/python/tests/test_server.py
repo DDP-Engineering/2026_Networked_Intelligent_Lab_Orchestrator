@@ -112,6 +112,55 @@ class AllMethodsIntegration(PrintingIntegration):
         return None
 
 
+class EmptyErrorIntegration(PrintingIntegration):
+    async def execute(self, request, events):  # type: ignore[no-untyped-def]
+        raise RuntimeError()
+
+
+class OversizedResult:
+    def model_dump(self, *, mode: str) -> dict[str, object]:
+        assert mode == "json"
+        return {"type": "result", "status": "completed", "data": {"padding": "x" * MAX_LINE_BYTES}}
+
+
+class OversizedResultIntegration(PrintingIntegration):
+    async def execute(self, request, events):  # type: ignore[no-untyped-def]
+        return OversizedResult()
+
+
+class FailSecondWrite(io.BytesIO):
+    def __init__(self) -> None:
+        super().__init__()
+        self.writes = 0
+
+    def write(self, data: bytes) -> int:
+        self.writes += 1
+        if self.writes >= 2:
+            raise OSError("simulated protocol pipe loss")
+        return super().write(data)
+
+
+class ResultIntegration(PrintingIntegration):
+    async def execute(self, request, events):  # type: ignore[no-untyped-def]
+        return ExecuteResult(status="completed", data={})
+
+
+class BlockingDescribeIntegration(PrintingIntegration):
+    def __init__(self) -> None:
+        self.started = asyncio.Event()
+        self.release = asyncio.Event()
+        self.cancelled = asyncio.Event()
+
+    async def describe(self) -> DescribeResult:
+        self.started.set()
+        try:
+            await self.release.wait()
+        except asyncio.CancelledError:
+            self.cancelled.set()
+            raise
+        return DescribeResult(status="ok")
+
+
 def request(message_id: str, method: str, payload: dict[str, object]) -> bytes:
     return (
         json.dumps(
@@ -444,3 +493,98 @@ async def test_output_framing_accepts_exact_one_mib_and_rejects_plus_one() -> No
         await ProtocolServer(PrintingIntegration(), protocol_output=io.BytesIO())._send(
             "response", "request-1", "execute", {"padding": "x" * (padding_length + 1)}
         )
+
+
+@pytest.mark.asyncio
+async def test_oversized_execute_result_gets_one_terminal_error() -> None:
+    reader = asyncio.StreamReader()
+    reader.feed_data(request("hello-1", "hello", {"type": "hello", "client": "nilo"}))
+    reader.feed_data(
+        request("execute-1", "execute", {"type": "execute", "operation": "large", "parameters": {}})
+    )
+    reader.feed_eof()
+    output = io.BytesIO()
+
+    exit_code = await ProtocolServer(OversizedResultIntegration(), protocol_output=output).run(
+        reader
+    )
+
+    messages = [json.loads(line) for line in output.getvalue().splitlines()]
+    assert exit_code == 0
+    assert [(message["method"], message["payload"]["type"]) for message in messages] == [
+        ("hello", "hello"),
+        ("execute", "error"),
+    ]
+
+
+@pytest.mark.asyncio
+async def test_empty_execute_exception_gets_one_terminal_error() -> None:
+    reader = asyncio.StreamReader()
+    reader.feed_data(request("hello-1", "hello", {"type": "hello", "client": "nilo"}))
+    reader.feed_data(
+        request("execute-1", "execute", {"type": "execute", "operation": "fail", "parameters": {}})
+    )
+    reader.feed_eof()
+    output = io.BytesIO()
+
+    exit_code = await ProtocolServer(EmptyErrorIntegration(), protocol_output=output).run(reader)
+
+    messages = [json.loads(line) for line in output.getvalue().splitlines()]
+    assert exit_code == 0
+    assert messages[-1]["method"] == "execute"
+    assert messages[-1]["payload"]["type"] == "error"
+    assert messages[-1]["payload"]["message"] == "RuntimeError"
+
+
+@pytest.mark.asyncio
+async def test_terminal_write_loss_exits_nonzero_without_waiting_for_eof() -> None:
+    reader = asyncio.StreamReader()
+    reader.feed_data(request("hello-1", "hello", {"type": "hello", "client": "nilo"}))
+    reader.feed_data(
+        request("execute-1", "execute", {"type": "execute", "operation": "write", "parameters": {}})
+    )
+    output = FailSecondWrite()
+    server_task = asyncio.create_task(
+        ProtocolServer(ResultIntegration(), protocol_output=output).run(reader)
+    )
+
+    assert await asyncio.wait_for(server_task, timeout=0.2) != 0
+
+
+@pytest.mark.asyncio
+async def test_eof_with_running_non_execute_request_is_not_success() -> None:
+    reader = asyncio.StreamReader()
+    integration = BlockingDescribeIntegration()
+    reader.feed_data(request("hello-1", "hello", {"type": "hello", "client": "nilo"}))
+    reader.feed_data(request("describe-1", "describe", {"type": "describe"}))
+    server_task = asyncio.create_task(
+        ProtocolServer(integration, protocol_output=io.BytesIO()).run(reader)
+    )
+    await integration.started.wait()
+    reader.feed_eof()
+
+    assert await asyncio.wait_for(server_task, timeout=0.2) != 0
+    assert integration.cancelled.is_set()
+
+
+@pytest.mark.asyncio
+async def test_cancelling_server_cancels_and_awaits_running_requests() -> None:
+    reader = asyncio.StreamReader()
+    integration = BlockingIntegration()
+    reader.feed_data(request("hello-1", "hello", {"type": "hello", "client": "nilo"}))
+    reader.feed_data(
+        request(
+            "00000000-0000-0000-0000-000000000001",
+            "execute",
+            {"type": "execute", "operation": "wait", "parameters": {}},
+        )
+    )
+    server_task = asyncio.create_task(
+        ProtocolServer(integration, protocol_output=io.BytesIO()).run(reader)
+    )
+    await integration.started.wait()
+    server_task.cancel()
+
+    with pytest.raises(asyncio.CancelledError):
+        await server_task
+    assert integration.execute_cancelled.is_set()

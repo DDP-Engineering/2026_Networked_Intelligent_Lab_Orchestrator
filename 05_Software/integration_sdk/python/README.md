@@ -10,6 +10,11 @@ stdout exclusively for protocol records. Use `EventSink.emit()` to send execute
 events; ordinary `print()` calls made by an integration are redirected to stderr
 during a request.
 
+An integration handler owns any asyncio tasks it creates. It must await or
+cancel them before returning; a runner can only reliably tear down the direct
+handler task. Task 13 adds the install-shaped runner boundary that enforces this
+authoring contract during process shutdown.
+
 For development:
 
 ```powershell
