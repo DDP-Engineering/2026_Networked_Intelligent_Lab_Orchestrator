@@ -32,6 +32,8 @@ var (
 	ErrApprovalDenied          = errors.New("request was denied")
 )
 
+var canonicalJSONNumberPattern = regexp.MustCompile(`^-?(0|[1-9][0-9]*)(\.[0-9]*[1-9])?$`)
+
 type AppMode string
 
 const (
@@ -177,7 +179,7 @@ func (input ResolutionInput) Validate() error {
 	if isZeroID(input.SnapshotID.String()) || isZeroID(input.IntegrationID.String()) || isZeroID(input.DeviceID.String()) {
 		return fmt.Errorf("%w: snapshot, integration, and device identity are required", ErrInvalidResolutionInput)
 	}
-	if matched, _ := regexp.MatchString(`^[a-z][a-z0-9_]*$`, input.OperationName); !matched {
+	if matched, _ := regexp.MatchString(`^[a-z][a-z0-9_]*$`, input.OperationName); len(input.OperationName) > domain.MaxOperationNameBytes || !matched {
 		return fmt.Errorf("%w: operation name must be a stable descriptor identifier", ErrInvalidResolutionInput)
 	}
 	if err := input.AppMode.Validate(); err != nil {
@@ -353,6 +355,12 @@ func walkJSONValue(decoder *json.Decoder) error {
 	}
 	delimiter, ok := token.(json.Delim)
 	if !ok {
+		if number, isNumber := token.(json.Number); isNumber {
+			spelling := number.String()
+			if spelling == "-0" || !canonicalJSONNumberPattern.MatchString(spelling) {
+				return fmt.Errorf("noncanonical JSON number %q", spelling)
+			}
+		}
 		return nil
 	}
 	switch delimiter {

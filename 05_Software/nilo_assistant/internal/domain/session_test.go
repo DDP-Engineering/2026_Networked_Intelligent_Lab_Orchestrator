@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 )
@@ -186,6 +187,59 @@ func TestNewOperationRequestKeepsStableValidatedOperationNames(t *testing.T) {
 	}
 }
 
+func TestNewOperationRequestEnforcesPersistedOperationNameBound(t *testing.T) {
+	now := time.Date(2026, time.August, 30, 12, 0, 0, 0, time.UTC)
+	input := validOperationRequestInput(t, now)
+	input.OperationName = strings.Repeat("a", 128)
+	if _, err := NewOperationRequest(input, now); err != nil {
+		t.Fatalf("NewOperationRequest(128-character name) error = %v", err)
+	}
+	input.OperationName = strings.Repeat("a", 129)
+	if _, err := NewOperationRequest(input, now); err == nil {
+		t.Fatal("NewOperationRequest() accepted a 129-character operation name")
+	}
+}
+
+func TestNewOperationRequestAllocatesFreshVersionSevenIdentity(t *testing.T) {
+	now := time.Date(2026, time.August, 30, 12, 0, 0, 0, time.UTC)
+	input := validOperationRequestInput(t, now)
+
+	first, err := NewOperationRequest(input, now)
+	if err != nil {
+		t.Fatalf("first NewOperationRequest() error = %v", err)
+	}
+	second, err := NewOperationRequest(input, now)
+	if err != nil {
+		t.Fatalf("second NewOperationRequest() error = %v", err)
+	}
+	if first.ID() == second.ID() {
+		t.Fatalf("distinct accepted requests reused ID %s", first.ID())
+	}
+	if !isUUIDv7(first.ID().String()) || !isUUIDv7(second.ID().String()) {
+		t.Fatalf("allocated IDs %q and %q are not UUID-v7", first.ID(), second.ID())
+	}
+}
+
+func TestRehydrateOperationRequestAcceptsOnlyExplicitStoredIdentity(t *testing.T) {
+	now := time.Date(2026, time.August, 30, 12, 0, 0, 0, time.UTC)
+	input := validOperationRequestInput(t, now)
+	storedID, err := ParseRequestID("018f3d8d-8d2c-7c20-8e0c-000000000401")
+	if err != nil {
+		t.Fatalf("ParseRequestID() error = %v", err)
+	}
+
+	request, err := RehydrateOperationRequest(storedID, input, now)
+	if err != nil {
+		t.Fatalf("RehydrateOperationRequest() error = %v", err)
+	}
+	if request.ID() != storedID {
+		t.Fatalf("rehydrated ID = %s, want stored ID %s", request.ID(), storedID)
+	}
+	if _, err := RehydrateOperationRequest(RequestID{}, input, now); err == nil {
+		t.Fatal("RehydrateOperationRequest() accepted an empty stored ID")
+	}
+}
+
 func TestNewOperationRequestExposesValueGetters(t *testing.T) {
 	now := time.Date(2026, time.August, 30, 12, 0, 0, 0, time.UTC)
 	input := validOperationRequestInput(t, now)
@@ -195,8 +249,8 @@ func TestNewOperationRequestExposesValueGetters(t *testing.T) {
 		t.Fatalf("NewOperationRequest() error = %v", err)
 	}
 
-	if got, want := request.ID(), input.ID; got != want {
-		t.Fatalf("ID() = %v, want %v", got, want)
+	if got := request.ID().String(); !isUUIDv7(got) {
+		t.Fatalf("ID() = %q, want generated UUID-v7", got)
 	}
 	if got, want := request.Actor(), input.Actor; got != want {
 		t.Fatalf("Actor() = %v, want %v", got, want)
@@ -236,7 +290,6 @@ func TestNewOperationRequestRejectsInvalidInput(t *testing.T) {
 		name   string
 		mutate func(*OperationRequestInput)
 	}{
-		{name: "empty request ID", mutate: func(in *OperationRequestInput) { in.ID = RequestID{} }},
 		{name: "empty actor", mutate: func(in *OperationRequestInput) { in.Actor = Actor{} }},
 		{name: "empty integration ID", mutate: func(in *OperationRequestInput) { in.IntegrationID = IntegrationID{} }},
 		{name: "empty operation name", mutate: func(in *OperationRequestInput) { in.OperationName = "" }},
@@ -290,10 +343,6 @@ func TestNewOperationRequestCopiesCanonicalParameters(t *testing.T) {
 func validOperationRequestInput(t *testing.T, now time.Time) OperationRequestInput {
 	t.Helper()
 
-	requestID, err := NewRequestID()
-	if err != nil {
-		t.Fatalf("NewRequestID() error = %v", err)
-	}
 	actorID, err := NewActorID()
 	if err != nil {
 		t.Fatalf("NewActorID() error = %v", err)
@@ -316,7 +365,6 @@ func validOperationRequestInput(t *testing.T, now time.Time) OperationRequestInp
 	}
 
 	return OperationRequestInput{
-		ID:                    requestID,
 		Actor:                 Actor{ID: actorID},
 		IntegrationID:         integrationID,
 		OperationName:         "capture",

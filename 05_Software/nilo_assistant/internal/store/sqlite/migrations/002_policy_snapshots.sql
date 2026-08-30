@@ -33,8 +33,24 @@ CREATE TABLE IF NOT EXISTS policy_snapshots (
         )
     ),
     resolved_at TEXT NOT NULL CHECK (
-        length(resolved_at) BETWEEN 20 AND 35
+        length(resolved_at) BETWEEN 20 AND 30
         AND substr(resolved_at, -1, 1) = 'Z'
+        AND substr(resolved_at, 1, 19) GLOB
+            '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9]'
+        AND strftime('%Y-%m-%dT%H:%M:%SZ', resolved_at) IS NOT NULL
+        AND strftime('%Y-%m-%dT%H:%M:%SZ', resolved_at) =
+            substr(resolved_at, 1, 19) || 'Z'
+        AND (
+            length(resolved_at) = 20
+            OR (
+                length(resolved_at) BETWEEN 22 AND 30
+                AND substr(resolved_at, 20, 1) = '.'
+                AND substr(resolved_at, 21, length(resolved_at) - 21)
+                    NOT GLOB '*[^0-9]*'
+                AND substr(resolved_at, length(resolved_at) - 1, 1)
+                    BETWEEN '1' AND '9'
+            )
+        )
     ),
     CHECK (
         (device_known = 1 AND device_mode IS NOT NULL)

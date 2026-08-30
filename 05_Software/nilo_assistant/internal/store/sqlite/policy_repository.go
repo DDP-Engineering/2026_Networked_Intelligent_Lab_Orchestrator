@@ -155,8 +155,8 @@ func (repository *PolicyRepository) loadOperationRequest(ctx context.Context, re
 	if err != nil {
 		return domain.OperationRequest{}, fmt.Errorf("parse stored request creation time: %w", err)
 	}
-	request, err := domain.NewOperationRequest(domain.OperationRequestInput{
-		ID: parsedRequestID, Actor: domain.Actor{ID: actorID}, IntegrationID: integrationID,
+	request, err := domain.RehydrateOperationRequest(parsedRequestID, domain.OperationRequestInput{
+		Actor: domain.Actor{ID: actorID}, IntegrationID: integrationID,
 		OperationName: operationName, DeviceID: deviceID, CanonicalParameters: parameters,
 		ConfigurationSnapshot: configurationID, PolicySnapshot: policyID, Deadline: deadline,
 	}, created)

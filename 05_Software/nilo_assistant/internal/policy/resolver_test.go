@@ -3,6 +3,7 @@ package policy
 import (
 	"bytes"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -200,6 +201,18 @@ func TestResolveRejectsOpenEndedOrIncompleteInputs(t *testing.T) {
 	}
 }
 
+func TestResolveEnforcesPersistedOperationNameBound(t *testing.T) {
+	input := validResolutionInput(t)
+	input.OperationName = strings.Repeat("a", 128)
+	if _, err := Resolve(input); err != nil {
+		t.Fatalf("Resolve(128-character name) error = %v", err)
+	}
+	input.OperationName = strings.Repeat("a", 129)
+	if _, err := Resolve(input); !errors.Is(err, ErrInvalidResolutionInput) {
+		t.Fatalf("Resolve(129-character name) error = %v, want ErrInvalidResolutionInput", err)
+	}
+}
+
 func TestPolicyStringTypesRejectUnknownValues(t *testing.T) {
 	if _, err := ParseAppMode("operator"); !errors.Is(err, ErrInvalidAppMode) {
 		t.Fatalf("ParseAppMode() error = %v, want ErrInvalidAppMode", err)
@@ -261,6 +274,22 @@ func TestCanonicalRequestJSONRejectsDuplicateParameterKeys(t *testing.T) {
 	request := operationRequestWithParameters(t, `{"channel":"A","channel":"B"}`)
 	if _, err := CanonicalRequestJSON(request); !errors.Is(err, ErrInvalidCanonicalRequest) {
 		t.Fatalf("CanonicalRequestJSON() error = %v, want ErrInvalidCanonicalRequest", err)
+	}
+}
+
+func TestCanonicalRequestJSONRejectsNoncanonicalEquivalentNumberSpellings(t *testing.T) {
+	canonical := operationRequestWithParameters(t, `{"amplitude":2}`)
+	if _, err := CanonicalRequestJSON(canonical); err != nil {
+		t.Fatalf("CanonicalRequestJSON(canonical number) error = %v", err)
+	}
+
+	for _, parameters := range []string{`{"amplitude":2.0}`, `{"amplitude":2e0}`} {
+		t.Run(parameters, func(t *testing.T) {
+			request := operationRequestWithParameters(t, parameters)
+			if _, err := CanonicalRequestJSON(request); !errors.Is(err, ErrInvalidCanonicalRequest) {
+				t.Fatalf("CanonicalRequestJSON(%s) error = %v, want ErrInvalidCanonicalRequest", parameters, err)
+			}
+		})
 	}
 }
 
@@ -343,14 +372,14 @@ func operationRequestWithParameters(t *testing.T, parameters string) domain.Oper
 		t.Fatalf("ParseSnapshotID(policy) error = %v", err)
 	}
 	createdAt := time.Date(2026, 8, 30, 12, 0, 0, 0, time.UTC)
-	request, err := domain.NewOperationRequest(domain.OperationRequestInput{
-		ID: requestID, Actor: domain.Actor{ID: actorID}, IntegrationID: integrationID,
+	request, err := domain.RehydrateOperationRequest(requestID, domain.OperationRequestInput{
+		Actor: domain.Actor{ID: actorID}, IntegrationID: integrationID,
 		OperationName: "capture", DeviceID: deviceID,
 		CanonicalParameters: []byte(parameters), ConfigurationSnapshot: configurationSnapshot,
 		PolicySnapshot: policySnapshot, Deadline: createdAt.Add(time.Hour),
 	}, createdAt)
 	if err != nil {
-		t.Fatalf("NewOperationRequest() error = %v", err)
+		t.Fatalf("RehydrateOperationRequest() error = %v", err)
 	}
 	return request
 }

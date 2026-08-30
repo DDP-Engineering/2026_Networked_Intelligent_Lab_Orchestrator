@@ -7,12 +7,14 @@ import (
 	"time"
 )
 
-const MaxCanonicalParametersBytes = 1 << 20
+const (
+	MaxCanonicalParametersBytes = 1 << 20
+	MaxOperationNameBytes       = 128
+)
 
 var operationNamePattern = regexp.MustCompile(`^[a-z][a-z0-9_]*$`)
 
 type OperationRequestInput struct {
-	ID                    RequestID
 	Actor                 Actor
 	IntegrationID         IntegrationID
 	OperationName         string
@@ -37,10 +39,24 @@ type OperationRequest struct {
 }
 
 func NewOperationRequest(input OperationRequestInput, createdAt time.Time) (OperationRequest, error) {
-	if input.ID.isZero() || input.Actor.ID.isZero() || input.IntegrationID.isZero() || input.DeviceID.isZero() || input.ConfigurationSnapshot.isZero() || input.PolicySnapshot.isZero() {
+	id, err := NewRequestID()
+	if err != nil {
+		return OperationRequest{}, err
+	}
+	return buildOperationRequest(id, input, createdAt)
+}
+
+// RehydrateOperationRequest reconstructs a previously accepted durable
+// request using its stored identity. New requests must use NewOperationRequest.
+func RehydrateOperationRequest(id RequestID, input OperationRequestInput, createdAt time.Time) (OperationRequest, error) {
+	return buildOperationRequest(id, input, createdAt)
+}
+
+func buildOperationRequest(id RequestID, input OperationRequestInput, createdAt time.Time) (OperationRequest, error) {
+	if id.isZero() || input.Actor.ID.isZero() || input.IntegrationID.isZero() || input.DeviceID.isZero() || input.ConfigurationSnapshot.isZero() || input.PolicySnapshot.isZero() {
 		return OperationRequest{}, errors.New("operation request identity is required")
 	}
-	if !operationNamePattern.MatchString(input.OperationName) {
+	if len(input.OperationName) > MaxOperationNameBytes || !operationNamePattern.MatchString(input.OperationName) {
 		return OperationRequest{}, errors.New("operation name must be a stable descriptor identifier")
 	}
 	if len(input.CanonicalParameters) > MaxCanonicalParametersBytes {
@@ -54,7 +70,7 @@ func NewOperationRequest(input OperationRequestInput, createdAt time.Time) (Oper
 	}
 
 	return OperationRequest{
-		id:                    input.ID,
+		id:                    id,
 		actor:                 input.Actor,
 		integrationID:         input.IntegrationID,
 		operationName:         input.OperationName,

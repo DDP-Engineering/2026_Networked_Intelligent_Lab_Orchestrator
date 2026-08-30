@@ -3,6 +3,7 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -124,6 +125,13 @@ func TestPolicySnapshotsEnforceEnumBooleanAndNullabilityChecks(t *testing.T) {
 		{name: "decision enum", mutate: func(row *policySnapshotRow) { row.decision = "maybe" }},
 		{name: "bounded reason enum", mutate: func(row *policySnapshotRow) { row.reason = strings.Repeat("x", 65) }},
 		{name: "UTC resolution time", mutate: func(row *policySnapshotRow) { row.resolvedAt = "2026-08-30T15:04:05+03:00" }},
+		{name: "malformed timestamp ending Z", mutate: func(row *policySnapshotRow) { row.resolvedAt = "xxxxxxxxxxxxxxxxxxxZ" }},
+		{name: "noncanonical timestamp separator", mutate: func(row *policySnapshotRow) { row.resolvedAt = "2026-08-30 12:04:05Z" }},
+		{name: "noncanonical fractional trailing zero", mutate: func(row *policySnapshotRow) { row.resolvedAt = "2026-08-30T12:04:05.120Z" }},
+		{name: "invalid timestamp month", mutate: func(row *policySnapshotRow) { row.resolvedAt = "2026-13-30T12:04:05Z" }},
+		{name: "invalid timestamp hour", mutate: func(row *policySnapshotRow) { row.resolvedAt = "2026-08-30T25:04:05Z" }},
+		{name: "invalid timestamp calendar day", mutate: func(row *policySnapshotRow) { row.resolvedAt = "2026-02-30T12:04:05Z" }},
+		{name: "invalid timestamp leap day", mutate: func(row *policySnapshotRow) { row.resolvedAt = "2025-02-29T12:04:05Z" }},
 	}
 
 	for _, test := range tests {
@@ -149,6 +157,37 @@ func TestPolicySnapshotsEnforceEnumBooleanAndNullabilityChecks(t *testing.T) {
 			}
 			if !strings.Contains(strings.ToLower(err.Error()), "constraint") {
 				t.Fatalf("insert error = %v, want constraint rejection", err)
+			}
+		})
+	}
+}
+
+func TestPolicySnapshotsAcceptCanonicalUTCTimestampPrecision(t *testing.T) {
+	for index, timestamp := range []string{
+		"2026-08-30T12:04:05Z",
+		"2026-08-30T12:04:05.1Z",
+		"2026-08-30T12:04:05.999999999Z",
+	} {
+		t.Run(timestamp, func(t *testing.T) {
+			db := openTemporaryDatabase(t)
+			row := validPolicySnapshotRow()
+			row.id = fmt.Sprintf("018f3d8d-8d2c-7c20-8e0c-%012d", 410+index)
+			row.resolvedAt = timestamp
+			_, err := db.SQL().ExecContext(context.Background(), `
+				INSERT INTO policy_snapshots (
+					id, integration_id, operation_name, device_id,
+					app_known, app_mode, manifest_policy, operation_override,
+					device_known, device_mode, effective_mode, effective_policy,
+					decision, reason, resolved_at
+				) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			`,
+				row.id, row.integrationID, row.operationName, row.deviceID,
+				row.appKnown, row.appMode, row.manifestPolicy, row.operationOverride,
+				row.deviceKnown, row.deviceMode, row.effectiveMode, row.effectivePolicy,
+				row.decision, row.reason, row.resolvedAt,
+			)
+			if err != nil {
+				t.Fatalf("policy_snapshots rejected canonical timestamp %q: %v", timestamp, err)
 			}
 		})
 	}

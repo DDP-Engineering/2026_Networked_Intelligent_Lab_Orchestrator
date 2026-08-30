@@ -234,8 +234,7 @@ func policyResolutionInput(t *testing.T) policy.ResolutionInput {
 func policyOperationRequest(t *testing.T, parameters string) domain.OperationRequest {
 	t.Helper()
 	createdAt := time.Date(2026, 8, 30, 12, 0, 0, 0, time.UTC)
-	request, err := domain.NewOperationRequest(domain.OperationRequestInput{
-		ID:                    mustParseRequestID(t, "018f3d8d-8d2c-7c20-8e0c-000000000201"),
+	request, err := domain.RehydrateOperationRequest(mustParseRequestID(t, "018f3d8d-8d2c-7c20-8e0c-000000000201"), domain.OperationRequestInput{
 		Actor:                 domain.Actor{ID: mustParseActorID(t, "018f3d8d-8d2c-7c20-8e0c-000000000202")},
 		IntegrationID:         mustParseIntegrationID(t, "018f3d8d-8d2c-7c20-8e0c-000000000203"),
 		OperationName:         "capture",
@@ -246,7 +245,7 @@ func policyOperationRequest(t *testing.T, parameters string) domain.OperationReq
 		Deadline:              createdAt.Add(time.Hour),
 	}, createdAt)
 	if err != nil {
-		t.Fatalf("NewOperationRequest() error = %v", err)
+		t.Fatalf("RehydrateOperationRequest() error = %v", err)
 	}
 	return request
 }
