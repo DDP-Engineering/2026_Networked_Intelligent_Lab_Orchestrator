@@ -680,6 +680,7 @@ type Runner struct {
 - Create: `05_Software/nilo_assistant/internal/integration/protocol/codec.go`
 - Create: `05_Software/nilo_assistant/internal/integration/protocol/codec_test.go`
 - Create: `05_Software/nilo_assistant/internal/integration/protocol/types.go`
+- Create: `05_Software/tests/contract/fixtures/protocol-v1/hello.ndjson`
 
 **Consumes:** One newline-delimited JSON message at a time.
 
