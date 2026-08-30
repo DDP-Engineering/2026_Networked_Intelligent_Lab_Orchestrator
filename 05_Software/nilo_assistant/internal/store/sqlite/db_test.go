@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -38,23 +39,14 @@ func TestOpenConfiguresDurableDatabaseAndMigratesAllFoundationTables(t *testing.
 		t.Fatalf("MaxOpenConnections = %d, want 1", got)
 	}
 
-	required := []string{
-		"schema_migrations", "config_versions", "users", "mcp_tokens",
-		"app_policies", "operation_policy_overrides", "device_policies",
-		"operation_requests", "approval_records", "sessions", "resource_leases", "audit_events", "artifacts",
+	wantTables := []string{
+		"app_policies", "approval_records", "artifacts", "audit_events",
+		"config_versions", "device_policies", "mcp_tokens", "operation_policy_overrides",
+		"operation_requests", "resource_leases", "schema_migrations", "sessions",
+		"users",
 	}
-	for _, table := range required {
-		var count int
-		if err := db.SQL().QueryRowContext(
-			context.Background(),
-			"SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = ?",
-			table,
-		).Scan(&count); err != nil {
-			t.Fatalf("look up table %q: %v", table, err)
-		}
-		if count != 1 {
-			t.Fatalf("table %q count = %d, want 1", table, count)
-		}
+	if gotTables := nonInternalTableNames(t, db.SQL()); !slices.Equal(gotTables, wantTables) {
+		t.Fatalf("non-internal tables = %q, want %q", gotTables, wantTables)
 	}
 }
 
@@ -186,4 +178,29 @@ func queryString(t *testing.T, db *sql.DB, query string) string {
 		t.Fatalf("query %q: %v", query, err)
 	}
 	return got
+}
+
+func nonInternalTableNames(t *testing.T, db *sql.DB) []string {
+	t.Helper()
+	rows, err := db.QueryContext(
+		context.Background(),
+		"SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
+	)
+	if err != nil {
+		t.Fatalf("list non-internal SQLite tables: %v", err)
+	}
+	defer rows.Close()
+
+	var names []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			t.Fatalf("scan SQLite table name: %v", err)
+		}
+		names = append(names, name)
+	}
+	if err := rows.Err(); err != nil {
+		t.Fatalf("iterate SQLite table names: %v", err)
+	}
+	return names
 }
