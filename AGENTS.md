@@ -45,3 +45,11 @@ in for an automatable test, a retired requirement, and unrequested work found
 in review.
 
 <!-- AEGIS:END -->
+
+## Repository environment tools
+
+Keep repository-local setup, environment, validation, deployment, and
+diagnostic tooling in `02_Tools/`. Downloaded runtimes and compiler binaries
+belong under `02_Tools/runtime/` and are not committed; bootstrap and
+environment scripts must recreate them from pinned, checksum-verified
+archives without modifying the system-wide environment.
