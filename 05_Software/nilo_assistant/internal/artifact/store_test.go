@@ -21,6 +21,7 @@ import (
 type memoryRepository struct {
 	artifacts map[domain.ArtifactID]domain.Artifact
 	saveError error
+	getValue  *domain.Artifact
 }
 
 func (repository *memoryRepository) Save(_ context.Context, value domain.Artifact) error {
@@ -35,11 +36,134 @@ func (repository *memoryRepository) Save(_ context.Context, value domain.Artifac
 }
 
 func (repository *memoryRepository) Get(_ context.Context, id domain.ArtifactID) (domain.Artifact, error) {
+	if repository.getValue != nil {
+		return *repository.getValue, nil
+	}
 	value, ok := repository.artifacts[id]
 	if !ok {
 		return domain.Artifact{}, artifact.ErrArtifactNotFound
 	}
 	return value, nil
+}
+
+func TestRegisterCollisionNeverOverwritesExistingDestination(t *testing.T) {
+	t.Parallel()
+
+	fixture := newArtifactFixture(t, []byte("new measurement"))
+	destinationDirectory := filepath.Join(fixture.artifactRoot, fixture.sessionID.String())
+	if err := os.MkdirAll(destinationDirectory, 0o700); err != nil {
+		t.Fatalf("MkdirAll(destination) error = %v", err)
+	}
+	destination := filepath.Join(destinationDirectory, fixture.artifactID.String())
+	existing := []byte("existing durable bytes")
+	if err := os.WriteFile(destination, existing, 0o600); err != nil {
+		t.Fatalf("WriteFile(destination) error = %v", err)
+	}
+	store := newTestStore(t, fixture, &memoryRepository{}, 1024)
+
+	if _, err := store.Register(context.Background(), fixture.registerInput(fixture.stagedPath)); !errors.Is(err, artifact.ErrArtifactAlreadyRegistered) {
+		t.Fatalf("Register() error = %v, want ErrArtifactAlreadyRegistered", err)
+	}
+	if contents, err := os.ReadFile(destination); err != nil || !bytes.Equal(contents, existing) {
+		t.Fatalf("colliding destination = %q, error = %v", contents, err)
+	}
+	if contents, err := os.ReadFile(fixture.stagedPath); err != nil || !bytes.Equal(contents, fixture.contents) {
+		t.Fatalf("staged source = %q, error = %v", contents, err)
+	}
+}
+
+func TestRegisterMetadataFailureDoesNotRemoveAReplacedDestination(t *testing.T) {
+	t.Parallel()
+
+	fixture := newArtifactFixture(t, []byte("measurement"))
+	destination := filepath.Join(fixture.artifactRoot, fixture.sessionID.String(), fixture.artifactID.String())
+	replacement := []byte("replacement owned elsewhere")
+	var replacementError error
+	repositoryFailure := errors.New("metadata unavailable")
+	store, err := artifact.NewStore(artifact.Config{
+		ArtifactRoot: fixture.artifactRoot,
+		StagingRoot:  fixture.stagingRoot,
+		MaximumBytes: 1024,
+	}, artifact.Dependencies{
+		Repository:    &memoryRepository{saveError: repositoryFailure},
+		NewArtifactID: func() (domain.ArtifactID, error) { return fixture.artifactID, nil },
+		Now: func() time.Time {
+			if err := os.Remove(destination); err != nil {
+				replacementError = err
+				return fixture.createdAt
+			}
+			replacementError = os.WriteFile(destination, replacement, 0o600)
+			return fixture.createdAt
+		},
+	})
+	if err != nil {
+		t.Fatalf("NewStore() error = %v", err)
+	}
+
+	if _, err := store.Register(context.Background(), fixture.registerInput(fixture.stagedPath)); !errors.Is(err, repositoryFailure) {
+		t.Fatalf("Register() error = %v, want metadata failure", err)
+	}
+	if replacementError != nil {
+		t.Fatalf("replace destination: %v", replacementError)
+	}
+	if contents, err := os.ReadFile(destination); err != nil || !bytes.Equal(contents, replacement) {
+		t.Fatalf("replacement destination = %q, error = %v", contents, err)
+	}
+}
+
+func TestNewStoreRejectsRootsThatAliasTheSamePhysicalDirectory(t *testing.T) {
+	t.Parallel()
+
+	base := t.TempDir()
+	realParent := filepath.Join(base, "real")
+	realRoot := filepath.Join(realParent, "shared")
+	if err := os.MkdirAll(realRoot, 0o700); err != nil {
+		t.Fatalf("MkdirAll(real root) error = %v", err)
+	}
+	aliasParent := filepath.Join(base, "alias")
+	if err := os.Symlink(realParent, aliasParent); err != nil {
+		t.Skipf("directory symbolic links unavailable: %v", err)
+	}
+	aliasRoot := filepath.Join(aliasParent, "shared")
+	_, err := artifact.NewStore(artifact.Config{
+		ArtifactRoot: realRoot,
+		StagingRoot:  aliasRoot,
+		MaximumBytes: 1024,
+	}, artifact.Dependencies{
+		Repository:    &memoryRepository{},
+		NewArtifactID: domain.NewArtifactID,
+		Now:           time.Now,
+	})
+	if !errors.Is(err, artifact.ErrInvalidStoreConfiguration) {
+		t.Fatalf("NewStore() error = %v, want ErrInvalidStoreConfiguration", err)
+	}
+}
+
+func TestOpenRejectsMetadataIdentityThatDoesNotMatchRequestedArtifact(t *testing.T) {
+	t.Parallel()
+
+	fixture := newArtifactFixture(t, []byte("measurement"))
+	otherID, err := domain.NewArtifactID()
+	if err != nil {
+		t.Fatalf("NewArtifactID() error = %v", err)
+	}
+	destinationDirectory := filepath.Join(fixture.artifactRoot, fixture.sessionID.String())
+	if err := os.MkdirAll(destinationDirectory, 0o700); err != nil {
+		t.Fatalf("MkdirAll(destination) error = %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(destinationDirectory, otherID.String()), fixture.contents, 0o600); err != nil {
+		t.Fatalf("WriteFile(destination) error = %v", err)
+	}
+	mismatched := domain.Artifact{ID: otherID, SessionID: fixture.sessionID, SizeBytes: int64(len(fixture.contents))}
+	store := newTestStore(t, fixture, &memoryRepository{getValue: &mismatched}, 1024)
+
+	reader, _, err := store.Open(context.Background(), fixture.artifactID)
+	if reader != nil {
+		_ = reader.Close()
+	}
+	if !errors.Is(err, artifact.ErrInvalidArtifact) {
+		t.Fatalf("Open() error = %v, want ErrInvalidArtifact", err)
+	}
 }
 
 type artifactFixture struct {

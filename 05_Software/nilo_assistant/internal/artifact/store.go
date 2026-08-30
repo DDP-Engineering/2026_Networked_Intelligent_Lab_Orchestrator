@@ -66,12 +66,13 @@ type RegisterInput struct {
 }
 
 type store struct {
-	artifactRoot  string
-	stagingRoot   string
-	maximumBytes  int64
-	repository    Repository
-	newArtifactID func() (domain.ArtifactID, error)
-	now           func() time.Time
+	artifactRoot        string
+	stagingRoot         string
+	stagingPhysicalRoot string
+	maximumBytes        int64
+	repository          Repository
+	newArtifactID       func() (domain.ArtifactID, error)
+	now                 func() time.Time
 }
 
 func NewStore(config Config, dependencies Dependencies) (Store, error) {
@@ -83,7 +84,8 @@ func NewStore(config Config, dependencies Dependencies) (Store, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%w: staging root: %v", ErrInvalidStoreConfiguration, err)
 	}
-	if samePath(artifactRoot, stagingRoot) || pathContains(artifactRoot, stagingRoot) || pathContains(stagingRoot, artifactRoot) {
+	if os.SameFile(artifactRoot.info, stagingRoot.info) || samePath(artifactRoot.physical, stagingRoot.physical) ||
+		pathContains(artifactRoot.physical, stagingRoot.physical) || pathContains(stagingRoot.physical, artifactRoot.physical) {
 		return nil, fmt.Errorf("%w: artifact and staging roots must be disjoint", ErrInvalidStoreConfiguration)
 	}
 	if config.MaximumBytes <= 0 {
@@ -93,8 +95,9 @@ func NewStore(config Config, dependencies Dependencies) (Store, error) {
 		return nil, fmt.Errorf("%w: repository, ID generator, and clock are required", ErrInvalidStoreConfiguration)
 	}
 	return &store{
-		artifactRoot: artifactRoot, stagingRoot: stagingRoot, maximumBytes: config.MaximumBytes,
-		repository: dependencies.Repository, newArtifactID: dependencies.NewArtifactID, now: dependencies.Now,
+		artifactRoot: artifactRoot.physical, stagingRoot: stagingRoot.configured, stagingPhysicalRoot: stagingRoot.physical,
+		maximumBytes: config.MaximumBytes,
+		repository:   dependencies.Repository, newArtifactID: dependencies.NewArtifactID, now: dependencies.Now,
 	}, nil
 }
 
@@ -106,7 +109,7 @@ func (storage *store) Register(ctx context.Context, input RegisterInput) (domain
 	if err != nil {
 		return domain.Artifact{}, err
 	}
-	stagingRoot, err := os.OpenRoot(storage.stagingRoot)
+	stagingRoot, err := os.OpenRoot(storage.stagingPhysicalRoot)
 	if err != nil {
 		return domain.Artifact{}, fmt.Errorf("open staging root: %w", err)
 	}
@@ -184,17 +187,29 @@ func (storage *store) Register(ctx context.Context, input RegisterInput) (domain
 	if err := temporary.Sync(); err != nil {
 		return domain.Artifact{}, fmt.Errorf("sync verified artifact: %w", err)
 	}
+	createdInfo, err := temporary.Stat()
+	if err != nil {
+		return domain.Artifact{}, fmt.Errorf("identify verified artifact: %w", err)
+	}
 	if err := temporary.Close(); err != nil {
 		return domain.Artifact{}, fmt.Errorf("close verified artifact: %w", err)
 	}
 	temporaryClosed = true
-	if _, err := artifactRoot.Lstat(destinationRelative); err == nil {
-		return domain.Artifact{}, ErrArtifactAlreadyRegistered
-	} else if !errors.Is(err, os.ErrNotExist) {
-		return domain.Artifact{}, fmt.Errorf("check artifact destination: %w", err)
+	if err := placeNoReplace(artifactRoot, temporaryRelative, destinationRelative); err != nil {
+		if errors.Is(err, os.ErrExist) {
+			return domain.Artifact{}, ErrArtifactAlreadyRegistered
+		}
+		return domain.Artifact{}, fmt.Errorf("atomically place verified artifact without replacement: %w", err)
 	}
-	if err := artifactRoot.Rename(temporaryRelative, destinationRelative); err != nil {
-		return domain.Artifact{}, fmt.Errorf("atomically place verified artifact: %w", err)
+	destinationInfo, err := artifactRoot.Lstat(destinationRelative)
+	if err != nil || destinationInfo.Mode()&os.ModeSymlink != 0 || !destinationInfo.Mode().IsRegular() ||
+		!os.SameFile(createdInfo, destinationInfo) {
+		_, cleanupErr := removeCreatedDestination(artifactRoot, destinationRelative, createdInfo)
+		return domain.Artifact{}, fmt.Errorf("verify placed artifact identity: %v (cleanup: %v)", err, cleanupErr)
+	}
+	if err := syncContainingDirectory(artifactRoot, sessionRelative); err != nil {
+		_, cleanupErr := removeCreatedDestination(artifactRoot, destinationRelative, createdInfo)
+		return domain.Artifact{}, fmt.Errorf("sync artifact directory after placement: %w (cleanup: %v)", err, cleanupErr)
 	}
 
 	value := domain.Artifact{
@@ -204,12 +219,15 @@ func (storage *store) Register(ctx context.Context, input RegisterInput) (domain
 		PresentationHints: append([]byte(nil), input.PresentationHints...), CreatedAt: storage.now().UTC(),
 	}
 	if value.CreatedAt.IsZero() {
-		_ = artifactRoot.Remove(destinationRelative)
+		_, _ = removeCreatedDestination(artifactRoot, destinationRelative, createdInfo)
 		return domain.Artifact{}, fmt.Errorf("%w: clock returned zero time", ErrInvalidArtifact)
 	}
 	if err := storage.repository.Save(ctx, value); err != nil {
-		removeErr := artifactRoot.Remove(destinationRelative)
-		if removeErr != nil && !errors.Is(removeErr, os.ErrNotExist) {
+		removed, removeErr := removeCreatedDestination(artifactRoot, destinationRelative, createdInfo)
+		if removed && removeErr == nil {
+			removeErr = syncContainingDirectory(artifactRoot, sessionRelative)
+		}
+		if removeErr != nil {
 			return domain.Artifact{}, fmt.Errorf("save artifact metadata: %w (cleanup destination: %v)", err, removeErr)
 		}
 		return domain.Artifact{}, fmt.Errorf("save artifact metadata: %w", err)
@@ -225,6 +243,9 @@ func (storage *store) Open(ctx context.Context, id domain.ArtifactID) (io.ReadCl
 	value, err := storage.repository.Get(ctx, id)
 	if err != nil {
 		return nil, domain.Artifact{}, err
+	}
+	if value.ID != id {
+		return nil, domain.Artifact{}, fmt.Errorf("%w: repository returned metadata for %s when %s was requested", ErrInvalidArtifact, value.ID.String(), id.String())
 	}
 	artifactRoot, err := os.OpenRoot(storage.artifactRoot)
 	if err != nil {
@@ -245,6 +266,15 @@ func (storage *store) Open(ctx context.Context, id domain.ArtifactID) (io.ReadCl
 	file, err := artifactRoot.Open(artifactRelative)
 	if err != nil {
 		return nil, domain.Artifact{}, fmt.Errorf("open artifact: %w", err)
+	}
+	openedInfo, err := file.Stat()
+	if err != nil {
+		_ = file.Close()
+		return nil, domain.Artifact{}, fmt.Errorf("identify opened artifact: %w", err)
+	}
+	if !openedInfo.Mode().IsRegular() || !os.SameFile(info, openedInfo) {
+		_ = file.Close()
+		return nil, domain.Artifact{}, fmt.Errorf("%w: artifact changed while opening", ErrArtifactNotFound)
 	}
 	return file, cloneArtifact(value), nil
 }
@@ -272,22 +302,40 @@ func (storage *store) validateInput(input RegisterInput) error {
 	return nil
 }
 
-func prepareRoot(root string) (string, error) {
+type preparedRoot struct {
+	configured string
+	physical   string
+	info       os.FileInfo
+}
+
+func prepareRoot(root string) (preparedRoot, error) {
 	if strings.TrimSpace(root) == "" || !filepath.IsAbs(root) {
-		return "", errors.New("root must be absolute")
+		return preparedRoot{}, errors.New("root must be absolute")
 	}
 	clean := filepath.Clean(root)
 	if err := os.MkdirAll(clean, 0o700); err != nil {
-		return "", err
+		return preparedRoot{}, err
 	}
-	info, err := os.Lstat(clean)
+	lexicalInfo, err := os.Lstat(clean)
 	if err != nil {
-		return "", err
+		return preparedRoot{}, err
 	}
-	if info.Mode()&os.ModeSymlink != 0 || !info.IsDir() {
-		return "", errors.New("root must be a real directory")
+	if lexicalInfo.Mode()&os.ModeSymlink != 0 || !lexicalInfo.IsDir() {
+		return preparedRoot{}, errors.New("root must be a real directory")
 	}
-	return clean, nil
+	physical, err := filepath.EvalSymlinks(clean)
+	if err != nil {
+		return preparedRoot{}, err
+	}
+	physical, err = filepath.Abs(filepath.Clean(physical))
+	if err != nil {
+		return preparedRoot{}, err
+	}
+	physicalInfo, err := os.Stat(physical)
+	if err != nil {
+		return preparedRoot{}, err
+	}
+	return preparedRoot{configured: clean, physical: physical, info: physicalInfo}, nil
 }
 
 func confinedRelative(root, candidate string) (string, error) {
@@ -325,6 +373,35 @@ func rejectSymlinkComponents(root *os.Root, relative string) (os.FileInfo, error
 		}
 	}
 	return info, nil
+}
+
+func removeCreatedDestination(root *os.Root, relative string, created os.FileInfo) (bool, error) {
+	pathInfo, err := root.Lstat(relative)
+	if errors.Is(err, os.ErrNotExist) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	if pathInfo.Mode()&os.ModeSymlink != 0 || !pathInfo.Mode().IsRegular() || !os.SameFile(created, pathInfo) {
+		return false, nil
+	}
+	file, err := root.Open(relative)
+	if err != nil {
+		return false, err
+	}
+	defer file.Close()
+	openedInfo, err := file.Stat()
+	if err != nil {
+		return false, err
+	}
+	if !openedInfo.Mode().IsRegular() || !os.SameFile(created, openedInfo) || !os.SameFile(pathInfo, openedInfo) {
+		return false, nil
+	}
+	if err := root.Remove(relative); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func samePath(left, right string) bool {
