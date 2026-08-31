@@ -28,6 +28,83 @@ func TestLoadAcceptsValidPackage(t *testing.T) {
 	}
 }
 
+func TestResourceClaimGrammar(t *testing.T) {
+	valid := []ResourceClaim{
+		"usb_bus",
+		"fake/device/stable-001",
+		"fake/device_2/stable-001",
+	}
+	for _, claim := range valid {
+		t.Run("accepts_"+string(claim), func(t *testing.T) {
+			if !validResourceClaim(claim) {
+				t.Fatalf("validResourceClaim(%q) = false, want true", claim)
+			}
+		})
+	}
+
+	invalid := []ResourceClaim{
+		"",
+		"/fake/device",
+		"fake/device/",
+		"fake//device",
+		"fake/./device",
+		"fake/../device",
+		"fake/device/..",
+		"fake\\device",
+		"fake/device?",
+		"fake/Device",
+		"fake/device name",
+	}
+	for _, claim := range invalid {
+		t.Run("rejects_"+strings.NewReplacer("/", "_", "\\", "_", "?", "_").Replace(string(claim)), func(t *testing.T) {
+			if validResourceClaim(claim) {
+				t.Fatalf("validResourceClaim(%q) = true, want false", claim)
+			}
+		})
+	}
+}
+
+func TestLoadAcceptsFakePythonPackage(t *testing.T) {
+	root := filepath.Join("..", "..", "..", "..", "integrations", "fake_python")
+
+	loaded, err := Load(root)
+	if err != nil {
+		t.Fatalf("Load(%q) error = %v", root, err)
+	}
+	if len(loaded.Operations) != 5 {
+		t.Fatalf("operation count = %d, want 5", len(loaded.Operations))
+	}
+	for _, operation := range loaded.Operations {
+		if !sameClaims(operation.Resources, []ResourceClaim{"fake/device/stable-001"}) {
+			t.Fatalf("operation %q resources = %v, want fake/device/stable-001", operation.ID, operation.Resources)
+		}
+	}
+}
+
+func TestLoadRejectsMalformedResourceClaims(t *testing.T) {
+	claims := []string{
+		"",
+		"/fake/device",
+		"fake/device/",
+		"fake//device",
+		"fake/./device",
+		"fake/../device",
+		"fake\\device",
+		"fake/device?",
+		"fake/device name",
+	}
+	for _, claim := range claims {
+		t.Run("rejects_"+strings.NewReplacer("/", "_", "\\", "_", "?", "_").Replace(claim), func(t *testing.T) {
+			root := writePackage(t, func(_ *testing.T, document map[string]any) {
+				document["operations"].([]any)[0].(map[string]any)["resources"] = []any{claim}
+			})
+			if _, err := Load(root); !errors.Is(err, ErrInvalidManifest) {
+				t.Fatalf("Load() error = %v, want ErrInvalidManifest", err)
+			}
+		})
+	}
+}
+
 func TestCanonicalPackageRootUsesPhysicalPath(t *testing.T) {
 	root := writePackage(t, nil)
 	want, err := filepath.EvalSymlinks(root)

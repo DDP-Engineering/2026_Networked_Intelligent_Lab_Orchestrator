@@ -411,16 +411,33 @@ func supportedPlatform(platform Platform) bool {
 }
 
 func validResourceClaim(resource ResourceClaim) bool {
-	if resource == "" {
+	segments := strings.Split(string(resource), "/")
+	if len(segments) == 0 {
 		return false
 	}
-	for index, character := range resource {
+	for _, segment := range segments {
+		if !validResourceSegment(segment) {
+			return false
+		}
+	}
+	return true
+}
+
+// validResourceSegment permits a stable lowercase identifier within a
+// slash-delimited resource namespace. Empty segments reject absolute paths and
+// duplicate separators; the restricted character set also rejects traversal
+// and platform-specific path syntax.
+func validResourceSegment(segment string) bool {
+	if segment == "" || segment[0] < 'a' || segment[0] > 'z' {
+		return false
+	}
+	for index, character := range segment {
 		if (character >= 'a' && character <= 'z') || (character >= '0' && character <= '9' && index > 0) || character == '_' || character == '-' {
 			continue
 		}
 		return false
 	}
-	return resource[0] >= 'a' && resource[0] <= 'z'
+	return true
 }
 
 func requireEOF(decoder *json.Decoder) error {

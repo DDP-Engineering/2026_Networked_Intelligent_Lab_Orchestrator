@@ -1,0 +1,31 @@
+{
+  "package": {
+    "id": "fake-python",
+    "version": "0.1.0",
+    "publisher": "DDP Engineering",
+    "integrity": "sha256:742b103819dfef5d233bf1fe046db474137857a36dc0d81cde526ee7f276750d"
+  },
+  "protocol": "nilo.integration/1",
+  "platforms": [
+    {"os": "linux", "architecture": "arm64"},
+    {"os": "linux", "architecture": "amd64"},
+    {"os": "windows", "architecture": "amd64"}
+  ],
+  "runner": {
+    "executable": "src/nilo_fake_integration/__main__.py",
+    "arguments": []
+  },
+  "app_configuration_schema": "schemas/echo.input.schema.json",
+  "operations": [
+    {"id": "echo", "policy": "auto_eligible", "input_schema": "schemas/echo.input.schema.json", "result_schema": "schemas/echo.result.schema.json", "timeout": "30s", "cancellable": false, "state_changing": false, "resources": ["fake/device/stable-001"]},
+    {"id": "artifact", "policy": "auto_eligible", "input_schema": "schemas/echo.input.schema.json", "result_schema": "schemas/echo.result.schema.json", "timeout": "30s", "cancellable": false, "state_changing": true, "resources": ["fake/device/stable-001"]},
+    {"id": "sleep", "policy": "full_only", "input_schema": "schemas/sleep.input.schema.json", "result_schema": "schemas/echo.result.schema.json", "timeout": "1h", "cancellable": true, "state_changing": false, "resources": ["fake/device/stable-001"]},
+    {"id": "fail", "policy": "always_prompt", "input_schema": "schemas/echo.input.schema.json", "result_schema": "schemas/echo.result.schema.json", "timeout": "30s", "cancellable": false, "state_changing": false, "resources": ["fake/device/stable-001"]},
+    {"id": "crash", "policy": "always_prompt", "input_schema": "schemas/echo.input.schema.json", "result_schema": "schemas/echo.result.schema.json", "timeout": "30s", "cancellable": false, "state_changing": false, "resources": ["fake/device/stable-001"]}
+  ],
+  "cancellation": {"supported": true, "safe_shutdown": "sleep"},
+  "events": [{"id": "progress", "schema": "schemas/echo.result.schema.json"}],
+  "artifacts": [{"id": "fake_artifact", "schema": "schemas/echo.result.schema.json"}],
+  "health_checks": [{"id": "runner", "timeout": "5s"}],
+  "contract_fixtures": []
+}
