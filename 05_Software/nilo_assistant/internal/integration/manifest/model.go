@@ -35,8 +35,17 @@ type Platform struct {
 // Runner deliberately models an executable and arguments separately so no
 // manifest value is ever interpreted as a shell command.
 type Runner struct {
-	Executable string   `json:"executable"`
-	Arguments  []string `json:"arguments"`
+	Executable        string           `json:"executable"`
+	Arguments         []string         `json:"arguments"`
+	PlatformOverrides []RunnerOverride `json:"platform_overrides,omitempty"`
+}
+
+// RunnerOverride supplies a native installed command for one declared target.
+type RunnerOverride struct {
+	OS           string   `json:"os"`
+	Architecture string   `json:"architecture"`
+	Executable   string   `json:"executable"`
+	Arguments    []string `json:"arguments"`
 }
 
 // ResourceClaim is a normalized exclusive or shared hardware resource name.

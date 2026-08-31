@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "fraction", "message", "stage"],
+  "properties": {
+    "type": {"const": "progress"},
+    "fraction": {"type": "number", "minimum": 0, "maximum": 1},
+    "message": {"type": "string", "minLength": 1},
+    "stage": {"type": "string", "minLength": 1}
+  }
+}

@@ -20,7 +20,7 @@ func TestLoadAcceptsValidPackage(t *testing.T) {
 	if loaded.Package.ID != "sigrok-cli" {
 		t.Fatalf("Package.ID = %q, want sigrok-cli", loaded.Package.ID)
 	}
-	if got, want := loaded.Operations[0].Resources, []ResourceClaim{"logic_analyzer", "usb_bus"}; !sameClaims(got, want) {
+	if got, want := loaded.Operations[0].Resources, []ResourceClaim{"lab/logic/analyzer", "lab/usb/bus"}; !sameClaims(got, want) {
 		t.Fatalf("operation resources = %v, want %v", got, want)
 	}
 	if !filepath.IsAbs(loaded.Operations[0].InputSchema) {
@@ -30,7 +30,6 @@ func TestLoadAcceptsValidPackage(t *testing.T) {
 
 func TestResourceClaimGrammar(t *testing.T) {
 	valid := []ResourceClaim{
-		"usb_bus",
 		"fake/device/stable-001",
 		"fake/device_2/stable-001",
 	}
@@ -44,6 +43,9 @@ func TestResourceClaimGrammar(t *testing.T) {
 
 	invalid := []ResourceClaim{
 		"",
+		"usb_bus",
+		"fake/device",
+		"fake/device/stable/extra",
 		"/fake/device",
 		"fake/device/",
 		"fake//device",
@@ -84,6 +86,8 @@ func TestLoadAcceptsFakePythonPackage(t *testing.T) {
 func TestLoadRejectsMalformedResourceClaims(t *testing.T) {
 	claims := []string{
 		"",
+		"fake/device",
+		"fake/device/stable/extra",
 		"/fake/device",
 		"fake/device/",
 		"fake//device",
@@ -200,7 +204,7 @@ func TestLoadRejectsInvalidManifestContracts(t *testing.T) {
 		{
 			name: "colliding resource claims",
 			mutate: func(_ *testing.T, manifest map[string]any) {
-				manifest["operations"].([]any)[0].(map[string]any)["resources"] = []any{"usb_bus", " USB_BUS "}
+				manifest["operations"].([]any)[0].(map[string]any)["resources"] = []any{"lab/usb/bus", "LAB/USB/BUS"}
 			},
 			want: ErrInvalidManifest,
 		},

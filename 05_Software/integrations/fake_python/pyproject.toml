@@ -8,7 +8,7 @@ dependencies = ["nilo-integration-sdk"]
 nilo-fake-integration = "nilo_fake_integration.__main__:main"
 
 [dependency-groups]
-dev = ["pytest==9.1.1", "pytest-asyncio==1.4.0", "ruff==0.16.5"]
+dev = ["jsonschema==4.26.0", "pytest==9.1.1", "pytest-asyncio==1.4.0", "ruff==0.16.5"]
 
 [build-system]
 requires = ["uv_build==0.11.25"]

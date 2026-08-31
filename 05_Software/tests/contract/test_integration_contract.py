@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from jsonschema import Draft202012Validator
 
 ROOT = Path(__file__).parents[2]
 PACKAGE = ROOT / "integrations" / "fake_python"
@@ -47,29 +48,40 @@ def decode_records(stdout: bytes) -> list[dict[str, Any]]:
     return [json.loads(line) for line in stdout.splitlines()]
 
 
-def fake_command() -> tuple[str, list[str]]:
-    """Use the installed console entry as an executable with an argument array."""
+def manifest() -> dict[str, Any]:
+    return json.loads((PACKAGE / "manifest.json").read_text(encoding="utf-8"))
 
-    executable = Path(sys.executable).with_name(
-        "nilo-fake-integration.exe" if os.name == "nt" else "nilo-fake-integration"
-    )
-    return str(executable), []
+
+def validate_schema(relative_path: str, value: object) -> None:
+    Draft202012Validator(json.loads((PACKAGE / relative_path).read_text(encoding="utf-8"))).validate(value)
+
+
+def fake_command() -> tuple[str, list[str]]:
+    """Resolve and launch the manifest's installed runner without substitution."""
+
+    package_manifest = manifest()
+    executable = PACKAGE / package_manifest["runner"]["executable"]
+    assert executable.is_file()
+    arguments = package_manifest["runner"]["arguments"]
+    assert isinstance(arguments, list) and arguments
+    return str(executable), arguments
 
 
 def test_manifest_declares_the_expected_policies_and_separate_runner_fields() -> None:
-    manifest = json.loads((PACKAGE / "manifest.json").read_text(encoding="utf-8"))
+    package_manifest = manifest()
 
-    assert manifest["protocol"] == "nilo.integration/1"
-    assert isinstance(manifest["runner"]["executable"], str)
-    assert isinstance(manifest["runner"]["arguments"], list)
-    assert {operation["id"]: operation["policy"] for operation in manifest["operations"]} == {
+    assert package_manifest["protocol"] == "nilo.integration/1"
+    assert isinstance(package_manifest["runner"]["executable"], str)
+    assert isinstance(package_manifest["runner"]["arguments"], list) and package_manifest["runner"]["arguments"]
+    assert {operation["id"]: operation["policy"] for operation in package_manifest["operations"]} == {
         "echo": "auto_eligible",
         "artifact": "auto_eligible",
         "sleep": "full_only",
         "fail": "always_prompt",
         "crash": "always_prompt",
     }
-    assert all(operation["resources"] == ["fake/device/stable-001"] for operation in manifest["operations"])
+    assert all(operation["resources"] == ["fake/device/stable-001"] for operation in package_manifest["operations"])
+    assert {artifact["id"] for artifact in package_manifest["artifacts"]} == {"fake_artifact"}
 
 
 def test_declared_sleep_schema_is_strict() -> None:
@@ -82,7 +94,23 @@ def test_declared_sleep_schema_is_strict() -> None:
     assert echo["additionalProperties"] is False
 
 
+def test_manifest_operation_schemas_are_strict_and_validate_canonical_samples() -> None:
+    operations = {operation["id"]: operation for operation in manifest()["operations"]}
+    samples = {
+        "echo": {"value": {"a": 1}},
+        "artifact": {"staging_directory": "staging"},
+        "sleep": {"duration_ms": 1},
+        "fail": {"code": "fake_selected", "message": "planned failure"},
+        "crash": {},
+    }
+    for operation_id, sample in samples.items():
+        schema = json.loads((PACKAGE / operations[operation_id]["input_schema"]).read_text(encoding="utf-8"))
+        assert schema["additionalProperties"] is False
+        Draft202012Validator(schema).validate(sample)
+
+
 def test_runner_hello_describe_health_and_echo_have_strict_ordering() -> None:
+    package_manifest = manifest()
     executable, arguments = fake_command()
     completed = launch(
         executable,
@@ -115,12 +143,17 @@ def test_runner_hello_describe_health_and_echo_have_strict_ordering() -> None:
         ("response", "execute"),
     ]
     assert messages[1]["payload"]["status"] == "ok"
+    assert messages[0]["payload"]["integration"] == package_manifest["package"]["id"]
     assert messages[-1]["payload"] == {
         "type": "result",
         "status": "completed",
         "data": {"canonical": {"value": {"a": 1, "b": 2}}},
     }
     assert all(set(message) == {"protocol", "kind", "message_id", "request_id", "method", "timestamp", "payload"} for message in messages)
+    validate_schema("schemas/echo.input.schema.json", {"value": {"b": 2, "a": 1}})
+    validate_schema("schemas/echo.result.schema.json", messages[-1]["payload"]["data"])
+    for message in messages[3:5]:
+        validate_schema("schemas/progress.event.schema.json", message["payload"])
 
 
 def test_runner_rejects_malformed_request_without_protocol_stdout() -> None:
@@ -133,6 +166,65 @@ def test_runner_rejects_malformed_request_without_protocol_stdout() -> None:
     assert completed.returncode != 0
     assert completed.stdout == b""
     assert b"protocol error" in completed.stderr
+
+
+def test_runner_preserves_selected_fake_failure_code() -> None:
+    executable, arguments = fake_command()
+    completed = launch(
+        executable,
+        arguments,
+        [
+            request("hello-1", "hello", {"type": "hello", "client": "contract-kit"}),
+            request(
+                "00000000-0000-0000-0000-000000000003",
+                "execute",
+                {
+                    "type": "execute",
+                    "operation": "fail",
+                    "parameters": {"code": "fake_selected", "message": "planned failure"},
+                },
+            ),
+        ],
+    )
+
+    assert completed.returncode == 0, completed.stderr.decode()
+    assert decode_records(completed.stdout)[-1]["payload"] == {
+        "type": "error",
+        "code": "fake_selected",
+        "message": "planned failure",
+        "retryable": False,
+    }
+
+
+def test_runner_crash_and_malformed_request_exit_with_open_stdin() -> None:
+    for record in (
+        request(
+            "hello-1",
+            "hello",
+            {"type": "hello", "client": "contract-kit", "unexpected": True},
+        ),
+        request("hello-1", "hello", {"type": "hello", "client": "contract-kit"}),
+    ):
+        executable, arguments = fake_command()
+        process = subprocess.Popen(
+            [executable, *arguments], cwd=PACKAGE, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        assert process.stdin is not None
+        process.stdin.write(json.dumps(record, separators=(",", ":")).encode() + b"\n")
+        if record["payload"].get("unexpected") is None:
+            process.stdin.write(
+                json.dumps(
+                    request(
+                        "00000000-0000-0000-0000-000000000004",
+                        "execute",
+                        {"type": "execute", "operation": "crash", "parameters": {}},
+                    ),
+                    separators=(",", ":"),
+                ).encode()
+                + b"\n"
+            )
+        process.stdin.flush()
+        assert process.wait(timeout=3) != 0
 
 
 def test_runner_cancel_and_safe_shutdown_have_one_terminal_execute_response() -> None:
@@ -219,10 +311,12 @@ def test_runner_artifact_stays_in_explicit_staging_and_crash_preserves_progress(
         assert completed.returncode == 0, completed.stderr.decode()
         assert artifact.read_bytes() == b"nilo fake artifact v1\n"
         assert messages[-2]["payload"]["type"] == "artifact"
+        validate_schema("schemas/artifact.event.schema.json", messages[-2]["payload"])
+        validate_schema("schemas/artifact.result.schema.json", messages[-1]["payload"]["data"])
         assert messages[-1]["payload"] == {
             "type": "result",
             "status": "completed",
-            "data": {"artifact_id": "fake-artifact"},
+            "data": {"artifact_id": "fake_artifact"},
         }
 
     executable, arguments = fake_command()

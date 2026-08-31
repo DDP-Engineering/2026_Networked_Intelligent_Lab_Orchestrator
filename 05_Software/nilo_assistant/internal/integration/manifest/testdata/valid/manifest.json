@@ -24,7 +24,7 @@
       "timeout": "30s",
       "cancellable": true,
       "state_changing": false,
-      "resources": [" USB_Bus ", "logic_analyzer"]
+      "resources": ["lab/usb/bus", "lab/logic/analyzer"]
     }
   ],
   "cancellation": {"supported": true, "safe_shutdown": "capture"},

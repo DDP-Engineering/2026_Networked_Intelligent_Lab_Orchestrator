@@ -12,20 +12,25 @@
     {"os": "windows", "architecture": "amd64"}
   ],
   "runner": {
-    "executable": "src/nilo_fake_integration/__main__.py",
-    "arguments": []
+    "executable": ".venv/Scripts/nilo-fake-integration.exe",
+    "arguments": ["--stdio"],
+    "platform_overrides": [
+      {"os": "linux", "architecture": "amd64", "executable": ".venv/bin/nilo-fake-integration", "arguments": ["--stdio"]},
+      {"os": "linux", "architecture": "arm64", "executable": ".venv/bin/nilo-fake-integration", "arguments": ["--stdio"]},
+      {"os": "windows", "architecture": "amd64", "executable": ".venv/Scripts/nilo-fake-integration.exe", "arguments": ["--stdio"]}
+    ]
   },
   "app_configuration_schema": "schemas/echo.input.schema.json",
   "operations": [
     {"id": "echo", "policy": "auto_eligible", "input_schema": "schemas/echo.input.schema.json", "result_schema": "schemas/echo.result.schema.json", "timeout": "30s", "cancellable": false, "state_changing": false, "resources": ["fake/device/stable-001"]},
-    {"id": "artifact", "policy": "auto_eligible", "input_schema": "schemas/echo.input.schema.json", "result_schema": "schemas/echo.result.schema.json", "timeout": "30s", "cancellable": false, "state_changing": true, "resources": ["fake/device/stable-001"]},
-    {"id": "sleep", "policy": "full_only", "input_schema": "schemas/sleep.input.schema.json", "result_schema": "schemas/echo.result.schema.json", "timeout": "1h", "cancellable": true, "state_changing": false, "resources": ["fake/device/stable-001"]},
-    {"id": "fail", "policy": "always_prompt", "input_schema": "schemas/echo.input.schema.json", "result_schema": "schemas/echo.result.schema.json", "timeout": "30s", "cancellable": false, "state_changing": false, "resources": ["fake/device/stable-001"]},
-    {"id": "crash", "policy": "always_prompt", "input_schema": "schemas/echo.input.schema.json", "result_schema": "schemas/echo.result.schema.json", "timeout": "30s", "cancellable": false, "state_changing": false, "resources": ["fake/device/stable-001"]}
+    {"id": "artifact", "policy": "auto_eligible", "input_schema": "schemas/artifact.input.schema.json", "result_schema": "schemas/artifact.result.schema.json", "timeout": "30s", "cancellable": false, "state_changing": true, "resources": ["fake/device/stable-001"]},
+    {"id": "sleep", "policy": "full_only", "input_schema": "schemas/sleep.input.schema.json", "result_schema": "schemas/sleep.result.schema.json", "timeout": "1h", "cancellable": true, "state_changing": false, "resources": ["fake/device/stable-001"]},
+    {"id": "fail", "policy": "always_prompt", "input_schema": "schemas/fail.input.schema.json", "result_schema": "schemas/fail.input.schema.json", "timeout": "30s", "cancellable": false, "state_changing": false, "resources": ["fake/device/stable-001"]},
+    {"id": "crash", "policy": "always_prompt", "input_schema": "schemas/crash.input.schema.json", "result_schema": "schemas/crash.input.schema.json", "timeout": "30s", "cancellable": false, "state_changing": false, "resources": ["fake/device/stable-001"]}
   ],
   "cancellation": {"supported": true, "safe_shutdown": "sleep"},
-  "events": [{"id": "progress", "schema": "schemas/echo.result.schema.json"}],
-  "artifacts": [{"id": "fake_artifact", "schema": "schemas/echo.result.schema.json"}],
+  "events": [{"id": "progress", "schema": "schemas/progress.event.schema.json"}],
+  "artifacts": [{"id": "fake_artifact", "schema": "schemas/artifact.event.schema.json"}],
   "health_checks": [{"id": "runner", "timeout": "5s"}],
   "contract_fixtures": []
 }

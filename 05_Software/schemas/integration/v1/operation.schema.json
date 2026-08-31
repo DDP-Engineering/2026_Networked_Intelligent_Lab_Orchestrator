@@ -12,6 +12,6 @@
     "timeout": {"type": "string", "minLength": 1, "maxLength": 32},
     "cancellable": {"type": "boolean"},
     "state_changing": {"type": "boolean"},
-    "resources": {"type": "array", "items": {"type": "string", "minLength": 1}}
+    "resources": {"type": "array", "items": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]*/[A-Za-z][A-Za-z0-9_-]*/[A-Za-z][A-Za-z0-9_-]*$"}}
   }
 }

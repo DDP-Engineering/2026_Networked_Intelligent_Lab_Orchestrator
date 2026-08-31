@@ -13,7 +13,7 @@ from uuid import UUID, uuid4
 
 from pydantic import ValidationError
 
-from nilo_integration.api import EventSink, Integration
+from nilo_integration.api import EventSink, ExecuteFailure, Integration, _execute_request_id
 from nilo_integration.models import (
     MAX_LINE_BYTES,
     CancelRequest,
@@ -321,7 +321,15 @@ class ProtocolServer:
             await self._integration.cancel(target_request_id)
             return CancelResult()
         if isinstance(payload, ExecuteRequest):
-            return await self._integration.execute(payload, _ServerEventSink(self, request))
+            try:
+                request_id = UUID(request.envelope.message_id)
+            except ValueError:
+                request_id = None
+            token = _execute_request_id.set(request_id)
+            try:
+                return await self._integration.execute(payload, _ServerEventSink(self, request))
+            finally:
+                _execute_request_id.reset(token)
         raise ProtocolViolation("unsupported request payload")
 
     async def _deliver_result(self, request: _Request, result: Any) -> None:
@@ -341,11 +349,17 @@ class ProtocolServer:
                 return
             request.closing = True
             try:
+                code = "execution_failed"
+                retryable = False
+                if isinstance(error, ExecuteFailure):
+                    code = error.code
+                    retryable = error.retryable
                 await self._send_error(
                     request.envelope.message_id,
                     request.envelope.method,
-                    "execution_failed",
+                    code,
                     self._error_text(error),
+                    retryable=retryable,
                 )
             except Exception:
                 request.closing = False
@@ -380,9 +394,13 @@ class ProtocolServer:
         await self._send_error(message_id, method, "invalid_request", self._error_text(error))
         return True
 
-    async def _send_error(self, request_id: str, method: Method, code: str, message: str) -> None:
+    async def _send_error(
+        self, request_id: str, method: Method, code: str, message: str, *, retryable: bool = False
+    ) -> None:
         if method == "execute":
-            payload = ErrorResult(code=code, message=message).model_dump(mode="json")
+            payload = ErrorResult(code=code, message=message, retryable=retryable).model_dump(
+                mode="json"
+            )
         else:
             payload = {"type": method, "status": "error"}
         await self._send("response", request_id, method, payload)

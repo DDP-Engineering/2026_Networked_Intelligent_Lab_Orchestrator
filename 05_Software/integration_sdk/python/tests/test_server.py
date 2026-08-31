@@ -4,6 +4,7 @@ import json
 
 import pytest
 
+from nilo_integration.api import ExecuteFailure
 from nilo_integration.models import (
     ConfigureResult,
     DescribeResult,
@@ -115,6 +116,11 @@ class AllMethodsIntegration(PrintingIntegration):
 class EmptyErrorIntegration(PrintingIntegration):
     async def execute(self, request, events):  # type: ignore[no-untyped-def]
         raise RuntimeError()
+
+
+class SelectedErrorIntegration(PrintingIntegration):
+    async def execute(self, request, events):  # type: ignore[no-untyped-def]
+        raise ExecuteFailure("fake_selected", "planned failure", retryable=True)
 
 
 class OversizedResult:
@@ -283,6 +289,28 @@ async def test_server_returns_one_terminal_error_for_invalid_execute() -> None:
     assert messages[0]["kind"] == "response"
     assert messages[0]["request_id"] == "execute-1"
     assert messages[0]["payload"]["type"] == "error"
+
+
+@pytest.mark.asyncio
+async def test_server_preserves_selected_execute_failure_code() -> None:
+    reader = asyncio.StreamReader()
+    reader.feed_data(request("hello-1", "hello", {"type": "hello", "client": "nilo"}))
+    reader.feed_data(
+        request("execute-1", "execute", {"type": "execute", "operation": "fail", "parameters": {}})
+    )
+    reader.feed_eof()
+    output = io.BytesIO()
+
+    exit_code = await ProtocolServer(SelectedErrorIntegration(), protocol_output=output).run(reader)
+
+    messages = [json.loads(line) for line in output.getvalue().splitlines()]
+    assert exit_code == 0
+    assert messages[-1]["payload"] == {
+        "type": "error",
+        "code": "fake_selected",
+        "message": "planned failure",
+        "retryable": True,
+    }
 
 
 @pytest.mark.asyncio

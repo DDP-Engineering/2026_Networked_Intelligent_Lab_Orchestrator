@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextvars import ContextVar
 from typing import Protocol
 from uuid import UUID
 
@@ -15,6 +16,24 @@ from nilo_integration.models import (
     ExecuteResult,
     HealthResult,
 )
+
+
+class ExecuteFailure(Exception):
+    """A selected typed execute failure that is safe to expose on protocol v1."""
+
+    def __init__(self, code: str, message: str, *, retryable: bool = False) -> None:
+        super().__init__(message)
+        self.code = code
+        self.retryable = retryable
+
+
+_execute_request_id: ContextVar[UUID | None] = ContextVar("nilo_execute_request_id", default=None)
+
+
+def current_execute_request_id() -> UUID | None:
+    """Return the active protocol execute request UUID for the current task."""
+
+    return _execute_request_id.get()
 
 
 class EventSink(Protocol):

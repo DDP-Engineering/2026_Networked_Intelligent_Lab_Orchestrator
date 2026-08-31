@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"time"
@@ -123,6 +124,12 @@ func validateManifest(manifest *Manifest, root string) error {
 			return fmt.Errorf("%w: %s/%s", ErrUnsupportedPlatform, platform.OS, platform.Architecture)
 		}
 	}
+	if err := selectRunnerForHost(manifest); err != nil {
+		return err
+	}
+	if len(manifest.Runner.Arguments) == 0 {
+		return fmt.Errorf("%w: runner arguments must not be empty", ErrInvalidManifest)
+	}
 	if err := resolvePath(root, &manifest.Runner.Executable, true); err != nil {
 		return err
 	}
@@ -186,6 +193,17 @@ func validateManifest(manifest *Manifest, root string) error {
 	if manifest.Cancellation.Supported {
 		if _, exists := operationIDs[manifest.Cancellation.SafeShutdown]; !exists {
 			return fmt.Errorf("%w: safe shutdown operation %q is not declared", ErrInvalidManifest, manifest.Cancellation.SafeShutdown)
+		}
+	}
+	return nil
+}
+
+func selectRunnerForHost(manifest *Manifest) error {
+	for _, override := range manifest.Runner.PlatformOverrides {
+		if override.OS == runtime.GOOS && override.Architecture == runtime.GOARCH {
+			manifest.Runner.Executable = override.Executable
+			manifest.Runner.Arguments = append([]string(nil), override.Arguments...)
+			return nil
 		}
 	}
 	return nil
@@ -412,7 +430,7 @@ func supportedPlatform(platform Platform) bool {
 
 func validResourceClaim(resource ResourceClaim) bool {
 	segments := strings.Split(string(resource), "/")
-	if len(segments) == 0 {
+	if len(segments) != 3 {
 		return false
 	}
 	for _, segment := range segments {
