@@ -3,6 +3,7 @@ import hashlib
 import json
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import NoReturn
 from uuid import UUID
 
 import pytest
@@ -21,6 +22,10 @@ class Events:
 
 async def immediate_sleep(_: float) -> None:
     return None
+
+
+def raise_system_exit(code: int) -> NoReturn:
+    raise SystemExit(code)
 
 
 @pytest.mark.asyncio
@@ -114,7 +119,7 @@ async def test_fail_exposes_selected_typed_error_without_crashing() -> None:
 
 @pytest.mark.asyncio
 async def test_crash_emits_one_event_then_terminates() -> None:
-    integration = FakeIntegration(sleeper=immediate_sleep)
+    integration = FakeIntegration(sleeper=immediate_sleep, crash=raise_system_exit)
     events = Events()
 
     with pytest.raises(SystemExit, match="70"):

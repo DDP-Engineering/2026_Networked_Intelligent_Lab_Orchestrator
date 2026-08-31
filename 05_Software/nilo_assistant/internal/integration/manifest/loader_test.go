@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -79,6 +80,40 @@ func TestLoadAcceptsFakePythonPackage(t *testing.T) {
 	for _, operation := range loaded.Operations {
 		if !sameClaims(operation.Resources, []ResourceClaim{"fake/device/stable-001"}) {
 			t.Fatalf("operation %q resources = %v, want fake/device/stable-001", operation.ID, operation.Resources)
+		}
+	}
+}
+
+func TestLoadValidatesAndSelectsRunnerOverrides(t *testing.T) {
+	root := writePackage(t, func(_ *testing.T, document map[string]any) {
+		document["platforms"] = []any{
+			map[string]any{"os": runtime.GOOS, "architecture": runtime.GOARCH},
+		}
+		document["runner"].(map[string]any)["platform_overrides"] = []any{
+			map[string]any{"os": runtime.GOOS, "architecture": runtime.GOARCH, "executable": "bin/sigrok-cli", "arguments": []any{"--override"}},
+		}
+	})
+	loaded, err := Load(root)
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if got, want := loaded.Runner.Arguments, []string{"--override"}; !sameStrings(got, want) {
+		t.Fatalf("runner arguments = %v, want %v", got, want)
+	}
+
+	for _, overrides := range []any{
+		[]any{map[string]any{"os": "linux", "architecture": "amd64", "executable": "bin/sigrok-cli", "arguments": []any{}}},
+		[]any{
+			map[string]any{"os": "windows", "architecture": "amd64", "executable": "bin/sigrok-cli", "arguments": []any{}},
+			map[string]any{"os": "windows", "architecture": "amd64", "executable": "bin/sigrok-cli", "arguments": []any{}},
+		},
+		[]any{map[string]any{"os": "windows", "architecture": "amd64", "executable": "../escape", "arguments": []any{}}},
+	} {
+		root := writePackage(t, func(_ *testing.T, document map[string]any) {
+			document["runner"].(map[string]any)["platform_overrides"] = overrides
+		})
+		if _, err := Load(root); !errors.Is(err, ErrInvalidManifest) {
+			t.Fatalf("Load() error = %v, want ErrInvalidManifest", err)
 		}
 	}
 }
@@ -446,6 +481,18 @@ func cloneMap(t *testing.T, input map[string]any) map[string]any {
 }
 
 func sameClaims(got, want []ResourceClaim) bool {
+	if len(got) != len(want) {
+		return false
+	}
+	for index := range want {
+		if got[index] != want[index] {
+			return false
+		}
+	}
+	return true
+}
+
+func sameStrings(got, want []string) bool {
 	if len(got) != len(want) {
 		return false
 	}

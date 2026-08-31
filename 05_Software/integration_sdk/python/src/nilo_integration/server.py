@@ -375,7 +375,10 @@ class ProtocolServer:
         except ValidationError as error:
             raise ProtocolViolation("integration returned an invalid result") from error
         await self._send(
-            "response", request.message_id, request.method, result.model_dump(mode="json")
+            "response",
+            request.message_id,
+            request.method,
+            result.model_dump(mode="json", exclude_none=True),
         )
 
     async def _reply_if_recoverable(self, raw: dict[str, Any] | None, error: Exception) -> bool:

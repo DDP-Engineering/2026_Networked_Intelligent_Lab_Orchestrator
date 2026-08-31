@@ -119,16 +119,32 @@ func validateManifest(manifest *Manifest, root string) error {
 	if manifest.Protocol != protocolV1 {
 		return fmt.Errorf("%w: %q", ErrUnsupportedProtocol, manifest.Protocol)
 	}
+	declaredPlatforms := make(map[string]struct{}, len(manifest.Platforms))
 	for _, platform := range manifest.Platforms {
 		if !supportedPlatform(platform) {
 			return fmt.Errorf("%w: %s/%s", ErrUnsupportedPlatform, platform.OS, platform.Architecture)
 		}
+		declaredPlatforms[platformKey(platform.OS, platform.Architecture)] = struct{}{}
+	}
+	seenOverrides := make(map[string]struct{}, len(manifest.Runner.PlatformOverrides))
+	for _, override := range manifest.Runner.PlatformOverrides {
+		key := platformKey(override.OS, override.Architecture)
+		if !supportedPlatform(Platform{OS: override.OS, Architecture: override.Architecture}) {
+			return fmt.Errorf("%w: runner override %s", ErrUnsupportedPlatform, key)
+		}
+		if _, declared := declaredPlatforms[key]; !declared {
+			return fmt.Errorf("%w: runner override %s is not declared", ErrInvalidManifest, key)
+		}
+		if _, duplicate := seenOverrides[key]; duplicate {
+			return fmt.Errorf("%w: duplicate runner override %s", ErrInvalidManifest, key)
+		}
+		seenOverrides[key] = struct{}{}
+		if _, err := config.ResolveWithin(root, override.Executable); err != nil {
+			return fmt.Errorf("%w: runner override %s executable: %v", ErrInvalidManifest, key, err)
+		}
 	}
 	if err := selectRunnerForHost(manifest); err != nil {
 		return err
-	}
-	if len(manifest.Runner.Arguments) == 0 {
-		return fmt.Errorf("%w: runner arguments must not be empty", ErrInvalidManifest)
 	}
 	if err := resolvePath(root, &manifest.Runner.Executable, true); err != nil {
 		return err
@@ -208,6 +224,8 @@ func selectRunnerForHost(manifest *Manifest) error {
 	}
 	return nil
 }
+
+func platformKey(os, architecture string) string { return os + "/" + architecture }
 
 func resolveSchema(root string, path *string) error {
 	if err := resolvePath(root, path, true); err != nil {

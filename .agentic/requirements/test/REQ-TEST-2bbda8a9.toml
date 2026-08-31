@@ -18,7 +18,7 @@ title = "Verify integrations with a common contract"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
-status = "draft"
+status = "active"
 
 # Self-contained prose: a reader with no other context must be able to
 # understand and check it. No ticket numbers, no run IDs, no references
@@ -60,7 +60,14 @@ affected_paths = [
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
-linked_tests = []
+linked_tests = [
+    "05_Software/tests/contract/test_integration_contract.py::test_manifest_declares_the_expected_policies_and_separate_runner_fields",
+    "05_Software/tests/contract/test_integration_contract.py::test_clean_package_install_launches_the_host_manifest_command",
+    "05_Software/tests/contract/test_integration_contract.py::test_runner_hello_describe_health_and_echo_have_strict_ordering",
+    "05_Software/tests/contract/test_integration_contract.py::test_runner_crash_and_malformed_request_exit_with_open_stdin",
+    "05_Software/tests/contract/test_integration_contract.py::test_runner_cancel_and_safe_shutdown_have_one_terminal_execute_response",
+    "05_Software/tests/contract/test_integration_contract.py::test_runner_artifact_stays_in_explicit_staging_and_crash_preserves_progress",
+]
 
 # --- optional below this line ---
 
@@ -71,4 +78,4 @@ priority = "high"   # low | normal | high
 rationale = "A common suite prevents each hardware family from inventing an incompatible control boundary."        # why this behavior exists, if not obvious
 
 created = 2026-08-30
-updated = 2026-08-30
+updated = 2026-08-31

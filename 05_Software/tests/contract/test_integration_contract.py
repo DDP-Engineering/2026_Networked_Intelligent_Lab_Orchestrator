@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import os
+import platform
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -48,23 +50,37 @@ def decode_records(stdout: bytes) -> list[dict[str, Any]]:
     return [json.loads(line) for line in stdout.splitlines()]
 
 
-def manifest() -> dict[str, Any]:
-    return json.loads((PACKAGE / "manifest.json").read_text(encoding="utf-8"))
+def manifest(package: Path = PACKAGE) -> dict[str, Any]:
+    return json.loads((package / "manifest.json").read_text(encoding="utf-8"))
 
 
 def validate_schema(relative_path: str, value: object) -> None:
     Draft202012Validator(json.loads((PACKAGE / relative_path).read_text(encoding="utf-8"))).validate(value)
 
 
-def fake_command() -> tuple[str, list[str]]:
+def fake_command(package: Path = PACKAGE) -> tuple[str, list[str]]:
     """Resolve and launch the manifest's installed runner without substitution."""
 
-    package_manifest = manifest()
-    executable = PACKAGE / package_manifest["runner"]["executable"]
+    package_manifest = manifest(package)
+    runner = select_host_runner(package_manifest)
+    executable = package / runner["executable"]
     assert executable.is_file()
-    arguments = package_manifest["runner"]["arguments"]
+    arguments = runner["arguments"]
     assert isinstance(arguments, list) and arguments
     return str(executable), arguments
+
+
+def select_host_runner(
+    package_manifest: dict[str, Any], operating_system: str | None = None, architecture: str | None = None
+) -> dict[str, Any]:
+    architecture = architecture or {"AMD64": "amd64", "x86_64": "amd64", "aarch64": "arm64"}.get(
+        platform.machine(), platform.machine().lower()
+    )
+    operating_system = operating_system or ("windows" if os.name == "nt" else "linux")
+    for override in package_manifest["runner"].get("platform_overrides", []):
+        if override["os"] == operating_system and override["architecture"] == architecture:
+            return override
+    return package_manifest["runner"]
 
 
 def test_manifest_declares_the_expected_policies_and_separate_runner_fields() -> None:
@@ -82,6 +98,13 @@ def test_manifest_declares_the_expected_policies_and_separate_runner_fields() ->
     }
     assert all(operation["resources"] == ["fake/device/stable-001"] for operation in package_manifest["operations"])
     assert {artifact["id"] for artifact in package_manifest["artifacts"]} == {"fake_artifact"}
+    selected = select_host_runner(package_manifest)
+    assert selected["arguments"] == ["--stdio"]
+    assert selected["executable"] != ""
+    assert select_host_runner(package_manifest, "linux", "arm64")["executable"] == ".venv/bin/nilo-fake-integration"
+    assert select_host_runner({"runner": package_manifest["runner"]}, "plan9", "amd64") == package_manifest[
+        "runner"
+    ]
 
 
 def test_declared_sleep_schema_is_strict() -> None:
@@ -107,6 +130,35 @@ def test_manifest_operation_schemas_are_strict_and_validate_canonical_samples() 
         schema = json.loads((PACKAGE / operations[operation_id]["input_schema"]).read_text(encoding="utf-8"))
         assert schema["additionalProperties"] is False
         Draft202012Validator(schema).validate(sample)
+
+
+def test_clean_package_install_launches_the_host_manifest_command() -> None:
+    with tempfile.TemporaryDirectory() as directory:
+        root = Path(directory)
+        clean_package = root / "integrations" / "fake_python"
+        clean_sdk = root / "integration_sdk" / "python"
+        shutil.copytree(PACKAGE, clean_package, ignore=shutil.ignore_patterns(".venv", "__pycache__"))
+        shutil.copytree(ROOT / "integration_sdk" / "python", clean_sdk, ignore=shutil.ignore_patterns(".venv", "__pycache__"))
+        installed = subprocess.run(
+            ["uv", "sync", "--all-groups", "--locked"], cwd=clean_package, capture_output=True
+        )
+        assert installed.returncode == 0, installed.stderr.decode()
+        executable, arguments = fake_command(clean_package)
+        completed = subprocess.run(
+            [executable, *arguments],
+            input=(
+                json.dumps(
+                    request("hello-1", "hello", {"type": "hello", "client": "contract-kit"}),
+                    separators=(",", ":"),
+                ).encode()
+                + b"\n"
+            ),
+            cwd=clean_package,
+            capture_output=True,
+            check=False,
+        )
+        assert completed.returncode == 0, completed.stderr.decode()
+        assert decode_records(completed.stdout)[0]["method"] == "hello"
 
 
 def test_runner_hello_describe_health_and_echo_have_strict_ordering() -> None:
@@ -144,6 +196,10 @@ def test_runner_hello_describe_health_and_echo_have_strict_ordering() -> None:
     ]
     assert messages[1]["payload"]["status"] == "ok"
     assert messages[0]["payload"]["integration"] == package_manifest["package"]["id"]
+    assert messages[1]["payload"]["integration"] == package_manifest["package"]["id"]
+    assert messages[1]["payload"]["operations"] == [
+        operation["id"] for operation in package_manifest["operations"]
+    ]
     assert messages[-1]["payload"] == {
         "type": "result",
         "status": "completed",
@@ -285,6 +341,8 @@ def test_runner_cancel_and_safe_shutdown_have_one_terminal_execute_response() ->
 
     send(request("shutdown-1", "safe_shutdown", {"type": "safe_shutdown"}))
     assert receive()["payload"] == {"type": "safe_shutdown", "status": "ok"}
+    send(request("health-after-shutdown", "health", {"type": "health"}))
+    assert receive()["payload"] == {"type": "health", "status": "stopped"}
     process.stdin.close()
     assert process.wait(timeout=5) == 0
     assert process.stdout.read() == b""

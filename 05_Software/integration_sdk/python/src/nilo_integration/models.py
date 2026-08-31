@@ -30,6 +30,12 @@ def _non_empty(value: str) -> str:
     return value
 
 
+def _utc_datetime(value: datetime) -> datetime:
+    if value.tzinfo is None or value.utcoffset() != timedelta(0):
+        raise ValueError("must be UTC")
+    return value.astimezone(UTC)
+
+
 class Envelope(StrictModel):
     protocol: Literal["nilo.integration/1"]
     kind: Kind
@@ -44,12 +50,7 @@ class Envelope(StrictModel):
     def message_id_is_not_empty(cls, value: str) -> str:
         return _non_empty(value)
 
-    @field_validator("timestamp")
-    @classmethod
-    def timestamp_is_utc(cls, value: datetime) -> datetime:
-        if value.tzinfo is None or value.utcoffset() != timedelta(0):
-            raise ValueError("must be UTC")
-        return value.astimezone(UTC)
+    _timestamp_is_utc = field_validator("timestamp")(_utc_datetime)
 
     @model_validator(mode="after")
     def request_correlation_matches_kind(self) -> Envelope:
@@ -109,6 +110,18 @@ class ControlResult(StrictModel):
 
 class DescribeResult(ControlResult):
     type: Literal["describe"] = "describe"
+    integration: str | None = None
+    operations: list[str] | None = None
+
+    @model_validator(mode="after")
+    def describe_metadata_is_complete(self) -> DescribeResult:
+        if (self.integration is None) != (self.operations is None):
+            raise ValueError("describe metadata requires integration and operations together")
+        if self.integration is not None:
+            _non_empty(self.integration)
+            if not self.operations or any(not item.strip() for item in self.operations):
+                raise ValueError("describe operations must be non-empty")
+        return self
 
 
 class DiscoverResult(ControlResult):
@@ -156,7 +169,7 @@ class Measurement(StrictModel):
 
     _name_is_not_empty = field_validator("name")(_non_empty)
     _unit_is_not_empty = field_validator("unit")(_non_empty)
-    _timestamp_is_utc = field_validator("timestamp")(Envelope.timestamp_is_utc)
+    _timestamp_is_utc = field_validator("timestamp")(_utc_datetime)
 
     @field_validator("value")
     @classmethod
@@ -173,7 +186,7 @@ class DomainEvent(StrictModel):
     timestamp: datetime
 
     _name_is_not_empty = field_validator("name")(_non_empty)
-    _timestamp_is_utc = field_validator("timestamp")(Envelope.timestamp_is_utc)
+    _timestamp_is_utc = field_validator("timestamp")(_utc_datetime)
 
 
 class WarningEvent(StrictModel):

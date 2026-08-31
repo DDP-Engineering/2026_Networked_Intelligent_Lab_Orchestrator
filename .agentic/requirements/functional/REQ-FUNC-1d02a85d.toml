@@ -18,7 +18,7 @@ title = "Load runtime integration packages"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
-status = "draft"
+status = "active"
 
 # Self-contained prose: a reader with no other context must be able to
 # understand and check it. No ticket numbers, no run IDs, no references
@@ -56,11 +56,17 @@ affected_paths = [
     "05_Software/schemas/integration/v1/",
     "05_Software/nilo_assistant/internal/integration/manifest/",
     "05_Software/nilo_assistant/internal/integration/supervisor/",
+    "05_Software/integrations/fake_python/manifest.json",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
-linked_tests = []
+linked_tests = [
+    "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go::TestLoadAcceptsFakePythonPackage",
+    "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go::TestLoadValidatesAndSelectsRunnerOverrides",
+    "05_Software/nilo_assistant/internal/integration/supervisor/supervisor_test.go::TestSupervisorDescribesTheConfiguredPackage",
+    "05_Software/nilo_assistant/internal/integration/supervisor/supervisor_test.go::TestSupervisorExecutesOnlyAfterHandshake",
+]
 
 # --- optional below this line ---
 
@@ -71,4 +77,4 @@ priority = "high"   # low | normal | high
 rationale = "Runtime packages make sigrok the first integration rather than a special subsystem."        # why this behavior exists, if not obvious
 
 created = 2026-08-30
-updated = 2026-08-30
+updated = 2026-08-31

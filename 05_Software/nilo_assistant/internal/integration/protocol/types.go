@@ -125,12 +125,25 @@ type ControlPayload struct {
 // It remains separate from the wire envelope so callers cannot construct a
 // response with a mismatched method accidentally.
 type DescribeResult struct {
-	Type   PayloadType `json:"type"`
-	Status string      `json:"status"`
+	Type        PayloadType `json:"type"`
+	Status      string      `json:"status"`
+	Integration string      `json:"integration,omitempty"`
+	Operations  []string    `json:"operations,omitempty"`
 }
 
 func (value DescribeResult) Validate() error {
-	return ControlPayload{Type: value.Type, Status: value.Status}.Validate(payloadDescribe, true)
+	if err := (ControlPayload{Type: value.Type, Status: value.Status}).Validate(payloadDescribe, true); err != nil {
+		return err
+	}
+	if (value.Integration == "") != (len(value.Operations) == 0) {
+		return fmt.Errorf("%w: incomplete describe metadata", ErrInvalidMessage)
+	}
+	for _, operation := range value.Operations {
+		if strings.TrimSpace(operation) == "" {
+			return fmt.Errorf("%w: invalid describe operation", ErrInvalidMessage)
+		}
+	}
+	return nil
 }
 
 func (value ControlPayload) Validate(expected PayloadType, response bool) error {

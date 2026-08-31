@@ -10,6 +10,7 @@ import stat
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import NoReturn
 from uuid import UUID, uuid4
 
 from nilo_integration import EventSink, ExecuteFailure, current_execute_request_id
@@ -32,6 +33,7 @@ _STABLE_DEVICE = "fake/device/stable-001"
 Sleeper = Callable[[float], Awaitable[None]]
 Clock = Callable[[], datetime]
 UUIDFactory = Callable[[], UUID]
+Crash = Callable[[int], NoReturn]
 
 
 class FakeOperationError(ExecuteFailure):
@@ -52,10 +54,12 @@ class FakeIntegration:
         sleeper: Sleeper = asyncio.sleep,
         clock: Clock | None = None,
         uuid_factory: UUIDFactory = uuid4,
+        crash: Crash = os._exit,
     ) -> None:
         self._sleeper = sleeper
         self._clock = clock or (lambda: datetime.now(UTC))
         self._uuid_factory = uuid_factory
+        self._crash = crash
         self._cancellations: dict[UUID, asyncio.Event] = {}
         self._pending_cancellations: set[UUID] = set()
         self._shutdown_observed = False
@@ -70,14 +74,18 @@ class FakeIntegration:
         return self._last_observed_at
 
     async def describe(self) -> DescribeResult:
-        return DescribeResult(status="ok")
+        return DescribeResult(
+            status="ok",
+            integration=self.name,
+            operations=["echo", "artifact", "sleep", "fail", "crash"],
+        )
 
     async def discover(self) -> DiscoverResult:
         return DiscoverResult(status="ok")
 
     async def health(self) -> HealthResult:
         self._observe()
-        return HealthResult(status="ok")
+        return HealthResult(status="stopped" if self._shutdown_observed else "ok")
 
     async def configure(self, request: ConfigureRequest) -> ConfigureResult:
         del request
@@ -92,7 +100,7 @@ class FakeIntegration:
             return self._fail(request.parameters)
         if request.operation == "crash":
             await events.emit(Progress(fraction=0.5, message="crash imminent", stage="crash"))
-            raise SystemExit(70)
+            self._crash(70)
         if request.operation == "artifact":
             return await self._artifact(request.parameters, events)
         raise FakeOperationError(

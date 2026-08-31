@@ -30,15 +30,7 @@
         }
       }
     },
-    "runner": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["executable", "arguments"],
-      "properties": {
-        "executable": {"type": "string", "minLength": 1},
-        "arguments": {"type": "array", "items": {"type": "string"}}
-      }
-    },
+    "runner": {"type": "object", "additionalProperties": false, "required": ["executable", "arguments"], "properties": {"executable": {"type": "string", "minLength": 1}, "arguments": {"type": "array", "items": {"type": "string"}}, "platform_overrides": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["os", "architecture", "executable", "arguments"], "properties": {"os": {"type": "string", "minLength": 1}, "architecture": {"type": "string", "minLength": 1}, "executable": {"type": "string", "minLength": 1}, "arguments": {"type": "array", "items": {"type": "string"}}}}}}},
     "app_configuration_schema": {"type": "string", "minLength": 1},
     "operations": {"type": "array", "items": {"$ref": "operation.schema.json"}},
     "cancellation": {
