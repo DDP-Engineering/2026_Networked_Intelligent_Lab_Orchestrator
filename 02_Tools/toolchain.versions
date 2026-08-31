@@ -1,0 +1,12 @@
+# NILO repository-local development toolchain.
+# Go hashes: https://go.dev/dl/?mode=json&include=all
+# uv hashes: https://github.com/astral-sh/uv/releases/download/0.11.25/sha256.sum
+GO_VERSION=1.27.0
+PYTHON_VERSION=3.12.10
+UV_VERSION=0.11.25
+GO_WINDOWS_AMD64_SHA256=f0c0a0d33ba94f4d2c5dbc887334ce678b21813504ddb3aafcb06e60a5a667c4
+GO_LINUX_AMD64_SHA256=675c26c449cbb18fc24b74650de1eabbae6e16f64326fd85a283fb3b58280685
+GO_LINUX_ARM64_SHA256=51798d2c42d0e1c6ed7fd9f48728b4193abac9e8aad6dbac2fe96a81f5909bda
+UV_WINDOWS_AMD64_SHA256=15bfd1423b7eaa7aae949922d4712ebaac2bb44a81af64ab59bbe007090cb0d0
+UV_LINUX_AMD64_SHA256=1db18b5e76fa645a7f3865773139bdec8e2d46adbdbb35e7410b34fa8015ccd2
+UV_LINUX_ARM64_SHA256=e0e9d73f74e06a7dcd53910d5962146ab48f0af9c92cc8df33a37baa0121014d
