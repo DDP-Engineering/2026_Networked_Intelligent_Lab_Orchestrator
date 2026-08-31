@@ -973,7 +973,7 @@ authenticate actor (already resolved at this layer)
 
 **Produces:** Reproducible evidence for the PRD Increment 1 gate and a clean starting boundary for the sigrok package.
 
-- [ ] Write the failing black-box test before adding the harness. It must launch the real fake Python runner through the real supervisor and demonstrate:
+- [x] Write the failing black-box test before adding the harness. It must launch the real fake Python runner through the real supervisor and demonstrate:
 
   - new integration and device default to Ask;
   - immutable approval then successful `echo` with ordered progress;
@@ -983,9 +983,9 @@ authenticate actor (already resolved at this layer)
   - Bench Core close/reopen converting a deliberately interrupted running session to `incomplete` and releasing only its leases;
   - full audit correlation by request/session/actor/integration/device.
 
-- [ ] Run the new package; expect failure until the black-box fixture and launch path are wired.
+- [x] Run the new package; expect failure until the black-box fixture and launch path are wired.
 
-- [ ] Implement both test scripts in this order:
+- [x] Implement both test scripts in this order:
 
 ```text
 verify tool versions
@@ -1016,25 +1016,25 @@ git status --short
 
 Expected: every check exits zero. Linux ARM64 execution evidence is mandatory for release readiness; Windows cross-compilation alone is not a substitute.
 
-- [ ] Write `INCREMENT_1_ACCEPTANCE.md` with prerequisites, exact commands, observed platform evidence, protocol/package authoring entry points, known later-platform adapter gaps, and an explicit statement that sigrok/MCP/GUI/WireGuard remain outside Increment 1.
+- [x] Write `INCREMENT_1_ACCEPTANCE.md` with prerequisites, exact commands, observed platform evidence, protocol/package authoring entry points, known later-platform adapter gaps, and an explicit statement that sigrok/MCP/GUI/WireGuard remain outside Increment 1.
 
-- [ ] Review against every Increment 1 PRD deliverable and gate. Record any unmet item honestly; do not relabel a partial vertical slice as accepted.
+- [x] Review against every Increment 1 PRD deliverable and gate. Record any unmet item honestly; do not relabel a partial vertical slice as accepted.
 
 - [ ] Finish the AEGIS validate stage with the complete review, knowledge update, full-suite evidence, strict check, and refreshed stage report. Necessary reviewed task and fix commits are already authorized on the task branch; then enter AEGIS deliver and present the validated branch at its mandatory approval stop before any push, merge, PR publication, or release action.
 
 ## Final Review Checklist
 
-- [ ] Every operation parameter is schema-validated before the runner sees it.
-- [ ] Every policy matrix cell has a test, including `Denied` and `Always prompt` under Full Access.
-- [ ] Approval is bound to one immutable request digest.
-- [ ] A runner cannot write protocol messages through diagnostics accidentally.
-- [ ] stdout, stderr, manifests, schemas, events, logs, and artifacts are bounded.
-- [ ] Resource acquisition is atomic and conflicting work cannot race.
-- [ ] Success is reported only after required evidence and audit data are durable.
-- [ ] Cancellation, timeout, crash, malformed output, and restart have truthful terminal states and no stale proven-orphan lease.
-- [ ] The Python fake integration passes the same generic contract intended for sigrok.
-- [ ] Go tests pass and portable core builds for Linux ARM64, Linux x86_64, and Windows x86_64.
+- [x] Every operation parameter is schema-validated before the runner sees it.
+- [x] Every policy matrix cell has a test, including `Denied` and `Always prompt` under Full Access.
+- [x] Approval is bound to one immutable request digest.
+- [x] A runner cannot write protocol messages through diagnostics accidentally.
+- [x] stdout, stderr, manifests, schemas, events, logs, and artifacts are bounded.
+- [x] Resource acquisition is atomic and conflicting work cannot race.
+- [x] Success is reported only after required evidence and audit data are durable.
+- [x] Cancellation, timeout, crash, malformed output, and restart have truthful terminal states and no stale proven-orphan lease.
+- [x] The Python fake integration passes the same generic contract intended for sigrok.
+- [x] Go tests pass and portable core builds for Linux ARM64, Linux x86_64, and Windows x86_64.
 - [ ] The full test script runs natively on Raspberry Pi 4 Linux ARM64 before Increment 1 is called release-ready.
-- [ ] No sigrok-specific behavior leaked into Bench Core.
-- [ ] No MCP/HTTP, GUI, WireGuard, or appliance packaging scope was pulled into Increment 1.
-- [ ] No Git mutation occurred without explicit user authority.
+- [x] No sigrok-specific behavior leaked into Bench Core.
+- [x] No MCP/HTTP, GUI, WireGuard, or appliance packaging scope was pulled into Increment 1.
+- [x] No Git mutation occurred without explicit user authority.

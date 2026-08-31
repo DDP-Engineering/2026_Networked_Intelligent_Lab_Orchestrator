@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 import stat
+import sys
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from pathlib import Path
@@ -100,6 +101,7 @@ class FakeIntegration:
             return self._fail(request.parameters)
         if request.operation == "crash":
             await events.emit(Progress(fraction=0.5, message="crash imminent", stage="crash"))
+            print("fake crash requested", file=sys.stderr, flush=True)
             self._crash(70)
         if request.operation == "artifact":
             return await self._artifact(request.parameters, events)

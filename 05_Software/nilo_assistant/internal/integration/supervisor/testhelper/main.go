@@ -90,6 +90,10 @@ func main() {
 		write(protocol.Response, "execute-error", execute.MessageID, protocol.Execute, map[string]any{"type": "error", "code": "device_busy", "message": "device busy", "retryable": true})
 		return
 	}
+	if mode == "crash-exit" {
+		fmt.Fprint(os.Stderr, "intentional crash")
+		os.Exit(70)
+	}
 	if mode == "event-hang" {
 		write(protocol.Event, "progress-event", execute.MessageID, protocol.Execute, map[string]any{"type": "progress", "fraction": 0.5, "message": "blocked sink"})
 		time.Sleep(time.Hour)
@@ -99,7 +103,7 @@ func main() {
 		write(protocol.Response, "execute-response", execute.MessageID, protocol.Execute, map[string]any{"type": "result", "status": "completed", "data": map[string]any{}})
 		return
 	}
-	if mode == "cooperative-cancel" {
+	if mode == "cooperative-cancel" || mode == "cooperative-cancel-result" {
 		mark(marker, execute.MessageID)
 		line, err := reader.ReadBytes('\n')
 		if err != nil {
@@ -116,6 +120,10 @@ func main() {
 			return
 		}
 		mark(marker, "correct-cancel")
+		if mode == "cooperative-cancel-result" {
+			write(protocol.Response, "cancel-response", cancel.MessageID, protocol.Cancel, map[string]any{"type": "cancel", "status": "ok"})
+			write(protocol.Response, "execute-cancelled", execute.MessageID, protocol.Execute, map[string]any{"type": "result", "status": "cancelled", "data": map[string]any{}})
+		}
 		waitForSafeShutdown(reader, marker)
 		return
 	}

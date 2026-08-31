@@ -118,7 +118,7 @@ async def test_fail_exposes_selected_typed_error_without_crashing() -> None:
 
 
 @pytest.mark.asyncio
-async def test_crash_emits_one_event_then_terminates() -> None:
+async def test_crash_emits_one_event_then_terminates(capsys: pytest.CaptureFixture[str]) -> None:
     integration = FakeIntegration(sleeper=immediate_sleep, crash=raise_system_exit)
     events = Events()
 
@@ -130,6 +130,7 @@ async def test_crash_emits_one_event_then_terminates() -> None:
     assert [event.model_dump(mode="json") for event in events.values] == [
         Progress(fraction=0.5, message="crash imminent", stage="crash").model_dump(mode="json")
     ]
+    assert capsys.readouterr().err == "fake crash requested\n"
 
 
 @pytest.mark.asyncio

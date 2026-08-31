@@ -67,6 +67,16 @@ func TestSupervisorContainsInvalidRunnerOutput(t *testing.T) {
 	}
 }
 
+func TestSupervisorClassifiesNonzeroExitWithoutTerminalAsCrash(t *testing.T) {
+	_, err := newTestSupervisor(t, "crash-exit").Execute(context.Background(), executeRequest(), eventSinkFunc(func(context.Context, protocol.Envelope) error { return nil }))
+	if !errors.Is(err, ErrRunnerCrashed) || errors.Is(err, ErrRunnerProtocol) {
+		t.Fatalf("Execute() error = %v, want runner crash without protocol classification", err)
+	}
+	if diagnostics := Diagnostics(err); diagnostics != "intentional crash" {
+		t.Fatalf("Diagnostics() = %q", diagnostics)
+	}
+}
+
 func TestSupervisorSanitizesControlCharactersInStderr(t *testing.T) {
 	_, err := newTestSupervisor(t, "stderr-control").Execute(context.Background(), executeRequest(), eventSinkFunc(func(context.Context, protocol.Envelope) error { return nil }))
 	if err == nil {
@@ -146,6 +156,35 @@ func TestSupervisorUsesOperationRequestIDForTargetedCancel(t *testing.T) {
 	case <-completed:
 	case <-time.After(time.Second):
 		t.Fatal("Execute() did not finish after correlated cancellation")
+	}
+}
+
+func TestCooperativeTerminalResponseCannotRaceCancelSafeShutdown(t *testing.T) {
+	marker := filepath.Join(t.TempDir(), "terminal-cancel-marker")
+	supervisor := newTestSupervisor(t, "cooperative-cancel-result", marker)
+	requestID, err := domain.NewRequestID()
+	if err != nil {
+		t.Fatalf("NewRequestID() error = %v", err)
+	}
+	completed := make(chan error, 1)
+	go func() {
+		_, executeErr := supervisor.Execute(WithRequestID(context.Background(), requestID), executeRequest(), eventSinkFunc(func(context.Context, protocol.Envelope) error { return nil }))
+		completed <- executeErr
+	}()
+	waitMarker(t, marker, func(value string) bool { return strings.Contains(value, requestID.String()) })
+	if err := supervisor.Cancel(context.Background(), "test.integration", requestID); err != nil {
+		t.Fatalf("Cancel() error = %v", err)
+	}
+	waitMarker(t, marker, func(value string) bool {
+		return strings.Contains(value, "correct-cancel") && strings.Contains(value, "safe_shutdown")
+	})
+	select {
+	case err := <-completed:
+		if err != nil {
+			t.Fatalf("Execute() error = %v", err)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("Execute() did not finish after cooperative terminal response")
 	}
 }
 

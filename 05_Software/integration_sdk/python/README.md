@@ -17,6 +17,11 @@ authoring contract during process shutdown.
 
 For development:
 
+The install-shaped fake package in `05_Software/integrations/fake_python` and
+the generic suite in `05_Software/tests/contract` are the reference authoring
+examples. Use the repository-level Increment 1 scripts for the full locked
+SDK, package, protocol, and Go-supervisor gate.
+
 ```powershell
 uv sync --all-groups
 uv run pytest -q

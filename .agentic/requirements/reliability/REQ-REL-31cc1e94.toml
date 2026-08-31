@@ -62,8 +62,10 @@ affected_paths = [
 linked_tests = [
     "05_Software/nilo_assistant/internal/integration/supervisor/supervisor_test.go::TestSupervisorCancelTargetsActiveExecuteWireID",
     "05_Software/nilo_assistant/internal/integration/supervisor/supervisor_test.go::TestSupervisorUsesOperationRequestIDForTargetedCancel",
+    "05_Software/nilo_assistant/internal/integration/supervisor/supervisor_test.go::TestCooperativeTerminalResponseCannotRaceCancelSafeShutdown",
     "05_Software/nilo_assistant/internal/integration/supervisor/supervisor_test.go::TestSupervisorTimeoutAndCancellationTerminateRunner",
     "05_Software/nilo_assistant/internal/operation/service_test.go::TestRunningCancellationInvokesSupervisorRecordsTerminalStateAndReleasesLease",
+    "05_Software/nilo_assistant/internal/acceptance/increment1_e2e_test.go::TestIncrement1RealFakeIntegrationLifecycle",
 ]
 
 # --- optional below this line ---

@@ -220,6 +220,9 @@ func (supervisor *ProcessSupervisor) Execute(ctx context.Context, request protoc
 		if err != nil {
 			return protocol.ExecuteResult{}, runner.classify(ctx, err)
 		}
+		if message.Kind == protocol.Response && (message.Method == protocol.Cancel || message.Method == protocol.SafeShutdown) {
+			continue
+		}
 		if message.Method != protocol.Execute || message.RequestID != messageID {
 			return protocol.ExecuteResult{}, runner.protocolError(fmt.Errorf("mismatched execute message"))
 		}
@@ -285,17 +288,24 @@ func (supervisor *ProcessSupervisor) Shutdown(ctx context.Context) error {
 }
 
 type runnerProcess struct {
-	cmd         *exec.Cmd
-	encoder     *protocol.Encoder
-	decoder     *protocol.Decoder
-	stdin       io.WriteCloser
-	diagnostics *diagnosticRing
-	grace       time.Duration
-	wait        chan error
-	stopOnce    sync.Once
-	closeOnce   sync.Once
-	stateMu     sync.RWMutex
-	executeID   string
+	cmd          *exec.Cmd
+	encoder      *protocol.Encoder
+	decoder      *protocol.Decoder
+	stdin        io.WriteCloser
+	diagnostics  *diagnosticRing
+	grace        time.Duration
+	processDone  chan struct{}
+	processMu    sync.RWMutex
+	processErr   error
+	stopOnce     sync.Once
+	stopDone     chan struct{}
+	stopDoneOnce sync.Once
+	closeOnce    sync.Once
+	lifecycleMu  sync.Mutex
+	stopping     bool
+	closing      bool
+	stateMu      sync.RWMutex
+	executeID    string
 }
 
 func (supervisor *ProcessSupervisor) start(ctx context.Context) (*runnerProcess, error) {
@@ -330,7 +340,8 @@ func (supervisor *ProcessSupervisor) start(ctx context.Context) (*runnerProcess,
 		stdin:       stdin,
 		diagnostics: diagnostics,
 		grace:       supervisor.config.GracePeriod,
-		wait:        make(chan error, 1),
+		processDone: make(chan struct{}),
+		stopDone:    make(chan struct{}),
 	}
 	registry := protocol.NewRegistry()
 	runner.encoder = protocol.NewEncoderWithRegistry(stdin, registry)
@@ -341,7 +352,13 @@ func (supervisor *ProcessSupervisor) start(ctx context.Context) (*runnerProcess,
 		_ = stdout.Close()
 		return nil, classifyLaunch(ctx, err)
 	}
-	go func() { runner.wait <- command.Wait() }()
+	go func() {
+		waitErr := command.Wait()
+		runner.processMu.Lock()
+		runner.processErr = waitErr
+		runner.processMu.Unlock()
+		close(runner.processDone)
+	}()
 	supervisor.runners[runner] = struct{}{}
 	supervisor.mu.Unlock()
 	if err := runner.handshake(ctx); err != nil {
@@ -513,12 +530,27 @@ func (runner *runnerProcess) control(ctx context.Context, method protocol.Method
 }
 
 func (runner *runnerProcess) stop(ctx context.Context) error {
+	runner.lifecycleMu.Lock()
+	if runner.closing {
+		done := runner.processDone
+		runner.lifecycleMu.Unlock()
+		select {
+		case <-done:
+			return nil
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
+	runner.stopping = true
+	runner.lifecycleMu.Unlock()
 	var result error
 	runner.stopOnce.Do(func() {
 		if target := runner.executeMessageID(); target != "" {
 			result = runner.control(ctx, protocol.Cancel, protocol.CancelRequest{Type: "cancel", TargetRequestID: target})
 		}
 		select {
+		case <-runner.processDone:
+			return
 		case <-time.After(runner.grace):
 		case <-ctx.Done():
 			result = errors.Join(result, ctx.Err())
@@ -529,6 +561,8 @@ func (runner *runnerProcess) stop(ctx context.Context) error {
 		// Give a cooperative runner one bounded scheduling interval to receive
 		// safe_shutdown before the platform termination escalation.
 		select {
+		case <-runner.processDone:
+			return
 		case <-time.After(runner.grace):
 		case <-ctx.Done():
 			result = errors.Join(result, ctx.Err())
@@ -537,17 +571,27 @@ func (runner *runnerProcess) stop(ctx context.Context) error {
 			result = errors.Join(result, err)
 		}
 	})
+	runner.stopDoneOnce.Do(func() { close(runner.stopDone) })
 	return result
 }
 
 func (runner *runnerProcess) close() {
+	runner.lifecycleMu.Lock()
+	if runner.stopping {
+		done := runner.stopDone
+		runner.lifecycleMu.Unlock()
+		<-done
+	} else {
+		runner.closing = true
+		runner.lifecycleMu.Unlock()
+	}
 	runner.closeOnce.Do(func() {
 		_ = runner.stdin.Close()
 		select {
-		case <-runner.wait:
+		case <-runner.processDone:
 		case <-time.After(runner.grace):
 			_ = terminateProcess(runner.cmd)
-			<-runner.wait
+			<-runner.processDone
 		}
 	})
 }
@@ -578,6 +622,18 @@ func (runner *runnerProcess) classify(ctx context.Context, cause error) error {
 	}
 	if errors.Is(ctx.Err(), context.Canceled) {
 		return &RunnerError{Kind: context.Canceled, Cause: ctx.Err(), Diagnostic: runner.diagnostics.String()}
+	}
+	if errors.Is(cause, protocol.ErrOutstandingExecute) {
+		select {
+		case <-runner.processDone:
+		case <-time.After(runner.grace):
+		}
+		runner.processMu.RLock()
+		processErr := runner.processErr
+		runner.processMu.RUnlock()
+		if processErr != nil {
+			return &RunnerError{Kind: ErrRunnerCrashed, Cause: processErr, Diagnostic: runner.diagnostics.String()}
+		}
 	}
 	for _, protocolError := range []error{
 		protocol.ErrInvalidMessage,

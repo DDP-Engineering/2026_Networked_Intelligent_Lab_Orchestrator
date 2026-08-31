@@ -18,7 +18,7 @@ title = "Prove the fake integration lifecycle"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
-status = "draft"
+status = "active"
 
 # Self-contained prose: a reader with no other context must be able to
 # understand and check it. No ticket numbers, no run IDs, no references
@@ -54,6 +54,7 @@ verification = "The black-box test starts with a clean temporary database and pa
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
     "05_Software/nilo_assistant/internal/acceptance/increment1_e2e_test.go",
+    "05_Software/nilo_assistant/internal/acceptance/increment1_fixture_test.go",
     "05_Software/integrations/fake_python/",
     "05_Software/scripts/test-increment-1.ps1",
     "05_Software/scripts/test-increment-1.sh",
@@ -61,7 +62,11 @@ affected_paths = [
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
-linked_tests = []
+linked_tests = [
+    "05_Software/nilo_assistant/internal/acceptance/increment1_e2e_test.go::TestIncrement1RealFakeIntegrationLifecycle",
+    "05_Software/scripts/test-increment-1.ps1",
+    "05_Software/scripts/test-increment-1.sh",
+]
 
 # --- optional below this line ---
 
@@ -72,4 +77,4 @@ priority = "high"   # low | normal | high
 rationale = "The fake package is the release-independent proof that the reusable integration platform works before sigrok is added."        # why this behavior exists, if not obvious
 
 created = 2026-08-30
-updated = 2026-08-30
+updated = 2026-08-31
