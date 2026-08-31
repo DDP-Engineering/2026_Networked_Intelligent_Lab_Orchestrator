@@ -120,6 +120,35 @@ func TestSupervisorCancelTargetsActiveExecuteWireID(t *testing.T) {
 	}
 }
 
+func TestSupervisorUsesOperationRequestIDForTargetedCancel(t *testing.T) {
+	marker := filepath.Join(t.TempDir(), "correlated-cancel-marker")
+	supervisor := newTestSupervisor(t, "cooperative-cancel", marker)
+	requestID, err := domain.NewRequestID()
+	if err != nil {
+		t.Fatalf("NewRequestID() error = %v", err)
+	}
+	executeContext, stop := context.WithCancel(WithRequestID(context.Background(), requestID))
+	defer stop()
+	completed := make(chan error, 1)
+	go func() {
+		_, executeErr := supervisor.Execute(executeContext, executeRequest(), eventSinkFunc(func(context.Context, protocol.Envelope) error { return nil }))
+		completed <- executeErr
+	}()
+	if wireID := strings.TrimSpace(waitMarker(t, marker, func(value string) bool { return strings.TrimSpace(value) != "" })); wireID != requestID.String() {
+		t.Fatalf("execute wire ID = %q, want operation request ID %q", wireID, requestID)
+	}
+	if err := supervisor.Cancel(context.Background(), "test.integration", requestID); err != nil {
+		t.Fatalf("Cancel() error = %v", err)
+	}
+	waitMarker(t, marker, func(value string) bool { return strings.Contains(value, "correct-cancel") })
+	stop()
+	select {
+	case <-completed:
+	case <-time.After(time.Second):
+		t.Fatal("Execute() did not finish after correlated cancellation")
+	}
+}
+
 func TestSupervisorShutdownTracksDescribeRunnerAndDoesNotBlockOnUnreadStdin(t *testing.T) {
 	marker := filepath.Join(t.TempDir(), "shutdown-marker")
 	supervisor := newTestSupervisor(t, "describe-hang", marker)

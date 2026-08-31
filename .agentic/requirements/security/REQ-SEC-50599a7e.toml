@@ -65,6 +65,9 @@ linked_tests = [
     "05_Software/nilo_assistant/internal/policy/resolver_test.go::TestBindApprovalUsesImmutableRequestDigestAndDeadline",
     "05_Software/nilo_assistant/internal/store/sqlite/policy_repository_test.go::TestPolicyRepositoryFindsOnlyMatchingUnexpiredApprovalAcrossReload",
     "05_Software/nilo_assistant/internal/store/sqlite/policy_repository_test.go::TestPolicyRepositoryRejectsApprovalNotBoundToStoredRequest",
+    "05_Software/nilo_assistant/internal/operation/service_test.go::TestApprovalQueuesLeasesRunsPersistsEvidenceAndCompletes",
+    "05_Software/nilo_assistant/internal/operation/service_test.go::TestApprovalRevalidatesCurrentPackageAndDeviceBeforeQueueing",
+    "05_Software/nilo_assistant/internal/operation/service_test.go::TestApprovalRetryRepairsAuditAfterDecisionWasPersisted",
 ]
 
 # --- optional below this line ---
@@ -76,4 +79,4 @@ priority = "high"   # low | normal | high
 rationale = "Approval must never authorize parameters the administrator did not inspect."        # why this behavior exists, if not obvious
 
 created = 2026-08-30
-updated = 2026-08-30
+updated = 2026-08-31

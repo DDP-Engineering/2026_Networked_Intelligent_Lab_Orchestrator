@@ -173,6 +173,32 @@ func (repository *PolicyRepository) FindValidApproval(ctx context.Context, reque
 	if requestID.String() == "00000000-0000-0000-0000-000000000000" || now.IsZero() {
 		return policy.ApprovalRecord{}, fmt.Errorf("%w: request identity and current time are required", policy.ErrInvalidApprovalRecord)
 	}
+	record, err := repository.GetApproval(ctx, requestID)
+	if err != nil {
+		return policy.ApprovalRecord{}, err
+	}
+	if subtle.ConstantTimeCompare(record.RequestDigest[:], digest[:]) != 1 {
+		return policy.ApprovalRecord{}, policy.ErrApprovalDigestMismatch
+	}
+	if !now.Before(record.ExpiresAt) {
+		return policy.ApprovalRecord{}, policy.ErrApprovalExpired
+	}
+	if record.Decision != policy.ApprovalGranted {
+		return policy.ApprovalRecord{}, policy.ErrApprovalDenied
+	}
+	return record, nil
+}
+
+// GetApproval loads the immutable decision without changing its semantics.
+// Callers that authorize execution must still check digest, decision, and
+// expiry, as FindValidApproval does.
+func (repository *PolicyRepository) GetApproval(ctx context.Context, requestID domain.RequestID) (policy.ApprovalRecord, error) {
+	if err := repository.validateDatabase(); err != nil {
+		return policy.ApprovalRecord{}, err
+	}
+	if requestID.String() == "00000000-0000-0000-0000-000000000000" {
+		return policy.ApprovalRecord{}, policy.ErrApprovalNotFound
+	}
 	var (
 		record       policy.ApprovalRecord
 		requestValue string
@@ -220,15 +246,6 @@ func (repository *PolicyRepository) FindValidApproval(ctx context.Context, reque
 	}
 	if err := record.Validate(); err != nil {
 		return policy.ApprovalRecord{}, err
-	}
-	if subtle.ConstantTimeCompare(record.RequestDigest[:], digest[:]) != 1 {
-		return policy.ApprovalRecord{}, policy.ErrApprovalDigestMismatch
-	}
-	if !now.Before(record.ExpiresAt) {
-		return policy.ApprovalRecord{}, policy.ErrApprovalExpired
-	}
-	if record.Decision != policy.ApprovalGranted {
-		return policy.ApprovalRecord{}, policy.ErrApprovalDenied
 	}
 	return record, nil
 }

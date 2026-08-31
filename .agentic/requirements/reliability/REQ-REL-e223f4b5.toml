@@ -18,7 +18,7 @@ title = "Preserve truthful terminal outcomes"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
-status = "draft"
+status = "active"
 
 # Self-contained prose: a reader with no other context must be able to
 # understand and check it. No ticket numbers, no run IDs, no references
@@ -61,7 +61,12 @@ affected_paths = [
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
-linked_tests = []
+linked_tests = [
+    "05_Software/nilo_assistant/internal/operation/service_test.go::TestArtifactPersistenceFailurePreventsCompleted",
+    "05_Software/nilo_assistant/internal/operation/service_test.go::TestTerminalAuditFailurePreventsCompletedAndReleasesLease",
+    "05_Software/nilo_assistant/internal/operation/service_test.go::TestAtomicTerminalTransitionFailureNeverReportsCompleted",
+    "05_Software/nilo_assistant/internal/operation/service_test.go::TestRunnerFailureUsesFailedOnlyForTypedRemoteFailure",
+]
 
 # --- optional below this line ---
 
@@ -72,4 +77,4 @@ priority = "high"   # low | normal | high
 rationale = "A laboratory result is successful only when the evidence needed to trust it survives the process."        # why this behavior exists, if not obvious
 
 created = 2026-08-30
-updated = 2026-08-30
+updated = 2026-08-31

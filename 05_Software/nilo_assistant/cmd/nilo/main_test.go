@@ -29,6 +29,22 @@ func TestNiloCLIContract(t *testing.T) {
 		t.Fatalf("unexpected build information: %#v", info)
 	}
 
+	foundation := exec.Command(binary, "serve-foundation-check", "--data-dir", t.TempDir())
+	foundationOutput, err := foundation.Output()
+	if err != nil {
+		t.Fatalf("nilo serve-foundation-check: %v", err)
+	}
+	var health struct {
+		Status     string `json:"status"`
+		Reconciled bool   `json:"reconciled"`
+	}
+	if err := json.Unmarshal(foundationOutput, &health); err != nil {
+		t.Fatalf("decode foundation health: %v", err)
+	}
+	if health.Status != "ok" || !health.Reconciled {
+		t.Fatalf("unexpected foundation health: %#v", health)
+	}
+
 	invalid := exec.Command(binary, "invalid")
 	if err := invalid.Run(); err == nil {
 		t.Fatal("invalid invocation succeeded")

@@ -59,7 +59,12 @@ affected_paths = [
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
-linked_tests = []
+linked_tests = [
+    "05_Software/nilo_assistant/internal/integration/supervisor/supervisor_test.go::TestSupervisorCancelTargetsActiveExecuteWireID",
+    "05_Software/nilo_assistant/internal/integration/supervisor/supervisor_test.go::TestSupervisorUsesOperationRequestIDForTargetedCancel",
+    "05_Software/nilo_assistant/internal/integration/supervisor/supervisor_test.go::TestSupervisorTimeoutAndCancellationTerminateRunner",
+    "05_Software/nilo_assistant/internal/operation/service_test.go::TestRunningCancellationInvokesSupervisorRecordsTerminalStateAndReleasesLease",
+]
 
 # --- optional below this line ---
 
@@ -70,4 +75,4 @@ priority = "high"   # low | normal | high
 rationale = "Physical resources need a bounded attempt to return to a safe state before process termination."        # why this behavior exists, if not obvious
 
 created = 2026-08-30
-updated = 2026-08-30
+updated = 2026-08-31

@@ -18,7 +18,7 @@ title = "Execute immutable operation lifecycle"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
-status = "draft"
+status = "active"
 
 # Self-contained prose: a reader with no other context must be able to
 # understand and check it. No ticket numbers, no run IDs, no references
@@ -56,6 +56,7 @@ affected_paths = [
     "05_Software/nilo_assistant/internal/domain/",
     "05_Software/nilo_assistant/internal/session/",
     "05_Software/nilo_assistant/internal/operation/",
+    "05_Software/nilo_assistant/internal/store/sqlite/operation_repository.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
@@ -67,6 +68,11 @@ linked_tests = [
     "05_Software/nilo_assistant/internal/domain/session_test.go::TestNewOperationRequestKeepsStableValidatedOperationNames",
     "05_Software/nilo_assistant/internal/domain/session_test.go::TestNewOperationRequestExposesValueGetters",
     "05_Software/nilo_assistant/internal/domain/session_test.go::TestNewOperationRequestCopiesCanonicalParameters",
+    "05_Software/nilo_assistant/internal/operation/service_test.go::TestAskCreatesPendingApprovalWithoutRunner",
+    "05_Software/nilo_assistant/internal/operation/service_test.go::TestApprovalQueuesLeasesRunsPersistsEvidenceAndCompletes",
+    "05_Software/nilo_assistant/internal/operation/service_test.go::TestRunnerFailureUsesFailedOnlyForTypedRemoteFailure",
+    "05_Software/nilo_assistant/internal/operation/service_test.go::TestConflictingRequestReturnsTypedBusyWithoutStartingRunner",
+    "05_Software/nilo_assistant/internal/store/sqlite/operation_repository_test.go::TestOperationRepositoryAtomicallyPersistsAndLoadsRequestWithPolicySnapshot",
 ]
 
 # --- optional below this line ---
@@ -78,4 +84,4 @@ priority = "high"   # low | normal | high
 rationale = "One truthful state model lets human and AI actors observe the same physical operation without ambiguous success."        # why this behavior exists, if not obvious
 
 created = 2026-08-30
-updated = 2026-08-30
+updated = 2026-08-31

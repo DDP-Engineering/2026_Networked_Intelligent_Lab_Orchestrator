@@ -57,6 +57,14 @@ type Supervisor interface {
 	Shutdown(context.Context) error
 }
 
+type operationRequestIDKey struct{}
+
+// WithRequestID binds the immutable operation identity to the execute wire ID
+// so a concurrent Cancel targets the same runner request.
+func WithRequestID(ctx context.Context, requestID domain.RequestID) context.Context {
+	return context.WithValue(ctx, operationRequestIDKey{}, requestID)
+}
+
 // ProcessSupervisor starts one isolated runner process for each operation.
 // Separate processes prevent a faulty integration from corrupting Bench Core.
 type ProcessSupervisor struct {
@@ -186,10 +194,13 @@ func (supervisor *ProcessSupervisor) Execute(ctx context.Context, request protoc
 	if err != nil {
 		return protocol.ExecuteResult{}, err
 	}
-	requestID, err := domain.NewRequestID()
-	if err != nil {
-		supervisor.release(runner)
-		return protocol.ExecuteResult{}, fmt.Errorf("create request ID: %w", err)
+	requestID, ok := ctx.Value(operationRequestIDKey{}).(domain.RequestID)
+	if !ok || requestID.String() == "00000000-0000-0000-0000-000000000000" {
+		requestID, err = domain.NewRequestID()
+		if err != nil {
+			supervisor.release(runner)
+			return protocol.ExecuteResult{}, fmt.Errorf("create request ID: %w", err)
+		}
 	}
 	runner.setExecuteMessageID(requestID.String())
 	supervisor.mu.Lock()

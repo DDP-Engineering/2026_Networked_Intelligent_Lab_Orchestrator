@@ -913,7 +913,7 @@ Expected: all SDK, contract, manifest, protocol, and supervisor tests pass.
 
 **Produces:** One coherent vertical slice from immutable request through terminal durable evidence and resource release.
 
-- [ ] Write failing service tests with fakes for these exact scenarios:
+- [x] Write failing service tests with fakes for these exact scenarios:
 
 1. Ask creates `pending_approval` and does not invoke the runner.
 2. Approval of the same request queues, leases, runs, persists evidence, and completes.
@@ -925,9 +925,9 @@ Expected: all SDK, contract, manifest, protocol, and supervisor tests pass.
 8. Artifact persistence failure prevents `completed`.
 9. A second conflicting request returns typed busy and never starts its runner.
 
-- [ ] Run `go test ./internal/operation`; expect compile failure.
+- [x] Run `go test ./internal/operation`; expect compile failure.
 
-- [ ] Implement the stable `operation.Service` contract declared at the top of this plan. Submit order is fixed:
+- [x] Implement the stable `operation.Service` contract declared at the top of this plan. Submit order is fixed:
 
 ```text
 authenticate actor (already resolved at this layer)
@@ -945,15 +945,15 @@ authenticate actor (already resolved at this layer)
 -> release leases
 ```
 
-- [ ] Ensure approval revalidates the exact request digest, expiry, current package compatibility, and device presence before queueing. It does not silently update parameters or reuse an older approval.
+- [x] Ensure approval revalidates the exact request digest, expiry, current package compatibility, and device presence before queueing. It does not silently update parameters or reuse an older approval.
 
-- [ ] Ensure cancellation is idempotent. Cancelling a terminal session returns its existing state and cancelling running work invokes the supervisor. A request still in `pending_approval` is resolved with `Deny`, producing a denial record and audit event without dispatching to the runner; it is not forced through an invalid session transition.
+- [x] Ensure cancellation is idempotent. Cancelling a terminal session returns its existing state and cancelling running work invokes the supervisor. A request still in `pending_approval` is resolved with `Deny`, producing a denial record and audit event without dispatching to the runner; it is not forced through an invalid session transition.
 
-- [ ] Add `app.New` to open configuration/database/artifact services and invoke `ReconcileStartup` before accepting operations. `cmd/nilo` gains `serve-foundation-check --data-dir <temp>` only as a local smoke command; it opens, reconciles, reports JSON health, and exits without network listeners.
+- [x] Add `app.New` to open configuration/database/artifact services and invoke `ReconcileStartup` before accepting operations. `cmd/nilo` gains `serve-foundation-check --data-dir <temp>` only as a local smoke command; it opens, reconciles, reports JSON health, and exits without network listeners.
 
-- [ ] Run focused tests, `go test ./...`, Python tests/lint, and portable compilation.
+- [x] Run focused tests, `go test ./...`, Python tests/lint, and portable compilation.
 
-- [ ] Record Task 14 evidence, then commit only Task 14 files with message `feat: orchestrate operation lifecycle` for task review; do not push.
+- [x] Record Task 14 evidence, then commit only Task 14 files with message `feat: orchestrate operation lifecycle` for task review; do not push.
 
 ---
 
