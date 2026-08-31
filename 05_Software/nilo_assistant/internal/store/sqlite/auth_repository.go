@@ -22,6 +22,56 @@ func NewAuthRepository(database *DB) *AuthRepository {
 	return &AuthRepository{database: database}
 }
 
+// CreateUserAndToken atomically persists a user and only the token verifier.
+func (repository *AuthRepository) CreateUserAndToken(
+	ctx context.Context,
+	user auth.UserRecord,
+	token auth.CreatedToken,
+	verifier auth.TokenVerifier,
+) (err error) {
+	if repository == nil || repository.database == nil || repository.database.SQL() == nil {
+		return errors.New("authentication database is required")
+	}
+	if user.ID == "" || user.Username == "" || user.PasswordVerifier == "" || token.ID == "" {
+		return errors.New("user and token fields are required")
+	}
+	transaction, err := repository.database.SQL().BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin user and token transaction: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			_ = transaction.Rollback()
+		}
+	}()
+	timestamp := user.CreatedAt.UTC().Format(time.RFC3339Nano)
+	if _, err = transaction.ExecContext(
+		ctx,
+		"INSERT INTO users (id, username, password_hash, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+		user.ID,
+		user.Username,
+		user.PasswordVerifier,
+		timestamp,
+		timestamp,
+	); err != nil {
+		return fmt.Errorf("store development user: %w", err)
+	}
+	if _, err = transaction.ExecContext(
+		ctx,
+		"INSERT INTO mcp_tokens (id, user_id, verifier, created_at) VALUES (?, ?, ?, ?)",
+		token.ID,
+		user.ID,
+		verifier[:],
+		token.CreatedAt.UTC().Format(time.RFC3339Nano),
+	); err != nil {
+		return fmt.Errorf("store development token verifier: %w", err)
+	}
+	if err = transaction.Commit(); err != nil {
+		return fmt.Errorf("commit development user and token: %w", err)
+	}
+	return nil
+}
+
 // CreateToken persists only the SHA-256 verifier for a newly-created token.
 func (repository *AuthRepository) CreateToken(ctx context.Context, userID, id string, createdAt time.Time, verifier auth.TokenVerifier) error {
 	if repository == nil || repository.database == nil || repository.database.SQL() == nil {
@@ -122,3 +172,4 @@ func (repository *AuthRepository) RevokeToken(ctx context.Context, id string, at
 }
 
 var _ auth.TokenRepository = (*AuthRepository)(nil)
+var _ auth.DevelopmentTokenRepository = (*AuthRepository)(nil)

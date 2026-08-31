@@ -11,6 +11,9 @@ var (
 	ErrTokenRevoked  = errors.New("token revoked")
 )
 
+// DisabledDevelopmentPasswordVerifier marks identities that cannot use password login.
+const DisabledDevelopmentPasswordVerifier = "!disabled-development-login"
+
 // TokenRecord is the non-secret representation returned after authentication.
 type TokenRecord struct {
 	ID        string
@@ -19,9 +22,23 @@ type TokenRecord struct {
 	RevokedAt *time.Time
 }
 
+// UserRecord contains the durable fields required to attribute a token.
+type UserRecord struct {
+	ID               string
+	Username         string
+	PasswordVerifier string
+	CreatedAt        time.Time
+}
+
 // TokenRepository makes token storage and authentication dependencies explicit.
 type TokenRepository interface {
 	CreateToken(ctx context.Context, userID, id string, createdAt time.Time, verifier TokenVerifier) error
 	VerifyToken(ctx context.Context, plaintext string) (TokenRecord, error)
 	RevokeToken(ctx context.Context, id string, at time.Time) error
+}
+
+// DevelopmentTokenRepository atomically creates a non-login identity and token.
+type DevelopmentTokenRepository interface {
+	TokenRepository
+	CreateUserAndToken(ctx context.Context, user UserRecord, token CreatedToken, verifier TokenVerifier) error
 }

@@ -146,7 +146,12 @@ shape is:
 nilo serve --profile simulation
 ```
 
-This command is a planned interface and does not exist in Increment 1.
+The first executable form of this command now requires an explicit WSL-native
+data directory and loopback listener:
+
+```text
+nilo serve --profile simulation --data-dir <absolute-path> --bind <loopback-host:port>
+```
 
 Simulation must be obvious and fail closed:
 
@@ -228,7 +233,7 @@ The intended daily flow, once the GUI and long-running server exist, is:
    change and explicitly rerun with `-InstallWSL`; complete any required reboot
    or first-launch initialization, then rerun the ordinary command.
 3. Start Bench Core in WSL2 with the simulation profile and a WSL-native data
-   directory.
+   directory, using the commands in section 8.1.
 4. Start the GUI development server on Windows.
 5. Open the GUI in the Windows browser.
 6. Use mock mode for isolated visual states or integrated simulation mode for
@@ -242,6 +247,36 @@ The intended daily flow, once the GUI and long-running server exist, is:
 Exact application-server, GUI, and port defaults will be added only when their
 corresponding interfaces are implemented. Documentation must not present a
 planned application command as currently executable.
+
+### 8.1 Current backend-only workflow
+
+From a WSL2 shell, use the shared source checkout but keep state in Linux:
+
+```bash
+cd /mnt/f/2026_Networked_Intelligent_Lab_Orchestrator/05_Software/nilo_assistant
+mkdir -p "$HOME/.local/state/nilo-development"
+../../02_Tools/env/with-tools.sh go run ./cmd/nilo development issue-token \
+  --data-dir "$HOME/.local/state/nilo-development"
+../../02_Tools/env/with-tools.sh go run ./cmd/nilo serve \
+  --profile simulation \
+  --data-dir "$HOME/.local/state/nilo-development" \
+  --bind 127.0.0.1:8090
+```
+
+Copy the `token` value printed by the first command. While the server remains
+running, verify it from Windows PowerShell:
+
+```powershell
+$headers = @{ Authorization = "Bearer <paste-token-here>" }
+Invoke-RestMethod -Uri http://127.0.0.1:8090/api/v1/status -Headers $headers
+```
+
+The response must report `profile` as `simulation` and `simulation` as `true`.
+Stop the server with Ctrl+C. Issuing another token creates another development
+identity; it does not reveal any earlier token.
+
+This is currently a backend verification flow. There is no GUI process to
+start yet.
 
 ## 9. Verification levels
 
@@ -261,10 +296,11 @@ real PLC flashing path.
 
 ## 10. Current repository state
 
-Increment 1 currently provides the Go foundation, SQLite stores, policy and
-session services, runner supervision, Python SDK, fake integration, and
-contract/acceptance tests. It does not yet provide a long-running HTTP or MCP
-service or a browser GUI.
+The repository currently provides the Go foundation, SQLite stores, policy and
+session services, runner supervision, Python SDK, fake integration,
+contract/acceptance tests, and a long-running authenticated simulation status
+API. It does not yet provide simulated device inventory, an MCP service, or a
+browser GUI.
 
 The existing Windows foundation gate is:
 
@@ -272,18 +308,16 @@ The existing Windows foundation gate is:
 .\05_Software\scripts\test-increment-1.ps1
 ```
 
-`nilo serve-foundation-check` is a short-lived composition check. It is not the
-future simulation server.
+`nilo serve-foundation-check` remains a short-lived composition check. `nilo
+serve --profile simulation` is the long-running development server.
 
-The environment bootstrap is executable now. The complete application flow
-becomes executable after the following foundations are added:
+The environment bootstrap and backend-only flow are executable now. The complete
+GUI application flow requires the remaining foundations:
 
-1. a long-running `nilo serve` command;
-2. a versioned authenticated HTTP API;
-3. an explicit simulation profile and isolated data directory;
-4. a TypeScript GUI project and pinned frontend toolchain;
-5. contract-validated mock scenarios;
-6. browser end-to-end tests against WSL2.
+1. deterministic simulated integration and device inventory;
+2. a TypeScript GUI project and pinned frontend toolchain;
+3. contract-validated mock scenarios;
+4. browser end-to-end tests against WSL2.
 
 ## 11. Relationship to product delivery
 

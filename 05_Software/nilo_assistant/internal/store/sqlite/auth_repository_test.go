@@ -109,6 +109,36 @@ func TestAuthRepositoryReturnsTypedErrorForUnknownToken(t *testing.T) {
 	}
 }
 
+func TestAuthRepositoryRollsBackDevelopmentUserWhenTokenInsertFails(t *testing.T) {
+	ctx := context.Background()
+	db := openTemporaryDatabase(t)
+	seedAuthUser(t, db)
+	repository := NewAuthRepository(db)
+	existing, verifier := newCreatedToken(t, 0x03)
+	if err := repository.CreateToken(ctx, authUserID, existing.ID, existing.CreatedAt, verifier); err != nil {
+		t.Fatalf("seed existing token: %v", err)
+	}
+
+	newUser := auth.UserRecord{
+		ID:               "018f3d8d-8d2c-7c20-8e0c-000000000009",
+		Username:         "development-rollback-test",
+		PasswordVerifier: auth.DisabledDevelopmentPasswordVerifier,
+		CreatedAt:        existing.CreatedAt,
+	}
+	duplicate := existing
+	duplicate.ID = "018f3d8d-8d2c-7c20-8e0c-000000000010"
+	if err := repository.CreateUserAndToken(ctx, newUser, duplicate, verifier); err == nil {
+		t.Fatal("CreateUserAndToken accepted a duplicate verifier")
+	}
+	var count int
+	if err := db.SQL().QueryRowContext(ctx, "SELECT COUNT(*) FROM users WHERE id = ?", newUser.ID).Scan(&count); err != nil {
+		t.Fatalf("count rolled-back development user: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("development user count = %d, want rollback", count)
+	}
+}
+
 func seedAuthUser(t *testing.T, db *DB) {
 	t.Helper()
 	_, err := db.SQL().ExecContext(context.Background(), "INSERT INTO users (id, username, password_hash, created_at, updated_at) VALUES (?, ?, ?, ?, ?)", authUserID, "admin", "stored-verifier-only", createdAt, createdAt)

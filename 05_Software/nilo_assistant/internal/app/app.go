@@ -3,13 +3,16 @@ package app
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"time"
 
+	"github.com/google/uuid"
 	"nilo.local/nilo/internal/artifact"
+	"nilo.local/nilo/internal/auth"
 	"nilo.local/nilo/internal/config"
 	"nilo.local/nilo/internal/domain"
 	"nilo.local/nilo/internal/session"
@@ -28,6 +31,14 @@ type App struct {
 	sessionRepository *sqlite.SessionRepository
 	sessionService    session.Service
 	artifactStore     artifact.Store
+	authRepository    *sqlite.AuthRepository
+	now               func() time.Time
+}
+
+// DevelopmentToken is the one-time token result and its attributed user.
+type DevelopmentToken struct {
+	UserID string
+	Token  auth.CreatedToken
 }
 
 func New(ctx context.Context, options Options) (*App, error) {
@@ -69,11 +80,40 @@ func New(ctx context.Context, options Options) (*App, error) {
 	return &App{
 		configuration: configuration, database: database,
 		sessionRepository: sessionRepository, sessionService: sessionService,
-		artifactStore: artifactStore,
+		artifactStore: artifactStore, authRepository: sqlite.NewAuthRepository(database), now: options.Now,
 	}, nil
 }
 
 func (application *App) Configuration() config.Config { return application.configuration }
+
+// TokenRepository returns the narrow verifier used by authenticated transports.
+func (application *App) TokenRepository() auth.TokenRepository { return application.authRepository }
+
+// IssueDevelopmentToken creates a unique non-login identity and bearer token.
+func (application *App) IssueDevelopmentToken(ctx context.Context) (DevelopmentToken, error) {
+	if application == nil || application.authRepository == nil || application.now == nil {
+		return DevelopmentToken{}, errors.New("application authentication service is required")
+	}
+	userID, err := uuid.NewV7()
+	if err != nil {
+		return DevelopmentToken{}, fmt.Errorf("create development user ID: %w", err)
+	}
+	now := application.now().UTC()
+	created, verifier, err := auth.NewToken(rand.Reader, now)
+	if err != nil {
+		return DevelopmentToken{}, err
+	}
+	user := auth.UserRecord{
+		ID:               userID.String(),
+		Username:         "development-" + userID.String(),
+		PasswordVerifier: auth.DisabledDevelopmentPasswordVerifier,
+		CreatedAt:        now,
+	}
+	if err := application.authRepository.CreateUserAndToken(ctx, user, created, verifier); err != nil {
+		return DevelopmentToken{}, err
+	}
+	return DevelopmentToken{UserID: user.ID, Token: created}, nil
+}
 
 func (application *App) Close() error {
 	if application == nil || application.database == nil {

@@ -31,7 +31,11 @@ workdir = "05_Software"
 [layout]
 # Globs used by the traceability heuristics of `aegis check`.
 source = ["05_Software/nilo_assistant/"]
-tests = ["05_Software/tests/", "05_Software/scripts/"]
+tests = [
+    "05_Software/tests/",
+    "05_Software/scripts/",
+    "05_Software/nilo_assistant/**/*_test.go",
+]
 docs = [
     "README.md",
     "05_Software/README.md",
