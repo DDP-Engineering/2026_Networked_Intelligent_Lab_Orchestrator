@@ -150,7 +150,7 @@ The first executable form of this command now requires an explicit WSL-native
 data directory and loopback listener:
 
 ```text
-nilo serve --profile simulation --data-dir <absolute-path> --bind <loopback-host:port>
+nilo serve --profile simulation [--scenario healthy|unavailable] --data-dir <absolute-path> --bind <loopback-host:port>
 ```
 
 Simulation must be obvious and fail closed:
@@ -259,6 +259,7 @@ mkdir -p "$HOME/.local/state/nilo-development"
   --data-dir "$HOME/.local/state/nilo-development"
 ../../02_Tools/env/with-tools.sh go run ./cmd/nilo serve \
   --profile simulation \
+  --scenario healthy \
   --data-dir "$HOME/.local/state/nilo-development" \
   --bind 127.0.0.1:8090
 ```
@@ -269,11 +270,16 @@ running, verify it from Windows PowerShell:
 ```powershell
 $headers = @{ Authorization = "Bearer <paste-token-here>" }
 Invoke-RestMethod -Uri http://127.0.0.1:8090/api/v1/status -Headers $headers
+Invoke-RestMethod -Uri http://127.0.0.1:8090/api/v1/integrations -Headers $headers
+Invoke-RestMethod -Uri http://127.0.0.1:8090/api/v1/devices -Headers $headers
 ```
 
-The response must report `profile` as `simulation` and `simulation` as `true`.
-Stop the server with Ctrl+C. Issuing another token creates another development
-identity; it does not reveal any earlier token.
+The status response must report `profile` as `simulation` and `simulation` as
+`true`. Inventory responses must use unmistakable `simulation.` identities and
+`SIMULATION - ` display names. Restart with `--scenario unavailable` to retain
+the same identities while reporting unavailable inventory. Stop the server with
+Ctrl+C. Issuing another token creates another development identity; it does not
+reveal any earlier token.
 
 This is currently a backend verification flow. There is no GUI process to
 start yet.
@@ -298,9 +304,9 @@ real PLC flashing path.
 
 The repository currently provides the Go foundation, SQLite stores, policy and
 session services, runner supervision, Python SDK, fake integration,
-contract/acceptance tests, and a long-running authenticated simulation status
-API. It does not yet provide simulated device inventory, an MCP service, or a
-browser GUI.
+contract/acceptance tests, a long-running authenticated simulation status API,
+and deterministic integration and device inventory. It does not yet provide an
+MCP service or a browser GUI.
 
 The existing Windows foundation gate is:
 
@@ -314,10 +320,9 @@ serve --profile simulation` is the long-running development server.
 The environment bootstrap and backend-only flow are executable now. The complete
 GUI application flow requires the remaining foundations:
 
-1. deterministic simulated integration and device inventory;
-2. a TypeScript GUI project and pinned frontend toolchain;
-3. contract-validated mock scenarios;
-4. browser end-to-end tests against WSL2.
+1. a TypeScript GUI project and pinned frontend toolchain;
+2. contract-validated mock scenarios;
+3. browser end-to-end tests against WSL2.
 
 ## 11. Relationship to product delivery
 

@@ -12,6 +12,7 @@ import (
 
 	"nilo.local/nilo/internal/auth"
 	"nilo.local/nilo/internal/buildinfo"
+	"nilo.local/nilo/internal/simulation"
 )
 
 const simulationProfile = "simulation"
@@ -83,6 +84,7 @@ type HandlerOptions struct {
 	Tokens  auth.TokenRepository
 	Profile string
 	Build   buildinfo.Info
+	Catalog simulation.Catalog
 }
 
 // NewHandler builds the protected Bench Core HTTP API.
@@ -92,6 +94,9 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 	}
 	if options.Profile != simulationProfile {
 		return nil, errors.New("HTTP status API requires the simulation profile")
+	}
+	if options.Catalog.Scenario() == "" {
+		return nil, errors.New("simulation catalog is required")
 	}
 
 	mux := http.NewServeMux()
@@ -105,7 +110,35 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 			Build:      options.Build,
 		})
 	})
+	mux.HandleFunc("GET /api/v1/integrations", func(response http.ResponseWriter, _ *http.Request) {
+		response.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(response).Encode(integrationListResponse{
+			APIVersion: "nilo.http/1",
+			Scenario:   options.Catalog.Scenario(),
+			Items:      options.Catalog.Integrations(),
+		})
+	})
+	mux.HandleFunc("GET /api/v1/devices", func(response http.ResponseWriter, _ *http.Request) {
+		response.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(response).Encode(deviceListResponse{
+			APIVersion: "nilo.http/1",
+			Scenario:   options.Catalog.Scenario(),
+			Items:      options.Catalog.Devices(),
+		})
+	})
 	return authenticate(options.Tokens, mux), nil
+}
+
+type integrationListResponse struct {
+	APIVersion string                   `json:"api_version"`
+	Scenario   simulation.Scenario      `json:"scenario"`
+	Items      []simulation.Integration `json:"items"`
+}
+
+type deviceListResponse struct {
+	APIVersion string              `json:"api_version"`
+	Scenario   simulation.Scenario `json:"scenario"`
+	Items      []simulation.Device `json:"items"`
 }
 
 type statusResponse struct {

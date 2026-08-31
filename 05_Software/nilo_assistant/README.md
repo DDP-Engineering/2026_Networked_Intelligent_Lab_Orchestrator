@@ -15,14 +15,16 @@ The currently implemented application commands are:
 nilo version
 nilo serve-foundation-check --data-dir <absolute-path>
 nilo development issue-token --data-dir <absolute-path>
-nilo serve --profile simulation --data-dir <absolute-path> --bind <loopback-address>
+nilo serve --profile simulation [--scenario healthy|unavailable] --data-dir <absolute-path> --bind <loopback-address>
 ```
 
-The simulation server exposes authenticated `GET /api/v1/status` using the
-`nilo.http/1` contract. Development token issuance creates a non-login identity,
-stores only the one-way token verifier, and prints the plaintext token once.
-The simulation listener rejects wildcard, hostname, LAN, and other non-loopback
-addresses.
+The simulation server exposes authenticated `GET /api/v1/status`, `GET
+/api/v1/integrations`, and `GET /api/v1/devices` routes using the `nilo.http/1`
+contract. The optional scenario is deterministic and defaults to `healthy`;
+`unavailable` preserves stable identities while changing readiness. Development
+token issuance creates a non-login identity, stores only the one-way token
+verifier, and prints the plaintext token once. The simulation listener rejects
+wildcard, hostname, LAN, and other non-loopback addresses.
 
 For the complete Windows-browser and WSL2-backend workflow, including exact
 commands, see `../../06_SoftwareDocu/Development_and_Simulation_Flow.md`.

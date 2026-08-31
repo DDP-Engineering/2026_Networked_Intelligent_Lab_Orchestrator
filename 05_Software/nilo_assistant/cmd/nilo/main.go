@@ -14,6 +14,7 @@ import (
 	"nilo.local/nilo/internal/app"
 	"nilo.local/nilo/internal/buildinfo"
 	"nilo.local/nilo/internal/httpapi"
+	"nilo.local/nilo/internal/simulation"
 )
 
 func main() {
@@ -97,6 +98,7 @@ func runServe(ctx context.Context, arguments []string) int {
 	flags := flag.NewFlagSet("serve", flag.ContinueOnError)
 	flags.SetOutput(os.Stderr)
 	profile := flags.String("profile", "", "runtime profile")
+	scenarioValue := flags.String("scenario", string(simulation.ScenarioHealthy), "deterministic simulation scenario")
 	dataDir := flags.String("data-dir", "", "absolute runtime data directory")
 	bindAddress := flags.String("bind", "", "loopback listener address")
 	if err := flags.Parse(arguments); err != nil {
@@ -109,6 +111,16 @@ func runServe(ctx context.Context, arguments []string) int {
 	if err := httpapi.ValidateSimulationBind(*bindAddress); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
+	}
+	scenario, err := simulation.ParseScenario(*scenarioValue)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 2
+	}
+	catalog, err := simulation.NewCatalog(scenario)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 2
 	}
 
 	application, err := app.New(ctx, app.Options{
@@ -125,7 +137,7 @@ func runServe(ctx context.Context, arguments []string) int {
 	}()
 
 	handler, err := httpapi.NewHandler(httpapi.HandlerOptions{
-		Tokens: application.TokenRepository(), Profile: *profile, Build: buildinfo.Current(),
+		Tokens: application.TokenRepository(), Profile: *profile, Build: buildinfo.Current(), Catalog: catalog,
 	})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -151,5 +163,5 @@ func runServe(ctx context.Context, arguments []string) int {
 }
 
 func writeUsage() {
-	fmt.Fprintln(os.Stderr, "usage: nilo version | nilo serve-foundation-check --data-dir <absolute-path> | nilo development issue-token --data-dir <absolute-path> | nilo serve --profile simulation --data-dir <absolute-path> --bind <loopback-address>")
+	fmt.Fprintln(os.Stderr, "usage: nilo version | nilo serve-foundation-check --data-dir <absolute-path> | nilo development issue-token --data-dir <absolute-path> | nilo serve --profile simulation [--scenario healthy|unavailable] --data-dir <absolute-path> --bind <loopback-address>")
 }

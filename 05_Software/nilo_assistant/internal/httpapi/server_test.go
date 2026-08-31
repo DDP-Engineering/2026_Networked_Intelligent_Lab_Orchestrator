@@ -13,7 +13,80 @@ import (
 
 	"nilo.local/nilo/internal/auth"
 	"nilo.local/nilo/internal/buildinfo"
+	"nilo.local/nilo/internal/simulation"
 )
+
+func TestIntegrationInventoryReturnsExactDeterministicSimulationEnvelope(t *testing.T) {
+	t.Parallel()
+
+	catalog, err := simulation.NewCatalog(simulation.ScenarioHealthy)
+	if err != nil {
+		t.Fatalf("NewCatalog: %v", err)
+	}
+	verifier := validTokenRepository()
+	handler, err := NewHandler(HandlerOptions{Tokens: verifier, Profile: "simulation", Catalog: catalog})
+	if err != nil {
+		t.Fatalf("NewHandler: %v", err)
+	}
+	const want = "{\"api_version\":\"nilo.http/1\",\"scenario\":\"healthy\",\"items\":[{\"id\":\"simulation.fake-python\",\"display_name\":\"SIMULATION - Fake Python Integration\",\"status\":\"healthy\",\"simulation\":true,\"operations\":[\"artifact\",\"crash\",\"echo\",\"fail\",\"sleep\"]}]}\n"
+
+	for attempt := 0; attempt < 2; attempt++ {
+		request := httptest.NewRequest(http.MethodGet, "/api/v1/integrations", nil)
+		request.Header.Set("Authorization", "Bearer nilo_valid")
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, request)
+		if response.Code != http.StatusOK {
+			t.Fatalf("attempt %d status = %d, want %d", attempt, response.Code, http.StatusOK)
+		}
+		if response.Body.String() != want {
+			t.Fatalf("attempt %d body = %s, want %s", attempt, response.Body.String(), want)
+		}
+	}
+}
+
+func TestDeviceInventoryReturnsExactDeterministicSimulationEnvelope(t *testing.T) {
+	t.Parallel()
+
+	catalog := mustCatalog(t, simulation.ScenarioUnavailable)
+	handler, err := NewHandler(HandlerOptions{
+		Tokens: validTokenRepository(), Profile: "simulation", Catalog: catalog,
+	})
+	if err != nil {
+		t.Fatalf("NewHandler: %v", err)
+	}
+	const want = "{\"api_version\":\"nilo.http/1\",\"scenario\":\"unavailable\",\"items\":[{\"id\":\"simulation.fake-python.device.stable-001\",\"integration_id\":\"simulation.fake-python\",\"display_name\":\"SIMULATION - Electronics Bench 001\",\"kind\":\"simulated-electronics-bench\",\"status\":\"unavailable\",\"simulation\":true,\"capabilities\":[\"artifact\",\"crash\",\"echo\",\"fail\",\"sleep\"]}]}\n"
+
+	for attempt := 0; attempt < 2; attempt++ {
+		request := httptest.NewRequest(http.MethodGet, "/api/v1/devices", nil)
+		request.Header.Set("Authorization", "Bearer nilo_valid")
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, request)
+		if response.Code != http.StatusOK {
+			t.Fatalf("attempt %d status = %d, want %d", attempt, response.Code, http.StatusOK)
+		}
+		if response.Body.String() != want {
+			t.Fatalf("attempt %d body = %s, want %s", attempt, response.Body.String(), want)
+		}
+	}
+}
+
+func validTokenRepository() *tokenRepositoryStub {
+	return &tokenRepositoryStub{verify: func(_ context.Context, plaintext string) (auth.TokenRecord, error) {
+		if plaintext != "nilo_valid" {
+			return auth.TokenRecord{}, auth.ErrTokenNotFound
+		}
+		return auth.TokenRecord{ID: "token-id", UserID: "user-id"}, nil
+	}}
+}
+
+func mustCatalog(t *testing.T, scenario simulation.Scenario) simulation.Catalog {
+	t.Helper()
+	catalog, err := simulation.NewCatalog(scenario)
+	if err != nil {
+		t.Fatalf("NewCatalog(%q): %v", scenario, err)
+	}
+	return catalog
+}
 
 func TestServeStopsAfterContextCancellation(t *testing.T) {
 	t.Parallel()
@@ -65,6 +138,7 @@ func TestStatusReturnsVersionedSimulationBuildInformation(t *testing.T) {
 	handler, err := NewHandler(HandlerOptions{
 		Tokens:  verifier,
 		Profile: "simulation",
+		Catalog: mustCatalog(t, simulation.ScenarioHealthy),
 		Build: buildinfo.Info{
 			Name: "nilo", Version: "test-version", IntegrationProtocol: "nilo.integration/1",
 		},
@@ -113,26 +187,31 @@ func TestProtectedAPIRejectsMissingMalformedUnknownAndRevokedTokens(t *testing.T
 			return auth.TokenRecord{}, auth.ErrTokenNotFound
 		}
 	}}
-	handler, err := NewHandler(HandlerOptions{Tokens: verifier, Profile: "simulation"})
+	handler, err := NewHandler(HandlerOptions{
+		Tokens: verifier, Profile: "simulation", Catalog: mustCatalog(t, simulation.ScenarioHealthy),
+	})
 	if err != nil {
 		t.Fatalf("NewHandler: %v", err)
 	}
 
 	for _, test := range []struct {
 		name          string
+		path          string
 		authorization string
 	}{
-		{name: "missing"},
-		{name: "basic", authorization: "Basic credentials"},
-		{name: "empty bearer", authorization: "Bearer"},
-		{name: "extra bearer field", authorization: "Bearer nilo_unknown extra"},
-		{name: "unknown", authorization: "Bearer nilo_unknown"},
-		{name: "revoked", authorization: "Bearer nilo_revoked"},
+		{name: "missing status", path: "/api/v1/status"},
+		{name: "missing integrations", path: "/api/v1/integrations"},
+		{name: "missing devices", path: "/api/v1/devices"},
+		{name: "basic", path: "/api/v1/status", authorization: "Basic credentials"},
+		{name: "empty bearer", path: "/api/v1/status", authorization: "Bearer"},
+		{name: "extra bearer field", path: "/api/v1/status", authorization: "Bearer nilo_unknown extra"},
+		{name: "unknown", path: "/api/v1/status", authorization: "Bearer nilo_unknown"},
+		{name: "revoked", path: "/api/v1/status", authorization: "Bearer nilo_revoked"},
 	} {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			request := httptest.NewRequest(http.MethodGet, "/api/v1/status", nil)
+			request := httptest.NewRequest(http.MethodGet, test.path, nil)
 			if test.authorization != "" {
 				request.Header.Set("Authorization", test.authorization)
 			}

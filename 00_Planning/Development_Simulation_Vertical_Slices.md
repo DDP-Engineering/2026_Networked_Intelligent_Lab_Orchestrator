@@ -25,7 +25,7 @@ physical equipment.
 Exit gate: a developer can run Bench Core under WSL2, authenticate from Windows,
 and receive an unambiguous simulation status response.
 
-### Slice 2 - Deterministic simulated inventory
+### Slice 2 - Deterministic simulated inventory (implemented)
 
 - Add stable simulated integration and device identities.
 - Expose authenticated service and device inventory endpoints.

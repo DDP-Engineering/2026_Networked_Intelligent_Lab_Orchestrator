@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"net"
 	"net/http"
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 	"time"
 
@@ -16,6 +18,76 @@ import (
 )
 
 func TestNiloServeCommandExposesAuthenticatedSimulationStatus(t *testing.T) {
+	responseBody := runNiloServerRequest(t, "", "/api/v1/status")
+	var status struct {
+		Profile    string `json:"profile"`
+		Simulation bool   `json:"simulation"`
+	}
+	if err := json.Unmarshal(responseBody, &status); err != nil {
+		t.Fatalf("decode status: %v", err)
+	}
+	if status.Profile != "simulation" || !status.Simulation {
+		t.Fatalf("unexpected status: %#v", status)
+	}
+}
+
+func TestNiloServeCommandSelectsUnavailableScenario(t *testing.T) {
+	responseBody := runNiloServerRequest(t, "unavailable", "/api/v1/devices")
+	var inventory struct {
+		Scenario string `json:"scenario"`
+		Items    []struct {
+			Status string `json:"status"`
+		} `json:"items"`
+	}
+	if err := json.Unmarshal(responseBody, &inventory); err != nil {
+		t.Fatalf("decode unavailable device inventory: %v", err)
+	}
+	if inventory.Scenario != "unavailable" || len(inventory.Items) != 1 || inventory.Items[0].Status != "unavailable" {
+		t.Fatalf("unexpected unavailable inventory: %#v", inventory)
+	}
+}
+
+func TestNiloServeCommandRejectsUnsupportedScenarioBeforeListening(t *testing.T) {
+	binary := buildNilo(t)
+	reservation, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("reserve loopback address: %v", err)
+	}
+	address := reservation.Addr().String()
+	if err := reservation.Close(); err != nil {
+		t.Fatalf("release loopback address: %v", err)
+	}
+
+	command := exec.Command(
+		binary,
+		"serve",
+		"--profile", "simulation",
+		"--scenario", "real-hardware",
+		"--data-dir", t.TempDir(),
+		"--bind", address,
+	)
+	output, err := command.CombinedOutput()
+	if err == nil {
+		t.Fatal("unsupported scenario command succeeded")
+	}
+	exitError, ok := err.(*exec.ExitError)
+	if !ok || exitError.ExitCode() != 2 {
+		t.Fatalf("unsupported scenario error = %v, want exit code 2; output=%s", err, output)
+	}
+	if !strings.Contains(string(output), "unsupported simulation scenario") {
+		t.Fatalf("unsupported scenario output = %q", output)
+	}
+	probe, err := net.Listen("tcp", address)
+	if err != nil {
+		t.Fatalf("scenario rejection left %s unavailable: %v", address, err)
+	}
+	if err := probe.Close(); err != nil {
+		t.Fatalf("close loopback probe: %v", err)
+	}
+}
+
+func runNiloServerRequest(t *testing.T, scenario, path string) []byte {
+	t.Helper()
 	binary := buildNilo(t)
 	dataDir := t.TempDir()
 	issue := exec.Command(binary, "development", "issue-token", "--data-dir", dataDir)
@@ -39,13 +111,16 @@ func TestNiloServeCommandExposesAuthenticatedSimulationStatus(t *testing.T) {
 		t.Fatalf("release loopback address: %v", err)
 	}
 
-	server := exec.Command(
-		binary,
+	arguments := []string{
 		"serve",
 		"--profile", "simulation",
 		"--data-dir", dataDir,
 		"--bind", address,
-	)
+	}
+	if scenario != "" {
+		arguments = append(arguments, "--scenario", scenario)
+	}
+	server := exec.Command(binary, arguments...)
 	var serverOutput bytes.Buffer
 	server.Stdout = &serverOutput
 	server.Stderr = &serverOutput
@@ -64,28 +139,34 @@ func TestNiloServeCommandExposesAuthenticatedSimulationStatus(t *testing.T) {
 	client := &http.Client{Timeout: 250 * time.Millisecond}
 	deadline := time.Now().Add(5 * time.Second)
 	for {
-		request, err := http.NewRequest(http.MethodGet, "http://"+address+"/api/v1/status", nil)
+		request, err := http.NewRequest(http.MethodGet, "http://"+address+path, nil)
 		if err != nil {
 			t.Fatalf("create status request: %v", err)
 		}
 		request.Header.Set("Authorization", "Bearer "+issued.Token)
 		response, requestErr := client.Do(request)
 		if requestErr == nil {
-			defer response.Body.Close()
 			if response.StatusCode != http.StatusOK {
-				t.Fatalf("status endpoint returned %d", response.StatusCode)
+				_ = response.Body.Close()
+				t.Fatalf("%s returned %d", path, response.StatusCode)
 			}
-			var status struct {
-				Profile    string `json:"profile"`
-				Simulation bool   `json:"simulation"`
+			responseBody, err := io.ReadAll(response.Body)
+			if closeErr := response.Body.Close(); err == nil {
+				err = closeErr
 			}
-			if err := json.NewDecoder(response.Body).Decode(&status); err != nil {
-				t.Fatalf("decode status: %v", err)
+			if err != nil {
+				t.Fatalf("read %s response: %v", path, err)
 			}
-			if status.Profile != "simulation" || !status.Simulation {
-				t.Fatalf("unexpected status: %#v", status)
+			if err := server.Process.Kill(); err != nil {
+				t.Fatalf("stop test server: %v", err)
 			}
-			break
+			if err := <-returned; err == nil {
+				t.Fatal("killed test server returned success unexpectedly")
+			}
+			if server.ProcessState == nil {
+				t.Fatalf("test server has no process state; output=%s", serverOutput.String())
+			}
+			return responseBody
 		}
 		select {
 		case err := <-returned:
@@ -93,19 +174,9 @@ func TestNiloServeCommandExposesAuthenticatedSimulationStatus(t *testing.T) {
 		default:
 		}
 		if time.Now().After(deadline) {
-			t.Fatalf("status endpoint did not become ready at %s: %v; output=%s", address, requestErr, serverOutput.String())
+			t.Fatalf("%s did not become ready at %s: %v; output=%s", path, address, requestErr, serverOutput.String())
 		}
 		time.Sleep(50 * time.Millisecond)
-	}
-
-	if err := server.Process.Kill(); err != nil {
-		t.Fatalf("stop test server: %v", err)
-	}
-	if err := <-returned; err == nil {
-		t.Fatal("killed test server returned success unexpectedly")
-	}
-	if server.ProcessState == nil {
-		t.Fatalf("test server has no process state; output=%s", serverOutput.String())
 	}
 }
 
