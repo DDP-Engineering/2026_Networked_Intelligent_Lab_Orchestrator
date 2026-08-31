@@ -49,3 +49,46 @@ in for an automatable test, a retired requirement, and unrequested work found
 in review.
 
 <!-- AEGIS:END -->
+
+## Repository environment tools
+
+Keep repository-local setup, environment, validation, deployment, and
+diagnostic tooling in `02_Tools/`. Downloaded runtimes and compiler binaries
+belong under `02_Tools/runtime/` and are not committed; bootstrap and
+environment scripts must recreate them from pinned, checksum-verified
+archives without modifying the system-wide environment.
+
+## Code style
+
+Use `01_Documentation/Code_Style.md` as the repository code-style and
+readability authority for production code and tests.
+
+For Go, apply its general maintainability, modularity, documentation,
+portability, determinism, and interface-preservation rules using idiomatic Go:
+
+- format Go source with `gofmt`;
+- use standard Go package and exported-identifier comments where documentation
+  is needed;
+- keep comments concise and focused on contracts, intent, and non-obvious
+  behavior;
+- do not copy Python-only shebangs, encoding declarations, Doxygen tags, or
+  section-marker conventions into Go files.
+
+Python files continue to follow the document's Python-specific rules directly.
+
+## Development and simulation flow
+
+Read `06_SoftwareDocu/Development_and_Simulation_Flow.md` before changing the
+GUI, backend startup, development toolchain, simulation profiles, integration
+simulators, or cross-component tests.
+
+The default local development topology is a native Windows browser GUI with
+Bench Core, SQLite, and integration runners executing under WSL2 Linux. Keep
+runtime state on the WSL Linux filesystem, use explicit simulation mode, and
+do not treat either Windows or WSL2 simulation as a production appliance or a
+substitute for required Raspberry Pi hardware acceptance.
+
+On a Windows development host, use
+`02_Tools/bootstrap/bootstrap-development.ps1` to prepare and verify the pinned
+Windows and WSL2 toolchains. WSL installation or conversion is a host change
+and must remain explicit through its `-InstallWSL` option.

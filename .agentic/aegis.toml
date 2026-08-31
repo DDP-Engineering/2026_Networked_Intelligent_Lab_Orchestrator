@@ -5,9 +5,9 @@ schema = 1
 
 [commands]
 # `aegis test` runs `test`; `aegis check --run` runs every entry here.
-test = "uv run pytest -q"
-test_impacted = "uv run pytest -q {tests}"  # {tests} = the focused regression set
-lint = "uv run ruff check ."
+test = "python scripts/aegis_test.py full"
+test_impacted = "python scripts/aegis_test.py impacted {tests}"  # {tests} = the focused regression set
+lint = "python scripts/aegis_test.py lint"
 workdir = "05_Software"
 # timeout = 0                           # seconds allowed per command; 0 or
 #                                       # absent means no limit at all
@@ -31,9 +31,10 @@ workdir = "05_Software"
 [layout]
 # Globs used by the traceability heuristics of `aegis check`.
 source = ["05_Software/nilo_assistant/"]
-tests = ["05_Software/tests/"]
+tests = ["05_Software/tests/", "05_Software/scripts/"]
 docs = [
     "README.md",
+    "05_Software/README.md",
     "00_Planning/",
     "01_Documentation/",
     "02_Tools/",

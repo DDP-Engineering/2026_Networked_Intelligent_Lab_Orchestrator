@@ -1,0 +1,35 @@
+{
+  "package": {
+    "id": "sigrok-cli",
+    "version": "0.7.0",
+    "publisher": "NILO Labs",
+    "integrity": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "protocol": "nilo.integration/1",
+  "platforms": [
+    {"os": "linux", "architecture": "arm64"},
+    {"os": "windows", "architecture": "amd64"}
+  ],
+  "runner": {
+    "executable": "bin/sigrok-cli",
+    "arguments": ["--driver", "hantek-dso"]
+  },
+  "app_configuration_schema": "schemas/config.json",
+  "operations": [
+    {
+      "id": "capture",
+      "policy": "auto_eligible",
+      "input_schema": "schemas/input.json",
+      "result_schema": "schemas/result.json",
+      "timeout": "30s",
+      "cancellable": true,
+      "state_changing": false,
+      "resources": ["lab/usb/bus", "lab/logic/analyzer"]
+    }
+  ],
+  "cancellation": {"supported": true, "safe_shutdown": "capture"},
+  "events": [{"id": "capture_completed", "schema": "schemas/result.json"}],
+  "artifacts": [{"id": "waveform", "schema": "schemas/result.json"}],
+  "health_checks": [{"id": "runner", "timeout": "5s"}],
+  "contract_fixtures": ["fixtures/capture.json"]
+}

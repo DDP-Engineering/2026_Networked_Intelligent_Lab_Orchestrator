@@ -1,0 +1,319 @@
+{
+  "reports": [
+    {
+      "anchor_created_at": "2026-08-31T16:43:03.156635Z",
+      "anchor_head": "2c2b9ad49eb11f14baed7069fae1bf648fa00228",
+      "anchor_id": "2807f7f56095300e",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "09346ab1ed47881da8cccb20f49058100018aff8f05c5fb9cd17a24fef108dc5"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "9e52633b11f66e96f44ea2a54d09854ebc3e8c57f62dbe5fcde8640fb94576e8"
+          },
+          "path": ".gitignore",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "5b72340f22fb6c77b64049558f67a8f1fa07d8a79ac5f7f4353cd0bcfca5a5f9"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "1172937d1442266f047b583373c6c23ddb759c50df174700d358f0a1ac7badd4"
+          },
+          "path": "02_Tools/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "32fe88f61210f609216cd4b34c5d8ab7cb71f4cdebd8ffa144ed099e71221208"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/bootstrap/bootstrap-development.ps1",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "c6fa1742edd9fe0fe4b0f5467f7a525d5062e0a88a204f759fd319ac6586e96f"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "434b18b9eef01429c9d4e99ce7ac49689d40df4e0fee3127c4f390d4d6dfd69c"
+          },
+          "path": "02_Tools/bootstrap/bootstrap.ps1",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "a1773e58e1e008af5de00f2ad732a431bcc7f8d55619d4456d8dc85c3e1c6f09"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "afb32f4c3ccdcc3f7e1c9ffb81a600b3753f64b0608b5ee17404e80896bce8ee"
+          },
+          "path": "02_Tools/bootstrap/bootstrap.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "10bb391c2b371ff20b9a0c063369ccb1a4bbff19b55a8f59a36698969eecf900"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/bootstrap/setup-wsl.ps1",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "577d5bf75148ffa9e9eb81878e77648627fd922ca1296dd7b50fe8b9c8f95a59"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "f6ef4ca91066a7b0573a9e1d61ad01e31300323a6459388a29f29beb95ed0238"
+          },
+          "path": "02_Tools/env/with-go.ps1",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "6b020d6774461be992bdb8bf01c3b1b2d3492ba2dd1d86933187c62d24352b19"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "f9e4602373f43b2d5d85a8fe15b26763adbfa3612b6fff13275f29b6027458c2"
+          },
+          "path": "02_Tools/env/with-go.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b0bde0eef6beb0fb596b1914f87ee7b888180030d8fac5e777265ad2bd043a93"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "01a55477446bbfc859a8442bc7d6d4620e7b572f333c674f8c8191b8b676f682"
+          },
+          "path": "02_Tools/env/with-tools.ps1",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "1157807d5e5aafd318c30438277d890b7891ab9fa35cd495bbcb55fa86c8f302"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "e3807fdaf1125a9eeab1115428f887cca743db85ceceb4dc86a1d180b4d5a034"
+          },
+          "path": "02_Tools/env/with-tools.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ebe373143cd88dd61f1d1198aecc0b9d892396c4514dd215df5551f10d6e9bac"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/lib/Wsl.ps1",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "db0828992b30c27617593e91aa102a4daa6eb9e58fa828fa09ecfb97c553aa1d"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/scripts/doctor-wsl.ps1",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "bf3f04142b23c82daf0e01717453ce72a68511f774886ff543c1295b7f9d1c6d"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "c47081cf8165d485f85bc886484e63931d7016ddf7bf61437bf7f01d6643ffed"
+          },
+          "path": "02_Tools/scripts/doctor.ps1",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b235bdf8b9d733ed43f8dc4b1e227bf1fd468c18fc4ca663d2d73ddca5cf3a8f"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "ce55960bd7d5e91757cf423455d3d8684ef16f7cd6b1d921f290eb796ea1cacc"
+          },
+          "path": "02_Tools/scripts/doctor.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "5813138c8398b1992ce3a0c4ebd1fda0345baa89c10d17b759b259c30ef262a1"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "852c64d9d436cbc57b7032e65ab2cb3663528db5b1e6795302d5a00a1c83c2c9"
+          },
+          "path": "05_Software/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "5eb78622ecb2ebd1c2012115bb0414cf663eec0757501851be69a34ed8206312"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "10496ce657287f5820c0350549edc62a937ac192210c04c9563e4ca86c0b9b2d"
+          },
+          "path": "05_Software/integrations/fake_python/manifest.json",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "338fb9d6fdacbda9af9d94cf1b251850abe1217f7d4f2cdabd93f96b44da6729"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "f07b2778ccf2100234e4f2607b504a073de472aef73de43511cd760a6cf97528"
+          },
+          "path": "05_Software/scripts/aegis_test.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "48400db7dd2c78bed487c22ef40c9ec0c84b41f435d5a924b37184faeabf9eda"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "68c6fc03eb09349542b7735a7ee5c43b8b648e039d0735da7ba73b17442d86ba"
+          },
+          "path": "05_Software/scripts/tests/test_aegis_test.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b91ac945190c9e360bee01a57ebe9736489cf5c36de9ffdc1194d32c03f4c79d"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "0fc53f00dd485d047b70142a8f77a878732cc9c66747e1fd41ed648cdc76f95f"
+          },
+          "path": "05_Software/scripts/tests/test_toolchain_bootstrap.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ea867970449b5b84fd0347dc6079a3ba533380a6fa5acf63d5a19333680d5d0d"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "0c57948670302c4ae6d5339d60285f44e4a3687fe990b41ecb3816ef53995e08"
+          },
+          "path": "05_Software/tests/contract/test_integration_contract.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "7104ba80a1c2c8bc130c9cfaab93dc928db38843a3c15651ad18238e2663ce54"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "ede84ab86fb61d4ed9ce180422d577dfb3e6e606090173fcb5636d484d14f8f3"
+          },
+          "path": "06_SoftwareDocu/Development_and_Simulation_Flow.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "68426b1b24f52b04f52529e7be1bc2605c98642164a9c26b50f790f60bd2dc38"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "532e02bb273c7bdd980ba8235012366a5ba2f0e8ceb517d7b130c26312469bfa"
+          },
+          "path": "AGENTS.md",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 4,
+            "modified": 14,
+            "removed": 0,
+            "unchanged": 59
+          },
+          "source": {
+            "added": 0,
+            "modified": 0,
+            "removed": 0,
+            "unchanged": 78
+          },
+          "tests": {
+            "added": 0,
+            "modified": 4,
+            "removed": 0,
+            "unchanged": 8
+          }
+        },
+        "status": {
+          "added": 4,
+          "modified": 18,
+          "removed": 0,
+          "unchanged": 145
+        }
+      },
+      "current_head": "2c2b9ad49eb11f14baed7069fae1bf648fa00228",
+      "evolution_stage": "validate",
+      "evolved_at": "2026-08-31T17:08:12.769270Z"
+    }
+  ],
+  "schema": 1,
+  "task": "TASK-7e799162"
+}

@@ -1,0 +1,659 @@
+{
+  "anchor_id": "9638fa3dcd38ecb2",
+  "categories": {
+    ".gitignore": "other",
+    "00_Planning/Increment_1_Platform_Integration_Foundation_Implementation_Plan.md": "other",
+    "00_Planning/Overview.md": "other",
+    "00_Planning/README.md": "other",
+    "00_Planning/Remote_Bench_MVP_PRD.md": "other",
+    "00_Planning/System_Build_Plan.md": "other",
+    "01_Documentation/README.md": "other",
+    "02_Tools/README.md": "other",
+    "02_Tools/env/with-go.ps1": "other",
+    "02_Tools/env/with-go.sh": "other",
+    "03_Hardware/README.md": "other",
+    "04_HardwareDocu/README.md": "other",
+    "05_Software/README.md": "other",
+    "05_Software/integration_sdk/python/.gitignore": "other",
+    "05_Software/integration_sdk/python/README.md": "other",
+    "05_Software/integration_sdk/python/pyproject.toml": "other",
+    "05_Software/integration_sdk/python/src/nilo_integration/__init__.py": "other",
+    "05_Software/integration_sdk/python/src/nilo_integration/api.py": "other",
+    "05_Software/integration_sdk/python/src/nilo_integration/models.py": "other",
+    "05_Software/integration_sdk/python/src/nilo_integration/server.py": "other",
+    "05_Software/integration_sdk/python/tests/test_models.py": "other",
+    "05_Software/integration_sdk/python/tests/test_server.py": "other",
+    "05_Software/integration_sdk/python/uv.lock": "other",
+    "05_Software/integrations/fake_python/.gitignore": "other",
+    "05_Software/integrations/fake_python/manifest.json": "other",
+    "05_Software/integrations/fake_python/pyproject.toml": "other",
+    "05_Software/integrations/fake_python/schemas/artifact.event.schema.json": "other",
+    "05_Software/integrations/fake_python/schemas/artifact.input.schema.json": "other",
+    "05_Software/integrations/fake_python/schemas/artifact.result.schema.json": "other",
+    "05_Software/integrations/fake_python/schemas/crash.input.schema.json": "other",
+    "05_Software/integrations/fake_python/schemas/echo.input.schema.json": "other",
+    "05_Software/integrations/fake_python/schemas/echo.result.schema.json": "other",
+    "05_Software/integrations/fake_python/schemas/fail.input.schema.json": "other",
+    "05_Software/integrations/fake_python/schemas/progress.event.schema.json": "other",
+    "05_Software/integrations/fake_python/schemas/sleep.input.schema.json": "other",
+    "05_Software/integrations/fake_python/schemas/sleep.result.schema.json": "other",
+    "05_Software/integrations/fake_python/src/nilo_fake_integration/__init__.py": "other",
+    "05_Software/integrations/fake_python/src/nilo_fake_integration/__main__.py": "other",
+    "05_Software/integrations/fake_python/src/nilo_fake_integration/plugin.py": "other",
+    "05_Software/integrations/fake_python/tests/test_fake_integration.py": "other",
+    "05_Software/integrations/fake_python/uv.lock": "other",
+    "05_Software/nilo_assistant/README.md": "source",
+    "05_Software/nilo_assistant/cmd/nilo/main.go": "source",
+    "05_Software/nilo_assistant/cmd/nilo/main_test.go": "source",
+    "05_Software/nilo_assistant/go.mod": "source",
+    "05_Software/nilo_assistant/go.sum": "source",
+    "05_Software/nilo_assistant/internal/artifact/store.go": "source",
+    "05_Software/nilo_assistant/internal/artifact/store_test.go": "source",
+    "05_Software/nilo_assistant/internal/artifact/store_unix.go": "source",
+    "05_Software/nilo_assistant/internal/artifact/store_windows.go": "source",
+    "05_Software/nilo_assistant/internal/audit/audit.go": "source",
+    "05_Software/nilo_assistant/internal/audit/audit_test.go": "source",
+    "05_Software/nilo_assistant/internal/auth/password.go": "source",
+    "05_Software/nilo_assistant/internal/auth/password_test.go": "source",
+    "05_Software/nilo_assistant/internal/auth/repository.go": "source",
+    "05_Software/nilo_assistant/internal/auth/token.go": "source",
+    "05_Software/nilo_assistant/internal/auth/token_test.go": "source",
+    "05_Software/nilo_assistant/internal/buildinfo/buildinfo.go": "source",
+    "05_Software/nilo_assistant/internal/buildinfo/buildinfo_test.go": "source",
+    "05_Software/nilo_assistant/internal/config/config.go": "source",
+    "05_Software/nilo_assistant/internal/config/config_test.go": "source",
+    "05_Software/nilo_assistant/internal/config/paths.go": "source",
+    "05_Software/nilo_assistant/internal/config/paths_test.go": "source",
+    "05_Software/nilo_assistant/internal/config/paths_unix.go": "source",
+    "05_Software/nilo_assistant/internal/config/paths_windows.go": "source",
+    "05_Software/nilo_assistant/internal/domain/artifact.go": "source",
+    "05_Software/nilo_assistant/internal/domain/ids.go": "source",
+    "05_Software/nilo_assistant/internal/domain/operation.go": "source",
+    "05_Software/nilo_assistant/internal/domain/session.go": "source",
+    "05_Software/nilo_assistant/internal/domain/session_test.go": "source",
+    "05_Software/nilo_assistant/internal/integration/manifest/loader.go": "source",
+    "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go": "source",
+    "05_Software/nilo_assistant/internal/integration/manifest/model.go": "source",
+    "05_Software/nilo_assistant/internal/integration/manifest/schemas/event.schema.json": "source",
+    "05_Software/nilo_assistant/internal/integration/manifest/schemas/manifest.schema.json": "source",
+    "05_Software/nilo_assistant/internal/integration/manifest/schemas/operation.schema.json": "source",
+    "05_Software/nilo_assistant/internal/integration/manifest/testdata/invalid-command/manifest.json": "source",
+    "05_Software/nilo_assistant/internal/integration/manifest/testdata/valid/manifest.json": "source",
+    "05_Software/nilo_assistant/internal/integration/protocol/codec.go": "source",
+    "05_Software/nilo_assistant/internal/integration/protocol/codec_test.go": "source",
+    "05_Software/nilo_assistant/internal/integration/protocol/message.go": "source",
+    "05_Software/nilo_assistant/internal/integration/protocol/types.go": "source",
+    "05_Software/nilo_assistant/internal/integration/supervisor/process.go": "source",
+    "05_Software/nilo_assistant/internal/integration/supervisor/process_unix.go": "source",
+    "05_Software/nilo_assistant/internal/integration/supervisor/process_windows.go": "source",
+    "05_Software/nilo_assistant/internal/integration/supervisor/ring.go": "source",
+    "05_Software/nilo_assistant/internal/integration/supervisor/supervisor_test.go": "source",
+    "05_Software/nilo_assistant/internal/integration/supervisor/testhelper/main.go": "source",
+    "05_Software/nilo_assistant/internal/policy/model.go": "source",
+    "05_Software/nilo_assistant/internal/policy/repository.go": "source",
+    "05_Software/nilo_assistant/internal/policy/resolver.go": "source",
+    "05_Software/nilo_assistant/internal/policy/resolver_test.go": "source",
+    "05_Software/nilo_assistant/internal/session/repository.go": "source",
+    "05_Software/nilo_assistant/internal/session/service.go": "source",
+    "05_Software/nilo_assistant/internal/session/service_test.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/artifact_repository.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/audit_repository.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/auth_repository.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/auth_repository_test.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/db.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/db_test.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/001_initial.sql": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/002_policy_snapshots.sql": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/policy_repository.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/policy_repository_test.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/session_repository.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/session_repository_test.go": "source",
+    "05_Software/schemas/integration/v1/event.schema.json": "other",
+    "05_Software/schemas/integration/v1/manifest.schema.json": "other",
+    "05_Software/schemas/integration/v1/operation.schema.json": "other",
+    "05_Software/scripts/aegis_test.py": "tests",
+    "05_Software/scripts/tests/test_aegis_test.py": "tests",
+    "05_Software/scripts/tests/test_toolchain_bootstrap.py": "tests",
+    "05_Software/scripts/verify-portable-core.ps1": "tests",
+    "05_Software/scripts/verify-portable-core.sh": "tests",
+    "05_Software/tests/README.md": "tests",
+    "05_Software/tests/contract/.gitignore": "tests",
+    "05_Software/tests/contract/README.md": "tests",
+    "05_Software/tests/contract/fixtures/protocol-v1/hello.ndjson": "tests",
+    "05_Software/tests/contract/test_integration_contract.py": "tests",
+    "06_SoftwareDocu/README.md": "other",
+    "07_Delivery/README.md": "other",
+    "09_Others/README.md": "other",
+    "AGENTS.md": "other",
+    "CLAUDE.md": "other",
+    "QWEN.md": "other",
+    "README.md": "other"
+  },
+  "created_at": "2026-08-31T11:36:30.048409Z",
+  "files": {
+    ".gitignore": {
+      "kind": "file",
+      "sha256": "52a2759d8f05d9af9d6f18c0b3ed1a8bbc340290a0645a351ff2ccf4ceb1381a"
+    },
+    "00_Planning/Increment_1_Platform_Integration_Foundation_Implementation_Plan.md": {
+      "kind": "file",
+      "sha256": "21515b2cecc6eb692d5a072801f72030c54cf6c9fc960053067caf3c79dfb1e1"
+    },
+    "00_Planning/Overview.md": {
+      "kind": "file",
+      "sha256": "cac96c9c18ec89829e30e0f08571f258d2acf00e735b89f157576c19a7513645"
+    },
+    "00_Planning/README.md": {
+      "kind": "file",
+      "sha256": "d0d2176dd6d3036864515b9a285afbf2a9f111fe8119c0847df4eec83b4dd001"
+    },
+    "00_Planning/Remote_Bench_MVP_PRD.md": {
+      "kind": "file",
+      "sha256": "b851c372dee5698e854bf26c569a8b3f647b663a836a721a0baab9259ca08256"
+    },
+    "00_Planning/System_Build_Plan.md": {
+      "kind": "file",
+      "sha256": "563b7b7f7201c4a834455d01b2f38baed0f6ee66c9f07d4064db8994dea23664"
+    },
+    "01_Documentation/README.md": {
+      "kind": "file",
+      "sha256": "29cf0a26b1e7c35478e344400bb060ad4d7081519fe6d7f2dd56a9ecb0324cfc"
+    },
+    "02_Tools/README.md": {
+      "kind": "file",
+      "sha256": "22736d3ec328dec3baf50bec31a1f499d0701dc3185a4dfc07089a6c4560abd8"
+    },
+    "02_Tools/env/with-go.ps1": {
+      "kind": "file",
+      "sha256": "f6ef4ca91066a7b0573a9e1d61ad01e31300323a6459388a29f29beb95ed0238"
+    },
+    "02_Tools/env/with-go.sh": {
+      "kind": "file",
+      "sha256": "f9e4602373f43b2d5d85a8fe15b26763adbfa3612b6fff13275f29b6027458c2"
+    },
+    "03_Hardware/README.md": {
+      "kind": "file",
+      "sha256": "429f25dbedbe998d974bb61e80a066a317b68ee25309e99da9f972cb6668f4d1"
+    },
+    "04_HardwareDocu/README.md": {
+      "kind": "file",
+      "sha256": "5874ddfcb3bf0d3f391be7694deb4ae0a67ea3ef36e39932743584ef05f642ee"
+    },
+    "05_Software/README.md": {
+      "kind": "file",
+      "sha256": "b95b5694f43a7c2fea364712c2fbfc1917181a5896069ddebca73785e3d55568"
+    },
+    "05_Software/integration_sdk/python/.gitignore": {
+      "kind": "file",
+      "sha256": "6feaded4e28ea86e001a6751b4e3d960e8b7c31b9616ff9936b79297086e809b"
+    },
+    "05_Software/integration_sdk/python/README.md": {
+      "kind": "file",
+      "sha256": "27bd6cf5d327e6a68fe2bf5c6d50b7f000b7ea8e8d8e55b88c49e4bd27739802"
+    },
+    "05_Software/integration_sdk/python/pyproject.toml": {
+      "kind": "file",
+      "sha256": "7b57837985c63e4130c64c69332706f38d3520cf9e1ae17b16a80e722342c4e9"
+    },
+    "05_Software/integration_sdk/python/src/nilo_integration/__init__.py": {
+      "kind": "file",
+      "sha256": "ca69c2b8a520b27a18ca0fbfdabd03a39ba6196d60640dbebbfaf13560089717"
+    },
+    "05_Software/integration_sdk/python/src/nilo_integration/api.py": {
+      "kind": "file",
+      "sha256": "4ce20fd1053309f83074573b151d5681f2c8dcb9073404d52fb161fed38d4779"
+    },
+    "05_Software/integration_sdk/python/src/nilo_integration/models.py": {
+      "kind": "file",
+      "sha256": "52a03a75e088c27cff923234b15be6ead342e8be5ebe6e78d895df47b3ee6b17"
+    },
+    "05_Software/integration_sdk/python/src/nilo_integration/server.py": {
+      "kind": "file",
+      "sha256": "79e59e14c7d265e71a90f50d5cea8a760fd47ffe10c5f74514c17600e24d5881"
+    },
+    "05_Software/integration_sdk/python/tests/test_models.py": {
+      "kind": "file",
+      "sha256": "05e1c3810ad47716fa27c3d4f7fe18fb99282d1b5e5e0bab14d787a5ee40e14d"
+    },
+    "05_Software/integration_sdk/python/tests/test_server.py": {
+      "kind": "file",
+      "sha256": "b99a36d421d785820763b2999018579ed13e1e75dc9ae35cb6b04eefc8be6f3b"
+    },
+    "05_Software/integration_sdk/python/uv.lock": {
+      "kind": "file",
+      "sha256": "968a347805324ee7f3fd4c08e74582b86d21cea8dd72f7dcffbdf1c075403b2f"
+    },
+    "05_Software/integrations/fake_python/.gitignore": {
+      "kind": "file",
+      "sha256": "dc9e10ec44cf83875a7777f8695b2ebef2523f3c8d44b8c41f93c12362d02e14"
+    },
+    "05_Software/integrations/fake_python/manifest.json": {
+      "kind": "file",
+      "sha256": "10496ce657287f5820c0350549edc62a937ac192210c04c9563e4ca86c0b9b2d"
+    },
+    "05_Software/integrations/fake_python/pyproject.toml": {
+      "kind": "file",
+      "sha256": "46c957af78fb0ef26db62907d792597a1b21d6868e72ea338b1eb80c76ec37f9"
+    },
+    "05_Software/integrations/fake_python/schemas/artifact.event.schema.json": {
+      "kind": "file",
+      "sha256": "3c1d7316cc228f78bdc895a520c336dc027faaf76cf0800d9ebe34b9b119b0a7"
+    },
+    "05_Software/integrations/fake_python/schemas/artifact.input.schema.json": {
+      "kind": "file",
+      "sha256": "21ba5031e5fce6c5bef6f66c83ad0397d192080e2736b9972e1b29e09bf56001"
+    },
+    "05_Software/integrations/fake_python/schemas/artifact.result.schema.json": {
+      "kind": "file",
+      "sha256": "e7425d805a81e4bc20af37c9f5dd47e78e414302f653ac2a0fce305015501152"
+    },
+    "05_Software/integrations/fake_python/schemas/crash.input.schema.json": {
+      "kind": "file",
+      "sha256": "2656294ca60aa23acaa3e6e1b688fa8b754196e6636657eb146a559936511803"
+    },
+    "05_Software/integrations/fake_python/schemas/echo.input.schema.json": {
+      "kind": "file",
+      "sha256": "32f012e10613363055343cdcd49296fc8a8b66eb6875e3385101d0b9ecdcb365"
+    },
+    "05_Software/integrations/fake_python/schemas/echo.result.schema.json": {
+      "kind": "file",
+      "sha256": "ba854348e4c232385166d63f5edec273ed872efd84a4f240b0db835ae54f4a90"
+    },
+    "05_Software/integrations/fake_python/schemas/fail.input.schema.json": {
+      "kind": "file",
+      "sha256": "87df0421b3090fef769a3df94148b8226ed83f78b76881a8cbd664af48cb2747"
+    },
+    "05_Software/integrations/fake_python/schemas/progress.event.schema.json": {
+      "kind": "file",
+      "sha256": "402ea2f5b78fa5cd47fd271b0015ef23d7ceed1b3c2ce5990071977bfb7842c8"
+    },
+    "05_Software/integrations/fake_python/schemas/sleep.input.schema.json": {
+      "kind": "file",
+      "sha256": "bda8adf4498a8f58f2733f800eed222461fde89decbddd7a5ba84ae591397a40"
+    },
+    "05_Software/integrations/fake_python/schemas/sleep.result.schema.json": {
+      "kind": "file",
+      "sha256": "c93b85b3927c7b73c61155b000161ff0be43d2cc246a63692c3e82ddff349c7c"
+    },
+    "05_Software/integrations/fake_python/src/nilo_fake_integration/__init__.py": {
+      "kind": "file",
+      "sha256": "22c6e7cbde861009cb73b14319a1c803a249fd08b418a215749dd57360e59fc2"
+    },
+    "05_Software/integrations/fake_python/src/nilo_fake_integration/__main__.py": {
+      "kind": "file",
+      "sha256": "f84d64d75ae02600825dad4f3815e2ec4067f263f0f6ce94e0fc03c07db25d37"
+    },
+    "05_Software/integrations/fake_python/src/nilo_fake_integration/plugin.py": {
+      "kind": "file",
+      "sha256": "3309602545af04fe2ac2a42f423b53b8470e4a36bf45a90fd25e1f420b2aa6dd"
+    },
+    "05_Software/integrations/fake_python/tests/test_fake_integration.py": {
+      "kind": "file",
+      "sha256": "b86b88d0f53a893f6e556a4c4436d126e7c235506148ee32c7a207d03ef2fd35"
+    },
+    "05_Software/integrations/fake_python/uv.lock": {
+      "kind": "file",
+      "sha256": "e8b15a0d7a22c205aed7b9842cd15d01417ab6cabd8bb4b13d691a6c60219c8f"
+    },
+    "05_Software/nilo_assistant/README.md": {
+      "kind": "file",
+      "sha256": "1059926a1a07ca1052104d3a53eaabbf83c597b87a42459cbaef67be0a653f5a"
+    },
+    "05_Software/nilo_assistant/cmd/nilo/main.go": {
+      "kind": "file",
+      "sha256": "338a97d4efcc9c7e2c2a5bd4ee7caed6f7af8b1f4d99536f46eeaf6d30b8ce5a"
+    },
+    "05_Software/nilo_assistant/cmd/nilo/main_test.go": {
+      "kind": "file",
+      "sha256": "712b059cbb63ff8b701227939456b58fe607c4b1565432a4c78d41bf09f02ff4"
+    },
+    "05_Software/nilo_assistant/go.mod": {
+      "kind": "file",
+      "sha256": "f728ba8fe5a46e78802dbb892791e8e0b71c3134b834fe4f51d3631799aa889c"
+    },
+    "05_Software/nilo_assistant/go.sum": {
+      "kind": "file",
+      "sha256": "f0ffc4da14e3fdef5adf075eb7aff185bbdebd1421e6f9ba35b136cc573529b6"
+    },
+    "05_Software/nilo_assistant/internal/artifact/store.go": {
+      "kind": "file",
+      "sha256": "f201a3666d38854fd76bbf8a7d007b307ae609aad46e62129a6c028d03a5be0c"
+    },
+    "05_Software/nilo_assistant/internal/artifact/store_test.go": {
+      "kind": "file",
+      "sha256": "1dda3b50bda6ef8156c7513dc180519f3247094f365a7ff12f2eff4d2fa6a6b1"
+    },
+    "05_Software/nilo_assistant/internal/artifact/store_unix.go": {
+      "kind": "file",
+      "sha256": "89bf1e25a54780faf3e07926691a504ac6353a5128b03fe9e6c289fbf60bc002"
+    },
+    "05_Software/nilo_assistant/internal/artifact/store_windows.go": {
+      "kind": "file",
+      "sha256": "55420543d00ffeb62d9b64aeedeb52cf2185f049bce84145fa862372b049be1c"
+    },
+    "05_Software/nilo_assistant/internal/audit/audit.go": {
+      "kind": "file",
+      "sha256": "c7a14dce3a3727c7c56dd3bcc0156e2c857ccdc629714102b269d7629d53f71e"
+    },
+    "05_Software/nilo_assistant/internal/audit/audit_test.go": {
+      "kind": "file",
+      "sha256": "34b51bc9dc601ebaff40ba248096a3fe840fb5dd10c9dd5a3b6cc3479c65d6db"
+    },
+    "05_Software/nilo_assistant/internal/auth/password.go": {
+      "kind": "file",
+      "sha256": "ebc9a6e49cc3d21ef2e63817240c4ec1bf246ebc6472c2cfb94cc91659a9d538"
+    },
+    "05_Software/nilo_assistant/internal/auth/password_test.go": {
+      "kind": "file",
+      "sha256": "ca1c3aacf3cc98b930c34eb091b800df760f55454288dcc51526864a58a10ded"
+    },
+    "05_Software/nilo_assistant/internal/auth/repository.go": {
+      "kind": "file",
+      "sha256": "4237108e60fdcb09842b60db726452c1dd4f51a1554b0575abac28cd699538b2"
+    },
+    "05_Software/nilo_assistant/internal/auth/token.go": {
+      "kind": "file",
+      "sha256": "a71d0de99dad5d61e472f8ab07d731d99b2cdfaa42be34178ba1dd8d22a4796f"
+    },
+    "05_Software/nilo_assistant/internal/auth/token_test.go": {
+      "kind": "file",
+      "sha256": "4f681c3482d62dafed5793ad255109371f628cf10cba82262babd40f6eaafa67"
+    },
+    "05_Software/nilo_assistant/internal/buildinfo/buildinfo.go": {
+      "kind": "file",
+      "sha256": "69bcee1f10f5e2c68f277821d8bebe1677fd786d64df165383941f28895e763c"
+    },
+    "05_Software/nilo_assistant/internal/buildinfo/buildinfo_test.go": {
+      "kind": "file",
+      "sha256": "a25a7361434b1fb6fd248b39e713d783514aa43bd363b1f45f4d3742458c949a"
+    },
+    "05_Software/nilo_assistant/internal/config/config.go": {
+      "kind": "file",
+      "sha256": "ff7cad3c04e6358a51e16c93f1237e8ee4c851bb787b067902f53b11d4ce1e68"
+    },
+    "05_Software/nilo_assistant/internal/config/config_test.go": {
+      "kind": "file",
+      "sha256": "8c8b69b2778ad4c396b3e29dbe74de802fa2fe1947acd6cb88348967f77f919c"
+    },
+    "05_Software/nilo_assistant/internal/config/paths.go": {
+      "kind": "file",
+      "sha256": "2b6a358c82f49827be0562d5ff0479ca8e1c4f8a69818dbf1b03fef55a60d0c2"
+    },
+    "05_Software/nilo_assistant/internal/config/paths_test.go": {
+      "kind": "file",
+      "sha256": "0fcdb15450f8f815ff175e5249cba9c5108e6919fc068f8ca86392cfa29bc524"
+    },
+    "05_Software/nilo_assistant/internal/config/paths_unix.go": {
+      "kind": "file",
+      "sha256": "c3c5e81152623dcc2c5d64c8ec86132e30965a20ad931b6dccb36ead1ce68068"
+    },
+    "05_Software/nilo_assistant/internal/config/paths_windows.go": {
+      "kind": "file",
+      "sha256": "70c7b2f03f3a9bc05155c5b9b6e6744a32306b35740419d93e3a595fada191d6"
+    },
+    "05_Software/nilo_assistant/internal/domain/artifact.go": {
+      "kind": "file",
+      "sha256": "b65bbc3dc5dc33ea270de7bb33efc489c604da779908082611d6ed758692063c"
+    },
+    "05_Software/nilo_assistant/internal/domain/ids.go": {
+      "kind": "file",
+      "sha256": "963973dbacddf83597747ffc0eb0b94c5dbb22622cc01c3662c46f447caabb10"
+    },
+    "05_Software/nilo_assistant/internal/domain/operation.go": {
+      "kind": "file",
+      "sha256": "1c3fee681e09a06d9d261d1495db80624c310f447ed4086b5b58d7b6b8fd0b0d"
+    },
+    "05_Software/nilo_assistant/internal/domain/session.go": {
+      "kind": "file",
+      "sha256": "a9b26dc9a23b0431613c748836e63703540fc0141ae07790a5bca6027f6636f6"
+    },
+    "05_Software/nilo_assistant/internal/domain/session_test.go": {
+      "kind": "file",
+      "sha256": "6bf0c4df6c441b3c741edef310f85043ea4b6024b9daa91243eefab6858c250a"
+    },
+    "05_Software/nilo_assistant/internal/integration/manifest/loader.go": {
+      "kind": "file",
+      "sha256": "9c6349f65830bec1a48f97c55b04edebd6c2561d89fac41f43965cbc63065d96"
+    },
+    "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go": {
+      "kind": "file",
+      "sha256": "e0ee4cc95fc5bf3412102a5d279f48cdebac5564f443c867c771be982eddec50"
+    },
+    "05_Software/nilo_assistant/internal/integration/manifest/model.go": {
+      "kind": "file",
+      "sha256": "7a494bba22b9a2bfd660ae6536d0a5490eb01cc9ad330eedb56b1f912495fe73"
+    },
+    "05_Software/nilo_assistant/internal/integration/manifest/schemas/event.schema.json": {
+      "kind": "file",
+      "sha256": "8383764235252958bc2fd71974ee077d590a374e3b84a9eda07cece178070aae"
+    },
+    "05_Software/nilo_assistant/internal/integration/manifest/schemas/manifest.schema.json": {
+      "kind": "file",
+      "sha256": "35a503a82cad71921cb333b32858d8cce0c511ee9c943cd7db1f944526fc7d01"
+    },
+    "05_Software/nilo_assistant/internal/integration/manifest/schemas/operation.schema.json": {
+      "kind": "file",
+      "sha256": "8bdf474922b48a3da79c310de84904f907186b24af688d47dcad17283280e512"
+    },
+    "05_Software/nilo_assistant/internal/integration/manifest/testdata/invalid-command/manifest.json": {
+      "kind": "file",
+      "sha256": "878bf1da4e49e5b8482a8352da4fdbf75440994a9c562697448a411be8411aa0"
+    },
+    "05_Software/nilo_assistant/internal/integration/manifest/testdata/valid/manifest.json": {
+      "kind": "file",
+      "sha256": "7cd97ddf21068415eca2b75528e9df5855d9aadbdce9602fbb6c3219e0a16ad0"
+    },
+    "05_Software/nilo_assistant/internal/integration/protocol/codec.go": {
+      "kind": "file",
+      "sha256": "0768fa1e0c841b44011277028ebf820937d56e8171d1b9837799d8e3b8e263ae"
+    },
+    "05_Software/nilo_assistant/internal/integration/protocol/codec_test.go": {
+      "kind": "file",
+      "sha256": "014f10dbc37b23acb59b99db3e9bacd2db6bb685f974f2ebecaba39656b5cb37"
+    },
+    "05_Software/nilo_assistant/internal/integration/protocol/message.go": {
+      "kind": "file",
+      "sha256": "7085d4cb61902e0e24c4cfa15c763bf7831600da5a7541b16c90cfa9f2276d85"
+    },
+    "05_Software/nilo_assistant/internal/integration/protocol/types.go": {
+      "kind": "file",
+      "sha256": "7a26a33b4b8c60c0b9a65effd1261e9cbfd7f14b81fe3b3ca9d24073a70bab65"
+    },
+    "05_Software/nilo_assistant/internal/integration/supervisor/process.go": {
+      "kind": "file",
+      "sha256": "0836ca81bc917894cb8d6784a4470591a4a9ccecab6194448d36521a0a26a384"
+    },
+    "05_Software/nilo_assistant/internal/integration/supervisor/process_unix.go": {
+      "kind": "file",
+      "sha256": "aa3bc607614e2e02df83710e7dddfc0b48f70407579f78f7c15cbed296be95fb"
+    },
+    "05_Software/nilo_assistant/internal/integration/supervisor/process_windows.go": {
+      "kind": "file",
+      "sha256": "dcc733b47a3a9e1932faf13e5f47685ef80eb7e566e6d653938662963b20e744"
+    },
+    "05_Software/nilo_assistant/internal/integration/supervisor/ring.go": {
+      "kind": "file",
+      "sha256": "183c9564a4f6e5a66f5a37634dffdabbe321ec249598206673b9d6a275602fc5"
+    },
+    "05_Software/nilo_assistant/internal/integration/supervisor/supervisor_test.go": {
+      "kind": "file",
+      "sha256": "ca7b74856603bea9bd1172cedc774109f0e85c5eb37f385ed68425a7d40ce890"
+    },
+    "05_Software/nilo_assistant/internal/integration/supervisor/testhelper/main.go": {
+      "kind": "file",
+      "sha256": "e617010191fba6e3a79b6ab8b46655f2d6b360ad330b5dfbafcac0e8f1470196"
+    },
+    "05_Software/nilo_assistant/internal/policy/model.go": {
+      "kind": "file",
+      "sha256": "1c0722c0b9c1792d2f587fc89b1e2c734ad8501b7eb039b150dfccf578b38979"
+    },
+    "05_Software/nilo_assistant/internal/policy/repository.go": {
+      "kind": "file",
+      "sha256": "95557e05e4fad6a00bfea11105f1485df3350658a0f91bc95f493192a787dd11"
+    },
+    "05_Software/nilo_assistant/internal/policy/resolver.go": {
+      "kind": "file",
+      "sha256": "69cdfb5751a3ccc403b3890b2ef80318bc19d88b72feb504f5d185e2c2c7b9e6"
+    },
+    "05_Software/nilo_assistant/internal/policy/resolver_test.go": {
+      "kind": "file",
+      "sha256": "60bdc0afbe031000fbb55b4c1ff8a7950c865eb5033e9c95c38d41c4e8ac74bb"
+    },
+    "05_Software/nilo_assistant/internal/session/repository.go": {
+      "kind": "file",
+      "sha256": "49ab0b65c924cc333f685f13e0cf01f83179a856462a83f06ae1213867a21638"
+    },
+    "05_Software/nilo_assistant/internal/session/service.go": {
+      "kind": "file",
+      "sha256": "436a04dea918459477f7fe0f28223b36113ee67384758ed6c8e9fb85e6d94c69"
+    },
+    "05_Software/nilo_assistant/internal/session/service_test.go": {
+      "kind": "file",
+      "sha256": "ce33894eb27fe81cdedb16da50cffee74025eee642cfb07b19fb98a6d79cf4d4"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/artifact_repository.go": {
+      "kind": "file",
+      "sha256": "95accafe852fc974457961989e68c5d07eb24a2cf699283f48fed12260b6f4eb"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/audit_repository.go": {
+      "kind": "file",
+      "sha256": "72545f8cb76a0cdb989eb67cc5b8e0da62c75dfce28d856153a5cb3c7f922f18"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/auth_repository.go": {
+      "kind": "file",
+      "sha256": "f04a1a36e523abfc00d4780d74d1c04f8aeb89965ed18ae80940d684f9cdb096"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/auth_repository_test.go": {
+      "kind": "file",
+      "sha256": "4e9b3deaddf3b8aede433fd12392b586a058c731aadac4770138d4f122e509e1"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/db.go": {
+      "kind": "file",
+      "sha256": "27ff477265f22f3464817eddab35d73143afc562f944c9a399f8db9fdaf1f15e"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/db_test.go": {
+      "kind": "file",
+      "sha256": "3aafc7167cde4d97f3fae46b3d91975c226d3e29bcebf791082f9cf5141cf682"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations.go": {
+      "kind": "file",
+      "sha256": "e0881e128f40c6985595f55ec15a5639818db5844a797f923f4d345c52ecaa70"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/001_initial.sql": {
+      "kind": "file",
+      "sha256": "79fbdad8bdf9d4df05e35dcc30325ea83a28143666dc281e22dd9d9aacfb7578"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/002_policy_snapshots.sql": {
+      "kind": "file",
+      "sha256": "3109c2cf834451aa7c84a3e1c89128341fc54ba6e5c79176a3331b550fa0639f"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/policy_repository.go": {
+      "kind": "file",
+      "sha256": "dfbfc16486b3d5017c42b5e6b47839f2eea02fe9c9ceb60e2108cfced7bcc749"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/policy_repository_test.go": {
+      "kind": "file",
+      "sha256": "b32cbe0f1e4807a8f54bd4987b863030bb61e31fc1c4c99b1ac01b4be9371e8b"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/session_repository.go": {
+      "kind": "file",
+      "sha256": "0b205c16a6e0d12df9d420cb00e5713613b43c7563474ba9b920aeaa0fca0b07"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/session_repository_test.go": {
+      "kind": "file",
+      "sha256": "939e6c152839bd3462d22b435fd59593511fba77973e01061e3a756a8c342eee"
+    },
+    "05_Software/schemas/integration/v1/event.schema.json": {
+      "kind": "file",
+      "sha256": "8383764235252958bc2fd71974ee077d590a374e3b84a9eda07cece178070aae"
+    },
+    "05_Software/schemas/integration/v1/manifest.schema.json": {
+      "kind": "file",
+      "sha256": "19fbd1467c255f3a03eea3a7a6c6d67c633e8bdd9b272ef3f63903b1d42f2241"
+    },
+    "05_Software/schemas/integration/v1/operation.schema.json": {
+      "kind": "file",
+      "sha256": "8bdf474922b48a3da79c310de84904f907186b24af688d47dcad17283280e512"
+    },
+    "05_Software/scripts/aegis_test.py": {
+      "kind": "file",
+      "sha256": "f07b2778ccf2100234e4f2607b504a073de472aef73de43511cd760a6cf97528"
+    },
+    "05_Software/scripts/tests/test_aegis_test.py": {
+      "kind": "file",
+      "sha256": "68c6fc03eb09349542b7735a7ee5c43b8b648e039d0735da7ba73b17442d86ba"
+    },
+    "05_Software/scripts/tests/test_toolchain_bootstrap.py": {
+      "kind": "file",
+      "sha256": "1a7f8aa7fe69c214764d4bb664552d7a052dc13b7016be8b8172ba4139144908"
+    },
+    "05_Software/scripts/verify-portable-core.ps1": {
+      "kind": "file",
+      "sha256": "a47ef1184e53f01669eca56996890ddac29a4df0f3bf9ba92d2cf3448f5a1853"
+    },
+    "05_Software/scripts/verify-portable-core.sh": {
+      "kind": "file",
+      "sha256": "0f99edf0476daf0b9d4f4a3932a11af037c90f679b108caed0872869311599b1"
+    },
+    "05_Software/tests/README.md": {
+      "kind": "file",
+      "sha256": "2ed17583bbd0441e14776084c81be69d655958ef1bd404c446863d071a7d3735"
+    },
+    "05_Software/tests/contract/.gitignore": {
+      "kind": "file",
+      "sha256": "6feaded4e28ea86e001a6751b4e3d960e8b7c31b9616ff9936b79297086e809b"
+    },
+    "05_Software/tests/contract/README.md": {
+      "kind": "file",
+      "sha256": "7e75699054412c3644565c2a7432d32c1dd630143037559d58c4f8211e22e4ea"
+    },
+    "05_Software/tests/contract/fixtures/protocol-v1/hello.ndjson": {
+      "kind": "file",
+      "sha256": "0ab3633028552c027a65cb7461c8d6f4f5474e8c52429fbc83d1556f4d40f357"
+    },
+    "05_Software/tests/contract/test_integration_contract.py": {
+      "kind": "file",
+      "sha256": "c915b1ea292f854d0986229dfd3ee44be9c61f6deca50f05764956a905620244"
+    },
+    "06_SoftwareDocu/README.md": {
+      "kind": "file",
+      "sha256": "47af51649015c386a3a8fab2290362f6675c2bbb76530eeaf2d37cd2d3eece55"
+    },
+    "07_Delivery/README.md": {
+      "kind": "file",
+      "sha256": "fe1edacaca2ce5db836c1933fbd704681a42f4bf897b969f55a6ab687f5fcc96"
+    },
+    "09_Others/README.md": {
+      "kind": "file",
+      "sha256": "63b12bdf7152279f3f3f95259e31e210f3de706f833914ab43f4ad923c9df01f"
+    },
+    "AGENTS.md": {
+      "kind": "file",
+      "sha256": "03dc3dd0a89c8cf47cd8f913668306dc80e6878cead64231801f0a74268b0f24"
+    },
+    "CLAUDE.md": {
+      "kind": "file",
+      "sha256": "09ea95c802c322629462dde170a08ee4d97110430c0d414ec7beb719e4f31ea9"
+    },
+    "QWEN.md": {
+      "kind": "file",
+      "sha256": "f8205b6221d7e2003bcf4de609dd38b7dd8072957df4ab4553c2f995ac4d75bf"
+    },
+    "README.md": {
+      "kind": "file",
+      "sha256": "50c0d6fc479d956b7fe2a2413cbb16becc6a2f91fdca6364d668eec06ff093ef"
+    }
+  },
+  "head": "ae206513cfc563dc94fd17e32ad634f98b79c000",
+  "schema": 1,
+  "source_globs": [
+    "05_Software/nilo_assistant/"
+  ],
+  "stage": "build",
+  "task": "TASK-65c14bc6",
+  "test_globs": [
+    "05_Software/tests/",
+    "05_Software/scripts/"
+  ]
+}

@@ -1,0 +1,10 @@
+# Downloaded repository-local runtime tools are reproducible from 02_Tools.
+/02_Tools/runtime/
+/02_Tools/cache/
+
+# Generated Python environments and bytecode are never source artifacts.
+**/.venv/
+**/.venv-*/
+__pycache__/
+**/__pycache__/
+*.py[cod]

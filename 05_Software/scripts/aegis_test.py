@@ -1,0 +1,150 @@
+"""Portable test and lint routing for the NILO Go core and Python integrations."""
+
+from __future__ import annotations
+
+import argparse
+import subprocess
+import sys
+from pathlib import Path
+
+import tomllib
+
+IGNORED_PARTS = {".git", ".venv", "__pycache__"}
+
+
+def discover_suites(root: Path) -> list[tuple[str, Path]]:
+    """Return every Go module and Python project below the software root."""
+    root = root.resolve()
+    suites: list[tuple[str, Path]] = []
+    for module_file in root.rglob("go.mod"):
+        if not _is_ignored(module_file.relative_to(root)):
+            suites.append(("go", module_file.parent))
+    for project_file in root.rglob("pyproject.toml"):
+        if not _is_ignored(project_file.relative_to(root)):
+            suites.append(("python", project_file.parent))
+    return sorted(suites, key=lambda suite: (suite[0] != "go", str(suite[1])))
+
+
+def _is_ignored(path: Path) -> bool:
+    return any(
+        part in IGNORED_PARTS or part.startswith(".venv-") for part in path.parts
+    )
+
+
+def _run(command: list[str], cwd: Path) -> int:
+    print(f"[{cwd}] {' '.join(command)}", flush=True)
+    try:
+        return subprocess.run(command, cwd=cwd, check=False).returncode
+    except FileNotFoundError:
+        print(
+            f"error: required command not found: {command[0]}",
+            file=sys.stderr,
+            flush=True,
+        )
+        return 127
+
+
+def _uses_uv_environment(suite_root: Path) -> bool:
+    """Return whether a Python project's declared build environment is uv."""
+    if (suite_root / "uv.lock").is_file():
+        return True
+    try:
+        metadata = tomllib.loads(
+            (suite_root / "pyproject.toml").read_text(encoding="utf-8")
+        )
+    except (OSError, tomllib.TOMLDecodeError):
+        return False
+    build_system = metadata.get("build-system", {})
+    return (
+        isinstance(build_system, dict)
+        and build_system.get("build-backend") == "uv_build"
+    )
+
+
+def _python_test_command(suite_root: Path) -> list[str]:
+    """Choose the test runner declared by a Python suite's project metadata."""
+    if _uses_uv_environment(suite_root):
+        return ["uv", "run", "pytest", "-q"]
+    return [
+        sys.executable,
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-p",
+        "test_*.py",
+        "-v",
+    ]
+
+
+def _run_full(root: Path) -> int:
+    script_tests = root / "scripts" / "tests"
+    if script_tests.is_dir():
+        result = _run(
+            [
+                sys.executable,
+                "-m",
+                "unittest",
+                "discover",
+                "-s",
+                "scripts/tests",
+                "-p",
+                "test_*.py",
+                "-v",
+            ],
+            root,
+        )
+        if result:
+            return result
+
+    for kind, suite_root in discover_suites(root):
+        if kind == "go":
+            result = _run(["go", "test", "./..."], suite_root)
+        else:
+            tests = suite_root / "tests"
+            if tests.is_dir():
+                result = _run(_python_test_command(suite_root), suite_root)
+            else:
+                print(
+                    f"[{suite_root}] no tests directory; compiling Python sources",
+                    flush=True,
+                )
+                result = _run(
+                    [sys.executable, "-m", "compileall", "-q", "."], suite_root
+                )
+        if result:
+            return result
+    return 0
+
+
+def _run_lint(root: Path) -> int:
+    for kind, suite_root in discover_suites(root):
+        if kind == "go":
+            result = _run(["go", "vet", "./..."], suite_root)
+        else:
+            result = _run([sys.executable, "-m", "compileall", "-q", "."], suite_root)
+        if result:
+            return result
+    return _run([sys.executable, "-m", "compileall", "-q", "scripts"], root)
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("mode", choices=("full", "impacted", "lint"))
+    parser.add_argument("selectors", nargs="*")
+    arguments = parser.parse_args(argv)
+    root = Path.cwd()
+
+    if arguments.mode == "lint":
+        return _run_lint(root)
+    if arguments.mode == "impacted" and arguments.selectors:
+        print(
+            "Impacted routing is conservative; running every discovered suite.",
+            flush=True,
+        )
+    return _run_full(root)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
