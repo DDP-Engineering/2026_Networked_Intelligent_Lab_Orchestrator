@@ -23,7 +23,7 @@ Resolution precedence is:
 4. A known device policy may lower effective authority but cannot silently raise the app mode.
 5. The matrix produces the decision.
 
-The decision snapshot records app mode, manifest default, operation override, device input, resolved policy, decision, reason, and time. Full Access may bypass equipment-protection limits but never bypasses authentication, schema validation, compatibility, resource leases, audit, cancellation, safe shutdown, `denied`, or `always_prompt`.
+The decision snapshot records app mode, manifest default, operation override, device input, resolved policy, decision, reason, and time. Full Access automates only operations classified for that mode; it never bypasses authentication, schema validation, compatibility, resource leases, audit, cancellation, safe shutdown, configured equipment-protection limits, physical interlocks, `denied`, or `always_prompt`.
 
 ## Examples
 

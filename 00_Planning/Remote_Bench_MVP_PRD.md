@@ -8,12 +8,13 @@
 
 **First target:** Raspberry Pi 4, Linux ARM64
 
-**Later targets:** Ubuntu/Linux x86_64 and Windows 11 x86_64
+**Later appliance target:** Ubuntu/Linux x86_64
+**Portability check:** Windows 11 x86_64 compile-only for the portable core
 **Reference integration:** sigrok with Hantek DSO-3062L certification
 
 ## 1. Document authority
 
-This document defines the first NILO Remote Bench MVP. It narrows the broader product direction in `Overview.md`. When the two documents differ about MVP scope, sequencing, safety modes, supported platforms, or integrations, this PRD controls the MVP.
+This document defines the first NILO Remote Bench MVP inside the Stage 1 plan in `System_Build_Plan.md`. `Overview.md` remains the long-term vision. This PRD controls the MVP feature slice and its acceptance criteria, while `System_Build_Plan.md` controls architecture, supported appliance platforms, build order, and safety boundaries wherever the documents differ.
 
 The MVP proves a complete remote evidence workflow while establishing a reusable integration platform. Sigrok is the first reference integration package, not a special subsystem built into Bench Core.
 
@@ -43,7 +44,7 @@ The MVP must:
 9. Enforce persistent Ask, Auto, and Full Access policies at the app-operation boundary.
 10. Preserve durable, attributable evidence for successful, failed, cancelled, and interrupted operations.
 11. Give AI and human actors different presentations of the same underlying session and evidence.
-12. Keep the portable core, integration protocol, schemas, and browser GUI suitable for later Ubuntu/Linux x86_64 and Windows 11 x86_64 deliveries.
+12. Keep the portable core, integration protocol, and schemas cross-compilable for Windows x86_64 while delivering NILO appliances only for Linux ARM64 and later Linux x86_64.
 
 ## 4. Non-goals for this MVP
 
@@ -331,7 +332,7 @@ Newly installed apps and newly detected hardware begin in Ask mode. Known app, o
 
 - **Ask:** prompt for each operation.
 - **Auto:** automatically run routine reads and explicitly auto-eligible writes; prompt for operations requiring a higher threshold.
-- **Full Access:** automatically run dangerous and full-only operations and allow equipment-protection limits or device configuration to be changed or disabled.
+- **Full Access:** automatically run operations explicitly classified as full-only, while core-enforced equipment limits and device safety invariants remain binding.
 
 ### 9.3 Operation policies
 
@@ -346,7 +347,7 @@ Each integration declares a default policy for every operation. The administrato
 
 ### 9.4 Full Access boundary
 
-Full Access intentionally acts as a protection-bypass mode. It may change or disable equipment-protection limits such as voltage, current, duration, channel limits, or device configuration.
+Full Access is an approval-automation mode, not a protection-bypass mode. It may remove a per-request human prompt only where the administrator has explicitly classified the operation as full-only. Voltage, current, duration, channel, target-identity, firmware-allowlist, armed-state, interlock, and device safe-state constraints remain binding when configured and cannot be disabled by an operation request.
 
 Full Access does not bypass:
 
@@ -360,6 +361,7 @@ Full Access does not bypass:
 - crash cleanup;
 - operations marked Denied;
 - operations marked Always prompt.
+- configured equipment-protection limits and physical safety interlocks.
 
 Every mode change, policy override, approval, denial, operation, cancellation, and terminal result is audited.
 
@@ -653,14 +655,14 @@ After MVP acceptance, future work may add:
 - camera and visual-evidence packages;
 - OpenVPN and other VPN providers;
 - Ubuntu/Linux x86_64 and mini-PC appliance delivery;
-- Windows 11 x86_64 delivery with Windows service, path, process, networking, and hardware-driver adaptations.
+- additional compile-only Windows portability checks where they prevent Linux appliance code from acquiring avoidable host assumptions.
 
 Each new integration must use the common package template and contract rather than adding instrument-specific behavior to Bench Core.
 
 ## 19. Approved product decisions
 
 - Raspberry Pi 4 Linux ARM64 is the only first-MVP appliance target.
-- Ubuntu/Linux x86_64 and Windows 11 x86_64 are explicit later targets, so portable core contracts must not assume Linux-only process, path, or service behavior.
+- Ubuntu/Linux x86_64 is the later appliance target; Windows x86_64 remains a compile-only portability target, not a NILO runtime delivery.
 - The ARM64 PulseView/sigrok stack is supplied outside this project.
 - NILO controls `sigrok-cli` headlessly.
 - The Hantek DSO-3062L is the only MVP-certified instrument.
@@ -675,5 +677,5 @@ Each new integration must use the common package template and contract rather th
 - VPN providers use an internal abstraction, but only WireGuard is implemented now.
 - Permission policy belongs to the integration app, not to an MCP client or token.
 - New apps and hardware start in Ask mode; known settings persist.
-- Full Access may bypass equipment-protection limits but not platform integrity controls.
+- Full Access may automate explicitly classified operations but cannot bypass configured equipment-protection limits, physical interlocks, or platform integrity controls.
 - Every operation and policy decision is auditable.

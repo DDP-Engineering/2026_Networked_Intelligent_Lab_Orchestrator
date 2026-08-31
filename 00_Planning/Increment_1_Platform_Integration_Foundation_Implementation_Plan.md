@@ -16,7 +16,7 @@
 
 - This plan implements only PRD Increment 1. It does not implement sigrok, MCP/HTTP routes, browser GUI, WireGuard, packaging, or hardware-in-the-loop tests.
 - Implementation is governed by `.agentic/AGENTS.md`. Start or resume one AEGIS task for Increment 1, complete its frame/specify/design obligations, and execute this Superpowers plan only when that task reaches build.
-- The current Windows host does not have `go` installed. Install and verify Go 1.26 or newer before Task 1; do not substitute unverified generated code for actual Go test results.
+- Use the pinned repository-local toolchain under `02_Tools`; bootstrap Go, uv, and managed Python without a system-wide installation before running implementation checks.
 - Raspberry Pi 4 Linux ARM64 is the release-blocking platform. Every portable Go package must also compile for Linux x86_64 and Windows 11 x86_64. Platform-specific behavior belongs behind narrow adapters and build-tagged files.
 - Bench Core never accepts arbitrary shell commands, unbounded messages, or unrestricted filesystem paths. Integration input, output, manifests, configuration, and artifacts are typed, size-bounded, and schema-validated.
 - Python integrations run as independently supervised processes. Protocol output uses stdout exclusively; diagnostics use stderr. Dependencies remain isolated from Bench Core.
@@ -193,7 +193,7 @@ func Current() Info {
 
 - [ ] Make `cmd/nilo/main.go` encode `buildinfo.Current()` as JSON for `nilo version`, return exit code 2 for unknown arguments, and contain no service behavior yet.
 
-- [ ] Update all four README files to state: Go Bench Core, external Python integrations, Linux ARM64 first, Linux/Windows x86_64 later, and Increment 1 scope.
+- [x] Update all four README files to state: Go Bench Core, external Python integrations, Linux ARM64 first, Linux x86_64 later, Windows x86_64 compile-only, and Increment 1 scope.
 
 - [ ] Add both verification scripts. Each must run `go test ./...`, build the host executable, then cross-compile with `CGO_ENABLED=0` for `linux/arm64`, `linux/amd64`, and `windows/amd64` into a temporary directory that is removed on success or failure.
 
@@ -864,7 +864,7 @@ Require a successful `hello` before any other method. Validate every response/ev
 
 **Produces:** An install-shaped package proving semantic operations without sigrok or hardware.
 
-- [ ] Write failing tests for manifest validation and these operations:
+- [x] Write failing tests for manifest validation and these operations:
 
   - `echo`: emit two progress events and return canonical input;
   - `sleep`: run until duration or cancellation, then report cancelled;
@@ -872,17 +872,17 @@ Require a successful `hello` before any other method. Validate every response/ev
   - `crash`: terminate after one progress event for supervisor recovery testing;
   - `artifact`: write deterministic bytes only inside the supplied staging directory and declare digest/size/media type.
 
-- [ ] Run the SDK and fake-package tests; expect failure because the fake integration does not exist.
+- [x] Run the SDK and fake-package tests; expect failure because the fake integration does not exist.
 
-- [ ] Implement `FakeIntegration` against the Task 11 interface. Use injected clock/sleeper and deterministic UUID/bytes fixtures; do not use shell execution, hardware, network, or repository paths outside the test temporary directory.
+- [x] Implement `FakeIntegration` against the Task 11 interface. Use injected clock/sleeper and deterministic UUID/bytes fixtures; do not use shell execution, hardware, network, or repository paths outside the test temporary directory.
 
-- [ ] Give the fake package an isolated `pyproject.toml` using `uv_build==0.11.25`, a `nilo-fake-integration` console entry point, and a repository-test `tool.uv.sources` path dependency on `../../integration_sdk/python`; the manifest declares executable and argument array separately.
+- [x] Give the fake package an isolated `pyproject.toml` using `uv_build==0.11.25`, a `nilo-fake-integration` console entry point, and a repository-test `tool.uv.sources` path dependency on `../../integration_sdk/python`; the manifest declares executable and argument array separately.
 
-- [ ] Give operations meaningful policies: `echo` and `artifact` are `auto_eligible`; `sleep` is `full_only`; `fail` and `crash` are `always_prompt` test operations. Mark all resources as `fake/device/<stable-id>`.
+- [x] Give operations meaningful policies: `echo` and `artifact` are `auto_eligible`; `sleep` is `full_only`; `fail` and `crash` are `always_prompt` test operations. Mark all resources as `fake/device/<stable-id>`.
 
-- [ ] Make the contract kit launch any package command supplied as executable plus argument array and verify hello, describe/manifest agreement, strict schemas, health, event ordering, one terminal response, cancel, safe shutdown, malformed-request behavior, and stderr/stdout separation.
+- [x] Make the contract kit launch any package command supplied as executable plus argument array and verify hello, describe/manifest agreement, strict schemas, health, event ordering, one terminal response, cancel, safe shutdown, malformed-request behavior, and stderr/stdout separation.
 
-- [ ] Run:
+- [x] Run:
 
 ```powershell
 Set-Location 05_Software/integration_sdk/python
@@ -895,7 +895,7 @@ go test ./internal/integration/...
 
 Expected: all SDK, contract, manifest, protocol, and supervisor tests pass.
 
-- [ ] Record Task 13 evidence, then commit only Task 13 files with message `test: add fake integration contract package` for task review; do not push.
+- [x] Record Task 13 evidence, then commit only Task 13 files with message `test: add fake integration contract package` for task review; do not push.
 
 ---
 
