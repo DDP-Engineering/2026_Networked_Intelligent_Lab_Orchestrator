@@ -18,7 +18,7 @@ title = "Confine commands and file paths"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
-status = "draft"
+status = "active"
 
 # Self-contained prose: a reader with no other context must be able to
 # understand and check it. No ticket numbers, no run IDs, no references
@@ -68,6 +68,9 @@ linked_tests = [
     "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go::TestLoadRejectsPackageSchemaReferenceEscape",
     "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go::TestLoadRejectsPhysicalPathEscapes",
     "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go::TestLoadRejectsSymlinkedSchemaDirectory",
+    "05_Software/nilo_assistant/internal/artifact/store_test.go::TestNewStoreRejectsRootsThatAliasTheSamePhysicalDirectory",
+    "05_Software/nilo_assistant/internal/artifact/store_test.go::TestRegisterRejectsUnconfinedAndNonAbsoluteStagedPaths",
+    "05_Software/nilo_assistant/internal/artifact/store_test.go::TestRegisterRejectsSymlinkedStagedFile",
 ]
 
 # --- optional below this line ---
@@ -79,4 +82,4 @@ priority = "high"   # low | normal | high
 rationale = "Typed operations must not become an indirect arbitrary shell or filesystem interface."        # why this behavior exists, if not obvious
 
 created = 2026-08-30
-updated = 2026-08-30
+updated = 2026-08-31

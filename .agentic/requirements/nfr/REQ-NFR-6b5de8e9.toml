@@ -18,7 +18,7 @@ title = "Validate and bound integration data"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
-status = "draft"
+status = "active"
 
 # Self-contained prose: a reader with no other context must be able to
 # understand and check it. No ticket numbers, no run IDs, no references
@@ -57,6 +57,8 @@ affected_paths = [
     "05_Software/nilo_assistant/internal/config/",
     "05_Software/nilo_assistant/internal/integration/manifest/",
     "05_Software/nilo_assistant/internal/integration/protocol/",
+    "05_Software/nilo_assistant/internal/integration/supervisor/",
+    "05_Software/nilo_assistant/internal/artifact/",
     "05_Software/integration_sdk/python/src/nilo_integration/",
 ]
 
@@ -70,6 +72,13 @@ linked_tests = [
     "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go::TestLoadRejectsInvalidManifestContracts",
     "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go::TestLoadRejectsRemoteReferenceInPackageSchema",
     "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go::TestLoadRejectsOversizedReferencedSchema",
+    "05_Software/nilo_assistant/internal/integration/protocol/codec_test.go::TestDecoderRejectsUnknownEnvelopeFieldAndPayloadShapes",
+    "05_Software/nilo_assistant/internal/integration/protocol/codec_test.go::TestDecoderRejectsMalformedJSONMissingNewlineAndOversizedLine",
+    "05_Software/nilo_assistant/internal/integration/protocol/codec_test.go::TestEncoderRejectsFrameOverOneMiBAndAcceptsExactBoundary",
+    "05_Software/nilo_assistant/internal/integration/supervisor/supervisor_test.go::TestSupervisorKeepsOnlyLast64KiBOfStderr",
+    "05_Software/nilo_assistant/internal/artifact/store_test.go::TestRegisterBoundsActualStreamedBytes",
+    "05_Software/integration_sdk/python/tests/test_models.py::test_hello_request_rejects_extra_fields",
+    "05_Software/integration_sdk/python/tests/test_server.py::test_event_payload_parser_rejects_fields_not_in_the_protocol",
 ]
 
 # --- optional below this line ---
@@ -81,4 +90,4 @@ priority = "high"   # low | normal | high
 rationale = "The integration boundary is an untrusted local process boundary and must not admit ambiguous or unbounded input."        # why this behavior exists, if not obvious
 
 created = 2026-08-30
-updated = 2026-08-30
+updated = 2026-08-31

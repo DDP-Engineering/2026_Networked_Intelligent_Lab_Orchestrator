@@ -21,9 +21,13 @@ var initialMigration string
 //go:embed migrations/002_policy_snapshots.sql
 var policySnapshotsMigration string
 
+//go:embed migrations/003_active_configuration.sql
+var activeConfigurationMigration string
+
 var migrations = []migration{
 	{version: "001_initial", sql: initialMigration},
 	{version: "002_policy_snapshots", sql: policySnapshotsMigration},
+	{version: "003_active_configuration", sql: activeConfigurationMigration},
 }
 
 func applyMigrations(ctx context.Context, database *sql.DB) (err error) {

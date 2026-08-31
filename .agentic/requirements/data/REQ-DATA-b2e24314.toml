@@ -18,7 +18,7 @@ title = "Persist appliance configuration snapshots"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
-status = "draft"
+status = "active"
 
 # Self-contained prose: a reader with no other context must be able to
 # understand and check it. No ticket numbers, no run IDs, no references
@@ -55,13 +55,15 @@ verification = "SQLite repository tests activate configuration snapshots, close 
 affected_paths = [
     "05_Software/nilo_assistant/internal/config/",
     "05_Software/nilo_assistant/internal/store/sqlite/",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/003_active_configuration.sql",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/store/sqlite/db_test.go::TestOpenConfiguresDurableDatabaseAndMigratesAllFoundationTables",
-    "05_Software/nilo_assistant/internal/store/sqlite/db_test.go::TestOpenIsIdempotentForAnAlreadyMigratedDatabase",
+    "05_Software/nilo_assistant/internal/store/sqlite/config_repository_test.go::TestConfigRepositoryActivatesAndReloadsVersionedSnapshot",
+    "05_Software/nilo_assistant/internal/store/sqlite/config_repository_test.go::TestConfigRepositoryRejectsInvalidSnapshotsAndReportsNoActiveVersion",
+    "05_Software/nilo_assistant/internal/store/sqlite/config_repository_test.go::TestConfigRepositoryActivationRollsBackWithoutLosingCurrentSelection",
 ]
 
 # --- optional below this line ---
@@ -73,4 +75,4 @@ priority = "high"   # low | normal | high
 rationale = "Persistent settings make Ask, Auto, Full Access, and known hardware behavior stable across restarts."        # why this behavior exists, if not obvious
 
 created = 2026-08-30
-updated = 2026-08-30
+updated = 2026-08-31

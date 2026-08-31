@@ -40,24 +40,22 @@ Refresh after work or decisions even if current has not changed.
 
 # TASK-65c14bc6 — Increment 1 platform and integration foundation
 
-stage: build
+stage: done
 type: feature
 path: full
-requirements: REQ-FUNC-880eac8d, REQ-FUNC-1d02a85d, REQ-FUNC-b0dd990f, REQ-FUNC-39397f99, REQ-DATA-b2e24314, REQ-DATA-4357c6f2, REQ-DATA-f9b0b55d, REQ-DATA-9608cfd8, REQ-REL-32b81ca8, REQ-SEC-0ecda0e7, REQ-SEC-f9fd49ff, REQ-SEC-035a8f94, REQ-SEC-50599a7e, REQ-SEC-ae30d292, REQ-NFR-6b5de8e9, REQ-NFR-c4c70f53, REQ-NFR-1ad0cee7, REQ-PLAT-93e1b194, REQ-REL-31cc1e94, REQ-REL-e223f4b5, REQ-TEST-2bbda8a9, REQ-TEST-b52051b8
+requirements: REQ-FUNC-880eac8d, REQ-FUNC-1d02a85d, REQ-FUNC-b0dd990f, REQ-FUNC-39397f99, REQ-DATA-b2e24314, REQ-DATA-4357c6f2, REQ-DATA-f9b0b55d, REQ-DATA-9608cfd8, REQ-REL-32b81ca8, REQ-SEC-0ecda0e7, REQ-SEC-f9fd49ff, REQ-SEC-035a8f94, REQ-SEC-50599a7e, REQ-SEC-ae30d292, REQ-NFR-6b5de8e9, REQ-NFR-c4c70f53, REQ-NFR-1ad0cee7, REQ-PLAT-93e1b194, REQ-PLAT-978855a5, REQ-REL-31cc1e94, REQ-REL-e223f4b5, REQ-TEST-2bbda8a9, REQ-TEST-b52051b8
 branch: ddp/increment-1-foundation
 base: 67df8be9401082b6a8ba2e255c35ce58ec11272b
 opened: 2026-08-30
 
 ## Done checklist (current stage)
 
-- [ ] each automated requirement has a pre-implementation red record with exact selector or command, non-zero exit, and expected failure reason; each manual requirement has a post-implementation observation
-- [ ] repository anchor recorded after red and evolution reviewed after implementation
-- [ ] implementation makes those tests pass
-- [ ] `test --impacted` green
-- [ ] `affected_paths` and `linked_tests` updated on every requirement
-- [ ] `status = "active"` on every requirement this task delivers - or `"retired"`, with the reason in its prose, where this task deliberately removed the behavior
-- [ ] `check` clean, or each remaining warning explained in the log
-- [ ] `stage: validate`
+- [x] validated candidate confirmed unchanged; otherwise returned to validate
+- [x] validation evidence, diff, exclusions, and outcome presented
+- [x] delivery confirmed by the human
+- [x] journal and report included in the delivery commit
+- [x] agreed outcome delivered, normally a PR
+- [x] close-out committed after the outcome succeeded, or carried by the delivery commit where nothing could fail after it
 
 ## Log
 
@@ -224,6 +222,70 @@ opened: 2026-08-30
 - 2026-08-30 test: test --impacted (38 test ref(s)) exit 0 (0.6s)
 - 2026-08-30 test: test --impacted (49 test ref(s)) exit 0 (0.9s)
 - 2026-08-30 test: test --impacted (54 test ref(s)) exit 0 (0.8s)
+- 2026-08-31 build: Resume reconciliation read the complete task journal and build instructions, confirmed branch `ddp/increment-1-foundation`, and preserved the existing ten-file Task 13 hardening diff without staging or cleanup.
+- 2026-08-31 build: The preserved Task 13 candidate passes all focused Go integration tests plus vet, 17 fake-package and contract tests with one environment skip, and all 32 Python SDK tests.
+- 2026-08-31 build: The active and planning-worktree copies of `Overview.md` and `System_Build_Plan.md` have identical SHA-256 hashes; `System_Build_Plan.md` remains untracked pending this reconciliation.
+- 2026-08-31 build: User expanded Increment 1 to include a checksum-verified repository-local Go, uv, and managed-Python bootstrap under `02_Tools`, while push, merge, PR publication, and release remain unauthorized.
+- 2026-08-31 build: Reconciliation establishes the hierarchy Overview as long-term vision, System Build Plan as Stage 1 architecture and safety authority, Remote Bench MVP PRD as the first product slice, and this implementation plan as its foundation decomposition.
+- 2026-08-31 build: Reconciliation classifies Windows x86_64 as a compile-only portability target and keeps NILO appliance delivery Linux-only in accordance with System Build Plan D10.
+- 2026-08-31 build: Reconciliation makes Full Access an approval-automation mode that cannot bypass configured equipment limits or physical interlocks, correcting the earlier PRD wording to match the Stage 1 safety model without changing the existing twelve-cell policy matrix.
+- 2026-08-31 build: DEVIATION the required Superpowers execution skills are unavailable in this session, so their task-level TDD, review, and verification discipline continues directly under AEGIS without subagent execution.
+- 2026-08-31 build: DEVIATION two read-only reconciliation probes used unknown commit `979bc17` and invalid Windows wildcard `.agentic\design*`; both outputs were discarded and replaced with direct journal, log, and requirement reads.
+- 2026-08-31 build red: command=`python -m unittest discover -s scripts/tests -p test_toolchain_bootstrap.py -v`; exit=1; expected missing behavior=the repository had neither the pinned toolchain manifest nor bootstrap, combined-environment, and doctor scripts.
+- 2026-08-31 build: DEVIATION the first real Windows bootstrap exited 1 during parsing because `$LASTEXITCODE:` was an invalid PowerShell variable reference; no archive was downloaded or extracted, and the interpolation was corrected before repeating the same end-to-end command.
+- 2026-08-31 build: DEVIATION the second Windows bootstrap exited 1 before download because the constrained Codex process omits `PROCESSOR_ARCHITECTURE`; the host hint is now enforced when present and otherwise executable verification determines compatibility.
+- 2026-08-31 build: Repository-local bootstrap verified the pinned uv archive, installed managed CPython 3.12.10 under ignored `02_Tools/runtime`, and passed the doctor with Go 1.27.0, uv 0.11.25, and Python 3.12.10 without persistent host changes.
+- 2026-08-31 build: Offline-mode bootstrap reused the populated runtime and passed the same doctor; both toolchain contract tests, three script-router tests, Git diff whitespace check, and POSIX shell syntax checks passed.
+- 2026-08-31 build: DEVIATION the repository-local AEGIS impacted run exited 1 after recreating the locked SDK environment because Task 13 reused a bound Pydantic class validator as an unbound field validator; two SDK regressions exposed the invalid UTC-validator signature and the shared helper replaces it before rerun.
+- 2026-08-31 build: DEVIATION the combined environment's first `python --version` check matched by coincidence because `python` fell through to the host while uv had installed only `python3.12.exe`; bootstrap now requests the repository-local default shim and both doctors require it before passing.
+- 2026-08-31 build: DEVIATION two verification shells used repository-local wrapper paths one directory too shallow and exited before running any check; those outputs were discarded and every intended check was rerun through the absolute wrapper path.
+- 2026-08-31 build red: command=`02_Tools/env/with-tools.ps1 uv run --project 05_Software/integrations/fake_python --all-groups pytest -q 05_Software/tests/contract/test_integration_contract.py`; exit=1; expected missing behavior=the fake runner's crash operation raised `SystemExit` only in an async protocol task and failed to terminate while stdin remained open.
+- 2026-08-31 build: DEVIATION a read-only plan excerpt used the nonexistent shortened filename `Increment_1_Foundation_Implementation_Plan.md`; it changed nothing and the actual platform-integration plan was read immediately afterward.
+- 2026-08-31 build: DEVIATION a read-only selector search passed Unix-style Go globs directly to Windows; its partial output was discarded and the search was rerun against the two directory paths.
+- 2026-08-31 build: Task 13 deterministic process termination uses `os._exit(70)` only in the fake runner's intentional crash operation, with an injected exception terminator keeping the unit test isolated; 7 fake unit tests passed with one Windows symlink-capability skip and all 10 black-box contract tests passed with stdin open.
+- 2026-08-31 build: Task 13 final focused verification passed SDK Ruff check/format plus 32 tests, fake Ruff check/format plus 7 tests and one environment skip, and all Go integration tests plus vet.
+- 2026-08-31 build: AEGIS impacted verification passed every discovered suite with 28 linked references; evolution reports the intentional 15-file post-anchor slice rather than the cumulative branch, and check reports errors=0 warnings=41 notes=0.
+- 2026-08-31 build: DEVIATION the post-anchor evolution report is slice-local because the anchor was refreshed before repository-toolchain work; it must not be interpreted as the complete Increment 1 branch delta.
+- 2026-08-31 build: DEVIATION AEGIS check's 41 warnings are accepted for the intentional multi-root SDK/integration/schema layout, Task 14/15 future paths, and the known deterministic password test fixture; the expanded report contains no hidden error or new warning class.
+- 2026-08-31 build: Task 13 hardening commit `8b71e30`, repository-local toolchain commit `06e84a0`, and Stage 1 boundary reconciliation commit `3bce855` were created locally under the recorded task authority; no push, merge, PR, or release action occurred.
+- 2026-08-31 build red: command=`go test ./internal/operation`; exit=1; expected missing behavior=the stable operation Service, SubmitCommand, validation/evidence contracts, and policy-denial behavior do not yet exist.
+- 2026-08-31 build: DEVIATION the first Task 14 implementation run used a fixed test deadline that was already behind the host wall clock, so Go returned `context deadline exceeded` before the intended cancellation; only the deterministic fixture clock moved to 2030 before repeating the same package test.
+- 2026-08-31 build: DEVIATION Task 14 exposed missing production request persistence and mismatched operation/supervisor request identities outside its original file list; scope expands narrowly to an atomic SQLite operation repository, approval lookup, and supervisor request-ID correlation so lifecycle and cancellation do not pass only through fakes.
+- 2026-08-31 build: DEVIATION a read-only helper search passed a wildcard path directly to Windows `rg`; it changed nothing and all remaining searches use directory paths with `-g` filters.
+- 2026-08-31 build red: command=`go test ./internal/store/sqlite ./internal/app ./internal/integration/supervisor ./cmd/nilo`; exit=1; expected missing behavior=atomic operation request persistence, foundation app composition/reconciliation, operation-to-wire request ID correlation, and the smoke command were absent.
+- 2026-08-31 build: Task 14 service, persistence, app, smoke-command, and correlated-cancellation checks pass under repeated focused runs, full Go tests and vet, Python SDK/fake lint and tests, portable host/cross-target compilation, and the conservative 48-reference AEGIS route; local commit `f6bc5bf` was created without remote Git action.
+- 2026-08-31 build red: command=`go test ./internal/acceptance`; exit=1; expected missing behavior=the real-runner Increment 1 fixture and launch/composition path do not yet exist.
+- 2026-08-31 build: DEVIATION the first composed acceptance run reached live sleep cancellation and exposed a supervisor close/safe-shutdown race: cancellation succeeded but returned `write |1: file already closed`; lifecycle coordination now prevents execute cleanup from closing stdin while bounded cancel and safe-shutdown are in progress.
+- 2026-08-31 build: DEVIATION the next composed cancellation run received a valid correlated `cancel` response before the execute terminal and misclassified it as a mismatched execute message; the execute loop now skips only registry-validated cancel/safe-shutdown responses while waiting for its execute terminal.
+- 2026-08-31 build: DEVIATION the first control-response patch was rejected by the patch parser due to a malformed hunk header and made no changes; the corrected patch applied immediately afterward.
+- 2026-08-31 build: DEVIATION the composed crash run correctly persisted `incomplete` but classified every EOF with an outstanding execute as protocol failure; the supervisor now preserves process wait status so nonzero exit is a bounded diagnostic runner crash while clean missing-terminal exit remains protocol failure.
+- 2026-08-31 build: DEVIATION the first crash-diagnostic assertion expected no trailing newline even though the bounded stderr ring correctly preserves it; only the assertion now trims surrounding whitespace.
+- 2026-08-31 build: DEVIATION two combined acceptance-document patches were rejected by mismatched README context and made no changes; the scripts, acceptance document, and README additions were then applied in isolated patches against actual text.
+- 2026-08-31 build: The real fake-runner acceptance test passes approval, ordered progress, verified artifact persistence, live cancellation with lease release, bounded crash diagnostics with truthful incomplete state, restart reconciliation, and full request/session/actor/integration/device audit correlation.
+- 2026-08-31 build: The Windows Increment 1 script passed the repository doctor, 32 SDK tests, 7 fake tests with one Windows symlink-capability skip, both Ruff checks, 10 generic contract tests, focused and full Go tests, vet, the real-runner acceptance slice, all three cross-builds, and the no-new-artifact comparison.
+- 2026-08-31 build: Go race tests were explicitly skipped because repository-local Go reports CGO_ENABLED=0 and no gcc is available; native Raspberry Pi 4 Linux ARM64 full-script evidence remains mandatory before release readiness.
+- 2026-08-31 build red: command=`go test ./internal/store/sqlite -run TestConfigRepository`; exit=1; expected missing behavior=the requirement audit found schema-only configuration versions with no atomic activation, active selection, or restart reload repository.
+- 2026-08-31 build: Added digest-checked immutable configuration snapshots, a single-active-version migration, atomic rollback-safe activation, and restart reload tests so REQ-DATA-b2e24314 now describes implemented behavior.
+- 2026-08-31 build: DEVIATION the first full SQLite run exited 1 because its idempotence fixture still expected two migrations after migration 003 was added; the expectation was corrected to three and the complete package passed.
+- 2026-08-31 validate: The complete 295-line task journal, all twenty-three linked requirements, the component template, and the authoritative validation instructions were read before semantic review.
+- 2026-08-31 validate: DEVIATION the first validation-step read used nonexistent shortened path `.agentic/steps/validate.md`, so it was discarded and replaced with the complete `.agentic/steps/5_validate.md` read.
+- 2026-08-31 validate: DEVIATION one combined journal/template/knowledge read was truncated and `.agentic/knowledge` did not exist, so that output was not counted; bounded reads completed the journal and validation will create the required knowledge pages.
+- 2026-08-31 validate: Semantic review reconciled the complete 168-file branch delta and the final configuration diff against scope, all requirements and specs, design, error paths, Windows/Linux adapters, secrets, safety boundaries, and unrequested work; no MCP, HTTP, WireGuard, appliance, hardware-in-the-loop, or hardware-family implementation entered the candidate.
+- 2026-08-31 validate: The only sigrok and Hantek names in product paths are inert manifest loader fixtures that verify the generic package boundary, and the only secret-scanner candidate remains the deterministic public password test phrase already accepted during Task 5.
+- 2026-08-31 validate: Created current component knowledge for Bench Core, the integration platform, the repository-local toolchain, and Increment 1 acceptance, including built interfaces, requirement behavior, architecture, and complete component file locations.
+- 2026-08-31 validate: All twenty-three requirements now have active status, current affected paths, and executable linked tests; no requirement uses a Manual or Inspection substitute.
+- 2026-08-31 validate: The conservative impacted route reduced 101 selectors to 27 files and then passed every discovered suite: 5 script tests, full Go packages including the real-runner acceptance test, 32 SDK tests, and 7 fake tests with one Windows symlink-capability skip.
+- 2026-08-31 validate: Final Go vet passed, `git diff --check` passed, and refreshed evolution reports 39 expected post-anchor paths with 21 additions, 18 modifications, and no removals.
+- 2026-08-31 validate: DEVIATION one diff/vet shell ran from the Go module with repository-root paths and a nonexistent relative wrapper, so no verification ran; its output was discarded and both diff review and vet were rerun from the repository root with the absolute wrapper.
+- 2026-08-31 validate: Final command `python .agentic/aegis.py check --task TASK-65c14bc6 --strict --run` exited 0 after the last candidate edit; configured test and lint commands passed in 3.1 and 3.0 seconds, strict mode accepted the result, and the catalog reported errors=0 warnings=34 notes=0.
+- 2026-08-31 validate: DEVIATION the final strict proof retains 33 accepted outside-layout warnings for the intentional root ignore, acceptance document, public multi-root SDK, integration package, and schema layout plus one accepted secret-in-diff warning for a deterministic non-secret password test phrase.
+- 2026-08-31 test: test --impacted (27 test ref(s)) exit 0 (9.6s)
+- 2026-08-31 deliver: The validated candidate remains unchanged outside journal-only delivery records, and the user explicitly approved the presented local-delivery-commit-only outcome with no push, PR, merge, release, or deployment.
+- 2026-08-31 deliver: DEVIATION replacement root guidance names `aegis brief`, but the installed repository CLI rejected that unsupported command with exit 2, so the supported summary plus complete journal and delivery-step reads supplied the required resume context.
+- 2026-08-31 deliver: The AEGIS delivery report records 175 changed files, 23760 added lines, all twenty-three requirements, and a report-time advisory snapshot of errors=0 warnings=35 notes=0.
+- 2026-08-31 deliver: DEVIATION the report-time snapshot adds one transient `unticked-deliver` warning because close-out was intentionally still open when the report was generated; the same local delivery commit resolves it while the previously accepted 34 warnings remain unchanged.
+- 2026-08-31 deliver: The approved outcome is this repository-local delivery commit itself, so the task closes as done in that commit with no push, PR, merge, release, or deployment.
+- 2026-08-31 deliver: The post-close-out advisory check returned errors=0 warnings=34 notes=0, confirming the transient unticked-deliver warning is resolved and only the previously accepted warning set remains.
 
 ## Design
 
@@ -243,11 +305,43 @@ opened: 2026-08-30
 
 ## Stage report
 
-stage: build
-result: in_progress
-current: build
-changed: Tasks 1 through 11 are review-approved; Task 11 adds a pinned Python integration SDK with strict NDJSON protocol validation and supervised-lifecycle-safe server behavior
-evidence: Task 11 RED recorded missing Python models/server, then 31 SDK tests, Ruff check/format, focused Go protocol tests, portable core host plus linux/arm64, linux/amd64, and windows/amd64 builds, and the final 70-reference AEGIS impacted route through the repository-local Go wrapper passed; review cleared all protocol lifecycle and stream-integrity findings
-issues: two generated Python cache directories and twelve compile-only Task 2/3/4 binaries remain outside commits after policy-blocked cleanup; later requirement slices and affected paths remain pending; push, merge, PR publication, and release remain unauthorized
-next: generate the Task 12 brief for external integration supervision
-needs_user: no - approved implementation continues continuously in build and stops only for a named safety or authority boundary
+stage: deliver
+result: completed
+current: done
+changed: Increment 1 now includes the reviewed Go foundation, runtime integration boundary, Python SDK and fake package, repository-local toolchain, composed acceptance gate, atomic configuration activation and reload, and four current component knowledge pages
+evidence: user approved the local-commit-only outcome; final strict check exited 0 with errors=0 warnings=34 notes=0; the delivery report records 175 changed files and all twenty-three requirements
+issues: Go race verification is unavailable on this Windows host because CGO and gcc are absent; native Raspberry Pi 4 Linux ARM64 runtime acceptance remains release-blocking; no push, PR, merge, release, or deployment was authorized or performed
+next: run the Linux Increment 1 acceptance script natively on Raspberry Pi 4 ARM64 before release readiness, then plan the next product increment as a separate task
+needs_user: no - the explicitly approved local commit is the complete delivery outcome
+
+## Delivery report (2026-08-31)
+
+- stage: deliver; type: feature; path: full; branch: ddp/increment-1-foundation
+- requirements:
+  - REQ-FUNC-880eac8d - Execute immutable operation lifecycle
+  - REQ-FUNC-1d02a85d - Load runtime integration packages
+  - REQ-FUNC-b0dd990f - Exchange integration lifecycle messages
+  - REQ-FUNC-39397f99 - Provide Python integration SDK
+  - REQ-DATA-b2e24314 - Persist appliance configuration snapshots
+  - REQ-DATA-4357c6f2 - Enforce exclusive resource leases
+  - REQ-DATA-f9b0b55d - Append immutable audit events
+  - REQ-DATA-9608cfd8 - Register integrity-checked artifacts
+  - REQ-REL-32b81ca8 - Reconcile interrupted sessions
+  - REQ-SEC-0ecda0e7 - Protect administrator passwords
+  - REQ-SEC-f9fd49ff - Create and revoke MCP tokens
+  - REQ-SEC-035a8f94 - Resolve operation permissions
+  - REQ-SEC-50599a7e - Bind approvals to immutable requests
+  - REQ-SEC-ae30d292 - Default new integrations and devices to Ask mode
+  - REQ-NFR-6b5de8e9 - Validate and bound integration data
+  - REQ-NFR-c4c70f53 - Confine commands and file paths
+  - REQ-NFR-1ad0cee7 - Isolate integration runner processes
+  - REQ-PLAT-93e1b194 - Compile portable core targets
+  - REQ-PLAT-978855a5 - Bootstrap repository-local development toolchain
+  - REQ-REL-31cc1e94 - Cancel and safely terminate runners
+  - REQ-REL-e223f4b5 - Preserve truthful terminal outcomes
+  - REQ-TEST-2bbda8a9 - Verify integrations with a common contract
+  - REQ-TEST-b52051b8 - Prove the fake integration lifecycle
+- deviations: see the append-only task log for recorded build, validation, and delivery deviations
+- diff vs task base 67df8be: 175 file(s) changed, 23760 line(s) added
+- checks: errors=0 warnings=35 notes=0
+- checklist: 5/6 done; open: close-out committed after the outcome succeeded, or carried by the delivery commit where nothing could fail after it

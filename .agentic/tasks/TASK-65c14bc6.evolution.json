@@ -619,6 +619,489 @@
       "current_head": "af0e2e06f4d84735714519b6e361b34dc02debbd",
       "evolution_stage": "build",
       "evolved_at": "2026-08-30T17:33:39.235266Z"
+    },
+    {
+      "anchor_created_at": "2026-08-31T11:36:30.048409Z",
+      "anchor_head": "ae206513cfc563dc94fd17e32ad634f98b79c000",
+      "anchor_id": "9638fa3dcd38ecb2",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "9e52633b11f66e96f44ea2a54d09854ebc3e8c57f62dbe5fcde8640fb94576e8"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "52a2759d8f05d9af9d6f18c0b3ed1a8bbc340290a0645a351ff2ccf4ceb1381a"
+          },
+          "path": ".gitignore",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "1863c051f5d5cdb51df5b54d4b336b30f948011f33a45cdc939d0eac47a975e8"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "21515b2cecc6eb692d5a072801f72030c54cf6c9fc960053067caf3c79dfb1e1"
+          },
+          "path": "00_Planning/Increment_1_Platform_Integration_Foundation_Implementation_Plan.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "1172937d1442266f047b583373c6c23ddb759c50df174700d358f0a1ac7badd4"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "22736d3ec328dec3baf50bec31a1f499d0701dc3185a4dfc07089a6c4560abd8"
+          },
+          "path": "02_Tools/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "434b18b9eef01429c9d4e99ce7ac49689d40df4e0fee3127c4f390d4d6dfd69c"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/bootstrap/bootstrap.ps1",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "afb32f4c3ccdcc3f7e1c9ffb81a600b3753f64b0608b5ee17404e80896bce8ee"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/bootstrap/bootstrap.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "01a55477446bbfc859a8442bc7d6d4620e7b572f333c674f8c8191b8b676f682"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/env/with-tools.ps1",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "e3807fdaf1125a9eeab1115428f887cca743db85ceceb4dc86a1d180b4d5a034"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/env/with-tools.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "c47081cf8165d485f85bc886484e63931d7016ddf7bf61437bf7f01d6643ffed"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/scripts/doctor.ps1",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ce55960bd7d5e91757cf423455d3d8684ef16f7cd6b1d921f290eb796ea1cacc"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/scripts/doctor.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "de4f742de16cda9551885eb6f6964f7c14548400ee174894e24d0145750da24f"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/toolchain.versions",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "22ce45387bfea46f3346ddb94d359f3b088dc5ce39d970cff61de067c88099dc"
+          },
+          "area": "other",
+          "before": null,
+          "path": "05_Software/INCREMENT_1_ACCEPTANCE.md",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b89cfd86923e0f98c8353dcdd01bb7a15935477851cc943a78f452756bcf6ea0"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "27bd6cf5d327e6a68fe2bf5c6d50b7f000b7ea8e8d8e55b88c49e4bd27739802"
+          },
+          "path": "05_Software/integration_sdk/python/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b9885ffdd9007fd1ad7b2538549b4ecc4b681d2259ddab8dba0d87a3870ab418"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "52a03a75e088c27cff923234b15be6ead342e8be5ebe6e78d895df47b3ee6b17"
+          },
+          "path": "05_Software/integration_sdk/python/src/nilo_integration/models.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "dcbd248d34093ad37d51a2d6cdb6fc0a89744d37dd31f993ff93a31a925b4f71"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "3309602545af04fe2ac2a42f423b53b8470e4a36bf45a90fd25e1f420b2aa6dd"
+          },
+          "path": "05_Software/integrations/fake_python/src/nilo_fake_integration/plugin.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "49adea9b24a9835029a5cf2892d245f91f735666de7a25d5017e0f8537d0f848"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "b86b88d0f53a893f6e556a4c4436d126e7c235506148ee32c7a207d03ef2fd35"
+          },
+          "path": "05_Software/integrations/fake_python/tests/test_fake_integration.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "dce6655651646fb0c5d6161e6451b69b889ad993dc1774ea42bbcf18945d8b70"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "1059926a1a07ca1052104d3a53eaabbf83c597b87a42459cbaef67be0a653f5a"
+          },
+          "path": "05_Software/nilo_assistant/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "89d19bf9726c6de6bd2c6af26b00b91e2b1091acce44a6f2b8082169060f17ad"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "338a97d4efcc9c7e2c2a5bd4ee7caed6f7af8b1f4d99536f46eeaf6d30b8ce5a"
+          },
+          "path": "05_Software/nilo_assistant/cmd/nilo/main.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "67a4ae14d6a6aafd2e564d9fb74d68be228b3aa14813d48b0a63024dada8b28f"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "712b059cbb63ff8b701227939456b58fe607c4b1565432a4c78d41bf09f02ff4"
+          },
+          "path": "05_Software/nilo_assistant/cmd/nilo/main_test.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "23a0c22b7764a8119666a0fd807de5be79dc9dd3b81ff58fe4035cec67ff1eff"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/acceptance/increment1_e2e_test.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "f14f3df7b412bab38517c224d550ef9a31bca298ae11693fcbc4f5ce83fff181"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/acceptance/increment1_fixture_test.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "7c0f63da5eeb0a744093a755bdc72fb135e3b19a6d8a5584dc22750d95c5813f"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/app/app.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "e7c6d89c5c93bb357de33219a7ea2f02f2a1287318fbf2c9e6ceb2fcf9df1d9d"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/app/app_test.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "4045d5c970be59b88a1c965c6a107040e64eadc095803d494438474291b70783"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "e0ee4cc95fc5bf3412102a5d279f48cdebac5564f443c867c771be982eddec50"
+          },
+          "path": "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b24a49a150c4aa7520d405abdcb00e240b1dafef27aafdb90d7b05c178d2db09"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "0836ca81bc917894cb8d6784a4470591a4a9ccecab6194448d36521a0a26a384"
+          },
+          "path": "05_Software/nilo_assistant/internal/integration/supervisor/process.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "1512774c20a27605438de1b67f456bc7edfda3b0d71a7a332aa9ced2992f4680"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "ca7b74856603bea9bd1172cedc774109f0e85c5eb37f385ed68425a7d40ce890"
+          },
+          "path": "05_Software/nilo_assistant/internal/integration/supervisor/supervisor_test.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "8083929637e2dfe7a6bd195d4e9a28a3a6f633bfcf1858d57b5bf18db9583eaf"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "e617010191fba6e3a79b6ab8b46655f2d6b360ad330b5dfbafcac0e8f1470196"
+          },
+          "path": "05_Software/nilo_assistant/internal/integration/supervisor/testhelper/main.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "dc236be524bde98fb6ec4df0595bdb6a47f7df884ef28edecf86d6bf8284eb59"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/operation/service.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "45f29a6d423ea7b078ce87c0d621ceaf5f6d8efbe9f5ec4d91720e27f1d265c1"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/operation/service_test.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "394ba91786850596e47e618f06be489ebd57935937f56d5df6fabab968bb62fc"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/config_repository.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "9bdfdf957140d48df259bf99fed709130421284ff766e66751261fa98d740576"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/config_repository_test.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ca38bb8195e688adb0c545b50863a5fbb8e3476ebbdf8371390155cb845f99df"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "3aafc7167cde4d97f3fae46b3d91975c226d3e29bcebf791082f9cf5141cf682"
+          },
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/db_test.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "1380d0e586a8ece39d176d9b44aab701bfe4e0d516cdcccfbd3e8c551e8f5b6b"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "e0881e128f40c6985595f55ec15a5639818db5844a797f923f4d345c52ecaa70"
+          },
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/migrations.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "7d0ab94296d75d7b864287920746a1138bbd276c028addec7c94f28feb0c3683"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/migrations/003_active_configuration.sql",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "9c34be215e8d5dffc3770be08bd1e30fdab9798699aa497ac2f0db8368d99268"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/operation_repository.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "9617460426054f28787555ba17f644448e13e5dcf7968bfac6b2c1f34f7149c9"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/operation_repository_test.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "47f9abd96d2cfe8dddef685705c1455e18bf727d090d5402bf5bb98003e45b7c"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "dfbfc16486b3d5017c42b5e6b47839f2eea02fe9c9ceb60e2108cfced7bcc749"
+          },
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/policy_repository.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "768dc349e78a319d2ee15fa25f167f13b9a9465b3810150ee5dbcbcfa4f66710"
+          },
+          "area": "tests",
+          "before": null,
+          "path": "05_Software/scripts/test-increment-1.ps1",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b555f527b6102abe20d58c24a632781230403b5935485ebdb3f53f4596a890fe"
+          },
+          "area": "tests",
+          "before": null,
+          "path": "05_Software/scripts/test-increment-1.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "0c57948670302c4ae6d5339d60285f44e4a3687fe990b41ecb3816ef53995e08"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "c915b1ea292f854d0986229dfd3ee44be9c61f6deca50f05764956a905620244"
+          },
+          "path": "05_Software/tests/contract/test_integration_contract.py",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 8,
+            "modified": 7,
+            "removed": 0,
+            "unchanged": 44
+          },
+          "source": {
+            "added": 11,
+            "modified": 10,
+            "removed": 0,
+            "unchanged": 57
+          },
+          "tests": {
+            "added": 2,
+            "modified": 1,
+            "removed": 0,
+            "unchanged": 9
+          }
+        },
+        "status": {
+          "added": 21,
+          "modified": 18,
+          "removed": 0,
+          "unchanged": 110
+        }
+      },
+      "current_head": "52e653dd740b5d41df4834e900086b85e1c01cf8",
+      "evolution_stage": "validate",
+      "evolved_at": "2026-08-31T13:15:49.973448Z"
     }
   ],
   "schema": 1,

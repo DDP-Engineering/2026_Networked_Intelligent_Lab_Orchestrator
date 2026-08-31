@@ -70,8 +70,8 @@ func TestOpenIsIdempotentForAnAlreadyMigratedDatabase(t *testing.T) {
 			t.Errorf("second close: %v", err)
 		}
 	})
-	if got := queryInt(t, second.SQL(), "SELECT COUNT(*) FROM schema_migrations"); got != 2 {
-		t.Fatalf("schema_migrations count = %d, want 2 after reopen", got)
+	if got := queryInt(t, second.SQL(), "SELECT COUNT(*) FROM schema_migrations"); got != 3 {
+		t.Fatalf("schema_migrations count = %d, want 3 after reopen", got)
 	}
 }
 
