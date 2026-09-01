@@ -49,7 +49,7 @@ The browser GUI shall address the backend only through same-origin request paths
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "A test drives the configured live-mode client over a recording transport and asserts the requested URL is the origin-relative path `/api/v1/status` with no scheme or host, and a second test reads the development server configuration and asserts both its serve and preview modes forward the `/api` prefix to the endpoint named by the environment."
+verification = "A test drives every method of the configured live-mode client over a recording transport and asserts each requested URL is an origin-relative path beneath `/api/v1/` carrying no scheme, no host, and no protocol-relative prefix, a further test asserts the same of every request path the wire contract declares, and a second test reads the development server configuration and asserts both its serve and preview modes forward the `/api` prefix to the endpoint named by the environment."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
@@ -57,6 +57,9 @@ affected_paths = [
     "05_Software/nilo_gui/src/config/environment.ts",
     "05_Software/nilo_gui/src/config/environment.test.ts",
     "05_Software/nilo_gui/src/config/devServer.test.ts",
+    "05_Software/nilo_gui/src/api/contract.ts",
+    "05_Software/nilo_gui/src/api/contract.test.ts",
+    "05_Software/nilo_gui/README.md",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
@@ -64,6 +67,7 @@ affected_paths = [
 linked_tests = [
     "05_Software/nilo_gui/src/config/environment.test.ts",
     "05_Software/nilo_gui/src/config/devServer.test.ts",
+    "05_Software/nilo_gui/src/api/contract.test.ts",
 ]
 
 # --- optional below this line ---

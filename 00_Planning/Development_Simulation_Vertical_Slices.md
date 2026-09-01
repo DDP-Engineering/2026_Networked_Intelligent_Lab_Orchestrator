@@ -46,21 +46,27 @@ contacting equipment networks.
 Exit gate: a fresh supported Windows checkout can build and test the GUI using
 only repository bootstrap commands.
 
-### Slice 4 - GUI login and status shell (partly implemented)
+### Slice 4 - GUI login and status shell (implemented)
 
 - Add the API client and authentication flow. (implemented)
 - Add the application shell, service status, and prominent `SIMULATION`
   indicator. (implemented)
 - Add contract-validated mock scenarios for isolated component development.
-  (implemented for the status resource)
+  (implemented for the status, integration, and device resources)
 - Cover loading, unauthorized, unavailable, malformed-response, and healthy
   states. (implemented)
-- Add the integration and device inventory views. (outstanding)
+- Add the integration and device inventory views. (implemented)
 
-Exit gate: the Windows GUI works with both its contract mock and the real WSL2
-backend. The backend status half of this gate is met; the inventory views that
-consume `/api/v1/integrations` and `/api/v1/devices` remain outstanding, so the
-slice is not closed.
+Exit gate: met. The Windows GUI works with both its contract mock and the real
+WSL2 backend for status, integrations, and devices. The mock serves all three
+resources by path across eight scenarios, and a live browser session against
+`nilo serve --profile simulation` showed the status with both inventories in the
+`healthy` and `unavailable` backend scenarios, an unreachable backend, recovery
+by retry, and a single unusable inventory named without hiding the rest.
+
+That live session is manual integration evidence recorded in the task journal,
+not an automated gate. Slice 6 still owes the browser end-to-end tests that make
+this path part of the repository gate.
 
 ### Slice 5 - One-command development lifecycle
 

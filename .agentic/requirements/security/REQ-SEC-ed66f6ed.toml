@@ -49,19 +49,23 @@ While the browser GUI holds a bearer token, it shall keep that token only in vol
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "A component test authenticates through the GUI while spying on `localStorage.setItem`, `sessionStorage.setItem`, and the `document.cookie` setter, asserts none of them was called and that neither web storage contains the token text, and asserts that unmounting and rendering the application again presents the login screen instead of a restored session."
+verification = "A component test authenticates through the GUI and refreshes every backend resource it retrieves while spying on `localStorage.setItem`, `sessionStorage.setItem`, and the `document.cookie` setter, asserts none of them was called and that neither web storage contains the token text, asserts the token appears in no requested URL, and asserts that unmounting and rendering the application again presents the login screen instead of a restored session."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
     "05_Software/nilo_gui/src/App.tsx",
     "05_Software/nilo_gui/src/components/LoginScreen.tsx",
     "05_Software/nilo_gui/src/App.test.tsx",
+    "05_Software/nilo_gui/src/api/client.ts",
+    "05_Software/nilo_gui/src/api/client.test.ts",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
     "05_Software/nilo_gui/src/App.test.tsx",
+    "05_Software/nilo_gui/src/api/client.test.ts",
+    "05_Software/nilo_gui/src/config/environment.test.ts",
 ]
 
 # --- optional below this line ---

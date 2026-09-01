@@ -49,7 +49,7 @@ The browser GUI's primary screen shall occupy exactly the height of one monitor 
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "A test reads the shipped application and document stylesheets and asserts the document root and body are bounded to the viewport height with page-level overflow hidden, that the application frame is a viewport-height layout rather than a minimum-height one, and that the workspace region declares its own overflow so any excess content scrolls inside it."
+verification = "A test reads the shipped application and document stylesheets and asserts the document root and body are bounded to the viewport height with page-level overflow hidden, that the application frame is a viewport-height layout rather than a minimum-height one, that the workspace region declares its own overflow so any excess content scrolls inside it, and that the inventory list region declares its own overflow and a zero minimum height so a long inventory scrolls within its compartment instead of growing the page."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
@@ -57,6 +57,7 @@ affected_paths = [
     "05_Software/nilo_gui/src/index.css",
     "05_Software/nilo_gui/src/layout.test.ts",
     "05_Software/nilo_gui/tsconfig.app.json",
+    "05_Software/nilo_gui/src/components/InventoryPanel.tsx",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;

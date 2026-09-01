@@ -1,8 +1,17 @@
 import {
+  DEVICES_PATH,
+  INTEGRATIONS_PATH,
+  STATUS_PATH,
   normalizeBaseUrl,
+  parseDevicesBody,
+  parseIntegrationsBody,
   parseStatusBody,
-  statusUrl,
+  resourceUrl,
+  type BenchCorePath,
   type BenchCoreStatus,
+  type DeviceInventory,
+  type IntegrationInventory,
+  type ParseResult,
 } from './contract';
 
 /** The subset of a fetch response this client depends on. */
@@ -46,6 +55,8 @@ export class BenchCoreError extends Error {
 export interface BenchCoreClient {
   readonly baseUrl: string;
   getStatus(token: string): Promise<BenchCoreStatus>;
+  getIntegrations(token: string): Promise<IntegrationInventory>;
+  getDevices(token: string): Promise<DeviceInventory>;
 }
 
 export interface BenchCoreClientOptions {
@@ -59,52 +70,68 @@ export function createBenchCoreClient(
 ): BenchCoreClient {
   const baseUrl = normalizeBaseUrl(options.baseUrl);
   const transport = options.transport ?? defaultTransport;
-  const url = statusUrl(baseUrl);
+
+  /**
+   * One request path for every resource, so a rejected token, an unreachable
+   * backend, and a body outside the contract are classified identically
+   * whichever resource was asked for. The token is only ever an Authorization
+   * header value; it never reaches the URL.
+   */
+  async function request<T>(
+    path: BenchCorePath,
+    token: string,
+    parse: (body: unknown) => ParseResult<T>,
+  ): Promise<T> {
+    const url = resourceUrl(baseUrl, path);
+
+    let response: TransportResponse;
+    try {
+      response = await transport(url, {
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    } catch (error) {
+      throw new BenchCoreError('unavailable', describe(error));
+    }
+
+    if (response.status === 401) {
+      throw new BenchCoreError(
+        'unauthorized',
+        'Bench Core rejected the bearer token (HTTP 401)',
+      );
+    }
+    if (!response.ok) {
+      throw new BenchCoreError(
+        'unavailable',
+        `Bench Core answered with HTTP ${response.status}`,
+      );
+    }
+
+    let body: unknown;
+    try {
+      body = JSON.parse(await response.text());
+    } catch (error) {
+      throw new BenchCoreError(
+        'malformed',
+        `the response to ${path} is not valid JSON: ${describe(error)}`,
+      );
+    }
+
+    const parsed = parse(body);
+    if (!parsed.ok) {
+      throw new BenchCoreError('malformed', parsed.violation);
+    }
+    return parsed.value;
+  }
 
   return {
     baseUrl,
-    async getStatus(token: string): Promise<BenchCoreStatus> {
-      let response: TransportResponse;
-      try {
-        response = await transport(url, {
-          headers: {
-            Accept: 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-        });
-      } catch (error) {
-        throw new BenchCoreError('unavailable', describe(error));
-      }
-
-      if (response.status === 401) {
-        throw new BenchCoreError(
-          'unauthorized',
-          'Bench Core rejected the bearer token (HTTP 401)',
-        );
-      }
-      if (!response.ok) {
-        throw new BenchCoreError(
-          'unavailable',
-          `Bench Core answered with HTTP ${response.status}`,
-        );
-      }
-
-      let body: unknown;
-      try {
-        body = JSON.parse(await response.text());
-      } catch (error) {
-        throw new BenchCoreError(
-          'malformed',
-          `the status response is not valid JSON: ${describe(error)}`,
-        );
-      }
-
-      const parsed = parseStatusBody(body);
-      if (!parsed.ok) {
-        throw new BenchCoreError('malformed', parsed.violation);
-      }
-      return parsed.status;
-    },
+    getStatus: (token) => request(STATUS_PATH, token, parseStatusBody),
+    getIntegrations: (token) =>
+      request(INTEGRATIONS_PATH, token, parseIntegrationsBody),
+    getDevices: (token) => request(DEVICES_PATH, token, parseDevicesBody),
   };
 }
 

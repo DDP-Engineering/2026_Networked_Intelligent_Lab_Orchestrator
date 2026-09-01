@@ -49,7 +49,7 @@ The browser GUI shall resolve from build-time environment variables whether it a
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "Unit tests call the environment reader with an empty environment, an explicit live endpoint, an explicit mock mode with a named scenario, an unrecognised mode, and a malformed endpoint, and assert respectively the documented loopback default, the live configuration, the mock configuration, and a thrown configuration error naming the offending variable for the last two."
+verification = "Unit tests call the environment reader with an empty environment, an explicit live endpoint, an explicit mock mode with each documented scenario name, an unrecognised mode, an unrecognised scenario, and a malformed endpoint, and assert respectively the documented loopback default, the live configuration, the mock configuration for every scenario the mock offers, and a thrown configuration error naming the offending variable for the last three."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [

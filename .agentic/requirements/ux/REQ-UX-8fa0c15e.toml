@@ -1,0 +1,62 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+# One requirement = one independently verifiable behavior.
+# Lives at .agentic/requirements/<category>/<id>.toml
+# Required fields: schema, id, title, status, requirement, verification.
+
+schema = 1
+
+# REQ-<CAT>-<8 hex>. CAT is FUNC, UX, NFR, SEC, DATA, PLAT, REL or TEST,
+# and must match the category folder this file sits in.
+id = "REQ-UX-8fa0c15e"
+
+title = "Display simulated integrations and devices after authentication"
+
+# draft while being written, active once it is built and tested,
+# retired when the behavior is deliberately removed.
+status = "active"
+
+# Self-contained prose: a reader with no other context must be able to
+# understand and check it. No ticket numbers, no run IDs, no references
+# to other requirements.
+requirement = """
+While the browser GUI holds a bearer token the backend has accepted, it shall present on one screen the reported backend status, every integration the backend reports together with that integration's state, and every device the backend reports together with the integration that owns it and that device's availability.
+"""
+
+# The observation that settles whether the behavior holds — not a
+# restatement of the requirement.
+verification = "Component tests render the authenticated screen with a stub client returning the ready inventory and again with one returning the unavailable inventory, and assert that in each case the backend status, every integration's display name and state, and every device's display name, owning integration identity, and availability are all visible at once, and that the state shown for each entry changes with the inventory the stub returned."
+
+# Repo-relative, forward slashes. The source files this behavior lives in.
+affected_paths = [
+    "05_Software/nilo_gui/src/App.tsx",
+    "05_Software/nilo_gui/src/components/InventoryPanel.tsx",
+    "05_Software/nilo_gui/src/components/StatusPanel.tsx",
+    "05_Software/nilo_gui/src/App.css",
+    "05_Software/nilo_gui/src/App.test.tsx",
+    "05_Software/nilo_gui/README.md",
+    "06_SoftwareDocu/Development_and_Simulation_Flow.md",
+    "00_Planning/Development_Simulation_Vertical_Slices.md",
+    ".agentic/knowledge/gui-foundation.md",
+]
+
+# "tests/path/test_file.py::test_name" entries. Kept current during build;
+# these select the impacted regression set.
+linked_tests = [
+    "05_Software/nilo_gui/src/App.test.tsx",
+]
+
+# --- optional below this line ---
+
+# "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "A bench operator decides what to run against what; seeing which integration owns a device and whether it is available is the whole point of the inventory screen."
+
+created = 2026-09-01
+updated = 2026-09-01

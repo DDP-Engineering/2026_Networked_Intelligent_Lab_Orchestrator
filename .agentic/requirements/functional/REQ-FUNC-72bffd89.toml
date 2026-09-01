@@ -1,0 +1,61 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+# One requirement = one independently verifiable behavior.
+# Lives at .agentic/requirements/<category>/<id>.toml
+# Required fields: schema, id, title, status, requirement, verification.
+
+schema = 1
+
+# REQ-<CAT>-<8 hex>. CAT is FUNC, UX, NFR, SEC, DATA, PLAT, REL or TEST,
+# and must match the category folder this file sits in.
+id = "REQ-FUNC-72bffd89"
+
+title = "Retrieve authenticated device inventory from the GUI"
+
+# draft while being written, active once it is built and tested,
+# retired when the behavior is deliberately removed.
+status = "active"
+
+# Self-contained prose: a reader with no other context must be able to
+# understand and check it. No ticket numbers, no run IDs, no references
+# to other requirements.
+requirement = """
+When the browser GUI is given a bearer token, its Bench Core client shall request the versioned device inventory resource with that token as an HTTP bearer credential and return the reported simulation scenario together with each device's identity, owning integration, display name, kind, availability, simulation flag, and capabilities as typed values.
+"""
+
+# The observation that settles whether the behavior holds — not a
+# restatement of the requirement.
+verification = "A unit test drives the client with a recording stub transport and asserts the issued request targets the versioned device inventory path, carries an `Authorization: Bearer` header holding the supplied token, and that the returned value exposes the scenario and, for each entry, the identity, owning integration identity, display name, kind, availability, simulation flag, and capability list taken from a contract-shaped response body."
+
+# Repo-relative, forward slashes. The source files this behavior lives in.
+affected_paths = [
+    "05_Software/nilo_gui/src/api/contract.ts",
+    "05_Software/nilo_gui/src/api/client.ts",
+    "05_Software/nilo_gui/src/api/client.test.ts",
+    "05_Software/nilo_gui/README.md",
+    "06_SoftwareDocu/Development_and_Simulation_Flow.md",
+    "00_Planning/Development_Simulation_Vertical_Slices.md",
+    ".agentic/knowledge/gui-foundation.md",
+]
+
+# "tests/path/test_file.py::test_name" entries. Kept current during build;
+# these select the impacted regression set.
+linked_tests = [
+    "05_Software/nilo_gui/src/api/client.test.ts",
+    "05_Software/nilo_gui/src/api/contract.test.ts",
+]
+
+# --- optional below this line ---
+
+# "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "Device identity, ownership, and availability are what a later operation screen selects against, so they must arrive typed rather than as untyped JSON."
+
+created = 2026-09-01
+updated = 2026-09-01

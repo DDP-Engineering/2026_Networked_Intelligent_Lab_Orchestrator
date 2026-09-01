@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import './App.css';
 import { BenchCoreError, type BenchCoreClient } from './api/client';
 import { LoginScreen } from './components/LoginScreen';
+import type { Resource } from './components/InventoryPanel';
 import { StatusPanel, type Connection } from './components/StatusPanel';
 import type { ApiMode } from './config/environment';
 
@@ -20,44 +21,72 @@ export interface AppProps {
 
 type Session = { phase: 'unauthenticated' } | ({ token: string } & Connection);
 
+/** Turn a settled request into a value or the reason it could not be used. */
+async function settle<T>(request: Promise<T>): Promise<Resource<T>> {
+  try {
+    return { ok: true, value: await request };
+  } catch (error) {
+    return error instanceof BenchCoreError
+      ? { ok: false, failure: error.failure, detail: error.detail }
+      : {
+          ok: false,
+          failure: 'unavailable',
+          detail: error instanceof Error ? error.message : String(error),
+        };
+  }
+}
+
 /**
  * The NILO development shell.
  *
  * It owns the whole conversation with Bench Core: the bearer token, which is
- * held in this component's state and nowhere else, and the connection state
- * the panels render. Every screen keeps the SIMULATION identity and the
+ * held in this component's state and nowhere else, and the connection state the
+ * panels render. Every screen keeps the SIMULATION identity and the
  * physical-equipment boundary visible.
  */
 function App({ client, apiMode, endpoint }: AppProps) {
   const [session, setSession] = useState<Session>({ phase: 'unauthenticated' });
 
-  const requestStatus = useCallback(
+  const requestBench = useCallback(
     async (token: string) => {
       setSession({ token, phase: 'checking' });
-      try {
-        const status = await client.getStatus(token);
-        setSession({ token, phase: 'connected', status });
-      } catch (error) {
-        setSession(
-          error instanceof BenchCoreError
-            ? { token, phase: 'failed', failure: error.failure, detail: error.detail }
-            : {
-                token,
-                phase: 'failed',
-                failure: 'unavailable',
-                detail: error instanceof Error ? error.message : String(error),
-              },
-        );
+
+      // One round trip for the whole screen: the three resources are
+      // independent, so nothing is gained by asking for them in turn.
+      const [status, integrations, devices] = await Promise.all([
+        settle(client.getStatus(token)),
+        settle(client.getIntegrations(token)),
+        settle(client.getDevices(token)),
+      ]);
+
+      // A status that could not be read means the token, the backend, or the
+      // contract is wrong for everything, so it settles the whole screen.
+      if (!status.ok) {
+        setSession({
+          token,
+          phase: 'failed',
+          failure: status.failure,
+          detail: status.detail,
+        });
+        return;
       }
+
+      setSession({
+        token,
+        phase: 'connected',
+        status: status.value,
+        integrations,
+        devices,
+      });
     },
     [client],
   );
 
   const retry = useCallback(() => {
     if (session.phase !== 'unauthenticated') {
-      void requestStatus(session.token);
+      void requestBench(session.token);
     }
-  }, [requestStatus, session]);
+  }, [requestBench, session]);
 
   const reset = useCallback(() => setSession({ phase: 'unauthenticated' }), []);
 
@@ -83,7 +112,7 @@ function App({ client, apiMode, endpoint }: AppProps) {
         {session.phase === 'unauthenticated' ? (
           <LoginScreen
             endpoint={endpoint}
-            onSubmit={(token) => void requestStatus(token)}
+            onSubmit={(token) => void requestBench(token)}
           />
         ) : (
           <StatusPanel connection={session} onRetry={retry} onReset={reset} />

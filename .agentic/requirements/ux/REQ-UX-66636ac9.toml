@@ -56,6 +56,7 @@ affected_paths = [
     "05_Software/nilo_gui/src/App.tsx",
     "05_Software/nilo_gui/src/components/StatusPanel.tsx",
     "05_Software/nilo_gui/src/components/LoginScreen.tsx",
+    "05_Software/nilo_gui/src/components/InventoryPanel.tsx",
     "05_Software/nilo_gui/src/App.test.tsx",
     "05_Software/nilo_gui/src/test/setup.ts",
 ]

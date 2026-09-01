@@ -307,16 +307,31 @@ simulated results never represent evidence from physical equipment.
 
 Paste the `token` value printed by `nilo development issue-token` in section 8.1
 into the login field and select **Connect**. The GUI then calls
-`GET /api/v1/status` with that token as a bearer credential and displays the
-reported profile, service status, simulation flag, build version, API version,
-and integration protocol. The token is held in memory for that page only: it is
-never written to `localStorage`, `sessionStorage`, or a cookie, so reloading the
-page returns to the login screen.
+`GET /api/v1/status`, `GET /api/v1/integrations`, and `GET /api/v1/devices`
+together, with that token as the bearer credential on each, and displays:
 
-The GUI distinguishes five outcomes, each with its own screen: the request is in
-progress, the token was rejected, Bench Core was unreachable, Bench Core replied
-with a response this interface does not understand, and Bench Core reported its
-status.
+- the reported profile, service status, simulation flag, build version, API
+  version, and integration protocol;
+- every integration, with its identifier, state, and supported operations;
+- every device, with its identifier, the integration that owns it, its
+  availability, its kind, and its capabilities.
+
+Each inventory names the deterministic scenario it came from and how many
+entries it is showing. The token is held in memory for that page only: it is
+never written to `localStorage`, `sessionStorage`, a cookie, or a request URL, so
+reloading the page returns to the login screen.
+
+The GUI distinguishes five whole-screen outcomes, each with its own screen: the
+requests are in progress, the token was rejected, Bench Core was unreachable,
+Bench Core replied with a status response this interface does not understand,
+and Bench Core reported its status. Beyond those, each inventory carries its own
+outcome: entries, an explicit empty statement, or a message naming which of the
+two inventories could not be read, with the status and the other inventory still
+on screen. **Refresh** repeats all three requests with the token already held,
+and **Use a different token** discards it and returns to the login screen.
+
+The whole screen stays inside one viewport; a bench with more entries than fit
+scrolls inside the inventory compartment rather than scrolling the page.
 
 To develop the interface with no WSL2 backend at all, use mock mode:
 
@@ -325,10 +340,26 @@ To develop the interface with no WSL2 backend at all, use mock mode:
 ```
 
 Mock mode answers from the repository's own contract-aligned mock, accepts any
-non-empty token, and contacts nothing. Select which answer it gives by setting
-`VITE_NILO_MOCK_SCENARIO` to `healthy`, `unauthorized`, `unavailable`, or
-`malformed` in `05_Software/nilo_gui/.env.mock`, or in an ignored
-`.env.mock.local`.
+non-empty token, and contacts nothing. The mock routes on the request path, so
+one scenario can leave the status healthy while an inventory is unusable. Select
+the answer by setting `VITE_NILO_MOCK_SCENARIO` in
+`05_Software/nilo_gui/.env.mock`, or in an ignored `.env.mock.local`:
+
+| Scenario                 | What the mock answers                                          |
+| ------------------------ | -------------------------------------------------------------- |
+| `healthy`                | status healthy; ready integration and device inventory          |
+| `unavailable-inventory`  | backend answers; both inventories report themselves unavailable |
+| `empty`                  | backend answers; both inventories are valid and empty           |
+| `unauthorized`           | every resource rejects the token                                |
+| `unavailable`            | nothing answers at all                                          |
+| `malformed-status`       | status outside the contract; both inventories fine              |
+| `malformed-integrations` | integration inventory outside the contract; the rest fine       |
+| `malformed-devices`      | device inventory outside the contract; the rest fine            |
+
+`malformed` is still accepted and means `malformed-status`. The `healthy` and
+`unavailable-inventory` bodies reproduce the deterministic catalog the Go
+simulation profile serves, so a mock session and a WSL2 session show the same
+integration and device identities.
 
 The endpoint itself comes from `05_Software/nilo_gui/.env`:
 `VITE_NILO_API_MODE` selects `live` or `mock`, and `VITE_NILO_API_BASE_URL` must
@@ -348,8 +379,9 @@ serves the built assets itself. A `502` from the development server with
 `ECONNREFUSED` in its log means the WSL2 backend is not running or is bound to a
 different port.
 
-The GUI does not yet render the integration or device inventory; keep using the
-PowerShell calls in section 8.1 for those two endpoints.
+To see the backend's other deterministic scenario in the browser, restart Bench
+Core with `--scenario unavailable` and reload the page: the status stays healthy
+while both inventories report their entries as unavailable.
 
 Run the complete focused frontend gate with:
 
@@ -383,8 +415,8 @@ session services, runner supervision, Python SDK, fake integration,
 contract/acceptance tests, a long-running authenticated simulation status API,
 deterministic integration and device inventory, a repository-local Windows
 Node.js toolchain, and a browser GUI that authenticates with a development
-bearer token and displays the backend status. The GUI does not yet render the
-integration or device inventory, and the repository does not yet provide an MCP
+bearer token and displays the backend status together with the simulated
+integration and device inventory. The repository does not yet provide an MCP
 service.
 
 The existing Windows foundation gate is:
@@ -396,14 +428,17 @@ The existing Windows foundation gate is:
 `nilo serve-foundation-check` remains a short-lived composition check. `nilo
 serve --profile simulation` is the long-running development server.
 
-The environment bootstrap, backend flow, and the authenticated GUI status flow
-are executable now. The complete GUI application flow requires the remaining
-foundations:
+The environment bootstrap, backend flow, and the authenticated GUI status and
+inventory flow are executable now. The complete GUI application flow requires
+the remaining foundations:
 
-1. GUI integration and device inventory views over `/api/v1/integrations` and
-   `/api/v1/devices`;
-2. mock scenarios for those two inventory resources;
-3. browser end-to-end tests against WSL2.
+1. one-command Windows start, stop, status, and log entry points for the whole
+   local topology;
+2. browser end-to-end tests against WSL2, covering authentication, status,
+   simulation marking, device inventory, and backend-unavailable recovery.
+
+Until that second item lands, the browser-to-WSL2 path is proven only by a
+manual browser check recorded in the task journal, never by the repository gate.
 
 ## 11. Relationship to product delivery
 

@@ -1,0 +1,59 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+# One requirement = one independently verifiable behavior.
+# Lives at .agentic/requirements/<category>/<id>.toml
+# Required fields: schema, id, title, status, requirement, verification.
+
+schema = 1
+
+# REQ-<CAT>-<8 hex>. CAT is FUNC, UX, NFR, SEC, DATA, PLAT, REL or TEST,
+# and must match the category folder this file sits in.
+id = "REQ-UX-8169ea1d"
+
+title = "Identify which inventory resource returned an unusable response"
+
+# draft while being written, active once it is built and tested,
+# retired when the behavior is deliberately removed.
+status = "active"
+
+# Self-contained prose: a reader with no other context must be able to
+# understand and check it. No ticket numbers, no run IDs, no references
+# to other requirements.
+requirement = """
+If a response the browser GUI receives cannot be read against the supported versioned contract, then the interface shall name which resource produced it — the backend status, the integration inventory, or the device inventory — and shall keep showing whichever of the other resources were read successfully.
+"""
+
+# The observation that settles whether the behavior holds — not a
+# restatement of the requirement.
+verification = "Component tests drive the interface with a stub client whose status and device inventory are usable but whose integration inventory is not, then with one whose device inventory alone is unusable, and assert each shows a message naming the affected inventory, that the message differs between the two cases, that the successfully read status and the other inventory stay visible next to it, and that the same screen is reached by neither a rejected token nor an unreachable backend."
+
+# Repo-relative, forward slashes. The source files this behavior lives in.
+affected_paths = [
+    "05_Software/nilo_gui/src/App.tsx",
+    "05_Software/nilo_gui/src/components/InventoryPanel.tsx",
+    "05_Software/nilo_gui/src/components/StatusPanel.tsx",
+    "05_Software/nilo_gui/src/App.test.tsx",
+    "05_Software/nilo_gui/README.md",
+    ".agentic/knowledge/gui-foundation.md",
+]
+
+# "tests/path/test_file.py::test_name" entries. Kept current during build;
+# these select the impacted regression set.
+linked_tests = [
+    "05_Software/nilo_gui/src/App.test.tsx",
+]
+
+# --- optional below this line ---
+
+# "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "One resource drifting from the contract must not blank the whole screen or be mistaken for a stopped backend; the developer needs to know which endpoint to look at."
+
+created = 2026-09-01
+updated = 2026-09-01

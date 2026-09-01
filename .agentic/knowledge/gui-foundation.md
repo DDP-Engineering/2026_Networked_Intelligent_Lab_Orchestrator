@@ -5,8 +5,9 @@
 The browser GUI foundation provides NILO's native Windows development
 interface while keeping the deployed appliance boundary static. It gives
 developers a locked, testable React and TypeScript project that authenticates
-against the versioned Bench Core HTTP API and displays the backend status,
-without ever suggesting that a simulated result came from physical equipment.
+against the versioned Bench Core HTTP API and displays the backend status
+together with the simulated integration and device inventory, without ever
+suggesting that a simulated result came from physical equipment.
 
 ## Public interface
 
@@ -20,17 +21,24 @@ and `build` (or `build:mock`) emits static production assets into ignored
 Three build-time environment variables configure the endpoint:
 `VITE_NILO_API_MODE` (`live` or `mock`), `VITE_NILO_API_BASE_URL` (an absolute
 http or https URL, `http://127.0.0.1:8090` by default), and
-`VITE_NILO_MOCK_SCENARIO` (`healthy`, `unauthorized`, `unavailable`, or
-`malformed`). They are read from the committed `.env` and `.env.mock` files,
-neither of which holds a credential.
+`VITE_NILO_MOCK_SCENARIO`, one of `healthy`, `unavailable-inventory`, `empty`,
+`unauthorized`, `unavailable`, `malformed-status`, `malformed-integrations`, or
+`malformed-devices`, with `malformed` still accepted as an alias of
+`malformed-status`. They are read from the committed `.env` and `.env.mock`
+files, neither of which holds a credential.
 
 The GUI's own module boundary is `src/api`: `createBenchCoreClient` returns a
-`BenchCoreClient` with `baseUrl` and `getStatus(token)`, and every failure
-arrives as a `BenchCoreError` whose `failure` field is `unauthorized`,
-`unavailable`, or `malformed`.
+`BenchCoreClient` with `baseUrl`, `getStatus(token)`, `getIntegrations(token)`,
+and `getDevices(token)`, and every failure from any of them arrives as a
+`BenchCoreError` whose `failure` field is `unauthorized`, `unavailable`, or
+`malformed`. All three share one private `request(path, token, parse)`, so the
+classification cannot drift between resources, and the token is only ever an
+`Authorization` header value.
 
 The configured client's `baseUrl` is always the empty same-origin base, so it
-requests origin-relative paths such as `/api/v1/status`. `VITE_NILO_API_BASE_URL`
+requests origin-relative paths — `/api/v1/status`, `/api/v1/integrations`, and
+`/api/v1/devices`, the three entries of `BENCH_CORE_PATHS`.
+`VITE_NILO_API_BASE_URL`
 is the endpoint the development server forwards `/api` to and the label the
 login screen shows, never a URL the browser fetches. This is what keeps the page
 and the backend one origin: an `Authorization` header is not CORS-safelisted, so
@@ -66,29 +74,46 @@ assets from Bench Core itself, where the same paths are already same-origin.
   forwards them from the development server, so no authenticated request is ever
   preflighted.
 - `REQ-TEST-76b94249` - answers from a mock built on the same contract the
-  production client parses, so the interface runs with no backend.
+  production client parses and routed by API path, so the interface runs with no
+  backend and one scenario can spoil a single resource.
+- `REQ-FUNC-539355e0` - requests the versioned integration inventory with the
+  entered bearer token and returns the scenario and each integration's identity,
+  display name, state, simulation flag, and operations as typed values.
+- `REQ-FUNC-72bffd89` - requests the versioned device inventory with the entered
+  bearer token and returns the scenario and each device's identity, owning
+  integration, display name, kind, availability, simulation flag, and
+  capabilities as typed values.
+- `REQ-UX-8fa0c15e` - presents the backend status, every integration with its
+  state, and every device with its owning integration and availability on one
+  authenticated screen.
+- `REQ-UX-afb79ae0` - states that an inventory is empty when the backend
+  legitimately returns no entries, rather than showing a failure.
+- `REQ-UX-8169ea1d` - names which resource returned an unusable response and
+  keeps the resources that were read successfully on screen.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    app["App shell: connection state and in-memory token"]
+    app["App shell: session state and in-memory token"]
     login["LoginScreen"]
     status["StatusPanel"]
+    inventory["InventoryPanel: integrations and devices"]
     env["config/environment: mode and base URL"]
-    client["api/client: BenchCoreClient"]
-    contract["api/contract: nilo.http/1 types and parser"]
-    mock["api/mock: contract-built scenarios"]
+    client["api/client: getStatus, getIntegrations, getDevices"]
+    contract["api/contract: nilo.http/1 types and parsers"]
+    mock["api/mock: path-routed contract scenarios"]
     proxy["Vite dev server: /api forwarding"]
-    backend["WSL2 Bench Core /api/v1/status"]
+    backend["WSL2 Bench Core /api/v1/status, /integrations, /devices"]
     app --> login
     app --> status
+    app --> inventory
     env --> client
     env -- "mock mode" --> mock
     client --> contract
     mock --> contract
     app --> client
-    client -- "live mode, same-origin /api/v1/status" --> proxy
+    client -- "live mode, same-origin /api/v1/*" --> proxy
     proxy -- "VITE_NILO_API_BASE_URL" --> backend
     client -- "mock mode" --> mock
 ```
@@ -96,8 +121,15 @@ flowchart LR
 `App` owns the whole conversation: the token it holds in state, and a session
 that is `unauthenticated`, `checking`, `connected`, or `failed`. Components
 never call the network themselves, and nothing outside `api/contract.ts` knows
-the wire field names. The integration and device inventory resources exist in
-the backend but have no client, mock, or view here yet.
+the wire field names.
+
+The three resources are requested concurrently on one token. A status that
+cannot be read settles the whole screen as `failed`, because without it neither
+the token nor the backend nor the contract can be trusted for anything else.
+Once the status is in, each inventory is carried as its own `Resource<T>` —
+value or failure — which is what lets an unusable integration inventory be told
+from an unusable device inventory while the status and the other inventory stay
+visible.
 
 ## Files
 
@@ -105,24 +137,30 @@ the backend but have no client, mock, or view here yet.
   dependency versions, transitive resolution, and integrity hashes.
 - `05_Software/nilo_gui/.env` and `.env.mock` - committed build-time endpoint
   configuration for the WSL2-backed and mock-only development modes.
-- `05_Software/nilo_gui/src/api/contract.ts` - the `nilo.http/1` constants,
-  status types, and body parser shared by the client and the mock.
-- `05_Software/nilo_gui/src/api/client.ts` - the typed client and
-  `BenchCoreError` with its three causes.
-- `05_Software/nilo_gui/src/api/mock.ts` - contract-built healthy, unauthorized,
-  unavailable, and malformed answers.
+- `05_Software/nilo_gui/src/api/contract.ts` - the `nilo.http/1` constants, the
+  three origin-relative resource paths, the status, integration and device
+  types, and the strict parsers shared by the client and the mock.
+- `05_Software/nilo_gui/src/api/client.ts` - the typed client's three resource
+  methods over one shared request, and `BenchCoreError` with its three causes.
+- `05_Software/nilo_gui/src/api/mock.ts` - path-routed, contract-built answers
+  for the eight development scenarios; the ready and unavailable inventories
+  reproduce the Go simulation catalog exactly.
 - `05_Software/nilo_gui/src/config/environment.ts` - environment reader,
   `GuiConfigurationError`, and the configured-client factory.
-- `05_Software/nilo_gui/src/App.tsx` - the shell: in-memory token, connection
-  state, persistent SIMULATION identity and boundary statement.
-- `05_Software/nilo_gui/src/components/LoginScreen.tsx` and `StatusPanel.tsx` -
-  the unauthenticated screen and the four post-submission screens.
+- `05_Software/nilo_gui/src/App.tsx` - the shell: in-memory token, the
+  concurrent three-resource request, session state, persistent SIMULATION
+  identity and boundary statement.
+- `05_Software/nilo_gui/src/components/LoginScreen.tsx`, `StatusPanel.tsx` and
+  `InventoryPanel.tsx` - the unauthenticated screen, the post-submission
+  screens, and the two inventory regions with their populated, empty and failed
+  states.
 - `05_Software/nilo_gui/src/App.css` and `src/index.css` - single-viewport
-  layout and the CSS custom properties every colour is expressed through.
+  layout, the inventory scroll compartment, and the CSS custom properties every
+  colour is expressed through.
 - `05_Software/nilo_gui/src/App.test.tsx`, `src/api/client.test.ts`,
-  `src/api/mock.test.ts`, `src/config/environment.test.ts`, and
-  `src/layout.test.ts` - the component, client, mock, configuration, and layout
-  tests.
+  `src/api/contract.test.ts`, `src/api/mock.test.ts`,
+  `src/config/environment.test.ts`, and `src/layout.test.ts` - the component,
+  client, path-contract, mock, configuration, and layout tests.
 - `05_Software/nilo_gui/src/test/setup.ts` - jest-dom matchers and the
   Testing Library cleanup Vitest does not register without injected globals.
 - `05_Software/nilo_gui/vite.config.ts` - local development server, the `/api`

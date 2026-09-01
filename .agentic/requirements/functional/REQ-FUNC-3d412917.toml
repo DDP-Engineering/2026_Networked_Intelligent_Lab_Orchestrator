@@ -38,7 +38,7 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-If a status request from the browser GUI is rejected as unauthorized, cannot reach the backend at all, or returns a body that does not match the supported versioned response contract, then the GUI's Bench Core client shall fail with a distinct machine-readable cause identifying which of those three conditions occurred.
+If any request the browser GUI makes to a Bench Core resource is rejected as unauthorized, cannot reach the backend at all, or returns a body that does not match the supported versioned response contract, then the GUI's Bench Core client shall fail with a distinct machine-readable cause identifying which of those three conditions occurred.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -49,13 +49,14 @@ If a status request from the browser GUI is rejected as unauthorized, cannot rea
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "Unit tests drive the client with stub transports that return an HTTP 401 response, that reject with a network error, and that return a body with a missing field, an unsupported API version, and non-JSON content, and assert the raised error carries the unauthorized cause, the unavailable cause, and the malformed cause respectively."
+verification = "Unit tests drive each of the client's resource methods with stub transports that return an HTTP 401 response, that reject with a network error, and that return a body with a missing field, an unsupported API version, and non-JSON content, and assert the raised error carries the unauthorized cause, the unavailable cause, and the malformed cause respectively, for the status resource and for both inventory resources."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
     "05_Software/nilo_gui/src/api/contract.ts",
     "05_Software/nilo_gui/src/api/client.ts",
     "05_Software/nilo_gui/src/api/client.test.ts",
+    "05_Software/nilo_gui/src/components/StatusPanel.tsx",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;

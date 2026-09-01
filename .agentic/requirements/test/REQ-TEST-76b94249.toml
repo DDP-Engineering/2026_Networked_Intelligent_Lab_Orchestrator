@@ -38,7 +38,7 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-The browser GUI shall provide a mock Bench Core transport whose healthy, unauthorized, unavailable, and malformed status answers are built from the same versioned response contract the production client parses, so that the interface can be developed and tested with no backend process running.
+The browser GUI shall provide a mock Bench Core transport that routes each request by its API path and answers the status, integration inventory, and device inventory resources from the same versioned response contract the production client parses, in a selectable scenario, so that the interface can be developed and tested with no backend process running.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -49,13 +49,15 @@ The browser GUI shall provide a mock Bench Core transport whose healthy, unautho
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "A test drives the production client over the mock transport in each scenario and asserts the healthy scenario parses into a simulation status with the contract's API version, profile, and build identity, and that the unauthorized, unavailable, and malformed scenarios raise exactly the client's corresponding failure causes; a further assertion confirms the mock declares no field the contract does not define."
+verification = "A test drives the production client's status, integration, and device methods over the mock transport in every selectable scenario and asserts that each resource is answered from its own path, that the ready and unavailable inventory scenarios parse into the states the simulation backend defines, that the empty scenario yields inventories with no entries, that the unauthorized, unreachable, and each unusable-response scenario raise exactly the client's corresponding failure causes for the resource they target, and that no mock body declares a field the contract does not define."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
     "05_Software/nilo_gui/src/api/mock.ts",
     "05_Software/nilo_gui/src/api/contract.ts",
     "05_Software/nilo_gui/src/api/mock.test.ts",
+    "05_Software/nilo_gui/.env.mock",
+    "05_Software/nilo_gui/README.md",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
