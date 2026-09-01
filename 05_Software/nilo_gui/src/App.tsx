@@ -1,6 +1,66 @@
-import './App.css';
+import { useCallback, useState } from 'react';
 
-function App() {
+import './App.css';
+import { BenchCoreError, type BenchCoreClient } from './api/client';
+import { LoginScreen } from './components/LoginScreen';
+import { StatusPanel, type Connection } from './components/StatusPanel';
+import type { ApiMode } from './config/environment';
+
+export interface AppProps {
+  /** The Bench Core client this session talks to. */
+  client: BenchCoreClient;
+  /** Whether that client reaches a real backend or the contract mock. */
+  apiMode: ApiMode;
+  /**
+   * The Bench Core endpoint to show the developer. Requests themselves are
+   * origin-relative and forwarded there, so this is a label, not a target.
+   */
+  endpoint: string;
+}
+
+type Session = { phase: 'unauthenticated' } | ({ token: string } & Connection);
+
+/**
+ * The NILO development shell.
+ *
+ * It owns the whole conversation with Bench Core: the bearer token, which is
+ * held in this component's state and nowhere else, and the connection state
+ * the panels render. Every screen keeps the SIMULATION identity and the
+ * physical-equipment boundary visible.
+ */
+function App({ client, apiMode, endpoint }: AppProps) {
+  const [session, setSession] = useState<Session>({ phase: 'unauthenticated' });
+
+  const requestStatus = useCallback(
+    async (token: string) => {
+      setSession({ token, phase: 'checking' });
+      try {
+        const status = await client.getStatus(token);
+        setSession({ token, phase: 'connected', status });
+      } catch (error) {
+        setSession(
+          error instanceof BenchCoreError
+            ? { token, phase: 'failed', failure: error.failure, detail: error.detail }
+            : {
+                token,
+                phase: 'failed',
+                failure: 'unavailable',
+                detail: error instanceof Error ? error.message : String(error),
+              },
+        );
+      }
+    },
+    [client],
+  );
+
+  const retry = useCallback(() => {
+    if (session.phase !== 'unauthenticated') {
+      void requestStatus(session.token);
+    }
+  }, [requestStatus, session]);
+
+  const reset = useCallback(() => setSession({ phase: 'unauthenticated' }), []);
+
   return (
     <div className="app-frame">
       <header className="topbar">
@@ -20,48 +80,27 @@ function App() {
       </header>
 
       <main className="workspace">
-        <section className="hero" aria-labelledby="workspace-title">
-          <p className="eyebrow">Development interface</p>
-          <h2 id="workspace-title">Frontend foundation is ready.</h2>
-          <p className="hero-copy">
-            The native Windows toolchain can now develop, test, and build NILO&apos;s
-            browser interface. Backend authentication and live bench data arrive in the
-            next slice.
-          </p>
-
-          <dl className="foundation-grid">
-            <div className="foundation-card foundation-card-ready">
-              <dt>Frontend</dt>
-              <dd>Ready</dd>
-              <p>React and TypeScript build locally from the locked repository.</p>
-            </div>
-            <div className="foundation-card">
-              <dt>Bench Core</dt>
-              <dd>Not connected</dd>
-              <p>This scaffold deliberately makes no backend request.</p>
-            </div>
-            <div className="foundation-card">
-              <dt>Equipment</dt>
-              <dd>Simulation only</dd>
-              <p>No physical electronics or automation network is contacted.</p>
-            </div>
-          </dl>
-        </section>
-
-        <aside className="next-step" aria-labelledby="next-step-title">
-          <span className="step-index" aria-hidden="true">
-            04
-          </span>
-          <div>
-            <p className="eyebrow">Next vertical slice</p>
-            <h2 id="next-step-title">Login and bench status</h2>
-            <p>
-              The next increment connects this shell to the authenticated simulation API
-              and renders integration and device state.
-            </p>
-          </div>
-        </aside>
+        {session.phase === 'unauthenticated' ? (
+          <LoginScreen
+            endpoint={endpoint}
+            onSubmit={(token) => void requestStatus(token)}
+          />
+        ) : (
+          <StatusPanel connection={session} onRetry={retry} onReset={reset} />
+        )}
       </main>
+
+      <footer className="boundary">
+        <p>
+          Simulation profile only — simulated results never represent evidence from
+          physical equipment.
+        </p>
+        <p className="mode-note">
+          {apiMode === 'mock'
+            ? 'Answers come from this interface’s own contract mock; no backend process is contacted.'
+            : 'Requests go to the configured Bench Core development endpoint.'}
+        </p>
+      </footer>
     </div>
   );
 }

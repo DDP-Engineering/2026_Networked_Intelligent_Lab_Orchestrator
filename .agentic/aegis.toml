@@ -38,6 +38,8 @@ tests = [
     "05_Software/tests/",
     "05_Software/scripts/",
     "05_Software/nilo_assistant/**/*_test.go",
+    "05_Software/nilo_gui/src/*.test.ts",
+    "05_Software/nilo_gui/src/*.test.tsx",
     "05_Software/nilo_gui/src/**/*.test.ts",
     "05_Software/nilo_gui/src/**/*.test.tsx",
 ]

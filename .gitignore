@@ -13,3 +13,7 @@ __pycache__/
 **/node_modules/
 **/coverage/
 **/dist/
+
+# Local frontend environment overrides are per-developer, never shared.
+**/.env.local
+**/.env.*.local

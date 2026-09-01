@@ -13,7 +13,7 @@ physical equipment.
 
 ## Task list
 
-### Slice 1 - Simulation backend and authenticated status
+### Slice 1 - Simulation backend and authenticated status (implemented)
 
 - Add `nilo serve --profile simulation` with explicit data and bind settings.
 - Restrict the simulation server to loopback addresses.
@@ -46,16 +46,21 @@ contacting equipment networks.
 Exit gate: a fresh supported Windows checkout can build and test the GUI using
 only repository bootstrap commands.
 
-### Slice 4 - GUI login and status shell
+### Slice 4 - GUI login and status shell (partly implemented)
 
-- Add the API client and authentication flow.
-- Add the application shell, service status, device list, and prominent
-  `SIMULATION` indicator.
+- Add the API client and authentication flow. (implemented)
+- Add the application shell, service status, and prominent `SIMULATION`
+  indicator. (implemented)
 - Add contract-validated mock scenarios for isolated component development.
-- Cover loading, unauthorized, unavailable, and healthy states.
+  (implemented for the status resource)
+- Cover loading, unauthorized, unavailable, malformed-response, and healthy
+  states. (implemented)
+- Add the integration and device inventory views. (outstanding)
 
 Exit gate: the Windows GUI works with both its contract mock and the real WSL2
-backend.
+backend. The backend status half of this gate is met; the inventory views that
+consume `/api/v1/integrations` and `/api/v1/devices` remain outstanding, so the
+slice is not closed.
 
 ### Slice 5 - One-command development lifecycle
 

@@ -295,16 +295,61 @@ run:
 .\02_Tools\bootstrap\bootstrap-frontend.ps1
 ```
 
-Start the current GUI scaffold from the repository root:
+Start the GUI against the WSL2 backend from the repository root:
 
 ```powershell
 .\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run dev
 ```
 
 Open `http://127.0.0.1:5173/` in the Windows browser. The page displays a
-prominent `SIMULATION` status and explicitly reports that Bench Core is not
-connected. This slice makes no API request; keep using the PowerShell calls in
-section 8.1 to exercise the backend until GUI authentication is implemented.
+prominent `SIMULATION` status in every state and a permanent statement that
+simulated results never represent evidence from physical equipment.
+
+Paste the `token` value printed by `nilo development issue-token` in section 8.1
+into the login field and select **Connect**. The GUI then calls
+`GET /api/v1/status` with that token as a bearer credential and displays the
+reported profile, service status, simulation flag, build version, API version,
+and integration protocol. The token is held in memory for that page only: it is
+never written to `localStorage`, `sessionStorage`, or a cookie, so reloading the
+page returns to the login screen.
+
+The GUI distinguishes five outcomes, each with its own screen: the request is in
+progress, the token was rejected, Bench Core was unreachable, Bench Core replied
+with a response this interface does not understand, and Bench Core reported its
+status.
+
+To develop the interface with no WSL2 backend at all, use mock mode:
+
+```powershell
+.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run dev:mock
+```
+
+Mock mode answers from the repository's own contract-aligned mock, accepts any
+non-empty token, and contacts nothing. Select which answer it gives by setting
+`VITE_NILO_MOCK_SCENARIO` to `healthy`, `unauthorized`, `unavailable`, or
+`malformed` in `05_Software/nilo_gui/.env.mock`, or in an ignored
+`.env.mock.local`.
+
+The endpoint itself comes from `05_Software/nilo_gui/.env`:
+`VITE_NILO_API_MODE` selects `live` or `mock`, and `VITE_NILO_API_BASE_URL` must
+match the `--bind` address passed to `nilo serve --profile simulation`
+(`http://127.0.0.1:8090` by default). Override either locally in an ignored
+`.env.local` rather than editing the committed defaults; an unrecognised value
+fails the startup with an explicit error naming the variable.
+
+The browser never addresses that endpoint directly. It requests origin-relative
+paths such as `/api/v1/status`, and the Vite development server forwards `/api`
+to `VITE_NILO_API_BASE_URL`. This is deliberate: an `Authorization` header is not
+CORS-safelisted, so a direct call from port 5173 to port 8090 would be
+preflighted, and the loopback simulation server answers no `OPTIONS` request and
+sends no CORS headers. Forwarding keeps one origin in development without giving
+Bench Core a cross-origin surface, and matches the appliance, where Bench Core
+serves the built assets itself. A `502` from the development server with
+`ECONNREFUSED` in its log means the WSL2 backend is not running or is bound to a
+different port.
+
+The GUI does not yet render the integration or device inventory; keep using the
+PowerShell calls in section 8.1 for those two endpoints.
 
 Run the complete focused frontend gate with:
 
@@ -337,9 +382,10 @@ The repository currently provides the Go foundation, SQLite stores, policy and
 session services, runner supervision, Python SDK, fake integration,
 contract/acceptance tests, a long-running authenticated simulation status API,
 deterministic integration and device inventory, a repository-local Windows
-Node.js toolchain, and a static browser GUI scaffold. The GUI does not yet
-authenticate or consume the backend, and the repository does not yet provide an
-MCP service.
+Node.js toolchain, and a browser GUI that authenticates with a development
+bearer token and displays the backend status. The GUI does not yet render the
+integration or device inventory, and the repository does not yet provide an MCP
+service.
 
 The existing Windows foundation gate is:
 
@@ -350,11 +396,13 @@ The existing Windows foundation gate is:
 `nilo serve-foundation-check` remains a short-lived composition check. `nilo
 serve --profile simulation` is the long-running development server.
 
-The environment bootstrap, backend flow, and frontend scaffold are executable
-now. The connected GUI application flow requires the remaining foundations:
+The environment bootstrap, backend flow, and the authenticated GUI status flow
+are executable now. The complete GUI application flow requires the remaining
+foundations:
 
-1. GUI authentication and the status/inventory API client;
-2. contract-validated mock scenarios;
+1. GUI integration and device inventory views over `/api/v1/integrations` and
+   `/api/v1/devices`;
+2. mock scenarios for those two inventory resources;
 3. browser end-to-end tests against WSL2.
 
 ## 11. Relationship to product delivery

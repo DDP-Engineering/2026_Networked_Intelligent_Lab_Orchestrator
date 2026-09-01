@@ -10,6 +10,10 @@
   --accent: #57d6cc;
   --success: #77df9a;
   --warning: #ffb547;
+  --warning-line: rgb(255 181 71 / 48%);
+  --warning-surface: rgb(255 181 71 / 8%);
+  --grid-line: rgb(87 214 204 / 4%);
+  --glow: rgb(40 109 112 / 18%);
   --font-mono:
     'Cascadia Code', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
 
@@ -27,18 +31,23 @@
   text-rendering: optimizeLegibility;
 }
 
+html,
+body {
+  height: 100dvh;
+  overflow: hidden;
+}
+
 * {
   box-sizing: border-box;
 }
 
 body {
   min-width: 20rem;
-  min-height: 100vh;
   margin: 0;
   background:
-    linear-gradient(rgb(87 214 204 / 4%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(87 214 204 / 4%) 1px, transparent 1px),
-    radial-gradient(circle at 75% 20%, rgb(40 109 112 / 18%), transparent 32rem),
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+    radial-gradient(circle at 75% 20%, var(--glow), transparent 32rem),
     var(--background);
   background-size:
     3.5rem 3.5rem,

@@ -36,7 +36,9 @@ class ToolchainBootstrapTests(unittest.TestCase):
             package["scripts"],
             {
                 "dev": "vite --host 127.0.0.1",
+                "dev:mock": "vite --host 127.0.0.1 --mode mock",
                 "build": "tsc -b && vite build",
+                "build:mock": "tsc -b && vite build --mode mock",
                 "format": "prettier --write .",
                 "format:check": "prettier --check .",
                 "lint": "eslint . --max-warnings 0",

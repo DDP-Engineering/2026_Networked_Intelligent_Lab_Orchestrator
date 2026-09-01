@@ -14,7 +14,7 @@ schema = 1
 # and must match the category folder this file sits in.
 id = "REQ-UX-188a4860"
 
-title = "Identify the simulation GUI scaffold"
+title = "Identify the GUI as simulation in every state"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
@@ -38,7 +38,7 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-When the initial browser GUI loads, the interface shall identify NILO as a development interface with a prominent persistent `SIMULATION` status.
+Whatever screen the browser GUI is showing, it shall identify NILO as a development interface with a prominent `SIMULATION` runtime status and a visible statement that simulated results never represent evidence from physical equipment.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -49,7 +49,7 @@ When the initial browser GUI loads, the interface shall identify NILO as a devel
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "A component test renders the application and asserts the NILO heading, development description, and visible SIMULATION status are exposed through accessible document semantics."
+verification = "Component tests render the application unauthenticated, while a status request is pending, after each failure outcome, and after a successful status response, and assert in every one of them that the accessible runtime-profile status reads SIMULATION, that the NILO development identity is exposed through accessible document semantics, and that the physical-equipment boundary statement is visible."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
