@@ -41,7 +41,7 @@ Refresh after work or decisions even if current has not changed.
 
 # TASK-8fd83f88 — Add GUI integration and device inventory
 
-stage: deliver
+stage: done
 type: feature
 path: full
 requirements: REQ-FUNC-539355e0, REQ-FUNC-72bffd89, REQ-UX-8fa0c15e, REQ-UX-afb79ae0, REQ-UX-8169ea1d, REQ-FUNC-3d412917, REQ-SEC-ed66f6ed, REQ-UX-0018c647, REQ-UX-66636ac9, REQ-UX-188a4860, REQ-PLAT-b55586c0, REQ-PLAT-f852c5b2, REQ-TEST-76b94249
@@ -56,8 +56,8 @@ opened: 2026-09-01
 - [x] validation evidence, diff, exclusions, and outcome presented
 - [x] delivery confirmed by the human
 - [x] journal and report included in the delivery commit
-- [ ] agreed outcome delivered, normally a PR
-- [ ] close-out committed after the outcome succeeded, or carried by the delivery commit where nothing could fail after it
+- [x] agreed outcome delivered, normally a PR
+- [x] close-out committed after the outcome succeeded, or carried by the delivery commit where nothing could fail after it
 
 ## Log
 
@@ -138,6 +138,13 @@ opened: 2026-09-01
 - 2026-09-01 deliver: the delivery commit also carries TASK-524e8dde's close-out; that task's outcome, a commit pushed to `origin`, had already succeeded, so nothing can fail after this commit for it and its close-out item is ticked here rather than deferred to a further commit.
 - 2026-09-01 deliver: this task's own close-out stays unticked until its outcome succeeds, because the repository delivers by pushing `master` to `origin` and a push can fail after the commit; a small close-out commit follows the push.
 - 2026-09-01 deliver: ran `python .agentic/aegis.py report TASK-8fd83f88`; the appended report is a fresh report-time advisory snapshot and does not replace the validation evidence above.
+- 2026-09-01 deliver: the human made the delivery commit and the push manually rather than through this workflow, so the session that presented the candidate ended before its own checklist could be ticked; commit 89aba98 is that delivery and it was already pushed when the next session opened.
+- 2026-09-01 deliver: reconciled the approved candidate against the commit that carries it before ticking anything - `git diff --name-status 2cf1a2a 89aba98` lists exactly the 35 tracked paths recorded as staged, file for file, with no path added and none missing, and `git diff --shortstat` reports 35 files changed, 4117 insertions, 371 deletions.
+- 2026-09-01 deliver: verified the line-ending fix survived into history - every one of the five new requirement blobs in 89aba98 contains 0 CR bytes, matching the proof recorded at validate.
+- 2026-09-01 deliver: accounted for the one number that did not match rather than ignoring it - the delivery report says 36 files while the commit has 35, because `collect_diff` in `.agentic/aegis.py` appends untracked non-ignored files to its list and `00_Planning/TODO.md` was the 36th; the same mechanism confirms TODO.md was excluded from the commit, and it is still untracked and unmodified.
+- 2026-09-01 deliver: the agreed outcome succeeded - `git rev-parse HEAD origin/master` reports 89aba98 for both, so the push this task deferred its close-out for has completed.
+- 2026-09-01 deliver: TASK-524e8dde's close-out rode on this commit as planned and its journal reads `stage: done` in 89aba98.
+- 2026-09-01 done: closed out on the evidence above, without rewriting or amending 89aba98; per `6_deliver.md` step 7 the close-out for a push-delivered task needs a later commit, so this journal edit is carried by the delivery of TASK-8a4ba5da and is presented there as part of that task's staged files.
 
 ## Design
 
@@ -226,22 +233,22 @@ Modified: `src/api/contract.ts`, `src/api/client.ts`, `src/api/mock.ts`,
 
 ## Handoff
 
-current: deliver
-status: waiting
-next: Present the re-proven candidate and wait for the human's approval before committing anything.
-must_read: .agentic/steps/6_deliver.md, .agentic/tasks/TASK-8fd83f88.md
-blockers: delivery approval not yet given; TASK-524e8dde's close-out rides on the same approval
+current: done
+status: ready
+next: Nothing; this task is closed and its close-out edit ships with TASK-8a4ba5da's delivery commit.
+must_read: .agentic/tasks/TASK-8fd83f88.md
+blockers: none
 
 ## Stage report
 
-stage: validate
+stage: deliver
 result: completed
-current: deliver
-changed: 25 tracked files changed against commit 2cf1a2a (2041 insertions, 370 deletions) plus 10 untracked files to add - the GUI wire contract and its strict inventory parsers, the two new client methods, the path-routed mock, the new inventory panel, the status panel and shell, the single-viewport stylesheet, six test files, five new requirement files plus eight updated ones, this journal with its anchor and evolution records, the GUI knowledge page, and the GUI README, development-flow and vertical-slice documentation; `00_Planning/TODO.md` stays untracked and excluded
+current: done
+changed: delivered as commit 89aba98 - 35 tracked files changed against commit 2cf1a2a (4117 insertions, 371 deletions), the exact path set recorded as staged; the only later change is this journal's close-out, which ships with TASK-8a4ba5da. Previously recorded at validate: 25 tracked files changed against commit 2cf1a2a (2041 insertions, 370 deletions) plus 10 untracked files to add - the GUI wire contract and its strict inventory parsers, the two new client methods, the path-routed mock, the new inventory panel, the status panel and shell, the single-viewport stylesheet, six test files, five new requirement files plus eight updated ones, this journal with its anchor and evolution records, the GUI knowledge page, and the GUI README, development-flow and vertical-slice documentation; `00_Planning/TODO.md` stays untracked and excluded
 evidence: `.\02_Tools\env\with-tools.ps1 python .agentic/aegis.py check --task TASK-8fd83f88 --strict --run` exit=0 on the normalised candidate, run test ok 17.8s, run lint ok 6.2s, strict ok, errors=0 warnings=0 notes=0; `git diff --cached --check` exits 0 with no flagged lines and `tr -cd '\r' | wc -c` counts 0 CR bytes in every staged blob; `npm --prefix ./05_Software/nilo_gui run test:ci` exit=0 with 113 tests in 7 files, up from 43 in 6; `format:check`, `lint` and `build` each exit=0 with a 207.03 kB bundle; a live browser session against WSL2 Bench Core in both the healthy and unavailable scenarios, plus mock mode and a malformed-devices mock, all recorded in the log as manual integration evidence
-issues: the reported P2 is fixed and re-proven - the five new requirement files were CRLF because a build-stage helper used Python text-mode writes, and they are now LF like every other file; two build deviations stand - the widened REQ-PLAT-f852c5b2 and the environment-level REQ-PLAT-b55586c0 assertions passed without a red of their own, and a manual browser session stands in for the automated browser gate slice 6 owes; two validate deviations stand - the browser pane never composited, so screenshots were unavailable and the mock-mode login needed a real DOM click from the console, and the live evidence is therefore drawn from the accessibility tree, page text and network log; separately, TASK-524e8dde's close-out commit is still owed and rides on this approval
-next: Present the candidate and wait for delivery approval; commit nothing before it
-needs_user: yes - explicit approval is required before the delivery commit, and the user asked to see the implementation, the screens, the exact commands, every result, the deviations, the staged files, the proposed message, and what slices 5 and 6 still owe
+issues: the reported P2 is fixed and re-proven - the five new requirement files were CRLF because a build-stage helper used Python text-mode writes, and they are now LF like every other file; two build deviations stand - the widened REQ-PLAT-f852c5b2 and the environment-level REQ-PLAT-b55586c0 assertions passed without a red of their own, and a manual browser session stands in for the automated browser gate slice 6 owes; two validate deviations stand - the browser pane never composited, so screenshots were unavailable and the mock-mode login needed a real DOM click from the console, and the live evidence is therefore drawn from the accessibility tree, page text and network log; TASK-524e8dde's close-out rode on commit 89aba98 and is no longer owed; this task's own close-out is recorded here and ships with TASK-8a4ba5da
+next: Nothing; the close-out edit is carried by TASK-8a4ba5da's delivery
+needs_user: no - the human approved delivery, made commit 89aba98 and pushed it manually, and that outcome is verified complete; nothing further is asked of them for this task
 spec_compliance: disabled
 implementation_quality: disabled
 review_round:

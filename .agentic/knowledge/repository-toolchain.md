@@ -35,6 +35,27 @@ and SHA-256 checksums.
   toolchain from Windows.
 - `REQ-TEST-031b1658` - routes frontend format, lint, unit-test, and build
   commands through the repository validation entry point on Windows.
+- `REQ-FUNC-d05e1128` - offers `start` and `status` for the local development
+  topology from one Windows entry point, with explicit distribution, scenario
+  and port options.
+- `REQ-FUNC-d161146d` - reports a successful start only once both components
+  answer, and names the silent one on a readiness timeout.
+- `REQ-FUNC-645b9d0c` - starts only the components that are not already
+  answering.
+- `REQ-UX-4f1d3604` - classifies the topology as stopped, healthy, partially
+  running or port conflict, from endpoint answers rather than processes.
+- `REQ-UX-1f854bdc` - prints the endpoints, the selection, the token-issuance
+  command, the status command, and how to stop each component.
+- `REQ-UX-09865d40` - opens a browser only when explicitly asked to.
+- `REQ-SEC-e0462d41` - never writes a plaintext bearer token to its output or
+  to any file.
+- `REQ-REL-8c82d667` - reports a port held by an unowned process and starts
+  nothing, without ever signalling that process.
+- `REQ-PLAT-5360be1a` - keeps Bench Core runtime state on the WSL Linux
+  filesystem, refusing a Windows drive mount.
+- `REQ-PLAT-022e39b0` - reports each outcome through its own exit code.
+- `REQ-TEST-daa9a99d` - exposes the WSL, endpoint, port, launcher and browser
+  boundaries as injectable options so tests open no window and bind no port.
 
 ## Architecture
 
@@ -72,11 +93,26 @@ flowchart TD
     gui_lock --> frontend_bootstrap
     npm_cache --> frontend_bootstrap
     frontend_bootstrap --> static_assets
+    lifecycle(["nilo-dev start/status"])
+    backend_window(["Bench Core window under WSL2"])
+    frontend_window(["interface window on Windows"])
+    wsl_data[("WSL-native runtime data")]
+    lifecycle --> wrapper
+    lifecycle --> backend_window
+    lifecycle --> frontend_window
+    backend_window --> wsl_data
 ```
 
 The scripts modify environment variables only in their child process. The
 frontend bootstrap restores locked dependencies and can produce static assets;
 it does not package the Raspberry Pi appliance.
+
+The lifecycle entry point starts the topology those scripts prepared, each
+component in its own visible console window, and answers whether the endpoints
+are responding. It has no arrow to any stored state on purpose: it keeps no
+metadata, tracks no process, and signals nothing, so a developer stops a
+component by closing its window. Bench Core's database and artifacts are the
+only durable state, and they live on the WSL Linux filesystem.
 
 ## Files
 
@@ -101,10 +137,20 @@ it does not package the Raspberry Pi appliance.
   exact-version verification.
 - `02_Tools/scripts/doctor-wsl.ps1` - Windows-side combined WSL2 and Linux-tool
   diagnosis.
-- `02_Tools/README.md` - usage, support, cache, and offline-kit guidance.
+- `02_Tools/scripts/nilo-dev.ps1` - the `start` and `status` entry point, its
+  option surface, and its exit-code contract.
+- `02_Tools/lib/DevLifecycle.ps1` - endpoint-based state classification, shell,
+  PowerShell and Windows command-line quoting, listening-socket parsing,
+  WSL-native data directory resolution, and the real endpoint, port, launcher
+  and browser boundaries.
+- `02_Tools/README.md` - usage, support, cache, offline-kit, lifecycle option,
+  and exit-code guidance.
 - `05_Software/scripts/aegis_test.py` - Go, Python, integration, and Windows
   frontend suite discovery that excludes generated environments and outputs.
 - `05_Software/scripts/tests/test_toolchain_bootstrap.py` - manifest,
   non-global bootstrap, WSL safety, orchestration, and diagnostic contract
   tests.
+- `05_Software/scripts/tests/test_development_lifecycle.py` - lifecycle command,
+  option, readiness, conflict, quoting and reporting tests, driven entirely
+  through injected boundaries.
 - `.gitignore` - runtime, cache, and generated-artifact exclusions.

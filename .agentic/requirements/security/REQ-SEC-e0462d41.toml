@@ -1,0 +1,71 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+# One requirement = one independently verifiable behavior.
+# Lives at .agentic/requirements/<category>/<id>.toml
+# Required fields: schema, id, title, status, requirement, verification.
+
+schema = 1
+
+# REQ-<CAT>-<8 hex>. CAT is FUNC, UX, NFR, SEC, DATA, PLAT, REL or TEST,
+# and must match the category folder this file sits in.
+id = "REQ-SEC-e0462d41"
+
+title = "Keep the development bearer token out of lifecycle state and logs"
+
+# draft while being written, active once it is built and tested,
+# retired when the behavior is deliberately removed.
+status = "active"
+
+# Self-contained prose: a reader with no other context must be able to
+# understand and check it. No ticket numbers, no run IDs, no references
+# to other requirements.
+#
+# Recommended shape - EARS. Pick the one pattern that fits; a stated
+# trigger or condition is what the test has to arrange, so surfacing it
+# here is what makes the behavior testable:
+#
+#   ubiquitous  The <system> shall <response>.
+#   event       When <trigger>, the <system> shall <response>.
+#   state       While <state>, the <system> shall <response>.
+#   unwanted    If <condition>, then the <system> shall <response>.
+#   optional    Where <feature is included>, the <system> shall <response>.
+#
+# Two "shall" clauses means two behaviors: split it into two requirements.
+# Do not contort prose to fit a pattern - a constraint that reads better
+# plainly is better plainly.
+requirement = """
+The development lifecycle command shall never write a plaintext bearer token into its output or into any file, and shall instead print the command a developer runs to issue a token for themselves.
+"""
+
+# The observation that settles whether the behavior holds — not a
+# restatement of the requirement.
+verification = "An automated test reads the lifecycle sources and confirms they never invoke the token-issuing command, then runs start and status against injected boundaries and confirms the printed token-issuance command is present while no token value appears in the output and no file is written into the repository."
+
+# Repo-relative, forward slashes. The source files this behavior lives in.
+affected_paths = [
+    "02_Tools/scripts/nilo-dev.ps1",
+    "02_Tools/lib/DevLifecycle.ps1",
+    "05_Software/scripts/tests/test_development_lifecycle.py",
+]
+
+# "tests/path/test_file.py::test_name" entries. Kept current during build;
+# these select the impacted regression set.
+linked_tests = [
+    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_the_lifecycle_writes_no_files_into_the_repository",
+    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_token_command_uses_the_translated_checkout_path",
+]
+
+# --- optional below this line ---
+
+# "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "A token captured for convenience would outlive the session in a file or a scrollback buffer, which is exactly the persistence the browser interface was built to avoid."
+
+created = 2026-09-01
+updated = 2026-09-01

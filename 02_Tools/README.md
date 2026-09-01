@@ -115,6 +115,75 @@ The combined development bootstrap invokes this step automatically. Use
 Direct GUI commands use `npm.cmd` through the tool wrapper to avoid relying on
 PowerShell script execution policy.
 
+## One-command development lifecycle
+
+Once both toolchains are bootstrapped, the local topology - the Go Bench Core
+under WSL2 on the simulation profile, and the browser interface development
+server on native Windows - starts from one entry point:
+
+```powershell
+.\02_Tools\scripts\nilo-dev.ps1 start
+.\02_Tools\scripts\nilo-dev.ps1 status
+```
+
+Each component is launched into **its own visible console window**. Its output
+is in that window, and you stop it by pressing Ctrl+C there or closing it.
+
+This command supervises nothing. It records no process identifiers, keeps no
+state files anywhere in the repository, and never signals or terminates a
+process. That is deliberate: owning long-lived processes across Windows and a
+WSL2 distribution means handling identifier reuse and process trees in two
+operating system namespaces, and a command that terminates nothing cannot
+terminate the wrong thing. There is no `stop` and no `logs` command, because
+closing a window and reading a window replace both.
+
+| Option | Applies to | Default | Meaning |
+| --- | --- | --- | --- |
+| `-Distribution <name>` | both | the only installed distribution | WSL2 distribution running Bench Core |
+| `-Scenario <healthy\|unavailable>` | `start` | `healthy` | deterministic simulation scenario |
+| `-BackendPort <1-65535>` | both | `8090` | Bench Core loopback port |
+| `-FrontendPort <1-65535>` | both | `5173` | interface development-server port |
+| `-OpenBrowser` | `start` | off | open the interface once it is answering |
+| `-ReadyTimeoutSeconds <n>` | `start` | `180` | how long to wait for each component |
+| `-WslExecutable <path>` | both | `wsl.exe` | injected WSL boundary, for tests |
+| `-BoundaryScript <path>` | both | none | injected endpoint, port, launcher and browser boundaries, for tests |
+
+The default readiness wait is 180 seconds because the first start compiles the
+Go backend, which can take well over a minute on a cold build cache.
+
+`start` reports success only once Bench Core answers on its loopback endpoint
+and the interface answers on its port. It starts only what is not already
+answering, so running it twice is harmless and running it against a half-up
+topology completes it rather than duplicating it. It prints the endpoints, the
+selected distribution and scenario, the exact command that issues a development
+bearer token, and how to stop each component. It never issues, stores, or prints
+a token itself.
+
+A port that is held while its component does not answer is reported as a
+conflict, naming the port and the holding process, and nothing is started. That
+process is left running.
+
+`status` reports `healthy`, `partially running`, `stopped`, or `port conflict`,
+decided purely from what the endpoints answer. Bench Core is recognised by a
+`401` to an unauthenticated status request, which proves it is Bench Core
+without this command ever holding a token.
+
+Exit codes, for automation:
+
+| Code | Meaning |
+| --- | --- |
+| `0` | the command succeeded, or `status` found the topology healthy |
+| `1` | an unexpected failure |
+| `2` | a usage error |
+| `3` | a port conflict with a process this command does not own |
+| `4` | the topology is stopped |
+| `5` | the topology is partially running, or a start did not become ready |
+
+Bench Core's SQLite database, artifacts, and other product runtime state are
+kept on the WSL Linux filesystem under `$HOME/.local/state/nilo-development/`,
+never under `/mnt/`. A distribution whose home directory resolves to a Windows
+drive mount is refused and nothing is started.
+
 ## WSL2 development support
 
 - `bootstrap/setup-wsl.ps1` checks the selected distribution and requests

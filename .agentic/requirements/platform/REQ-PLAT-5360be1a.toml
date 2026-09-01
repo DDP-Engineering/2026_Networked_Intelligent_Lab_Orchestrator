@@ -1,0 +1,72 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+# One requirement = one independently verifiable behavior.
+# Lives at .agentic/requirements/<category>/<id>.toml
+# Required fields: schema, id, title, status, requirement, verification.
+
+schema = 1
+
+# REQ-<CAT>-<8 hex>. CAT is FUNC, UX, NFR, SEC, DATA, PLAT, REL or TEST,
+# and must match the category folder this file sits in.
+id = "REQ-PLAT-5360be1a"
+
+title = "Keep Bench Core runtime state on the WSL Linux filesystem"
+
+# draft while being written, active once it is built and tested,
+# retired when the behavior is deliberately removed.
+status = "active"
+
+# Self-contained prose: a reader with no other context must be able to
+# understand and check it. No ticket numbers, no run IDs, no references
+# to other requirements.
+#
+# Recommended shape - EARS. Pick the one pattern that fits; a stated
+# trigger or condition is what the test has to arrange, so surfacing it
+# here is what makes the behavior testable:
+#
+#   ubiquitous  The <system> shall <response>.
+#   event       When <trigger>, the <system> shall <response>.
+#   state       While <state>, the <system> shall <response>.
+#   unwanted    If <condition>, then the <system> shall <response>.
+#   optional    Where <feature is included>, the <system> shall <response>.
+#
+# Two "shall" clauses means two behaviors: split it into two requirements.
+# Do not contort prose to fit a pattern - a constraint that reads better
+# plainly is better plainly.
+requirement = """
+When the development lifecycle command starts Bench Core inside the WSL2 distribution, it shall pass a data directory that resolves to a path on the WSL Linux filesystem and never to a path under a Windows drive mount, so that the SQLite database, artifacts, and other product runtime state are written outside the shared Windows checkout.
+"""
+
+# The observation that settles whether the behavior holds — not a
+# restatement of the requirement.
+verification = "An automated test runs the start command against a stand-in distribution launcher that records every argument, and confirms the recorded data directory argument begins with a Linux home path and not with a Windows drive mount prefix; a second run whose home directory resolves under a mount confirms the command refuses it and launches nothing; a third run whose distribution emits a diagnostic line alongside the path confirms the diagnostic does not become part of the data directory."
+
+# Repo-relative, forward slashes. The source files this behavior lives in.
+affected_paths = [
+    "02_Tools/scripts/nilo-dev.ps1",
+    "02_Tools/lib/DevLifecycle.ps1",
+    "05_Software/scripts/tests/test_development_lifecycle.py",
+]
+
+# "tests/path/test_file.py::test_name" entries. Kept current during build;
+# these select the impacted regression set.
+linked_tests = [
+    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_backend_data_directory_is_linux_native",
+    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_a_windows_mounted_home_is_refused",
+    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_a_diagnostic_line_from_wsl_does_not_corrupt_the_data_directory",
+]
+
+# --- optional below this line ---
+
+# "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "A live SQLite database on the DrvFS Windows mount has different locking and permission semantics from the Linux filesystem an appliance uses, so development would exercise behavior the product never sees."
+
+created = 2026-09-01
+updated = 2026-09-01

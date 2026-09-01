@@ -249,6 +249,68 @@ Exact application-server, GUI, and port defaults will be added only when their
 corresponding interfaces are implemented. Documentation must not present a
 planned application command as currently executable.
 
+### 8.0 One-command lifecycle
+
+The whole topology now starts from one Windows entry point, which runs Bench
+Core under WSL2 and the interface development server on Windows. Stopping is
+manual: each component gets its own window, and you close it or press Ctrl+C
+there. The entry point never signals a process, so there is no `stop` command:
+
+```powershell
+.\02_Tools\scripts\nilo-dev.ps1 start
+```
+
+Each component is launched into **its own visible console window**. Its output
+is in that window, and you stop it by pressing Ctrl+C there or by closing it.
+There is no `stop` command and no `logs` command, because closing a window and
+reading a window replace both.
+
+A successful start prints the backend endpoint, the browser URL, the selected
+distribution and scenario, the exact command that issues a development token,
+and the exact command that reports status again. It reports success only once
+Bench Core answers on its loopback endpoint and the interface answers on its
+port. Select the topology explicitly when the defaults do not suit:
+
+```powershell
+.\02_Tools\scripts\nilo-dev.ps1 start -Distribution Ubuntu-24.04 -Scenario unavailable -BackendPort 9090 -FrontendPort 5200
+```
+
+Check it again at any time:
+
+```powershell
+.\02_Tools\scripts\nilo-dev.ps1 status
+```
+
+`status` reports one of stopped, healthy, partially running, or port conflict,
+decided purely from what the two endpoints answer, and each state has its own
+exit code so an automated caller can tell them apart. The full option and
+exit-code tables are in `02_Tools/README.md`.
+
+The command deliberately supervises nothing. It records no process identifiers,
+keeps no state files anywhere in the repository, and never signals or terminates
+a process. Owning long-lived processes across Windows and a WSL2 distribution
+means handling identifier reuse and process trees in two operating system
+namespaces, and a development convenience that terminates nothing cannot
+terminate the wrong thing. `start` therefore starts only what is not already
+answering, so running it twice is harmless and running it against a half-up
+topology completes it rather than duplicating it.
+
+A port that is held while its component does not answer is reported as a
+conflict naming the port and the holding process, and nothing is started; that
+process is left running.
+
+Bench Core's SQLite database and artifacts are written to
+`$HOME/.local/state/nilo-development/<instance>` inside the distribution, never
+under `/mnt/`, and a home directory that resolves to a Windows drive mount is
+refused rather than used.
+
+The command never issues, stores, or prints a bearer token. It prints the
+`nilo development issue-token` command, already carrying the right data
+directory, and the developer runs it.
+
+The manual commands in sections 8.1 and 8.2 remain correct and are still the
+right tool for driving one component on its own.
+
 ### 8.1 Current backend-only workflow
 
 From a WSL2 shell, use the shared source checkout but keep state in Linux:

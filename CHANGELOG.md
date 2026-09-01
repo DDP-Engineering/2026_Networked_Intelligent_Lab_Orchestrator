@@ -5,6 +5,13 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ## [Unreleased]
 
+### Added
+
+- One-command Windows development start, `02_Tools/scripts/nilo-dev.ps1
+  start|status`, which brings up Bench Core under WSL2 and the browser
+  interface on Windows, each in its own window, and reports whether they
+  answer. It supervises nothing and never signals a process.
+
 ## [0.1.0] - 2026-09-01
 
 ### Added

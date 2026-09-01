@@ -1,0 +1,71 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+# One requirement = one independently verifiable behavior.
+# Lives at .agentic/requirements/<category>/<id>.toml
+# Required fields: schema, id, title, status, requirement, verification.
+
+schema = 1
+
+# REQ-<CAT>-<8 hex>. CAT is FUNC, UX, NFR, SEC, DATA, PLAT, REL or TEST,
+# and must match the category folder this file sits in.
+id = "REQ-UX-4f1d3604"
+
+title = "Classify the development topology lifecycle state"
+
+# draft while being written, active once it is built and tested,
+# retired when the behavior is deliberately removed.
+status = "active"
+
+# Self-contained prose: a reader with no other context must be able to
+# understand and check it. No ticket numbers, no run IDs, no references
+# to other requirements.
+#
+# Recommended shape - EARS. Pick the one pattern that fits; a stated
+# trigger or condition is what the test has to arrange, so surfacing it
+# here is what makes the behavior testable:
+#
+#   ubiquitous  The <system> shall <response>.
+#   event       When <trigger>, the <system> shall <response>.
+#   state       While <state>, the <system> shall <response>.
+#   unwanted    If <condition>, then the <system> shall <response>.
+#   optional    Where <feature is included>, the <system> shall <response>.
+#
+# Two "shall" clauses means two behaviors: split it into two requirements.
+# Do not contort prose to fit a pattern - a constraint that reads better
+# plainly is better plainly.
+requirement = """
+When a developer runs the development status command, the command shall name the state of the local topology as exactly one of stopped, healthy, partially running, or port conflict, deciding from what each component endpoint answers rather than from the existence of any process, and shall report for each component whether it is answering.
+"""
+
+# The observation that settles whether the behavior holds — not a
+# restatement of the requirement.
+verification = "An automated test drives the classification with an injected probe once per state: neither endpoint answering, both answering, exactly one answering, and a wanted port held by a process while the endpoint does not answer; each run must report the matching state name and no other, and must report each component answering state separately."
+
+# Repo-relative, forward slashes. The source files this behavior lives in.
+affected_paths = [
+    "02_Tools/scripts/nilo-dev.ps1",
+    "02_Tools/lib/DevLifecycle.ps1",
+    "05_Software/scripts/tests/test_development_lifecycle.py",
+]
+
+# "tests/path/test_file.py::test_name" entries. Kept current during build;
+# these select the impacted regression set.
+linked_tests = [
+    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_status_classifies_from_what_the_endpoints_answer",
+    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_a_backend_that_answers_something_else_is_not_accepted",
+]
+
+# --- optional below this line ---
+
+# "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "A developer needs to tell a half-up topology from a stopped one, and both from a port another program is holding; answering is also the only thing that matters, since a process that exists but does not serve is of no use."
+
+created = 2026-09-01
+updated = 2026-09-01

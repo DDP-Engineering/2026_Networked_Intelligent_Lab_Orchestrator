@@ -68,15 +68,27 @@ That live session is manual integration evidence recorded in the task journal,
 not an automated gate. Slice 6 still owes the browser end-to-end tests that make
 this path part of the repository gate.
 
-### Slice 5 - One-command development lifecycle
+### Slice 5 - One-command development start
 
-- Add Windows entry points for start, stop, status, and logs.
-- Keep SQLite, artifacts, and runtime state on the WSL Linux filesystem.
-- Detect port conflicts and stale processes without killing unrelated work.
-- Print the browser URL and the commands needed for diagnosis.
+- Add one Windows entry point, `02_Tools/scripts/nilo-dev.ps1`, offering `start`
+  and `status`.
+- Launch each component into its own visible console window; the developer
+  stops one by pressing Ctrl+C in it or closing it.
+- Keep SQLite, artifacts, and runtime state on the WSL Linux filesystem; refuse
+  a home directory that resolves under `/mnt/`.
+- Detect a port held by unrelated work, report it, and start nothing.
+- Print the browser URL, the token-issuance command, and the status command; no
+  token is ever stored or printed.
 
-Exit gate: a developer can reliably start and stop the complete local topology
-from PowerShell.
+The slice deliberately does **not** supervise processes. It records no process
+identifiers, keeps no lifecycle state in the repository, and never signals or
+terminates anything, so there is no `stop` and no `logs` command. Owning
+long-lived processes across Windows and a WSL2 distribution means handling
+identifier reuse and process trees in two namespaces; a development convenience
+that terminates nothing cannot terminate the wrong thing.
+
+Exit gate: a developer can bring the whole local topology up from PowerShell in
+one command and see, from that same command, whether it is answering.
 
 ### Slice 6 - Cross-component browser verification
 
