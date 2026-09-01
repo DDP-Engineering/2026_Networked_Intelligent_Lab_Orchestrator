@@ -11,3 +11,6 @@ appliance platform.
 
 Repository-local setup, verification, deployment, and runtime-tool guidance
 lives in [02_Tools/README.md](02_Tools/README.md).
+
+The repository carries one project-level Semantic Version, declared in the root
+[VERSION](VERSION) file and recorded in [CHANGELOG.md](CHANGELOG.md).

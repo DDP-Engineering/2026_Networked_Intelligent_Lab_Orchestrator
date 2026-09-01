@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"nilo.local/nilo/internal/buildinfo"
 	"nilo.local/nilo/internal/store/sqlite"
 )
 
@@ -243,7 +244,7 @@ func TestNiloCLIContract(t *testing.T) {
 	if err := json.Unmarshal(output, &info); err != nil {
 		t.Fatalf("decode nilo version output: %v", err)
 	}
-	if info.Name != "nilo" || info.Version != "0.1.0-dev" || info.IntegrationProtocol != "nilo.integration/1" {
+	if info.Name != "nilo" || info.Version != buildinfo.Version || info.IntegrationProtocol != "nilo.integration/1" {
 		t.Fatalf("unexpected build information: %#v", info)
 	}
 

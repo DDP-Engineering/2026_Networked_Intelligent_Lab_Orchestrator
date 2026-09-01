@@ -28,7 +28,7 @@ Successful status response:
   "simulation": true,
   "build": {
     "name": "nilo",
-    "version": "0.1.0-dev",
+    "version": "0.1.0",
     "integration_protocol": "nilo.integration/1"
   }
 }

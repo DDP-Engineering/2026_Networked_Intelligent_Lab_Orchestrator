@@ -50,6 +50,41 @@ in review.
 
 <!-- AEGIS:END -->
 
+## Versioning and changelog rules
+
+The repository carries one project-level Semantic Version covering the Go Bench
+Core, the integrations, the GUI, and the tooling together. Components are not
+versioned separately.
+
+- The root `VERSION` file is the single canonical declaration. Two mirrors must
+  match it: the `Version` literal in
+  `05_Software/nilo_assistant/internal/buildinfo/buildinfo.go`, which is what
+  `nilo version` and the HTTP status build block report, and the `version`
+  field in `05_Software/nilo_gui/package.json` and its lockfile. The buildinfo
+  mirror is enforced by a test; the rest are not.
+- Assigning a version and building a release are repository operations, not
+  AEGIS work: do not open a task journal for them and do not run the stages
+  over them. The implementation a release carries is journaled; the release
+  itself is not.
+- The root `CHANGELOG.md` is the canonical record of project updates. Accrue
+  changes under `## [Unreleased]` using Keep a Changelog sections (Added,
+  Changed, Fixed, Removed).
+- Keep entries short. One or two lines each: what changed, and why only when
+  the why is not obvious from the what. No rationale essays and no restating
+  the implementation - those belong in the task journal and the knowledge page.
+  A reader scans a changelog; they do not study it.
+- When the user gives a command such as "assign a version to the changelog", in
+  the same change:
+  1. roll `## [Unreleased]` into a new dated `## [x.y.z] - YYYY-MM-DD` section
+     in `CHANGELOG.md`, leaving `## [Unreleased]` in place and empty;
+  2. write that same `x.y.z` to the root `VERSION` file and mirror it into
+     `buildinfo.go`, `package.json`, and `package-lock.json`;
+  3. update every document that states the version in prose.
+- Use Semantic Versioning: MAJOR for breaking changes to the integration wire
+  protocol, package manifest format, CLI, HTTP API, or on-disk state layout;
+  MINOR for backward-compatible capabilities; PATCH for fixes with no contract
+  change. While MAJOR is `0`, a breaking change bumps MINOR.
+
 ## Repository environment tools
 
 Keep repository-local setup, environment, validation, deployment, and
