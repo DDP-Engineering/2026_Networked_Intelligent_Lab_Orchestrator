@@ -38,7 +38,7 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-When a developer bootstraps a supported NILO source checkout, the repository shall provide checksum-verified pinned Go, uv, and managed Python tools without changing the host's persistent PATH or requiring a system-wide language installation.
+When a developer bootstraps a supported NILO source checkout, the repository shall provide checksum-verified pinned Go, uv, managed Python, and Windows Node.js tools without changing the host's persistent PATH or requiring a system-wide language installation.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -49,7 +49,7 @@ When a developer bootstraps a supported NILO source checkout, the repository sha
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "Repository toolchain tests validate the complete version/checksum manifest and non-global bootstrap contract, then the platform doctor proves the populated repository-local Go, uv, and Python executables report the pinned versions."
+verification = "Repository toolchain tests validate the complete version/checksum manifest and non-global bootstrap contract, then the Windows doctor proves the populated repository-local Go, uv, Python, Node.js, and npm executables report the pinned versions."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
@@ -76,4 +76,4 @@ priority = "high"   # low | normal | high
 rationale = "NILO is a public multi-language appliance project, so a fresh checkout must reproduce its build environment without undocumented global tools while an offline development kit can carry the same populated runtime and cache."
 
 created = 2026-08-31
-updated = 2026-08-31
+updated = 2026-09-01

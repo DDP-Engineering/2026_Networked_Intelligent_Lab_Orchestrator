@@ -10,9 +10,9 @@ requiring a global installation or mixing tools into product source.
 - `env/` — PowerShell and POSIX helpers that set process-local environment
   variables such as `PATH`.
 - `scripts/` - setup, validation, deployment, and maintenance scripts.
-- `runtime/<platform>/` - downloaded or extracted Go, uv, and Python runtimes
-  for `windows-x86_64`, `linux-x86_64`, or `linux-arm64`. This is intentionally
-  ignored by Git.
+- `runtime/<platform>/` - downloaded or extracted Go, uv, Python, and supported
+  host-specific Node.js runtimes for `windows-x86_64`, `linux-x86_64`, or
+  `linux-arm64`. This is intentionally ignored by Git.
 - `cache/<platform>/` - platform-specific uv data, with verified downloaded
   archives under the shared `cache/downloads/`. This is also ignored by Git.
 - `toolchain.versions` - pinned versions and upstream SHA-256 digests readable
@@ -64,11 +64,12 @@ On Linux x86_64 or ARM64:
 ./02_Tools/scripts/doctor.sh
 ```
 
-Bootstrap downloads only the pinned Go and uv archives, verifies their
-published SHA-256 digests, and asks the pinned uv to install CPython below the
-repository. It changes no persistent PATH, shell profile, registry association,
-or system package. Pass `-Offline` on PowerShell or `--offline` on POSIX to
-forbid downloads and use a populated development kit.
+Bootstrap downloads only the pinned archives for the current platform, verifies
+their published SHA-256 digests, and asks the pinned uv to install CPython below
+the repository. Windows also receives the Node.js distribution used for native
+GUI development. It changes no persistent PATH, shell profile, registry
+association, or system package. Pass `-Offline` on PowerShell or `--offline` on
+POSIX to forbid downloads and use a populated development kit.
 
 ## Go toolchain
 
@@ -95,12 +96,34 @@ share incompatible `.venv` contents. Project dependencies, including Ruff
 0.16.5, remain pinned in each Python project's `uv.lock`; do not install Ruff
 globally.
 
+## Windows Node.js and frontend dependencies
+
+Windows GUI development uses Node.js 24.20.0 LTS and its bundled npm 11.19.0.
+The archive is checksum-verified and extracted below
+`runtime/windows-x86_64/node/`; neither executable is installed globally.
+`env/with-tools.ps1` adds that directory only to its child process and keeps the
+npm cache below `cache/windows-x86_64/npm/`.
+
+Restore the exact GUI dependency graph independently with:
+
+```powershell
+.\02_Tools\bootstrap\bootstrap-frontend.ps1
+```
+
+The combined development bootstrap invokes this step automatically. Use
+`-Offline` only after the ignored npm cache and runtime have been populated.
+Direct GUI commands use `npm.cmd` through the tool wrapper to avoid relying on
+PowerShell script execution policy.
+
 ## WSL2 development support
 
 - `bootstrap/setup-wsl.ps1` checks the selected distribution and requests
   installation or conversion only with `-Install`.
 - `bootstrap/bootstrap-development.ps1` orchestrates Windows and WSL Linux
-  bootstrap from the shared checkout; `-Offline` is forwarded to both sides.
+  bootstrap plus locked Windows GUI dependency restore from the shared
+  checkout; `-Offline` is forwarded to every step.
+- `bootstrap/bootstrap-frontend.ps1` restores the committed GUI lockfile with
+  the pinned Windows Node.js and repository-local npm cache.
 - `scripts/doctor-wsl.ps1` verifies the WSL2 kernel, Windows-to-WSL repository
   mapping, and the pinned Linux toolchain.
 - `lib/Wsl.ps1` centralizes checked WSL invocation and path translation.

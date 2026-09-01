@@ -8,9 +8,10 @@ virtual environments stay below ignored repository directories. Bootstrap
 never updates a user or system PATH, shell profile, registry association, or
 system package manager.
 
-The pinned toolchain is Go 1.27.0, uv 0.11.25, and CPython 3.12.10. Go and uv
-archives are accepted only after a SHA-256 match against the tracked manifest.
-The pinned uv executable installs its frozen managed-Python distribution below
+The pinned toolchain is Go 1.27.0, uv 0.11.25, CPython 3.12.10, and Windows
+Node.js 24.20.0 with its bundled npm 11.19.0. Go, uv, and Node.js archives are
+accepted only after a SHA-256 match against the tracked manifest. The pinned uv
+executable installs its frozen managed-Python distribution below
 `02_Tools/runtime/python` and uses `02_Tools/cache/uv` for downloads. A populated
 offline development kit may skip downloads but must pass the same doctor.
 
@@ -22,7 +23,8 @@ offline development kit may skip downloads but must pass the same doctor.
 - `02_Tools/bootstrap/bootstrap.sh` supports Linux x86_64 and ARM64.
 - `02_Tools/env/with-tools.ps1 <command> [args...]` and the POSIX equivalent
   ask the pinned uv for the managed interpreter and prepend only the current
-  process environment with the local Go, uv, and managed-Python directories.
+  process environment with the local Go, uv, and managed-Python directories;
+  the Windows helper also exposes the pinned Node.js and npm distribution.
 - `02_Tools/scripts/doctor.ps1` and `doctor.sh` fail if a tool is absent or its
   reported version differs from the manifest.
 - `02_Tools/runtime`, `02_Tools/cache`, Python virtual environments, and Python
@@ -38,6 +40,7 @@ The tracked manifest covers these archives:
 | uv | Windows x86_64 | `uv-x86_64-pc-windows-msvc.zip` |
 | uv | Linux x86_64 | `uv-x86_64-unknown-linux-gnu.tar.gz` |
 | uv | Linux ARM64 | `uv-aarch64-unknown-linux-gnu.tar.gz` |
+| Node.js | Windows x86_64 | `node-v24.20.0-win-x64.zip` |
 
 ## Examples
 
@@ -59,7 +62,7 @@ the network.
 
 ## Acceptance
 
-- Manifest tests prove every supported Go and uv archive has a pinned 64-digit
+- Manifest tests prove every supported Go, uv, and Node.js archive has a pinned 64-digit
   lowercase SHA-256 digest and an HTTPS upstream URL derivable from its version.
 - Script-contract tests prove checksum gates, repository-local runtime/cache
   variables, and the absence of persistent PATH or shell-profile mutation.

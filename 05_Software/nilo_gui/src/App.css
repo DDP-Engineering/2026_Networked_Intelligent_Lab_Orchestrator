@@ -1,0 +1,226 @@
+.app-frame {
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 6.25rem;
+  padding: 1.25rem clamp(1.25rem, 4vw, 4rem);
+  border-bottom: 1px solid var(--line);
+  background: rgb(10 20 25 / 82%);
+  backdrop-filter: blur(1rem);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.brand-mark {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.brand h1,
+.brand p,
+.hero h2,
+.hero p,
+.next-step h2,
+.next-step p {
+  margin: 0;
+}
+
+.brand h1 {
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  letter-spacing: 0.18em;
+}
+
+.brand p {
+  margin-top: 0.3rem;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.simulation-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid rgb(255 181 71 / 48%);
+  border-radius: 999px;
+  color: var(--warning);
+  background: rgb(255 181 71 / 8%);
+  font-family: var(--font-mono);
+  font-size: 0.73rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.status-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0.75rem currentColor;
+}
+
+.workspace {
+  width: min(72rem, calc(100% - 2.5rem));
+  margin: 0 auto;
+  padding: clamp(4rem, 9vw, 8rem) 0 3rem;
+}
+
+.hero {
+  max-width: 62rem;
+}
+
+.eyebrow {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.hero h2 {
+  max-width: 14ch;
+  margin-top: 1rem;
+  color: var(--text-strong);
+  font-size: clamp(2.5rem, 7vw, 5.6rem);
+  font-weight: 620;
+  letter-spacing: -0.055em;
+  line-height: 0.98;
+}
+
+.hero-copy {
+  max-width: 43rem;
+  margin-top: 1.75rem !important;
+  color: var(--text-muted);
+  font-size: clamp(1rem, 2vw, 1.16rem);
+  line-height: 1.7;
+}
+
+.foundation-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  margin: clamp(3rem, 7vw, 5.5rem) 0 0;
+  border: 1px solid var(--line);
+  background: var(--line);
+}
+
+.foundation-card {
+  min-height: 12rem;
+  padding: 1.5rem;
+  background: var(--surface);
+}
+
+.foundation-card dt {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.foundation-card dd {
+  margin: 1.8rem 0 0;
+  color: var(--text-strong);
+  font-size: 1.15rem;
+  font-weight: 650;
+}
+
+.foundation-card-ready dd {
+  color: var(--success);
+}
+
+.foundation-card p {
+  margin: 0.7rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.87rem;
+  line-height: 1.55;
+}
+
+.next-step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+  max-width: 44rem;
+  margin-top: 2rem;
+  margin-left: auto;
+  padding: 1.5rem;
+  border-left: 2px solid var(--accent);
+  background: var(--surface-raised);
+}
+
+.step-index {
+  color: var(--line-strong);
+  font-family: var(--font-mono);
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.next-step h2 {
+  margin-top: 0.35rem;
+  color: var(--text-strong);
+  font-size: 1.15rem;
+}
+
+.next-step div > p:last-child {
+  margin-top: 0.65rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+@media (max-width: 44rem) {
+  .topbar {
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .brand p {
+    max-width: 15rem;
+  }
+
+  .simulation-status {
+    padding-inline: 0.65rem;
+  }
+
+  .foundation-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .foundation-card {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 30rem) {
+  .topbar {
+    flex-direction: column;
+  }
+
+  .workspace {
+    width: min(100% - 2rem, 72rem);
+  }
+
+  .next-step {
+    grid-template-columns: 1fr;
+  }
+}

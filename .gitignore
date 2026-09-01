@@ -8,3 +8,8 @@
 __pycache__/
 **/__pycache__/
 *.py[cod]
+
+# Generated frontend dependencies, test coverage, and static build output.
+**/node_modules/
+**/coverage/
+**/dist/

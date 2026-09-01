@@ -1,17 +1,19 @@
 # NILO Software
 
-This directory contains the NILO Go Bench Core, the language-neutral
-integration contract, the Python integration SDK, reference integrations, and
-the verification entry points that exercise them together.
+This directory contains the NILO Go Bench Core, browser GUI, language-neutral
+integration contract, Python integration SDK, reference integrations, and the
+verification entry points that exercise them together.
 
 Increment 1 establishes the portable foundation and integration boundary. It
-does not yet provide real hardware behavior, an MCP or HTTP service, a browser
-GUI, remote networking, appliance packaging, or PLC flashing.
+does not yet provide real hardware behavior, an MCP service, a connected
+browser application, remote networking, appliance packaging, or PLC flashing;
+the current HTTP service and GUI remain development foundations.
 
 ## Directory map
 
 ```text
 05_Software/
+├── nilo_gui/                React and TypeScript browser GUI
 ├── nilo_assistant/          Go Bench Core and `nilo` command
 ├── integration_sdk/
 │   └── python/              Python integration authoring SDK
@@ -73,6 +75,18 @@ Important subdirectories:
 
 See `nilo_assistant/README.md` for the current command boundary.
 
+## `nilo_gui/` - browser interface
+
+The Windows-native GUI project uses React, TypeScript, and Vite. Its direct npm
+dependencies are exact and the committed lockfile records every transitive
+package and integrity digest. The current scaffold visibly identifies
+simulation but deliberately makes no backend request; authentication and the
+status/inventory client are the next vertical slice.
+
+Use the repository-local Node.js toolchain for dependency restore, development,
+formatting, linting, unit tests, and static production builds. See
+`nilo_gui/README.md` for exact commands.
+
 ## `integration_sdk/python/` — Python integration SDK
 
 This locked Python project is the supported authoring surface for Python
@@ -133,8 +147,8 @@ compatibility unless a deliberate new protocol version is introduced.
 - `verify-portable-core.ps1` and `verify-portable-core.sh` run the Go suite and
   compile the portable command for Linux ARM64, Linux x86_64, and Windows
   x86_64 with CGO disabled.
-- `aegis_test.py` discovers and routes the Go module and every locked Python
-  project for full, impacted, and lint checks.
+- `aegis_test.py` discovers and routes the Go module, every locked Python
+  project, and the Windows frontend project for full, impacted, and lint checks.
 - `tests/` verifies the test router and repository-local toolchain contract.
 
 The scripts use the pinned tools under `02_Tools`; no system Go, Python, uv,

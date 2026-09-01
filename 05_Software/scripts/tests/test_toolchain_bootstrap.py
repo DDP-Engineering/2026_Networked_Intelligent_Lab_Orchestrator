@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import tempfile
@@ -14,11 +15,65 @@ MANIFEST_PATH = TOOLS_ROOT / "toolchain.versions"
 
 
 class ToolchainBootstrapTests(unittest.TestCase):
+    def test_frontend_project_is_locked_static_build(self) -> None:
+        frontend = REPOSITORY_ROOT / "05_Software" / "nilo_gui"
+        bootstrap = TOOLS_ROOT / "bootstrap" / "bootstrap-frontend.ps1"
+        package_path = frontend / "package.json"
+        lock_path = frontend / "package-lock.json"
+        favicon_path = frontend / "public" / "favicon.svg"
+
+        self.assertTrue(bootstrap.is_file(), f"missing frontend bootstrap: {bootstrap}")
+        self.assertTrue(package_path.is_file(), f"missing frontend package: {package_path}")
+        self.assertTrue(lock_path.is_file(), f"missing frontend lockfile: {lock_path}")
+        self.assertTrue(favicon_path.is_file(), f"missing frontend favicon: {favicon_path}")
+        self.assertIn(
+            'href="/favicon.svg"',
+            (frontend / "index.html").read_text(encoding="utf-8"),
+        )
+
+        package = json.loads(package_path.read_text(encoding="utf-8"))
+        self.assertEqual(
+            package["scripts"],
+            {
+                "dev": "vite --host 127.0.0.1",
+                "build": "tsc -b && vite build",
+                "format": "prettier --write .",
+                "format:check": "prettier --check .",
+                "lint": "eslint . --max-warnings 0",
+                "test": "vitest",
+                "test:ci": "vitest run",
+                "preview": "vite preview --host 127.0.0.1",
+            },
+        )
+        for dependency_group in ("dependencies", "devDependencies"):
+            for version in package[dependency_group].values():
+                self.assertRegex(version, r"^\d+\.\d+\.\d+$")
+
+        lock = json.loads(lock_path.read_text(encoding="utf-8"))
+        self.assertEqual(lock["lockfileVersion"], 3)
+        self.assertEqual(lock["packages"][""]["dependencies"], package["dependencies"])
+        self.assertEqual(
+            lock["packages"][""]["devDependencies"], package["devDependencies"]
+        )
+
+        source = bootstrap.read_text(encoding="utf-8").lower()
+        self.assertIn("npm.cmd", source)
+        self.assertIn("ci", source)
+        self.assertIn("[switch]$offline", source)
+
+        combined = (
+            TOOLS_ROOT / "bootstrap" / "bootstrap-development.ps1"
+        ).read_text(encoding="utf-8").lower()
+        self.assertIn("bootstrap-frontend.ps1", combined)
+        self.assertIn("$frontendbootstrap @windowsarguments", combined)
+
     def test_manifest_pins_supported_tool_archives(self) -> None:
         values = self._read_manifest()
         self.assertEqual(values["GO_VERSION"], "1.27.0")
         self.assertEqual(values["PYTHON_VERSION"], "3.12.10")
         self.assertEqual(values["UV_VERSION"], "0.11.25")
+        self.assertEqual(values["NODE_VERSION"], "24.20.0")
+        self.assertEqual(values["NPM_VERSION"], "11.19.0")
 
         expected_digests = {
             "GO_WINDOWS_AMD64_SHA256": "f0c0a0d33ba94f4d2c5dbc887334ce678b21813504ddb3aafcb06e60a5a667c4",
@@ -27,6 +82,7 @@ class ToolchainBootstrapTests(unittest.TestCase):
             "UV_WINDOWS_AMD64_SHA256": "15bfd1423b7eaa7aae949922d4712ebaac2bb44a81af64ab59bbe007090cb0d0",
             "UV_LINUX_AMD64_SHA256": "1db18b5e76fa645a7f3865773139bdec8e2d46adbdbb35e7410b34fa8015ccd2",
             "UV_LINUX_ARM64_SHA256": "e0e9d73f74e06a7dcd53910d5962146ab48f0af9c92cc8df33a37baa0121014d",
+            "NODE_WINDOWS_AMD64_SHA256": "6cac9ffbca8f6a47091e4b5c772e0606049c3871cb67d900c0cedde630e545ba",
         }
         for name, expected in expected_digests.items():
             self.assertEqual(values[name], expected)
@@ -34,7 +90,14 @@ class ToolchainBootstrapTests(unittest.TestCase):
 
         self.assertEqual(
             set(values),
-            {"GO_VERSION", "PYTHON_VERSION", "UV_VERSION", *expected_digests},
+            {
+                "GO_VERSION",
+                "PYTHON_VERSION",
+                "UV_VERSION",
+                "NODE_VERSION",
+                "NPM_VERSION",
+                *expected_digests,
+            },
         )
 
     def test_bootstrap_and_environment_scripts_are_checksum_gated_and_process_local(
@@ -66,13 +129,22 @@ class ToolchainBootstrapTests(unittest.TestCase):
             "https://github.com/astral-sh/uv/releases/download/",
             bootstrap_ps1 + bootstrap_sh,
         )
+        self.assertIn("https://nodejs.org/dist/", bootstrap_ps1)
         self.assertNotRegex(bootstrap_ps1, r"\bsetx(?:\.exe)?\b|setenvironmentvariable")
         self.assertNotRegex(
             bootstrap_sh, r"(?:^|\s)(?:>>|>)\s*[^\n]*(?:profile|bashrc|zshrc)"
         )
 
-        for variable in ("uv_cache_dir", "uv_python_install_dir", "path"):
+        for variable in (
+            "uv_cache_dir",
+            "uv_python_install_dir",
+            "npm_config_cache",
+            "path",
+        ):
             self.assertIn(variable, environment)
+        self.assertIn("node.exe", bootstrap_ps1)
+        self.assertIn("node.exe", paths["doctor_ps1"].read_text(encoding="utf-8").lower())
+        self.assertIn("npm.cmd", paths["doctor_ps1"].read_text(encoding="utf-8").lower())
         self.assertIn("/02_tools/runtime/", ignore)
         self.assertIn("/02_tools/cache/", ignore)
         self.assertIn("__pycache__/", ignore)

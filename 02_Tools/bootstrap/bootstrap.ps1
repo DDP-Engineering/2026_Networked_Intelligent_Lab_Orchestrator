@@ -90,6 +90,41 @@ if (-not (Test-Path -LiteralPath $goExecutable -PathType Leaf)) {
     }
 }
 
+$nodeVersion = $versions['NODE_VERSION']
+$nodeArchiveName = "node-v$nodeVersion-win-x64.zip"
+$nodeArchive = Join-Path $downloadRoot $nodeArchiveName
+$nodeRoot = Join-Path $runtimeRoot "node\$nodeVersion"
+$nodeExecutable = Join-Path $nodeRoot 'node.exe'
+if (-not (Test-Path -LiteralPath $nodeExecutable -PathType Leaf)) {
+    if (Test-Path -LiteralPath $nodeRoot) {
+        throw "Refusing to replace incomplete Node.js runtime: $nodeRoot"
+    }
+    Get-VerifiedArchive -Url "https://nodejs.org/dist/v$nodeVersion/$nodeArchiveName" -Path $nodeArchive -Digest $versions['NODE_WINDOWS_AMD64_SHA256']
+    $stagingRoot = Join-Path $runtimeRoot "bootstrap-node-$PID"
+    if (Test-Path -LiteralPath $stagingRoot) {
+        throw "Refusing to replace existing bootstrap staging directory: $stagingRoot"
+    }
+    New-Item -ItemType Directory -Path $stagingRoot | Out-Null
+    try {
+        & tar.exe -xf $nodeArchive -C $stagingRoot
+        if ($LASTEXITCODE -ne 0) {
+            throw "Node.js extraction failed with exit code $LASTEXITCODE"
+        }
+        New-Item -ItemType Directory -Force -Path (Split-Path -Parent $nodeRoot) | Out-Null
+        Move-Item -LiteralPath (Join-Path $stagingRoot "node-v$nodeVersion-win-x64") -Destination $nodeRoot
+    }
+    finally {
+        if (Test-Path -LiteralPath $stagingRoot) {
+            if ((Get-ChildItem -Force -LiteralPath $stagingRoot).Count -eq 0) {
+                Remove-Item -LiteralPath $stagingRoot -Force
+            }
+            else {
+                Write-Warning "Preserving non-empty failed bootstrap staging directory: $stagingRoot"
+            }
+        }
+    }
+}
+
 $uvVersion = $versions['UV_VERSION']
 $uvArchiveName = 'uv-x86_64-pc-windows-msvc.zip'
 $uvArchive = Join-Path $downloadRoot "uv-$uvVersion-windows-amd64.zip"

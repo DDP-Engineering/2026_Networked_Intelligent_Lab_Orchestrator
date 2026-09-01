@@ -12,7 +12,10 @@ $platformKey = 'windows-x86_64'
 $runtimeRoot = Join-Path $toolRoot "runtime\$platformKey"
 $goExecutable = Join-Path $runtimeRoot "go\$($values['GO_VERSION'])\go\bin\go.exe"
 $uvExecutable = Join-Path $runtimeRoot "uv\$($values['UV_VERSION'])\uv.exe"
-foreach ($required in @($goExecutable, $uvExecutable)) {
+$nodeRoot = Join-Path $runtimeRoot "node\$($values['NODE_VERSION'])"
+$nodeExecutable = Join-Path $nodeRoot 'node.exe'
+$npmExecutable = Join-Path $nodeRoot 'npm.cmd'
+foreach ($required in @($goExecutable, $uvExecutable, $nodeExecutable, $npmExecutable)) {
     if (-not (Test-Path -LiteralPath $required -PathType Leaf)) {
         throw "Missing repository-local tool: $required"
     }
@@ -25,6 +28,16 @@ if ($LASTEXITCODE -ne 0 -or $goVersion -notmatch "go$($values['GO_VERSION'])") {
 $uvVersion = (& $uvExecutable --version) -join ''
 if ($LASTEXITCODE -ne 0 -or $uvVersion -notmatch "^uv $($values['UV_VERSION'])( |$)") {
     throw "Unexpected uv version: $uvVersion"
+}
+$nodeVersion = (& $nodeExecutable --version) -join ''
+if ($LASTEXITCODE -ne 0 -or $nodeVersion -ne "v$($values['NODE_VERSION'])") {
+    throw "Unexpected Node.js version: $nodeVersion"
+}
+$env:npm_config_cache = Join-Path $toolRoot "cache\$platformKey\npm"
+New-Item -ItemType Directory -Force -Path $env:npm_config_cache | Out-Null
+$npmVersion = (& $npmExecutable --version) -join ''
+if ($LASTEXITCODE -ne 0 -or $npmVersion -ne $values['NPM_VERSION']) {
+    throw "Unexpected npm version: $npmVersion"
 }
 
 $env:UV_CACHE_DIR = Join-Path $toolRoot "cache\$platformKey\uv"
@@ -45,4 +58,6 @@ if ($LASTEXITCODE -ne 0 -or $pythonVersion -ne "Python $($values['PYTHON_VERSION
 Write-Output "Go: $goVersion"
 Write-Output "uv: $uvVersion"
 Write-Output "Python: $pythonVersion"
+Write-Output "Node.js: $nodeVersion"
+Write-Output "npm: $npmVersion"
 Write-Output 'NILO repository-local toolchain: OK'

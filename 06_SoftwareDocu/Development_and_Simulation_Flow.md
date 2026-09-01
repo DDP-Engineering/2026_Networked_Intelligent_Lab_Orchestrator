@@ -234,7 +234,8 @@ The intended daily flow, once the GUI and long-running server exist, is:
    or first-launch initialization, then rerun the ordinary command.
 3. Start Bench Core in WSL2 with the simulation profile and a WSL-native data
    directory, using the commands in section 8.1.
-4. Start the GUI development server on Windows.
+4. Start the GUI development server on Windows using the commands in section
+   8.2.
 5. Open the GUI in the Windows browser.
 6. Use mock mode for isolated visual states or integrated simulation mode for
    real backend behavior.
@@ -281,8 +282,38 @@ the same identities while reporting unavailable inventory. Stop the server with
 Ctrl+C. Issuing another token creates another development identity; it does not
 reveal any earlier token.
 
-This is currently a backend verification flow. There is no GUI process to
-start yet.
+This is the backend verification flow. The native Windows GUI flow is separate
+below.
+
+### 8.2 Current Windows frontend workflow
+
+The combined bootstrap now installs the checksum-pinned Windows Node.js runtime
+and restores the committed GUI lockfile. To restore only frontend dependencies,
+run:
+
+```powershell
+.\02_Tools\bootstrap\bootstrap-frontend.ps1
+```
+
+Start the current GUI scaffold from the repository root:
+
+```powershell
+.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run dev
+```
+
+Open `http://127.0.0.1:5173/` in the Windows browser. The page displays a
+prominent `SIMULATION` status and explicitly reports that Bench Core is not
+connected. This slice makes no API request; keep using the PowerShell calls in
+section 8.1 to exercise the backend until GUI authentication is implemented.
+
+Run the complete focused frontend gate with:
+
+```powershell
+.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run format:check
+.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run lint
+.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run test:ci
+.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run build
+```
 
 ## 9. Verification levels
 
@@ -305,8 +336,10 @@ real PLC flashing path.
 The repository currently provides the Go foundation, SQLite stores, policy and
 session services, runner supervision, Python SDK, fake integration,
 contract/acceptance tests, a long-running authenticated simulation status API,
-and deterministic integration and device inventory. It does not yet provide an
-MCP service or a browser GUI.
+deterministic integration and device inventory, a repository-local Windows
+Node.js toolchain, and a static browser GUI scaffold. The GUI does not yet
+authenticate or consume the backend, and the repository does not yet provide an
+MCP service.
 
 The existing Windows foundation gate is:
 
@@ -317,10 +350,10 @@ The existing Windows foundation gate is:
 `nilo serve-foundation-check` remains a short-lived composition check. `nilo
 serve --profile simulation` is the long-running development server.
 
-The environment bootstrap and backend-only flow are executable now. The complete
-GUI application flow requires the remaining foundations:
+The environment bootstrap, backend flow, and frontend scaffold are executable
+now. The connected GUI application flow requires the remaining foundations:
 
-1. a TypeScript GUI project and pinned frontend toolchain;
+1. GUI authentication and the status/inventory API client;
 2. contract-validated mock scenarios;
 3. browser end-to-end tests against WSL2.
 

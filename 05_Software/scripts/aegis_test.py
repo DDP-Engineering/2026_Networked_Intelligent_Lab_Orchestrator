@@ -9,7 +9,14 @@ from pathlib import Path
 
 import tomllib
 
-IGNORED_PARTS = {".git", ".venv", "__pycache__"}
+IGNORED_PARTS = {
+    ".git",
+    ".venv",
+    "__pycache__",
+    "coverage",
+    "dist",
+    "node_modules",
+}
 
 
 def discover_suites(root: Path) -> list[tuple[str, Path]]:
@@ -22,7 +29,12 @@ def discover_suites(root: Path) -> list[tuple[str, Path]]:
     for project_file in root.rglob("pyproject.toml"):
         if not _is_ignored(project_file.relative_to(root)):
             suites.append(("python", project_file.parent))
-    return sorted(suites, key=lambda suite: (suite[0] != "go", str(suite[1])))
+    if sys.platform == "win32":
+        for package_file in root.rglob("package.json"):
+            if not _is_ignored(package_file.relative_to(root)):
+                suites.append(("frontend", package_file.parent))
+    suite_order = {"go": 0, "python": 1, "frontend": 2}
+    return sorted(suites, key=lambda suite: (suite_order[suite[0]], str(suite[1])))
 
 
 def _is_ignored(path: Path) -> bool:
@@ -101,7 +113,7 @@ def _run_full(root: Path) -> int:
     for kind, suite_root in discover_suites(root):
         if kind == "go":
             result = _run(["go", "test", "./..."], suite_root)
-        else:
+        elif kind == "python":
             tests = suite_root / "tests"
             if tests.is_dir():
                 result = _run(_python_test_command(suite_root), suite_root)
@@ -113,6 +125,10 @@ def _run_full(root: Path) -> int:
                 result = _run(
                     [sys.executable, "-m", "compileall", "-q", "."], suite_root
                 )
+        else:
+            result = _run(["npm.cmd", "run", "test:ci"], suite_root)
+            if not result:
+                result = _run(["npm.cmd", "run", "build"], suite_root)
         if result:
             return result
     return 0
@@ -122,8 +138,12 @@ def _run_lint(root: Path) -> int:
     for kind, suite_root in discover_suites(root):
         if kind == "go":
             result = _run(["go", "vet", "./..."], suite_root)
-        else:
+        elif kind == "python":
             result = _run([sys.executable, "-m", "compileall", "-q", "."], suite_root)
+        else:
+            result = _run(["npm.cmd", "run", "format:check"], suite_root)
+            if not result:
+                result = _run(["npm.cmd", "run", "lint"], suite_root)
         if result:
             return result
     return _run([sys.executable, "-m", "compileall", "-q", "scripts"], root)

@@ -35,7 +35,7 @@ and receive an unambiguous simulation status response.
 Exit gate: the real backend returns predictable device and service state without
 contacting equipment networks.
 
-### Slice 3 - Repository-local frontend toolchain
+### Slice 3 - Repository-local frontend toolchain (implemented)
 
 - Pin Node.js and the package manager in `02_Tools` with checksums.
 - Bootstrap the Windows frontend runtime without changing the persistent host
