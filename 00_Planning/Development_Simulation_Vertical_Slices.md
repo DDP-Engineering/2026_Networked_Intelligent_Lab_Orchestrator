@@ -124,6 +124,59 @@ That proof covers the simulated path only and certifies nothing about Raspberry
 Pi hardware, real device I/O, or PLC flashing, which remain the later Linux VM,
 ARM64, and hardware-in-the-loop gates.
 
+### Slice 7 - Identity and access-control foundation (implemented)
+
+- Reconcile the access model: identity authorization gates which actions an
+  actor may *request*; integration operation policy independently gates whether
+  an operation may *run* without a human approval. (implemented)
+- Add fixed Administrator, Operator and Viewer roles mapped to a compiled-in
+  permission set, with no custom-role editor and no policy language.
+  (implemented)
+- Add `nilo admin` local administration: bootstrap the first administrator, and
+  list, create, re-role, disable, enable and reset the password of an identity.
+  (implemented)
+- Add HTTP login, logout and current-session routes, with absolute session
+  expiry, server-side invalidation, an `HttpOnly` cookie, a CSRF token, a
+  failed-login brake, and an explicit development-localhost versus HTTPS cookie
+  mode. (implemented)
+- Add named, scoped, expiring API tokens whose secret is disclosed once and
+  whose effective permissions never exceed their owner's current role.
+  (implemented)
+- Enforce authorization server-side on every protected route, answering `401`
+  without a usable credential and `403` with a usable one that lacks the
+  permission. (implemented)
+- Audit identity and token lifecycle changes with attributable actors and no
+  plaintext secrets. (implemented)
+
+Neither an administrator role nor a fully scoped token bypasses an approval, an
+operation marked Denied or Always prompt, or a configured equipment-protection
+limit; those remain the integration app's operation policy, enforced separately.
+
+The forward SQLite migration preserves existing identities and tokens: every
+pre-existing identity becomes a Viewer, and every pre-existing token keeps an
+empty scope list, which means "not narrowed" and follows its owner's role. The
+existing development-token flow therefore keeps working and gains nothing.
+
+Exit gate: met. An administrator can be created on a fresh data directory
+without a default credential, users and scoped tokens can be managed from the
+command line, a browser can log in and out against Bench Core, and a request
+from an under-privileged actor is refused at the HTTP boundary with a status
+distinct from an unauthenticated one. Proof is Go tests through the real HTTP
+handler, the real command binary, and a reopened SQLite data directory; the
+existing Windows-to-WSL2 browser suite still passes unchanged.
+
+This slice implements the backend only. There is no administration or login
+GUI yet, and no MCP transport.
+
+### Slice 8 - Identity and access-control interface (planned)
+
+- Add the GUI login screen, session handling and the administration pages for
+  users, roles and API tokens.
+- Add the main navigation this implies, and the About and Settings surfaces.
+- Add authenticated audit browsing for identity and token changes.
+- Consider durable login-attempt state, terminal echo suppression for
+  command-line password entry, and token rotation.
+
 ## Deferred product behavior
 
 These slices do not pull PLC flashing, hardware debugging, MCP operations,

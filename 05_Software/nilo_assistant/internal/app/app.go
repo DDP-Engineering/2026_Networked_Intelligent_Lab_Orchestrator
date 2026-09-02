@@ -15,6 +15,7 @@ import (
 	"nilo.local/nilo/internal/auth"
 	"nilo.local/nilo/internal/config"
 	"nilo.local/nilo/internal/domain"
+	"nilo.local/nilo/internal/identity"
 	"nilo.local/nilo/internal/session"
 	"nilo.local/nilo/internal/store/sqlite"
 )
@@ -32,8 +33,17 @@ type App struct {
 	sessionService    session.Service
 	artifactStore     artifact.Store
 	authRepository    *sqlite.AuthRepository
+	identityService   *identity.Service
 	now               func() time.Time
 }
+
+const (
+	// browserSessionLifetime bounds how long one password login stays usable.
+	browserSessionLifetime = 12 * time.Hour
+	// loginFailureLimit and loginFailureWindow brake password guessing.
+	loginFailureLimit  = 5
+	loginFailureWindow = 15 * time.Minute
+)
 
 // DevelopmentToken is the one-time token result and its attributed user.
 type DevelopmentToken struct {
@@ -41,7 +51,26 @@ type DevelopmentToken struct {
 	Token  auth.CreatedToken
 }
 
+// New starts the server's foundation: it opens the durable services and then
+// reconciles the sessions an interrupted server left running. Only a starting
+// server may do that, because reconciliation declares running work dead.
 func New(ctx context.Context, options Options) (*App, error) {
+	application, err := Open(ctx, options)
+	if err != nil {
+		return nil, err
+	}
+	if err := application.sessionService.ReconcileStartup(ctx); err != nil {
+		_ = application.Close()
+		return nil, fmt.Errorf("reconcile interrupted sessions: %w", err)
+	}
+	return application, nil
+}
+
+// Open composes the durable foundation services over a data directory without
+// touching the operations recorded in it. Every command that is not the server
+// itself opens the appliance this way, because a server may be running beside
+// it and still own the sessions and leases stored there.
+func Open(ctx context.Context, options Options) (*App, error) {
 	if options.Now == nil {
 		return nil, errors.New("application clock is required")
 	}
@@ -65,10 +94,6 @@ func New(ctx context.Context, options Options) (*App, error) {
 		_ = database.Close()
 		return nil, err
 	}
-	if err := sessionService.ReconcileStartup(ctx); err != nil {
-		_ = database.Close()
-		return nil, fmt.Errorf("reconcile interrupted sessions: %w", err)
-	}
 	artifactStore, err := artifact.NewStore(
 		artifact.Config{ArtifactRoot: configuration.ArtifactRoot, StagingRoot: stagingRoot, MaximumBytes: 64 << 20},
 		artifact.Dependencies{Repository: sqlite.NewArtifactRepository(database), NewArtifactID: domain.NewArtifactID, Now: func() time.Time { return options.Now().UTC() }},
@@ -77,17 +102,31 @@ func New(ctx context.Context, options Options) (*App, error) {
 		_ = database.Close()
 		return nil, err
 	}
+	identityService, err := identity.NewService(identity.Options{
+		Repository:         sqlite.NewIdentityRepository(database),
+		Now:                func() time.Time { return options.Now().UTC() },
+		Random:             rand.Reader,
+		SessionLifetime:    browserSessionLifetime,
+		LoginFailureLimit:  loginFailureLimit,
+		LoginFailureWindow: loginFailureWindow,
+	})
+	if err != nil {
+		_ = database.Close()
+		return nil, err
+	}
 	return &App{
 		configuration: configuration, database: database,
 		sessionRepository: sessionRepository, sessionService: sessionService,
-		artifactStore: artifactStore, authRepository: sqlite.NewAuthRepository(database), now: options.Now,
+		artifactStore: artifactStore, authRepository: sqlite.NewAuthRepository(database),
+		identityService: identityService, now: options.Now,
 	}, nil
 }
 
 func (application *App) Configuration() config.Config { return application.configuration }
 
-// TokenRepository returns the narrow verifier used by authenticated transports.
-func (application *App) TokenRepository() auth.TokenRepository { return application.authRepository }
+// IdentityService returns the authentication and authorization service shared
+// by the HTTP boundary and the local administration command line.
+func (application *App) IdentityService() *identity.Service { return application.identityService }
 
 // IssueDevelopmentToken creates a unique non-login identity and bearer token.
 func (application *App) IssueDevelopmentToken(ctx context.Context) (DevelopmentToken, error) {

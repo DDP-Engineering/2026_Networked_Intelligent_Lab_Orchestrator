@@ -56,7 +56,9 @@ func run(ctx context.Context, arguments []string) int {
 		return 0
 	}
 	if len(arguments) == 4 && arguments[0] == "development" && arguments[1] == "issue-token" && arguments[2] == "--data-dir" {
-		application, err := app.New(ctx, app.Options{
+		// Issuing a token is not a server start, and this command is normally run
+		// against a data directory a development server is already serving.
+		application, err := app.Open(ctx, app.Options{
 			DataDir: arguments[3], BindAddress: "127.0.0.1:0", Now: func() time.Time { return time.Now().UTC() },
 		})
 		if err != nil {
@@ -86,6 +88,9 @@ func run(ctx context.Context, arguments []string) int {
 		}
 		return 0
 	}
+	if len(arguments) > 0 && arguments[0] == "admin" {
+		return runAdminCommand(ctx, arguments[1:], adminIO{stdin: os.Stdin, stdout: os.Stdout, stderr: os.Stderr})
+	}
 	if len(arguments) > 0 && arguments[0] == "serve" {
 		return runServe(ctx, arguments[1:])
 	}
@@ -101,6 +106,11 @@ func runServe(ctx context.Context, arguments []string) int {
 	scenarioValue := flags.String("scenario", string(simulation.ScenarioHealthy), "deterministic simulation scenario")
 	dataDir := flags.String("data-dir", "", "absolute runtime data directory")
 	bindAddress := flags.String("bind", "", "loopback listener address")
+	cookieMode := flags.String(
+		"session-cookies",
+		string(httpapi.CookieDevelopmentLocalhost),
+		"browser session cookie mode: development-localhost or https",
+	)
 	if err := flags.Parse(arguments); err != nil {
 		return 2
 	}
@@ -108,12 +118,17 @@ func runServe(ctx context.Context, arguments []string) int {
 		fmt.Fprintln(os.Stderr, "serve requires --profile simulation, --data-dir, and --bind")
 		return 2
 	}
+	cookieSecurity, err := httpapi.ParseCookieSecurity(*cookieMode)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 2
+	}
 	if err := httpapi.ValidateSimulationBind(*bindAddress); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
 	}
-	scenario, err := simulation.ParseScenario(*scenarioValue)
-	if err != nil {
+	scenario, parseErr := simulation.ParseScenario(*scenarioValue)
+	if err := parseErr; err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 2
 	}
@@ -137,7 +152,8 @@ func runServe(ctx context.Context, arguments []string) int {
 	}()
 
 	handler, err := httpapi.NewHandler(httpapi.HandlerOptions{
-		Tokens: application.TokenRepository(), Profile: *profile, Build: buildinfo.Current(), Catalog: catalog,
+		Identity: application.IdentityService(), Profile: *profile, Build: buildinfo.Current(),
+		Catalog: catalog, CookieSecurity: cookieSecurity,
 	})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -163,5 +179,6 @@ func runServe(ctx context.Context, arguments []string) int {
 }
 
 func writeUsage() {
-	fmt.Fprintln(os.Stderr, "usage: nilo version | nilo serve-foundation-check --data-dir <absolute-path> | nilo development issue-token --data-dir <absolute-path> | nilo serve --profile simulation [--scenario healthy|unavailable] --data-dir <absolute-path> --bind <loopback-address>")
+	fmt.Fprintln(os.Stderr, "usage: nilo version | nilo serve-foundation-check --data-dir <absolute-path> | nilo development issue-token --data-dir <absolute-path> | nilo admin ... | nilo serve --profile simulation [--scenario healthy|unavailable] [--session-cookies development-localhost|https] --data-dir <absolute-path> --bind <loopback-address>")
+	fmt.Fprintln(os.Stderr, adminUsage)
 }

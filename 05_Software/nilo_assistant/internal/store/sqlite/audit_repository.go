@@ -13,6 +13,9 @@ import (
 
 type AuditRepository struct {
 	database *DB
+	// bound is set only on the repository handed to an administrative
+	// transaction, so the event joins the change it attributes.
+	bound statements
 }
 
 func NewAuditRepository(database *DB) *AuditRepository {
@@ -26,16 +29,32 @@ func (repository *AuditRepository) Append(ctx context.Context, event audit.Event
 	if err := event.Validate(); err != nil {
 		return err
 	}
+	if repository.bound != nil {
+		return appendEvent(ctx, repository.bound, event)
+	}
 	transaction, err := repository.database.SQL().BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin audit append: %w", err)
 	}
 	defer transaction.Rollback()
+	if err := appendEvent(ctx, transaction, event); err != nil {
+		return err
+	}
+	if err := transaction.Commit(); err != nil {
+		return fmt.Errorf("commit audit append: %w", err)
+	}
+	return nil
+}
+
+// appendEvent allocates the next sequence and writes one event through the
+// caller's transaction, so the same statements serve a standalone append and an
+// append that belongs to an administrative change.
+func appendEvent(ctx context.Context, execute statements, event audit.Event) error {
 	var sequence int64
-	if err := transaction.QueryRowContext(ctx, `SELECT COALESCE(MAX(sequence), 0) + 1 FROM audit_events`).Scan(&sequence); err != nil {
+	if err := execute.QueryRowContext(ctx, `SELECT COALESCE(MAX(sequence), 0) + 1 FROM audit_events`).Scan(&sequence); err != nil {
 		return fmt.Errorf("allocate audit sequence: %w", err)
 	}
-	_, err = transaction.ExecContext(ctx, `
+	_, err := execute.ExecContext(ctx, `
 		INSERT INTO audit_events (
 			id, sequence, actor_id, action, subject_type, subject_id, payload_json, created_at
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -46,9 +65,6 @@ func (repository *AuditRepository) Append(ctx context.Context, event audit.Event
 			return fmt.Errorf("%w: %s", audit.ErrEventAlreadyAppended, event.ID)
 		}
 		return fmt.Errorf("insert audit event: %w", err)
-	}
-	if err := transaction.Commit(); err != nil {
-		return fmt.Errorf("commit audit append: %w", err)
 	}
 	return nil
 }
@@ -91,7 +107,7 @@ func (repository *AuditRepository) List(ctx context.Context, filter audit.Filter
 		query += " LIMIT ?"
 		arguments = append(arguments, filter.Limit)
 	}
-	rows, err := repository.database.SQL().QueryContext(ctx, query, arguments...)
+	rows, err := repository.execute().QueryContext(ctx, query, arguments...)
 	if err != nil {
 		return nil, fmt.Errorf("list audit events: %w", err)
 	}
@@ -122,10 +138,23 @@ func (repository *AuditRepository) List(ctx context.Context, filter audit.Filter
 }
 
 func (repository *AuditRepository) validateDatabase() error {
-	if repository == nil || repository.database == nil || repository.database.SQL() == nil {
+	if repository == nil {
+		return errors.New("audit database is required")
+	}
+	if repository.bound != nil {
+		return nil
+	}
+	if repository.database == nil || repository.database.SQL() == nil {
 		return errors.New("audit database is required")
 	}
 	return nil
+}
+
+func (repository *AuditRepository) execute() statements {
+	if repository.bound != nil {
+		return repository.bound
+	}
+	return repository.database.SQL()
 }
 
 var _ audit.Repository = (*AuditRepository)(nil)

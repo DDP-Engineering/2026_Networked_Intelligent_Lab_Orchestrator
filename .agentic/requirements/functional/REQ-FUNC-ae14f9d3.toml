@@ -1,0 +1,84 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+# One requirement = one independently verifiable behavior.
+# Lives at .agentic/requirements/<category>/<id>.toml
+# Required fields: schema, id, title, status, requirement, verification.
+
+schema = 1
+
+# REQ-<CAT>-<8 hex>. CAT is FUNC, UX, NFR, SEC, DATA, PLAT, REL or TEST,
+# and must match the category folder this file sits in.
+id = "REQ-FUNC-ae14f9d3"
+
+title = "Create named API tokens with scopes and expiry"
+
+# draft while being written, active once it is built and tested,
+# retired when the behavior is deliberately removed.
+status = "active"
+
+# Self-contained prose: a reader with no other context must be able to
+# understand and check it. No ticket numbers, no run IDs, no references
+# to other requirements.
+#
+# Recommended shape - EARS. Pick the one pattern that fits; a stated
+# trigger or condition is what the test has to arrange, so surfacing it
+# here is what makes the behavior testable:
+#
+#   ubiquitous  The <system> shall <response>.
+#   event       When <trigger>, the <system> shall <response>.
+#   state       While <state>, the <system> shall <response>.
+#   unwanted    If <condition>, then the <system> shall <response>.
+#   optional    Where <feature is included>, the <system> shall <response>.
+#
+# Two "shall" clauses means two behaviors: split it into two requirements.
+# Do not contort prose to fit a pattern - a constraint that reads better
+# plainly is better plainly.
+requirement = """
+When an API token is created for a named owner with a name, an optional scope list, and an optional
+expiry, Bench Core shall emit the token secret exactly once at creation and persist only a one-way
+verifier of it.
+"""
+
+# The observation that settles whether the behavior holds — not a
+# restatement of the requirement.
+#
+# Some behaviors no test can settle: a look-and-see judgement, an install
+# on clean hardware, a printed page. Start this field with "Manual:" or
+# "Inspection:" and name the method, and `check` records the requirement
+# as verified by hand instead of counting it among the tests still owed.
+# The prefix alone is not enough — it has to say what someone does.
+verification = "A command test creates a token, asserts the secret appears in the creation output, and asserts that the stored row contains neither the secret nor any value from which the secret can be read back."
+
+# Repo-relative, forward slashes. The source files this behavior lives in.
+affected_paths = [
+    "05_Software/nilo_assistant/cmd/nilo/admin.go",
+    "05_Software/nilo_assistant/internal/identity/service.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/identity_repository.go",
+    "05_Software/nilo_assistant/internal/auth/token.go",
+    "05_Software/nilo_assistant/cmd/nilo/admin_test.go",
+    "05_Software/nilo_assistant/internal/identity/service_test.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/identity_repository_test.go",
+]
+
+# "tests/path/test_file.py::test_name" entries. Kept current during build;
+# these select the impacted regression set.
+linked_tests = [
+    "05_Software/nilo_assistant/cmd/nilo/admin_test.go::TestAdminTokenCommandsDiscloseTheSecretOnceAndNeverAgain",
+    "05_Software/nilo_assistant/internal/identity/service_test.go::TestTokenSecretIsDisclosedOnceAndNeverStored",
+    "05_Software/nilo_assistant/internal/store/sqlite/identity_repository_test.go::TestIdentityRepositoryStoresNoTokenOrSessionPlaintext",
+]
+
+# --- optional below this line ---
+
+# "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "A secret that can be re-read later is a stored password, not a token."
+
+created = 2026-09-02
+updated = 2026-09-02

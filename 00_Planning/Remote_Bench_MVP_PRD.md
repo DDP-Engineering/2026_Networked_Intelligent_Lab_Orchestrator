@@ -95,7 +95,7 @@ An AI client uses authenticated MCP tools to:
 - retrieve a compact structured result;
 - list and download authorized artifacts by stable identifier.
 
-MCP tokens authenticate clients. Permission policy is not attached to a client or token; it is attached to the integration app and its declared operations.
+MCP tokens authenticate clients and carry the scopes that bound what their owner may request. *Operation* policy — whether an action needs a human approval — is not attached to a client or token; it is attached to the integration app and its declared operations. The two are enforced independently, and a broadly scoped token gains no approval automation.
 
 ### 5.3 Integration developer
 
@@ -322,11 +322,30 @@ Embedded or remote PulseView and browser-native waveform rendering are future ca
 
 ## 9. Permission and approval model
 
-### 9.1 Policy ownership
+### 9.1 Two independent decisions
 
-Policy is configured per integration app, not per MCP client, token, or GUI user. An app provides an effective default for its operations. Per-operation overrides and persisted device settings refine that default.
+Every request passes two checks, and both must pass.
+
+**Identity authorization** decides whether an actor may *request* an action. It comes from the actor's fixed role — Administrator, Operator or Viewer — narrowed further by the scopes of the API token in use, if any. A token's effective permissions are its scopes intersected with its owner's current role, so a scope can only remove a permission, never add one.
+
+**Operation policy** decides whether an operation may *run* without a human approval. It is configured per integration app, not per MCP client, token, or GUI user. An app provides an effective default for its operations. Per-operation overrides and persisted device settings refine that default.
+
+Identity authorization is a gate in front of operation policy, never a substitute for it. The Administrator role is not a bypass: an administrator submitting an operation still meets Ask/Auto/Full Access resolution, still meets required approvals, and still meets the core-enforced equipment limits and safety interlocks. Relaxing an approval requirement remains an explicit change to the integration policy configuration, and it is audited there.
 
 Newly installed apps and newly detected hardware begin in Ask mode. Known app, operation, and device settings persist across Bench Core and appliance restarts.
+
+### 9.1.1 Role permissions
+
+| Permission | Viewer | Operator | Administrator |
+|---|---|---|---|
+| Read backend status | yes | yes | yes |
+| Read the integration and device inventories | yes | yes | yes |
+| Read and manage one's own API tokens | no | yes | yes |
+| Read identities, their roles and their state | no | no | yes |
+| Create identities, change roles, disable, enable, reset passwords | no | no | yes |
+| Read and revoke every identity's API tokens | no | no | yes |
+
+Roles are fixed. There is no custom-role editor and no general-purpose permission language. The table grows only as the functionality it authorizes is implemented.
 
 ### 9.2 Modes
 
@@ -352,6 +371,7 @@ Full Access is an approval-automation mode, not a protection-bypass mode. It may
 Full Access does not bypass:
 
 - authentication;
+- identity authorization and API-token scopes;
 - typed and schema validation;
 - package compatibility checks;
 - exclusive hardware locks;
@@ -675,7 +695,8 @@ Each new integration must use the common package template and contract rather th
 - WireGuard is optional; local lab operation is fully supported without VPN.
 - The DCP server is an example hub/router, not a NILO dependency.
 - VPN providers use an internal abstraction, but only WireGuard is implemented now.
-- Permission policy belongs to the integration app, not to an MCP client or token.
+- Operation policy — whether an action needs a human approval — belongs to the integration app, not to an MCP client, token, or user.
+- Request authorization belongs to the actor: fixed Administrator, Operator and Viewer roles, further narrowed by API-token scopes. Neither an administrator role nor a broad token bypasses an approval or a safety limit.
 - New apps and hardware start in Ask mode; known settings persist.
 - Full Access may automate explicitly classified operations but cannot bypass configured equipment-protection limits, physical interlocks, or platform integrity controls.
 - Every operation and policy decision is auditable.

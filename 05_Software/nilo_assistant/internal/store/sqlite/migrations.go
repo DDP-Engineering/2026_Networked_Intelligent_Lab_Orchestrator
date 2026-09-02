@@ -24,10 +24,14 @@ var policySnapshotsMigration string
 //go:embed migrations/003_active_configuration.sql
 var activeConfigurationMigration string
 
+//go:embed migrations/004_identity_access_control.sql
+var identityAccessControlMigration string
+
 var migrations = []migration{
 	{version: "001_initial", sql: initialMigration},
 	{version: "002_policy_snapshots", sql: policySnapshotsMigration},
 	{version: "003_active_configuration", sql: activeConfigurationMigration},
+	{version: "004_identity_access_control", sql: identityAccessControlMigration},
 }
 
 func applyMigrations(ctx context.Context, database *sql.DB) (err error) {

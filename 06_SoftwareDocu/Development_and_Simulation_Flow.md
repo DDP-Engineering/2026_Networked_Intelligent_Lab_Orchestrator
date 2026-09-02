@@ -344,8 +344,44 @@ the same identities while reporting unavailable inventory. Stop the server with
 Ctrl+C. Issuing another token creates another development identity; it does not
 reveal any earlier token.
 
+A development identity is created with the least-privileged **Viewer** role, so
+its token can read status and both inventories and nothing else. Reading
+`/api/v1/users` with it returns `403 Forbidden` — a usable credential without
+the permission — as distinct from the `401 Unauthorized` returned when no
+credential is presented at all.
+
+To exercise the human login path instead of a token, create an administrator
+once against the same data directory and log in over HTTP:
+
+```powershell
+wsl.exe -d Ubuntu -- bash -lc "cd /mnt/f/2026_Networked_Intelligent_Lab_Orchestrator/05_Software/nilo_assistant && \
+  printf 'change-this-password\nchange-this-password\n' | \
+  ../../02_Tools/env/with-tools.sh go run ./cmd/nilo admin bootstrap \
+    --data-dir \$HOME/.local/state/nilo-dev --username admin"
+
+$session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+$login = Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8090/api/v1/auth/login `
+    -ContentType application/json -WebSession $session `
+    -Body '{"username":"admin","password":"change-this-password"}'
+Invoke-RestMethod -Uri http://127.0.0.1:8090/api/v1/users -WebSession $session
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8090/api/v1/auth/logout `
+    -WebSession $session -Headers @{ "X-NILO-CSRF" = $login.csrf_token }
+```
+
+The bootstrap password is passed on standard input, never as an argument, and
+no command prints it back. The login response carries the role and the
+effective permissions; the session cookie is `HttpOnly`, and the logout above
+fails without the `X-NILO-CSRF` header. `nilo serve` runs in the
+`development-localhost` cookie mode by default, which omits the `Secure`
+attribute because the local topology is plain HTTP on loopback; any HTTPS
+deployment must pass `--session-cookies https`.
+
+The complete command and authentication reference is the shipped document
+`../07_Delivery/NILO_CLI_and_Authentication.md`.
+
 This is the backend verification flow. The native Windows GUI flow is separate
-below.
+below. The GUI still authenticates with a development token: the login and
+administration screens are a later slice.
 
 ### 8.2 Current Windows frontend workflow
 
@@ -549,6 +585,13 @@ Passing a lower level never substitutes for a required higher-level release
 gate. In particular, WSL2 simulation cannot certify Raspberry Pi hardware or a
 real PLC flashing path.
 
+The local development bench has an optional Raspberry Pi ARM64 device that can
+answer some ARM64, packaging, and physical I/O questions the simulated topology
+cannot; it is described in [Local Hardware Access](Local_Hardware_Access.md). It
+is a convenience for early signal only. No repository gate contacts it, it may
+be powered off or off the network at any time, and an observation made on it is
+not the hardware-in-the-loop level in the table above.
+
 ## 10. Current repository state
 
 The repository currently provides the Go foundation, SQLite stores, policy and
@@ -596,6 +639,12 @@ delivered. The platform distinction is:
 - **Linux x86_64 VM:** system and network test environment;
 - **Raspberry Pi 4 Linux ARM64:** first MVP appliance and final hardware
   acceptance environment.
+
+The Raspberry Pi on the local development bench is not that acceptance
+environment. It shares the architecture and the operating system, which is what
+makes it useful early, but its configuration is not recorded in this repository
+and cannot be rebuilt from it. See
+[Local Hardware Access](Local_Hardware_Access.md).
 
 No result from simulation may be represented as evidence that a physical
 operation occurred.

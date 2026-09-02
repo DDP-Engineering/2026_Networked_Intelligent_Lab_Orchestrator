@@ -2,20 +2,22 @@ package httpapi
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
 	"net/http"
-	"strings"
 	"time"
 
 	"nilo.local/nilo/internal/auth"
 	"nilo.local/nilo/internal/buildinfo"
+	"nilo.local/nilo/internal/identity"
 	"nilo.local/nilo/internal/simulation"
 )
 
-const simulationProfile = "simulation"
+const (
+	simulationProfile = "simulation"
+	apiVersion        = "nilo.http/1"
+)
 
 // ServeOptions controls one loopback-confined simulation HTTP server.
 type ServeOptions struct {
@@ -81,16 +83,19 @@ func Serve(ctx context.Context, options ServeOptions) error {
 
 // HandlerOptions contains the dependencies for the protected HTTP API.
 type HandlerOptions struct {
-	Tokens  auth.TokenRepository
-	Profile string
-	Build   buildinfo.Info
-	Catalog simulation.Catalog
+	Identity       *identity.Service
+	Profile        string
+	Build          buildinfo.Info
+	Catalog        simulation.Catalog
+	CookieSecurity CookieSecurity
 }
 
-// NewHandler builds the protected Bench Core HTTP API.
+// NewHandler builds the protected Bench Core HTTP API. Every route below
+// declares the permission it requires, so authorization is decided in one
+// place rather than inside each handler.
 func NewHandler(options HandlerOptions) (http.Handler, error) {
-	if options.Tokens == nil {
-		return nil, errors.New("token repository is required")
+	if options.Identity == nil {
+		return nil, errors.New("identity service is required")
 	}
 	if options.Profile != simulationProfile {
 		return nil, errors.New("HTTP status API requires the simulation profile")
@@ -98,35 +103,44 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 	if options.Catalog.Scenario() == "" {
 		return nil, errors.New("simulation catalog is required")
 	}
+	if _, err := ParseCookieSecurity(string(options.CookieSecurity)); err != nil {
+		return nil, err
+	}
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /api/v1/status", func(response http.ResponseWriter, _ *http.Request) {
-		response.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(response).Encode(statusResponse{
-			APIVersion: "nilo.http/1",
+	protected := http.NewServeMux()
+	protected.Handle("GET /api/v1/status", authorize(auth.PermissionStatusRead, func(response http.ResponseWriter, _ *http.Request) {
+		writeJSON(response, http.StatusOK, statusResponse{
+			APIVersion: apiVersion,
 			Status:     "healthy",
 			Profile:    options.Profile,
 			Simulation: true,
 			Build:      options.Build,
 		})
-	})
-	mux.HandleFunc("GET /api/v1/integrations", func(response http.ResponseWriter, _ *http.Request) {
-		response.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(response).Encode(integrationListResponse{
-			APIVersion: "nilo.http/1",
+	}))
+	protected.Handle("GET /api/v1/integrations", authorize(auth.PermissionInventoryRead, func(response http.ResponseWriter, _ *http.Request) {
+		writeJSON(response, http.StatusOK, integrationListResponse{
+			APIVersion: apiVersion,
 			Scenario:   options.Catalog.Scenario(),
 			Items:      options.Catalog.Integrations(),
 		})
-	})
-	mux.HandleFunc("GET /api/v1/devices", func(response http.ResponseWriter, _ *http.Request) {
-		response.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(response).Encode(deviceListResponse{
-			APIVersion: "nilo.http/1",
+	}))
+	protected.Handle("GET /api/v1/devices", authorize(auth.PermissionInventoryRead, func(response http.ResponseWriter, _ *http.Request) {
+		writeJSON(response, http.StatusOK, deviceListResponse{
+			APIVersion: apiVersion,
 			Scenario:   options.Catalog.Scenario(),
 			Items:      options.Catalog.Devices(),
 		})
-	})
-	return authenticate(options.Tokens, mux), nil
+	}))
+	protected.Handle("GET /api/v1/users", authorize(auth.PermissionUsersRead, handleListUsers(options.Identity)))
+	// Reading one's own session is identity, not authorization, so it carries
+	// no permission; logout is gated by the CSRF check in the middleware.
+	protected.HandleFunc("GET /api/v1/auth/session", handleCurrentSession)
+	protected.HandleFunc("POST /api/v1/auth/logout", handleLogout(options.Identity, options.CookieSecurity))
+
+	root := http.NewServeMux()
+	root.HandleFunc("POST /api/v1/auth/login", handleLogin(options.Identity, options.CookieSecurity))
+	root.Handle("/", resolveIdentity(options.Identity, options.CookieSecurity, protected))
+	return root, nil
 }
 
 type integrationListResponse struct {
@@ -147,36 +161,4 @@ type statusResponse struct {
 	Profile    string         `json:"profile"`
 	Simulation bool           `json:"simulation"`
 	Build      buildinfo.Info `json:"build"`
-}
-
-func authenticate(tokens auth.TokenRepository, next http.Handler) http.Handler {
-	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
-		plaintext, ok := bearerToken(request.Header.Get("Authorization"))
-		if !ok {
-			writeUnauthorized(response)
-			return
-		}
-		if _, err := tokens.VerifyToken(request.Context(), plaintext); err != nil {
-			writeUnauthorized(response)
-			return
-		}
-		next.ServeHTTP(response, request)
-	})
-}
-
-func bearerToken(header string) (string, bool) {
-	fields := strings.Fields(header)
-	if len(fields) != 2 || fields[0] != "Bearer" || fields[1] == "" {
-		return "", false
-	}
-	return fields[1], true
-}
-
-func writeUnauthorized(response http.ResponseWriter) {
-	response.Header().Set("Content-Type", "application/json")
-	response.Header().Set("WWW-Authenticate", "Bearer")
-	response.WriteHeader(http.StatusUnauthorized)
-	_ = json.NewEncoder(response).Encode(struct {
-		Error string `json:"error"`
-	}{Error: "unauthorized"})
 }

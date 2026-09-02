@@ -45,12 +45,15 @@ func (repository *AuthRepository) CreateUserAndToken(
 		}
 	}()
 	timestamp := user.CreatedAt.UTC().Format(time.RFC3339Nano)
+	// A development identity is created with the least-privileged role: a
+	// convenience token must never be an administrative credential.
 	if _, err = transaction.ExecContext(
 		ctx,
-		"INSERT INTO users (id, username, password_hash, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+		"INSERT INTO users (id, username, password_hash, role, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
 		user.ID,
 		user.Username,
 		user.PasswordVerifier,
+		string(auth.RoleViewer),
 		timestamp,
 		timestamp,
 	); err != nil {
@@ -58,10 +61,11 @@ func (repository *AuthRepository) CreateUserAndToken(
 	}
 	if _, err = transaction.ExecContext(
 		ctx,
-		"INSERT INTO mcp_tokens (id, user_id, verifier, created_at) VALUES (?, ?, ?, ?)",
+		"INSERT INTO mcp_tokens (id, user_id, verifier, name, created_at) VALUES (?, ?, ?, ?, ?)",
 		token.ID,
 		user.ID,
 		verifier[:],
+		"development",
 		token.CreatedAt.UTC().Format(time.RFC3339Nano),
 	); err != nil {
 		return fmt.Errorf("store development token verifier: %w", err)

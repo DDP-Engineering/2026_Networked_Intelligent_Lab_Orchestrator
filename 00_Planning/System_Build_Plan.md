@@ -149,6 +149,18 @@ reachable; an AI client never gets unrestricted access to an industrial subnet.
 
 ## 6. Safety and permission model
 
+Two independent decisions gate every request, and both must pass.
+
+- **Identity authorization** decides whether an actor may *request* an action.
+  Fixed Administrator, Operator and Viewer roles map to explicit permissions;
+  an API token's effective permissions are its scopes intersected with its
+  owner's current role, so a scope can only ever remove one.
+- **Operation policy** decides whether an operation may *run* without a human
+  approval. It belongs to the integration app and its declared operations, and
+  no role and no token scope can weaken it.
+
+The rest of this section describes the second decision.
+
 - Read-only operations are the default and may run automatically once a device
   is configured.
 - State-changing operations (flash, erase, reset, relay/power switching,

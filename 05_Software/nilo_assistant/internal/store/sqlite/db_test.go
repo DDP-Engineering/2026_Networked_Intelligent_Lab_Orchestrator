@@ -44,7 +44,7 @@ func TestOpenConfiguresDurableDatabaseAndMigratesAllFoundationTables(t *testing.
 		"app_policies", "approval_records", "artifacts", "audit_events",
 		"config_versions", "device_policies", "mcp_tokens", "operation_policy_overrides",
 		"operation_requests", "policy_snapshots", "resource_leases", "schema_migrations", "sessions",
-		"users",
+		"user_sessions", "users",
 	}
 	if gotTables := nonInternalTableNames(t, db.SQL()); !slices.Equal(gotTables, wantTables) {
 		t.Fatalf("non-internal tables = %q, want %q", gotTables, wantTables)
@@ -70,8 +70,8 @@ func TestOpenIsIdempotentForAnAlreadyMigratedDatabase(t *testing.T) {
 			t.Errorf("second close: %v", err)
 		}
 	})
-	if got := queryInt(t, second.SQL(), "SELECT COUNT(*) FROM schema_migrations"); got != 3 {
-		t.Fatalf("schema_migrations count = %d, want 3 after reopen", got)
+	if got := queryInt(t, second.SQL(), "SELECT COUNT(*) FROM schema_migrations"); got != len(migrations) {
+		t.Fatalf("schema_migrations count = %d, want %d after reopen", got, len(migrations))
 	}
 }
 

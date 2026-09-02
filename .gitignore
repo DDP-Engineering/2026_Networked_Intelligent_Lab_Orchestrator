@@ -21,3 +21,11 @@ __pycache__/
 # Local frontend environment overrides are per-developer, never shared.
 **/.env.local
 **/.env.*.local
+
+# WireGuard peer configurations carry a private key and a preshared key, which
+# are real credentials for a network outside this bench. Unlike the bench device
+# password in 06_SoftwareDocu/Local_Hardware_Access.md, these are not disposable
+# and must never enter the history of a repository that gets cloned.
+*.conf.wg
+**/wg*.conf
+/DDP_Ubuntu.conf

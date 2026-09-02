@@ -37,17 +37,22 @@ Go process.
 
 Important subdirectories:
 
-- `cmd/nilo/` — executable entry point. Increment 1 provides `nilo version`
-  and the short-lived `serve-foundation-check` composition smoke command.
+- `cmd/nilo/` — executable entry point: `nilo version`, the short-lived
+  `serve-foundation-check` composition smoke command, the development token
+  command, the simulation server, and the `nilo admin` local administration
+  commands for the first administrator, users, and API tokens.
 - `internal/app/` — constructs the foundation services and performs startup
   reconciliation.
 - `internal/domain/` — immutable operation requests, UUID identities,
   artifacts, sessions, and allowed state transitions.
 - `internal/config/` — process configuration, absolute data-directory rules,
   and platform-specific physical path confinement.
-- `internal/auth/` — Argon2id administrator password verifiers and one-time,
-  revocable MCP-token primitives. Network authentication routes are later
-  work.
+- `internal/auth/` — Argon2id password verifiers, the fixed role-to-permission
+  matrix, browser session and API-token secrets, and the failed-login brake.
+- `internal/identity/` — identities, roles, browser sessions, scoped API
+  tokens, and the authorization decision shared by every interface. It gates
+  which actions an actor may *request*; whether an operation may *run* without
+  a human approval stays with `internal/policy/`.
 - `internal/policy/` — Ask, Auto, and Full Access resolution, operation policy
   overrides, immutable policy snapshots, and request-bound approvals.
 - `internal/operation/` — end-to-end operation lifecycle orchestration across

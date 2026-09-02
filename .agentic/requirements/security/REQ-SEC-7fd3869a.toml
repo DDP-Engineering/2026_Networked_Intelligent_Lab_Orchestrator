@@ -54,13 +54,14 @@ verification = "HTTP middleware tests submit missing, malformed, unknown, and re
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
     "05_Software/nilo_assistant/internal/httpapi/server.go",
+    "05_Software/nilo_assistant/internal/httpapi/identity.go",
     "05_Software/nilo_assistant/internal/httpapi/server_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/httpapi/server_test.go::TestProtectedAPIRejectsMissingMalformedUnknownAndRevokedTokens",
+    "05_Software/nilo_assistant/internal/httpapi/server_test.go::TestProtectedAPIRejectsMissingAndMalformedCredentials",
 ]
 
 # --- optional below this line ---
@@ -72,4 +73,4 @@ priority = "high"   # low | normal | high
 rationale = "Development mode must exercise the real authentication boundary rather than introduce an unauthenticated shortcut."
 
 created = 2026-08-31
-updated = 2026-08-31
+updated = 2026-09-02

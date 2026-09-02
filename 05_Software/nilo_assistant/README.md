@@ -15,16 +15,36 @@ The currently implemented application commands are:
 nilo version
 nilo serve-foundation-check --data-dir <absolute-path>
 nilo development issue-token --data-dir <absolute-path>
-nilo serve --profile simulation [--scenario healthy|unavailable] --data-dir <absolute-path> --bind <loopback-address>
+nilo serve --profile simulation [--scenario healthy|unavailable] [--session-cookies development-localhost|https] --data-dir <absolute-path> --bind <loopback-address>
+
+nilo admin bootstrap --data-dir <absolute-path> --username <name>
+nilo admin user list --data-dir <absolute-path>
+nilo admin user create --data-dir <absolute-path> --actor <administrator> --username <name> --role administrator|operator|viewer
+nilo admin user set-role --data-dir <absolute-path> --actor <administrator> --username <name> --role administrator|operator|viewer
+nilo admin user disable --data-dir <absolute-path> --actor <administrator> --username <name>
+nilo admin user enable --data-dir <absolute-path> --actor <administrator> --username <name>
+nilo admin user reset-password --data-dir <absolute-path> --actor <administrator> --username <name>
+nilo admin token create --data-dir <absolute-path> --actor <administrator> --owner <name> --name <label> [--scopes a,b] [--expires-in 720h]
+nilo admin token list --data-dir <absolute-path>
+nilo admin token revoke --data-dir <absolute-path> --actor <administrator> --id <token-id>
 ```
 
-The simulation server exposes authenticated `GET /api/v1/status`, `GET
-/api/v1/integrations`, and `GET /api/v1/devices` routes using the `nilo.http/1`
-contract. The optional scenario is deterministic and defaults to `healthy`;
-`unavailable` preserves stable identities while changing readiness. Development
-token issuance creates a non-login identity, stores only the one-way token
-verifier, and prints the plaintext token once. The simulation listener rejects
-wildcard, hostname, LAN, and other non-loopback addresses.
+The simulation server exposes `POST /api/v1/auth/login`, and the authenticated
+`POST /api/v1/auth/logout`, `GET /api/v1/auth/session`, `GET /api/v1/status`,
+`GET /api/v1/integrations`, `GET /api/v1/devices`, and `GET /api/v1/users`
+routes using the `nilo.http/1` contract. The optional scenario is deterministic
+and defaults to `healthy`; `unavailable` preserves stable identities while
+changing readiness. Development token issuance creates a non-login identity
+with the least-privileged Viewer role, stores only the one-way token verifier,
+and prints the plaintext token once. The simulation listener rejects wildcard,
+hostname, LAN, and other non-loopback addresses.
+
+Identity and access control live in `internal/identity`: fixed Administrator,
+Operator and Viewer roles, browser sessions, and scoped API tokens, enforced
+server-side on every protected route. The `nilo admin` commands administer
+them locally. The role and permission model, the command reference, the
+authentication routes and the upgrade behavior are documented in
+`../../07_Delivery/NILO_CLI_and_Authentication.md`.
 
 For the complete Windows-browser and WSL2-backend workflow, including exact
 commands, see `../../06_SoftwareDocu/Development_and_Simulation_Flow.md`.
