@@ -75,4 +75,4 @@ priority = "normal"   # low | normal | high
 rationale = "Isolated frontend work must not drift from the real API; a mock derived from the same contract fails loudly when the contract moves."
 
 created = 2026-09-01
-updated = 2026-09-01
+updated = 2026-09-02

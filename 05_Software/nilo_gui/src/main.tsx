@@ -7,6 +7,8 @@ import {
   readGuiEnvironment,
   type EnvironmentRecord,
 } from './config/environment';
+import { LanguageProvider } from './i18n/LanguageProvider';
+import { ThemeProvider } from './theme/ThemeProvider';
 import './index.css';
 
 const root = document.getElementById('root');
@@ -23,6 +25,14 @@ const client = createConfiguredClient(environment);
 
 createRoot(root).render(
   <StrictMode>
-    <App client={client} apiMode={resolved.apiMode} endpoint={resolved.apiBaseUrl} />
+    <ThemeProvider>
+      <LanguageProvider>
+        <App
+          client={client}
+          apiMode={resolved.apiMode}
+          endpoint={resolved.apiBaseUrl}
+        />
+      </LanguageProvider>
+    </ThemeProvider>
   </StrictMode>,
 );

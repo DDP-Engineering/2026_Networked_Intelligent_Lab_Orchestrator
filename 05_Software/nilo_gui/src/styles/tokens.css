@@ -1,0 +1,137 @@
+/*
+ * The one place a colour exists.
+ *
+ * Every token below is defined three times and never anywhere else: as light on
+ * `:root`, as dark on `:root[data-theme='dark']`, and as dark again for
+ * `:root[data-theme='system']` inside a colour-scheme query. Components style
+ * through these names, so a theme cannot acquire a second component tree — a
+ * state fixed in one theme is fixed in all of them by construction.
+ *
+ * The System branch is CSS rather than script, which is what makes it follow the
+ * device without a reload and without the interface re-rendering.
+ */
+
+:root {
+  /* Surfaces, from the page ground upward. */
+  --surface-base: #f4f7f7;
+  --surface-raised: #ffffff;
+  --surface-sunken: #e9eff0;
+  --surface-overlay: #ffffff;
+  --surface-selected: #e2f2f0;
+  --surface-hover: #edf3f3;
+
+  /* Text, from most to least prominent. */
+  --text-strong: #0b1417;
+  --text: #24373d;
+  --text-muted: #5e747c;
+  --text-on-accent: #ffffff;
+
+  /* Lines. */
+  --border: #d7e0e1;
+  --border-strong: #b3c3c6;
+
+  /* One accent, used for selection, focus and affirmative controls. */
+  --accent: #10796f;
+  --accent-hover: #0d635b;
+  --accent-subtle: rgb(16 121 111 / 10%);
+
+  /* Semantic state, deliberately separate from the accent. */
+  --state-ok: #1a7f4b;
+  --state-warn: #9a6205;
+  --state-danger: #b3261e;
+  --state-unknown: #6b7f86;
+  --state-ok-surface: rgb(26 127 75 / 10%);
+  --state-warn-surface: rgb(154 98 5 / 10%);
+  --state-danger-surface: rgb(179 38 30 / 10%);
+  --state-unknown-surface: rgb(107 127 134 / 10%);
+
+  --focus-ring: #10796f;
+  --shadow-overlay: 0 12px 32px rgb(11 20 23 / 16%);
+
+  /* Metrics the shell grid and its children share. */
+  --row-height: 46px;
+  --nav-width: 216px;
+  --nav-width-narrow: 60px;
+  --boundary-height: 24px;
+
+  --font-sans:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+  --font-mono:
+    'Cascadia Code', ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono',
+    monospace;
+
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --surface-base: #081116;
+  --surface-raised: #0d181e;
+  --surface-sunken: #060d11;
+  --surface-overlay: #111f26;
+  --surface-selected: rgb(87 214 204 / 12%);
+  --surface-hover: rgb(87 214 204 / 6%);
+
+  --text-strong: #f2f7f9;
+  --text: #d4e0e4;
+  --text-muted: #8fa5ae;
+  --text-on-accent: #06181a;
+
+  --border: #1d3039;
+  --border-strong: #38505a;
+
+  --accent: #57d6cc;
+  --accent-hover: #7ce4dc;
+  --accent-subtle: rgb(87 214 204 / 14%);
+
+  --state-ok: #77df9a;
+  --state-warn: #ffb547;
+  --state-danger: #ff8a80;
+  --state-unknown: #8fa5ae;
+  --state-ok-surface: rgb(119 223 154 / 12%);
+  --state-warn-surface: rgb(255 181 71 / 12%);
+  --state-danger-surface: rgb(255 138 128 / 12%);
+  --state-unknown-surface: rgb(143 165 174 / 12%);
+
+  --focus-ring: #57d6cc;
+  --shadow-overlay: 0 12px 32px rgb(0 0 0 / 45%);
+
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme='system'] {
+    --surface-base: #081116;
+    --surface-raised: #0d181e;
+    --surface-sunken: #060d11;
+    --surface-overlay: #111f26;
+    --surface-selected: rgb(87 214 204 / 12%);
+    --surface-hover: rgb(87 214 204 / 6%);
+
+    --text-strong: #f2f7f9;
+    --text: #d4e0e4;
+    --text-muted: #8fa5ae;
+    --text-on-accent: #06181a;
+
+    --border: #1d3039;
+    --border-strong: #38505a;
+
+    --accent: #57d6cc;
+    --accent-hover: #7ce4dc;
+    --accent-subtle: rgb(87 214 204 / 14%);
+
+    --state-ok: #77df9a;
+    --state-warn: #ffb547;
+    --state-danger: #ff8a80;
+    --state-unknown: #8fa5ae;
+    --state-ok-surface: rgb(119 223 154 / 12%);
+    --state-warn-surface: rgb(255 181 71 / 12%);
+    --state-danger-surface: rgb(255 138 128 / 12%);
+    --state-unknown-surface: rgb(143 165 174 / 12%);
+
+    --focus-ring: #57d6cc;
+    --shadow-overlay: 0 12px 32px rgb(0 0 0 / 45%);
+
+    color-scheme: dark;
+  }
+}

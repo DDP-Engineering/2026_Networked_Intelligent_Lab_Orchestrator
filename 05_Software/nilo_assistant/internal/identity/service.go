@@ -36,6 +36,9 @@ var (
 	ErrLastAdministrator = errors.New("the last enabled administrator must remain an enabled administrator")
 	// ErrNotAdministrator reports that the named actor may not administer identities.
 	ErrNotAdministrator = errors.New("actor is not an enabled administrator")
+	// ErrExpiryNotInFuture reports a token expiry that has already passed, which
+	// would create a credential that is unusable the moment it is disclosed.
+	ErrExpiryNotInFuture = errors.New("token expiry must be in the future")
 )
 
 // Repository is the persistence this package needs, named at the point of use.
@@ -398,6 +401,9 @@ func (service *Service) CreateToken(
 		if _, err := auth.ParsePermission(string(scope)); err != nil {
 			return TokenIssue{}, err
 		}
+	}
+	if expiresAt != nil && !expiresAt.After(service.now()) {
+		return TokenIssue{}, ErrExpiryNotInFuture
 	}
 	created, verifier, err := auth.NewToken(service.random, service.now())
 	if err != nil {

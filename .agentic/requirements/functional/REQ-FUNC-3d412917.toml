@@ -56,7 +56,7 @@ affected_paths = [
     "05_Software/nilo_gui/src/api/contract.ts",
     "05_Software/nilo_gui/src/api/client.ts",
     "05_Software/nilo_gui/src/api/client.test.ts",
-    "05_Software/nilo_gui/src/components/StatusPanel.tsx",
+    "05_Software/nilo_gui/src/components/pages/BenchPage.tsx",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
@@ -74,4 +74,4 @@ priority = "high"   # low | normal | high
 rationale = "A developer must be able to tell a wrong token from a stopped backend from a contract mismatch without reading the browser console."
 
 created = 2026-09-01
-updated = 2026-09-01
+updated = 2026-09-02

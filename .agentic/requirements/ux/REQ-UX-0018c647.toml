@@ -53,11 +53,12 @@ verification = "A test reads the shipped application and document stylesheets an
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/App.css",
+    "05_Software/nilo_gui/src/styles/tokens.css",
+    "05_Software/nilo_gui/src/styles/shell.css",
     "05_Software/nilo_gui/src/index.css",
     "05_Software/nilo_gui/src/layout.test.ts",
     "05_Software/nilo_gui/tsconfig.app.json",
-    "05_Software/nilo_gui/src/components/InventoryPanel.tsx",
+    "05_Software/nilo_gui/src/components/pages/BenchPage.tsx",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
@@ -75,4 +76,4 @@ priority = "normal"   # low | normal | high
 rationale = "Bench work is read at a glance on one monitor; a page that scrolls hides state the operator is relying on."
 
 created = 2026-09-01
-updated = 2026-09-01
+updated = 2026-09-02

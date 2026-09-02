@@ -1,0 +1,88 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+# One requirement = one independently verifiable behavior.
+# Lives at .agentic/requirements/<category>/<id>.toml
+# Required fields: schema, id, title, status, requirement, verification.
+
+schema = 1
+
+# REQ-<CAT>-<8 hex>. CAT is FUNC, UX, NFR, SEC, DATA, PLAT, REL or TEST,
+# and must match the category folder this file sits in.
+id = "REQ-TEST-68dcb172"
+
+title = "Prove the administration page against a real backend in a browser"
+
+# draft while being written, active once it is built and tested,
+# retired when the behavior is deliberately removed.
+status = "active"
+
+# Self-contained prose: a reader with no other context must be able to
+# understand and check it. No ticket numbers, no run IDs, no references
+# to other requirements.
+#
+# Recommended shape - EARS. Pick the one pattern that fits; a stated
+# trigger or condition is what the test has to arrange, so surfacing it
+# here is what makes the behavior testable:
+#
+#   ubiquitous  The <system> shall <response>.
+#   event       When <trigger>, the <system> shall <response>.
+#   state       While <state>, the <system> shall <response>.
+#   unwanted    If <condition>, then the <system> shall <response>.
+#   optional    Where <feature is included>, the <system> shall <response>.
+#
+# Two "shall" clauses means two behaviors: split it into two requirements.
+# Do not contort prose to fit a pattern - a constraint that reads better
+# plainly is better plainly.
+requirement = """
+The repository shall provide a browser end-to-end test that signs a real
+administrator into the interface against a real Bench Core running under WSL2 and
+administers identities and API tokens through that backend's own authorization
+decisions rather than a substituted response.
+"""
+
+# The observation that settles whether the behavior holds — not a
+# restatement of the requirement.
+#
+# Some behaviors no test can settle: a look-and-see judgement, an install
+# on clean hardware, a printed page. Start this field with "Manual:" or
+# "Inspection:" and name the method, and `check` records the requirement
+# as verified by hand instead of counting it among the tests still owed.
+# The prefix alone is not enough — it has to say what someone does.
+verification = "Running the browser end-to-end suite bootstraps an administrator in that run's temporary Bench Core through its command line, drives a real browser through password sign-in, an identity creation, a role change and a token creation with its one-time secret, and passes only when those changes are still visible after a page reload that restores the session."
+
+# Repo-relative, forward slashes. The source files this behavior lives in.
+affected_paths = [
+    "05_Software/nilo_gui/e2e/authentication.spec.ts",
+    "05_Software/nilo_gui/e2e/topology.ts",
+    "05_Software/nilo_gui/e2e/commands.test.ts",
+]
+
+# "tests/path/test_file.py::test_name" entries. Kept current during build;
+# these select the impacted regression set.
+linked_tests = [
+    "05_Software/nilo_gui/e2e/authentication.spec.ts::signs a real administrator in with a password",
+    "05_Software/nilo_gui/e2e/authentication.spec.ts::administers identities from the Authentication page",
+    "05_Software/nilo_gui/e2e/authentication.spec.ts::creates an API token and shows its secret exactly once",
+    "05_Software/nilo_gui/e2e/authentication.spec.ts::restores the session across a reload and never shows the secret again",
+    "05_Software/nilo_gui/e2e/authentication.spec.ts::revokes a token only after an explicit confirmation",
+    "05_Software/nilo_gui/e2e/authentication.spec.ts::refuses to remove the last enabled administrator",
+    "05_Software/nilo_gui/e2e/authentication.spec.ts::hides the Authentication entry from an identity that may not administer",
+    "05_Software/nilo_gui/e2e/authentication.spec.ts::ends the session server-side when the human signs out",
+    "05_Software/nilo_gui/e2e/commands.test.ts::never lets the administration spec type a password unredacted",
+    "05_Software/nilo_gui/e2e/commands.test.ts::bootstraps its administrator through standard input, never a command line",
+]
+
+# --- optional below this line ---
+
+# "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "Mocked authorization answers prove the interface renders; only the real backend proves the cookie, the CSRF token and the permission checks line up."
+
+created = 2026-09-02
+updated = 2026-09-02

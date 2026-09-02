@@ -58,9 +58,7 @@ test('signs in with a development token and shows the simulated bench', async ()
   const running = requireTopology();
   await page.goto(running.frontendUrl);
 
-  await expect(
-    page.getByRole('heading', { name: 'Connect to Bench Core' }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sign in to NILO' })).toBeVisible();
   await expectSimulationIdentity();
 
   // The harness types it in. There is no accessor for the value, and a failing
@@ -68,9 +66,7 @@ test('signs in with a development token and shows the simulated bench', async ()
   await running.enterTokenInto(page.getByLabel('Development bearer token'));
   await page.getByRole('button', { name: 'Connect' }).click();
 
-  await expect(
-    page.getByRole('heading', { name: 'Bench Core connected' }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Bench', exact: true })).toBeVisible();
   await expectSimulationIdentity();
 
   await expect(statusValue('Profile')).toHaveText('simulation');
@@ -105,16 +101,14 @@ test('presents Bench Core as unreachable and recovers through the interface', as
   await page.getByRole('button', { name: 'Try again' }).click();
 
   // No reload and no second token: the interface reuses the one it still holds.
-  await expect(
-    page.getByRole('heading', { name: 'Bench Core connected' }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Bench', exact: true })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Devices' })).toContainText(DEVICE_ID);
 });
 
 /** The identity and the boundary statement every screen must carry. */
 async function expectSimulationIdentity(): Promise<void> {
-  await expect(page.getByRole('status', { name: 'Runtime profile' })).toHaveText(
-    'SIMULATION',
+  await expect(page.getByRole('status', { name: /runtime profile/i })).toContainText(
+    'SIM',
   );
   await expect(
     page.getByText(
@@ -123,10 +117,10 @@ async function expectSimulationIdentity(): Promise<void> {
   ).toBeVisible();
 }
 
-/** The value shown for one labelled status card. */
+/** The value shown for one labelled fact. */
 function statusValue(label: string) {
   return page
-    .locator('.status-card')
+    .locator('.fact')
     .filter({ hasText: new RegExp(`^${label}`) })
     .locator('dd');
 }

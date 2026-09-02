@@ -38,7 +38,7 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-While no bearer token has been submitted, the browser GUI shall present a development login screen offering a labelled masked bearer-token field and a submit control, name the Bench Core endpoint it is configured against, and issue no backend request until that field is submitted with a non-empty value.
+While nobody is signed in, the browser GUI shall present a sign-in screen offering a labelled masked bearer-token field and a submit control beside the password form, name the Bench Core endpoint it is configured against, and issue no backend request for that field until it is submitted with a non-empty value.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -53,7 +53,7 @@ verification = "A component test renders the GUI with a recording stub client an
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/components/LoginScreen.tsx",
+    "05_Software/nilo_gui/src/components/SignInScreen.tsx",
     "05_Software/nilo_gui/src/App.tsx",
     "05_Software/nilo_gui/src/App.test.tsx",
 ]
@@ -73,4 +73,4 @@ priority = "high"   # low | normal | high
 rationale = "The backend issues development tokens out of band, so the first GUI screen has to accept one explicitly rather than assume an authenticated session."
 
 created = 2026-09-01
-updated = 2026-09-01
+updated = 2026-09-02

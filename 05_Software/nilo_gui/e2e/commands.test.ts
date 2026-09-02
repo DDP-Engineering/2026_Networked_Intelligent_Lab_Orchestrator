@@ -88,6 +88,31 @@ describe('what a browser run is allowed to leave behind', () => {
     expect(spec).not.toMatch(/\.fill\(/);
   });
 
+  it('never lets the administration spec type a password unredacted', () => {
+    // Same hazard as the token field: a failing fill repeats its argument. The
+    // administration spec types real passwords, so every one of them goes
+    // through the harness's redaction wrapper rather than straight into fill.
+    const spec = readFileSync(
+      resolve(guiRoot, 'e2e', 'authentication.spec.ts'),
+      'utf8',
+    );
+
+    expect(spec).toContain('withRedactedSecret');
+    expect(spec).not.toMatch(/\.fill\(\s*[A-Za-z_]*PASSWORD/);
+  });
+
+  it('bootstraps its administrator through standard input, never a command line', () => {
+    // Write access to the data directory is already full control, but a
+    // password in argv is readable by every other process on the host.
+    const harness = readFileSync(resolve(guiRoot, 'e2e', 'topology.ts'), 'utf8');
+    const method = harness.slice(harness.indexOf('async bootstrapAdministrator'));
+    const body = method.slice(0, method.indexOf('\n  }'));
+
+    expect(body).toContain('input:');
+    expect(body).toContain('withRedactedSecret');
+    expect(body).not.toContain('--password');
+  });
+
   it('keeps its generated output directory out of Git', () => {
     const ignored = readFileSync(resolve(repositoryRoot, '.gitignore'), 'utf8');
 

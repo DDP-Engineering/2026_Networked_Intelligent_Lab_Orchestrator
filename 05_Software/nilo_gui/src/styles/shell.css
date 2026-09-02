@@ -1,0 +1,1036 @@
+/*
+ * The shell and everything inside it.
+ *
+ * Not one literal colour appears below: every value comes from a token in
+ * tokens.css, which is what makes a second component tree for the second theme
+ * impossible rather than merely discouraged.
+ */
+
+/* ---------- the grid ---------- */
+
+/*
+ * Four cells. The wordmark sits in the navigation column of the header row and
+ * the controls in the workspace column of the same row, which is why there is
+ * nowhere for a second header row to appear.
+ */
+.shell {
+  display: grid;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--surface-base);
+  grid-template-columns: var(--nav-width) minmax(0, 1fr);
+  grid-template-rows: var(--row-height) minmax(0, 1fr) var(--boundary-height);
+  grid-template-areas:
+    'brand    toprow'
+    'sidenav  workspace'
+    'sidenav  boundary';
+}
+
+.shell-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0 0.85rem;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-raised);
+  grid-area: brand;
+}
+
+.brand-mark {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  place-items: center;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.brand-word {
+  color: var(--text-strong);
+  font-family: var(--font-mono);
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.shell-workspace {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  grid-area: workspace;
+}
+
+/* The boundary statement, required on every screen, in the least space that
+   still reads. It replaces a 47px footer with a single line. */
+.shell-boundary {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0 0.9rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface-raised);
+  color: var(--state-warn);
+  font-size: 0.68rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  grid-area: boundary;
+}
+
+/* ---------- top row ---------- */
+
+.toprow {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  min-width: 0;
+  padding-right: 0.6rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-raised);
+  grid-area: toprow;
+}
+
+.toprow-controls {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: auto;
+}
+
+.control-label {
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+.sim-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.5rem;
+  flex: none;
+  border: 1px solid var(--state-warn);
+  border-radius: 999px;
+  background: var(--state-warn-surface);
+  color: var(--state-warn);
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.state-dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: currentcolor;
+}
+
+.state-dot.state-ok {
+  color: var(--state-ok);
+}
+.state-dot.state-warn {
+  color: var(--state-warn);
+}
+.state-dot.state-danger {
+  color: var(--state-danger);
+}
+.state-dot.state-unknown {
+  color: var(--state-unknown);
+}
+
+/* ---------- tabs ---------- */
+
+/* Never wraps: excess tabs scroll, because a second header line would take the
+   space this layout exists to give the workspace. */
+.tabstrip {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: stretch;
+  gap: 1px;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.5rem 0 0.7rem;
+  flex: none;
+  max-width: 15rem;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.tab:hover {
+  background: var(--surface-hover);
+}
+
+.tab-active {
+  border-bottom-color: var(--accent);
+  background: var(--surface-selected);
+  color: var(--text-strong);
+}
+
+.tab-name {
+  overflow: hidden;
+  font-size: 0.79rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-close {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.tab-close:hover {
+  background: var(--surface-sunken);
+  opacity: 1;
+}
+
+/* ---------- navigation ---------- */
+
+.sidenav {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 0;
+  padding: 0.5rem 0;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+  background: var(--surface-raised);
+  grid-area: sidenav;
+}
+
+.nav-upper,
+.nav-lower {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.nav-lower {
+  padding-top: 0.5rem;
+}
+
+.nav-section {
+  margin: 0.6rem 0 0.25rem;
+  padding: 0 0.9rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav-entry {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.42rem 0.9rem;
+  border: 0;
+  border-left: 2px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.82rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nav-entry:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.nav-entry-active {
+  border-left-color: var(--accent);
+  background: var(--surface-selected);
+  color: var(--text-strong);
+  font-weight: 550;
+}
+
+.nav-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Marks an entry whose page is not built yet, so the agreed navigation shape
+   exists without anything being advertised as working. */
+.nav-pending {
+  width: 5px;
+  height: 5px;
+  margin-left: auto;
+  flex: none;
+  border-radius: 50%;
+  background: var(--state-unknown);
+}
+
+/* ---------- menus ---------- */
+
+.menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.menu-trigger,
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.menu-trigger:hover {
+  background: var(--surface-hover);
+}
+
+.button {
+  border-color: var(--border-strong);
+  background: var(--surface-raised);
+}
+
+.button:hover {
+  border-color: var(--accent);
+  color: var(--text-strong);
+}
+
+.button-primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
+.button-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.button-danger {
+  border-color: var(--state-danger);
+  color: var(--state-danger);
+}
+
+.button:disabled,
+.menu-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.menu-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  min-width: 15rem;
+  max-width: 24rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--surface-overlay);
+  box-shadow: var(--shadow-overlay);
+}
+
+.menu-title {
+  margin: 0 0 0.35rem;
+  padding: 0 0.4rem;
+  color: var(--text-strong);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.menu-subtitle {
+  margin: 0.35rem 0 0.2rem;
+  padding: 0 0.4rem;
+  color: var(--text-strong);
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.menu-note {
+  margin: 0 0 0.3rem;
+  padding: 0 0.4rem;
+  color: var(--state-warn);
+  font-size: 0.74rem;
+}
+
+.menu-body {
+  margin: 0;
+  padding: 0 0.4rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.menu-foot {
+  margin: 0.35rem 0 0;
+  padding: 0 0.4rem;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.menu-mono {
+  font-family: var(--font-mono);
+}
+
+.menu-rule {
+  margin: 0.45rem 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.menu-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.4rem;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.8rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-item:hover {
+  background: var(--surface-hover);
+}
+.menu-item-icon {
+  display: grid;
+  width: 18px;
+  place-items: center;
+  flex: none;
+}
+.menu-item-label {
+  flex: 1 1 auto;
+}
+
+.menu-link {
+  margin-top: 0.5rem;
+  padding: 0.3rem 0.4rem;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 0.76rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.network-summary {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- pages ---------- */
+
+.page {
+  display: grid;
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.page-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.page-head h2 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 1.02rem;
+  font-weight: 600;
+}
+
+.page-head .button {
+  margin-left: auto;
+}
+
+.page-sub {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+}
+
+.page-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  min-height: 0;
+  padding: 0.9rem 1rem;
+  overflow-y: auto;
+}
+
+.page-foot {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+}
+
+.section-title {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.notice {
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--accent);
+  border-radius: 4px;
+  background: var(--surface-raised);
+}
+
+.notice-unknown {
+  border-left-color: var(--state-unknown);
+}
+.notice-warn {
+  border-left-color: var(--state-warn);
+}
+.notice-danger {
+  border-left-color: var(--state-danger);
+}
+
+.notice h3 {
+  margin: 0 0 0.3rem;
+  color: var(--text-strong);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.notice p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.fact-grid {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--border);
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  overflow: hidden;
+}
+
+.fact {
+  padding: 0.5rem 0.7rem;
+  background: var(--surface-raised);
+}
+
+.fact dt {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.fact dd {
+  margin: 0.3rem 0 0;
+  color: var(--text-strong);
+  font-size: 0.82rem;
+}
+
+/* ---------- tables ---------- */
+
+.table-scroll {
+  min-height: 0;
+  overflow: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.4rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  border-bottom-color: var(--border-strong);
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.data-table tbody th {
+  color: var(--text-strong);
+  font-weight: 600;
+}
+.data-table tbody tr:hover {
+  background: var(--surface-hover);
+}
+
+/* Technical values only: identifiers, versions, addresses, protocol names. */
+.cell-mono {
+  font-family: var(--font-mono);
+  color: var(--text);
+}
+.cell-unknown {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.row-id {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+.row-actions .button {
+  padding: 0.15rem 0.45rem;
+  font-size: 0.7rem;
+}
+
+.empty {
+  margin: 0;
+  padding: 0.8rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.failure-detail {
+  margin: 0.35rem 0 0;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- inventories ---------- */
+
+.inventory-grid {
+  display: grid;
+  gap: 0.9rem;
+  min-height: 0;
+  grid-template-columns: repeat(auto-fit, minmax(26rem, 1fr));
+}
+
+.inventory {
+  display: grid;
+  min-height: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface-raised);
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.inventory-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.3rem 0.8rem;
+  padding: 0.5rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.inventory-head h3 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.inventory-meta {
+  display: flex;
+  gap: 0.75rem;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+}
+
+.inventory-list {
+  min-height: 0;
+  overflow: auto;
+}
+.inventory-failed {
+  padding: 0.7rem;
+}
+.inventory-failed p[role='alert'] {
+  margin: 0;
+  color: var(--state-warn);
+  font-size: 0.78rem;
+}
+
+/* ---------- unauthenticated screens ---------- */
+
+.centred {
+  display: grid;
+  height: 100dvh;
+  padding: 1.5rem;
+  overflow-y: auto;
+  background: var(--surface-base);
+  place-items: center;
+}
+
+.card {
+  width: min(34rem, 100%);
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-raised);
+}
+
+.card h1 {
+  margin: 0.4rem 0 0;
+  color: var(--text-strong);
+  font-size: 1.4rem;
+  font-weight: 620;
+}
+.card h2 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.card-copy {
+  margin: 0.75rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.card-sim {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-boundary {
+  margin: 1.25rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  color: var(--state-warn);
+  font-size: 0.72rem;
+}
+
+.mode-note {
+  margin: 0.4rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+/* ---------- forms ---------- */
+
+.form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.1rem;
+}
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.field label,
+.scopes legend {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.field input,
+.field select {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  color: var(--text-strong);
+  background: var(--surface-base);
+  font-family: inherit;
+  font-size: 0.82rem;
+}
+
+.field-error {
+  margin: 0;
+  color: var(--state-danger);
+  font-size: 0.76rem;
+}
+.field-notice {
+  margin: 0;
+  color: var(--accent);
+  font-size: 0.76rem;
+}
+
+.divider {
+  margin: 1.25rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+.divider h3 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+/* ---------- dialogs ---------- */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  padding: 1.25rem;
+  overflow-y: auto;
+  background: rgb(0 0 0 / 45%);
+  place-items: center;
+}
+
+.modal {
+  width: min(32rem, 100%);
+  max-height: 100%;
+  padding: 1.1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  overflow-y: auto;
+  background: var(--surface-overlay);
+  box-shadow: var(--shadow-overlay);
+}
+
+.modal-title {
+  margin: 0 0 0.8rem;
+  color: var(--text-strong);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.dialog-form {
+  display: grid;
+  gap: 0.7rem;
+}
+.dialog-form .card-copy {
+  margin: 0;
+  font-size: 0.8rem;
+}
+.modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
+}
+
+.scopes {
+  margin: 0;
+  padding: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.scope-grid {
+  display: grid;
+  gap: 0.25rem 0.75rem;
+  margin-top: 0.4rem;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+}
+
+.scope {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+}
+
+.token-secret {
+  margin: 0;
+  padding: 0.6rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--surface-base);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- administration page ---------- */
+
+.admin-grid {
+  display: grid;
+  gap: 0.9rem;
+  min-height: 0;
+  grid-template-columns: repeat(auto-fit, minmax(27rem, 1fr));
+}
+
+.admin-panel {
+  display: grid;
+  min-height: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface-raised);
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.admin-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem 0.8rem;
+  padding: 0.5rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-head h3 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.admin-message {
+  margin: 0;
+  padding: 0.8rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+.admin-message p[role='alert'] {
+  margin: 0;
+  color: var(--state-warn);
+  font-weight: 600;
+}
+.admin-list {
+  min-height: 0;
+  overflow: auto;
+}
+
+/* ---------- focus, everywhere and in both themes ---------- */
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+
+/* ---------- narrow viewports ---------- */
+
+/*
+ * Below two comfortable columns the navigation becomes an icon rail rather than
+ * disappearing, and nothing is clipped: the workspace was already its own
+ * scroll region.
+ */
+@media (width <= 60rem) {
+  .shell {
+    grid-template-columns: var(--nav-width-narrow) minmax(0, 1fr);
+  }
+  .brand-word {
+    display: none;
+  }
+  .nav-label,
+  .nav-section {
+    display: none;
+  }
+  .nav-entry {
+    justify-content: center;
+    padding-inline: 0;
+  }
+  .control-label {
+    display: none;
+  }
+  .shell-boundary {
+    font-size: 0.62rem;
+  }
+}

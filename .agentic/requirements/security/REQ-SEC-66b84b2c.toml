@@ -1,0 +1,87 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+# One requirement = one independently verifiable behavior.
+# Lives at .agentic/requirements/<category>/<id>.toml
+# Required fields: schema, id, title, status, requirement, verification.
+
+schema = 1
+
+# REQ-<CAT>-<8 hex>. CAT is FUNC, UX, NFR, SEC, DATA, PLAT, REL or TEST,
+# and must match the category folder this file sits in.
+id = "REQ-SEC-66b84b2c"
+
+title = "Keep browser credentials out of durable storage and URLs"
+
+# draft while being written, active once it is built and tested,
+# retired when the behavior is deliberately removed.
+status = "active"
+
+# Self-contained prose: a reader with no other context must be able to
+# understand and check it. No ticket numbers, no run IDs, no references
+# to other requirements.
+#
+# Recommended shape - EARS. Pick the one pattern that fits; a stated
+# trigger or condition is what the test has to arrange, so surfacing it
+# here is what makes the behavior testable:
+#
+#   ubiquitous  The <system> shall <response>.
+#   event       When <trigger>, the <system> shall <response>.
+#   state       While <state>, the <system> shall <response>.
+#   unwanted    If <condition>, then the <system> shall <response>.
+#   optional    Where <feature is included>, the <system> shall <response>.
+#
+# Two "shall" clauses means two behaviors: split it into two requirements.
+# Do not contort prose to fit a pattern - a constraint that reads better
+# plainly is better plainly.
+requirement = """
+The browser interface shall never write an entered password, a newly created API
+token secret, or the session's cross-site request forgery token to `localStorage`,
+`sessionStorage`, a request URL, or the browser console.
+"""
+
+# The observation that settles whether the behavior holds — not a
+# restatement of the requirement.
+#
+# Some behaviors no test can settle: a look-and-see judgement, an install
+# on clean hardware, a printed page. Start this field with "Manual:" or
+# "Inspection:" and name the method, and `check` records the requirement
+# as verified by hand instead of counting it among the tests still owed.
+# The prefix alone is not enough — it has to say what someone does.
+verification = "A component test signs in while spying on `localStorage.setItem`, `sessionStorage.setItem`, the document cookie setter and every console method, and asserts none of them received the password or the cross-site request forgery token; a second creates an API token and asserts the same for its secret, including after the disclosure is dismissed and the page is rendered again; and client tests assert the password travels in the body of one request and the request-forgery token in a header, with neither value in any requested URL."
+
+# Repo-relative, forward slashes. The source files this behavior lives in.
+affected_paths = [
+    "05_Software/nilo_gui/src/App.tsx",
+    "05_Software/nilo_gui/src/api/client.ts",
+    "05_Software/nilo_gui/src/api/csrf.ts",
+    "05_Software/nilo_gui/src/components/SignInScreen.tsx",
+    "05_Software/nilo_gui/src/components/AuthenticationPage.tsx",
+    "05_Software/nilo_gui/src/components/AdministrationForms.tsx",
+    "05_Software/nilo_gui/src/api/client.test.ts",
+]
+
+# "tests/path/test_file.py::test_name" entries. Kept current during build;
+# these select the impacted regression set.
+linked_tests = [
+    "05_Software/nilo_gui/src/App.test.tsx::never writes a password or a CSRF token to a durable store or the console",
+    "05_Software/nilo_gui/src/api/client.test.ts::sends a password in one request body and never in the URL",
+    "05_Software/nilo_gui/src/api/client.test.ts::sends a replacement password in the body of the reset request only",
+    "05_Software/nilo_gui/src/api/client.test.ts::repeats the CSRF token in a header on a state change and not on a read",
+    "05_Software/nilo_gui/src/App.test.tsx::never writes the development token to a durable browser store",
+    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::discloses the secret once, copies it, and never shows it again",
+]
+
+# --- optional below this line ---
+
+# "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "Web storage and URLs outlive the page and reach logs and history; the session secret itself is deliberately in a cookie the page cannot read at all."
+
+created = 2026-09-02
+updated = 2026-09-02

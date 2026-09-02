@@ -168,14 +168,20 @@ existing Windows-to-WSL2 browser suite still passes unchanged.
 This slice implements the backend only. There is no administration or login
 GUI yet, and no MCP transport.
 
-### Slice 8 - Identity and access-control interface (planned)
+### Slice 8 - Identity and access-control interface (delivered)
 
-- Add the GUI login screen, session handling and the administration pages for
-  users, roles and API tokens.
-- Add the main navigation this implies, and the About and Settings surfaces.
-- Add authenticated audit browsing for identity and token changes.
-- Consider durable login-attempt state, terminal echo suppression for
-  command-line password entry, and token rotation.
+- Added the GUI sign-in screen, browser session handling over the server-managed
+  `HttpOnly` cookie, session restoration after a reload, sign-out, and the
+  administrator-only Authentication page for users, roles and API tokens.
+- Added the Bench Core identity and token administration routes those screens
+  drive, each behind the existing per-route permission check.
+- Added the main navigation this implies, with the Bench and Authentication
+  entries only. The About and Settings surfaces are deliberately not added: an
+  empty page is worse than no entry, and neither subsystem exists yet.
+- Deferred to a later slice: authenticated audit browsing for identity and token
+  changes, self-service token management for an Operator, durable
+  login-attempt state, terminal echo suppression for command-line password
+  entry, and token rotation.
 
 ## Deferred product behavior
 

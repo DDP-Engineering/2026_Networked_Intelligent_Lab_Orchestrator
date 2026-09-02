@@ -1,0 +1,217 @@
+import { resolve } from 'node:path';
+import { expect, test, type Locator, type Page } from '@playwright/test';
+
+import { DevelopmentTopology, withRedactedSecret } from './topology';
+
+/**
+ * The redesigned shell, in a real browser against a real Bench Core under WSL2.
+ *
+ * What only a browser can settle is here: that the header really is one row,
+ * that a theme and a language survive an actual page reload, and that the
+ * session survives it with them. Everything else about the shell is settled far
+ * more cheaply in the component tests.
+ */
+
+const guiRoot = process.cwd();
+const repositoryRoot = resolve(guiRoot, '..', '..');
+
+const ADMINISTRATOR = 'shell-admin';
+// A fixture credential for a temporary database this run creates and deletes.
+const ADMINISTRATOR_PASSWORD = 'shell-admin-password-1';
+
+let topology: DevelopmentTopology | null = null;
+let page: Page;
+
+test.describe.configure({ mode: 'serial' });
+
+test.beforeAll(async ({ browser }) => {
+  test.setTimeout(900_000);
+  try {
+    topology = await DevelopmentTopology.start({ repositoryRoot, guiRoot });
+    await topology.bootstrapAdministrator(ADMINISTRATOR, ADMINISTRATOR_PASSWORD);
+  } catch (failure) {
+    await topology?.dispose().catch(() => undefined);
+    topology = null;
+    throw failure;
+  }
+  page = await browser.newPage();
+});
+
+test.afterAll(async () => {
+  try {
+    await page?.close();
+  } finally {
+    await topology?.dispose();
+    topology = null;
+  }
+});
+
+test('puts the wordmark, tabs and every control on one row', async () => {
+  const running = requireTopology();
+  await page.goto(running.frontendUrl);
+
+  await expect(page.getByRole('heading', { name: 'Sign in to NILO' })).toBeVisible();
+  await signIn(ADMINISTRATOR, ADMINISTRATOR_PASSWORD);
+  await expect(page.getByRole('heading', { name: 'Bench', exact: true })).toBeVisible();
+
+  const row = page.locator('.toprow');
+  await expect(row.getByRole('tablist', { name: 'Open pages' })).toBeVisible();
+  await expect(row.getByRole('button', { name: 'Network' })).toBeVisible();
+  await expect(row.getByRole('button', { name: 'Appearance' })).toBeVisible();
+  await expect(row.getByRole('button', { name: 'Language' })).toBeVisible();
+  await expect(row.getByRole('button', { name: 'Account' })).toBeVisible();
+
+  // One row, and within the agreed height.
+  const height = await row.evaluate(
+    (element) => element.getBoundingClientRect().height,
+  );
+  expect(height).toBeGreaterThanOrEqual(44);
+  expect(height).toBeLessThanOrEqual(48);
+
+  // One tab strip, and the document does not scroll. The measurement is taken
+  // from the root element itself, so this file needs no DOM globals.
+  await expect(page.getByRole('tablist')).toHaveCount(1);
+  expect(
+    await page
+      .locator('html')
+      .evaluate((root) => root.scrollHeight <= root.clientHeight + 1),
+  ).toBe(true);
+});
+
+test('anchors Network in the lower cluster, not among the instruments', async () => {
+  const lower = page.locator('.nav-lower');
+
+  await expect(lower.getByRole('button')).toHaveText([
+    'Network',
+    'Plugins',
+    'Authentication',
+    'Settings',
+    'About',
+  ]);
+  await expect(
+    page.locator('.nav-upper').getByRole('button', { name: 'Network' }),
+  ).toHaveCount(0);
+});
+
+test('opens and closes pages as tabs', async () => {
+  const tabs = page.getByRole('tablist', { name: 'Open pages' });
+
+  await page.locator('.nav-lower').getByRole('button', { name: 'Network' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Network', exact: true }),
+  ).toBeVisible();
+  await expect(tabs.getByRole('tab')).toHaveCount(2);
+
+  await page.locator('.nav-lower').getByRole('button', { name: 'About' }).click();
+  await expect(tabs.getByRole('tab')).toHaveCount(3);
+
+  // Closing the active tab falls back to its left neighbour.
+  await page.getByRole('button', { name: 'Close About' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Network', exact: true }),
+  ).toBeVisible();
+  await expect(tabs.getByRole('tab')).toHaveCount(2);
+});
+
+test('reports appliance network state as unavailable rather than inventing it', async () => {
+  await expect(
+    page.getByRole('heading', { name: 'Network', exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText('Appliance network reporting is not yet available'),
+  ).toBeVisible();
+  await expect(page.getByText('answered this interface over HTTP')).toBeVisible();
+
+  // None of the illustrative values from the design references is present.
+  const body = (await page.locator('body').innerText()).replace(/\s+/g, ' ');
+  for (const value of [
+    '192.168.10.42',
+    '10.8.0.12',
+    '1 Gbps',
+    '2.4 Mbps',
+    '0.3 Mbps',
+  ]) {
+    expect(body).not.toContain(value);
+  }
+});
+
+test('keeps the theme and the language across a reload, with the session', async () => {
+  await page.getByRole('button', { name: 'Appearance' }).click();
+  await page.getByRole('menuitemradio', { name: 'Dark' }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+
+  await page.getByRole('button', { name: 'Language' }).click();
+  await page.getByRole('menuitemradio', { name: 'Deutsch' }).click();
+  await expect(
+    page.locator('.nav-lower').getByRole('button', { name: 'Netzwerk' }),
+  ).toBeVisible();
+
+  await page.reload();
+
+  // The reload proves all three: the cookie session, and both preferences.
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'de');
+  await expect(page.getByRole('heading', { name: 'Sign in to NILO' })).toHaveCount(0);
+  await expect(
+    page.locator('.nav-lower').getByRole('button', { name: 'Netzwerk' }),
+  ).toBeVisible();
+
+  // Back to English so the remaining assertions read in one language.
+  await page.getByRole('button', { name: 'Sprache' }).click();
+  await page.getByRole('menuitemradio', { name: 'English' }).click();
+  await expect(
+    page.locator('.nav-lower').getByRole('button', { name: 'Network' }),
+  ).toBeVisible();
+});
+
+test('narrows the navigation on a small viewport without clipping it', async () => {
+  await page.setViewportSize({ width: 900, height: 720 });
+
+  // The labels give way, but every entry is still there, still named for a
+  // screen reader, and still clickable.
+  await expect(page.locator('.nav-lower').getByRole('button')).toHaveCount(5);
+  await expect(
+    page.locator('.nav-lower').getByRole('button', { name: 'Network' }),
+  ).toBeVisible();
+  const boxes = await page
+    .locator('.nav-lower button')
+    .evaluateAll((elements) =>
+      elements.map((element) => element.getBoundingClientRect().width),
+    );
+  expect(Math.min(...boxes)).toBeGreaterThan(0);
+  expect(
+    await page
+      .locator('html')
+      .evaluate((root) => root.scrollWidth <= root.clientWidth + 1),
+  ).toBe(true);
+
+  await page.setViewportSize({ width: 1280, height: 720 });
+});
+
+test('keeps the simulation marking and the boundary statement on every screen', async () => {
+  for (const entry of ['Bench', 'Authentication', 'About']) {
+    await page.locator('.sidenav').getByRole('button', { name: entry }).click();
+    await expect(page.getByRole('status', { name: /runtime profile/i })).toBeVisible();
+    await expect(page.locator('.shell-boundary')).toContainText(
+      'never represent evidence from physical equipment',
+    );
+  }
+});
+
+/** Sign in without letting a failing action repeat the password. */
+async function signIn(username: string, password: string): Promise<void> {
+  await page.getByLabel('Username').fill(username);
+  await fillSecret(page.getByLabel('Password', { exact: true }), password);
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+}
+
+async function fillSecret(field: Locator, secret: string): Promise<void> {
+  await withRedactedSecret(secret, () => field.fill(secret));
+}
+
+function requireTopology(): DevelopmentTopology {
+  if (topology === null) {
+    throw new Error('the development topology is not running');
+  }
+  return topology;
+}

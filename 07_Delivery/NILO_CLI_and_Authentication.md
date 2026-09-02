@@ -15,9 +15,10 @@ discover it in production.
 3. [The `nilo admin` command line](#3-the-nilo-admin-command-line)
 4. [First-run setup](#4-first-run-setup)
 5. [HTTP authentication](#5-http-authentication)
-6. [Audit](#6-audit)
-7. [Upgrading an existing installation](#7-upgrading-an-existing-installation)
-8. [Not yet available](#8-not-yet-available)
+6. [The browser Authentication page](#6-the-browser-authentication-page)
+7. [Audit](#7-audit)
+8. [Upgrading an existing installation](#8-upgrading-an-existing-installation)
+9. [Not yet available](#9-not-yet-available)
 
 ## 1. Two decisions, not one
 
@@ -63,10 +64,11 @@ firmware flashing, MCP access and artifact retrieval receive their permissions
 when those interfaces ship.
 
 One caveat worth knowing before you assign roles: the two `tokens.*.self`
-permissions are enforced wherever token management is reachable, but the only
-surface in this release is the administrator-only command line in section 3.
-An Operator therefore holds those permissions without yet having an interface
-for them. They are kept because they are what a token scope narrows against.
+permissions are enforced wherever token management is reachable, but both
+surfaces in this release - the command line in section 3 and the browser page in
+section 6 - are administrator-only. An Operator therefore holds those
+permissions without yet having an interface for them. They are kept because they
+are what a token scope narrows against.
 
 ### How effective permissions are calculated
 
@@ -210,6 +212,11 @@ Revoke it when the client is retired:
 nilo admin token revoke --data-dir /var/lib/nilo --actor admin --id 0199...
 ```
 
+Bootstrap is the only step that has to happen at the console. Once one
+administrator exists, everything above can be done from the browser
+Authentication page in section 6 instead, by that administrator signing in with
+the password you just set.
+
 ## 5. HTTP authentication
 
 ### Routes
@@ -223,6 +230,28 @@ nilo admin token revoke --data-dir /var/lib/nilo --actor admin --id 0199...
 | `GET /api/v1/integrations` | session or bearer | `inventory.read` |
 | `GET /api/v1/devices` | session or bearer | `inventory.read` |
 | `GET /api/v1/users` | session or bearer | `users.read` |
+| `POST /api/v1/users` | session or bearer | `users.manage` |
+| `PUT /api/v1/users/{username}/role` | session or bearer | `users.manage` |
+| `PUT /api/v1/users/{username}/enabled` | session or bearer | `users.manage` |
+| `PUT /api/v1/users/{username}/password` | session or bearer | `users.manage` |
+| `GET /api/v1/tokens` | session or bearer | `tokens.read.all` |
+| `POST /api/v1/tokens` | session or bearer | `tokens.manage.all` |
+| `POST /api/v1/tokens/{id}/revoke` | session or bearer | `tokens.manage.all` |
+
+Every route that changes something and is authenticated by a session cookie
+must also carry the `X-NILO-CSRF` header. A creation returns what the caller
+cannot otherwise obtain — the new identity, or the new token together with the
+one and only disclosure of its secret. Every other change answers `204 No
+Content`, and the caller re-reads the listing.
+
+A refusal that the caller can act on carries a stable code and a fixed message,
+for example `{"error":"invalid_role","message":"role must be one of
+administrator, operator or viewer"}`. The codes are `invalid_request`,
+`invalid_username`, `invalid_password`, `invalid_role`, `invalid_name`,
+`invalid_scope`, `invalid_expiry`, `invalid_enabled`, `user_not_found`,
+`token_not_found`, `username_taken` and `last_administrator`. Anything NILO did
+not expect is `500` with `internal_error` and no message: a message built from
+an internal error would hand a caller the shape of the store behind it.
 
 ### Two rejections, deliberately distinct
 
@@ -321,7 +350,37 @@ Invoke-RestMethod -Uri http://127.0.0.1:8090/api/v1/status -Headers $headers   #
 Invoke-RestMethod -Uri http://127.0.0.1:8090/api/v1/users  -Headers $headers   # 403
 ```
 
-## 6. Audit
+## 6. The browser Authentication page
+
+An administrator signing in to the browser interface gets an **Authentication**
+entry in the main navigation. It administers the same identities and tokens as
+the command line, through the routes above, and enforces nothing itself: NILO
+authorizes every request server-side, so an identity that reaches the page some
+other way is refused there rather than being relied on not to look.
+
+**Users.** Every identity with its role and enabled state. You can create one
+with a role, change a role, disable and re-enable, and reset a password.
+Identities are never deleted, and the last enabled administrator can be neither
+disabled nor demoted. Disabling and resetting a password each ask for an
+explicit confirmation naming the identity, because both take access away
+immediately and neither is undone by repeating the control.
+
+**API tokens.** Every token's owner, name, scopes, expiry and revocation state —
+never a secret, which NILO does not store. You can create a named token for an
+existing identity with optional scopes and an optional expiry, and revoke one
+after an explicit confirmation. The creation form states that a token's
+permissions are its scopes narrowed by its owner's current role, so selecting
+every scope for a Viewer's token still yields a Viewer's token.
+
+A new token's secret is shown once, with a copy action and the warning that it
+cannot be retrieved later. Dismissing the dialog or reloading the page does not
+bring it back.
+
+Token administration in this release is administrator-only. An Operator holds
+the `tokens.read.self` and `tokens.manage.self` permissions and still has no
+interface for them.
+
+## 7. Audit
 
 Each of these changes appends an audit record naming the acting identity and
 the affected subject. No record contains a password, a token secret, or a
@@ -341,7 +400,7 @@ change whose record cannot be written does not happen at all.
 Login attempts themselves are not yet recorded, and this release exposes no
 route for reading the audit history.
 
-## 7. Upgrading an existing installation
+## 8. Upgrading an existing installation
 
 An installation created before role-based access control is migrated forward
 automatically the first time the new version opens its data directory. The
@@ -362,13 +421,14 @@ What to expect:
 Take a backup of the data directory before upgrading, as with any schema
 change.
 
-## 8. Not yet available
+## 9. Not yet available
 
 Do not plan around these; they are not in this release.
 
-- An administration or sign-in screen in the browser interface. The interface
-  still authenticates with a token.
-- Self-service token management for an Operator.
+- Self-service token management for an Operator, in the browser or anywhere
+  else.
+- An authenticated way to read the audit history, and auditing of login
+  attempts themselves.
 - Custom roles, arbitrary permission editing, single sign-on, multi-factor
   authentication, and email-based account recovery.
 - Token rotation, and permanent deletion of identities or tokens.

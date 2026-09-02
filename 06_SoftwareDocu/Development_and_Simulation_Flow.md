@@ -354,19 +354,30 @@ To exercise the human login path instead of a token, create an administrator
 once against the same data directory and log in over HTTP:
 
 ```powershell
-wsl.exe -d Ubuntu -- bash -lc "cd /mnt/f/2026_Networked_Intelligent_Lab_Orchestrator/05_Software/nilo_assistant && \
+wsl.exe -- bash -lc "cd /mnt/f/2026_Networked_Intelligent_Lab_Orchestrator/05_Software/nilo_assistant && \
   printf 'change-this-password\nchange-this-password\n' | \
   ../../02_Tools/env/with-tools.sh go run ./cmd/nilo admin bootstrap \
-    --data-dir \$HOME/.local/state/nilo-dev --username admin"
+    --data-dir `$HOME/.local/state/nilo-development --username admin"
 
-$session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
 $login = Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8090/api/v1/auth/login `
-    -ContentType application/json -WebSession $session `
+    -ContentType application/json -SessionVariable session `
     -Body '{"username":"admin","password":"change-this-password"}'
 Invoke-RestMethod -Uri http://127.0.0.1:8090/api/v1/users -WebSession $session
 Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8090/api/v1/auth/logout `
     -WebSession $session -Headers @{ "X-NILO-CSRF" = $login.csrf_token }
 ```
+
+Three details in that first command are easy to get wrong. `$HOME` is escaped
+with a backtick so PowerShell hands it to bash unexpanded; without the escape
+PowerShell expands it on the Windows side and the data directory becomes a
+Windows path. The directory must be the same `nilo-development` one the running
+server opened, or the administrator is created in a database that server never
+reads and the login below fails against it. And the command uses the default WSL
+distribution — pass `-d <name>` if that is not the one holding the checkout.
+
+On a Windows host under a Constrained Language Mode policy, `New-Object` is
+refused for a web session type, which is why the session above is created by
+`-SessionVariable` instead.
 
 The bootstrap password is passed on standard input, never as an argument, and
 no command prints it back. The login response carries the role and the
@@ -379,9 +390,13 @@ deployment must pass `--session-cookies https`.
 The complete command and authentication reference is the shipped document
 `../07_Delivery/NILO_CLI_and_Authentication.md`.
 
+The identity created by `nilo admin bootstrap` above is the one you sign in with
+in the browser; section 8.2 describes that flow. Bootstrap stays a local console
+operation with no HTTP route, so create it against the data directory the server
+serves before opening the interface.
+
 This is the backend verification flow. The native Windows GUI flow is separate
-below. The GUI still authenticates with a development token: the login and
-administration screens are a later slice.
+below.
 
 ### 8.2 Current Windows frontend workflow
 
@@ -403,10 +418,65 @@ Open `http://127.0.0.1:5173/` in the Windows browser. The page displays a
 prominent `SIMULATION` status in every state and a permanent statement that
 simulated results never represent evidence from physical equipment.
 
-Paste the `token` value printed by `nilo development issue-token` in section 8.1
-into the login field and select **Connect**. The GUI then calls
-`GET /api/v1/status`, `GET /api/v1/integrations`, and `GET /api/v1/devices`
-together, with that token as the bearer credential on each, and displays:
+**Signing in as a human.** Enter the username and password of the administrator
+created with `nilo admin bootstrap` in section 8.1 and select **Sign in**. Bench
+Core answers with a session cookie that is `HttpOnly` — the page cannot read it,
+and neither can an injected script — and a readable `nilo_csrf` cookie the page
+repeats in the `X-NILO-CSRF` header on every state-changing request. Reloading
+the page keeps you signed in: the interface asks `GET /api/v1/auth/session` who
+the browser's cookies belong to, and only shows the sign-in screen when the
+answer is that nobody is. **Sign out** ends the session server-side, so the
+cookie stops working for whoever holds it.
+
+The top bar names the signed-in identity and its role, and offers **Bench** and,
+for an identity holding the administration permissions, **Authentication**.
+
+**Connecting with a development token instead.** Paste the `token` value printed
+by `nilo development issue-token` in section 8.1 into the **Development bearer
+token** field and select **Connect**. That identity is a least-privileged
+Viewer, so it reads the bench and is refused by the administration routes. The
+token is held in memory for that page only — never in `localStorage`,
+`sessionStorage`, a cookie, or a request URL — so reloading the page returns to
+the sign-in screen. No password, session secret, cross-site request forgery
+token or newly created API token secret is written to any of those either.
+
+**The shell.** One compact row across the top carries the NILO wordmark, the
+open page tabs, and the network, `SIM`, appearance, language and account
+controls; there is no second tab strip and no page title above the workspace.
+The left navigation lists the working entries and the integrations Bench Core
+actually reports, with a bottom-anchored cluster of **Network, Plugins,
+Authentication, Settings** and **About**. Network is a built-in appliance
+capability, not an integration, which is why it sits there. Choosing an entry
+opens it as a tab; tabs activate on click, move with the arrow, Home and End
+keys, close from their own control, and fall back to the nearest remaining
+neighbour. Below roughly 60rem the navigation narrows to icons, which keep their
+accessible names.
+
+**Appearance and language.** The appearance menu offers **Light**, **Dark** and
+**System**; System follows the operating system or browser preference and
+changes with it without a reload. The language menu offers **English**,
+**Deutsch** and **Română**. Both selections are stored in `localStorage` under
+`nilo.theme` and `nilo.language`, which are the only two keys this interface
+ever writes: no password, session secret, request-forgery token or API token
+secret is stored beside them. Identifiers, permission names, protocol names,
+API values and everything Bench Core reports stay as sent, whatever the
+language.
+
+**Network.** Bench Core exposes no interface, address, link-speed or traffic
+data on any route, so the compact network control and the Network page both
+state that appliance network reporting is not yet available, and show no
+address, link speed or traffic figure at all. The one thing either reports is
+whether Bench Core answered over HTTP, labelled as exactly that: it is not the
+appliance's LAN, Wi-Fi or VPN state, and it is not evidence that any remote
+endpoint is reachable. Appliance network telemetry, VPN provisioning and network
+configuration are later work.
+
+**Plugins and Settings** name subsystems that are not built and say so; the
+navigation marks them. **About** is real, and reports the build identity Bench
+Core returns.
+
+**The Bench page** calls `GET /api/v1/status`, `GET /api/v1/integrations`, and
+`GET /api/v1/devices` together with the credential in use, and displays:
 
 - the reported profile, service status, simulation flag, build version, API
   version, and integration protocol;
@@ -415,21 +485,50 @@ together, with that token as the bearer credential on each, and displays:
   availability, its kind, and its capabilities.
 
 Each inventory names the deterministic scenario it came from and how many
-entries it is showing. The token is held in memory for that page only: it is
-never written to `localStorage`, `sessionStorage`, a cookie, or a request URL, so
-reloading the page returns to the login screen.
+entries it is showing.
 
-The GUI distinguishes five whole-screen outcomes, each with its own screen: the
-requests are in progress, the token was rejected, Bench Core was unreachable,
-Bench Core replied with a status response this interface does not understand,
-and Bench Core reported its status. Beyond those, each inventory carries its own
-outcome: entries, an explicit empty statement, or a message naming which of the
-two inventories could not be read, with the status and the other inventory still
-on screen. **Refresh** repeats all three requests with the token already held,
-and **Use a different token** discards it and returns to the login screen.
+The GUI distinguishes the whole-screen outcomes with their own screens: the
+session is being restored, the requests are in progress, the token was rejected,
+this identity is not permitted, Bench Core was unreachable, Bench Core replied
+with a status response this interface does not understand, and Bench Core
+reported its status. An ended session and a refused permission are deliberately
+different: the first returns to the sign-in screen, the second keeps you signed
+in and says an administrator has to widen the role or the token scopes. Beyond
+those, each inventory carries its own outcome: entries, an explicit empty
+statement, or a message naming which of the two inventories could not be read,
+with the status and the other inventory still on screen. **Refresh** repeats all
+three requests with the credential already held.
 
-The whole screen stays inside one viewport; a bench with more entries than fit
-scrolls inside the inventory compartment rather than scrolling the page.
+**The Authentication page** is administrator-only and administers identities on
+one side and API tokens on the other:
+
+- identities are listed with their role and enabled state, and can be created
+  with one of the three fixed roles, re-roled, disabled, re-enabled, and have
+  their password reset. They are never deleted, so audit records keep naming a
+  real subject, and the last enabled administrator cannot be disabled or
+  demoted;
+- tokens are listed with their owner, name, scopes, expiry and revocation state,
+  and can be created for an existing identity with optional scopes and an
+  optional expiry, and revoked. A token's permissions are its scopes narrowed by
+  its owner's current role, which the creation form states, so a token can never
+  exceed that role.
+
+Disabling an identity, resetting a password and revoking a token each ask for an
+explicit confirmation naming the subject. A new token's secret is shown once,
+with a copy action and a statement that it cannot be retrieved later; dismissing
+it or reloading the page does not bring it back, because Bench Core stores only
+a one-way verifier of it.
+
+Hiding the navigation entry is not a permission. Bench Core authorizes every
+administration request on its own — `401` without a usable credential, `403`
+with one that lacks the permission — so an identity that reaches the page
+another way is refused there.
+
+Every page stays inside one viewport at a normal desktop width; a bench, an
+identity list or a token list with more entries than fit scrolls inside its own
+compartment rather than scrolling the page. Below roughly 64rem the two
+administration panels stack and scroll in the workspace instead of being
+clipped.
 
 To develop the interface with no WSL2 backend at all, use mock mode:
 
@@ -437,18 +536,23 @@ To develop the interface with no WSL2 backend at all, use mock mode:
 .\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run dev:mock
 ```
 
-Mock mode answers from the repository's own contract-aligned mock, accepts any
-non-empty token, and contacts nothing. The mock routes on the request path, so
-one scenario can leave the status healthy while an inventory is unusable. Select
-the answer by setting `VITE_NILO_MOCK_SCENARIO` in
-`05_Software/nilo_gui/.env.mock`, or in an ignored `.env.mock.local`:
+Mock mode answers from the repository's own contract-aligned mock and contacts
+nothing. It seeds the identities `admin`, `operator` and `viewer`, all with the
+password `simulation-password`, and authenticates any non-empty bearer token as
+the Viewer. It enforces the same role matrix, the same CSRF rule and the same
+last-administrator rule the backend does, so a screen that works there is not
+relying on the mock being lenient; its store is in memory, so reloading the page
+in mock mode signs you out. The mock routes on the request path, so one scenario
+can leave the status healthy while an inventory is unusable. Select the answer
+by setting `VITE_NILO_MOCK_SCENARIO` in `05_Software/nilo_gui/.env.mock`, or in
+an ignored `.env.mock.local`:
 
 | Scenario                 | What the mock answers                                          |
 | ------------------------ | -------------------------------------------------------------- |
 | `healthy`                | status healthy; ready integration and device inventory          |
 | `unavailable-inventory`  | backend answers; both inventories report themselves unavailable |
 | `empty`                  | backend answers; both inventories are valid and empty           |
-| `unauthorized`           | every resource rejects the token                                |
+| `unauthorized`           | every request is refused, sign-in included                       |
 | `unavailable`            | nothing answers at all                                          |
 | `malformed-status`       | status outside the contract; both inventories fine              |
 | `malformed-integrations` | integration inventory outside the contract; the rest fine       |
@@ -509,15 +613,32 @@ The browser binaries live under the ignored
 `02_Tools/runtime/windows-x86_64/playwright/`, beside the other pinned runtimes.
 No persistent host environment is changed and a test run downloads nothing.
 
-The suite covers, in one browser session against one backend: submitting a
-development token on the login screen; the authenticated status request
-completing; the prominent `SIMULATION` identity and the physical-equipment
-boundary statement on every screen it visits; the reported `simulation` profile
-and `healthy` service status; the deterministic integration inventory; the
-deterministic device inventory with the integration that owns each device;
-Bench Core presented as unreachable once its process is stopped; and recovery to
-the connected screen through the interface's own retry control, with no page
-reload and no second token.
+`e2e/bench-core.spec.ts` covers, in one browser session against one backend:
+submitting a development token on the sign-in screen; the authenticated status
+request completing; the prominent `SIMULATION` identity and the
+physical-equipment boundary statement on every screen it visits; the reported
+`simulation` profile and `healthy` service status; the deterministic integration
+inventory; the deterministic device inventory with the integration that owns
+each device; Bench Core presented as unreachable once its process is stopped;
+and recovery to the connected screen through the interface's own retry control,
+with no page reload and no second token.
+
+`e2e/shell.spec.ts` covers what only a browser settles about the shell: that
+the header really is one row within the agreed height, that the lower cluster is
+the five core entries with Network among them, that tabs open and close with the
+documented fallback, that the Network page reports nothing it was not told, that
+a theme and a language survive a real reload together with the session, and that
+a narrow viewport narrows the navigation without clipping or naming nothing.
+
+`e2e/authentication.spec.ts` covers the human path against its own backend, with
+a real administrator it bootstraps through the real command line, passing the
+password on standard input: password sign-in; creating an identity; changing its
+role; creating an API token with a scope and reading its one-time secret;
+reloading the page and finding the session restored and the secret gone; a
+revocation that only happens after an explicit confirmation; the refusal to
+disable the last enabled administrator; the Authentication entry a Viewer does
+not get; and a sign-out that a reload confirms was server-side. Nothing in it is
+mocked: every refusal is Bench Core's own decision over its own database.
 
 It is headless and retains nothing: no trace, no video, no screenshot, no
 database, and no token. To watch a failure, run the same suite with the browser
@@ -541,6 +662,11 @@ status, and a release that does not fully succeed fails the run and names the
 directory that may survive. A distribution that could not delete the database
 has not deleted it, and reporting that as a clean pass would be the opposite of
 the guarantee.
+
+Every secret the suites type — the development token and the fixture passwords —
+reaches the browser only through a harness method that redacts the value out of
+anything the action throws, and the administrator's password is written to the
+bootstrap command's standard input rather than its command line.
 
 The development token is held in one private field with no accessor and reaches
 the browser only through the harness method that types it into a supplied field.
@@ -597,12 +723,12 @@ not the hardware-in-the-loop level in the table above.
 The repository currently provides the Go foundation, SQLite stores, policy and
 session services, runner supervision, Python SDK, fake integration,
 contract/acceptance tests, a long-running authenticated simulation status API,
-deterministic integration and device inventory, a repository-local Windows
-Node.js and browser toolchain, a browser GUI that authenticates with a
-development bearer token and displays the backend status together with the
-simulated integration and device inventory, and an integrated browser test that
-drives that GUI against a real WSL2 backend. The repository does not yet provide
-an MCP service.
+deterministic integration and device inventory, identity and access control with
+its HTTP administration routes, a repository-local Windows Node.js and browser
+toolchain, a browser GUI in which a human signs in with a password and
+administers identities and API tokens beside the backend status and the
+simulated inventory, and integrated browser tests that drive that GUI against a
+real WSL2 backend. The repository does not yet provide an MCP service.
 
 The existing Windows foundation gate is:
 

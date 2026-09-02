@@ -51,7 +51,7 @@ performing the change.
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "HTTP tests submit a session-authenticated logout with no token, with another session's token, and with the correct token, and assert rejection, rejection, and success, with the session still valid after each rejection."
+verification = "HTTP tests submit a session-authenticated logout with no token, with another session's token, and with the correct token, and assert rejection, rejection, and success, with the session still valid after each rejection; a table test repeats the missing-token case against every identity and token administration route and asserts each is rejected with the identity and token listings unchanged afterwards."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
@@ -59,12 +59,15 @@ affected_paths = [
     "05_Software/nilo_assistant/internal/auth/session.go",
     "05_Software/nilo_assistant/internal/identity/service.go",
     "05_Software/nilo_assistant/internal/httpapi/identity_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/administration.go",
+    "05_Software/nilo_assistant/internal/httpapi/server.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
     "05_Software/nilo_assistant/internal/httpapi/identity_test.go::TestStateChangingSessionRequestsRequireTheMatchingCSRFToken",
+    "05_Software/nilo_assistant/internal/httpapi/administration_test.go::TestAdministrationRoutesRequireTheSessionCSRFToken",
 ]
 
 # --- optional below this line ---

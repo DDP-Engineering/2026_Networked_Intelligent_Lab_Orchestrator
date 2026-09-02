@@ -13,9 +13,13 @@ import (
 )
 
 const (
-	minPasswordBytes = 12
-	maxPasswordBytes = 1024
-	argon2Version    = 19
+	// MinPasswordBytes and MaxPasswordBytes bound an acceptable password. They
+	// are exported so an interface can refuse a password with a useful message
+	// before the slow hash runs, without inventing its own limits.
+	MinPasswordBytes = 12
+	MaxPasswordBytes = 1024
+
+	argon2Version = 19
 
 	argon2SaltBytes        = 16
 	argon2KeyBytes         = 32
@@ -83,8 +87,8 @@ func VerifyPassword(encoded string, password []byte) (bool, error) {
 }
 
 func validatePassword(password []byte) error {
-	if len(password) < minPasswordBytes || len(password) > maxPasswordBytes {
-		return fmt.Errorf("password must be between %d and %d bytes", minPasswordBytes, maxPasswordBytes)
+	if len(password) < MinPasswordBytes || len(password) > MaxPasswordBytes {
+		return fmt.Errorf("password must be between %d and %d bytes", MinPasswordBytes, MaxPasswordBytes)
 	}
 	return nil
 }

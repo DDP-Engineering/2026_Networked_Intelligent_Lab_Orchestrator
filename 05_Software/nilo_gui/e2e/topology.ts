@@ -510,6 +510,41 @@ export class DevelopmentTopology {
     await withRedactedSecret(this.#token, () => field.fill(this.#token));
   }
 
+  /**
+   * Create this run's first administrator through the real command line.
+   *
+   * First-administrator bootstrap is deliberately a local operation with no
+   * HTTP route, so a browser test that needs a human identity has to make one
+   * the same way an appliance owner does. The password is written to the
+   * command's standard input rather than passed as an argument, and no failure
+   * here repeats it.
+   */
+  async bootstrapAdministrator(username: string, password: string): Promise<void> {
+    const created = await withRedactedSecret(password, () =>
+      runCommand(
+        'wsl.exe',
+        [
+          '-d',
+          this.#distribution,
+          '--',
+          `${this.#dataDirectory}/bin/nilo`,
+          'admin',
+          'bootstrap',
+          '--data-dir',
+          this.#dataDirectory,
+          '--username',
+          username,
+        ],
+        { input: `${password}\n${password}\n` },
+      ),
+    );
+    if (created.code !== 0) {
+      throw new Error(
+        `bootstrapping the administrator exited with ${created.code}${describeStderr(created.stderr)}`,
+      );
+    }
+  }
+
   /** Stop this run's Bench Core and wait until its endpoint stops answering. */
   async stopBackend(): Promise<void> {
     if (this.#backend !== null) {
@@ -704,7 +739,7 @@ function expectSuccess(result: CommandResult, what: string): CommandResult {
 async function runCommand(
   file: string,
   args: readonly string[],
-  options: { encoding?: BufferEncoding; timeoutMs?: number } = {},
+  options: { encoding?: BufferEncoding; timeoutMs?: number; input?: string } = {},
 ): Promise<CommandResult> {
   const encoding = options.encoding ?? 'utf8';
   return new Promise((settle) => {
@@ -713,6 +748,11 @@ async function runCommand(
     const err: Buffer[] = [];
     let timer: NodeJS.Timeout | undefined;
 
+    // Standard input, never an argument: a password on a command line is
+    // visible to every other process on the host for as long as it runs.
+    if (options.input !== undefined) {
+      child.stdin?.end(options.input);
+    }
     child.stdout?.on('data', (chunk: Buffer) => out.push(chunk));
     child.stderr?.on('data', (chunk: Buffer) => err.push(chunk));
     if (options.timeoutMs !== undefined) {

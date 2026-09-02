@@ -1,0 +1,84 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+# One requirement = one independently verifiable behavior.
+# Lives at .agentic/requirements/<category>/<id>.toml
+# Required fields: schema, id, title, status, requirement, verification.
+
+schema = 1
+
+# REQ-<CAT>-<8 hex>. CAT is FUNC, UX, NFR, SEC, DATA, PLAT, REL or TEST,
+# and must match the category folder this file sits in.
+id = "REQ-TEST-842f1943"
+
+title = "Prove the shell, themes and languages in a browser"
+
+# draft while being written, active once it is built and tested,
+# retired when the behavior is deliberately removed.
+status = "active"
+
+# Self-contained prose: a reader with no other context must be able to
+# understand and check it. No ticket numbers, no run IDs, no references
+# to other requirements.
+#
+# Recommended shape - EARS. Pick the one pattern that fits; a stated
+# trigger or condition is what the test has to arrange, so surfacing it
+# here is what makes the behavior testable:
+#
+#   ubiquitous  The <system> shall <response>.
+#   event       When <trigger>, the <system> shall <response>.
+#   state       While <state>, the <system> shall <response>.
+#   unwanted    If <condition>, then the <system> shall <response>.
+#   optional    Where <feature is included>, the <system> shall <response>.
+#
+# Two "shall" clauses means two behaviors: split it into two requirements.
+# Do not contort prose to fit a pattern - a constraint that reads better
+# plainly is better plainly.
+requirement = """
+The repository shall provide a browser end-to-end test that drives the redesigned
+shell against a real Bench Core running under WSL2, covering navigation between pages,
+tab opening and closing, a theme change that survives a reload, and a language change
+that survives a reload.
+"""
+
+# The observation that settles whether the behavior holds — not a
+# restatement of the requirement.
+#
+# Some behaviors no test can settle: a look-and-see judgement, an install
+# on clean hardware, a printed page. Start this field with "Manual:" or
+# "Inspection:" and name the method, and `check` records the requirement
+# as verified by hand instead of counting it among the tests still owed.
+# The prefix alone is not enough — it has to say what someone does.
+verification = "Running the browser end-to-end suite signs a real administrator in, opens pages from both navigation clusters as tabs, closes one and asserts the fallback, switches theme and language, reloads, and passes only when both selections and the signed-in session survived that reload."
+
+# Repo-relative, forward slashes. The source files this behavior lives in.
+affected_paths = [
+    "05_Software/nilo_gui/e2e/shell.spec.ts",
+    "05_Software/nilo_gui/e2e/topology.ts",
+]
+
+# "tests/path/test_file.py::test_name" entries. Kept current during build;
+# these select the impacted regression set.
+linked_tests = [
+    "05_Software/nilo_gui/e2e/shell.spec.ts::puts the wordmark, tabs and every control on one row",
+    "05_Software/nilo_gui/e2e/shell.spec.ts::anchors Network in the lower cluster, not among the instruments",
+    "05_Software/nilo_gui/e2e/shell.spec.ts::opens and closes pages as tabs",
+    "05_Software/nilo_gui/e2e/shell.spec.ts::reports appliance network state as unavailable rather than inventing it",
+    "05_Software/nilo_gui/e2e/shell.spec.ts::keeps the theme and the language across a reload, with the session",
+    "05_Software/nilo_gui/e2e/shell.spec.ts::narrows the navigation on a small viewport without clipping it",
+    "05_Software/nilo_gui/e2e/shell.spec.ts::keeps the simulation marking and the boundary statement on every screen",
+]
+
+# --- optional below this line ---
+
+# "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "A shell that renders in a component test can still be unreachable in a browser; only the real page proves the preferences survive an actual reload."
+
+created = 2026-09-02
+updated = 2026-09-02

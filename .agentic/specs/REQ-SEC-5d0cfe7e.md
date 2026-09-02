@@ -68,13 +68,13 @@ get their permissions when they get their endpoints; inventing them now
 would produce a matrix that no test can exercise.
 
 One honest caveat: the two `tokens.*.self` permissions are enforced
-wherever token management is reachable, but token management is
-currently reachable only from the local administration command line,
-which is administrator-only by design. So an Operator holds those
-permissions and has no interface through which to use them yet. They are
-kept rather than dropped because they are what a token scope narrows
-against, and because collapsing them would make Operator identical to
-Viewer. The self-service surface is Slice 8's.
+wherever token management is reachable, but token management is reachable
+only from the local administration command line and from the browser
+Authentication page, both of which are administrator-only by design. So an
+Operator holds those permissions and still has no interface through which
+to use them. They are kept rather than dropped because they are what a
+token scope narrows against, and because collapsing them would make
+Operator identical to Viewer. The self-service surface remains deferred.
 
 Every authenticated actor may read its own session regardless of role;
 that is identity, not authorization, so it carries no permission.
@@ -106,7 +106,8 @@ short-lived, revocable server-side, and unusable for automation because
 its cookie is `HttpOnly` and its state-changing use additionally requires
 a CSRF token.
 
-**API token.** Created from the administration command line, named,
+**API token.** Created by an administrator, from the administration
+command line or the browser Authentication page: named,
 optionally scoped, optionally expiring, long-lived, and presented in the
 `Authorization: Bearer` header. It has no cookie and is not subject to
 CSRF, because it is never attached by a browser automatically.
@@ -237,6 +238,18 @@ own the operations recorded in that data directory.
 | `GET /api/v1/integrations` | session or bearer | `inventory.read` |
 | `GET /api/v1/devices` | session or bearer | `inventory.read` |
 | `GET /api/v1/users` | session or bearer | `users.read` |
+| `POST /api/v1/users` | session or bearer | `users.manage` |
+| `PUT /api/v1/users/{username}/role` | session or bearer | `users.manage` |
+| `PUT /api/v1/users/{username}/enabled` | session or bearer | `users.manage` |
+| `PUT /api/v1/users/{username}/password` | session or bearer | `users.manage` |
+| `GET /api/v1/tokens` | session or bearer | `tokens.read.all` |
+| `POST /api/v1/tokens` | session or bearer | `tokens.manage.all` |
+| `POST /api/v1/tokens/{id}/revoke` | session or bearer | `tokens.manage.all` |
+
+The eight administration routes carry the same authorization rule as
+everything above them; their request and response bodies, their error
+codes and their validation are specified once in
+`.agentic/specs/REQ-FUNC-5fd2806f.md` rather than repeated here.
 
 Rejection is uniform in shape and distinct in meaning:
 

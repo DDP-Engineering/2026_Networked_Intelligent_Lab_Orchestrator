@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { bearerCredential } from '../api/client';
 import type { BenchCoreClient, BenchCoreTransport } from '../api/client';
 import { createMockTransport, MOCK_SCENARIOS } from '../api/mock';
 import {
@@ -24,9 +25,18 @@ const RESOURCE_CALLS: readonly {
   name: string;
   call: (client: BenchCoreClient, token: string) => Promise<unknown>;
 }[] = [
-  { name: 'status', call: (client, token) => client.getStatus(token) },
-  { name: 'integrations', call: (client, token) => client.getIntegrations(token) },
-  { name: 'devices', call: (client, token) => client.getDevices(token) },
+  {
+    name: 'status',
+    call: (client, token) => client.getStatus(bearerCredential(token)),
+  },
+  {
+    name: 'integrations',
+    call: (client, token) => client.getIntegrations(bearerCredential(token)),
+  },
+  {
+    name: 'devices',
+    call: (client, token) => client.getDevices(bearerCredential(token)),
+  },
 ];
 
 describe('GUI environment configuration', () => {
@@ -142,7 +152,7 @@ describe('GUI environment configuration', () => {
   it('builds a mock-backed client that needs no backend process', async () => {
     const client = createConfiguredClient({ VITE_NILO_API_MODE: 'mock' });
 
-    const status = await client.getStatus('any-development-token');
+    const status = await client.getStatus(bearerCredential('any-development-token'));
 
     expect(client.baseUrl).toBe(SAME_ORIGIN_BASE_URL);
     expect(status.profile).toBe('simulation');
@@ -155,8 +165,10 @@ describe('GUI environment configuration', () => {
       VITE_NILO_MOCK_SCENARIO: 'healthy',
     });
 
-    const integrations = await client.getIntegrations('any-development-token');
-    const devices = await client.getDevices('any-development-token');
+    const integrations = await client.getIntegrations(
+      bearerCredential('any-development-token'),
+    );
+    const devices = await client.getDevices(bearerCredential('any-development-token'));
 
     expect(integrations.items[0].simulation).toBe(true);
     expect(devices.items[0].integrationId).toBe(integrations.items[0].id);

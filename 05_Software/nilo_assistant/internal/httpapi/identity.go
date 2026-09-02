@@ -122,19 +122,6 @@ type sessionResponse struct {
 	ExpiresAt   *time.Time        `json:"expires_at,omitempty"`
 }
 
-type userListResponse struct {
-	APIVersion string          `json:"api_version"`
-	Items      []userListEntry `json:"items"`
-}
-
-type userListEntry struct {
-	ID        string    `json:"id"`
-	Username  string    `json:"username"`
-	Role      auth.Role `json:"role"`
-	Enabled   bool      `json:"enabled"`
-	CreatedAt time.Time `json:"created_at"`
-}
-
 const maximumLoginRequestBytes = 4 << 10
 
 func handleLogin(service *identity.Service, security CookieSecurity) http.HandlerFunc {
@@ -207,24 +194,6 @@ func handleCurrentSession(response http.ResponseWriter, request *http.Request) {
 		APIVersion: apiVersion, Username: actor.User.Username, Role: actor.User.Role,
 		Permissions: actor.Permissions, Credential: string(actor.Credential),
 	})
-}
-
-func handleListUsers(service *identity.Service) http.HandlerFunc {
-	return func(response http.ResponseWriter, request *http.Request) {
-		users, err := service.ListUsers(request.Context())
-		if err != nil {
-			writeError(response, http.StatusInternalServerError, "user_listing_failed", "")
-			return
-		}
-		items := make([]userListEntry, 0, len(users))
-		for _, user := range users {
-			items = append(items, userListEntry{
-				ID: user.ID, Username: user.Username, Role: user.Role,
-				Enabled: user.Enabled(), CreatedAt: user.CreatedAt,
-			})
-		}
-		writeJSON(response, http.StatusOK, userListResponse{APIVersion: apiVersion, Items: items})
-	}
 }
 
 func writeJSON(response http.ResponseWriter, status int, body any) {

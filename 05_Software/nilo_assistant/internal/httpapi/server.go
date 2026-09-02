@@ -131,7 +131,17 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 			Items:      options.Catalog.Devices(),
 		})
 	}))
+	// Identity and token administration. Every route declares its permission
+	// here, beside the read routes above, so one table answers "what may an
+	// actor do" for the whole API rather than each handler answering for itself.
 	protected.Handle("GET /api/v1/users", authorize(auth.PermissionUsersRead, handleListUsers(options.Identity)))
+	protected.Handle("POST /api/v1/users", authorize(auth.PermissionUsersManage, handleCreateUser(options.Identity)))
+	protected.Handle("PUT /api/v1/users/{username}/role", authorize(auth.PermissionUsersManage, handleSetRole(options.Identity)))
+	protected.Handle("PUT /api/v1/users/{username}/enabled", authorize(auth.PermissionUsersManage, handleSetEnabled(options.Identity)))
+	protected.Handle("PUT /api/v1/users/{username}/password", authorize(auth.PermissionUsersManage, handleResetPassword(options.Identity)))
+	protected.Handle("GET /api/v1/tokens", authorize(auth.PermissionTokensReadAll, handleListTokens(options.Identity)))
+	protected.Handle("POST /api/v1/tokens", authorize(auth.PermissionTokensManageAll, handleCreateToken(options.Identity)))
+	protected.Handle("POST /api/v1/tokens/{id}/revoke", authorize(auth.PermissionTokensManageAll, handleRevokeToken(options.Identity)))
 	// Reading one's own session is identity, not authorization, so it carries
 	// no permission; logout is gated by the CSRF check in the middleware.
 	protected.HandleFunc("GET /api/v1/auth/session", handleCurrentSession)

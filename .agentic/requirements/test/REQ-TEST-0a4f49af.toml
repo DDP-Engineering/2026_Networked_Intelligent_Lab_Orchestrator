@@ -90,4 +90,4 @@ priority = "high"   # low | normal | high
 rationale = "Until a browser exercises the real backend, the only evidence that the Windows interface and the WSL2 core work together is a manual session recorded in a task journal, which no gate can repeat."
 
 created = 2026-09-01
-updated = 2026-09-01
+updated = 2026-09-02

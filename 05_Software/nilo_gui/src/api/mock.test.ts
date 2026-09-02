@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { BenchCoreError, createBenchCoreClient } from './client';
+import {
+  BenchCoreError,
+  bearerCredential,
+  createBenchCoreClient,
+  sessionCredential,
+} from './client';
 import {
   BENCH_CORE_API_VERSION,
   DEVICES_PATH,
@@ -8,6 +13,7 @@ import {
   STATUS_PATH,
 } from './contract';
 import {
+  MOCK_DEVELOPMENT_PASSWORD,
   MOCK_HEALTHY_DEVICES_BODY,
   MOCK_HEALTHY_INTEGRATIONS_BODY,
   MOCK_HEALTHY_STATUS_BODY,
@@ -31,11 +37,11 @@ function callResource(scenario: MockScenario, resource: Resource): Promise<unkno
   const token = 'any-development-token';
   switch (resource) {
     case 'status':
-      return client.getStatus(token);
+      return client.getStatus(bearerCredential(token));
     case 'integrations':
-      return client.getIntegrations(token);
+      return client.getIntegrations(bearerCredential(token));
     case 'devices':
-      return client.getDevices(token);
+      return client.getDevices(bearerCredential(token));
   }
 }
 
@@ -56,7 +62,9 @@ async function failureOf(
 
 describe('Bench Core mock transport', () => {
   it('answers the healthy scenario with a simulation status the real client accepts', async () => {
-    const status = await mockClient('healthy').getStatus('any-development-token');
+    const status = await mockClient('healthy').getStatus(
+      bearerCredential('any-development-token'),
+    );
 
     expect(status.apiVersion).toBe(BENCH_CORE_API_VERSION);
     expect(status.profile).toBe('simulation');
@@ -143,17 +151,19 @@ describe('mock request routing', () => {
     });
 
     await (resource === 'status'
-      ? client.getStatus('t')
+      ? client.getStatus(bearerCredential('t'))
       : resource === 'integrations'
-        ? client.getIntegrations('t')
-        : client.getDevices('t'));
+        ? client.getIntegrations(bearerCredential('t'))
+        : client.getDevices(bearerCredential('t')));
 
     expect(requested).toEqual([path]);
   });
 
   it('refuses a path it does not serve, rather than answering it by accident', async () => {
     const response = await createMockTransport('healthy')('/api/v1/operations', {
-      headers: {},
+      method: 'GET',
+      headers: { Authorization: 'Bearer any-development-token' },
+      credentials: 'same-origin',
     });
 
     expect(response.ok).toBe(false);
@@ -175,8 +185,10 @@ describe('mock request routing', () => {
 
 describe('mock inventory scenarios', () => {
   it('reproduces the simulation backend ready inventory in the healthy scenario', async () => {
-    const integrations = await mockClient('healthy').getIntegrations('t');
-    const devices = await mockClient('healthy').getDevices('t');
+    const integrations = await mockClient('healthy').getIntegrations(
+      bearerCredential('t'),
+    );
+    const devices = await mockClient('healthy').getDevices(bearerCredential('t'));
 
     expect(integrations.scenario).toBe('healthy');
     expect(integrations.items).toEqual([
@@ -203,9 +215,15 @@ describe('mock inventory scenarios', () => {
   });
 
   it('reproduces the simulation backend unavailable inventory, with the backend still answering', async () => {
-    const status = await mockClient('unavailable-inventory').getStatus('t');
-    const integrations = await mockClient('unavailable-inventory').getIntegrations('t');
-    const devices = await mockClient('unavailable-inventory').getDevices('t');
+    const status = await mockClient('unavailable-inventory').getStatus(
+      bearerCredential('t'),
+    );
+    const integrations = await mockClient('unavailable-inventory').getIntegrations(
+      bearerCredential('t'),
+    );
+    const devices = await mockClient('unavailable-inventory').getDevices(
+      bearerCredential('t'),
+    );
 
     expect(status.status).toBe('healthy');
     expect(integrations.scenario).toBe('unavailable');
@@ -216,13 +234,15 @@ describe('mock inventory scenarios', () => {
   });
 
   it('answers the empty scenario with valid inventories holding no entries', async () => {
-    const integrations = await mockClient('empty').getIntegrations('t');
-    const devices = await mockClient('empty').getDevices('t');
+    const integrations = await mockClient('empty').getIntegrations(
+      bearerCredential('t'),
+    );
+    const devices = await mockClient('empty').getDevices(bearerCredential('t'));
 
     expect(integrations.items).toEqual([]);
     expect(devices.items).toEqual([]);
     expect(integrations.apiVersion).toBe(BENCH_CORE_API_VERSION);
-    expect(await mockClient('empty').getStatus('t')).toHaveProperty(
+    expect(await mockClient('empty').getStatus(bearerCredential('t'))).toHaveProperty(
       'status',
       'healthy',
     );
@@ -254,5 +274,147 @@ describe('mock inventory scenarios', () => {
       callResource('malformed-status', 'integrations'),
     ).resolves.toBeDefined();
     await expect(callResource('malformed-status', 'devices')).resolves.toBeDefined();
+  });
+});
+
+describe('mock identity and token administration', () => {
+  const administrator = sessionCredential('mock-csrf-token');
+
+  /** Sign in against one mock transport and keep using that same transport. */
+  async function signedInMock(username = 'admin') {
+    const client = mockClient('healthy');
+    const session = await client.signIn(username, MOCK_DEVELOPMENT_PASSWORD);
+    return { client, session };
+  }
+
+  it('refuses every resource until somebody signs in', async () => {
+    const client = mockClient('healthy');
+
+    await expect(client.currentSession(administrator)).rejects.toMatchObject({
+      failure: 'unauthorized',
+    });
+  });
+
+  it('signs a seeded identity in and reports its role and permissions', async () => {
+    const { session } = await signedInMock('admin');
+
+    expect(session.username).toBe('admin');
+    expect(session.role).toBe('administrator');
+    expect(session.permissions).toContain('users.manage');
+    expect(session.csrfToken).toBe('mock-csrf-token');
+  });
+
+  it('refuses a wrong password without disclosing which part was wrong', async () => {
+    const client = mockClient('healthy');
+
+    await expect(client.signIn('admin', 'not-the-password')).rejects.toMatchObject({
+      failure: 'unauthorized',
+    });
+    await expect(
+      client.signIn('nobody', MOCK_DEVELOPMENT_PASSWORD),
+    ).rejects.toMatchObject({ failure: 'unauthorized' });
+  });
+
+  it('restores the signed-in identity from the current-session route', async () => {
+    const { client } = await signedInMock('admin');
+
+    expect((await client.currentSession(administrator)).username).toBe('admin');
+  });
+
+  it('refuses a state-changing session request that repeats no CSRF token', async () => {
+    const { client } = await signedInMock('admin');
+
+    await expect(
+      client.setIdentityRole(
+        sessionCredential('the-wrong-token'),
+        'viewer',
+        'operator',
+      ),
+    ).rejects.toMatchObject({ failure: 'forbidden' });
+  });
+
+  it('administers identities and tokens for an administrator', async () => {
+    const { client } = await signedInMock('admin');
+
+    await client.createIdentity(administrator, {
+      username: 'jane',
+      role: 'operator',
+      password: 'a-long-enough-password',
+    });
+    expect(
+      (await client.listIdentities(administrator)).items.map((entry) => entry.username),
+    ).toContain('jane');
+
+    await client.setIdentityRole(administrator, 'jane', 'viewer');
+    await client.setIdentityEnabled(administrator, 'jane', false);
+    const jane = (await client.listIdentities(administrator)).items.find(
+      (entry) => entry.username === 'jane',
+    );
+    expect(jane?.role).toBe('viewer');
+    expect(jane?.enabled).toBe(false);
+
+    const issued = await client.createToken(administrator, {
+      owner: 'jane',
+      name: 'nightly',
+      scopes: ['status.read'],
+      expiresAt: null,
+    });
+    expect(issued.secret).not.toBe('');
+    await client.revokeToken(administrator, issued.token.id);
+    const revoked = (await client.listTokens(administrator)).items.find(
+      (entry) => entry.id === issued.token.id,
+    );
+    expect(revoked?.revoked).toBe(true);
+  });
+
+  it('refuses administration for an identity without the permission', async () => {
+    const { client } = await signedInMock('operator');
+
+    await expect(client.listIdentities(administrator)).rejects.toMatchObject({
+      failure: 'forbidden',
+    });
+    await expect(
+      client.setIdentityRole(administrator, 'viewer', 'administrator'),
+    ).rejects.toMatchObject({ failure: 'forbidden' });
+  });
+
+  it('refuses administration for a development bearer token, as the backend does', async () => {
+    const client = mockClient('healthy');
+
+    await expect(
+      client.listIdentities(bearerCredential('any-development-token')),
+    ).rejects.toMatchObject({ failure: 'forbidden' });
+    await expect(
+      client.getStatus(bearerCredential('any-development-token')),
+    ).resolves.toBeDefined();
+  });
+
+  it('keeps the last enabled administrator, as the backend does', async () => {
+    const { client } = await signedInMock('admin');
+
+    await expect(
+      client.setIdentityRole(administrator, 'admin', 'viewer'),
+    ).rejects.toMatchObject({ failure: 'rejected', code: 'last_administrator' });
+  });
+
+  it('refuses an unknown scope and an expiry that has already passed', async () => {
+    const { client } = await signedInMock('admin');
+
+    await expect(
+      client.createToken(administrator, {
+        owner: 'viewer',
+        name: 'bad',
+        scopes: ['hardware.flash'],
+        expiresAt: null,
+      }),
+    ).rejects.toMatchObject({ code: 'invalid_scope' });
+    await expect(
+      client.createToken(administrator, {
+        owner: 'viewer',
+        name: 'bad',
+        scopes: [],
+        expiresAt: '2020-01-01T00:00:00Z',
+      }),
+    ).rejects.toMatchObject({ code: 'invalid_expiry' });
   });
 });

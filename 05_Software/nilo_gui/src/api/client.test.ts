@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { BenchCoreError, createBenchCoreClient } from './client';
+import {
+  BenchCoreError,
+  bearerCredential,
+  createBenchCoreClient,
+  sessionCredential,
+} from './client';
 import type { BenchCoreClient, BenchCoreTransport, TransportResponse } from './client';
 
 const healthyBody = {
@@ -59,11 +64,11 @@ function callResource(
 ): Promise<unknown> {
   switch (name) {
     case 'status':
-      return client.getStatus(token);
+      return client.getStatus(bearerCredential(token));
     case 'integrations':
-      return client.getIntegrations(token);
+      return client.getIntegrations(bearerCredential(token));
     case 'devices':
-      return client.getDevices(token);
+      return client.getDevices(bearerCredential(token));
   }
 }
 
@@ -105,7 +110,7 @@ describe('Bench Core status client', () => {
       transport,
     });
 
-    await client.getStatus('dev-token');
+    await client.getStatus(bearerCredential('dev-token'));
 
     expect(transport).toHaveBeenCalledTimes(1);
     const [url, request] = transport.mock.calls[0];
@@ -120,7 +125,7 @@ describe('Bench Core status client', () => {
       transport: () => Promise.resolve(respondWithJson(200, healthyBody)),
     });
 
-    const status = await client.getStatus('development-token');
+    const status = await client.getStatus(bearerCredential('development-token'));
 
     expect(status).toEqual({
       apiVersion: 'nilo.http/1',
@@ -209,7 +214,7 @@ describe('Bench Core integration inventory client', () => {
       transport,
     });
 
-    await client.getIntegrations('dev-token');
+    await client.getIntegrations(bearerCredential('dev-token'));
 
     expect(transport).toHaveBeenCalledTimes(1);
     const [url, request] = transport.mock.calls[0];
@@ -224,19 +229,21 @@ describe('Bench Core integration inventory client', () => {
       transport: () => Promise.resolve(respondWithJson(200, integrationsBody)),
     });
 
-    expect(await client.getIntegrations('development-token')).toEqual({
-      apiVersion: 'nilo.http/1',
-      scenario: 'healthy',
-      items: [
-        {
-          id: 'simulation.fake-python',
-          displayName: 'SIMULATION - Fake Python Integration',
-          status: 'healthy',
-          simulation: true,
-          operations: ['artifact', 'crash', 'echo', 'fail', 'sleep'],
-        },
-      ],
-    });
+    expect(await client.getIntegrations(bearerCredential('development-token'))).toEqual(
+      {
+        apiVersion: 'nilo.http/1',
+        scenario: 'healthy',
+        items: [
+          {
+            id: 'simulation.fake-python',
+            displayName: 'SIMULATION - Fake Python Integration',
+            status: 'healthy',
+            simulation: true,
+            operations: ['artifact', 'crash', 'echo', 'fail', 'sleep'],
+          },
+        ],
+      },
+    );
   });
 
   it('returns an inventory with no entries when the backend reports none', async () => {
@@ -246,7 +253,9 @@ describe('Bench Core integration inventory client', () => {
         Promise.resolve(respondWithJson(200, { ...integrationsBody, items: [] })),
     });
 
-    const inventory = await client.getIntegrations('development-token');
+    const inventory = await client.getIntegrations(
+      bearerCredential('development-token'),
+    );
 
     expect(inventory.items).toEqual([]);
     expect(inventory.scenario).toBe('healthy');
@@ -347,7 +356,7 @@ describe('Bench Core device inventory client', () => {
       transport,
     });
 
-    await client.getDevices('dev-token');
+    await client.getDevices(bearerCredential('dev-token'));
 
     expect(transport).toHaveBeenCalledTimes(1);
     const [url, request] = transport.mock.calls[0];
@@ -362,7 +371,7 @@ describe('Bench Core device inventory client', () => {
       transport: () => Promise.resolve(respondWithJson(200, devicesBody)),
     });
 
-    expect(await client.getDevices('development-token')).toEqual({
+    expect(await client.getDevices(bearerCredential('development-token'))).toEqual({
       apiVersion: 'nilo.http/1',
       scenario: 'healthy',
       items: [
@@ -386,7 +395,9 @@ describe('Bench Core device inventory client', () => {
         Promise.resolve(respondWithJson(200, { ...devicesBody, items: [] })),
     });
 
-    expect((await client.getDevices('development-token')).items).toEqual([]);
+    expect(
+      (await client.getDevices(bearerCredential('development-token'))).items,
+    ).toEqual([]);
   });
 
   it('reports a rejected token, an unreachable backend, and a bad body distinctly', async () => {
@@ -480,4 +491,102 @@ describe('every Bench Core resource', () => {
       expect(request.headers.Authorization).toBe('Bearer fixture-tok');
     },
   );
+});
+
+describe('credentials on the wire', () => {
+  /** Record every request one call made, so a URL can be inspected. */
+  function recording(status = 200, body: unknown = {}) {
+    return vi.fn<BenchCoreTransport>(() =>
+      Promise.resolve(respondWithJson(status, body)),
+    );
+  }
+
+  const sessionBody = {
+    api_version: 'nilo.http/1',
+    username: 'admin',
+    role: 'administrator',
+    permissions: ['users.manage'],
+    credential: 'session',
+    csrf_token: 'csrf-value',
+  };
+
+  it('sends a password in one request body and never in the URL', async () => {
+    const transport = recording(200, sessionBody);
+    const client = createBenchCoreClient({ baseUrl: '', transport });
+
+    await client.signIn('admin', 'fixture-pass-word');
+
+    expect(transport).toHaveBeenCalledTimes(1);
+    const [url, request] = transport.mock.calls[0];
+    expect(url).toBe('/api/v1/auth/login');
+    expect(url).not.toContain('fixture-pass-word');
+    expect(request.method).toBe('POST');
+    expect(request.body).toContain('fixture-pass-word');
+    expect(JSON.stringify(request.headers)).not.toContain('fixture-pass-word');
+  });
+
+  it('sends a replacement password in the body of the reset request only', async () => {
+    const transport = recording(204);
+    const client = createBenchCoreClient({ baseUrl: '', transport });
+
+    await client.resetIdentityPassword(
+      sessionCredential('csrf-value'),
+      'jane',
+      'fixture-pass-word',
+    );
+
+    const [url, request] = transport.mock.calls[0];
+    expect(url).toBe('/api/v1/users/jane/password');
+    expect(url).not.toContain('fixture-pass-word');
+    expect(request.body).toContain('fixture-pass-word');
+  });
+
+  it('repeats the CSRF token in a header on a state change and not on a read', async () => {
+    const transport = recording(204);
+    const client = createBenchCoreClient({ baseUrl: '', transport });
+    const credential = sessionCredential('csrf-value');
+
+    await client.setIdentityRole(credential, 'jane', 'viewer');
+    const [changeUrl, change] = transport.mock.calls[0];
+    expect(change.headers['X-NILO-CSRF']).toBe('csrf-value');
+    expect(change.headers.Authorization).toBeUndefined();
+    expect(changeUrl).not.toContain('csrf-value');
+
+    const listing = recording(200, { api_version: 'nilo.http/1', items: [] });
+    await createBenchCoreClient({ baseUrl: '', transport: listing }).listIdentities(
+      credential,
+    );
+    const [readUrl, read] = listing.mock.calls[0];
+    expect(read.headers['X-NILO-CSRF']).toBeUndefined();
+    expect(readUrl).not.toContain('csrf-value');
+  });
+
+  it('classifies a refusal by its status and carries the reason it was given', async () => {
+    for (const [status, failure] of [
+      [401, 'unauthorized'],
+      [403, 'forbidden'],
+      [400, 'rejected'],
+      [404, 'rejected'],
+      [409, 'rejected'],
+      [500, 'unavailable'],
+    ] as const) {
+      const client = createBenchCoreClient({
+        baseUrl: '',
+        transport: () =>
+          Promise.resolve(
+            respondWithJson(status, { error: 'a_code', message: 'a fixed message' }),
+          ),
+      });
+      const error = await client.listIdentities(sessionCredential('csrf-value')).then(
+        () => null,
+        (thrown: unknown) => thrown as BenchCoreError,
+      );
+
+      expect(error?.failure).toBe(failure);
+      if (status !== 401 && status !== 500) {
+        expect(error?.detail).toBe('a fixed message');
+        expect(error?.code).toBe('a_code');
+      }
+    }
+  });
 });

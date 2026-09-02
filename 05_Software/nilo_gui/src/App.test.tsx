@@ -1,10 +1,13 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import App from './App';
 import { BenchCoreError } from './api/client';
-import type { BenchCoreClient, BenchCoreFailure } from './api/client';
+import type { BenchCoreClient, BenchCoreFailure, Credential } from './api/client';
+import { PREFERENCE_KEYS } from './preferences/store';
+import { renderInShell } from './test/render';
 import type {
+  BenchCoreSession,
   BenchCoreStatus,
   DeviceInventory,
   IntegrationInventory,
@@ -60,19 +63,83 @@ const unavailableDevices: DeviceInventory = {
   items: readyDevices.items.map((item) => ({ ...item, status: 'unavailable' })),
 };
 
+const administratorSession: BenchCoreSession = {
+  apiVersion: 'nilo.http/1',
+  username: 'admin',
+  role: 'administrator',
+  permissions: [
+    'status.read',
+    'inventory.read',
+    'users.read',
+    'users.manage',
+    'tokens.read.all',
+    'tokens.manage.all',
+  ],
+  credential: 'session',
+  csrfToken: 'csrf-token-fixture',
+};
+
+const viewerSession: BenchCoreSession = {
+  apiVersion: 'nilo.http/1',
+  username: 'bench-viewer',
+  role: 'viewer',
+  permissions: ['status.read', 'inventory.read'],
+  credential: 'session',
+  csrfToken: 'csrf-token-fixture',
+};
+
+/** The identity a development bearer token resolves to: a least-privileged Viewer. */
+const tokenSession: BenchCoreSession = {
+  ...viewerSession,
+  username: 'development-identity',
+  credential: 'token',
+  csrfToken: null,
+};
+
 const ENDPOINT = 'http://127.0.0.1:8090';
 
 const BOUNDARY = /never represent evidence from physical equipment/i;
 
-/** A client that answers everything healthily unless an override says otherwise. */
+const noSession = () =>
+  Promise.reject(new BenchCoreError('unauthorized', 'no session', 'unauthorized'));
+
+/**
+ * A client that answers everything healthily unless an override says otherwise.
+ *
+ * By default the browser holds no session cookie, so restoration is refused and
+ * the interface presents the sign-in screen; a bearer credential resolves to the
+ * Viewer identity a development token really carries.
+ */
 function stubClient(overrides: Partial<BenchCoreClient> = {}): BenchCoreClient {
   return {
     baseUrl: '',
     getStatus: () => Promise.resolve(healthyStatus),
     getIntegrations: () => Promise.resolve(readyIntegrations),
     getDevices: () => Promise.resolve(readyDevices),
+    signIn: () => noSession(),
+    currentSession: (credential: Credential) =>
+      credential.kind === 'bearer' ? Promise.resolve(tokenSession) : noSession(),
+    signOut: () => Promise.resolve(),
+    listIdentities: () => Promise.resolve({ apiVersion: 'nilo.http/1', items: [] }),
+    createIdentity: () =>
+      Promise.reject(new BenchCoreError('forbidden', 'not in this fixture')),
+    setIdentityRole: () => Promise.resolve(),
+    setIdentityEnabled: () => Promise.resolve(),
+    resetIdentityPassword: () => Promise.resolve(),
+    listTokens: () => Promise.resolve({ apiVersion: 'nilo.http/1', items: [] }),
+    createToken: () =>
+      Promise.reject(new BenchCoreError('forbidden', 'not in this fixture')),
+    revokeToken: () => Promise.resolve(),
     ...overrides,
   };
+}
+
+/** A client whose browser already holds a usable session for this identity. */
+function signedInClient(
+  session: BenchCoreSession,
+  overrides: Partial<BenchCoreClient> = {},
+): BenchCoreClient {
+  return stubClient({ currentSession: () => Promise.resolve(session), ...overrides });
 }
 
 function rejecting(failure: BenchCoreFailure, detail = `simulated ${failure}`) {
@@ -82,10 +149,45 @@ function rejecting(failure: BenchCoreFailure, detail = `simulated ${failure}`) {
 /** Every request fails the same way, as a stopped backend or a bad token does. */
 function failing(failure: BenchCoreFailure): BenchCoreClient {
   return stubClient({
+    currentSession: rejecting(failure),
     getStatus: rejecting(failure),
     getIntegrations: rejecting(failure),
     getDevices: rejecting(failure),
   });
+}
+
+function renderApp(client: BenchCoreClient, apiMode: 'live' | 'mock' = 'live') {
+  return renderInShell(<App client={client} apiMode={apiMode} endpoint={ENDPOINT} />, {
+    theme: 'light',
+    language: 'en',
+  });
+}
+
+/** The Bench page heading, which is what "connected" now looks like. */
+function benchPage(): Promise<HTMLElement> {
+  return screen.findByRole('heading', { name: 'Bench', level: 2 });
+}
+
+/** Open the account menu, where sign-out and the role now live. */
+function openAccountMenu(): void {
+  fireEvent.click(screen.getByRole('button', { name: 'Account' }));
+}
+
+/**
+ * Render a page load that arrives with the cookies a signed-in browser holds.
+ *
+ * The session secret itself is `HttpOnly` and therefore invisible to both this
+ * page and this test; the readable cross-site request forgery cookie is the one
+ * thing restoration can and must pick up for itself.
+ */
+function renderRestoredApp(client: BenchCoreClient) {
+  document.cookie = 'nilo_csrf=csrf-token-fixture';
+  return renderApp(client);
+}
+
+/** Wait for the start-up session probe to settle on the sign-in screen. */
+function signInScreen(): Promise<HTMLElement> {
+  return screen.findByRole('heading', { name: /sign in to nilo/i });
 }
 
 function tokenField(): HTMLElement {
@@ -96,18 +198,26 @@ function connectButton(): HTMLElement {
   return screen.getByRole('button', { name: /^connect$/i });
 }
 
-function submitToken(token: string): void {
+async function connectWith(
+  client: BenchCoreClient,
+  token = 'development-token',
+): Promise<void> {
+  renderApp(client);
+  await signInScreen();
   fireEvent.change(tokenField(), { target: { value: token } });
   fireEvent.click(connectButton());
 }
 
-function connectWith(client: BenchCoreClient, token = 'development-token'): void {
-  render(<App client={client} apiMode="live" endpoint={ENDPOINT} />);
-  submitToken(token);
-}
-
-function statusRegion(): HTMLElement {
-  return screen.getByRole('region', { name: /bench core connected/i });
+async function signInAs(
+  client: BenchCoreClient,
+  username = 'admin',
+  password = 'administrator-secret',
+): Promise<void> {
+  renderApp(client);
+  await signInScreen();
+  fireEvent.change(screen.getByLabelText('Username'), { target: { value: username } });
+  fireEvent.change(screen.getByLabelText('Password'), { target: { value: password } });
+  fireEvent.click(screen.getByRole('button', { name: /^sign in$/i }));
 }
 
 function integrationsRegion(): HTMLElement {
@@ -119,8 +229,8 @@ function devicesRegion(): HTMLElement {
 }
 
 function expectSimulationIdentity(): void {
-  expect(screen.getByRole('status', { name: 'Runtime profile' })).toHaveTextContent(
-    'SIMULATION',
+  expect(screen.getByRole('status', { name: /runtime profile/i })).toHaveTextContent(
+    'SIM',
   );
   expect(screen.getByText(BOUNDARY)).toBeVisible();
 }
@@ -129,71 +239,243 @@ afterEach(() => {
   vi.restoreAllMocks();
   localStorage.clear();
   sessionStorage.clear();
+  document.cookie = 'nilo_csrf=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
 });
 
-describe('development login screen', () => {
-  it('offers a masked token field, a submit control, and the endpoint it will contact', () => {
+describe('sign-in screen', () => {
+  it('offers masked password and token fields and the endpoint it will contact', async () => {
     const client = stubClient();
     const getStatus = vi.spyOn(client, 'getStatus');
-    render(<App client={client} apiMode="live" endpoint={ENDPOINT} />);
+    renderApp(client);
 
+    await signInScreen();
+    expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password');
     expect(tokenField()).toHaveAttribute('type', 'password');
+    expect(screen.getByRole('button', { name: /^sign in$/i })).toBeVisible();
     expect(connectButton()).toBeVisible();
     expect(screen.getByText(/http:\/\/127\.0\.0\.1:8090/)).toBeVisible();
     expect(getStatus).not.toHaveBeenCalled();
+    expectSimulationIdentity();
+  });
+
+  it('refuses an incomplete sign-in without contacting the backend', async () => {
+    const client = stubClient();
+    const signIn = vi.spyOn(client, 'signIn');
+    renderApp(client);
+    await signInScreen();
+
+    fireEvent.click(screen.getByRole('button', { name: /^sign in$/i }));
+
+    expect(
+      await screen.findByText(/enter both a username and a password/i),
+    ).toBeVisible();
+    expect(signIn).not.toHaveBeenCalled();
   });
 
   it('refuses an empty token without contacting the backend', async () => {
     const client = stubClient();
-    const getStatus = vi.spyOn(client, 'getStatus');
-    render(<App client={client} apiMode="live" endpoint={ENDPOINT} />);
+    const currentSession = vi.spyOn(client, 'currentSession');
+    renderApp(client);
+    await signInScreen();
+    currentSession.mockClear();
 
     fireEvent.click(connectButton());
 
     expect(await screen.findByText(/enter the bearer token/i)).toBeVisible();
-    expect(getStatus).not.toHaveBeenCalled();
+    expect(currentSession).not.toHaveBeenCalled();
+  });
+});
+
+describe('human sign-in and session', () => {
+  it('signs in with a username and password and shows who is signed in', async () => {
+    const client = stubClient({ signIn: () => Promise.resolve(administratorSession) });
+    const signIn = vi.spyOn(client, 'signIn');
+
+    await signInAs(client, 'admin', 'administrator-secret');
+
+    expect(await benchPage()).toBeVisible();
+    expect(signIn).toHaveBeenCalledExactlyOnceWith('admin', 'administrator-secret');
+    expect(screen.getByRole('button', { name: 'Account' })).toHaveTextContent('admin');
+    expectSimulationIdentity();
   });
 
+  it('uses the session credential and its CSRF token for every later request', async () => {
+    const client = stubClient({ signIn: () => Promise.resolve(administratorSession) });
+    const getStatus = vi.spyOn(client, 'getStatus');
+
+    await signInAs(client);
+
+    await waitFor(() => {
+      expect(getStatus).toHaveBeenCalledWith({
+        kind: 'session',
+        csrfToken: 'csrf-token-fixture',
+      });
+    });
+  });
+
+  it('stays on the sign-in screen when the credentials are refused', async () => {
+    await signInAs(stubClient({ signIn: rejecting('unauthorized') }));
+
+    expect(
+      await screen.findByText(/that username and password were not accepted/i),
+    ).toBeVisible();
+    expect(screen.getByRole('heading', { name: /sign in to nilo/i })).toBeVisible();
+  });
+
+  it('says a throttled username has to wait rather than be retyped', async () => {
+    await signInAs(
+      stubClient({
+        signIn: () =>
+          Promise.reject(
+            new BenchCoreError('rejected', 'too many', 'too_many_attempts'),
+          ),
+      }),
+    );
+
+    expect(await screen.findByText(/wait for the lock-out window/i)).toBeVisible();
+  });
+
+  it('restores the signed-in state on a fresh page without asking again', async () => {
+    const client = signedInClient(administratorSession);
+    const signIn = vi.spyOn(client, 'signIn');
+
+    renderRestoredApp(client);
+
+    expect(await benchPage()).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Account' })).toHaveTextContent('admin');
+    expect(screen.queryByRole('heading', { name: /sign in to nilo/i })).toBeNull();
+    expect(signIn).not.toHaveBeenCalled();
+  });
+
+  it('presents the sign-in screen when no session can be restored', async () => {
+    renderApp(stubClient());
+
+    expect(await signInScreen()).toBeVisible();
+    expect(screen.queryByRole('heading', { name: 'Bench', level: 2 })).toBeNull();
+  });
+
+  it('ends the session server-side when the human signs out', async () => {
+    const client = signedInClient(administratorSession);
+    const signOut = vi.spyOn(client, 'signOut');
+    renderRestoredApp(client);
+    await benchPage();
+
+    openAccountMenu();
+    fireEvent.click(screen.getByRole('menuitem', { name: /sign out/i }));
+
+    expect(await signInScreen()).toBeVisible();
+    expect(screen.getByText(/you are signed out/i)).toBeVisible();
+    await waitFor(() => {
+      expect(signOut).toHaveBeenCalledWith({
+        kind: 'session',
+        csrfToken: 'csrf-token-fixture',
+      });
+    });
+  });
+
+  it('returns to the sign-in screen when the session has ended', async () => {
+    const client = signedInClient(administratorSession, {
+      getStatus: rejecting('unauthorized'),
+    });
+
+    renderRestoredApp(client);
+
+    expect(await screen.findByText(/your session ended/i)).toBeVisible();
+    expect(screen.getByRole('heading', { name: /sign in to nilo/i })).toBeVisible();
+  });
+
+  it('keeps a forbidden identity signed in rather than sending it back to sign in', async () => {
+    const client = signedInClient(viewerSession, {
+      getStatus: rejecting('forbidden', 'inventory.read is missing'),
+    });
+
+    renderRestoredApp(client);
+
+    expect(await screen.findByText(/may not read the bench/i)).toBeVisible();
+    expect(screen.queryByRole('heading', { name: /sign in to nilo/i })).toBeNull();
+  });
+});
+
+describe('main navigation', () => {
+  it('offers the Authentication page to an administrator', async () => {
+    renderRestoredApp(signedInClient(administratorSession));
+    await benchPage();
+
+    fireEvent.click(
+      within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', {
+        name: /authentication/i,
+      }),
+    );
+
+    expect(await screen.findByRole('region', { name: 'Users' })).toBeVisible();
+    expect(screen.getByRole('region', { name: 'API Tokens' })).toBeVisible();
+    expectSimulationIdentity();
+  });
+
+  it('omits the Authentication entry for an identity that may not administer', async () => {
+    renderRestoredApp(signedInClient(viewerSession));
+    await benchPage();
+
+    const navigation = within(screen.getByRole('navigation', { name: 'Main' }));
+    expect(navigation.getByRole('button', { name: /bench/i })).toBeVisible();
+    expect(navigation.queryByRole('button', { name: /authentication/i })).toBeNull();
+  });
+});
+
+describe('development bearer token', () => {
   it('sends the entered token as the bearer credential for every resource', async () => {
     const client = stubClient();
     const getStatus = vi.spyOn(client, 'getStatus');
     const getIntegrations = vi.spyOn(client, 'getIntegrations');
     const getDevices = vi.spyOn(client, 'getDevices');
+    const signIn = vi.spyOn(client, 'signIn');
 
-    connectWith(client, 'issued-development-token');
+    await connectWith(client, 'issued-development-token');
 
+    const credential = { kind: 'bearer', token: 'issued-development-token' };
     await waitFor(() => {
-      expect(getStatus).toHaveBeenCalledWith('issued-development-token');
-      expect(getIntegrations).toHaveBeenCalledWith('issued-development-token');
-      expect(getDevices).toHaveBeenCalledWith('issued-development-token');
+      expect(getStatus).toHaveBeenCalledWith(credential);
+      expect(getIntegrations).toHaveBeenCalledWith(credential);
+      expect(getDevices).toHaveBeenCalledWith(credential);
     });
+    expect(signIn).not.toHaveBeenCalled();
+  });
+
+  it('shows the identity a development token carries', async () => {
+    await connectWith(stubClient());
+
+    expect(await benchPage()).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Account' })).toHaveTextContent(
+      'development-identity',
+    );
   });
 });
 
 describe('connection states', () => {
   it('shows a distinct in-progress state while the requests are pending', async () => {
-    connectWith(
+    await connectWith(
       stubClient({ getStatus: () => new Promise<BenchCoreStatus>(() => {}) }),
     );
 
     expect(await screen.findByText(/contacting bench core/i)).toBeVisible();
-    expect(screen.queryByText(/bench core connected/i)).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Bench', level: 2 })).toBeNull();
     expectSimulationIdentity();
   });
 
   it('shows the reported status once Bench Core answers', async () => {
-    connectWith(stubClient());
+    await connectWith(stubClient());
 
-    expect(await screen.findByText(/bench core connected/i)).toBeVisible();
-    expect(within(statusRegion()).getByText('simulation')).toBeVisible();
-    expect(within(statusRegion()).getByText('healthy')).toBeVisible();
-    expect(within(statusRegion()).getByText('0.1.0')).toBeVisible();
+    expect(await benchPage()).toBeVisible();
+    const facts = within(document.querySelector('.fact-grid') as HTMLElement);
+    expect(facts.getByText('simulation')).toBeVisible();
+    expect(facts.getByText('healthy')).toBeVisible();
+    expect(facts.getByText('0.1.0')).toBeVisible();
     expect(screen.getByRole('button', { name: /refresh/i })).toBeVisible();
     expectSimulationIdentity();
   });
 
   it('shows a distinct rejected-token state', async () => {
-    connectWith(failing('unauthorized'));
+    await connectWith(failing('unauthorized'));
 
     expect(await screen.findByText(/rejected this token/i)).toBeVisible();
     expect(screen.queryByText(/not reachable/i)).toBeNull();
@@ -204,7 +486,7 @@ describe('connection states', () => {
   });
 
   it('shows a distinct unreachable-backend state', async () => {
-    connectWith(failing('unavailable'));
+    await connectWith(failing('unavailable'));
 
     expect(await screen.findByText(/is not reachable/i)).toBeVisible();
     expect(screen.queryByText(/rejected this token/i)).toBeNull();
@@ -213,7 +495,7 @@ describe('connection states', () => {
   });
 
   it('shows a distinct unsupported-status state', async () => {
-    connectWith(failing('malformed'));
+    await connectWith(failing('malformed'));
 
     expect(await screen.findByText(/unsupported status response/i)).toBeVisible();
     expect(screen.queryByText(/is not reachable/i)).toBeNull();
@@ -221,13 +503,14 @@ describe('connection states', () => {
     expectSimulationIdentity();
   });
 
-  it('returns to an empty login screen when a rejected token is replaced', async () => {
-    connectWith(failing('unauthorized'));
+  it('returns to an empty sign-in screen when a rejected token is replaced', async () => {
+    await connectWith(failing('unauthorized'));
 
     fireEvent.click(
       await screen.findByRole('button', { name: /use a different token/i }),
     );
 
+    expect(await signInScreen()).toBeVisible();
     expect(tokenField()).toHaveValue('');
     expectSimulationIdentity();
   });
@@ -243,28 +526,31 @@ describe('connection states', () => {
       },
     });
     const getDevices = vi.spyOn(client, 'getDevices');
-    connectWith(client, 'issued-development-token');
+    await connectWith(client, 'issued-development-token');
 
     fireEvent.click(await screen.findByRole('button', { name: /try again/i }));
 
-    expect(await screen.findByText(/bench core connected/i)).toBeVisible();
+    expect(await benchPage()).toBeVisible();
     expect(attempts).toBe(2);
-    expect(getDevices).toHaveBeenCalledTimes(2);
-    expect(getDevices).toHaveBeenLastCalledWith('issued-development-token');
+    expect(getDevices).toHaveBeenLastCalledWith({
+      kind: 'bearer',
+      token: 'issued-development-token',
+    });
   });
 
-  it('keeps the simulation identity on the unauthenticated screen', () => {
-    render(<App client={stubClient()} apiMode="live" endpoint={ENDPOINT} />);
+  it('keeps the simulation identity on the unauthenticated screen', async () => {
+    renderApp(stubClient());
 
+    await signInScreen();
     expectSimulationIdentity();
-    expect(screen.getByRole('heading', { name: 'NILO' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: /sign in to nilo/i })).toBeVisible();
     expect(screen.getByText(/development interface/i)).toBeVisible();
   });
 });
 
 describe('simulated inventory', () => {
   it('shows every integration the backend reports, with its state', async () => {
-    connectWith(stubClient());
+    await connectWith(stubClient());
 
     const integrations = within(
       await screen.findByRole('region', { name: 'Integrations' }),
@@ -278,7 +564,7 @@ describe('simulated inventory', () => {
   });
 
   it('shows every device with the integration that owns it and its availability', async () => {
-    connectWith(stubClient());
+    await connectWith(stubClient());
 
     const devices = within(await screen.findByRole('region', { name: 'Devices' }));
     expect(devices.getByText('SIMULATION - Electronics Bench 001')).toBeVisible();
@@ -289,7 +575,7 @@ describe('simulated inventory', () => {
   });
 
   it('shows the unavailable scenario states rather than the ready ones', async () => {
-    connectWith(
+    await connectWith(
       stubClient({
         getIntegrations: () => Promise.resolve(unavailableIntegrations),
         getDevices: () => Promise.resolve(unavailableDevices),
@@ -300,12 +586,14 @@ describe('simulated inventory', () => {
     expect(within(integrationsRegion()).getByText('unavailable')).toBeVisible();
     expect(within(devicesRegion()).getByText('unavailable')).toBeVisible();
     expect(within(devicesRegion()).queryByText('ready')).toBeNull();
-    expect(within(statusRegion()).getByText('healthy')).toBeVisible();
+    expect(
+      within(document.querySelector('.fact-grid') as HTMLElement).getByText('healthy'),
+    ).toBeVisible();
     expectSimulationIdentity();
   });
 
   it('states that an inventory is empty instead of treating it as a failure', async () => {
-    connectWith(
+    await connectWith(
       stubClient({
         getIntegrations: () => Promise.resolve({ ...readyIntegrations, items: [] }),
         getDevices: () => Promise.resolve({ ...readyDevices, items: [] }),
@@ -317,16 +605,15 @@ describe('simulated inventory', () => {
     expect(within(devicesRegion()).getByText(/no devices/i)).toBeVisible();
     expect(screen.queryByRole('alert')).toBeNull();
     expect(screen.queryByText(/could not be read/i)).toBeNull();
-    expect(within(statusRegion()).getByText('healthy')).toBeVisible();
-    expect(screen.getByRole('button', { name: /refresh/i })).toBeVisible();
     expect(
-      screen.getByRole('button', { name: /use a different token/i }),
+      within(document.querySelector('.fact-grid') as HTMLElement).getByText('healthy'),
     ).toBeVisible();
+    expect(screen.getByRole('button', { name: /refresh/i })).toBeVisible();
     expectSimulationIdentity();
   });
 
   it('counts the entries it is showing', async () => {
-    connectWith(stubClient());
+    await connectWith(stubClient());
 
     await screen.findByRole('region', { name: 'Integrations' });
     expect(within(integrationsRegion()).getByText(/1 entry/i)).toBeVisible();
@@ -336,7 +623,7 @@ describe('simulated inventory', () => {
 
 describe('unusable inventory responses', () => {
   it('names the integration inventory and keeps the rest of the screen', async () => {
-    connectWith(
+    await connectWith(
       stubClient({ getIntegrations: rejecting('malformed', 'items is not a list') }),
     );
 
@@ -346,7 +633,9 @@ describe('unusable inventory responses', () => {
       integrations.getByText(/integration inventory could not be read/i),
     ).toBeVisible();
     expect(integrations.getByText(/items is not a list/i)).toBeVisible();
-    expect(within(statusRegion()).getByText('healthy')).toBeVisible();
+    expect(
+      within(document.querySelector('.fact-grid') as HTMLElement).getByText('healthy'),
+    ).toBeVisible();
     expect(
       within(devicesRegion()).getByText('SIMULATION - Electronics Bench 001'),
     ).toBeVisible();
@@ -355,7 +644,7 @@ describe('unusable inventory responses', () => {
   });
 
   it('names the device inventory and keeps the rest of the screen', async () => {
-    connectWith(
+    await connectWith(
       stubClient({ getDevices: rejecting('malformed', 'entry 0 is missing kind') }),
     );
 
@@ -363,7 +652,9 @@ describe('unusable inventory responses', () => {
     const devices = within(devicesRegion());
     expect(devices.getByText(/device inventory could not be read/i)).toBeVisible();
     expect(devices.getByText(/entry 0 is missing kind/i)).toBeVisible();
-    expect(within(statusRegion()).getByText('healthy')).toBeVisible();
+    expect(
+      within(document.querySelector('.fact-grid') as HTMLElement).getByText('healthy'),
+    ).toBeVisible();
     expect(
       within(integrationsRegion()).getByText('SIMULATION - Fake Python Integration'),
     ).toBeVisible();
@@ -371,7 +662,7 @@ describe('unusable inventory responses', () => {
   });
 
   it('tells the two unusable inventories apart', async () => {
-    connectWith(
+    await connectWith(
       stubClient({ getIntegrations: rejecting('malformed', 'items is not a list') }),
     );
     expect(
@@ -381,7 +672,7 @@ describe('unusable inventory responses', () => {
   });
 
   it('reports an inventory the backend could not serve without claiming it is empty', async () => {
-    connectWith(
+    await connectWith(
       stubClient({
         getDevices: rejecting('unavailable', 'Bench Core answered HTTP 503'),
       }),
@@ -395,7 +686,7 @@ describe('unusable inventory responses', () => {
   });
 
   it('is not the screen a rejected token or a stopped backend reaches', async () => {
-    connectWith(failing('unauthorized'));
+    await connectWith(failing('unauthorized'));
 
     expect(await screen.findByText(/rejected this token/i)).toBeVisible();
     expect(screen.queryByRole('region', { name: 'Integrations' })).toBeNull();
@@ -404,43 +695,80 @@ describe('unusable inventory responses', () => {
   });
 });
 
-describe('bearer token retention', () => {
-  it('never writes the token to a durable browser store', async () => {
+describe('credential retention', () => {
+  it('never writes a password or a CSRF token to a durable store or the console', async () => {
+    const stored = vi.spyOn(Storage.prototype, 'setItem');
+    const cookie = vi.spyOn(Document.prototype, 'cookie', 'set');
+    const console = [
+      vi.spyOn(globalThis.console, 'log').mockImplementation(() => {}),
+      vi.spyOn(globalThis.console, 'info').mockImplementation(() => {}),
+      vi.spyOn(globalThis.console, 'warn').mockImplementation(() => {}),
+      vi.spyOn(globalThis.console, 'debug').mockImplementation(() => {}),
+      vi.spyOn(globalThis.console, 'error').mockImplementation(() => {}),
+    ];
+    const client = stubClient({ signIn: () => Promise.resolve(administratorSession) });
+
+    await signInAs(client, 'admin', 'administrator-secret');
+    await benchPage();
+
+    // Preferences are the only durable writes, and a credential is never one.
+    for (const [key] of stored.mock.calls) {
+      expect(Object.values(PREFERENCE_KEYS)).toContain(key);
+    }
+    expect(cookie).not.toHaveBeenCalled();
+    const written = console.flatMap((method) =>
+      method.mock.calls.map((call) => call.map(String).join(' ')),
+    );
+    for (const secret of ['administrator-secret', 'csrf-token-fixture']) {
+      expect(JSON.stringify(localStorage)).not.toContain(secret);
+      expect(JSON.stringify(sessionStorage)).not.toContain(secret);
+      expect(document.body.innerHTML).not.toContain(secret);
+      expect(written.join('\n')).not.toContain(secret);
+    }
+  });
+
+  it('never writes the development token to a durable browser store', async () => {
     const stored = vi.spyOn(Storage.prototype, 'setItem');
     const cookie = vi.spyOn(Document.prototype, 'cookie', 'set');
 
-    connectWith(stubClient(), 'issued-development-token');
-    await screen.findByText(/bench core connected/i);
+    await connectWith(stubClient(), 'issued-development-token');
+    await benchPage();
     fireEvent.click(screen.getByRole('button', { name: /refresh/i }));
     await screen.findByRole('region', { name: 'Devices' });
 
-    expect(stored).not.toHaveBeenCalled();
+    for (const [key, value] of stored.mock.calls) {
+      expect(Object.values(PREFERENCE_KEYS)).toContain(key);
+      expect(String(value)).not.toContain('issued-development-token');
+    }
     expect(cookie).not.toHaveBeenCalled();
     expect(JSON.stringify(localStorage)).not.toContain('issued-development-token');
     expect(JSON.stringify(sessionStorage)).not.toContain('issued-development-token');
     expect(document.body.innerHTML).not.toContain('issued-development-token');
   });
 
-  it('presents the login screen again after the application is remounted', async () => {
-    const { unmount } = render(
-      <App client={stubClient()} apiMode="live" endpoint={ENDPOINT} />,
-    );
-    submitToken('issued-development-token');
-    await screen.findByText(/bench core connected/i);
+  it('presents the sign-in screen again after the application is remounted', async () => {
+    const { unmount } = renderApp(stubClient());
+    await signInScreen();
+    fireEvent.change(tokenField(), { target: { value: 'issued-development-token' } });
+    fireEvent.click(connectButton());
+    await benchPage();
     unmount();
 
-    render(<App client={stubClient()} apiMode="live" endpoint={ENDPOINT} />);
+    renderApp(stubClient());
 
+    expect(await signInScreen()).toBeVisible();
     expect(tokenField()).toHaveValue('');
-    expect(screen.queryByText(/bench core connected/i)).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Bench', level: 2 })).toBeNull();
   });
 
   it('discards the token and the inventory when a different token is asked for', async () => {
-    connectWith(stubClient(), 'issued-development-token');
+    await connectWith(stubClient(), 'issued-development-token');
     await screen.findByRole('region', { name: 'Devices' });
 
-    fireEvent.click(screen.getByRole('button', { name: /use a different token/i }));
+    openAccountMenu();
+    fireEvent.click(screen.getByRole('menuitem', { name: /sign out/i }));
 
+    expect(await signInScreen()).toBeVisible();
     expect(tokenField()).toHaveValue('');
     expect(screen.queryByRole('region', { name: 'Devices' })).toBeNull();
     expect(screen.queryByText('SIMULATION - Electronics Bench 001')).toBeNull();
@@ -448,9 +776,10 @@ describe('bearer token retention', () => {
 });
 
 describe('mock mode', () => {
-  it('says the interface is answering from its own contract mock', () => {
-    render(<App client={stubClient()} apiMode="mock" endpoint={ENDPOINT} />);
+  it('says the interface is answering from its own contract mock', async () => {
+    renderApp(stubClient(), 'mock');
 
+    await signInScreen();
     expect(screen.getByText(/contract mock/i)).toBeVisible();
     expectSimulationIdentity();
   });

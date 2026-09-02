@@ -1,17 +1,35 @@
 import {
+  CSRF_HEADER_NAME,
   DEVICES_PATH,
+  IDENTITIES_PATH,
   INTEGRATIONS_PATH,
+  SESSION_PATH,
+  SIGN_IN_PATH,
+  SIGN_OUT_PATH,
   STATUS_PATH,
+  TOKENS_PATH,
+  identityPath,
   normalizeBaseUrl,
   parseDevicesBody,
+  parseIdentitiesBody,
+  parseIdentityBody,
   parseIntegrationsBody,
+  parseIssuedTokenBody,
+  parseSessionBody,
   parseStatusBody,
+  parseTokensBody,
   resourceUrl,
-  type BenchCorePath,
+  tokenRevocationPath,
+  type BenchCoreIdentity,
+  type BenchCoreRole,
+  type BenchCoreSession,
   type BenchCoreStatus,
   type DeviceInventory,
+  type IdentityInventory,
   type IntegrationInventory,
+  type IssuedToken,
   type ParseResult,
+  type TokenInventory,
 } from './contract';
 
 /** The subset of a fetch response this client depends on. */
@@ -23,7 +41,15 @@ export interface TransportResponse {
 
 /** The subset of a fetch request this client sends. */
 export interface TransportRequest {
+  method: string;
   headers: Record<string, string>;
+  body?: string;
+  /**
+   * Always `same-origin`. Every path is origin-relative, and the browser
+   * session lives in a cookie the page cannot read, so the cookie has to be
+   * attached by the browser or the request is anonymous.
+   */
+  credentials: 'same-origin';
 }
 
 /**
@@ -35,33 +61,120 @@ export type BenchCoreTransport = (
   request: TransportRequest,
 ) => Promise<TransportResponse>;
 
-/** Why a Bench Core request could not be completed. */
-export type BenchCoreFailure = 'unauthorized' | 'unavailable' | 'malformed';
+/**
+ * How one request proves who is asking.
+ *
+ * A browser session sends no `Authorization` header at all: its secret is in an
+ * `HttpOnly` cookie the browser attaches and the page never sees. What the page
+ * does hold is the cross-site request forgery token, which it repeats on every
+ * state-changing request. A bearer credential is the reverse — a header, and no
+ * cookie for a cross-site request to abuse.
+ */
+export type Credential =
+  | { readonly kind: 'session'; readonly csrfToken: string }
+  | { readonly kind: 'bearer'; readonly token: string };
+
+/** A credential that authenticates with a pasted development bearer token. */
+export function bearerCredential(token: string): Credential {
+  return { kind: 'bearer', token };
+}
+
+/** A credential that authenticates with the server-managed session cookie. */
+export function sessionCredential(csrfToken: string): Credential {
+  return { kind: 'session', csrfToken };
+}
+
+/**
+ * Why a Bench Core request could not be completed.
+ *
+ * `unauthorized` and `forbidden` are deliberately separate: signing in again
+ * fixes the first and achieves nothing for the second. `rejected` is a request
+ * Bench Core understood and refused with a reason the caller can act on.
+ */
+export type BenchCoreFailure =
+  'unauthorized' | 'forbidden' | 'rejected' | 'unavailable' | 'malformed';
 
 /** A Bench Core request failure with a machine-readable cause. */
 export class BenchCoreError extends Error {
   readonly failure: BenchCoreFailure;
   readonly detail: string;
+  /** The stable error code Bench Core sent, or the empty string. */
+  readonly code: string;
 
-  constructor(failure: BenchCoreFailure, detail: string) {
+  constructor(failure: BenchCoreFailure, detail: string, code = '') {
     super(`bench core request failed: ${failure}: ${detail}`);
     this.name = 'BenchCoreError';
     this.failure = failure;
     this.detail = detail;
+    this.code = code;
   }
+}
+
+/** What an administrator submits to create an identity. */
+export interface NewIdentity {
+  username: string;
+  role: BenchCoreRole;
+  password: string;
+}
+
+/** What an administrator submits to create an API token. */
+export interface NewToken {
+  owner: string;
+  name: string;
+  scopes: string[];
+  /** An RFC 3339 instant, or null for a token that does not expire. */
+  expiresAt: string | null;
 }
 
 /** The authenticated Bench Core operations the GUI can perform. */
 export interface BenchCoreClient {
   readonly baseUrl: string;
-  getStatus(token: string): Promise<BenchCoreStatus>;
-  getIntegrations(token: string): Promise<IntegrationInventory>;
-  getDevices(token: string): Promise<DeviceInventory>;
+
+  getStatus(credential: Credential): Promise<BenchCoreStatus>;
+  getIntegrations(credential: Credential): Promise<IntegrationInventory>;
+  getDevices(credential: Credential): Promise<DeviceInventory>;
+
+  signIn(username: string, password: string): Promise<BenchCoreSession>;
+  currentSession(credential: Credential): Promise<BenchCoreSession>;
+  signOut(credential: Credential): Promise<void>;
+
+  listIdentities(credential: Credential): Promise<IdentityInventory>;
+  createIdentity(
+    credential: Credential,
+    identity: NewIdentity,
+  ): Promise<BenchCoreIdentity>;
+  setIdentityRole(
+    credential: Credential,
+    username: string,
+    role: BenchCoreRole,
+  ): Promise<void>;
+  setIdentityEnabled(
+    credential: Credential,
+    username: string,
+    enabled: boolean,
+  ): Promise<void>;
+  resetIdentityPassword(
+    credential: Credential,
+    username: string,
+    password: string,
+  ): Promise<void>;
+
+  listTokens(credential: Credential): Promise<TokenInventory>;
+  createToken(credential: Credential, token: NewToken): Promise<IssuedToken>;
+  revokeToken(credential: Credential, id: string): Promise<void>;
 }
 
 export interface BenchCoreClientOptions {
   baseUrl: string;
   transport?: BenchCoreTransport;
+}
+
+interface Exchange<T> {
+  path: string;
+  credential: Credential | null;
+  method?: string;
+  body?: unknown;
+  parse?: (body: unknown) => ParseResult<T>;
 }
 
 /** Build a client for one Bench Core base URL. */
@@ -72,54 +185,58 @@ export function createBenchCoreClient(
   const transport = options.transport ?? defaultTransport;
 
   /**
-   * One request path for every resource, so a rejected token, an unreachable
-   * backend, and a body outside the contract are classified identically
-   * whichever resource was asked for. The token is only ever an Authorization
-   * header value; it never reaches the URL.
+   * One request path for every resource, so a rejected credential, an
+   * unreachable backend, a refused change and a body outside the contract are
+   * classified identically whichever route was asked for. A bearer token is
+   * only ever an Authorization header value; it never reaches the URL, and
+   * neither does a password, which travels in the body of one POST.
    */
-  async function request<T>(
-    path: BenchCorePath,
-    token: string,
-    parse: (body: unknown) => ParseResult<T>,
-  ): Promise<T> {
-    const url = resourceUrl(baseUrl, path);
+  async function exchange<T>(request: Exchange<T>): Promise<T> {
+    const url = resourceUrl(baseUrl, request.path);
+    const method = request.method ?? 'GET';
+    const headers: Record<string, string> = { Accept: 'application/json' };
+    let body: string | undefined;
+
+    if (request.credential?.kind === 'bearer') {
+      headers.Authorization = `Bearer ${request.credential.token}`;
+    }
+    if (request.credential?.kind === 'session' && changesState(method)) {
+      headers[CSRF_HEADER_NAME] = request.credential.csrfToken;
+    }
+    if (request.body !== undefined) {
+      headers['Content-Type'] = 'application/json';
+      body = JSON.stringify(request.body);
+    }
 
     let response: TransportResponse;
     try {
       response = await transport(url, {
-        headers: {
-          Accept: 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        method,
+        headers,
+        body,
+        credentials: 'same-origin',
       });
     } catch (error) {
       throw new BenchCoreError('unavailable', describe(error));
     }
 
-    if (response.status === 401) {
-      throw new BenchCoreError(
-        'unauthorized',
-        'Bench Core rejected the bearer token (HTTP 401)',
-      );
-    }
     if (!response.ok) {
-      throw new BenchCoreError(
-        'unavailable',
-        `Bench Core answered with HTTP ${response.status}`,
-      );
+      throw await refusalOf(response);
     }
 
-    let body: unknown;
+    if (request.parse === undefined) {
+      return undefined as T;
+    }
+    let decoded: unknown;
     try {
-      body = JSON.parse(await response.text());
+      decoded = JSON.parse(await response.text());
     } catch (error) {
       throw new BenchCoreError(
         'malformed',
-        `the response to ${path} is not valid JSON: ${describe(error)}`,
+        `the response to ${request.path} is not valid JSON: ${describe(error)}`,
       );
     }
-
-    const parsed = parse(body);
+    const parsed = request.parse(decoded);
     if (!parsed.ok) {
       throw new BenchCoreError('malformed', parsed.violation);
     }
@@ -128,11 +245,140 @@ export function createBenchCoreClient(
 
   return {
     baseUrl,
-    getStatus: (token) => request(STATUS_PATH, token, parseStatusBody),
-    getIntegrations: (token) =>
-      request(INTEGRATIONS_PATH, token, parseIntegrationsBody),
-    getDevices: (token) => request(DEVICES_PATH, token, parseDevicesBody),
+
+    getStatus: (credential) =>
+      exchange({ path: STATUS_PATH, credential, parse: parseStatusBody }),
+    getIntegrations: (credential) =>
+      exchange({ path: INTEGRATIONS_PATH, credential, parse: parseIntegrationsBody }),
+    getDevices: (credential) =>
+      exchange({ path: DEVICES_PATH, credential, parse: parseDevicesBody }),
+
+    signIn: (username, password) =>
+      exchange({
+        path: SIGN_IN_PATH,
+        credential: null,
+        method: 'POST',
+        body: { username, password },
+        parse: parseSessionBody,
+      }),
+    currentSession: (credential) =>
+      exchange({ path: SESSION_PATH, credential, parse: parseSessionBody }),
+    signOut: (credential) =>
+      exchange<void>({ path: SIGN_OUT_PATH, credential, method: 'POST' }),
+
+    listIdentities: (credential) =>
+      exchange({ path: IDENTITIES_PATH, credential, parse: parseIdentitiesBody }),
+    createIdentity: (credential, identity) =>
+      exchange({
+        path: IDENTITIES_PATH,
+        credential,
+        method: 'POST',
+        body: identity,
+        parse: parseIdentityBody,
+      }),
+    setIdentityRole: (credential, username, role) =>
+      exchange<void>({
+        path: identityPath(username, 'role'),
+        credential,
+        method: 'PUT',
+        body: { role },
+      }),
+    setIdentityEnabled: (credential, username, enabled) =>
+      exchange<void>({
+        path: identityPath(username, 'enabled'),
+        credential,
+        method: 'PUT',
+        body: { enabled },
+      }),
+    resetIdentityPassword: (credential, username, password) =>
+      exchange<void>({
+        path: identityPath(username, 'password'),
+        credential,
+        method: 'PUT',
+        body: { password },
+      }),
+
+    listTokens: (credential) =>
+      exchange({ path: TOKENS_PATH, credential, parse: parseTokensBody }),
+    createToken: (credential, token) =>
+      exchange({
+        path: TOKENS_PATH,
+        credential,
+        method: 'POST',
+        body: {
+          owner: token.owner,
+          name: token.name,
+          scopes: token.scopes,
+          expires_at: token.expiresAt,
+        },
+        parse: parseIssuedTokenBody,
+      }),
+    revokeToken: (credential, id) =>
+      exchange<void>({ path: tokenRevocationPath(id), credential, method: 'POST' }),
   };
+}
+
+/**
+ * Classify an unsuccessful answer.
+ *
+ * The three statuses Bench Core uses deliberately mean different things to a
+ * human: `401` says the credential is gone, `403` says this identity may not do
+ * this, and a `400`, `404`, `409` or `429` says the request itself has to
+ * change. Everything else is the backend failing, which is not the caller's
+ * fault and not something a different form entry would fix.
+ */
+async function refusalOf(response: TransportResponse): Promise<BenchCoreError> {
+  if (response.status === 401) {
+    return new BenchCoreError(
+      'unauthorized',
+      'Bench Core did not accept the credential (HTTP 401)',
+      'unauthorized',
+    );
+  }
+  const { code, message } = await readRefusal(response);
+  if (response.status === 403) {
+    return new BenchCoreError(
+      'forbidden',
+      message || 'This identity is not permitted to do that (HTTP 403).',
+      code,
+    );
+  }
+  if ([400, 404, 409, 429].includes(response.status)) {
+    return new BenchCoreError(
+      'rejected',
+      message || `Bench Core refused the request (HTTP ${response.status}).`,
+      code,
+    );
+  }
+  return new BenchCoreError(
+    'unavailable',
+    `Bench Core answered with HTTP ${response.status}`,
+    code,
+  );
+}
+
+/** Read the stable code and the fixed message from a refusal body, if any. */
+async function readRefusal(
+  response: TransportResponse,
+): Promise<{ code: string; message: string }> {
+  try {
+    const decoded: unknown = JSON.parse(await response.text());
+    if (typeof decoded === 'object' && decoded !== null) {
+      const body = decoded as { error?: unknown; message?: unknown };
+      return {
+        code: typeof body.error === 'string' ? body.error : '',
+        message: typeof body.message === 'string' ? body.message : '',
+      };
+    }
+  } catch {
+    // A refusal without a readable body is still a refusal; the status alone
+    // carries the meaning, and inventing a reason here would be a guess.
+  }
+  return { code: '', message: '' };
+}
+
+function changesState(method: string): boolean {
+  return method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS';
 }
 
 function defaultTransport(
