@@ -44,6 +44,8 @@ class ToolchainBootstrapTests(unittest.TestCase):
                 "lint": "eslint . --max-warnings 0",
                 "test": "vitest",
                 "test:ci": "vitest run",
+                "test:e2e": "playwright test",
+                "test:e2e:headed": "playwright test --headed",
                 "preview": "vite preview --host 127.0.0.1",
             },
         )
@@ -199,6 +201,50 @@ class ToolchainBootstrapTests(unittest.TestCase):
             self.assertNotEqual(unavailable.returncode, 0)
             self.assertIn("--install -d Ubuntu", unavailable.log)
 
+    def test_browser_runtime_is_pinned_and_stays_below_the_repository(self) -> None:
+        """A browser downloaded into a user-wide cache is an unpinned prerequisite."""
+        frontend = REPOSITORY_ROOT / "05_Software" / "nilo_gui"
+        browser_bootstrap = TOOLS_ROOT / "bootstrap" / "bootstrap-browser.ps1"
+        frontend_bootstrap = TOOLS_ROOT / "bootstrap" / "bootstrap-frontend.ps1"
+        wrapper = TOOLS_ROOT / "env" / "with-tools.ps1"
+
+        self.assertTrue(
+            browser_bootstrap.is_file(), f"missing browser bootstrap: {browser_bootstrap}"
+        )
+
+        package = json.loads((frontend / "package.json").read_text(encoding="utf-8"))
+        lock = json.loads((frontend / "package-lock.json").read_text(encoding="utf-8"))
+        pinned = package["devDependencies"]["@playwright/test"]
+        self.assertRegex(pinned, r"^\d+\.\d+\.\d+$")
+        self.assertEqual(
+            lock["packages"]["node_modules/@playwright/test"]["version"], pinned
+        )
+
+        wrapper_source = wrapper.read_text(encoding="utf-8")
+        self.assertRegex(
+            wrapper_source,
+            r"\$env:PLAYWRIGHT_BROWSERS_PATH\s*=\s*Join-Path \$runtimeRoot",
+        )
+        self.assertNotRegex(
+            wrapper_source, r"\bsetx(?:\.exe)?\b|SetEnvironmentVariable"
+        )
+
+        browser_source = browser_bootstrap.read_text(encoding="utf-8")
+        self.assertIn("with-tools.ps1", browser_source)
+        self.assertIn("chromium", browser_source)
+        self.assertNotRegex(browser_source, r"\bsetx(?:\.exe)?\b|SetEnvironmentVariable")
+
+        # A locked restore must never populate a user-wide browser cache.
+        self.assertIn(
+            "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD",
+            frontend_bootstrap.read_text(encoding="utf-8"),
+        )
+
+        ignore = (REPOSITORY_ROOT / ".gitignore").read_text(encoding="utf-8").lower()
+        self.assertIn("/02_tools/runtime/", ignore)
+        self.assertIn("test-results/", ignore)
+        self.assertIn("playwright-report/", ignore)
+
     def test_combined_bootstrap_orchestrates_windows_and_wsl_tools(self) -> None:
         combined = TOOLS_ROOT / "bootstrap" / "bootstrap-development.ps1"
         self.assertTrue(combined.is_file(), f"missing combined bootstrap: {combined}")
@@ -207,6 +253,7 @@ class ToolchainBootstrapTests(unittest.TestCase):
         expected_order = [
             "setup-wsl.ps1",
             "bootstrap.ps1",
+            "bootstrap-browser.ps1",
             "bootstrap.sh",
             "doctor.ps1",
             "doctor-wsl.ps1",

@@ -14,6 +14,10 @@ __pycache__/
 **/coverage/
 **/dist/
 
+# Generated browser end-to-end run output. A successful run leaves none.
+**/test-results/
+**/playwright-report/
+
 # Local frontend environment overrides are per-developer, never shared.
 **/.env.local
 **/.env.*.local

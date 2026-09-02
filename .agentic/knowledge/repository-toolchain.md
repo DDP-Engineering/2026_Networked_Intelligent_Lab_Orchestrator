@@ -14,10 +14,12 @@ Developers run `bootstrap.ps1` or `bootstrap.sh` for one host, or
 distribution from one checkout. `setup-wsl.ps1` keeps host installation and
 conversion opt-in, while `doctor-wsl.ps1` proves the distribution, repository
 mapping, and Linux tools. `bootstrap-frontend.ps1` restores the locked browser
-GUI dependencies, including from a populated offline cache. Commands run
-through `with-tools` or the Go-only compatibility wrapper.
+GUI dependencies, including from a populated offline cache, and
+`bootstrap-browser.ps1` installs the browser engine the integrated browser test
+drives. Commands run through `with-tools` or the Go-only compatibility wrapper.
 `toolchain.versions` is the authority for versions, platform archive URLs,
-and SHA-256 checksums.
+and SHA-256 checksums; the browser test package and its engine are pinned by the
+GUI lockfile rather than by that manifest, because npm resolves them.
 
 ## Key behaviors
 
@@ -56,6 +58,11 @@ and SHA-256 checksums.
 - `REQ-PLAT-022e39b0` - reports each outcome through its own exit code.
 - `REQ-TEST-daa9a99d` - exposes the WSL, endpoint, port, launcher and browser
   boundaries as injectable options so tests open no window and bind no port.
+- `REQ-PLAT-38014f08` - installs the pinned browser the integrated browser test
+  drives below the ignored platform runtime directory, so no test run downloads
+  one and no per-user cache is written.
+- `REQ-TEST-7ff6a75d` - runs the integrated browser test from the Windows
+  repository gate, after the interface component tests and the production build.
 
 ## Architecture
 
@@ -101,6 +108,12 @@ flowchart TD
     lifecycle --> backend_window
     lifecycle --> frontend_window
     backend_window --> wsl_data
+    browser_bootstrap(["Windows browser bootstrap"])
+    browser_runtime[("ignored Chromium under runtime")]
+    combined --> browser_bootstrap
+    gui_lock --> browser_bootstrap
+    browser_bootstrap --> browser_runtime
+    browser_runtime --> wrapper
 ```
 
 The scripts modify environment variables only in their child process. The
@@ -121,13 +134,18 @@ only durable state, and they live on the WSL Linux filesystem.
 - `02_Tools/bootstrap/bootstrap-development.ps1` - combined Windows and WSL2
   setup, bootstrap, and diagnostic entry point.
 - `02_Tools/bootstrap/bootstrap-frontend.ps1` - locked online or offline npm
-  restore for the browser GUI.
+  restore for the browser GUI, with browser downloads forbidden during the
+  restore so browsers are only ever acquired deliberately.
+- `02_Tools/bootstrap/bootstrap-browser.ps1` - installs the one pinned browser
+  engine the integrated browser test drives, below the ignored platform runtime,
+  and refuses to download under `-Offline`.
 - `02_Tools/bootstrap/setup-wsl.ps1` - read-only WSL2 readiness check with
   explicit installation or conversion requests.
 - `02_Tools/lib/Wsl.ps1` - checked WSL invocation, discovery, kernel check, and
   Windows-to-WSL path translation.
 - `02_Tools/env/with-tools.ps1` - Windows child-process environment for Go,
-  uv, managed Python, Node.js, npm, and the repository-local npm cache.
+  uv, managed Python, Node.js, npm, the repository-local npm cache, and the
+  repository-local browser installation directory.
 - `02_Tools/env/with-tools.sh` - Linux child-process environment for Go, uv,
   and managed Python.
 - `02_Tools/env/with-go.ps1` and `02_Tools/env/with-go.sh` - Go-only compatibility wrappers.
@@ -146,7 +164,8 @@ only durable state, and they live on the WSL Linux filesystem.
 - `02_Tools/README.md` - usage, support, cache, offline-kit, lifecycle option,
   and exit-code guidance.
 - `05_Software/scripts/aegis_test.py` - Go, Python, integration, and Windows
-  frontend suite discovery that excludes generated environments and outputs.
+  frontend suite discovery that excludes generated environments and outputs, and
+  the Windows browser end-to-end step that follows the frontend build.
 - `05_Software/scripts/tests/test_toolchain_bootstrap.py` - manifest,
   non-global bootstrap, WSL safety, orchestration, and diagnostic contract
   tests.

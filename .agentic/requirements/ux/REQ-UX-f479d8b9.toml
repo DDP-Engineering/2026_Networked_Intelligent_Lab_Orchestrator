@@ -1,0 +1,91 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+# One requirement = one independently verifiable behavior.
+# Lives at .agentic/requirements/<category>/<id>.toml
+# Required fields: schema, id, title, status, requirement, verification.
+
+schema = 1
+
+# REQ-<CAT>-<8 hex>. CAT is FUNC, UX, NFR, SEC, DATA, PLAT, REL or TEST,
+# and must match the category folder this file sits in.
+id = "REQ-UX-f479d8b9"
+
+title = "Offer one headless browser test command and an opt-in headed mode"
+
+# draft while being written, active once it is built and tested,
+# retired when the behavior is deliberately removed.
+status = "active"
+
+# Self-contained prose: a reader with no other context must be able to
+# understand and check it. No ticket numbers, no run IDs, no references
+# to other requirements.
+#
+# Recommended shape - EARS. Pick the one pattern that fits; a stated
+# trigger or condition is what the test has to arrange, so surfacing it
+# here is what makes the behavior testable:
+#
+#   ubiquitous  The <system> shall <response>.
+#   event       When <trigger>, the <system> shall <response>.
+#   state       While <state>, the <system> shall <response>.
+#   unwanted    If <condition>, then the <system> shall <response>.
+#   optional    Where <feature is included>, the <system> shall <response>.
+#
+# Two "shall" clauses means two behaviors: split it into two requirements.
+# Do not contort prose to fit a pattern - a constraint that reads better
+# plainly is better plainly.
+requirement = """
+The interface project shall offer one command that runs the integrated browser
+test headlessly and one further command that runs the same test with the
+browser window visible for diagnosis, with the headless command being the one
+the repository gate and the documentation name.
+"""
+
+# The observation that settles whether the behavior holds — not a
+# restatement of the requirement.
+#
+# Some behaviors no test can settle: a look-and-see judgement, an install
+# on clean hardware, a printed page. Start this field with "Manual:" or
+# "Inspection:" and name the method, and `check` records the requirement
+# as verified by hand instead of counting it among the tests still owed.
+# The prefix alone is not enough — it has to say what someone does.
+verification = """
+A test asserts that the interface manifest declares exactly one headless
+integrated browser script and one headed variant of the same suite, that the
+headed one differs only by making the browser visible, and that the repository
+gate and the development documentation both name the headless script; each
+command is run once on the supported host and observed to behave as named.
+"""
+
+# Repo-relative, forward slashes. The source files this behavior lives in.
+affected_paths = [
+    "05_Software/nilo_gui/package.json",
+    "05_Software/nilo_gui/playwright.config.ts",
+    "05_Software/nilo_gui/vite.config.ts",
+    "05_Software/nilo_gui/tsconfig.node.json",
+    "05_Software/nilo_gui/e2e/commands.test.ts",
+    "05_Software/nilo_gui/README.md",
+    "06_SoftwareDocu/Development_and_Simulation_Flow.md",
+]
+
+# "tests/path/test_file.py::test_name" entries. Kept current during build;
+# these select the impacted regression set.
+linked_tests = [
+    "05_Software/nilo_gui/e2e/commands.test.ts::the integrated browser test commands",
+    "05_Software/nilo_gui/e2e/commands.test.ts::the documentation and the gate",
+    "05_Software/scripts/tests/test_toolchain_bootstrap.py::ToolchainBootstrapTests::test_frontend_project_is_locked_static_build",
+]
+
+# --- optional below this line ---
+
+# "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = "A cross-component test is only used if it is one obvious command, and it is only debuggable if there is a way to watch the browser do what the failure describes."
+
+created = 2026-09-01
+updated = 2026-09-01

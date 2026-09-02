@@ -41,7 +41,7 @@ Refresh after work or decisions even if current has not changed.
 
 # TASK-8a4ba5da — Add one-command Windows development lifecycle
 
-stage: deliver
+stage: done
 type: feature
 path: full
 requirements: REQ-FUNC-d05e1128, REQ-FUNC-d161146d, REQ-FUNC-645b9d0c, REQ-UX-4f1d3604, REQ-UX-1f854bdc, REQ-UX-09865d40, REQ-SEC-e0462d41, REQ-REL-8c82d667, REQ-PLAT-5360be1a, REQ-PLAT-022e39b0, REQ-TEST-daa9a99d
@@ -56,8 +56,8 @@ opened: 2026-09-01
 - [x] validation evidence, diff, exclusions, and outcome presented
 - [x] delivery confirmed by the human, who also ran the live topology themselves
 - [x] journal and report included in the delivery commit
-- [ ] agreed outcome delivered — the human makes the commit themselves; this journal is staged with it
-- [ ] close-out committed after the outcome succeeded
+- [x] agreed outcome delivered — the human committed and pushed 0cb7732, which carries this journal
+- [x] close-out written after the outcome succeeded; a later task's commit carries this journal-only edit
 
 ## Log
 
@@ -196,6 +196,7 @@ opened: 2026-09-01
 - 2026-09-01 deliver: the human ran the command against the real Windows plus WSL2 topology and reported it tested; they did not relay their specific observations, so this line records their verdict and not a measurement of my own, and the automated evidence above remains the only evidence I observed directly.
 - 2026-09-01 deliver: the human approved delivery and chose to make the commit themselves; the candidate was staged for them unchanged, with `00_Planning/TODO.md` deliberately left unstaged and untracked as required throughout this task.
 - 2026-09-01 deliver: the delivery carries TASK-8fd83f88's close-out edit under RULING-003; this journal's own close-out cannot be carried by the same commit, because the outcome - the human's commit and any push that follows - is not observable to me beforehand, so `stage: deliver` stands until it succeeds.
+- 2026-09-01 deliver: the outcome succeeded - commit 0cb7732 carries this journal and the whole approved candidate, and `git rev-list --left-right --count origin/master...master` reports 0 0, so it is also pushed; this task is closed out to `stage: done` as a journal-only edit, which a later task's delivery commit will carry, exactly as RULING-003 handled TASK-8fd83f88.
 
 ## Design
 
@@ -295,22 +296,22 @@ deliberately **not** changed: the simplified command writes nothing.
 status: ready | waiting | blocked
 -->
 
-current: deliver
-status: waiting
-next: The human commits the staged candidate; once that succeeds, set `stage: done`, tick close-out, and make the small close-out commit.
-must_read: .agentic/tasks/TASK-8a4ba5da.md, 02_Tools/scripts/nilo-dev.ps1, 02_Tools/lib/DevLifecycle.ps1
-blockers: none - approval is given and the candidate is staged; the only open item is this journal's close-out, which waits on the human's commit and any push that follows
+current: done
+status: ready
+next: Nothing. The task is closed; its close-out edit rides in the next task's delivery commit.
+must_read: .agentic/tasks/TASK-8a4ba5da.md
+blockers: none
 
 ## Stage report
 
-stage: validate
+stage: deliver
 result: completed
-current: deliver
+current: done
 changed: 23 files against 89aba98 (6 modified tracked, 17 new; an earlier snapshot said 21 and under-counted the new files) - 2 new PowerShell files (`02_Tools/scripts/nilo-dev.ps1` about 310 lines, `02_Tools/lib/DevLifecycle.ps1` about 380), 1 new Python suite, 11 new requirement files, this journal with its anchor and evolution records, TASK-8fd83f88's close-out edit, and the tools README, development-flow, vertical-slice, knowledge-page and CHANGELOG updates; `.gitignore` is unchanged because the command writes nothing, and `00_Planning/TODO.md` stays untracked and excluded
 evidence: `python -m unittest discover -s scripts/tests -p test_development_lifecycle.py` from `05_Software` exit=0 with 27 tests in 36.3s; `.\02_Tools\env\with-tools.ps1 python .agentic/aegis.py check --task TASK-8a4ba5da --strict --run` exit=0 with `run: test ok` (44.1s), `run: lint ok` (4.0s), `strict: ok`, errors=0 warnings=1; `git diff --check` exit=0. The two defects fixed this round were each reproduced by measurement first and their tests confirmed to fail against the previous code. No live Windows plus WSL2 run of the simplified command has been performed - the live evidence recorded earlier in this journal belongs to the removed supervised design and does not carry over
 issues: three review rounds found twenty-two valid findings in the supervised design, after which RULING-006 removed process supervision entirely rather than continuing to repair it; the human's review of the first simplified cut found six more and the fourth review found two functional defects, both of which would have stopped a real start, all fixed; two deviations stand - the accepted `outside-layout` warning for `CHANGELOG.md`, and REQ-TEST-daa9a99d amended because the new argument-boundary test starts one hidden helper process; an earlier round of mine wrongly refuted the argument-quoting defect, which is now measured, recorded and withdrawn; `evolution` still reports `00_Planning/TODO.md` as modified by something outside this task, which is reported rather than accepted and the file remains untracked and excluded
-next: The human commits the staged candidate themselves; close this journal out once that commit, and any push that follows, has succeeded
-needs_user: yes - the human is making the delivery commit, so the close-out cannot be written until it lands
+next: Nothing is owed. Commit 0cb7732 delivered and pushed the approved candidate; this journal is closed out and its close-out edit is carried by the next task's delivery commit
+needs_user: no - the delivery outcome succeeded and was observed in Git, so the close-out needed no further decision
 spec_compliance: disabled
 implementation_quality: disabled
 review_round:

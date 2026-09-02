@@ -1,0 +1,102 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+# One requirement = one independently verifiable behavior.
+# Lives at .agentic/requirements/<category>/<id>.toml
+# Required fields: schema, id, title, status, requirement, verification.
+
+schema = 1
+
+# REQ-<CAT>-<8 hex>. CAT is FUNC, UX, NFR, SEC, DATA, PLAT, REL or TEST,
+# and must match the category folder this file sits in.
+id = "REQ-SEC-4884bc91"
+
+title = "Keep the end-to-end development token out of output and artifacts"
+
+# draft while being written, active once it is built and tested,
+# retired when the behavior is deliberately removed.
+status = "active"
+
+# Self-contained prose: a reader with no other context must be able to
+# understand and check it. No ticket numbers, no run IDs, no references
+# to other requirements.
+#
+# Recommended shape - EARS. Pick the one pattern that fits; a stated
+# trigger or condition is what the test has to arrange, so surfacing it
+# here is what makes the behavior testable:
+#
+#   ubiquitous  The <system> shall <response>.
+#   event       When <trigger>, the <system> shall <response>.
+#   state       While <state>, the <system> shall <response>.
+#   unwanted    If <condition>, then the <system> shall <response>.
+#   optional    Where <feature is included>, the <system> shall <response>.
+#
+# Two "shall" clauses means two behaviors: split it into two requirements.
+# Do not contort prose to fit a pattern - a constraint that reads better
+# plainly is better plainly.
+requirement = """
+The browser end-to-end harness shall keep the plaintext development bearer
+token it issues in process memory only, exposing it through no accessor and
+writing it to no file, no console output, no environment of an unrelated
+process, no trace, screenshot or video, and no error raised by a failing action
+that carries it.
+"""
+
+# The observation that settles whether the behavior holds — not a
+# restatement of the requirement.
+#
+# Some behaviors no test can settle: a look-and-see judgement, an install
+# on clean hardware, a printed page. Start this field with "Manual:" or
+# "Inspection:" and name the method, and `check` records the requirement
+# as verified by hand instead of counting it among the tests still owed.
+# The prefix alone is not enough — it has to say what someone does.
+verification = """
+A test asserts that the issued token is read from the backend's output, kept in
+one private field with no accessor, and reaches the browser only through the
+harness method that types it into a supplied field; that the browser suite
+itself never names the value; and that the test configuration records no trace,
+no video and no screenshot on any outcome. A forced-failure test drives a real
+browser action that fails after its locator has resolved, which is the case in
+which the runner repeats the argument in the error it throws, and asserts that
+the surfaced message and stack carry the redaction marker and not the value,
+alongside a companion test asserting that the same unwrapped action does leak
+it, so the wrapper is never removed on a guess. After a run, the repository
+working tree and the run's own output directory are confirmed to contain no file
+holding the token.
+"""
+
+# Repo-relative, forward slashes. The source files this behavior lives in.
+affected_paths = [
+    "05_Software/nilo_gui/e2e/topology.ts",
+    "05_Software/nilo_gui/e2e/topology.test.ts",
+    "05_Software/nilo_gui/e2e/commands.test.ts",
+    "05_Software/nilo_gui/e2e/bench-core.spec.ts",
+    "05_Software/nilo_gui/e2e/token-redaction.spec.ts",
+    "05_Software/nilo_gui/playwright.config.ts",
+    "05_Software/nilo_gui/.prettierignore",
+    ".gitignore",
+]
+
+# "tests/path/test_file.py::test_name" entries. Kept current during build;
+# these select the impacted regression set.
+linked_tests = [
+    "05_Software/nilo_gui/e2e/topology.test.ts::token handling",
+    "05_Software/nilo_gui/e2e/topology.test.ts::redacting the token out of a failed action",
+    "05_Software/nilo_gui/e2e/commands.test.ts::what a browser run is allowed to leave behind",
+    "05_Software/nilo_gui/e2e/token-redaction.spec.ts::a failing fill on a resolved field never surfaces its argument",
+    "05_Software/nilo_gui/e2e/token-redaction.spec.ts::an unwrapped fill would have leaked it, which is why the wrapper exists",
+]
+
+# --- optional below this line ---
+
+# "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "A credential that reaches a log line or a saved trace outlives the run that needed it and travels wherever that artifact is copied."
+
+created = 2026-09-01
+updated = 2026-09-01

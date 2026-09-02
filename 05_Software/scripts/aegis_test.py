@@ -129,6 +129,11 @@ def _run_full(root: Path) -> int:
             result = _run(["npm.cmd", "run", "test:ci"], suite_root)
             if not result:
                 result = _run(["npm.cmd", "run", "build"], suite_root)
+            if not result:
+                # The browser-to-WSL2 proof. It fails the whole command when a
+                # prerequisite is missing rather than skipping, so a green gate
+                # never claims a browser reached Bench Core when none did.
+                result = _run(["npm.cmd", "run", "test:e2e"], suite_root)
         if result:
             return result
     return 0

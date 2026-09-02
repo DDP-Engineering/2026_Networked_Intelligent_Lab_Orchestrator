@@ -35,6 +35,10 @@ $env:UV_PYTHON_NO_REGISTRY = '1'
 $env:UV_PYTHON_PREFERENCE = 'only-managed'
 $env:UV_PROJECT_ENVIRONMENT = ".venv-$platformKey"
 $env:npm_config_cache = Join-Path $toolRoot "cache\$platformKey\npm"
+# Browser binaries for the integrated browser test are a repository-local
+# runtime like every other pinned tool, so they are never written to the
+# per-user cache Playwright would otherwise choose.
+$env:PLAYWRIGHT_BROWSERS_PATH = Join-Path $runtimeRoot 'playwright'
 New-Item -ItemType Directory -Force -Path $env:npm_config_cache | Out-Null
 $managedPython = (& (Join-Path $uvBin 'uv.exe') python find $values['PYTHON_VERSION']) -join ''
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $managedPython -PathType Leaf)) {

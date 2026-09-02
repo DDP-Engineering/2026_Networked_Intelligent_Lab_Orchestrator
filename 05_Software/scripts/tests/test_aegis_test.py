@@ -64,11 +64,37 @@ class AegisTestRouterTests(unittest.TestCase):
                 [
                     (["npm.cmd", "run", "test:ci"], frontend),
                     (["npm.cmd", "run", "build"], frontend),
+                    (["npm.cmd", "run", "test:e2e"], frontend),
                     (["npm.cmd", "run", "format:check"], frontend),
                     (["npm.cmd", "run", "lint"], frontend),
                     ([sys.executable, "-m", "compileall", "-q", "scripts"], root),
                 ],
             )
+
+    def test_a_failing_browser_end_to_end_run_fails_the_whole_command(self) -> None:
+        """A skipped or failed browser run must never be reported as a pass."""
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            frontend = root / "nilo_gui"
+            frontend.mkdir()
+            (frontend / "package.json").write_text(
+                '{"name":"nilo-gui","private":true}', encoding="utf-8"
+            )
+
+            module = self._load_router()
+            attempted: list[list[str]] = []
+
+            def fail_end_to_end(command: list[str], cwd: Path) -> int:
+                attempted.append(command)
+                return 6 if command[-1] == "test:e2e" else 0
+
+            with (
+                patch.object(module.sys, "platform", "win32"),
+                patch.object(module, "_run", side_effect=fail_end_to_end),
+            ):
+                self.assertEqual(module._run_full(root), 6)
+
+            self.assertEqual(attempted[-1], ["npm.cmd", "run", "test:e2e"])
 
     def test_discover_suites_finds_go_module_and_each_python_integration(self) -> None:
         """A future integration must not be silently omitted from AEGIS runs."""

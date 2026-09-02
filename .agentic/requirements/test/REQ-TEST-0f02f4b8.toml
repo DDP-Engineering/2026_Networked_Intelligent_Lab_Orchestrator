@@ -1,0 +1,87 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+# One requirement = one independently verifiable behavior.
+# Lives at .agentic/requirements/<category>/<id>.toml
+# Required fields: schema, id, title, status, requirement, verification.
+
+schema = 1
+
+# REQ-<CAT>-<8 hex>. CAT is FUNC, UX, NFR, SEC, DATA, PLAT, REL or TEST,
+# and must match the category folder this file sits in.
+id = "REQ-TEST-0f02f4b8"
+
+title = "Prove backend-unavailable presentation and browser recovery"
+
+# draft while being written, active once it is built and tested,
+# retired when the behavior is deliberately removed.
+status = "active"
+
+# Self-contained prose: a reader with no other context must be able to
+# understand and check it. No ticket numbers, no run IDs, no references
+# to other requirements.
+#
+# Recommended shape - EARS. Pick the one pattern that fits; a stated
+# trigger or condition is what the test has to arrange, so surfacing it
+# here is what makes the behavior testable:
+#
+#   ubiquitous  The <system> shall <response>.
+#   event       When <trigger>, the <system> shall <response>.
+#   state       While <state>, the <system> shall <response>.
+#   unwanted    If <condition>, then the <system> shall <response>.
+#   optional    Where <feature is included>, the <system> shall <response>.
+#
+# Two "shall" clauses means two behaviors: split it into two requirements.
+# Do not contort prose to fit a pattern - a constraint that reads better
+# plainly is better plainly.
+requirement = """
+When the Bench Core process behind a connected browser session stops answering
+and later answers again, the integrated browser test shall confirm that the
+interface first presents the backend as unreachable and then, through its own
+retry control and without a page reload or a re-entered token, returns to the
+connected screen.
+"""
+
+# The observation that settles whether the behavior holds — not a
+# restatement of the requirement.
+#
+# Some behaviors no test can settle: a look-and-see judgement, an install
+# on clean hardware, a printed page. Start this field with "Manual:" or
+# "Inspection:" and name the method, and `check` records the requirement
+# as verified by hand instead of counting it among the tests still owed.
+# The prefix alone is not enough — it has to say what someone does.
+verification = """
+The browser end-to-end suite, already on the connected screen, stops the Bench
+Core process it started, activates the interface's refresh control, and
+asserts that the unreachable-backend screen appears; it then starts Bench Core
+again on the same port and data directory, activates the retry control on that
+screen, and asserts that the connected screen returns with the same
+deterministic inventory, without the browser being navigated and without the
+token being entered a second time.
+"""
+
+# Repo-relative, forward slashes. The source files this behavior lives in.
+affected_paths = [
+    "05_Software/nilo_gui/e2e/bench-core.spec.ts",
+    "05_Software/nilo_gui/e2e/topology.ts",
+]
+
+# "tests/path/test_file.py::test_name" entries. Kept current during build;
+# these select the impacted regression set.
+linked_tests = [
+    "05_Software/nilo_gui/e2e/bench-core.spec.ts::presents Bench Core as unreachable and recovers through the interface",
+]
+
+# --- optional below this line ---
+
+# "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "A development backend is restarted constantly, so the interface's behavior while it is down and its recovery afterwards are the states a developer meets most often and the ones a mock cannot prove."
+
+created = 2026-09-01
+updated = 2026-09-01

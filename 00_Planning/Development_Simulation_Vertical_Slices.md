@@ -64,9 +64,8 @@ resources by path across eight scenarios, and a live browser session against
 `healthy` and `unavailable` backend scenarios, an unreachable backend, recovery
 by retry, and a single unusable inventory named without hiding the rest.
 
-That live session is manual integration evidence recorded in the task journal,
-not an automated gate. Slice 6 still owes the browser end-to-end tests that make
-this path part of the repository gate.
+That live session was manual integration evidence recorded in the task journal.
+Slice 6 has since made this path part of the repository gate.
 
 ### Slice 5 - One-command development start
 
@@ -90,15 +89,40 @@ that terminates nothing cannot terminate the wrong thing.
 Exit gate: a developer can bring the whole local topology up from PowerShell in
 one command and see, from that same command, whether it is answering.
 
-### Slice 6 - Cross-component browser verification
+### Slice 6 - Cross-component browser verification (implemented)
 
-- Add browser end-to-end tests against the real WSL2 backend.
+- Add browser end-to-end tests against the real WSL2 backend. (implemented)
 - Exercise authentication, status, simulation marking, device inventory, and
-  backend-unavailable recovery.
+  backend-unavailable recovery. (implemented)
 - Update the development-flow document with the exact executable commands.
+  (implemented)
 
-Exit gate: the repository gate proves the browser-to-WSL simulation path and
-clearly separates that proof from Raspberry Pi and hardware acceptance.
+The suite runs from `npm run test:e2e` in `05_Software/nilo_gui`, headless by
+default, with `test:e2e:headed` for diagnosis. It starts its own topology: it
+compiles and runs Bench Core inside a WSL2 distribution on the simulation
+profile with its database under `$HOME/.local/state/nilo-e2e/`, starts its own
+Windows interface server, issues its own development token, and drives a real
+browser against them. Ports are taken from what is free at the moment it starts,
+so it runs beside a `nilo-dev.ps1` topology without disturbing it.
+
+`nilo-dev.ps1` is deliberately not the supervisor. It owns no process by design,
+so it could neither stop the backend mid-run nor guarantee it released only its
+own work; the suite manages its own short-lived processes instead and removes
+them and its temporary directory on the failing path as well as the passing one.
+
+The browser test is pinned and repository-local: the test package is fixed by
+exact version in the interface lockfile, and its one browser engine is installed
+below the ignored `02_Tools/runtime/windows-x86_64/playwright/` by
+`bootstrap-browser.ps1`. A test run downloads nothing and retains no trace,
+screenshot, video, token, or database.
+
+Exit gate: met. On a Windows host the repository gate runs the browser suite
+after the interface component tests and the production build, so the
+browser-to-WSL simulation path is gated evidence rather than a manual check; a
+missing prerequisite fails the gate and names its remedy instead of skipping.
+That proof covers the simulated path only and certifies nothing about Raspberry
+Pi hardware, real device I/O, or PLC flashing, which remain the later Linux VM,
+ARM64, and hardware-in-the-loop gates.
 
 ## Deferred product behavior
 

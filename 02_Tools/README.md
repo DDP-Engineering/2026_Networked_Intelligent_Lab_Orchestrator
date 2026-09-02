@@ -115,6 +115,37 @@ The combined development bootstrap invokes this step automatically. Use
 Direct GUI commands use `npm.cmd` through the tool wrapper to avoid relying on
 PowerShell script execution policy.
 
+## Browser for the integrated browser test
+
+The integrated browser test drives one pinned browser engine, Chromium. Its
+binaries are a repository-local runtime like every other pinned tool, installed
+below `runtime/windows-x86_64/playwright/` by:
+
+```powershell
+.\02_Tools\bootstrap\bootstrap-browser.ps1
+```
+
+The combined development bootstrap invokes this step automatically, after the
+locked frontend restore it depends on. `env/with-tools.ps1` points
+`PLAYWRIGHT_BROWSERS_PATH` at that directory for its child process only, so
+nothing is written to the per-user cache the browser package would otherwise
+choose, and the frontend restore additionally forbids browser downloads of its
+own in case a future package version reintroduces an install hook. An
+already-installed browser is left alone, so a test run downloads nothing;
+`-Offline` refuses to download and requires the directory to be populated
+already.
+
+The test package itself is pinned by exact version in the GUI `package.json` and
+lockfile. Run the suite with:
+
+```powershell
+.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run test:e2e
+```
+
+That suite starts and stops its own short-lived Bench Core and interface
+processes. It does not use `scripts/nilo-dev.ps1`, which owns no process by
+design. See `06_SoftwareDocu/Development_and_Simulation_Flow.md`, section 8.3.
+
 ## One-command development lifecycle
 
 Once both toolchains are bootstrapped, the local topology - the Go Bench Core
@@ -193,6 +224,8 @@ drive mount is refused and nothing is started.
   checkout; `-Offline` is forwarded to every step.
 - `bootstrap/bootstrap-frontend.ps1` restores the committed GUI lockfile with
   the pinned Windows Node.js and repository-local npm cache.
+- `bootstrap/bootstrap-browser.ps1` installs the pinned browser the integrated
+  browser test drives, below the ignored platform runtime directory.
 - `scripts/doctor-wsl.ps1` verifies the WSL2 kernel, Windows-to-WSL repository
   mapping, and the pinned Linux toolchain.
 - `lib/Wsl.ps1` centralizes checked WSL invocation and path translation.

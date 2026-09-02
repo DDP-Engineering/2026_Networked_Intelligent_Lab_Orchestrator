@@ -15,8 +15,13 @@ The project root is `05_Software/nilo_gui`. Developers use its npm scripts
 through `02_Tools/env/with-tools.ps1`: `dev` serves the interface against a real
 backend, `dev:mock` serves it against the built-in contract mock, `format:check`
 and `lint` enforce source quality, `test:ci` runs deterministic component tests,
-and `build` (or `build:mock`) emits static production assets into ignored
-`dist/`.
+`test:e2e` runs the integrated browser test against a real WSL2 backend with
+`test:e2e:headed` as its diagnosis variant, and `build` (or `build:mock`) emits
+static production assets into ignored `dist/`.
+
+`*.test.ts` belongs to the component runner and `*.spec.ts` to the browser
+runner; `vite.config.ts` and `playwright.config.ts` each name their own files, so
+neither collects the other's.
 
 Three build-time environment variables configure the endpoint:
 `VITE_NILO_API_MODE` (`live` or `mock`), `VITE_NILO_API_BASE_URL` (an absolute
@@ -90,6 +95,24 @@ assets from Bench Core itself, where the same paths are already same-origin.
   legitimately returns no entries, rather than showing a failure.
 - `REQ-UX-8169ea1d` - names which resource returned an unusable response and
   keeps the resources that were read successfully on screen.
+- `REQ-TEST-0a4f49af` - drives a real browser against a real Bench Core under
+  WSL2 and confirms the login, the simulation identity, the healthy status and
+  both deterministic inventories.
+- `REQ-TEST-0f02f4b8` - stops that backend mid-session, confirms the unreachable
+  screen, restarts it and recovers through the interface's own retry control.
+- `REQ-TEST-3c4487d6` - fails a browser run and names the repository command
+  that supplies each missing prerequisite, instead of skipping.
+- `REQ-REL-f04744fa` - waits a bounded time for each endpoint and names the one
+  that stayed silent.
+- `REQ-REL-f0c8b07c` - stops only the processes that run started, confirms the
+  removal of only the directory it created, and fails the run when any part of
+  that release did not succeed.
+- `REQ-SEC-4884bc91` - keeps the development token in one private field with no
+  accessor, and redacts it out of anything a failing action throws.
+- `REQ-PLAT-59993b78` - takes free loopback ports and keeps its temporary Bench
+  Core state on the WSL Linux filesystem.
+- `REQ-UX-f479d8b9` - offers one headless browser command and a headed variant
+  for diagnosis.
 
 ## Architecture
 
@@ -116,6 +139,16 @@ flowchart LR
     client -- "live mode, same-origin /api/v1/*" --> proxy
     proxy -- "VITE_NILO_API_BASE_URL" --> backend
     client -- "mock mode" --> mock
+    harness["e2e/topology: ports, WSL2 backend, Vite, in-memory token"]
+    prereq["e2e/prerequisites: fail, never skip"]
+    spec["e2e/bench-core.spec: the browser journey"]
+    browser["Chromium from 02_Tools/runtime"]
+    harness --> prereq
+    harness -- "starts, stops, removes its own" --> backend
+    harness -- "starts with the chosen backend port" --> proxy
+    spec --> harness
+    spec --> browser
+    browser --> proxy
 ```
 
 `App` owns the whole conversation: the token it holds in state, and a session
@@ -167,6 +200,24 @@ visible.
   forwarding for both serve and preview, Vitest, and static build configuration.
 - `05_Software/nilo_gui/src/config/devServer.test.ts` - asserts that forwarding
   is declared and takes its target from the environment.
+- `05_Software/nilo_gui/playwright.config.ts` - the integrated browser runner:
+  headless, serial, no retries, and no retained trace, video or screenshot.
+- `05_Software/nilo_gui/e2e/topology.ts` - one run's own Bench Core under WSL2
+  and interface server on Windows: free loopback ports, a `mktemp` directory on
+  the WSL Linux filesystem, the in-memory token, bounded readiness waits, and a
+  teardown that signals only its own handles and removes only its own directory.
+- `05_Software/nilo_gui/e2e/prerequisites.ts` - the distribution, checkout and
+  browser checks, each failing with the repository command that supplies it.
+- `05_Software/nilo_gui/e2e/bench-core.spec.ts` - the browser journey, in one
+  serial session: login, status, simulation identity, both inventories, the
+  unreachable screen, and recovery.
+- `05_Software/nilo_gui/e2e/token-redaction.spec.ts` - the forced-failure
+  regression: a real browser action made to fail after its locator resolves,
+  asserting the redaction wrapper removes the value and that the unwrapped call
+  would still have leaked it.
+- `05_Software/nilo_gui/e2e/topology.test.ts`, `e2e/prerequisites.test.ts` and
+  `e2e/commands.test.ts` - the harness, prerequisite and command-surface tests,
+  which run in the component suite and start no process of their own.
 - `05_Software/nilo_gui/public/favicon.svg` - repository-owned browser icon.
 - `05_Software/nilo_gui/README.md` - exact local restore, development, quality,
   build, configuration, and authentication commands.

@@ -1,0 +1,93 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+# One requirement = one independently verifiable behavior.
+# Lives at .agentic/requirements/<category>/<id>.toml
+# Required fields: schema, id, title, status, requirement, verification.
+
+schema = 1
+
+# REQ-<CAT>-<8 hex>. CAT is FUNC, UX, NFR, SEC, DATA, PLAT, REL or TEST,
+# and must match the category folder this file sits in.
+id = "REQ-TEST-0a4f49af"
+
+title = "Prove the authenticated browser-to-WSL2 simulation journey"
+
+# draft while being written, active once it is built and tested,
+# retired when the behavior is deliberately removed.
+status = "active"
+
+# Self-contained prose: a reader with no other context must be able to
+# understand and check it. No ticket numbers, no run IDs, no references
+# to other requirements.
+#
+# Recommended shape - EARS. Pick the one pattern that fits; a stated
+# trigger or condition is what the test has to arrange, so surfacing it
+# here is what makes the behavior testable:
+#
+#   ubiquitous  The <system> shall <response>.
+#   event       When <trigger>, the <system> shall <response>.
+#   state       While <state>, the <system> shall <response>.
+#   unwanted    If <condition>, then the <system> shall <response>.
+#   optional    Where <feature is included>, the <system> shall <response>.
+#
+# Two "shall" clauses means two behaviors: split it into two requirements.
+# Do not contort prose to fit a pattern - a constraint that reads better
+# plainly is better plainly.
+requirement = """
+When a developer runs the integrated browser test on a supported Windows host,
+a real browser shall drive the interface development server against a Bench
+Core process running under a WSL2 distribution on the simulation profile and
+confirm that submitting a development bearer token on the login screen leads
+to a screen carrying the prominent simulation indication, the reported healthy
+service status, the deterministic integration inventory, and the deterministic
+device inventory the simulation profile serves.
+"""
+
+# The observation that settles whether the behavior holds — not a
+# restatement of the requirement.
+#
+# Some behaviors no test can settle: a look-and-see judgement, an install
+# on clean hardware, a printed page. Start this field with "Manual:" or
+# "Inspection:" and name the method, and `check` records the requirement
+# as verified by hand instead of counting it among the tests still owed.
+# The prefix alone is not enough — it has to say what someone does.
+verification = """
+The browser end-to-end suite runs headless against a Bench Core process it
+started under WSL2 on the simulation profile with a data directory on the WSL
+Linux filesystem, submits a token that backend issued, and asserts from the
+rendered page that the login screen is replaced by the connected screen, that
+the SIMULATION indicator and the statement that simulated results never
+represent evidence from physical equipment are both present, that the profile
+reads simulation and the service status reads healthy, that the integration
+inventory shows the single simulated integration by its identifier and display
+name, and that the device inventory shows the single simulated device by its
+identifier together with the integration that owns it.
+"""
+
+# Repo-relative, forward slashes. The source files this behavior lives in.
+affected_paths = [
+    "05_Software/nilo_gui/e2e/bench-core.spec.ts",
+    "05_Software/nilo_gui/e2e/topology.ts",
+    "05_Software/nilo_gui/playwright.config.ts",
+]
+
+# "tests/path/test_file.py::test_name" entries. Kept current during build;
+# these select the impacted regression set.
+linked_tests = [
+    "05_Software/nilo_gui/e2e/bench-core.spec.ts::signs in with a development token and shows the simulated bench",
+]
+
+# --- optional below this line ---
+
+# "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "Until a browser exercises the real backend, the only evidence that the Windows interface and the WSL2 core work together is a manual session recorded in a task journal, which no gate can repeat."
+
+created = 2026-09-01
+updated = 2026-09-01

@@ -18,6 +18,14 @@ if ($Offline) {
     $installArguments += '--offline'
 }
 
+# Browsers are acquired deliberately, by bootstrap-browser.ps1, so that a locked
+# restore stays a locked restore. The pinned browser test package declares no
+# install hook today, so this changes nothing now; it is set so that a future
+# version reintroducing one cannot quietly populate a cache outside this
+# repository during an ordinary dependency restore.
+$previousSkip = $env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD
+$env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = '1'
+
 Push-Location $frontendRoot
 try {
     & $toolWrapper @installArguments
@@ -27,6 +35,7 @@ try {
 }
 finally {
     Pop-Location
+    $env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = $previousSkip
 }
 
 Write-Output 'NILO locked frontend dependencies: OK'

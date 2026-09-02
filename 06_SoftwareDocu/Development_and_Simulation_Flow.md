@@ -454,6 +454,85 @@ Run the complete focused frontend gate with:
 .\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run build
 ```
 
+### 8.3 Integrated browser test
+
+The browser-to-WSL2 path is proven by one command. It needs no running topology
+and no token: it builds and starts its own Bench Core inside the distribution on
+the simulation profile, starts its own interface server on Windows, issues its
+own development token, and drives a real browser against them.
+
+Install the pinned browser once — the combined development bootstrap in section
+8 already does this — and then run the suite:
+
+```powershell
+.\02_Tools\bootstrap\bootstrap-browser.ps1
+.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run test:e2e
+```
+
+The browser binaries live under the ignored
+`02_Tools/runtime/windows-x86_64/playwright/`, beside the other pinned runtimes.
+No persistent host environment is changed and a test run downloads nothing.
+
+The suite covers, in one browser session against one backend: submitting a
+development token on the login screen; the authenticated status request
+completing; the prominent `SIMULATION` identity and the physical-equipment
+boundary statement on every screen it visits; the reported `simulation` profile
+and `healthy` service status; the deterministic integration inventory; the
+deterministic device inventory with the integration that owns each device;
+Bench Core presented as unreachable once its process is stopped; and recovery to
+the connected screen through the interface's own retry control, with no page
+reload and no second token.
+
+It is headless and retains nothing: no trace, no video, no screenshot, no
+database, and no token. To watch a failure, run the same suite with the browser
+visible:
+
+```powershell
+.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run test:e2e:headed
+```
+
+Each run takes loopback ports that are free at the moment it starts, so it does
+not collide with a `nilo-dev.ps1` topology already using the defaults, and it
+keeps its Bench Core database and artifacts in a fresh temporary directory under
+`$HOME/.local/state/nilo-e2e/` inside the distribution — never under `/mnt/`. At
+the end of the run, passing or failing, it stops only the processes it started
+and removes only that directory. It never frees a port and never matches a
+process by name.
+
+That removal is confirmed rather than assumed: the release script checks the
+directory is absent afterwards instead of trusting the removal command's exit
+status, and a release that does not fully succeed fails the run and names the
+directory that may survive. A distribution that could not delete the database
+has not deleted it, and reporting that as a clean pass would be the opposite of
+the guarantee.
+
+The development token is held in one private field with no accessor and reaches
+the browser only through the harness method that types it into a supplied field.
+That method redacts the value out of anything the action throws, which matters
+because a browser action failing *after* its locator has resolved repeats its
+argument in the error message — and that message reaches the console reporter
+and the error-context note whether or not trace, video, and screenshot are off.
+A forced-failure test provokes that exact case with a dummy marker and asserts
+the value is absent, paired with a test asserting the unwrapped call still leaks
+it, so the protection is only ever removed on evidence.
+
+`02_Tools/scripts/nilo-dev.ps1` is deliberately **not** the supervisor for this
+suite. That entry point is for visible manual development windows: it owns no
+process, records no identifier, and signals nothing, so it could neither stop
+the backend mid-run nor guarantee it cleaned up only its own work.
+
+Select the distribution explicitly when more than one is installed:
+
+```powershell
+$env:NILO_E2E_DISTRIBUTION = 'Ubuntu-24.04'
+```
+
+A missing prerequisite — no WSL2 distribution, a checkout the distribution
+cannot see, or no repository-local browser — fails the run and names the
+repository command that provides it. The suite never skips itself, because a
+skipped browser test reported as a pass would claim a browser reached Bench Core
+under WSL2 when nothing was observed.
+
 ## 9. Verification levels
 
 | Level | Environment | What it proves |
@@ -476,10 +555,11 @@ The repository currently provides the Go foundation, SQLite stores, policy and
 session services, runner supervision, Python SDK, fake integration,
 contract/acceptance tests, a long-running authenticated simulation status API,
 deterministic integration and device inventory, a repository-local Windows
-Node.js toolchain, and a browser GUI that authenticates with a development
-bearer token and displays the backend status together with the simulated
-integration and device inventory. The repository does not yet provide an MCP
-service.
+Node.js and browser toolchain, a browser GUI that authenticates with a
+development bearer token and displays the backend status together with the
+simulated integration and device inventory, and an integrated browser test that
+drives that GUI against a real WSL2 backend. The repository does not yet provide
+an MCP service.
 
 The existing Windows foundation gate is:
 
@@ -490,17 +570,19 @@ The existing Windows foundation gate is:
 `nilo serve-foundation-check` remains a short-lived composition check. `nilo
 serve --profile simulation` is the long-running development server.
 
-The environment bootstrap, backend flow, and the authenticated GUI status and
-inventory flow are executable now. The complete GUI application flow requires
-the remaining foundations:
+The environment bootstrap, backend flow, the authenticated GUI status and
+inventory flow, the one-command development start, and the integrated browser
+test are all executable now.
 
-1. one-command Windows start, stop, status, and log entry points for the whole
-   local topology;
-2. browser end-to-end tests against WSL2, covering authentication, status,
-   simulation marking, device inventory, and backend-unavailable recovery.
+On a Windows host the repository gate runs that browser test after the GUI
+component tests and the production build, so the browser-to-WSL2 simulation path
+is repository-gated evidence rather than a manual check recorded in a task
+journal. A missing prerequisite fails the gate and names its remedy; it is never
+skipped and then presented as proof.
 
-Until that second item lands, the browser-to-WSL2 path is proven only by a
-manual browser check recorded in the task journal, never by the repository gate.
+That gate proves the simulated path only. It certifies nothing about Raspberry
+Pi hardware, real device I/O, or PLC flashing, all of which remain the later
+Linux VM, ARM64, and hardware-in-the-loop gates in section 9.
 
 ## 11. Relationship to product delivery
 

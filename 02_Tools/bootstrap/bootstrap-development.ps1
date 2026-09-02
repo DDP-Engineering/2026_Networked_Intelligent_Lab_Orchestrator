@@ -11,6 +11,7 @@ $repositoryRoot = (Resolve-Path (Join-Path $toolRoot '..')).Path
 $setupWsl = Join-Path $PSScriptRoot 'setup-wsl.ps1'
 $windowsBootstrap = Join-Path $PSScriptRoot 'bootstrap.ps1'
 $frontendBootstrap = Join-Path $PSScriptRoot 'bootstrap-frontend.ps1'
+$browserBootstrap = Join-Path $PSScriptRoot 'bootstrap-browser.ps1'
 $linuxBootstrapName = 'bootstrap.sh'
 $windowsDoctor = Join-Path $toolRoot 'scripts\doctor.ps1'
 $wslDoctor = Join-Path $toolRoot 'scripts\doctor-wsl.ps1'
@@ -48,6 +49,11 @@ if ($LASTEXITCODE -ne 0) {
 & $frontendBootstrap @windowsArguments
 if ($LASTEXITCODE -ne 0) {
     throw "Windows frontend bootstrap failed with exit code $LASTEXITCODE"
+}
+
+& $browserBootstrap @windowsArguments
+if ($LASTEXITCODE -ne 0) {
+    throw "Windows browser bootstrap failed with exit code $LASTEXITCODE"
 }
 
 $wslRepositoryRoot = ConvertTo-NiloWslPath -WslExecutable $WslExecutable -Distribution $Distribution -WindowsPath $repositoryRoot

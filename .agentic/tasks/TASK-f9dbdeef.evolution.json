@@ -1,0 +1,339 @@
+{
+  "reports": [
+    {
+      "anchor_created_at": "2026-09-01T20:27:27.969697Z",
+      "anchor_head": "0cb77320e22f6762625694c814120d86cf253477",
+      "anchor_id": "9d5a740dd44a3d2f",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "58bea6f443e7a337bf2c45a5ca8119f8cb1901ac6925ce09642265f6bba49ebd"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "86f3ad66536d08c6306a04b7eab5387fc920032562194c9a67f4e37f435bf16c"
+          },
+          "path": ".gitignore",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "cc4d996ea156ba03a642b01ae47f76f6fe788cb767ff28d2bcacd7219de46141"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "ca5cdd2023baf35689a84e286b5f27ebc8cd10109830d7415aa507b124b6886c"
+          },
+          "path": "00_Planning/Development_Simulation_Vertical_Slices.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "4bb5b83031986144c17916e2cbae6fdd8e48ffe342bc553355b7bbbc07370fb2"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "687a5cc401d09557e1617996c06713ab4de443c006029e3ec6f0758bcadd5670"
+          },
+          "path": "02_Tools/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "f79a5949cbb9a6233c0055af1931739b8bbb6c1d3f9a41acd35af7ad56180342"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/bootstrap/bootstrap-browser.ps1",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "5cff2ca186ddc6e601dccacf9decefc03274ac8f51111631ba9b9680e53d5ce0"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "b45271122b516cb754fe9d0d1954449d571326f182f356b7cf8c75010a7984ba"
+          },
+          "path": "02_Tools/bootstrap/bootstrap-development.ps1",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "a5573fa68b0acda9396cef6d7682e9964c45172abdb78b89e262a798c7d9f4d2"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "711d59dd8ede98b58627f18e18f1c6107976c87c14d4f17f67f974fbd3c7ff43"
+          },
+          "path": "02_Tools/bootstrap/bootstrap-frontend.ps1",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "6809d0317e6521e62b091daf0717dfddd393cd72f881cbbf7fd12b5b57fcae61"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "0b61ac232510c5c89d3b96a932987e2492e5b984b62f85e859741ca8397cfb9f"
+          },
+          "path": "02_Tools/env/with-tools.ps1",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "7665adf7be2ab08a697c450fdec8e4e24732fb1944ac6077a5eb7bd4f7d95a65"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "b94c3552edfd985392c3b1326da817e91a47d5f4548aeb886ce0a08ba6ea87a2"
+          },
+          "path": "05_Software/nilo_gui/.prettierignore",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "eb60f590fe1f49e4448615582a928257b09f43af50ff7b99dea0a28b14ed1ff0"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "2dd884f11748e94a1138f8020bb4231c65c520833b782ac48df4d3482f85c769"
+          },
+          "path": "05_Software/nilo_gui/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "1102d2d3fac5d07aef3c573f46ccc61b51ce8939ed85569eb9dccfd7e6b72a42"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_gui/e2e/bench-core.spec.ts",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "06f85b24d89d41c7dc5034b714b0eacc87d5c14bfe075f1b773a317acf0b8def"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "c19f39ff0c35c91585acd0e1e0523ea93d1e04eb9d77c32248c27a769e5ad880"
+          },
+          "path": "05_Software/nilo_gui/e2e/commands.test.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "69441e4a60114af256e15449fd406ceba44061693f32a1dcb424d403bd7dc958"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "f0b7a1f71e3901ee7ee0e914af7e72a2352079ee9656f585fee07751e380ebb8"
+          },
+          "path": "05_Software/nilo_gui/e2e/prerequisites.test.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "2ffb160f16e67b461544e1b1f4881f254fb3e69ab7e8355f0b2e44e51188fe6b"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_gui/e2e/prerequisites.ts",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b0c110680cd09af880882edd509ea99ff7d9fec151379127f3011c9ca8c97043"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_gui/e2e/token-redaction.spec.ts",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "94003c0fcfe10034ddd03d0fb2e2a33d5a88884335601ed2d0285a5a68df3ec2"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "2683097497b249a32e424bb4e3a02f32303e192030b07db48e47806d455669d0"
+          },
+          "path": "05_Software/nilo_gui/e2e/topology.test.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "e19c83830aeaaf1ae9ceb36b3ef232f94d899185727678057abc01d8c5dcf8bd"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_gui/e2e/topology.ts",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "6996394cf86f933567b0e3b077d5296e2b72efc67949302fa2f22d53cee63383"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "d6bd4ed0fa5b3dbcce7f8ea3b6b7349b87edc904ebd4e0f4b078487067773bdf"
+          },
+          "path": "05_Software/nilo_gui/package-lock.json",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "7c9391b7da12c85b1e481c78c9e80f3e9b388808657c01dbdd46a36069de01bb"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "3949078d1a36565624f4781a4bcef7b15f4023fbde06a6a63ff7d8bbca0b147d"
+          },
+          "path": "05_Software/nilo_gui/package.json",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "0dd332d56423002aaaddadbc215e5810b0fd72fec380d73f122d4b44f8572eaf"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_gui/playwright.config.ts",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "1b20329e772e976b2ea4d3930536c0a96e7ebd2d42ac32f19763ceff84aa73e0"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "2fba2f25e1859f193b54edef5d2d2cd08cae2a37fab64c08699f6f8672bea2cc"
+          },
+          "path": "05_Software/nilo_gui/tsconfig.node.json",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d8b54de39ad5ba093785303f1ca580e45d1f17f42474568793b9092227092805"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "729316867431b46665e49dce83a7bfd4bf21de9412a3d9aab139ce737c8ea595"
+          },
+          "path": "05_Software/nilo_gui/vite.config.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "91102c5df024ae84db7b124c9be613ad4cfcb6255d6677e39f435b84084e4d66"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "0d1bec1dbeac6764d9f82d1cafd0617a224dcbb048e0b2920dc6a1da5a1150b5"
+          },
+          "path": "05_Software/scripts/aegis_test.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "309ef928b8fa2145ed61d7e052d5a97b6d81f06610ae756a203628f2f0415dc0"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "d5332f8a568ac02cefb853af9fc2d53f1568c1b933b25e837bbf668c383e0722"
+          },
+          "path": "06_SoftwareDocu/Development_and_Simulation_Flow.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "e26ad2ae171077318d459c217c26054ca1a7f18d1bd82cb0a1bf57e0f86e30b6"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "0264540ccbd2970c34f60567b079f8a4718c838959d14849f480187014ff0e3e"
+          },
+          "path": "CHANGELOG.md",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 1,
+            "modified": 8,
+            "removed": 0,
+            "unchanged": 64
+          },
+          "source": {
+            "added": 5,
+            "modified": 9,
+            "removed": 0,
+            "unchanged": 78
+          },
+          "tests": {
+            "added": 0,
+            "modified": 1,
+            "removed": 0,
+            "unchanged": 46
+          }
+        },
+        "status": {
+          "added": 6,
+          "modified": 18,
+          "removed": 0,
+          "unchanged": 188
+        }
+      },
+      "current_head": "0cb77320e22f6762625694c814120d86cf253477",
+      "evolution_stage": "build",
+      "evolved_at": "2026-09-02T06:21:28.650091Z"
+    }
+  ],
+  "schema": 1,
+  "task": "TASK-f9dbdeef"
+}

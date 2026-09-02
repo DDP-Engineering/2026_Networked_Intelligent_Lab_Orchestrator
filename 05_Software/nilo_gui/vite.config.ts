@@ -19,6 +19,10 @@ export default defineConfig(({ mode }) => {
     test: {
       environment: 'jsdom',
       setupFiles: './src/test/setup.ts',
+      // Only *.test.ts belongs to this runner. The integrated browser suite
+      // is *.spec.ts and is collected by playwright.config.ts instead; the
+      // default pattern would otherwise try to run it here, in jsdom.
+      include: ['src/**/*.test.{ts,tsx}', 'e2e/**/*.test.ts'],
     },
   };
 });

@@ -27,8 +27,62 @@ Then run commands through the repository-local tool wrapper:
 
 The development server binds to `127.0.0.1` and uses Vite's default port 5173
 unless an explicit `-- --port <port>` argument is supplied. Generated
-`node_modules/`, `coverage/`, and `dist/` directories are ignored and must not
-be committed.
+`node_modules/`, `coverage/`, `dist/`, and `test-results/` directories are
+ignored and must not be committed.
+
+## Integrated browser test
+
+One command drives a real browser against the real Windows interface and a real
+Bench Core running under WSL2 on the simulation profile:
+
+```powershell
+.\02_Tools\bootstrap\bootstrap-browser.ps1
+.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run test:e2e
+```
+
+The first command installs the pinned browser once, below the ignored
+`02_Tools/runtime/windows-x86_64/playwright/`; the combined development
+bootstrap already runs it. A test run downloads nothing.
+
+The suite is headless and retains no trace, video, screenshot, database, or
+token. The one thing a passing run leaves is Playwright's own
+`test-results/.last-run.json`, a pass/fail marker it writes after the run ends;
+it is ignored by Git. To watch a failure happen, run the same suite with the
+browser visible:
+
+```powershell
+.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run test:e2e:headed
+```
+
+Each run picks its own free loopback ports, so it does not disturb a
+`nilo-dev.ps1` topology already running on the defaults, and it creates its own
+temporary Bench Core data directory under `$HOME/.local/state/nilo-e2e/` inside
+the distribution. It stops only the processes it started and removes only that
+directory, on the failing path as well as the passing one; it never frees a
+port and never matches a process by name. Select the distribution explicitly
+with `$env:NILO_E2E_DISTRIBUTION` when more than one is installed.
+
+Cleanup is checked, not assumed. The release script confirms the directory is
+gone rather than trusting the removal command's exit status, and a release that
+does not fully succeed fails the run and names the directory that may survive —
+a distribution that could not delete the database has not deleted it.
+
+The token never leaves the harness. There is no accessor for it: the browser
+suite hands the login field to the harness, which types the value in behind a
+redaction wrapper. That wrapper is why the suite is safe to fail — a browser
+action that fails _after_ its locator resolves repeats its argument in the error
+it throws, and that message reaches the console and the error-context note
+regardless of trace, video, and screenshot being off. `e2e/token-redaction.spec.ts`
+provokes exactly that failure with a dummy marker and asserts the value is gone,
+with a companion test asserting the unwrapped call still leaks it, so the wrapper
+is never dropped on a guess.
+
+A missing prerequisite fails the run and names the repository command that
+provides it. Nothing is ever skipped: a skipped browser test reported as a pass
+would claim a browser reached WSL2 when none did.
+
+`*.test.ts` belongs to the component runner (`test:ci`) and `*.spec.ts` to the
+browser runner (`test:e2e`); neither collects the other's files.
 
 ## How the browser reaches Bench Core
 
@@ -124,6 +178,17 @@ page itself never scrolls.
 - `src/config/environment.ts` — resolves the mode and base URL above.
 - `src/App.tsx` — the shell that owns the in-memory token and the session state,
   with `src/components/` for the login, status, and inventory screens.
+- `playwright.config.ts` — the integrated browser runner: headless, serial, no
+  retries, and no retained trace, video, or screenshot.
+- `e2e/topology.ts` — the run's own Bench Core under WSL2 and interface server
+  on Windows: free ports, WSL-native temporary state, the in-memory token,
+  bounded readiness waits, and a teardown limited to what it started.
+- `e2e/prerequisites.ts` — the checks that fail a run, with the repository
+  command that supplies each missing prerequisite.
+- `e2e/bench-core.spec.ts` — the browser journey: login, status, simulation
+  identity, both inventories, the unreachable screen, and recovery.
+- `e2e/token-redaction.spec.ts` — the forced-failure regression that keeps the
+  token out of a failing action's error.
 
 Simulation is never evidence that a physical operation occurred; the interface
 states this on every screen.
