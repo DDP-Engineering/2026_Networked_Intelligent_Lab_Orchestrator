@@ -14,7 +14,7 @@ schema = 1
 # and must match the category folder this file sits in.
 id = "REQ-SEC-89034a8a"
 
-title = "Take the acting administrator from the authenticated request"
+title = "Take the administrative actor from the authenticated credential"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
@@ -39,8 +39,9 @@ status = "active"
 # plainly is better plainly.
 requirement = """
 Bench Core shall attribute every identity and token administration change to the
-identity that authenticated the request, ignoring any actor, username or role field
-supplied in the request body.
+authenticated request credential, recording a user-kind actor with its identity ID
+for a session and a token-kind actor with its token ID for an API token, while
+ignoring every actor, username, credential-kind or role field supplied in the body.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -51,12 +52,14 @@ supplied in the request body.
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "An HTTP test submits an administration request whose body additionally names a different actor and asserts the stored audit record attributes the change to the authenticated identity; a second case submits a request from a non-administrator whose body names an administrator and asserts the request is refused and nothing changed."
+verification = "HTTP tests perform an administrative mutation first with a browser session and then with a suitably scoped API token, submit conflicting actor fields in both bodies, and assert Activity records user kind plus identity ID and token kind plus token ID respectively; boundary cases use an insufficient credential and a forged administrator body and assert refusal with no mutation record or state change."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
     "05_Software/nilo_assistant/internal/httpapi/administration.go",
+    "05_Software/nilo_assistant/internal/httpapi/administration_test.go",
     "05_Software/nilo_assistant/internal/httpapi/identity.go",
+    "05_Software/nilo_assistant/internal/identity/service.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
@@ -74,4 +77,4 @@ priority = "high"   # low | normal | high
 rationale = "An actor field a client can set is an impersonation control, and the audit history is only worth keeping if it names who actually asked."
 
 created = 2026-09-02
-updated = 2026-09-02
+updated = 2026-09-04

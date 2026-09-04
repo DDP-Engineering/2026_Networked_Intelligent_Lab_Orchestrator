@@ -494,7 +494,8 @@ built-in group with **Overview, Network adapters, Device access, VPN profiles**
 and **Diagnostics**. Choosing the group root opens Overview; choosing any entry
 opens it as a tab; tabs activate on click, move with the arrow, Home and End
 keys, close from their own control, and fall back to the nearest remaining
-neighbour.
+neighbour. Authentication is a second collapsible group whose permission-aware
+**Users** and **API tokens** destinations open as distinct workspace tabs.
 
 The shell has three layouts, decided by the viewport and used by the stylesheet
 and the interface alike. Above 72rem it is the full rail. At or below 72rem —
@@ -556,36 +557,44 @@ statement, or a message naming which of the two inventories could not be read,
 with the status and the other inventory still on screen. **Refresh** repeats all
 three requests with the credential already held.
 
-**The Authentication page** is administrator-only and administers identities on
-one side and API tokens on the other:
+**Authentication** is split into focused, permission-aware **Users** and **API
+tokens** destinations. Each owns its loading, empty and failure state and does
+not load the other listing; API tokens also reads identities for its owner
+selector:
 
 - identities are listed with their role and enabled state, and can be created
   with one of the three fixed roles, re-roled, disabled, re-enabled, and have
-  their password reset. They are never deleted, so audit records keep naming a
-  real subject, and the last enabled administrator cannot be disabled or
-  demoted;
-- tokens are listed with their owner, name, scopes, expiry and revocation state,
+  their password reset. Creation time is under **Details**. They are never
+  deleted, so audit records keep naming a real subject, and the last enabled
+  administrator cannot be disabled or demoted;
+- tokens are listed with their name, owner, effective state and expiry; scopes
+  and creation time are under **Details**. State precedence is revoked, expired,
+  then active. Tokens
   and can be created for an existing identity with optional scopes and an
   optional expiry, and revoked. A token's permissions are its scopes narrowed by
   its owner's current role, which the creation form states, so a token can never
   exceed that role.
 
+Row **Actions** dialogs identify the record and explain unavailable operations.
 Disabling an identity, resetting a password and revoking a token each ask for an
-explicit confirmation naming the subject. A new token's secret is shown once,
+explicit confirmation naming the subject. Field popovers and workflow help
+explain role and scope semantics, access impact, external coordination and
+verification without hiding persistent warnings. A new token's secret is shown once,
 with a copy action and a statement that it cannot be retrieved later; dismissing
 it or reloading the page does not bring it back, because Bench Core stores only
-a one-way verifier of it.
+a one-way verifier of it; closing the disclosure clears interface state and the
+document subtree. **View activity** opens Activity filtered to the `identity`
+component.
 
 Hiding the navigation entry is not a permission. Bench Core authorizes every
 administration request on its own — `401` without a usable credential, `403`
 with one that lacks the permission — so an identity that reaches the page
 another way is refused there.
 
-Every page stays inside one viewport at a normal desktop width; a bench, an
-identity list or a token list with more entries than fit scrolls inside its own
-compartment rather than scrolling the page. Below roughly 64rem the two
-administration panels stack and scroll in the workspace instead of being
-clipped.
+Every page stays inside one viewport at a normal desktop width. Bench inventory
+retains its bounded list compartment. A focused user or token listing follows
+normal workspace page flow, avoiding a second nested scrollbar; below 56rem its
+single semantic table becomes labelled record cards.
 
 ### The compact field interface
 

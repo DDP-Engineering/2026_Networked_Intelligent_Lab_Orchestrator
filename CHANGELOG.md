@@ -5,6 +5,15 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ## [Unreleased]
 
+### Changed
+
+- Authentication administration is now an expandable System group with focused
+  Users and API tokens workspaces, responsive record actions, shared field and
+  workflow help, and direct links to identity-filtered Activity.
+- User and API-token mutations now write the common Activity audit envelope in
+  the same transaction as the change, including the real session or bearer-token
+  actor and no credential material.
+
 ### Added
 
 - Compact field interface for the seven-inch appliance display: one semantic

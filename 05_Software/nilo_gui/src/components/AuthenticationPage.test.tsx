@@ -102,12 +102,17 @@ function stubClient(overrides: Partial<BenchCoreClient> = {}): BenchCoreClient {
   };
 }
 
-function renderPage(client: BenchCoreClient, onSessionEnded = vi.fn()) {
+function renderPage(
+  client: BenchCoreClient,
+  onSessionEnded = vi.fn(),
+  view: 'users' | 'tokens' = 'users',
+) {
   const rendered = renderInShell(
     <AuthenticationPage
       client={client}
       credential={CREDENTIAL}
       session={session}
+      view={view}
       onSessionEnded={onSessionEnded}
     />,
     { theme: 'light', language: 'en' },
@@ -130,6 +135,20 @@ function identityRow(username: string): HTMLElement {
   });
 }
 
+function openIdentityAction(username: string, action: RegExp): void {
+  fireEvent.click(
+    within(identityRow(username)).getByRole('button', {
+      name: `Actions for ${username}`,
+    }),
+  );
+  fireEvent.click(within(dialog()).getByRole('button', { name: action }));
+}
+
+function openTokenAction(name: string, action: RegExp): void {
+  fireEvent.click(screen.getByRole('button', { name: `Actions for ${name}` }));
+  fireEvent.click(within(dialog()).getByRole('button', { name: action }));
+}
+
 function dialog(): HTMLElement {
   return screen.getByRole('dialog');
 }
@@ -141,6 +160,19 @@ afterEach(() => {
 });
 
 describe('administration listings', () => {
+  it('lets the Users destination own identity loading without fetching tokens', async () => {
+    const client = stubClient();
+    const listTokens = vi.spyOn(client, 'listTokens');
+    renderPage(client, vi.fn(), 'users');
+
+    expect(
+      await screen.findByRole('heading', { name: 'Authentication / Users' }),
+    ).toBeVisible();
+    expect(screen.getByRole('region', { name: 'Users' })).toBeVisible();
+    expect(screen.queryByRole('region', { name: 'API Tokens' })).toBeNull();
+    expect(listTokens).not.toHaveBeenCalled();
+  });
+
   it('shows every identity with its role and enabled state', async () => {
     renderPage(stubClient());
 
@@ -152,26 +184,26 @@ describe('administration listings', () => {
   });
 
   it('shows every token with its owner, scopes, expiry and revocation state', async () => {
-    renderPage(stubClient());
+    renderPage(stubClient(), vi.fn(), 'tokens');
 
     const tokens = within(await screen.findByRole('region', { name: 'API Tokens' }));
     expect(tokens.getByText('bench-ci')).toBeVisible();
     expect(tokens.getByText('bench-operator')).toBeVisible();
+    fireEvent.click(tokens.getByRole('button', { name: 'Details bench-ci' }));
     expect(tokens.getByText('status.read')).toBeVisible();
     expect(tokens.getByText('never')).toBeVisible();
     expect(tokens.getByText('active')).toBeVisible();
   });
 
-  it('reports each listing as loading before it answers', () => {
+  it('reports the focused listing as loading before it answers', () => {
     renderPage(
       stubClient({
         listIdentities: () => new Promise(() => {}),
-        listTokens: () => new Promise(() => {}),
       }),
     );
 
     expect(screen.getByText(/reading the identity listing/i)).toBeVisible();
-    expect(screen.getByText(/reading the token listing/i)).toBeVisible();
+    expect(screen.queryByText(/reading the token listing/i)).toBeNull();
   });
 
   it('states plainly that a listing has no entries', async () => {
@@ -179,17 +211,19 @@ describe('administration listings', () => {
       stubClient({
         listTokens: () => Promise.resolve({ apiVersion: 'nilo.http/1', items: [] }),
       }),
+      vi.fn(),
+      'tokens',
     );
 
     expect(await screen.findByText(/no api tokens exist yet/i)).toBeVisible();
     expect(within(tokensRegion()).queryByRole('table')).toBeNull();
   });
 
-  it('gives each listing its own bounded scroll compartment', async () => {
+  it('renders one focused listing in normal page flow', async () => {
     const { container } = renderPage(stubClient());
     await screen.findByRole('region', { name: 'Users' });
 
-    expect(container.querySelectorAll('.admin-list')).toHaveLength(2);
+    expect(container.querySelectorAll('.admin-list')).toHaveLength(1);
   });
 
   it('names a listing Bench Core would not serve, without emptying the other', async () => {
@@ -198,16 +232,15 @@ describe('administration listings', () => {
         listTokens: () =>
           Promise.reject(new BenchCoreError('forbidden', 'tokens.read.all is missing')),
       }),
+      vi.fn(),
+      'tokens',
     );
 
-    await screen.findByRole('region', { name: 'Users' });
-    expect(
-      within(tokensRegion()).getByText(/token listing could not be read/i),
-    ).toBeVisible();
+    expect(await screen.findByText(/token listing could not be read/i)).toBeVisible();
     expect(
       within(tokensRegion()).getByText(/tokens\.read\.all is missing/i),
     ).toBeVisible();
-    expect(within(identitiesRegion()).getByText('bench-operator')).toBeVisible();
+    expect(screen.queryByRole('region', { name: 'Users' })).toBeNull();
   });
 });
 
@@ -267,11 +300,7 @@ describe('identity administration', () => {
     renderPage(client);
     await screen.findByRole('region', { name: 'Users' });
 
-    fireEvent.click(
-      within(identityRow('bench-operator')).getByRole('button', {
-        name: /change role/i,
-      }),
-    );
+    openIdentityAction('bench-operator', /change role/i);
     fireEvent.change(within(dialog()).getByLabelText('Role'), {
       target: { value: 'viewer' },
     });
@@ -300,9 +329,7 @@ describe('identity administration', () => {
     );
     await screen.findByRole('region', { name: 'Users' });
 
-    fireEvent.click(
-      within(identityRow('admin')).getByRole('button', { name: /change role/i }),
-    );
+    openIdentityAction('admin', /change role/i);
     fireEvent.change(within(dialog()).getByLabelText('Role'), {
       target: { value: 'viewer' },
     });
@@ -326,9 +353,7 @@ describe('identity administration', () => {
     );
     await screen.findByRole('region', { name: 'Users' });
 
-    fireEvent.click(
-      within(identityRow('bench-operator')).getByRole('button', { name: /disable/i }),
-    );
+    openIdentityAction('bench-operator', /disable/i);
     fireEvent.click(within(dialog()).getByRole('button', { name: /^disable$/i }));
 
     const working = await within(dialog()).findByRole('button', { name: /working/i });
@@ -397,10 +422,7 @@ describe('confirmation before an irreversible change', () => {
       renderPage(client);
       await screen.findByRole('region', { name: 'Users' });
 
-      const open = () =>
-        fireEvent.click(
-          within(identityRow('bench-operator')).getByRole('button', { name: control }),
-        );
+      const open = () => openIdentityAction('bench-operator', control);
 
       open();
       expect(dialog()).toHaveTextContent('bench-operator');
@@ -430,16 +452,16 @@ describe('confirmation before an irreversible change', () => {
   it('asks before it revokes a token, and revokes exactly once when confirmed', async () => {
     const client = stubClient();
     const revokeToken = vi.spyOn(client, 'revokeToken');
-    renderPage(client);
+    renderPage(client, vi.fn(), 'tokens');
     await screen.findByRole('region', { name: 'API Tokens' });
 
-    fireEvent.click(within(tokensRegion()).getByRole('button', { name: /revoke/i }));
+    openTokenAction('bench-ci', /revoke/i);
     expect(dialog()).toHaveTextContent('bench-ci');
     fireEvent.click(within(dialog()).getByRole('button', { name: /cancel/i }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(revokeToken).not.toHaveBeenCalled();
 
-    fireEvent.click(within(tokensRegion()).getByRole('button', { name: /revoke/i }));
+    openTokenAction('bench-ci', /revoke/i);
     fireEvent.click(within(dialog()).getByRole('button', { name: /revoke token/i }));
 
     expect(await screen.findByText(/revoked the token bench-ci/i)).toBeVisible();
@@ -449,7 +471,7 @@ describe('confirmation before an irreversible change', () => {
 
 describe('API token creation', () => {
   it('states that a token cannot exceed its owner’s current role', async () => {
-    renderPage(stubClient());
+    renderPage(stubClient(), vi.fn(), 'tokens');
     await screen.findByRole('region', { name: 'API Tokens' });
 
     fireEvent.click(screen.getByRole('button', { name: /new token/i }));
@@ -460,7 +482,7 @@ describe('API token creation', () => {
   it('sends the selected owner, name, scopes and explicit expiry', async () => {
     const client = stubClient();
     const createToken = vi.spyOn(client, 'createToken');
-    renderPage(client);
+    renderPage(client, vi.fn(), 'tokens');
     await screen.findByRole('region', { name: 'API Tokens' });
 
     fireEvent.click(screen.getByRole('button', { name: /new token/i }));
@@ -471,7 +493,7 @@ describe('API token creation', () => {
       target: { value: 'nightly' },
     });
     fireEvent.click(within(dialog()).getByRole('checkbox', { name: 'status.read' }));
-    fireEvent.change(within(dialog()).getByLabelText(/expires/i), {
+    fireEvent.change(within(dialog()).getByLabelText('Expires (optional)'), {
       target: { value: '2030-01-02T03:04' },
     });
     fireEvent.click(within(dialog()).getByRole('button', { name: /create token/i }));
@@ -492,7 +514,7 @@ describe('API token creation', () => {
       configurable: true,
     });
     const stored = vi.spyOn(Storage.prototype, 'setItem');
-    const { unmount } = renderPage(stubClient());
+    const { unmount } = renderPage(stubClient(), vi.fn(), 'tokens');
     await screen.findByRole('region', { name: 'API Tokens' });
 
     fireEvent.click(screen.getByRole('button', { name: /new token/i }));
@@ -518,7 +540,7 @@ describe('API token creation', () => {
     expect(document.body.innerHTML).not.toContain('nilo_fixture_secret_value');
 
     unmount();
-    renderPage(stubClient());
+    renderPage(stubClient(), vi.fn(), 'tokens');
     await screen.findByRole('region', { name: 'API Tokens' });
     expect(document.body.innerHTML).not.toContain('nilo_fixture_secret_value');
 
@@ -538,11 +560,7 @@ describe('refusals', () => {
     );
     await screen.findByRole('region', { name: 'Users' });
 
-    fireEvent.click(
-      within(identityRow('bench-operator')).getByRole('button', {
-        name: /change role/i,
-      }),
-    );
+    openIdentityAction('bench-operator', /change role/i);
     fireEvent.click(within(dialog()).getByRole('button', { name: /change role/i }));
 
     await waitFor(() => expect(onSessionEnded).toHaveBeenCalled());
@@ -557,11 +575,7 @@ describe('refusals', () => {
     );
     await screen.findByRole('region', { name: 'Users' });
 
-    fireEvent.click(
-      within(identityRow('bench-operator')).getByRole('button', {
-        name: /change role/i,
-      }),
-    );
+    openIdentityAction('bench-operator', /change role/i);
     fireEvent.click(within(dialog()).getByRole('button', { name: /change role/i }));
 
     expect(await screen.findByText(/users\.manage is missing/i)).toBeVisible();

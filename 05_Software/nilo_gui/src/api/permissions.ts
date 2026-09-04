@@ -1,6 +1,8 @@
 import {
   PERMISSION_ACTIVITY_READ,
+  PERMISSION_IDENTITIES_MANAGE,
   PERMISSION_IDENTITIES_READ,
+  PERMISSION_TOKENS_MANAGE,
   PERMISSION_TOKENS_READ,
   type BenchCoreSession,
 } from './contract';
@@ -8,6 +10,26 @@ import {
 /** Report whether this identity may open the shared Activity page. */
 export function mayReadActivity(session: BenchCoreSession | null): boolean {
   return session !== null && session.permissions.includes(PERMISSION_ACTIVITY_READ);
+}
+
+/** Report whether the current session may read the Users destination. */
+export function mayReadUsers(session: BenchCoreSession | null): boolean {
+  return session !== null && session.permissions.includes(PERMISSION_IDENTITIES_READ);
+}
+
+/** Report whether the current session may change user identities. */
+export function mayManageUsers(session: BenchCoreSession | null): boolean {
+  return session !== null && session.permissions.includes(PERMISSION_IDENTITIES_MANAGE);
+}
+
+/** Report whether the current session may read the API tokens destination. */
+export function mayReadTokens(session: BenchCoreSession | null): boolean {
+  return session !== null && session.permissions.includes(PERMISSION_TOKENS_READ);
+}
+
+/** Report whether the current session may create and revoke API tokens. */
+export function mayManageTokens(session: BenchCoreSession | null): boolean {
+  return session !== null && session.permissions.includes(PERMISSION_TOKENS_MANAGE);
 }
 
 /**
@@ -19,11 +41,5 @@ export function mayReadActivity(session: BenchCoreSession | null): boolean {
  * navigation entry that is merely hidden has never been a permission.
  */
 export function mayAdminister(session: BenchCoreSession | null): boolean {
-  if (session === null) {
-    return false;
-  }
-  return (
-    session.permissions.includes(PERMISSION_IDENTITIES_READ) ||
-    session.permissions.includes(PERMISSION_TOKENS_READ)
-  );
+  return mayReadUsers(session) || mayReadTokens(session);
 }

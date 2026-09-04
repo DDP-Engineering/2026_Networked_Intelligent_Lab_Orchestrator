@@ -8,6 +8,9 @@ import {
 } from '../api/contract';
 import type { NewIdentity, NewToken } from '../api/client';
 import { useTranslate } from '../i18n/languages';
+import { Field } from './help/Field';
+import { HelpPopover } from './help/HelpPopover';
+import { WorkflowHelp } from './help/WorkflowHelp';
 import { ModalActions } from './Modal';
 
 /** What every dialog body needs to report and to close itself. */
@@ -27,21 +30,6 @@ function FormFailure({ failure }: { failure: string }) {
   );
 }
 
-interface FieldProps {
-  id: string;
-  label: string;
-  children: ReactNode;
-}
-
-function Field({ id, label, children }: FieldProps) {
-  return (
-    <div className="field">
-      <label htmlFor={id}>{label}</label>
-      {children}
-    </div>
-  );
-}
-
 /**
  * Read a password twice.
  *
@@ -58,7 +46,11 @@ function usePasswordPair() {
   function fields(prefix: string) {
     return (
       <>
-        <Field id={`${prefix}-password`} label={t('auth.field.password')}>
+        <Field
+          id={`${prefix}-password`}
+          label={t('auth.field.password')}
+          help={t('auth.help.password')}
+        >
           <input
             id={`${prefix}-password`}
             type="password"
@@ -67,7 +59,11 @@ function usePasswordPair() {
             onChange={(event) => setPassword(event.target.value)}
           />
         </Field>
-        <Field id={`${prefix}-confirmation`} label={t('auth.field.confirmPassword')}>
+        <Field
+          id={`${prefix}-confirmation`}
+          label={t('auth.field.confirmPassword')}
+          help={t('auth.help.confirmPassword')}
+        >
           <input
             id={`${prefix}-confirmation`}
             type="password"
@@ -124,7 +120,12 @@ export function CreateIdentityForm({
 
   return (
     <form className="dialog-form" onSubmit={submit} noValidate>
-      <Field id="new-identity-username" label={t('auth.field.username')}>
+      <WorkflowHelp prefix="help.auth" title={t('help.auth.title')} />
+      <Field
+        id="new-identity-username"
+        label={t('auth.field.username')}
+        help={t('auth.help.username')}
+      >
         <input
           id="new-identity-username"
           type="text"
@@ -134,7 +135,12 @@ export function CreateIdentityForm({
           onChange={(event) => setUsername(event.target.value)}
         />
       </Field>
-      <Field id="new-identity-role" label={t('auth.field.role')}>
+      <Field
+        id="new-identity-role"
+        label={t('auth.field.role')}
+        help={t('auth.help.role')}
+        guidance={t('auth.roleMatrix')}
+      >
         <select
           id="new-identity-role"
           value={role}
@@ -183,13 +189,19 @@ export function ChangeRoleForm({
       }}
       noValidate
     >
+      <WorkflowHelp prefix="help.auth" title={t('help.auth.title')} />
       <p className="card-copy">
         {t('auth.roleExplanation', {
           username: identity.username,
           role: identity.role,
         })}
       </p>
-      <Field id="change-role-value" label={t('auth.field.role')}>
+      <Field
+        id="change-role-value"
+        label={t('auth.field.role')}
+        help={t('auth.help.role')}
+        guidance={t('auth.roleMatrix')}
+      >
         <select
           id="change-role-value"
           value={role}
@@ -239,6 +251,7 @@ export function ResetPasswordForm({
 
   return (
     <form className="dialog-form" onSubmit={submit} noValidate>
+      <WorkflowHelp prefix="help.auth" title={t('help.auth.title')} />
       <p className="card-copy">
         {t('auth.resetExplanation', { username: identity.username })}
       </p>
@@ -259,6 +272,7 @@ export interface ConfirmationFormProps extends FormShellProps {
   question: ReactNode;
   confirmLabel: string;
   onSubmit: () => void;
+  workflowHelp?: ReactNode;
 }
 
 /** Ask before a change that takes access away and cannot be repeated back. */
@@ -269,6 +283,7 @@ export function ConfirmationForm({
   failure,
   onDismiss,
   onSubmit,
+  workflowHelp,
 }: ConfirmationFormProps) {
   return (
     <form
@@ -279,6 +294,7 @@ export function ConfirmationForm({
       }}
       noValidate
     >
+      {workflowHelp}
       <p className="card-copy">{question}</p>
       <FormFailure failure={failure} />
       <ModalActions
@@ -331,7 +347,12 @@ export function CreateTokenForm({
 
   return (
     <form className="dialog-form" onSubmit={submit} noValidate>
-      <Field id="new-token-owner" label={t('auth.field.owner')}>
+      <WorkflowHelp prefix="help.auth" title={t('help.auth.title')} />
+      <Field
+        id="new-token-owner"
+        label={t('auth.field.owner')}
+        help={t('auth.help.owner')}
+      >
         <select
           id="new-token-owner"
           value={owner}
@@ -344,7 +365,11 @@ export function CreateTokenForm({
           ))}
         </select>
       </Field>
-      <Field id="new-token-name" label={t('auth.field.name')}>
+      <Field
+        id="new-token-name"
+        label={t('auth.field.name')}
+        help={t('auth.help.tokenName')}
+      >
         <input
           id="new-token-name"
           type="text"
@@ -355,7 +380,12 @@ export function CreateTokenForm({
       </Field>
 
       <fieldset className="scopes">
-        <legend>{t('auth.field.scopes')}</legend>
+        <legend>
+          {t('auth.field.scopes')}{' '}
+          <HelpPopover name={t('auth.field.scopes')}>
+            {t('auth.help.scopes')}
+          </HelpPopover>
+        </legend>
         <p className="card-copy">
           {t('auth.scopeExplanation')}
           {ownerRole === undefined ? '' : ` (${ownerRole})`}
@@ -381,7 +411,11 @@ export function CreateTokenForm({
         </div>
       </fieldset>
 
-      <Field id="new-token-expiry" label={t('auth.field.expires')}>
+      <Field
+        id="new-token-expiry"
+        label={t('auth.field.expires')}
+        help={t('auth.help.expiry')}
+      >
         <input
           id="new-token-expiry"
           type="datetime-local"

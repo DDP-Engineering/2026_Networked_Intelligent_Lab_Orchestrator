@@ -71,6 +71,13 @@ func newAPIFixture(
 	t.Cleanup(func() { _ = database.Close() })
 
 	clock := &apiClock{now: time.Date(2026, 9, 2, 9, 0, 0, 0, time.UTC)}
+	auditMonitor := activity.NewMonitor(sqlite.NewAuditRepository(database), clock.Now)
+	auditWriter, err := audit.NewWriter(audit.WriterOptions{
+		Events: auditMonitor, ApplianceID: "test-appliance", BootID: "test-boot", Now: clock.Now,
+	})
+	if err != nil {
+		t.Fatalf("audit.NewWriter: %v", err)
+	}
 	options := identity.Options{
 		Repository:         sqlite.NewIdentityRepository(database),
 		Now:                clock.Now,
@@ -78,6 +85,7 @@ func newAPIFixture(
 		SessionLifetime:    12 * time.Hour,
 		LoginFailureLimit:  5,
 		LoginFailureWindow: 15 * time.Minute,
+		Audit:              auditWriter,
 	}
 	for _, refine := range adjust {
 		refine(&options)
@@ -109,11 +117,6 @@ func newAPIFixture(
 		t.Fatalf("network.NewService: %v", err)
 	}
 	// The shared history and the timed diagnostics, wired the way serve does.
-	auditMonitor := activity.NewMonitor(sqlite.NewAuditRepository(database), clock.Now)
-	auditWriter, err := audit.NewWriter(audit.WriterOptions{Events: auditMonitor, ApplianceID: "test-appliance", BootID: "test-boot", Now: clock.Now})
-	if err != nil {
-		t.Fatalf("audit.NewWriter: %v", err)
-	}
 	activityService, err := activity.NewService(activity.Options{Store: sqlite.NewActivityRepository(database), ApplianceID: "test-appliance", Now: clock.Now, Monitor: auditMonitor})
 	if err != nil {
 		t.Fatalf("activity.NewService: %v", err)
@@ -611,6 +614,13 @@ func TestPasswordResetDuringAnOverlappingLoginLeavesNoUsableSession(t *testing.T
 
 	// The reset runs through its own service instance so that the login's gated
 	// randomness cannot hold the reset up as well.
+	auditWriter, err := audit.NewWriter(audit.WriterOptions{
+		Events: sqlite.NewAuditRepository(f.database), ApplianceID: "test-appliance",
+		BootID: "test-boot", Now: f.clock.Now,
+	})
+	if err != nil {
+		t.Fatalf("audit.NewWriter(administration): %v", err)
+	}
 	administration, err := identity.NewService(identity.Options{
 		Repository:         sqlite.NewIdentityRepository(f.database),
 		Now:                f.clock.Now,
@@ -618,6 +628,7 @@ func TestPasswordResetDuringAnOverlappingLoginLeavesNoUsableSession(t *testing.T
 		SessionLifetime:    12 * time.Hour,
 		LoginFailureLimit:  5,
 		LoginFailureWindow: 15 * time.Minute,
+		Audit:              auditWriter,
 	})
 	if err != nil {
 		t.Fatalf("NewService(administration): %v", err)

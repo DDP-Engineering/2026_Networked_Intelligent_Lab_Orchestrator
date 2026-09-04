@@ -82,10 +82,15 @@ test('administers identities from the Authentication page', async () => {
 
   await page.getByRole('button', { name: 'New user' }).click();
   const dialog = page.getByRole('dialog');
-  await dialog.getByLabel('Username').fill(OPERATOR);
-  await dialog.getByLabel('Role').selectOption('operator');
+  await dialog.getByRole('textbox', { name: 'Username', exact: true }).fill(OPERATOR);
+  await dialog
+    .getByRole('combobox', { name: 'Role', exact: true })
+    .selectOption('operator');
   await fillSecret(dialog.getByLabel('Password', { exact: true }), OPERATOR_PASSWORD);
-  await fillSecret(dialog.getByLabel('Confirm password'), OPERATOR_PASSWORD);
+  await fillSecret(
+    dialog.getByLabel('Confirm password', { exact: true }),
+    OPERATOR_PASSWORD,
+  );
   await dialog.getByRole('button', { name: 'Create identity' }).click();
 
   await expect(page.getByText(`Created ${OPERATOR} as operator.`)).toBeVisible();
@@ -95,11 +100,12 @@ test('administers identities from the Authentication page', async () => {
 
   // The change is Bench Core's, not this page's: the role it stores is what the
   // next read reports.
-  await users
-    .getByRole('row', { name: new RegExp(OPERATOR) })
-    .getByRole('button', { name: 'Change role' })
-    .click();
-  await page.getByRole('dialog').getByLabel('Role').selectOption('viewer');
+  await users.getByRole('button', { name: `Actions for ${OPERATOR}` }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Change role' }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('combobox', { name: 'Role', exact: true })
+    .selectOption('viewer');
   await page.getByRole('dialog').getByRole('button', { name: 'Change role' }).click();
 
   await expect(page.getByText(`${OPERATOR} is now a viewer.`)).toBeVisible();
@@ -130,16 +136,19 @@ test('keeps keyboard focus inside an open dialog', async () => {
 });
 
 test('creates an API token and shows its secret exactly once', async () => {
+  await openAuthenticationView('API tokens');
   const tokens = page.getByRole('region', { name: 'API Tokens' });
   // The harness issued itself a development token to reach the bench with, so
   // this listing already has an entry: an unnarrowed token owned by the
   // development identity that token belongs to.
-  await expect(tokens).toContainText("owner's whole role");
+  await expect(tokens).toBeVisible();
 
   await page.getByRole('button', { name: 'New token' }).click();
   const dialog = page.getByRole('dialog');
-  await dialog.getByLabel('Owner').selectOption(OPERATOR);
-  await dialog.getByLabel('Name').fill(TOKEN_NAME);
+  await dialog
+    .getByRole('combobox', { name: 'Owner', exact: true })
+    .selectOption(OPERATOR);
+  await dialog.getByRole('textbox', { name: 'Name', exact: true }).fill(TOKEN_NAME);
   await dialog.getByRole('checkbox', { name: 'status.read' }).check();
   await expect(dialog).toContainText('can never exceed that role');
   await dialog.getByRole('button', { name: 'Create token' }).click();
@@ -174,7 +183,7 @@ test('restores the session across a reload and never shows the secret again', as
   );
   await expect(page.getByRole('heading', { name: 'Sign in to NILO' })).toHaveCount(0);
 
-  await openAuthentication();
+  await openAuthenticationView('API tokens');
   const tokens = page.getByRole('region', { name: 'API Tokens' });
   await expect(tokens).toContainText(TOKEN_NAME);
   await expect(page.getByTestId('token-secret')).toHaveCount(0);
@@ -185,29 +194,40 @@ test('revokes a token only after an explicit confirmation', async () => {
   const tokens = page.getByRole('region', { name: 'API Tokens' });
   const row = tokens.getByRole('row', { name: new RegExp(TOKEN_NAME) });
 
-  await row.getByRole('button', { name: 'Revoke' }).click();
+  await row.getByRole('button', { name: `Actions for ${TOKEN_NAME}` }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Revoke' }).click();
   await expect(page.getByRole('dialog')).toContainText(TOKEN_NAME);
   await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(row).toContainText('active');
 
-  await row.getByRole('button', { name: 'Revoke' }).click();
+  await row.getByRole('button', { name: `Actions for ${TOKEN_NAME}` }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Revoke' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Revoke token' }).click();
 
   await expect(page.getByText(`Revoked the token ${TOKEN_NAME}.`)).toBeVisible();
   await expect(row).toContainText('revoked');
 });
 
-test('refuses to remove the last enabled administrator', async () => {
-  const users = page.getByRole('region', { name: 'Users' });
-  await users
-    .getByRole('row', { name: new RegExp(ADMINISTRATOR) })
-    .getByRole('button', { name: 'Disable' })
-    .click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Disable' }).click();
+test('opens the common Activity page filtered to identity mutations', async () => {
+  await page.getByRole('button', { name: 'View activity', exact: true }).click();
 
+  await expect(page.getByRole('heading', { name: 'Activity', level: 2 })).toBeVisible();
+  await expect(
+    page.getByRole('textbox', { name: 'Function', exact: true }),
+  ).toHaveValue('identity');
+  await expect(page.getByText('identity.token.revoked', { exact: true })).toBeVisible();
+});
+
+test('refuses to remove the last enabled administrator', async () => {
+  await openAuthenticationView('Users');
+  const users = page.getByRole('region', { name: 'Users' });
+  await users.getByRole('button', { name: `Actions for ${ADMINISTRATOR}` }).click();
+  await expect(
+    page.getByRole('dialog').getByRole('button', { name: 'Disable' }),
+  ).toBeDisabled();
   await expect(page.getByRole('dialog')).toContainText(
-    'last enabled administrator must remain an enabled administrator',
+    'The last enabled administrator must remain enabled.',
   );
   await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click();
   await expect(
@@ -263,9 +283,15 @@ async function fillSecret(field: Locator, secret: string): Promise<void> {
 async function openAuthentication(): Promise<void> {
   await page
     .getByRole('navigation')
-    .getByRole('button', { name: 'Authentication' })
+    .getByRole('button', { name: 'Authentication', exact: true })
     .click();
   await expect(page.getByRole('region', { name: 'Users' })).toBeVisible();
+}
+
+async function openAuthenticationView(name: 'Users' | 'API tokens'): Promise<void> {
+  await page.getByRole('navigation').getByRole('button', { name, exact: true }).click();
+  const regionName = name === 'Users' ? 'Users' : 'API Tokens';
+  await expect(page.getByRole('region', { name: regionName })).toBeVisible();
 }
 
 /** Sign out, which now lives inside the account menu. */

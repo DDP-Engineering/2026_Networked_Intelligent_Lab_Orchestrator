@@ -681,6 +681,30 @@ func TestAdministrationAttributesChangesToTheAuthenticatedActor(t *testing.T) {
 		t.Fatal("the change was attributed to the actor named in the request body")
 	}
 
+	secret := f.issueToken(t, "second-admin", "administration", []auth.Permission{auth.PermissionUsersManage}, nil)
+	var tokenID string
+	for _, token := range f.listTokens(t, acting) {
+		if token.Name == "administration" {
+			tokenID = token.ID
+			break
+		}
+	}
+	if tokenID == "" {
+		t.Fatal("the acting API token was not listed")
+	}
+	tokenResponse := f.bearerSend(t, http.MethodPost, "/api/v1/users", map[string]string{
+		"username": "token-jane", "role": "viewer", "password": createdIdentityPassword,
+		"actor": "admin", "actor_id": f.administrator.ID, "actor_kind": "user",
+	}, secret)
+	if tokenResponse.Code != http.StatusCreated {
+		t.Fatalf("token-authenticated POST /api/v1/users = %d, want 201; body=%s", tokenResponse.Code, tokenResponse.Body.String())
+	}
+	tokenEvents := listAuditEvents(t, f.database, "identity.user.created")
+	tokenEvent := tokenEvents[len(tokenEvents)-1]
+	if tokenEvent.ActorKind != audit.ActorKindToken || tokenEvent.ActorID.String() != tokenID {
+		t.Fatalf("token-authenticated actor = %s/%s, want token/%s", tokenEvent.ActorKind, tokenEvent.ActorID, tokenID)
+	}
+
 	// A non-administrator naming an administrator gets nowhere either.
 	f.createUser(t, "operator", auth.RoleOperator, operatorPassword)
 	operator := f.login(t, "operator", operatorPassword)

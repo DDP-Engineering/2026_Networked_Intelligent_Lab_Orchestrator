@@ -138,17 +138,26 @@ contains no network inventory and grants no permissions.
 - `REQ-FUNC-5ffce0e4` - ends the session server-side on sign-out.
 - `REQ-FUNC-5d80ae6c` - keeps the development bearer-token connection available
   without requiring it for a human sign-in.
-- `REQ-UX-c7a277c5` - offers the Authentication navigation entry exactly while
-  the identity holds the administration permissions, opening one page whose two
-  sections list their entries or say they have none.
-- `REQ-UX-c4a0c9e7` - keeps that page inside one viewport, with each listing in
-  its own scroll compartment.
+- `REQ-UX-c7a277c5`, `REQ-UX-93e1b747` - make Authentication an expandable,
+  permission-aware System group whose Users and API tokens destinations own
+  distinct workspace tabs and resource reads.
+- `REQ-UX-7c42d7ba`, `REQ-UX-833c9cd3` - keep primary user and token facts in
+  responsive records, secondary safe metadata under Details, and mutations in
+  record-aware Actions dialogs that explain unavailable choices.
+- `REQ-UX-c4a0c9e7` - keeps each focused listing in normal workspace flow and
+  converts the semantic table to labelled cards below 56rem without a nested
+  list scrollbar.
 - `REQ-UX-ae7baff0` - requires an explicit confirmation before a disable, a
   password reset or a revocation.
 - `REQ-UX-e60cf375` - discloses a new token secret once, with a copy action, and
   never again.
 - `REQ-UX-96852626` - tells an ended session apart from a refused permission.
 - `REQ-UX-38017d29` - states that a token cannot exceed its owner's current role.
+- `REQ-UX-ed735941`, `REQ-UX-2b0b6d59`, `REQ-UX-4570c081` - reuse the shared
+  Field, help popover and workflow-help contracts for authentication while
+  keeping validation, impact and irreversible warnings persistently visible.
+- `REQ-UX-d697e8ec` - opens Activity from either destination with the identity
+  component filter already applied.
 - `REQ-UX-b849ddb2` - shows every administrative action in progress and then its
   success or the reason Bench Core refused it.
 - `REQ-SEC-66b84b2c` - keeps an entered password, a created token secret and the
@@ -187,12 +196,14 @@ flowchart LR
     signin["SignInScreen: password sign-in and development token"]
     shell["AppShell: one grid, four cells"]
     toprow["TopRow: tabs, network, SIM, appearance, language, account"]
-    sidenav["SideNav: working entries, Network group and core peers"]
-    pages["Bench, five Network views, Activity, Authentication, About, integrations"]
+    sidenav["SideNav: working entries plus keyed Network and Authentication groups"]
+    pages["Bench, five Network views, Activity, focused Authentication views, About, integrations"]
     tokens["styles/tokens.css: one semantic palette, three themes"]
     catalogue["i18n: en, de, ro over one key set"]
     prefs["preferences/store: nilo.theme and nilo.language"]
-    admin["AuthenticationPage: users and API tokens"]
+    admin["AuthenticationPage(view): fetch-free dispatcher"]
+    users["UsersPage: identities and user mutations"]
+    apitokens["ApiTokensPage: safe token records and one-time disclosure"]
     netpage["NetworkPage(view): shared operations plus one focused concern"]
     modal["Modal: focused administrative forms"]
     env["config/environment: mode and base URL"]
@@ -207,6 +218,8 @@ flowchart LR
     shell --> sidenav
     shell --> pages
     pages --> admin
+    admin --> users
+    admin --> apitokens
     pages --> netpage
     netpage --> client
     admin --> modal
@@ -325,9 +338,10 @@ visible.
 - `05_Software/nilo_gui/src/components/SignInScreen.tsx` - the unauthenticated
   screen with both forms.
 - `05_Software/nilo_gui/src/components/AuthenticationPage.tsx`,
-  `AdministrationForms.tsx` and `Modal.tsx` - the two bounded administration
-  panels, the dialog bodies for every change, and the focused dialog itself with
-  its focus handling and Escape dismissal.
+  `src/components/authentication/`, `AdministrationForms.tsx` and `Modal.tsx` -
+  the fetch-free view dispatcher, focused Users and API tokens resource owners,
+  shared dialog bodies for every change, and the focused dialog itself with its
+  focus handling and Escape dismissal.
 - `05_Software/nilo_gui/src/App.css` and `src/index.css` - single-viewport
   layout, the inventory scroll compartment, and the CSS custom properties every
   colour is expressed through.

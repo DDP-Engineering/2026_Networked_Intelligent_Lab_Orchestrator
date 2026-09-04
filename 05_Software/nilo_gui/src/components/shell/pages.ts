@@ -1,8 +1,9 @@
-import { mayAdminister, mayReadActivity } from '../../api/permissions';
+import { mayReadActivity, mayReadTokens, mayReadUsers } from '../../api/permissions';
 import type { BenchCoreIntegration, BenchCoreSession } from '../../api/contract';
 import type { MessageKey } from '../../i18n/en';
 import type { IconName } from './Icon';
 import type { NetworkView } from '../network/views';
+import type { AuthenticationView } from '../AuthenticationPage';
 
 /**
  * Which navigation group an entry belongs to.
@@ -28,8 +29,13 @@ export interface PageDescriptor {
   navigationTitleKey?: MessageKey;
   /** The label used when a page-owning group repeats its landing page below. */
   overviewTitleKey?: MessageKey;
+  /** Accessible labels for expanding and collapsing a grouped destination. */
+  expandTitleKey?: MessageKey;
+  collapseTitleKey?: MessageKey;
   /** The focused Network content this page renders. */
   networkView?: NetworkView;
+  /** The focused Authentication content this page renders. */
+  authenticationView?: AuthenticationView;
   /**
    * Whether the page does something. An entry that is not available is still
    * shown, because the navigation shape is agreed, but it is marked so that
@@ -47,6 +53,8 @@ const CORE_PAGES: PageDescriptor[] = [
     titleKey: 'nav.network.overviewTab',
     navigationTitleKey: 'nav.network',
     overviewTitleKey: 'nav.network.overview',
+    expandTitleKey: 'nav.network.expand',
+    collapseTitleKey: 'nav.network.collapse',
     networkView: 'overview',
     available: true,
   },
@@ -104,7 +112,22 @@ const CORE_PAGES: PageDescriptor[] = [
     id: 'authentication',
     cluster: 'core',
     icon: 'authentication',
-    titleKey: 'nav.authentication',
+    titleKey: 'auth.usersTitle',
+    navigationTitleKey: 'nav.authentication',
+    overviewTitleKey: 'nav.authentication.users',
+    expandTitleKey: 'nav.authentication.expand',
+    collapseTitleKey: 'nav.authentication.collapse',
+    authenticationView: 'users',
+    available: true,
+  },
+  {
+    id: 'authentication:tokens',
+    parentId: 'authentication',
+    cluster: 'core',
+    icon: 'authentication',
+    titleKey: 'auth.tokensTitle',
+    navigationTitleKey: 'nav.authentication.tokens',
+    authenticationView: 'tokens',
     available: true,
   },
   {
@@ -160,10 +183,21 @@ export function buildPages(
     available: true,
   }));
 
+  const canReadUsers = mayReadUsers(session);
+  const canReadTokens = mayReadTokens(session);
   const core = CORE_PAGES.filter((page) => {
-    if (page.id === 'authentication') return mayAdminister(session);
+    if (page.id === 'authentication') return canReadUsers || canReadTokens;
+    if (page.id === 'authentication:tokens') return canReadUsers && canReadTokens;
     if (page.id === 'activity') return mayReadActivity(session);
     return true;
+  }).map((page) => {
+    if (page.id !== 'authentication' || canReadUsers) return page;
+    return {
+      ...page,
+      titleKey: 'auth.tokensTitle' as const,
+      overviewTitleKey: 'nav.authentication.tokens' as const,
+      authenticationView: 'tokens' as const,
+    };
   });
 
   return [BENCH_PAGE, ...instruments, ...core];

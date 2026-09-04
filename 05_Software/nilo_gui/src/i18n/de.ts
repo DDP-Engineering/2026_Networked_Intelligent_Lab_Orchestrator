@@ -27,6 +27,10 @@ export const de: Catalogue = {
   'nav.network.collapse': 'Netzwerk reduzieren',
   'nav.plugins': 'Plugins',
   'nav.authentication': 'Authentifizierung',
+  'nav.authentication.users': 'Benutzer',
+  'nav.authentication.tokens': 'API-Token',
+  'nav.authentication.expand': 'Authentifizierung erweitern',
+  'nav.authentication.collapse': 'Authentifizierung reduzieren',
   'nav.settings': 'Einstellungen',
   'nav.about': 'Über',
   'nav.collapse': 'Navigation einklappen',
@@ -304,6 +308,39 @@ export const de: Catalogue = {
   'integration.simulated': 'Simuliert',
 
   'auth.title': 'Authentifizierung',
+  'auth.usersTitle': 'Authentifizierung / Benutzer',
+  'auth.tokensTitle': 'Authentifizierung / API-Token',
+  'auth.tokensNote':
+    'Token sind Anmeldedaten. Ablauf oder Widerruf verhindert ihre weitere Verwendung.',
+  'auth.viewActivity': 'Aktivitäten anzeigen',
+  'auth.column.created': 'Erstellt',
+  'auth.expired': 'abgelaufen',
+  'auth.userType': 'Benutzeridentität',
+  'auth.tokenType': 'API-Token',
+  'auth.permission.usersManage': 'Ihre Sitzung enthält users.manage nicht.',
+  'auth.permission.tokensManage': 'Ihre Sitzung enthält tokens.manage.all nicht.',
+  'auth.lastAdministratorReason':
+    'Der letzte aktivierte Administrator muss aktiviert bleiben.',
+  'auth.revocationUnavailable':
+    'Dieses Token ist bereits abgelaufen oder widerrufen und kann nicht erneut widerrufen werden.',
+  'auth.help.username':
+    'Ein stabiler Anmeldename. Er wird normalisiert und kann keine andere Identität vortäuschen.',
+  'auth.help.role':
+    'Viewer liest Zustände, Operator verwendet zusätzlich eigene Token, Administrator verwaltet Benutzer, Token, Aktivitäten, Netzwerk und Diagnose.',
+  'auth.help.password':
+    'Ein neues Geheimnis nur für die Passwortanmeldung. NILO speichert eine Einwegprüfsumme.',
+  'auth.help.confirmPassword':
+    'Wiederholen Sie das Passwort genau, damit Tippfehler vor dem Speichern erkannt werden.',
+  'auth.help.owner':
+    'Die Identität, deren aktuelle Rolle dieses Token bei jeder Anfrage begrenzt.',
+  'auth.help.tokenName':
+    'Eine nicht geheime Bezeichnung für die Automatisierung oder den Client, der das Token verwendet.',
+  'auth.help.scopes':
+    'Keine Berechtigung auswählen, um die gesamte aktuelle Rolle des Eigentümers zu verwenden; ausgewählte Berechtigungen schränken sie nur ein.',
+  'auth.help.expiry':
+    'Nach diesem Zeitpunkt wird das Token automatisch abgelehnt. Leer bedeutet kein automatischer Ablauf.',
+  'auth.roleMatrix':
+    'Viewer: Inventar, Netzwerk und Status lesen. Operator: Viewer plus eigene Token. Administrator: gesamte Verwaltung, Aktivitäten, Diagnose, Netzwerk und VPN.',
   'auth.signedInAs': 'Angemeldet als {username} ({role}).',
   'auth.identitiesNote':
     'Identitäten werden deaktiviert statt gelöscht, damit Auditeinträge weiterhin ein reales Subjekt benennen.',
@@ -390,6 +427,20 @@ export const de: Catalogue = {
   'auth.tokenCreated': 'Token {name} für {owner} angelegt.',
   'auth.tokenRevoked': 'Token {name} widerrufen.',
   'auth.sessionEnded': 'Ihre Sitzung endete, bevor dies angewendet werden konnte.',
+
+  'help.auth.title': 'Arbeitsablauf für Authentifizierung',
+  'help.auth.goal':
+    'Menschliche Zugriffe und widerrufbare Anmeldedaten für Automatisierungen verwalten, ohne mehr Zugriff als nötig zu gewähren.',
+  'help.auth.needs':
+    'Prüfen Sie den genauen Benutzer oder das Token, die vorgesehene Rolle oder Berechtigungen und die Auswirkung auf laufende Arbeit.',
+  'help.auth.example':
+    'Viewer zum Beobachten, Operator für reguläre Laborarbeit und ein eng begrenztes Token für eine Automatisierung verwenden.',
+  'help.auth.changes':
+    'Benutzeränderungen gelten bei der nächsten Anfrage; das Deaktivieren beendet auch Sitzungen und Token. Token-Geheimnisse erscheinen nur einmal, ein Widerruf ist dauerhaft.',
+  'help.auth.external':
+    'Zugriffsänderungen abstimmen und Passwörter oder Token-Geheimnisse nur über einen geeigneten geschützten Kanal übermitteln.',
+  'help.auth.verify':
+    'Datensatz aktualisieren, erwartete Zugriffsgrenze testen und die Identitätseinträge in Aktivitäten prüfen.',
 
   'mode.mock':
     'Die Antworten stammen aus dem eigenen Vertrags-Mock dieser Oberfläche; es wird kein Backend-Prozess kontaktiert.',

@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"nilo.local/nilo/internal/audit"
 	"nilo.local/nilo/internal/identity"
 	"nilo.local/nilo/internal/store/sqlite"
 )
@@ -22,13 +23,22 @@ func identityServiceForTest(t *testing.T) *identity.Service {
 	}
 	t.Cleanup(func() { _ = database.Close() })
 
+	now := func() time.Time { return time.Now().UTC() }
+	auditWriter, err := audit.NewWriter(audit.WriterOptions{
+		Events: sqlite.NewAuditRepository(database), ApplianceID: "test-appliance",
+		BootID: "test-boot", Now: now,
+	})
+	if err != nil {
+		t.Fatalf("audit.NewWriter: %v", err)
+	}
 	service, err := identity.NewService(identity.Options{
 		Repository:         sqlite.NewIdentityRepository(database),
-		Now:                func() time.Time { return time.Now().UTC() },
+		Now:                now,
 		Random:             rand.Reader,
 		SessionLifetime:    12 * time.Hour,
 		LoginFailureLimit:  5,
 		LoginFailureWindow: 15 * time.Minute,
+		Audit:              auditWriter,
 	})
 	if err != nil {
 		t.Fatalf("identity.NewService: %v", err)

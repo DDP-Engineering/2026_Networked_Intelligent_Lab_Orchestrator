@@ -352,29 +352,41 @@ Invoke-RestMethod -Uri http://127.0.0.1:8090/api/v1/users  -Headers $headers   #
 
 ## 6. The browser Authentication page
 
-An administrator signing in to the browser interface gets an **Authentication**
-entry in the main navigation. It administers the same identities and tokens as
-the command line, through the routes above, and enforces nothing itself: NILO
-authorizes every request server-side, so an identity that reaches the page some
-other way is refused there rather than being relied on not to look.
+An administrator signing in to the browser interface gets an expandable
+**Authentication** group in the System navigation. **Users** and **API tokens**
+open as distinct workspace tabs and each fetches only the resource it owns
+(API tokens also reads identities for the owner selector). The destinations are
+shown only when the session can read them, but the interface enforces nothing
+itself: NILO authorizes every request server-side, so an identity that reaches a
+page some other way is refused there rather than being relied on not to look.
 
-**Users.** Every identity with its role and enabled state. You can create one
-with a role, change a role, disable and re-enable, and reset a password.
+**Users.** Every identity with its username, role and enabled state; creation
+time is under **Details**. The row **Actions** dialog explains unavailable
+choices. You can create a user, change a role, disable and re-enable, and reset
+a password.
 Identities are never deleted, and the last enabled administrator can be neither
 disabled nor demoted. Disabling and resetting a password each ask for an
 explicit confirmation naming the identity, because both take access away
 immediately and neither is undone by repeating the control.
 
-**API tokens.** Every token's owner, name, scopes, expiry and revocation state —
-never a secret, which NILO does not store. You can create a named token for an
-existing identity with optional scopes and an optional expiry, and revoke one
-after an explicit confirmation. The creation form states that a token's
+**API tokens.** Every token's name, owner, effective state and expiry; scopes
+and creation time are under **Details**. Revoked takes precedence over expired,
+which takes precedence over active. Safe metadata never includes a secret,
+which NILO does not store. You can create a named token for an existing identity
+with optional scopes and an optional expiry, and revoke an active token after
+an explicit confirmation. The creation form states that a token's
 permissions are its scopes narrowed by its owner's current role, so selecting
 every scope for a Viewer's token still yields a Viewer's token.
 
 A new token's secret is shown once, with a copy action and the warning that it
-cannot be retrieved later. Dismissing the dialog or reloading the page does not
-bring it back.
+cannot be retrieved later. Closing the disclosure clears the value from
+interface state and removes it from the document; dismissing it, navigating
+away or reloading does not bring it back.
+
+Field help and **How to configure** guidance describe the role boundary,
+empty-scope meaning, access impact, external coordination and verification.
+Warnings and confirmation text remain visible without opening help. **View
+activity** opens Activity with `component=identity` already applied.
 
 Token administration in this release is administrator-only. An Operator holds
 the `tokens.read.self` and `tokens.manage.self` permissions and still has no
@@ -382,10 +394,15 @@ interface for them.
 
 ## 7. Audit
 
-Each of these changes appends an audit record naming the acting identity and
-the affected subject. No record contains a password, a token secret, or a
-verifier. The change and its record are written in one database transaction: a
-change whose record cannot be written does not happen at all.
+Each of these changes appends exactly one common Activity audit event naming the
+authenticated actor and affected subject. A browser session records actor kind
+`user` and its user ID; a bearer request records actor kind `token` and its token
+ID. The client request body cannot supply attribution. Events use category
+`audit`, component `identity`, outcome `applied` and severity `info`, with the
+appliance, boot and time-source envelope completed by the common audit writer.
+No event contains a password, token secret or verifier. The change and its event
+are written in one database transaction: a change whose event cannot be written
+does not happen at all. Reads and rejected/no-op mutations add no mutation event.
 
 | Action | Subject |
 |---|---|
@@ -397,8 +414,8 @@ change whose record cannot be written does not happen at all.
 | `identity.token.created` | api_token |
 | `identity.token.revoked` | api_token |
 
-Login attempts themselves are not yet recorded, and this release exposes no
-route for reading the audit history.
+Activity can list and export these events with `component=identity`. Login
+attempts use their separate access-audit action and are not mutation events.
 
 ## 8. Upgrading an existing installation
 
@@ -427,8 +444,6 @@ Do not plan around these; they are not in this release.
 
 - Self-service token management for an Operator, in the browser or anywhere
   else.
-- An authenticated way to read the audit history, and auditing of login
-  attempts themselves.
 - Custom roles, arbitrary permission editing, single sign-on, multi-factor
   authentication, and email-based account recovery.
 - Token rotation, and permanent deletion of identities or tokens.

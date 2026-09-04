@@ -26,6 +26,10 @@ export const en = {
   'nav.network.collapse': 'Collapse Network',
   'nav.plugins': 'Plugins',
   'nav.authentication': 'Authentication',
+  'nav.authentication.users': 'Users',
+  'nav.authentication.tokens': 'API tokens',
+  'nav.authentication.expand': 'Expand Authentication',
+  'nav.authentication.collapse': 'Collapse Authentication',
   'nav.settings': 'Settings',
   'nav.about': 'About',
   'nav.collapse': 'Collapse navigation',
@@ -307,9 +311,14 @@ export const en = {
 
   // Authentication page
   'auth.title': 'Authentication',
+  'auth.usersTitle': 'Authentication / Users',
+  'auth.tokensTitle': 'Authentication / API tokens',
   'auth.signedInAs': 'Signed in as {username} ({role}).',
   'auth.identitiesNote':
     'Identities are disabled rather than deleted, so audit records keep naming a real subject.',
+  'auth.tokensNote':
+    'Tokens are credentials. Expiration or revocation prevents future use.',
+  'auth.viewActivity': 'View activity',
   'auth.csrfMissing':
     'This browser no longer holds the request-forgery token issued with the session, so Bench Core will refuse any change. Sign out and sign in again.',
   'auth.users': 'Users',
@@ -330,9 +339,11 @@ export const en = {
   'auth.column.owner': 'Owner',
   'auth.column.scopes': 'Scopes',
   'auth.column.expires': 'Expires',
+  'auth.column.created': 'Created',
   'auth.enabled': 'enabled',
   'auth.disabled': 'disabled',
   'auth.active': 'active',
+  'auth.expired': 'expired',
   'auth.revoked': 'revoked',
   'auth.never': 'never',
   'auth.wholeRole': "owner's whole role",
@@ -348,6 +359,13 @@ export const en = {
   'auth.working': 'Working…',
   'auth.done': 'Done',
   'auth.copySecret': 'Copy secret',
+  'auth.userType': 'User identity',
+  'auth.tokenType': 'API token',
+  'auth.permission.usersManage': 'Your session does not include users.manage.',
+  'auth.permission.tokensManage': 'Your session does not include tokens.manage.all.',
+  'auth.lastAdministratorReason': 'The last enabled administrator must remain enabled.',
+  'auth.revocationUnavailable':
+    'This token is already expired or revoked and cannot be revoked again.',
 
   // Authentication dialogs
   'auth.dialog.newUser': 'New user',
@@ -366,6 +384,24 @@ export const en = {
   'auth.field.name': 'Name',
   'auth.field.scopes': 'Scopes',
   'auth.field.expires': 'Expires (optional)',
+  'auth.help.username':
+    'A stable sign-in name. It is normalized and cannot impersonate another identity.',
+  'auth.help.role':
+    'Viewer reads state, Operator also uses self-owned tokens, and Administrator manages users, tokens, Activity, Network and diagnostics.',
+  'auth.help.password':
+    'A new secret used only for password sign-in. NILO stores a one-way verifier.',
+  'auth.help.confirmPassword':
+    'Repeat the password exactly so a typing error is caught before saving.',
+  'auth.help.owner':
+    'The identity whose current role limits this token for every request.',
+  'auth.help.tokenName':
+    'A non-secret label that identifies the automation or client using the token.',
+  'auth.help.scopes':
+    "Leave every scope clear for the owner's full current role; selected scopes only narrow that role.",
+  'auth.help.expiry':
+    'After this instant the token is rejected automatically. Leaving it empty means no automatic expiry.',
+  'auth.roleMatrix':
+    'Viewer: read inventory, Network and status. Operator: Viewer plus self-token access. Administrator: all administration, Activity, diagnostics, Network and VPN permissions.',
   'auth.passwordMismatch': 'The two passwords do not match.',
   'auth.expiryUnreadable': 'The expiry is not a date and time this interface can read.',
   'auth.roleExplanation':
@@ -394,6 +430,20 @@ export const en = {
   'auth.tokenCreated': 'Created the token {name} for {owner}.',
   'auth.tokenRevoked': 'Revoked the token {name}.',
   'auth.sessionEnded': 'Your session ended before this could be applied.',
+
+  'help.auth.title': 'Authentication workflow',
+  'help.auth.goal':
+    'Manage human access and revocable automation credentials without granting more access than needed.',
+  'help.auth.needs':
+    'Confirm the exact user or token, the intended role or scopes, and how an access change affects active work.',
+  'help.auth.example':
+    'Use Viewer for observation, Operator for routine bench work, and a narrowly scoped token for one automation.',
+  'help.auth.changes':
+    'User changes apply on the next request; disabling a user also stops its sessions and tokens. Token secrets are shown only once, and revocation is permanent.',
+  'help.auth.external':
+    'Coordinate access-impacting changes and transfer passwords or token secrets only through an appropriate protected channel.',
+  'help.auth.verify':
+    'Refresh the record, test the expected access boundary, and inspect the identity entries in Activity.',
 
   // Mode note
   'mode.mock':

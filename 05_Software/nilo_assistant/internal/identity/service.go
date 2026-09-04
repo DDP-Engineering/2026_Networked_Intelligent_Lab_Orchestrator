@@ -11,7 +11,6 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/subtle"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -95,6 +94,13 @@ type Actor struct {
 	Permissions  []auth.Permission
 }
 
+// UserActor adapts a locally authenticated administrator to the same rich
+// actor boundary used by HTTP requests. Local administration is attributed to
+// the user identity, never to a synthetic session or token.
+func UserActor(user auth.User) Actor {
+	return Actor{User: user, Credential: CredentialSession}
+}
+
 // Has reports whether the actor holds permission for this request.
 func (actor Actor) Has(permission auth.Permission) bool {
 	for _, candidate := range actor.Permissions {
@@ -135,16 +141,16 @@ type Options struct {
 	SessionLifetime    time.Duration
 	LoginFailureLimit  int
 	LoginFailureWindow time.Duration
-	// Audit records login outcomes with the full envelope. It is optional;
-	// without it the administrative changes are still recorded through their
-	// own transaction, and only the login outcomes go unrecorded.
-	Audit LoginJournal
+	// Audit records login outcomes and composes the complete envelope used by
+	// administrative transactions. The transaction still owns the append.
+	Audit Journal
 }
 
-// LoginJournal records a login outcome. A failed login has no identity: it is
-// recorded as an anonymous actor with the attempted name as a label.
-type LoginJournal interface {
+// Journal records ordinary outcomes and composes events for transaction-owned
+// appends. A failed login has no identity and is recorded as anonymous.
+type Journal interface {
 	Record(ctx context.Context, record audit.Record) error
+	Compose(record audit.Record) (audit.Event, error)
 }
 
 // Service enforces the identity invariants once, for every interface.
@@ -154,7 +160,7 @@ type Service struct {
 	random          io.Reader
 	sessionLifetime time.Duration
 	throttle        *auth.LoginThrottle
-	loginJournal    LoginJournal
+	auditJournal    Journal
 	dummyVerifier   string
 }
 
@@ -165,6 +171,9 @@ func NewService(options Options) (*Service, error) {
 	}
 	if options.Now == nil {
 		return nil, errors.New("identity clock is required")
+	}
+	if options.Audit == nil {
+		return nil, errors.New("identity audit journal is required")
 	}
 	if options.Random == nil {
 		options.Random = rand.Reader
@@ -181,7 +190,7 @@ func NewService(options Options) (*Service, error) {
 	return &Service{
 		repository:      options.Repository,
 		now:             func() time.Time { return options.Now().UTC() },
-		loginJournal:    options.Audit,
+		auditJournal:    options.Audit,
 		random:          options.Random,
 		sessionLifetime: options.SessionLifetime,
 		throttle:        auth.NewLoginThrottle(options.LoginFailureLimit, options.LoginFailureWindow),
@@ -211,7 +220,7 @@ func (service *Service) Bootstrap(ctx context.Context, username string, password
 			}
 			// Bootstrap has no prior actor, so the created administrator
 			// attributes its own creation.
-			return service.record(ctx, events, prepared.ID, "identity.user.created", "user", prepared.ID, map[string]string{
+			return service.record(ctx, events, UserActor(prepared), "identity.user.created", "user", prepared.ID, map[string]string{
 				"username": prepared.Username, "role": string(prepared.Role), "origin": "bootstrap",
 			})
 		},
@@ -225,19 +234,27 @@ func (service *Service) Bootstrap(ctx context.Context, username string, password
 func (service *Service) CreateUser(
 	ctx context.Context, actor auth.User, username string, role auth.Role, password []byte,
 ) (auth.User, error) {
+	return service.CreateUserAs(ctx, UserActor(actor), username, role, password)
+}
+
+// CreateUserAs adds an identity and retains the authenticated credential kind
+// for audit attribution.
+func (service *Service) CreateUserAs(
+	ctx context.Context, actor Actor, username string, role auth.Role, password []byte,
+) (auth.User, error) {
 	prepared, err := service.prepareUser(username, role, password)
 	if err != nil {
 		return auth.User{}, err
 	}
 	if err := service.repository.WithinAdministrativeTransaction(
 		ctx, func(repository Repository, events audit.Repository) error {
-			if err := requireAdministrator(ctx, repository, actor); err != nil {
+			if err := requireAdministrator(ctx, repository, actor.User); err != nil {
 				return err
 			}
 			if err := repository.CreateUser(ctx, prepared); err != nil {
 				return err
 			}
-			return service.record(ctx, events, actor.ID, "identity.user.created", "user", prepared.ID, map[string]string{
+			return service.record(ctx, events, actor, "identity.user.created", "user", prepared.ID, map[string]string{
 				"username": prepared.Username, "role": string(prepared.Role),
 			})
 		},
@@ -250,6 +267,11 @@ func (service *Service) CreateUser(
 // SetRole changes an identity's role, refusing to demote the last enabled
 // administrator.
 func (service *Service) SetRole(ctx context.Context, actor auth.User, username string, role auth.Role) error {
+	return service.SetRoleAs(ctx, UserActor(actor), username, role)
+}
+
+// SetRoleAs changes an identity's role with request credential attribution.
+func (service *Service) SetRoleAs(ctx context.Context, actor Actor, username string, role auth.Role) error {
 	if _, err := auth.ParseRole(string(role)); err != nil {
 		return err
 	}
@@ -259,7 +281,7 @@ func (service *Service) SetRole(ctx context.Context, actor auth.User, username s
 	}
 	return service.repository.WithinAdministrativeTransaction(
 		ctx, func(repository Repository, events audit.Repository) error {
-			if err := requireAdministrator(ctx, repository, actor); err != nil {
+			if err := requireAdministrator(ctx, repository, actor.User); err != nil {
 				return err
 			}
 			subject, err := repository.UserByUsername(ctx, normalized)
@@ -276,7 +298,7 @@ func (service *Service) SetRole(ctx context.Context, actor auth.User, username s
 			if err := repository.UpdateUserRole(ctx, subject.ID, role, now); err != nil {
 				return err
 			}
-			return service.record(ctx, events, actor.ID, "identity.user.role_changed", "user", subject.ID, map[string]string{
+			return service.record(ctx, events, actor, "identity.user.role_changed", "user", subject.ID, map[string]string{
 				"username": subject.Username, "previous_role": string(subject.Role), "role": string(role),
 			})
 		},
@@ -287,13 +309,18 @@ func (service *Service) SetRole(ctx context.Context, actor auth.User, username s
 // every browser session it holds, because a credential that keeps working
 // after revocation has not been revoked.
 func (service *Service) SetEnabled(ctx context.Context, actor auth.User, username string, enabled bool) error {
+	return service.SetEnabledAs(ctx, UserActor(actor), username, enabled)
+}
+
+// SetEnabledAs changes enabled state with request credential attribution.
+func (service *Service) SetEnabledAs(ctx context.Context, actor Actor, username string, enabled bool) error {
 	normalized, err := auth.NormalizeUsername(username)
 	if err != nil {
 		return err
 	}
 	return service.repository.WithinAdministrativeTransaction(
 		ctx, func(repository Repository, events audit.Repository) error {
-			if err := requireAdministrator(ctx, repository, actor); err != nil {
+			if err := requireAdministrator(ctx, repository, actor.User); err != nil {
 				return err
 			}
 			subject, err := repository.UserByUsername(ctx, normalized)
@@ -321,7 +348,7 @@ func (service *Service) SetEnabled(ctx context.Context, actor auth.User, usernam
 					return err
 				}
 			}
-			return service.record(ctx, events, actor.ID, action, "user", subject.ID, map[string]string{
+			return service.record(ctx, events, actor, action, "user", subject.ID, map[string]string{
 				"username": subject.Username,
 			})
 		},
@@ -333,6 +360,11 @@ func (service *Service) SetEnabled(ctx context.Context, actor auth.User, usernam
 // session cannot complete either: the session insert is conditional on the
 // verifier this transaction replaces.
 func (service *Service) ResetPassword(ctx context.Context, actor auth.User, username string, password []byte) error {
+	return service.ResetPasswordAs(ctx, UserActor(actor), username, password)
+}
+
+// ResetPasswordAs resets a password with request credential attribution.
+func (service *Service) ResetPasswordAs(ctx context.Context, actor Actor, username string, password []byte) error {
 	normalized, err := auth.NormalizeUsername(username)
 	if err != nil {
 		return err
@@ -343,7 +375,7 @@ func (service *Service) ResetPassword(ctx context.Context, actor auth.User, user
 	}
 	if err := service.repository.WithinAdministrativeTransaction(
 		ctx, func(repository Repository, events audit.Repository) error {
-			if err := requireAdministrator(ctx, repository, actor); err != nil {
+			if err := requireAdministrator(ctx, repository, actor.User); err != nil {
 				return err
 			}
 			subject, err := repository.UserByUsername(ctx, normalized)
@@ -357,7 +389,7 @@ func (service *Service) ResetPassword(ctx context.Context, actor auth.User, user
 			if err := repository.RevokeUserSessions(ctx, subject.ID, now); err != nil {
 				return err
 			}
-			return service.record(ctx, events, actor.ID, "identity.user.password_reset", "user", subject.ID, map[string]string{
+			return service.record(ctx, events, actor, "identity.user.password_reset", "user", subject.ID, map[string]string{
 				"username": subject.Username,
 			})
 		},
@@ -402,6 +434,14 @@ func (service *Service) CreateToken(
 	ctx context.Context, actor auth.User, ownerUsername, name string,
 	scopes []auth.Permission, expiresAt *time.Time,
 ) (TokenIssue, error) {
+	return service.CreateTokenAs(ctx, UserActor(actor), ownerUsername, name, scopes, expiresAt)
+}
+
+// CreateTokenAs issues a token with request credential attribution.
+func (service *Service) CreateTokenAs(
+	ctx context.Context, actor Actor, ownerUsername, name string,
+	scopes []auth.Permission, expiresAt *time.Time,
+) (TokenIssue, error) {
 	if name == "" {
 		return TokenIssue{}, errors.New("token name is required")
 	}
@@ -424,7 +464,7 @@ func (service *Service) CreateToken(
 	var issued TokenIssue
 	if err := service.repository.WithinAdministrativeTransaction(
 		ctx, func(repository Repository, events audit.Repository) error {
-			if err := requireAdministrator(ctx, repository, actor); err != nil {
+			if err := requireAdministrator(ctx, repository, actor.User); err != nil {
 				return err
 			}
 			owner, err := repository.UserByUsername(ctx, normalizedOwner)
@@ -444,7 +484,7 @@ func (service *Service) CreateToken(
 			if expiresAt != nil {
 				payload["expires_at"] = expiresAt.UTC().Format(time.RFC3339)
 			}
-			if err := service.record(ctx, events, actor.ID, "identity.token.created", "api_token", token.ID, payload); err != nil {
+			if err := service.record(ctx, events, actor, "identity.token.created", "api_token", token.ID, payload); err != nil {
 				return err
 			}
 			issued = TokenIssue{Token: token, Secret: created.Plaintext, OwnerUsername: owner.Username}
@@ -479,15 +519,20 @@ func (service *Service) ListTokens(ctx context.Context) ([]TokenView, error) {
 
 // RevokeToken invalidates one API token immediately.
 func (service *Service) RevokeToken(ctx context.Context, actor auth.User, tokenID string) error {
+	return service.RevokeTokenAs(ctx, UserActor(actor), tokenID)
+}
+
+// RevokeTokenAs revokes a token with request credential attribution.
+func (service *Service) RevokeTokenAs(ctx context.Context, actor Actor, tokenID string) error {
 	return service.repository.WithinAdministrativeTransaction(
 		ctx, func(repository Repository, events audit.Repository) error {
-			if err := requireAdministrator(ctx, repository, actor); err != nil {
+			if err := requireAdministrator(ctx, repository, actor.User); err != nil {
 				return err
 			}
 			if err := repository.RevokeAPIToken(ctx, tokenID, service.now()); err != nil {
 				return err
 			}
-			return service.record(ctx, events, actor.ID, "identity.token.revoked", "api_token", tokenID, map[string]string{
+			return service.record(ctx, events, actor, "identity.token.revoked", "api_token", tokenID, map[string]string{
 				"token_id": tokenID,
 			})
 		},
@@ -556,11 +601,8 @@ func (service *Service) Login(ctx context.Context, username string, password []b
 // a login is not a change to the appliance, and refusing it would lock the
 // administrator out exactly when the store needs attention.
 func (service *Service) recordLogin(ctx context.Context, record audit.Record) {
-	if service.loginJournal == nil {
-		return
-	}
 	record.Category, record.Component = audit.CategoryAudit, "identity"
-	_ = service.loginJournal.Record(ctx, record)
+	_ = service.auditJournal.Record(ctx, record)
 }
 
 // Logout invalidates one browser session server-side.
@@ -706,24 +748,28 @@ func requireAdministrator(ctx context.Context, repository Repository, actor auth
 // attributes. Payloads carry names and roles only; no password, token secret or
 // verifier ever reaches the audit history.
 func (service *Service) record(
-	ctx context.Context, events audit.Repository, actorID, action, subjectType, subjectID string,
+	ctx context.Context, events audit.Repository, actor Actor, action, subjectType, subjectID string,
 	payload map[string]string,
 ) error {
-	eventID, err := uuid.NewV7()
-	if err != nil {
-		return fmt.Errorf("create audit event ID: %w", err)
+	actorID := actor.User.ID
+	actorKind := audit.ActorKindUser
+	if actor.Credential == CredentialToken {
+		actorID = actor.TokenID
+		actorKind = audit.ActorKindToken
 	}
-	actor, err := domain.ParseActorID(actorID)
+	parsedActor, err := domain.ParseActorID(actorID)
 	if err != nil {
 		return fmt.Errorf("parse audit actor %q: %w", actorID, err)
 	}
-	encoded, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("encode audit payload: %w", err)
-	}
-	return events.Append(ctx, audit.Event{
-		ID: eventID.String(), ActorID: actor, Action: action,
+	event, err := service.auditJournal.Compose(audit.Record{
+		Category: audit.CategoryAudit, Component: "identity", Action: action,
 		SubjectType: subjectType, SubjectID: subjectID,
-		Payload: encoded, CreatedAt: service.now(),
+		ActorKind: actorKind, ActorID: parsedActor,
+		Outcome: audit.OutcomeApplied, Severity: audit.SeverityInfo,
+		Details: payload,
 	})
+	if err != nil {
+		return err
+	}
+	return events.Append(ctx, event)
 }

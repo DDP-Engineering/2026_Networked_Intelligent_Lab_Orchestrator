@@ -119,9 +119,9 @@ describe('single-viewport layout', () => {
     expect(strip).not.toMatch(/flex-wrap:\s*wrap/);
   });
 
-  it('scrolls long listings inside their own compartments', () => {
+  it('keeps focused administration listings in natural page flow', () => {
     expect(declarationsOf(shellCss, '.inventory-list')).toMatch(/overflow:\s*auto/);
-    expect(declarationsOf(shellCss, '.admin-list')).toMatch(/overflow:\s*auto/);
+    expect(declarationsOf(shellCss, '.admin-list')).toMatch(/overflow:\s*visible/);
     expect(declarationsOf(shellCss, '.inventory')).toMatch(
       /grid-template-rows:\s*auto minmax\(0, 1fr\)/,
     );

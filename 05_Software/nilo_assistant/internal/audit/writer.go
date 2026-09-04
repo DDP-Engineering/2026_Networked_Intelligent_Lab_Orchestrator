@@ -98,14 +98,20 @@ func (writer *Writer) Record(ctx context.Context, record Record) error {
 	if writer == nil {
 		return errors.New("audit writer is required")
 	}
-	event, err := writer.compose(record)
+	event, err := writer.Compose(record)
 	if err != nil {
 		return err
 	}
 	return writer.options.Events.Append(ctx, event)
 }
 
-func (writer *Writer) compose(record Record) (Event, error) {
+// Compose builds one complete event without appending it. A caller whose state
+// change and audit append share a transaction uses this method, then appends
+// through the repository bound to that transaction.
+func (writer *Writer) Compose(record Record) (Event, error) {
+	if writer == nil {
+		return Event{}, errors.New("audit writer is required")
+	}
 	identity, err := writer.options.NewID()
 	if err != nil {
 		return Event{}, fmt.Errorf("create audit event identity: %w", err)

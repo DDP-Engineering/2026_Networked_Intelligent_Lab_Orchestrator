@@ -65,6 +65,12 @@ func newFixtureAt(t *testing.T, path string) fixture {
 
 	clock := &testClock{now: time.Date(2026, 9, 2, 9, 0, 0, 0, time.UTC)}
 	auditRepository := sqlite.NewAuditRepository(database)
+	auditWriter, err := audit.NewWriter(audit.WriterOptions{
+		Events: auditRepository, ApplianceID: "test-appliance", BootID: "test-boot", Now: clock.Now,
+	})
+	if err != nil {
+		t.Fatalf("NewWriter: %v", err)
+	}
 	service, err := identity.NewService(identity.Options{
 		Repository:         sqlite.NewIdentityRepository(database),
 		Now:                clock.Now,
@@ -72,6 +78,7 @@ func newFixtureAt(t *testing.T, path string) fixture {
 		SessionLifetime:    12 * time.Hour,
 		LoginFailureLimit:  3,
 		LoginFailureWindow: 15 * time.Minute,
+		Audit:              auditWriter,
 	})
 	if err != nil {
 		t.Fatalf("NewService: %v", err)
@@ -553,6 +560,18 @@ func TestIdentityAndTokenChangesAreAuditedWithoutSecrets(t *testing.T) {
 	); err != nil {
 		t.Fatalf("CreateUser: %v", err)
 	}
+	if _, err := f.service.ListUsers(context.Background()); err != nil {
+		t.Fatalf("ListUsers: %v", err)
+	}
+	if err := f.service.SetRole(context.Background(), administrator, "operator", auth.RoleOperator); err != nil {
+		t.Fatalf("SetRole no-op: %v", err)
+	}
+	if err := f.service.SetEnabled(context.Background(), administrator, "operator", true); err != nil {
+		t.Fatalf("SetEnabled no-op: %v", err)
+	}
+	if _, err := f.service.ListTokens(context.Background()); err != nil {
+		t.Fatalf("ListTokens: %v", err)
+	}
 	if err := f.service.SetRole(context.Background(), administrator, "operator", auth.RoleViewer); err != nil {
 		t.Fatalf("SetRole: %v", err)
 	}
@@ -573,7 +592,10 @@ func TestIdentityAndTokenChangesAreAuditedWithoutSecrets(t *testing.T) {
 		t.Fatalf("RevokeToken: %v", err)
 	}
 
-	events, err := f.audit.List(context.Background(), audit.Filter{})
+	events, err := f.audit.List(context.Background(), audit.Filter{
+		Category:  audit.CategoryAudit,
+		Component: "identity",
+	})
 	if err != nil {
 		t.Fatalf("list audit events: %v", err)
 	}
@@ -593,6 +615,15 @@ func TestIdentityAndTokenChangesAreAuditedWithoutSecrets(t *testing.T) {
 	for index, action := range want {
 		if events[index].Action != action {
 			t.Fatalf("audit event %d action = %q, want %q", index, events[index].Action, action)
+		}
+		if events[index].EnvelopeVersion != audit.EnvelopeVersion ||
+			events[index].ApplianceID != "test-appliance" || events[index].BootID != "test-boot" {
+			t.Fatalf("audit event %d has incomplete envelope: %#v", index, events[index])
+		}
+		if events[index].Category != audit.CategoryAudit || events[index].Component != "identity" ||
+			events[index].ActorKind != audit.ActorKindUser || events[index].Outcome != audit.OutcomeApplied ||
+			events[index].Severity != audit.SeverityInfo {
+			t.Fatalf("audit event %d has wrong common fields: %#v", index, events[index])
 		}
 		if events[index].ActorID.String() != administrator.ID {
 			t.Fatalf("audit event %d actor = %s, want %s", index, events[index].ActorID, administrator.ID)

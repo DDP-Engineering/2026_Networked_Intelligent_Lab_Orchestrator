@@ -427,6 +427,47 @@ describe('the tabs', () => {
 });
 
 describe('the navigation', () => {
+  // REQ-UX-93e1b747, REQ-UX-7c42d7ba: Authentication owns focused destinations.
+  it('expands Authentication into distinct Users and API tokens workspaces', async () => {
+    renderShell();
+    await benchPage();
+
+    expect(nav().getByRole('button', { name: 'Users' })).toBeVisible();
+    expect(nav().getByRole('button', { name: 'API tokens' })).toBeVisible();
+
+    openFromNav('Users');
+    expect(
+      await screen.findByRole('heading', { name: 'Authentication / Users', level: 2 }),
+    ).toBeVisible();
+    openFromNav('API tokens');
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Authentication / API tokens',
+        level: 2,
+      }),
+    ).toBeVisible();
+    expect(tabs().getByRole('tab', { name: 'Authentication / Users' })).toBeVisible();
+    expect(
+      tabs().getByRole('tab', { name: 'Authentication / API tokens' }),
+    ).toBeVisible();
+
+    fireEvent.click(nav().getByRole('button', { name: 'Collapse Authentication' }));
+    expect(nav().queryByRole('button', { name: 'Users' })).toBeNull();
+    fireEvent.click(nav().getByRole('button', { name: 'Expand Authentication' }));
+    expect(nav().getByRole('button', { name: 'Users' })).toBeVisible();
+  });
+
+  it('opens Activity from Authentication with the identity component applied', async () => {
+    renderShell();
+    await benchPage();
+    openFromNav('Users');
+    await screen.findByRole('region', { name: 'Users' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'View activity' }));
+
+    expect(await screen.findByLabelText('Function')).toHaveValue('identity');
+  });
+
   // REQ-UX-b718864e: one nested Network group, five routable destinations.
   it('expands Network into five focused pages without duplicating their tabs', async () => {
     renderShell();
@@ -502,6 +543,30 @@ describe('the navigation', () => {
 
     expect(nav().queryByRole('button', { name: 'Authentication' })).toBeNull();
     expect(nav().getByRole('button', { name: 'Network' })).toBeVisible();
+  });
+
+  it('shows only the Authentication destination that the session may read', async () => {
+    const { unmount } = renderShell({
+      ...administrator,
+      permissions: ['users.read'],
+    });
+    await benchPage();
+    expect(nav().getByRole('button', { name: 'Users' })).toBeVisible();
+    expect(nav().queryByRole('button', { name: 'API tokens' })).toBeNull();
+    openFromNav('Users');
+    expect(await screen.findByRole('button', { name: 'New user' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'New user' })).toHaveAttribute(
+      'title',
+      'Your session does not include users.manage.',
+    );
+
+    unmount();
+    renderShell({ ...administrator, permissions: ['tokens.read.all'] });
+    await benchPage();
+    expect(nav().queryByRole('button', { name: 'Users' })).toBeNull();
+    expect(nav().getByRole('button', { name: 'API tokens' })).toBeVisible();
+    openFromNav('API tokens');
+    expect(await screen.findByRole('button', { name: 'New token' })).toBeDisabled();
   });
 
   it('opens an integration page showing what the backend reported', async () => {

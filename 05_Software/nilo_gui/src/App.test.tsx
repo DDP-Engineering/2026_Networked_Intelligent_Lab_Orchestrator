@@ -439,12 +439,12 @@ describe('main navigation', () => {
 
     fireEvent.click(
       within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', {
-        name: /authentication/i,
+        name: 'Authentication',
       }),
     );
 
     expect(await screen.findByRole('region', { name: 'Users' })).toBeVisible();
-    expect(screen.getByRole('region', { name: 'API Tokens' })).toBeVisible();
+    expect(screen.queryByRole('region', { name: 'API Tokens' })).toBeNull();
     expectSimulationIdentity();
   });
 

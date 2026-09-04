@@ -110,7 +110,7 @@ func handleCreateUser(service *identity.Service) http.HandlerFunc {
 		if !readPassword(response, body.Password) {
 			return
 		}
-		created, err := service.CreateUser(request.Context(), actor.User, username, role, []byte(body.Password))
+		created, err := service.CreateUserAs(request.Context(), actor, username, role, []byte(body.Password))
 		if err != nil {
 			writeAdministrationFailure(response, err)
 			return
@@ -137,7 +137,7 @@ func handleSetRole(service *identity.Service) http.HandlerFunc {
 		if !ok {
 			return
 		}
-		if err := service.SetRole(request.Context(), actor.User, username, role); err != nil {
+		if err := service.SetRoleAs(request.Context(), actor, username, role); err != nil {
 			writeAdministrationFailure(response, err)
 			return
 		}
@@ -164,7 +164,7 @@ func handleSetEnabled(service *identity.Service) http.HandlerFunc {
 			writeRefusal(response, http.StatusBadRequest, "invalid_enabled", enabledMessage)
 			return
 		}
-		if err := service.SetEnabled(request.Context(), actor.User, username, *body.Enabled); err != nil {
+		if err := service.SetEnabledAs(request.Context(), actor, username, *body.Enabled); err != nil {
 			writeAdministrationFailure(response, err)
 			return
 		}
@@ -187,7 +187,7 @@ func handleResetPassword(service *identity.Service) http.HandlerFunc {
 		if !readPassword(response, body.Password) {
 			return
 		}
-		if err := service.ResetPassword(request.Context(), actor.User, username, []byte(body.Password)); err != nil {
+		if err := service.ResetPasswordAs(request.Context(), actor, username, []byte(body.Password)); err != nil {
 			writeAdministrationFailure(response, err)
 			return
 		}
@@ -245,7 +245,7 @@ func handleCreateToken(service *identity.Service) http.HandlerFunc {
 		if !ok {
 			return
 		}
-		issued, err := service.CreateToken(request.Context(), actor.User, owner, name, scopes, expiresAt)
+		issued, err := service.CreateTokenAs(request.Context(), actor, owner, name, scopes, expiresAt)
 		if err != nil {
 			writeAdministrationFailure(response, err)
 			return
@@ -265,7 +265,7 @@ func handleRevokeToken(service *identity.Service) http.HandlerFunc {
 			writeUnauthorized(response)
 			return
 		}
-		if err := service.RevokeToken(request.Context(), actor.User, request.PathValue("id")); err != nil {
+		if err := service.RevokeTokenAs(request.Context(), actor, request.PathValue("id")); err != nil {
 			writeAdministrationFailure(response, err)
 			return
 		}

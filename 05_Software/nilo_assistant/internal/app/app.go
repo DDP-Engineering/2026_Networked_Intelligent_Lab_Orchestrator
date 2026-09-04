@@ -108,18 +108,6 @@ func Open(ctx context.Context, options Options) (*App, error) {
 		_ = database.Close()
 		return nil, err
 	}
-	identityService, err := identity.NewService(identity.Options{
-		Repository:         sqlite.NewIdentityRepository(database),
-		Now:                func() time.Time { return options.Now().UTC() },
-		Random:             rand.Reader,
-		SessionLifetime:    browserSessionLifetime,
-		LoginFailureLimit:  loginFailureLimit,
-		LoginFailureWindow: loginFailureWindow,
-	})
-	if err != nil {
-		_ = database.Close()
-		return nil, err
-	}
 	// The appliance identity is established here, while the foundation is
 	// opening, because it is the identity every recorded event is attributed to
 	// and an event whose appliance is unknown cannot be correlated afterwards.
@@ -141,7 +129,7 @@ func Open(ctx context.Context, options Options) (*App, error) {
 		_ = database.Close()
 		return nil, err
 	}
-	identityService, err = identity.NewService(identity.Options{
+	identityService, err := identity.NewService(identity.Options{
 		Repository:         sqlite.NewIdentityRepository(database),
 		Now:                func() time.Time { return options.Now().UTC() },
 		Random:             rand.Reader,

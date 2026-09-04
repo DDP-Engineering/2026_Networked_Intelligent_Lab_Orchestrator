@@ -9,7 +9,7 @@ const SECTIONS = ['goal', 'needs', 'example', 'changes', 'external', 'verify'] a
 
 export interface WorkflowHelpProps {
   /** Catalogue prefix, for example `help.dn`; the six sections hang off it. */
-  prefix: 'help.dn' | 'help.if';
+  prefix: 'help.dn' | 'help.if' | 'help.auth';
   /** The dialog title. */
   title: string;
 }

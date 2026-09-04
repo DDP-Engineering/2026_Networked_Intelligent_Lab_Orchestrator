@@ -14,7 +14,7 @@ schema = 1
 # and must match the category folder this file sits in.
 id = "REQ-UX-38017d29"
 
-title = "State that a token cannot exceed its owner's role"
+title = "Explain API token authority and lifetime"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
@@ -38,9 +38,10 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-While an administrator is creating an API token, the browser interface shall state
-that the token's effective permissions are its scopes narrowed by the owner's current
-role and can therefore never exceed that role.
+While an administrator is creating or reviewing an API token, the browser
+interface shall state that an empty scope list leaves the token at its owner's
+full current role permissions, a non-empty list only narrows that role, expiration
+stops future use automatically, and revocation stops future use immediately.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -51,7 +52,7 @@ role and can therefore never exceed that role.
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "A component test opens the token creation form and asserts its visible text states that a token's permissions cannot exceed the owner's current role."
+verification = "A component test opens token creation and token details with empty and non-empty scope lists, asserts the visible localized explanation distinguishes full-role from narrowed access and says a token cannot exceed its owner, then opens expiration and revocation guidance and asserts their future-use effects."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
@@ -61,7 +62,7 @@ affected_paths = [
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::states that a token cannot exceed its owner’s current role",
+    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::API token creation > states that a token cannot exceed its owner's current role",
 ]
 
 # --- optional below this line ---
@@ -73,4 +74,4 @@ priority = "normal"   # low | normal | high
 rationale = "A scope list looks like a grant, and an administrator who reads it that way would expect selecting every scope to widen a Viewer's token."
 
 created = 2026-09-02
-updated = 2026-09-02
+updated = 2026-09-04

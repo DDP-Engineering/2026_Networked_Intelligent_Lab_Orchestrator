@@ -14,7 +14,7 @@ schema = 1
 # and must match the category folder this file sits in.
 id = "REQ-UX-c4a0c9e7"
 
-title = "Fit the Authentication administration page in one viewport"
+title = "Keep focused Authentication pages usable at field sizes"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
@@ -38,9 +38,11 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-The browser interface's Authentication administration page shall occupy exactly the
-height of one monitor viewport and never scroll the page itself, giving its identity
-and token listings their own internal scrolling instead.
+At 1024x600, 800x480 and larger desktop viewports, each focused Authentication
+page shall remain readable without document-level horizontal overflow, use
+ordinary page-level vertical scrolling rather than nested list scrolling that
+hides menus, render compact cards below the table breakpoint, and keep visible
+text at least 14 pixels and field-size interactive targets at least 44 pixels.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -51,22 +53,21 @@ and token listings their own internal scrolling instead.
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "A test reads the shipped application stylesheet and asserts the administration page is a viewport-bounded grid with a zero minimum height, and that each of its two listing regions declares its own vertical overflow and a zero minimum height so a long listing scrolls inside its compartment rather than growing the page."
+verification = "Layout and real-browser tests render long Users and API-token lists at 1920x1080, 1366x768, 1024x600 and 800x480, assert tables become cards at the breakpoint, measure no document horizontal overflow, no nested record-list scrollbar, no visible text below 14 pixels and no field-size interactive target below 44 pixels, and open Details, Actions and help near every viewport edge."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/styles/tokens.css",
     "05_Software/nilo_gui/src/styles/shell.css",
-    "05_Software/nilo_gui/src/components/AuthenticationPage.tsx",
+    "05_Software/nilo_gui/src/components/authentication/UsersPage.tsx",
+    "05_Software/nilo_gui/src/components/authentication/ApiTokensPage.tsx",
+    "05_Software/nilo_gui/src/layout.test.ts",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/layout.test.ts::bounds the administration page to the space it is given",
-    "05_Software/nilo_gui/src/layout.test.ts::scrolls a long identity or token listing inside its own compartment",
-    "05_Software/nilo_gui/src/layout.test.ts::lets the administration panels stack rather than clip on a narrow screen",
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::gives each listing its own bounded scroll compartment",
+    "05_Software/nilo_gui/src/layout.test.ts::single-viewport layout > keeps focused administration listings in natural page flow",
+    "05_Software/nilo_gui/src/layout.test.ts::single-viewport layout > turns record tables into labeled cards below 56rem",
 ]
 
 # --- optional below this line ---
@@ -75,7 +76,7 @@ linked_tests = [
 spec = ""
 
 priority = "normal"   # low | normal | high
-rationale = "The bench interface is read at a glance on one monitor; a page that scrolls hides the simulation marking and the boundary statement pinned to its edges."
+rationale = "Field displays need natural page scrolling so action and help overlays are not clipped inside independently scrolling record compartments."
 
 created = 2026-09-02
-updated = 2026-09-02
+updated = 2026-09-04

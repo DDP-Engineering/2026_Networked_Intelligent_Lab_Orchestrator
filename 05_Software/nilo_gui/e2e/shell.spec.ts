@@ -231,7 +231,10 @@ test('narrows the navigation to a labeled rail on a small viewport without clipp
 
 test('keeps one runtime indicator on every screen', async () => {
   for (const entry of ['Bench', 'Authentication', 'About']) {
-    await page.locator('.sidenav').getByRole('button', { name: entry }).click();
+    await page
+      .locator('.sidenav')
+      .getByRole('button', { name: entry, exact: true })
+      .click();
     await expect(page.getByRole('status', { name: /runtime profile/i })).toBeVisible();
     await expect(page.locator('.shell-boundary')).toHaveCount(0);
     await expect(page.locator('.sim-badge')).toHaveCount(1);

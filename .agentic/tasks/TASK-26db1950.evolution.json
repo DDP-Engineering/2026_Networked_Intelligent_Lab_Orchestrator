@@ -1,0 +1,452 @@
+{
+  "reports": [
+    {
+      "anchor_created_at": "2026-09-04T13:43:57.410232Z",
+      "anchor_head": "8cf243345cd214357d19d9eb7533e46b199a71f0",
+      "anchor_id": "0cfb1b783a816a0c",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "2b4b7e9591ae07caa6f1c5faa0366161e83573e13893e0c005a47e40578f04b7"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "44098cb6a17ace6883733b6b8da274c27c6dae244830478f413ff687cef98f47"
+          },
+          "path": "05_Software/nilo_assistant/internal/app/app.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "baf58061c9b9638e50ff84fecd25de0020477c02d05ab00bef7f1dc356468a95"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "635a3f091439f09a20aacca9e7e3441c704f8430352fa7184b62c1b8707e291e"
+          },
+          "path": "05_Software/nilo_assistant/internal/audit/writer.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "e521a0491a64778c91f0e753b568de396a70bbb240c71b50540781fbaf663924"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "4809b4c1e3c55ffda19eac9fa825ab0732235ce9db28826b8f9fa01ffe06e9bc"
+          },
+          "path": "05_Software/nilo_assistant/internal/httpapi/activity_test.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d0a7d28744060ed424b2a212434062a7b939286d99892cd400e640db55aa7cb4"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "ac1b5f3c99917ba6927cdd1a49849bf0858897c0ca2847ac05165420bf72ec43"
+          },
+          "path": "05_Software/nilo_assistant/internal/httpapi/administration.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "542f1236f5972c7eb8239509ed0b9041f83e7a4373c76b518088591c87924421"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "0633525c74804076de366aa6feb962d1a36e01827b34033a700086f287e12038"
+          },
+          "path": "05_Software/nilo_assistant/internal/httpapi/administration_test.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "f5c478fccad615607c1dab984f6b1c20b85ce602b35d6ee116e30e47eb7a79b2"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "7706ae7eaacf338e98a389863b5c128de002864b5ec5fafc42fc75d510e84859"
+          },
+          "path": "05_Software/nilo_assistant/internal/httpapi/identity_test.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "bd0bd167da38d617123ae5f69310ed510460541f330fc4133a6b8bf99a325703"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "82c887a6c6e3f82db0ca28132c282e2fa6da49527cb724570d888fcb707af03e"
+          },
+          "path": "05_Software/nilo_assistant/internal/identity/service.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "24bc8f5879944435fec083bef0e26b328b3cc83c8befe4040cd6add46eaa69f5"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "6e14ee3d89e721a2b7d649afdafab1f9a2eb6e1821c03d6f36f23b24acd6d338"
+          },
+          "path": "05_Software/nilo_assistant/internal/identity/service_test.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b4f05cca8a0c9220e4b0147f4f23fc4c538f67f30d4a71152ebc2cc09251724d"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "87e54752b028e19ff1aabc126464b554f4e4014da3608ed68036db259edeb7ba"
+          },
+          "path": "05_Software/nilo_assistant/internal/mcp/fixture_test.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "c274cf91dc0031421ac310c8c7b1120d0d8406f84ee0ecf5730c4709c29d527f"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "e6d50b8a230f88fe1e2ff568ba61e4dadb755e66f9a2ce024f916445a98e91d9"
+          },
+          "path": "05_Software/nilo_gui/e2e/authentication.spec.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "41703f584800f89f54c1f5f2f68c87fc899dfcccd0f6422fa9ca34a53104db9e"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "926db2eb58c7f34c7cb08ebf55b74b52a6bdb9bc395a087bd2ecb33469c83599"
+          },
+          "path": "05_Software/nilo_gui/e2e/field-display.spec.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "45c44d8fd4d32e6faf09de6fffc835c4080d6cf6b3392e3841e7601c25eee05a"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "f7e6d41034c22d283d2714b7573eb262a0b2d9601d33d84191619346cc7afd61"
+          },
+          "path": "05_Software/nilo_gui/src/App.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d2e53792af04d1a1673e9b5faeebbcc9e27a8b0c9bf372ab5931033feae3d9dd"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "5d7f8a6c45fbba47421af28b51ce148141333852aa57c6b78ed57751a67ab7fa"
+          },
+          "path": "05_Software/nilo_gui/src/api/permissions.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "8fcc080f2021fad578f9646af25a71904140124f2a8aca88792eba12ceb72fae"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "d24bfc7ce7d89ed74bec5df05971fa7f8e48a1a006a5be780decb03c27e7bd95"
+          },
+          "path": "05_Software/nilo_gui/src/components/AdministrationForms.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "8840c0fee16453f119e8ffbd1416684bdeb89b483313562bce60c03b393109c6"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "ea6d4c5d04e4c91ce8ff2a521d3e5c3f4e5521c38a0bbb6eb8df3cdad9bd92d1"
+          },
+          "path": "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "38064e45a1d4f69f289d4426842e3994eb228a7c164fa5d5c832f3a0299758af"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "10d0ca31801f55cdef7da92b6abda4929a5a7c6a84d4c9f02c533c77bccd31b3"
+          },
+          "path": "05_Software/nilo_gui/src/components/AuthenticationPage.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "06e5aba7b91ded1e441c264ff5299a4aebb06a033f105303b6a37955d4345a30"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_gui/src/components/authentication/AdministrationPanel.tsx",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "19d438eee09f0baa13115ba8564e9fe5bb97fc34d13e5c47ddef19bfc54d37e3"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_gui/src/components/authentication/ApiTokensPage.tsx",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "5d0b422e1b2722df5dda2cae7807cd08f58738507b6366724cdea80100bf9e0e"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_gui/src/components/authentication/UsersPage.tsx",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "4ec9124ce9e308ce6e5636584466b0e9ac50f58685b1a8151e02e7e4c7c06d54"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "67007c57a8e88339cb68df4f385e22ab4009d2286e79d368d540e2df56cf31a2"
+          },
+          "path": "05_Software/nilo_gui/src/components/help/WorkflowHelp.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "a8dc95b17c1e167318377e92b355d1e0c35aca412481c49331212fff9ba32d88"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "b1c35c17bf3cb16780dd7ff2e9532d2dfdb656b9996dc1febfa0da8524d2f5d6"
+          },
+          "path": "05_Software/nilo_gui/src/components/shell/AppShell.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "717e5350ca0bac8e9138c7174754b3a122e457a22f344307e6717260b1813ff2"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "0a556ae210d2c0f60edb36d75bd1a7c74ad07c54d4ae2d79794920637c9e5ef5"
+          },
+          "path": "05_Software/nilo_gui/src/components/shell/SideNav.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "1a4d475e3bdfa02bb7c787b0cf23671384a657e95f651d6c5c732038d2fa0166"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "5216808803f45368f9f5686920e12e91ab56a8eb217170222fed1527f4e33dfb"
+          },
+          "path": "05_Software/nilo_gui/src/components/shell/pages.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "2e361a51d8249f47168b469921b4971d70018c372611a59171b8e87ac0b70833"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "f2011f16ac14aa2ed43f89f77771a77df4dd2bfa3539196ee729552dd77d5fe1"
+          },
+          "path": "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "0de5ae162073571f929fac1277e9fc028d0a6885738ded62bf0489ad8a1443a1"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "90b3663e84fe8772b930469f86cbd91ea72e551609038278bb24a7e14079afc0"
+          },
+          "path": "05_Software/nilo_gui/src/i18n/de.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "249f3e7c4f6f87bfd9e591ca7ed6bf389ab490da9e490046a98d585172e75016"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "f2760b16775cbdbbd6ee64febfcf42030dfcb40bb7c8f15d3bee2a7f5dcbbaf8"
+          },
+          "path": "05_Software/nilo_gui/src/i18n/en.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d14af94e480eaa028cfee206eea2a02627e7ee8dad488b6ac088683b9578f133"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "cf54f126662f53b2dd90a4c407b101e636432eb3aa320287c0073282e3353b52"
+          },
+          "path": "05_Software/nilo_gui/src/i18n/ro.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b7a81c8f72ebc3ebdcd12793ed82c3f710e260fc90b7e81f86a4ae430b407bea"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "9fc8625eca3fb85626d0e7ef5d5fdbe90f8dbc1e4a400e97c6b0b3ad00f2406d"
+          },
+          "path": "05_Software/nilo_gui/src/layout.test.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "2adbec75b3d3bdf10fbb81b23adb9825548ea361aa36ea2625c6312dc760cce5"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "27c278e3f78ba72257e7611f84f382d457f97477c595d3c213f0179fbf3947fa"
+          },
+          "path": "05_Software/nilo_gui/src/styles/shell.css",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "168de605a14210af0470fd8f09368588affefb3895e4cd3b88e8854009143ed8"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "a6100098236ffd2d940cf70f5ac6974510349c30f638523a7312c6d6e466ac3e"
+          },
+          "path": "06_SoftwareDocu/Development_and_Simulation_Flow.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "f2bbf9d30fb07f17040991dd4f7112b813827f4410487936fd1626cc8417ea2a"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "fb6f30ef83ac48cfcb4e322df098569a4348c7eae8cc718ed3a5d99eb9d78ba3"
+          },
+          "path": "07_Delivery/NILO_CLI_and_Authentication.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "786e2f59f6e02459e31dbc5e61ebbefd9e6e5b222aa6243a3d3b04f47e79411b"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "60e2ec4e50d3f259a3e101444c6d3bd9de72af3a94d49b19b0c1903e5ebaf3ef"
+          },
+          "path": "CHANGELOG.md",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 0,
+            "modified": 3,
+            "removed": 0,
+            "unchanged": 177
+          },
+          "source": {
+            "added": 3,
+            "modified": 17,
+            "removed": 0,
+            "unchanged": 231
+          },
+          "tests": {
+            "added": 0,
+            "modified": 9,
+            "removed": 0,
+            "unchanged": 129
+          }
+        },
+        "status": {
+          "added": 3,
+          "modified": 29,
+          "removed": 0,
+          "unchanged": 537
+        }
+      },
+      "current_head": "8cf243345cd214357d19d9eb7533e46b199a71f0",
+      "evolution_stage": "build",
+      "evolved_at": "2026-09-04T14:24:14.296899Z"
+    }
+  ],
+  "schema": 1,
+  "task": "TASK-26db1950"
+}

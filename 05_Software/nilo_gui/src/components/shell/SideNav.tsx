@@ -25,7 +25,7 @@ export interface SideNavProps {
  */
 export function SideNav({ pages, active, onOpen, nameOf }: SideNavProps) {
   const t = useTranslate();
-  const [networkExpanded, setNetworkExpanded] = useState(true);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const working = pages.filter((page) => page.cluster === 'working');
   const instruments = pages.filter((page) => page.cluster === 'instruments');
   const core = pages.filter((page) => page.cluster === 'core');
@@ -36,7 +36,11 @@ export function SideNav({ pages, active, onOpen, nameOf }: SideNavProps) {
     options: { child?: boolean; name?: string } = {},
   ) {
     const selected = page.id === active;
-    const name = options.name ?? nameOf(page);
+    const name =
+      options.name ??
+      (page.navigationTitleKey === undefined
+        ? nameOf(page)
+        : t(page.navigationTitleKey));
     return (
       <li key={page.id}>
         <button
@@ -56,7 +60,10 @@ export function SideNav({ pages, active, onOpen, nameOf }: SideNavProps) {
 
   function groupedEntry(page: PageDescriptor) {
     const children = core.filter((candidate) => candidate.parentId === page.id);
-    if (children.length === 0) return entry(page);
+    if (children.length === 0 && page.overviewTitleKey === undefined) {
+      return entry(page);
+    }
+    const expanded = expandedGroups[page.id] ?? true;
     const groupActive =
       active === page.id || children.some((child) => child.id === active);
     const groupName =
@@ -69,8 +76,8 @@ export function SideNav({ pages, active, onOpen, nameOf }: SideNavProps) {
         <div className="nav-group-row">
           <button
             type="button"
-            className={`nav-entry ${groupActive ? 'nav-entry-context' : ''} ${!networkExpanded && groupActive ? 'nav-entry-active' : ''}`}
-            aria-current={!networkExpanded && groupActive ? 'page' : undefined}
+            className={`nav-entry ${groupActive ? 'nav-entry-context' : ''} ${!expanded && groupActive ? 'nav-entry-active' : ''}`}
+            aria-current={!expanded && groupActive ? 'page' : undefined}
             aria-label={groupName}
             onClick={() => onOpen(page.id)}
           >
@@ -81,16 +88,23 @@ export function SideNav({ pages, active, onOpen, nameOf }: SideNavProps) {
             type="button"
             className="nav-group-toggle"
             aria-label={t(
-              networkExpanded ? 'nav.network.collapse' : 'nav.network.expand',
+              expanded
+                ? (page.collapseTitleKey ?? 'nav.network.collapse')
+                : (page.expandTitleKey ?? 'nav.network.expand'),
             )}
-            aria-expanded={networkExpanded}
+            aria-expanded={expanded}
             aria-controls={listId}
-            onClick={() => setNetworkExpanded((current) => !current)}
+            onClick={() =>
+              setExpandedGroups((current) => ({
+                ...current,
+                [page.id]: !expanded,
+              }))
+            }
           >
-            <Icon name={networkExpanded ? 'chevronUp' : 'chevron'} size={16} />
+            <Icon name={expanded ? 'chevronUp' : 'chevron'} size={16} />
           </button>
         </div>
-        {networkExpanded ? (
+        {expanded ? (
           <ul className="nav-list nav-sublist" id={listId}>
             {entry(page, { child: true, name: overviewName })}
             {children.map((child) => entry(child, { child: true }))}

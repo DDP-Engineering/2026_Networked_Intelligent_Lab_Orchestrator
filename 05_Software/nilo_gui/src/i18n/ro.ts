@@ -27,6 +27,10 @@ export const ro: Catalogue = {
   'nav.network.collapse': 'Restrânge Rețea',
   'nav.plugins': 'Plugin-uri',
   'nav.authentication': 'Autentificare',
+  'nav.authentication.users': 'Utilizatori',
+  'nav.authentication.tokens': 'Tokenuri API',
+  'nav.authentication.expand': 'Extinde Autentificare',
+  'nav.authentication.collapse': 'Restrânge Autentificare',
   'nav.settings': 'Setări',
   'nav.about': 'Despre',
   'nav.collapse': 'Restrânge navigarea',
@@ -297,6 +301,39 @@ export const ro: Catalogue = {
   'integration.simulated': 'Simulat',
 
   'auth.title': 'Autentificare',
+  'auth.usersTitle': 'Autentificare / Utilizatori',
+  'auth.tokensTitle': 'Autentificare / Tokenuri API',
+  'auth.tokensNote':
+    'Tokenurile sunt credențiale. Expirarea sau revocarea împiedică utilizarea lor ulterioară.',
+  'auth.viewActivity': 'Vezi activitatea',
+  'auth.column.created': 'Creat',
+  'auth.expired': 'expirat',
+  'auth.userType': 'Identitate utilizator',
+  'auth.tokenType': 'Token API',
+  'auth.permission.usersManage': 'Sesiunea nu include users.manage.',
+  'auth.permission.tokensManage': 'Sesiunea nu include tokens.manage.all.',
+  'auth.lastAdministratorReason':
+    'Ultimul administrator activat trebuie să rămână activat.',
+  'auth.revocationUnavailable':
+    'Acest token este deja expirat sau revocat și nu poate fi revocat din nou.',
+  'auth.help.username':
+    'Un nume stabil pentru autentificare. Este normalizat și nu poate imita altă identitate.',
+  'auth.help.role':
+    'Viewer citește starea, Operator folosește și tokenuri proprii, iar Administrator gestionează utilizatori, tokenuri, Activitate, Rețea și diagnosticare.',
+  'auth.help.password':
+    'Un secret nou folosit numai pentru autentificarea cu parolă. NILO stochează un verificator unidirecțional.',
+  'auth.help.confirmPassword':
+    'Repetați parola exact pentru a detecta o eroare de tastare înainte de salvare.',
+  'auth.help.owner':
+    'Identitatea al cărei rol curent limitează acest token pentru fiecare cerere.',
+  'auth.help.tokenName':
+    'O etichetă neconfidențială care identifică automatizarea sau clientul ce folosește tokenul.',
+  'auth.help.scopes':
+    'Lăsați toate permisiunile nealese pentru întregul rol curent al proprietarului; cele alese doar restrâng acel rol.',
+  'auth.help.expiry':
+    'După acest moment tokenul este respins automat. Câmpul gol înseamnă fără expirare automată.',
+  'auth.roleMatrix':
+    'Viewer: citește inventarul, Rețeaua și starea. Operator: Viewer plus tokenuri proprii. Administrator: toată administrarea, Activitatea, diagnosticarea, Rețeaua și VPN.',
   'auth.signedInAs': 'Autentificat ca {username} ({role}).',
   'auth.identitiesNote':
     'Identitățile sunt dezactivate, nu șterse, astfel încât înregistrările de audit să indice în continuare un subiect real.',
@@ -384,6 +421,20 @@ export const ro: Catalogue = {
   'auth.tokenRevoked': 'Tokenul {name} a fost revocat.',
   'auth.sessionEnded':
     'Sesiunea dumneavoastră s-a încheiat înainte ca aceasta să fie aplicată.',
+
+  'help.auth.title': 'Flux de lucru pentru autentificare',
+  'help.auth.goal':
+    'Gestionați accesul uman și credențialele revocabile pentru automatizări fără a acorda mai mult acces decât este necesar.',
+  'help.auth.needs':
+    'Confirmați utilizatorul sau tokenul exact, rolul ori permisiunile dorite și impactul schimbării asupra activității în curs.',
+  'help.auth.example':
+    'Folosiți Viewer pentru observare, Operator pentru lucrul obișnuit și un token strict limitat pentru o singură automatizare.',
+  'help.auth.changes':
+    'Schimbările utilizatorului se aplică la următoarea cerere; dezactivarea oprește și sesiunile și tokenurile. Secretele tokenurilor apar o singură dată, iar revocarea este permanentă.',
+  'help.auth.external':
+    'Coordonați schimbările de acces și transmiteți parolele sau secretele tokenurilor numai printr-un canal protejat adecvat.',
+  'help.auth.verify':
+    'Reîmprospătați înregistrarea, testați limita de acces așteptată și verificați intrările identității în Activitate.',
 
   'mode.mock':
     'Răspunsurile provin din mock-ul de contract al acestei interfețe; niciun proces backend nu este contactat.',

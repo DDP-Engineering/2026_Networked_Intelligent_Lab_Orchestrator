@@ -330,6 +330,9 @@ for (const viewport of VIEWPORTS) {
     await page.keyboard.press('Escape');
     await expect(editor).toHaveCount(0);
 
+    await exerciseAuthentication(viewport);
+    await review(`${size}-light-authentication`);
+
     // Dark theme, same page, same checks on sizes and overflow.
     await setTheme('dark');
     await openNetworkAfterReload(viewport);
@@ -337,6 +340,8 @@ for (const viewport of VIEWPORTS) {
     await expectNoDocumentOverflow();
     await expectReadableText();
     await review(`${size}-dark-network`);
+    await exerciseAuthentication(viewport);
+    await review(`${size}-dark-authentication`);
     await setTheme('light');
     await openNetworkAfterReload(viewport);
   });
@@ -368,9 +373,18 @@ test('1024x600: a change awaiting confirmation is stated in the overview and res
 });
 
 test('1024x600: the other pages stay readable without sideways scrolling', async () => {
-  for (const entry of ['Bench', 'Activity', 'Authentication', 'About']) {
-    await page.getByRole('navigation').getByRole('button', { name: entry }).click();
-    await expect(page.getByRole('heading', { name: entry, level: 2 })).toBeVisible();
+  for (const [entry, heading] of [
+    ['Bench', 'Bench'],
+    ['Activity', 'Activity'],
+    ['Authentication', 'Authentication / Users'],
+    ['API tokens', 'Authentication / API tokens'],
+    ['About', 'About'],
+  ] as const) {
+    await page
+      .getByRole('navigation')
+      .getByRole('button', { name: entry, exact: true })
+      .click();
+    await expect(page.getByRole('heading', { name: heading, level: 2 })).toBeVisible();
     await expectNoDocumentOverflow();
     await expectReadableText();
     await expectFieldTargets();
@@ -431,6 +445,78 @@ async function openNetworkAfterReload(viewport: { width: number; height: number 
   await expect(
     page.getByRole('heading', { name: 'Network / Overview', level: 2 }),
   ).toBeVisible();
+}
+
+async function openAuthenticationView(
+  destination: 'Users' | 'API tokens',
+): Promise<void> {
+  const viewport = page.viewportSize();
+  const constrained =
+    viewport !== null && (viewport.width <= 896 || viewport.height <= 520);
+  if (constrained) {
+    await page.getByRole('button', { name: 'Menu', exact: true }).click();
+    await page
+      .getByRole('dialog', { name: 'Navigation' })
+      .getByRole('button', { name: destination, exact: true })
+      .click();
+  } else {
+    await page
+      .getByRole('navigation')
+      .getByRole('button', { name: destination, exact: true })
+      .click();
+  }
+  const title =
+    destination === 'Users' ? 'Authentication / Users' : 'Authentication / API tokens';
+  await expect(page.getByRole('heading', { name: title, level: 2 })).toBeVisible();
+}
+
+async function exerciseAuthentication(viewport: (typeof VIEWPORTS)[number]) {
+  await openAuthenticationView('Users');
+  const users = page.getByRole('region', { name: 'Users' });
+  await expect(users).toBeVisible();
+  const details = users.getByRole('button', {
+    name: `Details ${ADMINISTRATOR}`,
+    exact: true,
+  });
+  await details.click();
+  await expect(users).toContainText('Created');
+  await details.click();
+
+  await users
+    .getByRole('button', { name: `Actions for ${ADMINISTRATOR}`, exact: true })
+    .click();
+  const actions = page.getByRole('dialog', {
+    name: `Actions for ${ADMINISTRATOR}`,
+  });
+  await expect(actions).toContainText('User identity');
+  await expect(actions.getByRole('button', { name: 'Disable' })).toBeDisabled();
+  await expect(actions).toContainText(
+    'The last enabled administrator must remain enabled.',
+  );
+  await expectInsideViewport(actions);
+  await actions.getByRole('button', { name: 'Cancel' }).click();
+
+  await page.getByRole('button', { name: 'New user', exact: true }).click();
+  const editor = page.getByRole('dialog', { name: 'New user' });
+  const fieldHelp = editor.getByRole('button', { name: 'Help for Username' });
+  await fieldHelp.click();
+  const popover = page.getByRole('dialog', { name: 'Help for Username' });
+  await expect(popover).toContainText('stable sign-in name');
+  await expectInsideViewport(popover);
+  await popover.getByRole('button', { name: 'Close help' }).click();
+  await editor.getByRole('button', { name: 'How to configure' }).click();
+  const workflow = page.getByRole('dialog', { name: 'Authentication workflow' });
+  await expect(workflow).toContainText('What NILO will change');
+  await expect(workflow).toContainText('Verify and recover');
+  await expectInsideViewport(workflow);
+  await workflow.getByRole('button', { name: 'Close' }).last().click();
+  await editor.getByRole('button', { name: 'Close' }).click();
+
+  await openAuthenticationView('API tokens');
+  await expect(page.getByRole('region', { name: 'API Tokens' })).toBeVisible();
+  await expectNoDocumentOverflow();
+  await expectReadableText();
+  if (viewport.field) await expectFieldTargets();
 }
 
 async function setTheme(theme: 'light' | 'dark'): Promise<void> {

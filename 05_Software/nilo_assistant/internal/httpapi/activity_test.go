@@ -56,6 +56,37 @@ func (f apiFixture) activity(t *testing.T, token, query string) activityPage {
 	return page
 }
 
+func TestActivityListsAndExportsIdentityMutationsByCommonComponent(t *testing.T) {
+	t.Parallel()
+
+	f := newAPIFixture(t, simulation.ScenarioHealthy, CookieDevelopmentLocalhost)
+	token := f.issueToken(t, "admin", "identity-audit", nil, nil)
+	created := f.post("/api/v1/users", token, `{"username":"activity-user","role":"viewer","password":"created-identity-password-1"}`)
+	if created.Code != http.StatusCreated {
+		t.Fatalf("create identity = %d %s", created.Code, created.Body.String())
+	}
+
+	page := f.activity(t, token, "?category=audit&component=identity")
+	if len(page.Items) < 2 {
+		t.Fatalf("identity activity has %d items, want token and user creation", len(page.Items))
+	}
+	for _, item := range page.Items {
+		if item.Category != "audit" || item.Component != "identity" {
+			t.Fatalf("filtered item escaped the common identity envelope: %+v", item)
+		}
+	}
+	before := len(page.Items)
+	exported := f.get("/api/v1/activity/export?format=jsonl&category=audit&component=identity", token)
+	if exported.Code != http.StatusOK || !strings.Contains(exported.Body.String(), `"component":"identity"`) ||
+		!strings.Contains(exported.Body.String(), `"action":"identity.user.created"`) {
+		t.Fatalf("identity export = %d %s", exported.Code, exported.Body.String())
+	}
+	after := f.activity(t, token, "?category=audit&component=identity")
+	if len(after.Items) != before {
+		t.Fatalf("activity reads/exports created identity mutation events: before=%d after=%d", before, len(after.Items))
+	}
+}
+
 // TestActivityExplainsAChangeFromIntentToOutcome is the P7 exit criterion at
 // the HTTP boundary (REQ-FUNC-d4f81a26, REQ-FUNC-6ba25f39,
 // REQ-FUNC-35da79f1): a network change is read back stage by stage through

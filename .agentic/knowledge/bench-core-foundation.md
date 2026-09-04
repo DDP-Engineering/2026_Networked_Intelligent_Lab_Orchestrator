@@ -37,11 +37,16 @@ same service. WireGuard reads expose safe metadata only.
 - `REQ-FUNC-db6fb2fa`, `REQ-FUNC-ec3d2e54` and `REQ-FUNC-7d80be16` - establish, end and report expiring browser sessions.
 - `REQ-SEC-b5502ddb`, `REQ-SEC-49fe784b`, `REQ-SEC-d8026dbe` and `REQ-SEC-e14c8f51` - confine session cookies to the declared deployment mode, require a session CSRF token, brake repeated failed logins, and invalidate sessions on disable or password reset.
 - `REQ-FUNC-ae14f9d3`, `REQ-FUNC-e325f08e` and `REQ-SEC-01c18c7c` - disclose a token secret once, list and revoke tokens without exposing secrets, and reject expired, revoked and disabled-owner credentials.
-- `REQ-DATA-cffc3af2` and `REQ-DATA-d8d5a701` - audit identity and token lifecycle changes without secrets, and migrate existing identities and tokens forward as least-privileged.
+- `REQ-DATA-cffc3af2` and `REQ-DATA-d8d5a701` - append one complete common
+  Activity audit envelope for every applied identity and token mutation without
+  secrets, and migrate existing identities and tokens forward as least-privileged.
 - `REQ-FUNC-5fd2806f`, `REQ-FUNC-27c1db30`, `REQ-FUNC-1fac821d` and `REQ-FUNC-907003de` - create an identity, change its role, disable and re-enable it, and replace its password over the authenticated HTTP interface.
 - `REQ-FUNC-795b54d0`, `REQ-FUNC-f50eb6d3` and `REQ-FUNC-71c3c908` - list every token's safe metadata, create a named token whose secret is returned exactly once, and revoke one.
 - `REQ-FUNC-938c5f85` - refuse an administrative request carrying an unknown role or scope, a bad username, a short password, a past expiry or a taken username, naming the field and changing nothing.
-- `REQ-SEC-7595665c`, `REQ-SEC-89034a8a` and `REQ-SEC-6e3ae992` - authorize every administration route server-side, attribute every change to the authenticated identity rather than any body field, and serialize no verifier of any kind.
+- `REQ-SEC-7595665c`, `REQ-SEC-89034a8a` and `REQ-SEC-6e3ae992` - authorize
+  every administration route server-side, attribute every change to the actual
+  request credential (user ID for a session, token ID for bearer) rather than
+  any body field, and serialize no verifier of any kind.
 
 ## Architecture
 
@@ -176,7 +181,19 @@ remaining hardware and reboot acceptance work.
 
 `identity.Service` decides whether an actor may *request* an action. `policy.Resolver` independently decides whether an operation may *run* without a human approval. Neither the Administrator role nor a fully scoped API token changes the second decision, so identity authorization can never become an approval or safety bypass.
 
-Every administrative identity change runs inside one `BEGIN IMMEDIATE` transaction supplied by the identity repository, which also supplies the audit repository bound to it. The write lock is taken before the change reads anything, so the last-enabled-administrator count is read and enforced without another connection or another process changing it in between, and a change whose audit event is rejected is rolled back with it rather than surviving unattributed. A browser session is inserted by a statement conditional on the identity still carrying the password verifier the login checked and still being enabled, so a completed password reset cannot be overtaken by a login already in flight.
+Every administrative identity change runs inside one `BEGIN IMMEDIATE`
+transaction supplied by the identity repository, which also supplies the audit
+repository bound to it. `audit.Writer.Compose` supplies the same appliance,
+boot, clock, actor, category, outcome and severity envelope used by other common
+Activity events, then the transaction-bound repository appends it before
+commit. The write lock is taken before the change reads anything, so the
+last-enabled-administrator count is read and enforced without another
+connection or another process changing it in between, and a change whose audit
+event is rejected is rolled back with it rather than surviving unattributed.
+Successful reads and rejected or no-op changes do not create mutation events. A
+browser session is inserted by a statement conditional on the identity still
+carrying the password verifier the login checked and still being enabled, so a
+completed password reset cannot be overtaken by a login already in flight.
 
 The simulation catalog is deliberately dependency-free and cannot discover or contact physical equipment; runner-backed discovery remains later work.
 

@@ -38,10 +38,13 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-When an identity is created, has its role changed, is disabled or enabled, has its password reset,
-or has an API token created or revoked, Bench Core shall persist the change together with an audit
-record naming the acting identity and the affected subject and containing no password, token secret
-or verifier, so that a change whose audit record cannot be appended is not persisted at all.
+When an identity is created, has its role changed, is enabled or disabled, has
+its password reset, or has an API token created or revoked, Bench Core shall
+atomically persist the change with exactly one complete common audit-envelope
+record using the corresponding canonical identity action, category `audit`,
+component `identity`, the affected subject, common `applied` outcome and `info` severity,
+safe operation metadata and no password, token secret or verifier, rolling back
+the state change whenever that audit append fails.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -52,16 +55,21 @@ or verifier, so that a change whose audit record cannot be appended is not persi
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "A test performs each of those changes, reads the audit history, asserts one record per change with the expected action, actor and subject, and asserts that no record payload contains the password or token secret used; a second test makes the database reject every audit insertion, attempts each administrative change, and asserts that each one fails and that the stored identity, token and session state is unchanged."
+verification = "Service and HTTP tests perform all seven mutation kinds, query Activity and export by category=audit and component=identity, assert exactly one record per successful change with the specified action, complete envelope, subject, outcome, severity and safe metadata, scan every serialized field for password, secret and verifier canaries, and then force each audit insertion to fail and assert the mutation, tokens and sessions are unchanged."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
     "05_Software/nilo_assistant/internal/identity/service.go",
     "05_Software/nilo_assistant/internal/audit/audit.go",
+    "05_Software/nilo_assistant/internal/audit/writer.go",
     "05_Software/nilo_assistant/internal/store/sqlite/audit_repository.go",
     "05_Software/nilo_assistant/internal/store/sqlite/identity_repository.go",
     "05_Software/nilo_assistant/internal/app/app.go",
+    "05_Software/nilo_assistant/internal/httpapi/administration.go",
+    "05_Software/nilo_assistant/internal/httpapi/activity_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/identity_test.go",
     "05_Software/nilo_assistant/internal/identity/service_test.go",
+    "05_Software/nilo_assistant/internal/mcp/fixture_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
@@ -69,15 +77,16 @@ affected_paths = [
 linked_tests = [
     "05_Software/nilo_assistant/internal/identity/service_test.go::TestIdentityAndTokenChangesAreAuditedWithoutSecrets",
     "05_Software/nilo_assistant/internal/identity/service_test.go::TestARejectedAuditRecordRollsBackTheAdministrativeChange",
+    "05_Software/nilo_assistant/internal/httpapi/activity_test.go::TestActivityListsAndExportsIdentityMutationsByCommonComponent",
 ]
 
 # --- optional below this line ---
 
 # "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
-spec = ""
+spec = "specs/REQ-DATA-cffc3af2.md"
 
 priority = "high"   # low | normal | high
 rationale = "Identity changes are the changes an investigator most needs attributed, and an audit log holding secrets becomes a second credential store."
 
 created = 2026-09-02
-updated = 2026-09-02
+updated = 2026-09-04

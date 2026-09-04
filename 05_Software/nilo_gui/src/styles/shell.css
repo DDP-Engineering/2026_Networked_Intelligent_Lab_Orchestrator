@@ -1428,13 +1428,11 @@ input[type='radio'] {
 }
 
 .admin-panel {
-  display: grid;
-  min-height: 0;
+  display: block;
   border: 1px solid var(--border);
   border-radius: var(--control-radius);
   background: var(--surface-raised);
-  grid-template-rows: auto minmax(0, 1fr);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .admin-head {
@@ -1453,6 +1451,12 @@ input[type='radio'] {
   font-size: var(--text-body);
   font-weight: 600;
 }
+
+.admin-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
 .admin-message {
   margin: 0;
   padding: var(--space-3);
@@ -1466,7 +1470,7 @@ input[type='radio'] {
 }
 .admin-list {
   min-height: 0;
-  overflow: auto;
+  overflow: visible;
 }
 
 /* ---------- focus, everywhere and in both themes ---------- */

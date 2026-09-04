@@ -39,8 +39,9 @@ status = "active"
 # plainly is better plainly.
 requirement = """
 When an API token has been created, the browser interface shall present its secret
-once with an explicit copy action and a statement that it cannot be retrieved later,
-and shall not present that secret again once it is dismissed or the page is reloaded.
+once with an explicit copy action and persistent warning that it cannot be retrieved
+later, then remove every secret-bearing React value and DOM node when the disclosure
+is dismissed so the secret cannot reappear after dismissal, navigation or reload.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -51,18 +52,19 @@ and shall not present that secret again once it is dismissed or the page is relo
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "A component test creates a token, asserts the secret and the warning are shown and that the copy action places exactly the secret on the clipboard, dismisses the disclosure and asserts the secret has left the document, renders the application again and asserts the secret does not reappear, and asserts the secret reached neither web storage nor any requested URL."
+verification = "A component test creates a token with a canary secret, asserts the disclosure and warning plus exact copy payload, dismisses by button and Escape in separate cases, inspects the document and React-visible state for the canary, navigates away and back, remounts the page, and asserts the secret never returns or reaches storage, console, notifications, URLs or error text."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/components/AuthenticationPage.tsx",
+    "05_Software/nilo_gui/src/components/authentication/ApiTokensPage.tsx",
     "05_Software/nilo_gui/src/components/AdministrationForms.tsx",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::discloses the secret once, copies it, and never shows it again",
+    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::API token creation > discloses the secret once, copies it, and never shows it again",
+    "05_Software/nilo_gui/e2e/authentication.spec.ts::creates an API token and shows its secret exactly once",
 ]
 
 # --- optional below this line ---
@@ -74,4 +76,4 @@ priority = "high"   # low | normal | high
 rationale = "Bench Core keeps only the verifier, so a secret the interface holds on to after its one showing is a credential copy nobody asked it to keep."
 
 created = 2026-09-02
-updated = 2026-09-02
+updated = 2026-09-04

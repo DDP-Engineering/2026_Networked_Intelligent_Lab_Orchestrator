@@ -1,0 +1,2855 @@
+{
+  "anchor_id": "0cfb1b783a816a0c",
+  "categories": {
+    ".gitignore": "other",
+    "00_Planning/CLAUDE_COMPACT_FIELD_UI_PROMPT.md": "other",
+    "00_Planning/CLAUDE_DEVICE_NETWORKS_AND_AUDIT_PROMPT.md": "other",
+    "00_Planning/Development_Simulation_Vertical_Slices.md": "other",
+    "00_Planning/GUI_Design/02_Instrument_Workbench_Dark.png": "other",
+    "00_Planning/GUI_Design/03_Network_Overview_Light.png": "other",
+    "00_Planning/GUI_Design/README.md": "other",
+    "00_Planning/Increment_1_Platform_Integration_Foundation_Implementation_Plan.md": "other",
+    "00_Planning/Overview.md": "other",
+    "00_Planning/PLAN_COMPACT_FIELD_UI.md": "other",
+    "00_Planning/PLAN_DEVICE_NETWORKS_AND_AUDIT.md": "other",
+    "00_Planning/PLAN_NETWORK.md": "other",
+    "00_Planning/README.md": "other",
+    "00_Planning/Remote_Bench_MVP_PRD.md": "other",
+    "00_Planning/System_Build_Plan.md": "other",
+    "00_Planning/TODO.md": "other",
+    "01_Documentation/Code_Style.md": "other",
+    "01_Documentation/README.md": "other",
+    "02_Tools/README.md": "other",
+    "02_Tools/bootstrap/bootstrap-browser.ps1": "other",
+    "02_Tools/bootstrap/bootstrap-development.ps1": "other",
+    "02_Tools/bootstrap/bootstrap-frontend.ps1": "other",
+    "02_Tools/bootstrap/bootstrap.ps1": "other",
+    "02_Tools/bootstrap/bootstrap.sh": "other",
+    "02_Tools/bootstrap/setup-wsl.ps1": "other",
+    "02_Tools/env/with-go.ps1": "other",
+    "02_Tools/env/with-go.sh": "other",
+    "02_Tools/env/with-tools.ps1": "other",
+    "02_Tools/env/with-tools.sh": "other",
+    "02_Tools/lib/DevLifecycle.ps1": "other",
+    "02_Tools/lib/Wsl.ps1": "other",
+    "02_Tools/scripts/build-appliance.sh": "other",
+    "02_Tools/scripts/doctor-wsl.ps1": "other",
+    "02_Tools/scripts/doctor.ps1": "other",
+    "02_Tools/scripts/doctor.sh": "other",
+    "02_Tools/scripts/install-nethelper.sh": "other",
+    "02_Tools/scripts/nilo-dev.ps1": "other",
+    "02_Tools/tests/network/Dockerfile": "other",
+    "02_Tools/tests/network/check.sh": "other",
+    "02_Tools/tests/network/run.sh": "other",
+    "02_Tools/toolchain.versions": "other",
+    "03_Hardware/NILO_case_v1.skp": "other",
+    "03_Hardware/NILO_case_v1.stl": "other",
+    "03_Hardware/README.md": "other",
+    "04_HardwareDocu/README.md": "other",
+    "05_Software/INCREMENT_1_ACCEPTANCE.md": "other",
+    "05_Software/README.md": "other",
+    "05_Software/integration_sdk/python/.gitignore": "other",
+    "05_Software/integration_sdk/python/README.md": "other",
+    "05_Software/integration_sdk/python/pyproject.toml": "other",
+    "05_Software/integration_sdk/python/src/nilo_integration/__init__.py": "other",
+    "05_Software/integration_sdk/python/src/nilo_integration/api.py": "other",
+    "05_Software/integration_sdk/python/src/nilo_integration/models.py": "other",
+    "05_Software/integration_sdk/python/src/nilo_integration/server.py": "other",
+    "05_Software/integration_sdk/python/tests/test_models.py": "other",
+    "05_Software/integration_sdk/python/tests/test_server.py": "other",
+    "05_Software/integration_sdk/python/uv.lock": "other",
+    "05_Software/integrations/fake_python/.gitignore": "other",
+    "05_Software/integrations/fake_python/manifest.json": "other",
+    "05_Software/integrations/fake_python/pyproject.toml": "other",
+    "05_Software/integrations/fake_python/schemas/artifact.event.schema.json": "other",
+    "05_Software/integrations/fake_python/schemas/artifact.input.schema.json": "other",
+    "05_Software/integrations/fake_python/schemas/artifact.result.schema.json": "other",
+    "05_Software/integrations/fake_python/schemas/crash.input.schema.json": "other",
+    "05_Software/integrations/fake_python/schemas/echo.input.schema.json": "other",
+    "05_Software/integrations/fake_python/schemas/echo.result.schema.json": "other",
+    "05_Software/integrations/fake_python/schemas/fail.input.schema.json": "other",
+    "05_Software/integrations/fake_python/schemas/progress.event.schema.json": "other",
+    "05_Software/integrations/fake_python/schemas/sleep.input.schema.json": "other",
+    "05_Software/integrations/fake_python/schemas/sleep.result.schema.json": "other",
+    "05_Software/integrations/fake_python/src/nilo_fake_integration/__init__.py": "other",
+    "05_Software/integrations/fake_python/src/nilo_fake_integration/__main__.py": "other",
+    "05_Software/integrations/fake_python/src/nilo_fake_integration/plugin.py": "other",
+    "05_Software/integrations/fake_python/tests/test_fake_integration.py": "other",
+    "05_Software/integrations/fake_python/uv.lock": "other",
+    "05_Software/nilo_assistant/README.md": "source",
+    "05_Software/nilo_assistant/cmd/nilo-nethelper/main.go": "source",
+    "05_Software/nilo_assistant/cmd/nilo-nethelper/recover_linux.go": "source",
+    "05_Software/nilo_assistant/cmd/nilo-nethelper/serve_linux.go": "source",
+    "05_Software/nilo_assistant/cmd/nilo-nethelper/serve_other.go": "source",
+    "05_Software/nilo_assistant/cmd/nilo/activity.go": "source",
+    "05_Software/nilo_assistant/cmd/nilo/admin.go": "source",
+    "05_Software/nilo_assistant/cmd/nilo/admin_test.go": "tests",
+    "05_Software/nilo_assistant/cmd/nilo/development.go": "source",
+    "05_Software/nilo_assistant/cmd/nilo/development_test.go": "tests",
+    "05_Software/nilo_assistant/cmd/nilo/diagnostics.go": "source",
+    "05_Software/nilo_assistant/cmd/nilo/main.go": "source",
+    "05_Software/nilo_assistant/cmd/nilo/main_test.go": "tests",
+    "05_Software/nilo_assistant/cmd/nilo/network.go": "source",
+    "05_Software/nilo_assistant/cmd/nilo/network_device_networks.go": "source",
+    "05_Software/nilo_assistant/cmd/nilo/network_runtime.go": "source",
+    "05_Software/nilo_assistant/cmd/nilo/network_runtime_linux.go": "source",
+    "05_Software/nilo_assistant/cmd/nilo/network_runtime_other.go": "source",
+    "05_Software/nilo_assistant/cmd/nilo/network_runtime_test.go": "tests",
+    "05_Software/nilo_assistant/cmd/nilo/network_settings.go": "source",
+    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go": "tests",
+    "05_Software/nilo_assistant/cmd/nilo/network_test.go": "tests",
+    "05_Software/nilo_assistant/cmd/nilo/network_vpn.go": "source",
+    "05_Software/nilo_assistant/cmd/nilo/network_vpn_test.go": "tests",
+    "05_Software/nilo_assistant/go.mod": "source",
+    "05_Software/nilo_assistant/go.sum": "source",
+    "05_Software/nilo_assistant/internal/acceptance/increment1_e2e_test.go": "tests",
+    "05_Software/nilo_assistant/internal/acceptance/increment1_fixture_test.go": "tests",
+    "05_Software/nilo_assistant/internal/activity/activity.go": "source",
+    "05_Software/nilo_assistant/internal/activity/activity_test.go": "tests",
+    "05_Software/nilo_assistant/internal/activity/health.go": "source",
+    "05_Software/nilo_assistant/internal/activity/housekeeping.go": "source",
+    "05_Software/nilo_assistant/internal/activity/policy.go": "source",
+    "05_Software/nilo_assistant/internal/apiclient/client.go": "source",
+    "05_Software/nilo_assistant/internal/app/app.go": "source",
+    "05_Software/nilo_assistant/internal/app/app_test.go": "tests",
+    "05_Software/nilo_assistant/internal/app/durable_network_test.go": "tests",
+    "05_Software/nilo_assistant/internal/app/profile_persistence_test.go": "tests",
+    "05_Software/nilo_assistant/internal/appliance/identity.go": "source",
+    "05_Software/nilo_assistant/internal/artifact/store.go": "source",
+    "05_Software/nilo_assistant/internal/artifact/store_test.go": "tests",
+    "05_Software/nilo_assistant/internal/artifact/store_unix.go": "source",
+    "05_Software/nilo_assistant/internal/artifact/store_windows.go": "source",
+    "05_Software/nilo_assistant/internal/audit/audit.go": "source",
+    "05_Software/nilo_assistant/internal/audit/audit_test.go": "tests",
+    "05_Software/nilo_assistant/internal/audit/writer.go": "source",
+    "05_Software/nilo_assistant/internal/auth/password.go": "source",
+    "05_Software/nilo_assistant/internal/auth/password_test.go": "tests",
+    "05_Software/nilo_assistant/internal/auth/repository.go": "source",
+    "05_Software/nilo_assistant/internal/auth/role.go": "source",
+    "05_Software/nilo_assistant/internal/auth/role_test.go": "tests",
+    "05_Software/nilo_assistant/internal/auth/session.go": "source",
+    "05_Software/nilo_assistant/internal/auth/session_test.go": "tests",
+    "05_Software/nilo_assistant/internal/auth/throttle.go": "source",
+    "05_Software/nilo_assistant/internal/auth/throttle_test.go": "tests",
+    "05_Software/nilo_assistant/internal/auth/token.go": "source",
+    "05_Software/nilo_assistant/internal/auth/token_test.go": "tests",
+    "05_Software/nilo_assistant/internal/auth/user.go": "source",
+    "05_Software/nilo_assistant/internal/buildinfo/buildinfo.go": "source",
+    "05_Software/nilo_assistant/internal/buildinfo/buildinfo_test.go": "tests",
+    "05_Software/nilo_assistant/internal/config/config.go": "source",
+    "05_Software/nilo_assistant/internal/config/config_test.go": "tests",
+    "05_Software/nilo_assistant/internal/config/paths.go": "source",
+    "05_Software/nilo_assistant/internal/config/paths_test.go": "tests",
+    "05_Software/nilo_assistant/internal/config/paths_unix.go": "source",
+    "05_Software/nilo_assistant/internal/config/paths_windows.go": "source",
+    "05_Software/nilo_assistant/internal/diagnostics/diagnostics.go": "source",
+    "05_Software/nilo_assistant/internal/diagnostics/diagnostics_test.go": "tests",
+    "05_Software/nilo_assistant/internal/domain/artifact.go": "source",
+    "05_Software/nilo_assistant/internal/domain/ids.go": "source",
+    "05_Software/nilo_assistant/internal/domain/operation.go": "source",
+    "05_Software/nilo_assistant/internal/domain/session.go": "source",
+    "05_Software/nilo_assistant/internal/domain/session_test.go": "tests",
+    "05_Software/nilo_assistant/internal/httpapi/activity.go": "source",
+    "05_Software/nilo_assistant/internal/httpapi/activity_test.go": "tests",
+    "05_Software/nilo_assistant/internal/httpapi/administration.go": "source",
+    "05_Software/nilo_assistant/internal/httpapi/administration_test.go": "tests",
+    "05_Software/nilo_assistant/internal/httpapi/appliance_test.go": "tests",
+    "05_Software/nilo_assistant/internal/httpapi/device_networks.go": "source",
+    "05_Software/nilo_assistant/internal/httpapi/device_networks_test.go": "tests",
+    "05_Software/nilo_assistant/internal/httpapi/identity.go": "source",
+    "05_Software/nilo_assistant/internal/httpapi/identity_test.go": "tests",
+    "05_Software/nilo_assistant/internal/httpapi/listener.go": "source",
+    "05_Software/nilo_assistant/internal/httpapi/listener_test.go": "tests",
+    "05_Software/nilo_assistant/internal/httpapi/network.go": "source",
+    "05_Software/nilo_assistant/internal/httpapi/network_operations.go": "source",
+    "05_Software/nilo_assistant/internal/httpapi/network_operations_test.go": "tests",
+    "05_Software/nilo_assistant/internal/httpapi/network_reattach_test.go": "tests",
+    "05_Software/nilo_assistant/internal/httpapi/network_settings_test.go": "tests",
+    "05_Software/nilo_assistant/internal/httpapi/network_test.go": "tests",
+    "05_Software/nilo_assistant/internal/httpapi/network_wireguard_test.go": "tests",
+    "05_Software/nilo_assistant/internal/httpapi/server.go": "source",
+    "05_Software/nilo_assistant/internal/httpapi/server_test.go": "tests",
+    "05_Software/nilo_assistant/internal/httpapi/serving.go": "source",
+    "05_Software/nilo_assistant/internal/httpapi/serving_test.go": "tests",
+    "05_Software/nilo_assistant/internal/httpapi/tls_test.go": "tests",
+    "05_Software/nilo_assistant/internal/identity/service.go": "source",
+    "05_Software/nilo_assistant/internal/identity/service_test.go": "tests",
+    "05_Software/nilo_assistant/internal/integration/manifest/loader.go": "source",
+    "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go": "tests",
+    "05_Software/nilo_assistant/internal/integration/manifest/model.go": "source",
+    "05_Software/nilo_assistant/internal/integration/manifest/schemas/event.schema.json": "source",
+    "05_Software/nilo_assistant/internal/integration/manifest/schemas/manifest.schema.json": "source",
+    "05_Software/nilo_assistant/internal/integration/manifest/schemas/operation.schema.json": "source",
+    "05_Software/nilo_assistant/internal/integration/manifest/testdata/invalid-command/manifest.json": "source",
+    "05_Software/nilo_assistant/internal/integration/manifest/testdata/valid/manifest.json": "source",
+    "05_Software/nilo_assistant/internal/integration/protocol/codec.go": "source",
+    "05_Software/nilo_assistant/internal/integration/protocol/codec_test.go": "tests",
+    "05_Software/nilo_assistant/internal/integration/protocol/message.go": "source",
+    "05_Software/nilo_assistant/internal/integration/protocol/types.go": "source",
+    "05_Software/nilo_assistant/internal/integration/supervisor/process.go": "source",
+    "05_Software/nilo_assistant/internal/integration/supervisor/process_unix.go": "source",
+    "05_Software/nilo_assistant/internal/integration/supervisor/process_windows.go": "source",
+    "05_Software/nilo_assistant/internal/integration/supervisor/ring.go": "source",
+    "05_Software/nilo_assistant/internal/integration/supervisor/supervisor_test.go": "tests",
+    "05_Software/nilo_assistant/internal/integration/supervisor/testhelper/main.go": "source",
+    "05_Software/nilo_assistant/internal/mcp/fixture_test.go": "tests",
+    "05_Software/nilo_assistant/internal/mcp/protocol_test.go": "tests",
+    "05_Software/nilo_assistant/internal/mcp/server.go": "source",
+    "05_Software/nilo_assistant/internal/mcp/server_test.go": "tests",
+    "05_Software/nilo_assistant/internal/nethelper/client.go": "source",
+    "05_Software/nilo_assistant/internal/nethelper/engine.go": "source",
+    "05_Software/nilo_assistant/internal/nethelper/engine_test.go": "tests",
+    "05_Software/nilo_assistant/internal/nethelper/forwarding.go": "source",
+    "05_Software/nilo_assistant/internal/nethelper/forwarding_test.go": "tests",
+    "05_Software/nilo_assistant/internal/nethelper/install.go": "source",
+    "05_Software/nilo_assistant/internal/nethelper/install_linux.go": "source",
+    "05_Software/nilo_assistant/internal/nethelper/install_policy.go": "source",
+    "05_Software/nilo_assistant/internal/nethelper/install_system_linux_test.go": "tests",
+    "05_Software/nilo_assistant/internal/nethelper/install_test.go": "tests",
+    "05_Software/nilo_assistant/internal/nethelper/keystore.go": "source",
+    "05_Software/nilo_assistant/internal/nethelper/keystore_engine.go": "source",
+    "05_Software/nilo_assistant/internal/nethelper/keystore_stager.go": "source",
+    "05_Software/nilo_assistant/internal/nethelper/keystore_stager_test.go": "tests",
+    "05_Software/nilo_assistant/internal/nethelper/keystore_test.go": "tests",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux.go": "source",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux_test.go": "tests",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_settings_linux.go": "source",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_settings_linux_test.go": "tests",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux.go": "source",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux_test.go": "tests",
+    "05_Software/nilo_assistant/internal/nethelper/nftables_linux.go": "source",
+    "05_Software/nilo_assistant/internal/nethelper/nftables_linux_test.go": "tests",
+    "05_Software/nilo_assistant/internal/nethelper/nftables_render.go": "source",
+    "05_Software/nilo_assistant/internal/nethelper/nftables_render_test.go": "tests",
+    "05_Software/nilo_assistant/internal/nethelper/nftables_vpn_linux_test.go": "tests",
+    "05_Software/nilo_assistant/internal/nethelper/probe.go": "source",
+    "05_Software/nilo_assistant/internal/nethelper/protocol.go": "source",
+    "05_Software/nilo_assistant/internal/nethelper/recover_system_linux_test.go": "tests",
+    "05_Software/nilo_assistant/internal/nethelper/recovery.go": "source",
+    "05_Software/nilo_assistant/internal/nethelper/recovery_test.go": "tests",
+    "05_Software/nilo_assistant/internal/nethelper/secrets_rpc_test.go": "tests",
+    "05_Software/nilo_assistant/internal/nethelper/settings_engine.go": "source",
+    "05_Software/nilo_assistant/internal/nethelper/settings_engine_test.go": "tests",
+    "05_Software/nilo_assistant/internal/nethelper/socket_linux.go": "source",
+    "05_Software/nilo_assistant/internal/nethelper/socket_linux_test.go": "tests",
+    "05_Software/nilo_assistant/internal/nethelper/store.go": "source",
+    "05_Software/nilo_assistant/internal/nethelper/tunnel_engine.go": "source",
+    "05_Software/nilo_assistant/internal/nethelper/tunnel_test.go": "tests",
+    "05_Software/nilo_assistant/internal/nethelper/wireguard.go": "source",
+    "05_Software/nilo_assistant/internal/nethelper/wireguard_linux.go": "source",
+    "05_Software/nilo_assistant/internal/nethelper/wireguard_linux_test.go": "tests",
+    "05_Software/nilo_assistant/internal/nethelper/wireguard_test.go": "tests",
+    "05_Software/nilo_assistant/internal/network/appliance.go": "source",
+    "05_Software/nilo_assistant/internal/network/appliance_device_networks.go": "source",
+    "05_Software/nilo_assistant/internal/network/appliance_settings.go": "source",
+    "05_Software/nilo_assistant/internal/network/change_test.go": "tests",
+    "05_Software/nilo_assistant/internal/network/changer_simulated.go": "source",
+    "05_Software/nilo_assistant/internal/network/device_network_check.go": "source",
+    "05_Software/nilo_assistant/internal/network/device_network_manager.go": "source",
+    "05_Software/nilo_assistant/internal/network/device_network_manager_test.go": "tests",
+    "05_Software/nilo_assistant/internal/network/device_network_reader.go": "source",
+    "05_Software/nilo_assistant/internal/network/devicenetwork.go": "source",
+    "05_Software/nilo_assistant/internal/network/devicenetwork_test.go": "tests",
+    "05_Software/nilo_assistant/internal/network/forwarding_plan.go": "source",
+    "05_Software/nilo_assistant/internal/network/forwarding_plan_test.go": "tests",
+    "05_Software/nilo_assistant/internal/network/install.go": "source",
+    "05_Software/nilo_assistant/internal/network/install_test.go": "tests",
+    "05_Software/nilo_assistant/internal/network/interface_settings.go": "source",
+    "05_Software/nilo_assistant/internal/network/interface_settings_test.go": "tests",
+    "05_Software/nilo_assistant/internal/network/management.go": "source",
+    "05_Software/nilo_assistant/internal/network/management_test.go": "tests",
+    "05_Software/nilo_assistant/internal/network/model.go": "source",
+    "05_Software/nilo_assistant/internal/network/operation.go": "source",
+    "05_Software/nilo_assistant/internal/network/operation_durability_test.go": "tests",
+    "05_Software/nilo_assistant/internal/network/operation_reconcile_test.go": "tests",
+    "05_Software/nilo_assistant/internal/network/operation_safety_test.go": "tests",
+    "05_Software/nilo_assistant/internal/network/operation_test.go": "tests",
+    "05_Software/nilo_assistant/internal/network/persistence.go": "source",
+    "05_Software/nilo_assistant/internal/network/profile.go": "source",
+    "05_Software/nilo_assistant/internal/network/profile_manager.go": "source",
+    "05_Software/nilo_assistant/internal/network/profile_manager_test.go": "tests",
+    "05_Software/nilo_assistant/internal/network/profile_test.go": "tests",
+    "05_Software/nilo_assistant/internal/network/profiles.go": "source",
+    "05_Software/nilo_assistant/internal/network/provider_simulated.go": "source",
+    "05_Software/nilo_assistant/internal/network/provider_simulated_test.go": "tests",
+    "05_Software/nilo_assistant/internal/network/runtime.go": "source",
+    "05_Software/nilo_assistant/internal/network/runtime_test.go": "tests",
+    "05_Software/nilo_assistant/internal/network/sampler.go": "source",
+    "05_Software/nilo_assistant/internal/network/sampler_test.go": "tests",
+    "05_Software/nilo_assistant/internal/network/service.go": "source",
+    "05_Software/nilo_assistant/internal/network/service_test.go": "tests",
+    "05_Software/nilo_assistant/internal/network/simulation.go": "source",
+    "05_Software/nilo_assistant/internal/network/simulation_device_networks.go": "source",
+    "05_Software/nilo_assistant/internal/network/simulation_settings.go": "source",
+    "05_Software/nilo_assistant/internal/network/simulation_settings_test.go": "tests",
+    "05_Software/nilo_assistant/internal/network/simulation_test.go": "tests",
+    "05_Software/nilo_assistant/internal/network/statistics.go": "source",
+    "05_Software/nilo_assistant/internal/network/statistics_test.go": "tests",
+    "05_Software/nilo_assistant/internal/network/tunnel.go": "source",
+    "05_Software/nilo_assistant/internal/network/wifi.go": "source",
+    "05_Software/nilo_assistant/internal/network/wireguard.go": "source",
+    "05_Software/nilo_assistant/internal/operation/service.go": "source",
+    "05_Software/nilo_assistant/internal/operation/service_test.go": "tests",
+    "05_Software/nilo_assistant/internal/policy/model.go": "source",
+    "05_Software/nilo_assistant/internal/policy/repository.go": "source",
+    "05_Software/nilo_assistant/internal/policy/resolver.go": "source",
+    "05_Software/nilo_assistant/internal/policy/resolver_test.go": "tests",
+    "05_Software/nilo_assistant/internal/session/repository.go": "source",
+    "05_Software/nilo_assistant/internal/session/service.go": "source",
+    "05_Software/nilo_assistant/internal/session/service_test.go": "tests",
+    "05_Software/nilo_assistant/internal/simulation/catalog.go": "source",
+    "05_Software/nilo_assistant/internal/simulation/catalog_test.go": "tests",
+    "05_Software/nilo_assistant/internal/store/sqlite/activity_repository.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository_test.go": "tests",
+    "05_Software/nilo_assistant/internal/store/sqlite/artifact_repository.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/audit_repository.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/auth_repository.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/auth_repository_test.go": "tests",
+    "05_Software/nilo_assistant/internal/store/sqlite/config_repository.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/config_repository_test.go": "tests",
+    "05_Software/nilo_assistant/internal/store/sqlite/db.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/db_test.go": "tests",
+    "05_Software/nilo_assistant/internal/store/sqlite/device_network_repository.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/device_network_repository_test.go": "tests",
+    "05_Software/nilo_assistant/internal/store/sqlite/diagnostic_repository.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/identity_repository.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/identity_repository_test.go": "tests",
+    "05_Software/nilo_assistant/internal/store/sqlite/interface_settings_repository.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/interface_settings_repository_test.go": "tests",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/001_initial.sql": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/002_policy_snapshots.sql": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/003_active_configuration.sql": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/004_identity_access_control.sql": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/005_network_traffic.sql": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/006_appliance_audit_operations.sql": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/007_vpn_profiles.sql": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/008_interface_settings.sql": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/009_device_networks.sql": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/010_activity.sql": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/network_operation_repository.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/network_repository.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/network_repository_test.go": "tests",
+    "05_Software/nilo_assistant/internal/store/sqlite/operation_repository.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/operation_repository_test.go": "tests",
+    "05_Software/nilo_assistant/internal/store/sqlite/policy_repository.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/policy_repository_test.go": "tests",
+    "05_Software/nilo_assistant/internal/store/sqlite/session_repository.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/session_repository_test.go": "tests",
+    "05_Software/nilo_assistant/internal/store/sqlite/vpn_profile_repository.go": "source",
+    "05_Software/nilo_assistant/internal/store/sqlite/vpn_profile_repository_test.go": "tests",
+    "05_Software/nilo_gui/.env": "source",
+    "05_Software/nilo_gui/.env.mock": "source",
+    "05_Software/nilo_gui/.prettierignore": "source",
+    "05_Software/nilo_gui/.prettierrc.json": "source",
+    "05_Software/nilo_gui/README.md": "source",
+    "05_Software/nilo_gui/e2e/authentication.spec.ts": "source",
+    "05_Software/nilo_gui/e2e/bench-core.spec.ts": "source",
+    "05_Software/nilo_gui/e2e/commands.test.ts": "source",
+    "05_Software/nilo_gui/e2e/field-display.spec.ts": "source",
+    "05_Software/nilo_gui/e2e/network.spec.ts": "source",
+    "05_Software/nilo_gui/e2e/prerequisites.test.ts": "source",
+    "05_Software/nilo_gui/e2e/prerequisites.ts": "source",
+    "05_Software/nilo_gui/e2e/shell.spec.ts": "source",
+    "05_Software/nilo_gui/e2e/token-redaction.spec.ts": "source",
+    "05_Software/nilo_gui/e2e/topology.test.ts": "source",
+    "05_Software/nilo_gui/e2e/topology.ts": "source",
+    "05_Software/nilo_gui/eslint.config.js": "source",
+    "05_Software/nilo_gui/index.html": "source",
+    "05_Software/nilo_gui/package-lock.json": "source",
+    "05_Software/nilo_gui/package.json": "source",
+    "05_Software/nilo_gui/playwright.config.ts": "source",
+    "05_Software/nilo_gui/public/favicon.svg": "source",
+    "05_Software/nilo_gui/src/App.test.tsx": "tests",
+    "05_Software/nilo_gui/src/App.tsx": "source",
+    "05_Software/nilo_gui/src/api/activity.ts": "source",
+    "05_Software/nilo_gui/src/api/client.test.ts": "tests",
+    "05_Software/nilo_gui/src/api/client.ts": "source",
+    "05_Software/nilo_gui/src/api/contract.test.ts": "tests",
+    "05_Software/nilo_gui/src/api/contract.ts": "source",
+    "05_Software/nilo_gui/src/api/csrf.ts": "source",
+    "05_Software/nilo_gui/src/api/devicenetworks.ts": "source",
+    "05_Software/nilo_gui/src/api/mock.test.ts": "tests",
+    "05_Software/nilo_gui/src/api/mock.ts": "source",
+    "05_Software/nilo_gui/src/api/network.test.ts": "tests",
+    "05_Software/nilo_gui/src/api/permissions.ts": "source",
+    "05_Software/nilo_gui/src/api/resource.ts": "source",
+    "05_Software/nilo_gui/src/api/settings.ts": "source",
+    "05_Software/nilo_gui/src/api/wireguard.test.ts": "tests",
+    "05_Software/nilo_gui/src/api/wireguard.ts": "source",
+    "05_Software/nilo_gui/src/components/AdministrationForms.tsx": "source",
+    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx": "tests",
+    "05_Software/nilo_gui/src/components/AuthenticationPage.tsx": "source",
+    "05_Software/nilo_gui/src/components/Modal.test.tsx": "tests",
+    "05_Software/nilo_gui/src/components/Modal.tsx": "source",
+    "05_Software/nilo_gui/src/components/RowActions.test.tsx": "tests",
+    "05_Software/nilo_gui/src/components/RowActions.tsx": "source",
+    "05_Software/nilo_gui/src/components/SignInScreen.tsx": "source",
+    "05_Software/nilo_gui/src/components/help/Field.tsx": "source",
+    "05_Software/nilo_gui/src/components/help/HelpPopover.test.tsx": "tests",
+    "05_Software/nilo_gui/src/components/help/HelpPopover.tsx": "source",
+    "05_Software/nilo_gui/src/components/help/WorkflowHelp.tsx": "source",
+    "05_Software/nilo_gui/src/components/layers.ts": "source",
+    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx": "tests",
+    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.tsx": "source",
+    "05_Software/nilo_gui/src/components/network/InstallationProgress.test.tsx": "tests",
+    "05_Software/nilo_gui/src/components/network/InstallationProgress.tsx": "source",
+    "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.test.tsx": "tests",
+    "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.tsx": "source",
+    "05_Software/nilo_gui/src/components/network/NetworkConfirmation.tsx": "source",
+    "05_Software/nilo_gui/src/components/network/NetworkOverview.tsx": "source",
+    "05_Software/nilo_gui/src/components/network/TrafficChart.test.tsx": "tests",
+    "05_Software/nilo_gui/src/components/network/TrafficChart.tsx": "source",
+    "05_Software/nilo_gui/src/components/network/WireGuardPanel.test.tsx": "tests",
+    "05_Software/nilo_gui/src/components/network/WireGuardPanel.tsx": "source",
+    "05_Software/nilo_gui/src/components/network/addressing.ts": "source",
+    "05_Software/nilo_gui/src/components/network/views.ts": "source",
+    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx": "tests",
+    "05_Software/nilo_gui/src/components/pages/ActivityPage.tsx": "source",
+    "05_Software/nilo_gui/src/components/pages/BenchPage.tsx": "source",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx": "tests",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx": "source",
+    "05_Software/nilo_gui/src/components/pages/SimplePages.tsx": "source",
+    "05_Software/nilo_gui/src/components/shell/AppShell.tsx": "source",
+    "05_Software/nilo_gui/src/components/shell/Icon.tsx": "source",
+    "05_Software/nilo_gui/src/components/shell/Menu.tsx": "source",
+    "05_Software/nilo_gui/src/components/shell/NavDrawer.tsx": "source",
+    "05_Software/nilo_gui/src/components/shell/NetworkSummary.test.tsx": "tests",
+    "05_Software/nilo_gui/src/components/shell/NetworkSummary.tsx": "source",
+    "05_Software/nilo_gui/src/components/shell/SideNav.tsx": "source",
+    "05_Software/nilo_gui/src/components/shell/TabStrip.tsx": "source",
+    "05_Software/nilo_gui/src/components/shell/TopRow.tsx": "source",
+    "05_Software/nilo_gui/src/components/shell/pages.ts": "source",
+    "05_Software/nilo_gui/src/components/shell/shell.test.tsx": "tests",
+    "05_Software/nilo_gui/src/components/shell/useViewportClass.ts": "source",
+    "05_Software/nilo_gui/src/components/shell/useWorkspace.ts": "source",
+    "05_Software/nilo_gui/src/config/devServer.test.ts": "tests",
+    "05_Software/nilo_gui/src/config/environment.test.ts": "tests",
+    "05_Software/nilo_gui/src/config/environment.ts": "source",
+    "05_Software/nilo_gui/src/i18n/LanguageProvider.tsx": "source",
+    "05_Software/nilo_gui/src/i18n/de.ts": "source",
+    "05_Software/nilo_gui/src/i18n/en.ts": "source",
+    "05_Software/nilo_gui/src/i18n/languages.ts": "source",
+    "05_Software/nilo_gui/src/i18n/messages.test.ts": "tests",
+    "05_Software/nilo_gui/src/i18n/ro.ts": "source",
+    "05_Software/nilo_gui/src/index.css": "source",
+    "05_Software/nilo_gui/src/layout.test.ts": "tests",
+    "05_Software/nilo_gui/src/main.tsx": "source",
+    "05_Software/nilo_gui/src/preferences/store.ts": "source",
+    "05_Software/nilo_gui/src/styles/shell.css": "source",
+    "05_Software/nilo_gui/src/styles/tokens.css": "source",
+    "05_Software/nilo_gui/src/test/render.tsx": "source",
+    "05_Software/nilo_gui/src/test/setup.ts": "source",
+    "05_Software/nilo_gui/src/theme/ThemeProvider.tsx": "source",
+    "05_Software/nilo_gui/src/theme/themes.ts": "source",
+    "05_Software/nilo_gui/src/theme/useSystemColorScheme.ts": "source",
+    "05_Software/nilo_gui/src/vite-env.d.ts": "source",
+    "05_Software/nilo_gui/tsconfig.app.json": "source",
+    "05_Software/nilo_gui/tsconfig.json": "source",
+    "05_Software/nilo_gui/tsconfig.node.json": "source",
+    "05_Software/nilo_gui/vite.config.ts": "source",
+    "05_Software/schemas/integration/v1/event.schema.json": "other",
+    "05_Software/schemas/integration/v1/manifest.schema.json": "other",
+    "05_Software/schemas/integration/v1/operation.schema.json": "other",
+    "05_Software/scripts/aegis_test.py": "tests",
+    "05_Software/scripts/test-increment-1.ps1": "tests",
+    "05_Software/scripts/test-increment-1.sh": "tests",
+    "05_Software/scripts/tests/test_aegis_test.py": "tests",
+    "05_Software/scripts/tests/test_development_lifecycle.py": "tests",
+    "05_Software/scripts/tests/test_toolchain_bootstrap.py": "tests",
+    "05_Software/scripts/verify-portable-core.ps1": "tests",
+    "05_Software/scripts/verify-portable-core.sh": "tests",
+    "05_Software/tests/README.md": "tests",
+    "05_Software/tests/contract/.gitignore": "tests",
+    "05_Software/tests/contract/README.md": "tests",
+    "05_Software/tests/contract/fixtures/protocol-v1/hello.ndjson": "tests",
+    "05_Software/tests/contract/test_integration_contract.py": "tests",
+    "06_SoftwareDocu/Development_and_Simulation_Flow.md": "other",
+    "06_SoftwareDocu/Live_Network_Development.md": "other",
+    "06_SoftwareDocu/Local_Hardware_Access.md": "other",
+    "06_SoftwareDocu/Network_Service_Implementation_Status.md": "other",
+    "06_SoftwareDocu/README.md": "other",
+    "07_Delivery/NILO_CLI_and_Authentication.md": "other",
+    "07_Delivery/README.md": "other",
+    "09_Others/Preview.mp4": "other",
+    "09_Others/README.md": "other",
+    "09_Others/compact-field-ui-20260904/README.md": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1024x600-dark-activity.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1024x600-dark-bench.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1024x600-dark-dn-editor.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1024x600-dark-network-full.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1024x600-dark-network.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1024x600-light-activity.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1024x600-light-bench.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1024x600-light-dn-editor.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1024x600-light-network-full.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1024x600-light-network.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1366x768-dark-activity.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1366x768-dark-bench.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1366x768-dark-dn-editor.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1366x768-dark-network-full.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1366x768-dark-network.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1366x768-light-activity.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1366x768-light-bench.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1366x768-light-dn-editor.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1366x768-light-network-full.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1366x768-light-network.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1920x1080-dark-activity.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1920x1080-dark-bench.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1920x1080-dark-dn-editor.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1920x1080-dark-network-full.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1920x1080-dark-network.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1920x1080-light-activity.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1920x1080-light-bench.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1920x1080-light-dn-editor.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1920x1080-light-network-full.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-1920x1080-light-network.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-800x480-dark-activity.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-800x480-dark-bench.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-800x480-dark-dn-editor.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-800x480-dark-network-full.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-800x480-dark-network.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-800x480-light-activity.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-800x480-light-bench.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-800x480-light-dn-editor.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-800x480-light-network-full.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-800x480-light-network.png": "other",
+    "09_Others/compact-field-ui-20260904/after/after-audit.json": "other",
+    "09_Others/compact-field-ui-20260904/after/reflow-320x800-network.png": "other",
+    "09_Others/compact-field-ui-20260904/after/reflow-600x800-network.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1024x600-dark-bench.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1024x600-dark-dn-editor.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1024x600-dark-network-full.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1024x600-dark-network.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1024x600-light-bench.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1024x600-light-dn-editor.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1024x600-light-network-full.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1024x600-light-network.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1366x768-dark-bench.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1366x768-dark-dn-editor.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1366x768-dark-network-full.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1366x768-dark-network.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1366x768-light-bench.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1366x768-light-dn-editor.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1366x768-light-network-full.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1366x768-light-network.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1920x1080-dark-bench.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1920x1080-dark-dn-editor.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1920x1080-dark-network-full.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1920x1080-dark-network.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1920x1080-light-bench.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1920x1080-light-dn-editor.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1920x1080-light-network-full.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-1920x1080-light-network.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-800x480-dark-bench.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-800x480-dark-dn-editor.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-800x480-dark-network-full.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-800x480-dark-network.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-800x480-light-bench.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-800x480-light-dn-editor.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-800x480-light-network-full.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-800x480-light-network.png": "other",
+    "09_Others/compact-field-ui-20260904/before/baseline-audit.json": "other",
+    "09_Others/nilo-review-20260902/01-bench-light.png": "other",
+    "09_Others/nilo-review-20260902/02-network-light.png": "other",
+    "09_Others/nilo-review-20260902/03-auth-dark.png": "other",
+    "09_Others/nilo-review-20260902/04-dialog-dark.png": "other",
+    "09_Others/nilo-review-20260902/05-auth-narrow.png": "other",
+    "09_Others/nilo-review-20260902/06-dialog-focus-escape.png": "other",
+    "09_Others/nilo-review-20260902/07-auth-romanian.png": "other",
+    "09_Others/nilo-review-20260902/08-device-inventory-failed.png": "other",
+    "09_Others/nilo-review-20260902/09-integration-false-empty.png": "other",
+    "09_Others/nilo-review-20260902/review.md": "other",
+    "AGENTS.md": "other",
+    "CHANGELOG.md": "other",
+    "CLAUDE.md": "other",
+    "QWEN.md": "other",
+    "README.md": "other",
+    "VERSION": "other"
+  },
+  "created_at": "2026-09-04T13:43:57.410232Z",
+  "files": {
+    ".gitignore": {
+      "kind": "file",
+      "sha256": "3551d07eaa657f3eee73542072d6e1f33118e19fac84331b3e8f6b36c072eb19"
+    },
+    "00_Planning/CLAUDE_COMPACT_FIELD_UI_PROMPT.md": {
+      "kind": "file",
+      "sha256": "b8a559d760eb0ef643f2007e4b16a5aaeca39b2e3d2f1638ad5a10a7f03a46ea"
+    },
+    "00_Planning/CLAUDE_DEVICE_NETWORKS_AND_AUDIT_PROMPT.md": {
+      "kind": "file",
+      "sha256": "b554dc99c7a2ad26346f46707b15431f1f0288d8c35d9fe3be3a80003455aff0"
+    },
+    "00_Planning/Development_Simulation_Vertical_Slices.md": {
+      "kind": "file",
+      "sha256": "c2a051c35744cc487f1fe72b3e725f4c497d37ad699430b782f891ce89f061f1"
+    },
+    "00_Planning/GUI_Design/02_Instrument_Workbench_Dark.png": {
+      "kind": "file",
+      "sha256": "65ff495ff2bc95325c8cc99ad39b65609bf716d1d086fbf4cdf10c430c077785"
+    },
+    "00_Planning/GUI_Design/03_Network_Overview_Light.png": {
+      "kind": "file",
+      "sha256": "808f44523e19d1a81531dc60149de86294adba8369854fffd4d1c29d33bc7b58"
+    },
+    "00_Planning/GUI_Design/README.md": {
+      "kind": "file",
+      "sha256": "01d681e93748faeec18536a06efd4b32b6eea92b27aa1c5b56296874daa9f907"
+    },
+    "00_Planning/Increment_1_Platform_Integration_Foundation_Implementation_Plan.md": {
+      "kind": "file",
+      "sha256": "1863c051f5d5cdb51df5b54d4b336b30f948011f33a45cdc939d0eac47a975e8"
+    },
+    "00_Planning/Overview.md": {
+      "kind": "file",
+      "sha256": "cac96c9c18ec89829e30e0f08571f258d2acf00e735b89f157576c19a7513645"
+    },
+    "00_Planning/PLAN_COMPACT_FIELD_UI.md": {
+      "kind": "file",
+      "sha256": "e44ffbb88e13c51efa19c110316e48e38191034c8b08b4dec7fef064b6607f44"
+    },
+    "00_Planning/PLAN_DEVICE_NETWORKS_AND_AUDIT.md": {
+      "kind": "file",
+      "sha256": "81e179bbffc9cc1e745dbb424b6ba6bff604961263d7dd3628ada5707b0bc7ee"
+    },
+    "00_Planning/PLAN_NETWORK.md": {
+      "kind": "file",
+      "sha256": "1e11fc031b2352a1fc9342be18ec9ab5ce0f0fbd6ad5819aa84a1fcb8e718857"
+    },
+    "00_Planning/README.md": {
+      "kind": "file",
+      "sha256": "d0d2176dd6d3036864515b9a285afbf2a9f111fe8119c0847df4eec83b4dd001"
+    },
+    "00_Planning/Remote_Bench_MVP_PRD.md": {
+      "kind": "file",
+      "sha256": "e117ddff9e0067027bb799f73c257be2a6d4c67b61c9f37ec3918f4c96c7d25e"
+    },
+    "00_Planning/System_Build_Plan.md": {
+      "kind": "file",
+      "sha256": "29ba735cd0fbbe2e539cbec8c942768ff6eb58dd57a99e959d29b85dbfa4256e"
+    },
+    "00_Planning/TODO.md": {
+      "kind": "file",
+      "sha256": "2edcea96adb34af3c843250686a4833281ac57848d9a91ea0dcded5ebc02f3eb"
+    },
+    "01_Documentation/Code_Style.md": {
+      "kind": "file",
+      "sha256": "0ab6ac5ef64954d7071fa02c0f41fc7c54fd728b2b1ff0c6ad7ec7f841528743"
+    },
+    "01_Documentation/README.md": {
+      "kind": "file",
+      "sha256": "29cf0a26b1e7c35478e344400bb060ad4d7081519fe6d7f2dd56a9ecb0324cfc"
+    },
+    "02_Tools/README.md": {
+      "kind": "file",
+      "sha256": "4bb5b83031986144c17916e2cbae6fdd8e48ffe342bc553355b7bbbc07370fb2"
+    },
+    "02_Tools/bootstrap/bootstrap-browser.ps1": {
+      "kind": "file",
+      "sha256": "f79a5949cbb9a6233c0055af1931739b8bbb6c1d3f9a41acd35af7ad56180342"
+    },
+    "02_Tools/bootstrap/bootstrap-development.ps1": {
+      "kind": "file",
+      "sha256": "5cff2ca186ddc6e601dccacf9decefc03274ac8f51111631ba9b9680e53d5ce0"
+    },
+    "02_Tools/bootstrap/bootstrap-frontend.ps1": {
+      "kind": "file",
+      "sha256": "a5573fa68b0acda9396cef6d7682e9964c45172abdb78b89e262a798c7d9f4d2"
+    },
+    "02_Tools/bootstrap/bootstrap.ps1": {
+      "kind": "file",
+      "sha256": "e42ebedd5f775e8865d192b23aa639bf5865a1f1fc1951ab5a44d6596b77e0a7"
+    },
+    "02_Tools/bootstrap/bootstrap.sh": {
+      "kind": "file",
+      "sha256": "a1773e58e1e008af5de00f2ad732a431bcc7f8d55619d4456d8dc85c3e1c6f09"
+    },
+    "02_Tools/bootstrap/setup-wsl.ps1": {
+      "kind": "file",
+      "sha256": "10bb391c2b371ff20b9a0c063369ccb1a4bbff19b55a8f59a36698969eecf900"
+    },
+    "02_Tools/env/with-go.ps1": {
+      "kind": "file",
+      "sha256": "577d5bf75148ffa9e9eb81878e77648627fd922ca1296dd7b50fe8b9c8f95a59"
+    },
+    "02_Tools/env/with-go.sh": {
+      "kind": "file",
+      "sha256": "6b020d6774461be992bdb8bf01c3b1b2d3492ba2dd1d86933187c62d24352b19"
+    },
+    "02_Tools/env/with-tools.ps1": {
+      "kind": "file",
+      "sha256": "6809d0317e6521e62b091daf0717dfddd393cd72f881cbbf7fd12b5b57fcae61"
+    },
+    "02_Tools/env/with-tools.sh": {
+      "kind": "file",
+      "sha256": "1157807d5e5aafd318c30438277d890b7891ab9fa35cd495bbcb55fa86c8f302"
+    },
+    "02_Tools/lib/DevLifecycle.ps1": {
+      "kind": "file",
+      "sha256": "69d24307bbec5793d916e45970819161b30fe01f199a1ece351adb1b2e4a3b72"
+    },
+    "02_Tools/lib/Wsl.ps1": {
+      "kind": "file",
+      "sha256": "ebe373143cd88dd61f1d1198aecc0b9d892396c4514dd215df5551f10d6e9bac"
+    },
+    "02_Tools/scripts/build-appliance.sh": {
+      "kind": "file",
+      "sha256": "d49994f7d823dcb3ba18833b89052a8fe19f2ae8975e0307f2d258cbf861d906"
+    },
+    "02_Tools/scripts/doctor-wsl.ps1": {
+      "kind": "file",
+      "sha256": "db0828992b30c27617593e91aa102a4daa6eb9e58fa828fa09ecfb97c553aa1d"
+    },
+    "02_Tools/scripts/doctor.ps1": {
+      "kind": "file",
+      "sha256": "abc971fd440ed9986b542aaa4f9b9ad30daa0f581f264750a8f6b67163e49b29"
+    },
+    "02_Tools/scripts/doctor.sh": {
+      "kind": "file",
+      "sha256": "b235bdf8b9d733ed43f8dc4b1e227bf1fd468c18fc4ca663d2d73ddca5cf3a8f"
+    },
+    "02_Tools/scripts/install-nethelper.sh": {
+      "kind": "file",
+      "sha256": "389e1ca5bc3ca7a151d2c426421796ff3f0c40253eabc7f5871f91eb86073951"
+    },
+    "02_Tools/scripts/nilo-dev.ps1": {
+      "kind": "file",
+      "sha256": "433777e9632875d735cb358c0f7fc294e6a74464766490d8e59aa6fbb61fd116"
+    },
+    "02_Tools/tests/network/Dockerfile": {
+      "kind": "file",
+      "sha256": "d9dfb6913c143142e6b3e59fd8ce472f44ec08896ea7fba58c0e98669ea445df"
+    },
+    "02_Tools/tests/network/check.sh": {
+      "kind": "file",
+      "sha256": "341fe14b890bfe19e34b0ee6b4ab2e01cbff5e9d34dc0cb719b1c6b0ca125aa5"
+    },
+    "02_Tools/tests/network/run.sh": {
+      "kind": "file",
+      "sha256": "6cfd2c0c4db49dc8dba5e9a5717ba2538afdf122f4698e432c95a541062d5b17"
+    },
+    "02_Tools/toolchain.versions": {
+      "kind": "file",
+      "sha256": "853d1c248004f23ba93bd471a6fbd65da71812f8a1778e942b79b75a728553a6"
+    },
+    "03_Hardware/NILO_case_v1.skp": {
+      "kind": "file",
+      "sha256": "4789468ac243175885b5ca54e821a23638215d1cdf5c95d4f4efc31b0409551b"
+    },
+    "03_Hardware/NILO_case_v1.stl": {
+      "kind": "file",
+      "sha256": "6fe4a8632ea0590233c900ec28231ab75c7e2ebf2cd0ed1ae6d2a4b726120432"
+    },
+    "03_Hardware/README.md": {
+      "kind": "file",
+      "sha256": "429f25dbedbe998d974bb61e80a066a317b68ee25309e99da9f972cb6668f4d1"
+    },
+    "04_HardwareDocu/README.md": {
+      "kind": "file",
+      "sha256": "5874ddfcb3bf0d3f391be7694deb4ae0a67ea3ef36e39932743584ef05f642ee"
+    },
+    "05_Software/INCREMENT_1_ACCEPTANCE.md": {
+      "kind": "file",
+      "sha256": "22ce45387bfea46f3346ddb94d359f3b088dc5ce39d970cff61de067c88099dc"
+    },
+    "05_Software/README.md": {
+      "kind": "file",
+      "sha256": "020046bbf2cf6a05ac8435355e238f9b95f5e8665aab1d625d8e7cc669c93302"
+    },
+    "05_Software/integration_sdk/python/.gitignore": {
+      "kind": "file",
+      "sha256": "6feaded4e28ea86e001a6751b4e3d960e8b7c31b9616ff9936b79297086e809b"
+    },
+    "05_Software/integration_sdk/python/README.md": {
+      "kind": "file",
+      "sha256": "b89cfd86923e0f98c8353dcdd01bb7a15935477851cc943a78f452756bcf6ea0"
+    },
+    "05_Software/integration_sdk/python/pyproject.toml": {
+      "kind": "file",
+      "sha256": "7b57837985c63e4130c64c69332706f38d3520cf9e1ae17b16a80e722342c4e9"
+    },
+    "05_Software/integration_sdk/python/src/nilo_integration/__init__.py": {
+      "kind": "file",
+      "sha256": "ca69c2b8a520b27a18ca0fbfdabd03a39ba6196d60640dbebbfaf13560089717"
+    },
+    "05_Software/integration_sdk/python/src/nilo_integration/api.py": {
+      "kind": "file",
+      "sha256": "4ce20fd1053309f83074573b151d5681f2c8dcb9073404d52fb161fed38d4779"
+    },
+    "05_Software/integration_sdk/python/src/nilo_integration/models.py": {
+      "kind": "file",
+      "sha256": "b9885ffdd9007fd1ad7b2538549b4ecc4b681d2259ddab8dba0d87a3870ab418"
+    },
+    "05_Software/integration_sdk/python/src/nilo_integration/server.py": {
+      "kind": "file",
+      "sha256": "79e59e14c7d265e71a90f50d5cea8a760fd47ffe10c5f74514c17600e24d5881"
+    },
+    "05_Software/integration_sdk/python/tests/test_models.py": {
+      "kind": "file",
+      "sha256": "05e1c3810ad47716fa27c3d4f7fe18fb99282d1b5e5e0bab14d787a5ee40e14d"
+    },
+    "05_Software/integration_sdk/python/tests/test_server.py": {
+      "kind": "file",
+      "sha256": "b99a36d421d785820763b2999018579ed13e1e75dc9ae35cb6b04eefc8be6f3b"
+    },
+    "05_Software/integration_sdk/python/uv.lock": {
+      "kind": "file",
+      "sha256": "968a347805324ee7f3fd4c08e74582b86d21cea8dd72f7dcffbdf1c075403b2f"
+    },
+    "05_Software/integrations/fake_python/.gitignore": {
+      "kind": "file",
+      "sha256": "dc9e10ec44cf83875a7777f8695b2ebef2523f3c8d44b8c41f93c12362d02e14"
+    },
+    "05_Software/integrations/fake_python/manifest.json": {
+      "kind": "file",
+      "sha256": "5eb78622ecb2ebd1c2012115bb0414cf663eec0757501851be69a34ed8206312"
+    },
+    "05_Software/integrations/fake_python/pyproject.toml": {
+      "kind": "file",
+      "sha256": "46c957af78fb0ef26db62907d792597a1b21d6868e72ea338b1eb80c76ec37f9"
+    },
+    "05_Software/integrations/fake_python/schemas/artifact.event.schema.json": {
+      "kind": "file",
+      "sha256": "3c1d7316cc228f78bdc895a520c336dc027faaf76cf0800d9ebe34b9b119b0a7"
+    },
+    "05_Software/integrations/fake_python/schemas/artifact.input.schema.json": {
+      "kind": "file",
+      "sha256": "21ba5031e5fce6c5bef6f66c83ad0397d192080e2736b9972e1b29e09bf56001"
+    },
+    "05_Software/integrations/fake_python/schemas/artifact.result.schema.json": {
+      "kind": "file",
+      "sha256": "e7425d805a81e4bc20af37c9f5dd47e78e414302f653ac2a0fce305015501152"
+    },
+    "05_Software/integrations/fake_python/schemas/crash.input.schema.json": {
+      "kind": "file",
+      "sha256": "2656294ca60aa23acaa3e6e1b688fa8b754196e6636657eb146a559936511803"
+    },
+    "05_Software/integrations/fake_python/schemas/echo.input.schema.json": {
+      "kind": "file",
+      "sha256": "32f012e10613363055343cdcd49296fc8a8b66eb6875e3385101d0b9ecdcb365"
+    },
+    "05_Software/integrations/fake_python/schemas/echo.result.schema.json": {
+      "kind": "file",
+      "sha256": "ba854348e4c232385166d63f5edec273ed872efd84a4f240b0db835ae54f4a90"
+    },
+    "05_Software/integrations/fake_python/schemas/fail.input.schema.json": {
+      "kind": "file",
+      "sha256": "87df0421b3090fef769a3df94148b8226ed83f78b76881a8cbd664af48cb2747"
+    },
+    "05_Software/integrations/fake_python/schemas/progress.event.schema.json": {
+      "kind": "file",
+      "sha256": "402ea2f5b78fa5cd47fd271b0015ef23d7ceed1b3c2ce5990071977bfb7842c8"
+    },
+    "05_Software/integrations/fake_python/schemas/sleep.input.schema.json": {
+      "kind": "file",
+      "sha256": "bda8adf4498a8f58f2733f800eed222461fde89decbddd7a5ba84ae591397a40"
+    },
+    "05_Software/integrations/fake_python/schemas/sleep.result.schema.json": {
+      "kind": "file",
+      "sha256": "c93b85b3927c7b73c61155b000161ff0be43d2cc246a63692c3e82ddff349c7c"
+    },
+    "05_Software/integrations/fake_python/src/nilo_fake_integration/__init__.py": {
+      "kind": "file",
+      "sha256": "22c6e7cbde861009cb73b14319a1c803a249fd08b418a215749dd57360e59fc2"
+    },
+    "05_Software/integrations/fake_python/src/nilo_fake_integration/__main__.py": {
+      "kind": "file",
+      "sha256": "f84d64d75ae02600825dad4f3815e2ec4067f263f0f6ce94e0fc03c07db25d37"
+    },
+    "05_Software/integrations/fake_python/src/nilo_fake_integration/plugin.py": {
+      "kind": "file",
+      "sha256": "dcbd248d34093ad37d51a2d6cdb6fc0a89744d37dd31f993ff93a31a925b4f71"
+    },
+    "05_Software/integrations/fake_python/tests/test_fake_integration.py": {
+      "kind": "file",
+      "sha256": "49adea9b24a9835029a5cf2892d245f91f735666de7a25d5017e0f8537d0f848"
+    },
+    "05_Software/integrations/fake_python/uv.lock": {
+      "kind": "file",
+      "sha256": "e8b15a0d7a22c205aed7b9842cd15d01417ab6cabd8bb4b13d691a6c60219c8f"
+    },
+    "05_Software/nilo_assistant/README.md": {
+      "kind": "file",
+      "sha256": "eba07dd3e84a6f4bc0489747fd505dc5fa79c678cbee39f3eb6659cef35aad4f"
+    },
+    "05_Software/nilo_assistant/cmd/nilo-nethelper/main.go": {
+      "kind": "file",
+      "sha256": "bffd604d4cc7966345f47f46dc88f17a204323c0ec554620e021ed945af22784"
+    },
+    "05_Software/nilo_assistant/cmd/nilo-nethelper/recover_linux.go": {
+      "kind": "file",
+      "sha256": "914d98d3834e90e8d9ac31561739d790d09abeff41307a74c110c3fbbd7df916"
+    },
+    "05_Software/nilo_assistant/cmd/nilo-nethelper/serve_linux.go": {
+      "kind": "file",
+      "sha256": "b6e005fd5404a7cf594c5339943fe019c2e81d480c191a6423aa0d9e41b9ea59"
+    },
+    "05_Software/nilo_assistant/cmd/nilo-nethelper/serve_other.go": {
+      "kind": "file",
+      "sha256": "8c1044733d0026f93b9f3ac8f940b11f87eede5eef52d4c949a2deb56da38ac0"
+    },
+    "05_Software/nilo_assistant/cmd/nilo/activity.go": {
+      "kind": "file",
+      "sha256": "f7633f85af1f76b41a11224440ced42058f36884fc35ed406e756536bc27071c"
+    },
+    "05_Software/nilo_assistant/cmd/nilo/admin.go": {
+      "kind": "file",
+      "sha256": "1d6ca6e81ee9adea6a73b34741cbf4991e2bb0bf6425ab846a17bda22303dee7"
+    },
+    "05_Software/nilo_assistant/cmd/nilo/admin_test.go": {
+      "kind": "file",
+      "sha256": "84c9e3ff32da4b18b6f2d4734d2715e9a8c833ac558692804cd2fb9d8094b318"
+    },
+    "05_Software/nilo_assistant/cmd/nilo/development.go": {
+      "kind": "file",
+      "sha256": "c0aaacd24a746157e9c338b4f9808cea37f0e789ac9fd698d05b0ba8e2784a5c"
+    },
+    "05_Software/nilo_assistant/cmd/nilo/development_test.go": {
+      "kind": "file",
+      "sha256": "718bd5a54c9a4c90b6c0fe1db7f8c15b7ff62a4de759c4185f1c45908242b0bd"
+    },
+    "05_Software/nilo_assistant/cmd/nilo/diagnostics.go": {
+      "kind": "file",
+      "sha256": "20e081e5ce16d858a856b8a556c7d15c112e7796ab7ed176478d62772f201321"
+    },
+    "05_Software/nilo_assistant/cmd/nilo/main.go": {
+      "kind": "file",
+      "sha256": "6e64dbe2fe9ca8c929fc78ee5973f26f21234910841fb11a49911bf37420fc36"
+    },
+    "05_Software/nilo_assistant/cmd/nilo/main_test.go": {
+      "kind": "file",
+      "sha256": "ce2ad891e9f6e22005dad990de32ce607d24d24a9ab434be3d750b853fbab972"
+    },
+    "05_Software/nilo_assistant/cmd/nilo/network.go": {
+      "kind": "file",
+      "sha256": "539fca4b44c222eca281c1f7d27675d6df88393a62476bb1fd746efa6b97db20"
+    },
+    "05_Software/nilo_assistant/cmd/nilo/network_device_networks.go": {
+      "kind": "file",
+      "sha256": "7bc1b624c977abcff358ac7769fc48c315b9551018d91972267d6b9d8b55d9f0"
+    },
+    "05_Software/nilo_assistant/cmd/nilo/network_runtime.go": {
+      "kind": "file",
+      "sha256": "70f955ca3b59cf99c25d69dc407422a24e12ca1a2d6152fff541ba1bf4466f94"
+    },
+    "05_Software/nilo_assistant/cmd/nilo/network_runtime_linux.go": {
+      "kind": "file",
+      "sha256": "2fb8e8c51c1a6fc822320b6b9ff04b48119fda01bf03e3f52533f960a9f6eb01"
+    },
+    "05_Software/nilo_assistant/cmd/nilo/network_runtime_other.go": {
+      "kind": "file",
+      "sha256": "eeb1e9b231cb59e42a361eef32f874abdddf9cda9496228926c470a3910f0f5f"
+    },
+    "05_Software/nilo_assistant/cmd/nilo/network_runtime_test.go": {
+      "kind": "file",
+      "sha256": "d11fbed543e0447410a13bef276932fe79220ef8b52f5bd08d3da11adff386a1"
+    },
+    "05_Software/nilo_assistant/cmd/nilo/network_settings.go": {
+      "kind": "file",
+      "sha256": "e513bd5c5546c985be1cf1997b9842c33ca43c024a587d7b23a474c4f9e806f4"
+    },
+    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go": {
+      "kind": "file",
+      "sha256": "c3c381d6df51905bad0ae3cc7090220da647e370f8603d2c801c0366d0084cb8"
+    },
+    "05_Software/nilo_assistant/cmd/nilo/network_test.go": {
+      "kind": "file",
+      "sha256": "4424b831c5f6ad073e1d12dd0e3e7a99b75af9ce4c30dd98002cf6614819c3ff"
+    },
+    "05_Software/nilo_assistant/cmd/nilo/network_vpn.go": {
+      "kind": "file",
+      "sha256": "2dc2d857be5320724142adee29012db5d36e19480c9907cfa8cab910d708fad5"
+    },
+    "05_Software/nilo_assistant/cmd/nilo/network_vpn_test.go": {
+      "kind": "file",
+      "sha256": "9dfab1dba8d10d95ddcae245c68bdc1f5577278df5a7a5cdd20a37905e87c876"
+    },
+    "05_Software/nilo_assistant/go.mod": {
+      "kind": "file",
+      "sha256": "72dad66a39519b53cd6f60923419cdecfff39afa6f0add9f5cad5df6ab8378ae"
+    },
+    "05_Software/nilo_assistant/go.sum": {
+      "kind": "file",
+      "sha256": "35a8eda1a70d6ff38bcedd28208d0f39eeed95e236e5c184bfd7655892c82671"
+    },
+    "05_Software/nilo_assistant/internal/acceptance/increment1_e2e_test.go": {
+      "kind": "file",
+      "sha256": "23a0c22b7764a8119666a0fd807de5be79dc9dd3b81ff58fe4035cec67ff1eff"
+    },
+    "05_Software/nilo_assistant/internal/acceptance/increment1_fixture_test.go": {
+      "kind": "file",
+      "sha256": "f14f3df7b412bab38517c224d550ef9a31bca298ae11693fcbc4f5ce83fff181"
+    },
+    "05_Software/nilo_assistant/internal/activity/activity.go": {
+      "kind": "file",
+      "sha256": "3c925291f855a9b269f0c5c4b0c2355ed00dd75d0ff1ead23a31937b15cf629d"
+    },
+    "05_Software/nilo_assistant/internal/activity/activity_test.go": {
+      "kind": "file",
+      "sha256": "e4841b837b9871a0cac14ad2fe686a0c369211f6d03dc642c9ff43e3514c1187"
+    },
+    "05_Software/nilo_assistant/internal/activity/health.go": {
+      "kind": "file",
+      "sha256": "a624c23e2201d300ca76c60114531e55fb85ceb7ffd74da50386ac96045987b6"
+    },
+    "05_Software/nilo_assistant/internal/activity/housekeeping.go": {
+      "kind": "file",
+      "sha256": "4e67347e976365fbaad3cc13751f58acc7fca13686c4cf29e7a91364c9044490"
+    },
+    "05_Software/nilo_assistant/internal/activity/policy.go": {
+      "kind": "file",
+      "sha256": "96cc71efed585d7521005ecf6c706036fc8a1ef0beeefc33a2f0df7ff48a2982"
+    },
+    "05_Software/nilo_assistant/internal/apiclient/client.go": {
+      "kind": "file",
+      "sha256": "f5b51889a73262bc27bba83e998fa50eac51a13e582da60451853d71da8ea4bc"
+    },
+    "05_Software/nilo_assistant/internal/app/app.go": {
+      "kind": "file",
+      "sha256": "44098cb6a17ace6883733b6b8da274c27c6dae244830478f413ff687cef98f47"
+    },
+    "05_Software/nilo_assistant/internal/app/app_test.go": {
+      "kind": "file",
+      "sha256": "63aa75d18d3000c388c8f81a2520158eda139be3a0ad8f39aae458a3db9316da"
+    },
+    "05_Software/nilo_assistant/internal/app/durable_network_test.go": {
+      "kind": "file",
+      "sha256": "9d1ae2a8c3174df44b500200ac6868985a5014f64d6af6238ff141b307b5aa94"
+    },
+    "05_Software/nilo_assistant/internal/app/profile_persistence_test.go": {
+      "kind": "file",
+      "sha256": "158befcfd651c98d74703b2571bff19293d71e8d9d21f00fe7a4fa2eb844997a"
+    },
+    "05_Software/nilo_assistant/internal/appliance/identity.go": {
+      "kind": "file",
+      "sha256": "e8ab3f5b77589a2f45d89ad56b9eb96b32c1710283753ed352cb661c9f55d64a"
+    },
+    "05_Software/nilo_assistant/internal/artifact/store.go": {
+      "kind": "file",
+      "sha256": "f201a3666d38854fd76bbf8a7d007b307ae609aad46e62129a6c028d03a5be0c"
+    },
+    "05_Software/nilo_assistant/internal/artifact/store_test.go": {
+      "kind": "file",
+      "sha256": "1dda3b50bda6ef8156c7513dc180519f3247094f365a7ff12f2eff4d2fa6a6b1"
+    },
+    "05_Software/nilo_assistant/internal/artifact/store_unix.go": {
+      "kind": "file",
+      "sha256": "89bf1e25a54780faf3e07926691a504ac6353a5128b03fe9e6c289fbf60bc002"
+    },
+    "05_Software/nilo_assistant/internal/artifact/store_windows.go": {
+      "kind": "file",
+      "sha256": "55420543d00ffeb62d9b64aeedeb52cf2185f049bce84145fa862372b049be1c"
+    },
+    "05_Software/nilo_assistant/internal/audit/audit.go": {
+      "kind": "file",
+      "sha256": "af452f2f34cc88482e409cf2286679f6251f1058c0a9ce6aec34c4ccae0ed1c9"
+    },
+    "05_Software/nilo_assistant/internal/audit/audit_test.go": {
+      "kind": "file",
+      "sha256": "34b51bc9dc601ebaff40ba248096a3fe840fb5dd10c9dd5a3b6cc3479c65d6db"
+    },
+    "05_Software/nilo_assistant/internal/audit/writer.go": {
+      "kind": "file",
+      "sha256": "635a3f091439f09a20aacca9e7e3441c704f8430352fa7184b62c1b8707e291e"
+    },
+    "05_Software/nilo_assistant/internal/auth/password.go": {
+      "kind": "file",
+      "sha256": "9a2e46de464104f153a4fbf924da63241f28f63901ae11b62e389f7a3d663144"
+    },
+    "05_Software/nilo_assistant/internal/auth/password_test.go": {
+      "kind": "file",
+      "sha256": "ca1c3aacf3cc98b930c34eb091b800df760f55454288dcc51526864a58a10ded"
+    },
+    "05_Software/nilo_assistant/internal/auth/repository.go": {
+      "kind": "file",
+      "sha256": "b36366298b709cb174fa800d618902f658d803b83e4c595227cd130af14f4a98"
+    },
+    "05_Software/nilo_assistant/internal/auth/role.go": {
+      "kind": "file",
+      "sha256": "804e5149ea0ac512507cf81a6ddffa5d811fe8c45bfdf223026ae70809e883f9"
+    },
+    "05_Software/nilo_assistant/internal/auth/role_test.go": {
+      "kind": "file",
+      "sha256": "8c69fb9a5bbab333e060fdacb221937aefaee1e75364b39bc68165c7732c08a4"
+    },
+    "05_Software/nilo_assistant/internal/auth/session.go": {
+      "kind": "file",
+      "sha256": "bd15906290b25512b84004dc4f86569a948b5edf36e344f7e43bde3c79cb3670"
+    },
+    "05_Software/nilo_assistant/internal/auth/session_test.go": {
+      "kind": "file",
+      "sha256": "03e2fe7c5203a839fd3a18f58bd4094597fa0b78f9c443a3d6eaaac8a1eafe72"
+    },
+    "05_Software/nilo_assistant/internal/auth/throttle.go": {
+      "kind": "file",
+      "sha256": "f5855ba523bcac0a9502733cd63b7909c740e8e3eb03e5b18769f08d45e75a0e"
+    },
+    "05_Software/nilo_assistant/internal/auth/throttle_test.go": {
+      "kind": "file",
+      "sha256": "40828d348b0b61748fb764ac44a849112ed98fd67bfa044691aaccb2f3c8e923"
+    },
+    "05_Software/nilo_assistant/internal/auth/token.go": {
+      "kind": "file",
+      "sha256": "7484a526737fe02f320ba19efd5412e71061bed4f97645553ef0ec5a2c5b4a1c"
+    },
+    "05_Software/nilo_assistant/internal/auth/token_test.go": {
+      "kind": "file",
+      "sha256": "4f681c3482d62dafed5793ad255109371f628cf10cba82262babd40f6eaafa67"
+    },
+    "05_Software/nilo_assistant/internal/auth/user.go": {
+      "kind": "file",
+      "sha256": "4833832b03c6dacaf9bcf3d3398cc5ff61af661a7327c38f48b903a22569be78"
+    },
+    "05_Software/nilo_assistant/internal/buildinfo/buildinfo.go": {
+      "kind": "file",
+      "sha256": "0357a4fb5910420796192c1c5ab2c2e7848d5708078e1bf6e3962852caf2dd63"
+    },
+    "05_Software/nilo_assistant/internal/buildinfo/buildinfo_test.go": {
+      "kind": "file",
+      "sha256": "9b75bd0d3079b2c142c023a46a74fa0b37f10befe60e65dc2410e1c280f792a3"
+    },
+    "05_Software/nilo_assistant/internal/config/config.go": {
+      "kind": "file",
+      "sha256": "ff7cad3c04e6358a51e16c93f1237e8ee4c851bb787b067902f53b11d4ce1e68"
+    },
+    "05_Software/nilo_assistant/internal/config/config_test.go": {
+      "kind": "file",
+      "sha256": "8c8b69b2778ad4c396b3e29dbe74de802fa2fe1947acd6cb88348967f77f919c"
+    },
+    "05_Software/nilo_assistant/internal/config/paths.go": {
+      "kind": "file",
+      "sha256": "2b6a358c82f49827be0562d5ff0479ca8e1c4f8a69818dbf1b03fef55a60d0c2"
+    },
+    "05_Software/nilo_assistant/internal/config/paths_test.go": {
+      "kind": "file",
+      "sha256": "0fcdb15450f8f815ff175e5249cba9c5108e6919fc068f8ca86392cfa29bc524"
+    },
+    "05_Software/nilo_assistant/internal/config/paths_unix.go": {
+      "kind": "file",
+      "sha256": "c3c5e81152623dcc2c5d64c8ec86132e30965a20ad931b6dccb36ead1ce68068"
+    },
+    "05_Software/nilo_assistant/internal/config/paths_windows.go": {
+      "kind": "file",
+      "sha256": "70c7b2f03f3a9bc05155c5b9b6e6744a32306b35740419d93e3a595fada191d6"
+    },
+    "05_Software/nilo_assistant/internal/diagnostics/diagnostics.go": {
+      "kind": "file",
+      "sha256": "588daddb7ff42f13b02ad65e57c102616a7ebfe13bf859ccd9085118c51c3751"
+    },
+    "05_Software/nilo_assistant/internal/diagnostics/diagnostics_test.go": {
+      "kind": "file",
+      "sha256": "06dba9c8b66e8f5392bd6e04020a17ba24595704a99337308bfeefd38045ab66"
+    },
+    "05_Software/nilo_assistant/internal/domain/artifact.go": {
+      "kind": "file",
+      "sha256": "b65bbc3dc5dc33ea270de7bb33efc489c604da779908082611d6ed758692063c"
+    },
+    "05_Software/nilo_assistant/internal/domain/ids.go": {
+      "kind": "file",
+      "sha256": "963973dbacddf83597747ffc0eb0b94c5dbb22622cc01c3662c46f447caabb10"
+    },
+    "05_Software/nilo_assistant/internal/domain/operation.go": {
+      "kind": "file",
+      "sha256": "1c3fee681e09a06d9d261d1495db80624c310f447ed4086b5b58d7b6b8fd0b0d"
+    },
+    "05_Software/nilo_assistant/internal/domain/session.go": {
+      "kind": "file",
+      "sha256": "a9b26dc9a23b0431613c748836e63703540fc0141ae07790a5bca6027f6636f6"
+    },
+    "05_Software/nilo_assistant/internal/domain/session_test.go": {
+      "kind": "file",
+      "sha256": "6bf0c4df6c441b3c741edef310f85043ea4b6024b9daa91243eefab6858c250a"
+    },
+    "05_Software/nilo_assistant/internal/httpapi/activity.go": {
+      "kind": "file",
+      "sha256": "6d43f198255c482048031e3f0ee79f2e400748b88d95d8048b5c99cdb0701f79"
+    },
+    "05_Software/nilo_assistant/internal/httpapi/activity_test.go": {
+      "kind": "file",
+      "sha256": "4809b4c1e3c55ffda19eac9fa825ab0732235ce9db28826b8f9fa01ffe06e9bc"
+    },
+    "05_Software/nilo_assistant/internal/httpapi/administration.go": {
+      "kind": "file",
+      "sha256": "ac1b5f3c99917ba6927cdd1a49849bf0858897c0ca2847ac05165420bf72ec43"
+    },
+    "05_Software/nilo_assistant/internal/httpapi/administration_test.go": {
+      "kind": "file",
+      "sha256": "0633525c74804076de366aa6feb962d1a36e01827b34033a700086f287e12038"
+    },
+    "05_Software/nilo_assistant/internal/httpapi/appliance_test.go": {
+      "kind": "file",
+      "sha256": "5719e2f1bfc44a158960edd3df841d4fce4b2d9575b6ae8c70a91b2a66fd96f4"
+    },
+    "05_Software/nilo_assistant/internal/httpapi/device_networks.go": {
+      "kind": "file",
+      "sha256": "cbddad3200745aebaf3b4fed195b9a8adf280caa46711b1145dc0163fb143324"
+    },
+    "05_Software/nilo_assistant/internal/httpapi/device_networks_test.go": {
+      "kind": "file",
+      "sha256": "3e63ee5a29a003fa882ee5b77df79a9d4d170df80aaa36dd88b16863237df15d"
+    },
+    "05_Software/nilo_assistant/internal/httpapi/identity.go": {
+      "kind": "file",
+      "sha256": "ed96ad829ba15b552ad5f37979fc08dee9ececa28efc16c0831dd1b98bcf390d"
+    },
+    "05_Software/nilo_assistant/internal/httpapi/identity_test.go": {
+      "kind": "file",
+      "sha256": "7706ae7eaacf338e98a389863b5c128de002864b5ec5fafc42fc75d510e84859"
+    },
+    "05_Software/nilo_assistant/internal/httpapi/listener.go": {
+      "kind": "file",
+      "sha256": "21d132b996d50d32849710466498f4e6ebdfad72045c14cd72a6a0599f8e77d3"
+    },
+    "05_Software/nilo_assistant/internal/httpapi/listener_test.go": {
+      "kind": "file",
+      "sha256": "980e393a58981338f8c356fc724134fc05ae3a077173e656580a69a6d7da1cb6"
+    },
+    "05_Software/nilo_assistant/internal/httpapi/network.go": {
+      "kind": "file",
+      "sha256": "236fcc4dafab077d7d51f23be9d288b0649868649b6976ae124e7405c2a667e5"
+    },
+    "05_Software/nilo_assistant/internal/httpapi/network_operations.go": {
+      "kind": "file",
+      "sha256": "c8edeb215cbd144210acdbcdaac018d371c6a0b59a086d088e9a3a2c762c4b63"
+    },
+    "05_Software/nilo_assistant/internal/httpapi/network_operations_test.go": {
+      "kind": "file",
+      "sha256": "eaec9a94753eb7e6fef9c85a156aa0e3edb285204064710de3ac4d72845a3efc"
+    },
+    "05_Software/nilo_assistant/internal/httpapi/network_reattach_test.go": {
+      "kind": "file",
+      "sha256": "90ba4ba20fcc4c749affaea440ea3ab42e177c3b609240819d0b7c64b28f735b"
+    },
+    "05_Software/nilo_assistant/internal/httpapi/network_settings_test.go": {
+      "kind": "file",
+      "sha256": "3ee5b777e8c1e247e0eb7c34225b47561b7d5508c69113063ff4690637261389"
+    },
+    "05_Software/nilo_assistant/internal/httpapi/network_test.go": {
+      "kind": "file",
+      "sha256": "ff55d2833f756c2e9cec97e1e9677a926820a430b85472c1ede5fb80e697941e"
+    },
+    "05_Software/nilo_assistant/internal/httpapi/network_wireguard_test.go": {
+      "kind": "file",
+      "sha256": "d8788fc522a67632dc7f2b954dbd371e04bd9d6ff31a6cadaa4e0cab84f2ff48"
+    },
+    "05_Software/nilo_assistant/internal/httpapi/server.go": {
+      "kind": "file",
+      "sha256": "a5c29dfceeafee159f7b45693c42a49c8eb8d172c669dbcaac7c213e116dc3ed"
+    },
+    "05_Software/nilo_assistant/internal/httpapi/server_test.go": {
+      "kind": "file",
+      "sha256": "af52d670f4b5b403b205c85ab5b35d2a41fc9d3437fdcec9060b1813d08c9bb4"
+    },
+    "05_Software/nilo_assistant/internal/httpapi/serving.go": {
+      "kind": "file",
+      "sha256": "79cf98eb3b4701320332e9aba749712efbb058f9a1680ccf33bcd425fbbfd124"
+    },
+    "05_Software/nilo_assistant/internal/httpapi/serving_test.go": {
+      "kind": "file",
+      "sha256": "876d9bcf14cfcd23cf787e7c104a104648049f9626b07d337fb3353d9527309a"
+    },
+    "05_Software/nilo_assistant/internal/httpapi/tls_test.go": {
+      "kind": "file",
+      "sha256": "6b4e6635ef4e5b756f353ec16d343cef17cd69637f208cbf06d10721252a51f4"
+    },
+    "05_Software/nilo_assistant/internal/identity/service.go": {
+      "kind": "file",
+      "sha256": "82c887a6c6e3f82db0ca28132c282e2fa6da49527cb724570d888fcb707af03e"
+    },
+    "05_Software/nilo_assistant/internal/identity/service_test.go": {
+      "kind": "file",
+      "sha256": "6e14ee3d89e721a2b7d649afdafab1f9a2eb6e1821c03d6f36f23b24acd6d338"
+    },
+    "05_Software/nilo_assistant/internal/integration/manifest/loader.go": {
+      "kind": "file",
+      "sha256": "9c6349f65830bec1a48f97c55b04edebd6c2561d89fac41f43965cbc63065d96"
+    },
+    "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go": {
+      "kind": "file",
+      "sha256": "4045d5c970be59b88a1c965c6a107040e64eadc095803d494438474291b70783"
+    },
+    "05_Software/nilo_assistant/internal/integration/manifest/model.go": {
+      "kind": "file",
+      "sha256": "7a494bba22b9a2bfd660ae6536d0a5490eb01cc9ad330eedb56b1f912495fe73"
+    },
+    "05_Software/nilo_assistant/internal/integration/manifest/schemas/event.schema.json": {
+      "kind": "file",
+      "sha256": "8383764235252958bc2fd71974ee077d590a374e3b84a9eda07cece178070aae"
+    },
+    "05_Software/nilo_assistant/internal/integration/manifest/schemas/manifest.schema.json": {
+      "kind": "file",
+      "sha256": "35a503a82cad71921cb333b32858d8cce0c511ee9c943cd7db1f944526fc7d01"
+    },
+    "05_Software/nilo_assistant/internal/integration/manifest/schemas/operation.schema.json": {
+      "kind": "file",
+      "sha256": "8bdf474922b48a3da79c310de84904f907186b24af688d47dcad17283280e512"
+    },
+    "05_Software/nilo_assistant/internal/integration/manifest/testdata/invalid-command/manifest.json": {
+      "kind": "file",
+      "sha256": "878bf1da4e49e5b8482a8352da4fdbf75440994a9c562697448a411be8411aa0"
+    },
+    "05_Software/nilo_assistant/internal/integration/manifest/testdata/valid/manifest.json": {
+      "kind": "file",
+      "sha256": "7cd97ddf21068415eca2b75528e9df5855d9aadbdce9602fbb6c3219e0a16ad0"
+    },
+    "05_Software/nilo_assistant/internal/integration/protocol/codec.go": {
+      "kind": "file",
+      "sha256": "0768fa1e0c841b44011277028ebf820937d56e8171d1b9837799d8e3b8e263ae"
+    },
+    "05_Software/nilo_assistant/internal/integration/protocol/codec_test.go": {
+      "kind": "file",
+      "sha256": "014f10dbc37b23acb59b99db3e9bacd2db6bb685f974f2ebecaba39656b5cb37"
+    },
+    "05_Software/nilo_assistant/internal/integration/protocol/message.go": {
+      "kind": "file",
+      "sha256": "7085d4cb61902e0e24c4cfa15c763bf7831600da5a7541b16c90cfa9f2276d85"
+    },
+    "05_Software/nilo_assistant/internal/integration/protocol/types.go": {
+      "kind": "file",
+      "sha256": "7a26a33b4b8c60c0b9a65effd1261e9cbfd7f14b81fe3b3ca9d24073a70bab65"
+    },
+    "05_Software/nilo_assistant/internal/integration/supervisor/process.go": {
+      "kind": "file",
+      "sha256": "b24a49a150c4aa7520d405abdcb00e240b1dafef27aafdb90d7b05c178d2db09"
+    },
+    "05_Software/nilo_assistant/internal/integration/supervisor/process_unix.go": {
+      "kind": "file",
+      "sha256": "aa3bc607614e2e02df83710e7dddfc0b48f70407579f78f7c15cbed296be95fb"
+    },
+    "05_Software/nilo_assistant/internal/integration/supervisor/process_windows.go": {
+      "kind": "file",
+      "sha256": "dcc733b47a3a9e1932faf13e5f47685ef80eb7e566e6d653938662963b20e744"
+    },
+    "05_Software/nilo_assistant/internal/integration/supervisor/ring.go": {
+      "kind": "file",
+      "sha256": "183c9564a4f6e5a66f5a37634dffdabbe321ec249598206673b9d6a275602fc5"
+    },
+    "05_Software/nilo_assistant/internal/integration/supervisor/supervisor_test.go": {
+      "kind": "file",
+      "sha256": "1512774c20a27605438de1b67f456bc7edfda3b0d71a7a332aa9ced2992f4680"
+    },
+    "05_Software/nilo_assistant/internal/integration/supervisor/testhelper/main.go": {
+      "kind": "file",
+      "sha256": "8083929637e2dfe7a6bd195d4e9a28a3a6f633bfcf1858d57b5bf18db9583eaf"
+    },
+    "05_Software/nilo_assistant/internal/mcp/fixture_test.go": {
+      "kind": "file",
+      "sha256": "87e54752b028e19ff1aabc126464b554f4e4014da3608ed68036db259edeb7ba"
+    },
+    "05_Software/nilo_assistant/internal/mcp/protocol_test.go": {
+      "kind": "file",
+      "sha256": "adff2648fc30ee18a7a7dfb7435e1920de9950a399579e50ed3d7e9d992acf5c"
+    },
+    "05_Software/nilo_assistant/internal/mcp/server.go": {
+      "kind": "file",
+      "sha256": "e2134ed5a1a5da67fa72237715077785593a8dc73b07e199c1548aa016463f0a"
+    },
+    "05_Software/nilo_assistant/internal/mcp/server_test.go": {
+      "kind": "file",
+      "sha256": "748dbc34b7ed915df71e75a146d32a50a81164da4b601f6acf808e55f0058a12"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/client.go": {
+      "kind": "file",
+      "sha256": "ff348d0d99d6bb38d294ab4b1fd66991de60a214d19ff4559a9a58bcaefc7919"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/engine.go": {
+      "kind": "file",
+      "sha256": "9f1b03c642a810d0ebbe16cdcad9888215f210edb0ba8bb726b617962c435dd3"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/engine_test.go": {
+      "kind": "file",
+      "sha256": "4e317332c6c730cf198a857574a84a337ab9f5b7dcfcd532e3c858d290ba06dc"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/forwarding.go": {
+      "kind": "file",
+      "sha256": "02fff46d1175af64a68b3aa54f0996463d126b2c5da84bc77ea36e31859167b5"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/forwarding_test.go": {
+      "kind": "file",
+      "sha256": "523783368e05310b5aeb15b83ea409498d481041ea3460e8a83338d37d48e60d"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/install.go": {
+      "kind": "file",
+      "sha256": "cda7e365c501148af486c5dc4df302ba730953b2156b104b7d6447e40a63f184"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/install_linux.go": {
+      "kind": "file",
+      "sha256": "73a421bf9546c6cfdac5f98d84bc664981e845cb6fd6cf523af30ae08ebf0e7e"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/install_policy.go": {
+      "kind": "file",
+      "sha256": "d1a14233a498acd32aa33e052a2ce9a14c619209f0e19109bc48c3ff758e9f0d"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/install_system_linux_test.go": {
+      "kind": "file",
+      "sha256": "9e5e352791478668210cef4dc80ed276ea9c64dcbaa50feb0013713185007da7"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/install_test.go": {
+      "kind": "file",
+      "sha256": "8bb2f42c7a10b983f3ad32cf322b2f68027bf5602820210f73336887f44cd2f2"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/keystore.go": {
+      "kind": "file",
+      "sha256": "8be25dbf35298a1b82f6e1377eeead3dec30e7f0c756ae7354f1915d6a5101c3"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/keystore_engine.go": {
+      "kind": "file",
+      "sha256": "fceed6327ee374efb0f6375dbe98aabe447946e82b9c0f7267a524ef18fe32b5"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/keystore_stager.go": {
+      "kind": "file",
+      "sha256": "16b6d5459bdb503492caf419972d00383edc749e5c8daa6ebc4cbab0ca0076a5"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/keystore_stager_test.go": {
+      "kind": "file",
+      "sha256": "bc0bbe5e48e7cfcd8e34b970e041c74abab5aa18337103bbf2f1f0042fe26b5b"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/keystore_test.go": {
+      "kind": "file",
+      "sha256": "8bc64e6e31e1564999d6169fab1ac1d9790caa6c535a96536d38fe9e1f77a18b"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux.go": {
+      "kind": "file",
+      "sha256": "c574e4e4216056a9de18a09d307d297b3c7cefc1e42cfbc3f182c673d3caf9e3"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux_test.go": {
+      "kind": "file",
+      "sha256": "f3d54005cf9d098e8898b8d5058fb25685337c539dcbc69cbce0db0268abe2bb"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_settings_linux.go": {
+      "kind": "file",
+      "sha256": "f9428d3305236d29142fe41fcb1363b8f99c6c16231dff63b20e1c627aebfec5"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_settings_linux_test.go": {
+      "kind": "file",
+      "sha256": "4e866e2a4b6ed6967accfd47348205fb0d2c3b8b7a91fe66e36c91e708018796"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux.go": {
+      "kind": "file",
+      "sha256": "f1e9acbde644716e30e83958eb18f7ab5fdff5248dd0a995f8eeefa3b4571344"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux_test.go": {
+      "kind": "file",
+      "sha256": "52fbf4a74d1d8f86c2368ee8239d07d6b732ff0e7e3fb29d951a8605b1e5197d"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/nftables_linux.go": {
+      "kind": "file",
+      "sha256": "9c4a578d7c18de331d6d3cecada10c9593a27df8b1df09167e0673799e269e64"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/nftables_linux_test.go": {
+      "kind": "file",
+      "sha256": "42389c4cd01133c1f1ba70f93240ede8a01c9fdb9d610fe2cc1113cdb9d2be34"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/nftables_render.go": {
+      "kind": "file",
+      "sha256": "55d5c1abad3aab77ace53aa9731903125e34389bc7162c6b1af6031958a6575c"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/nftables_render_test.go": {
+      "kind": "file",
+      "sha256": "961bfc2f25d9d6d6a779ca413e3da58467b3389df9a98750c74107f121a75861"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/nftables_vpn_linux_test.go": {
+      "kind": "file",
+      "sha256": "bfe56d0add3cdc367680dccbcd57740e2c44fa0c78c74c9376e3488cb4b47793"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/probe.go": {
+      "kind": "file",
+      "sha256": "4680eacd2fb7d06bd1047d0db4fb566847ca4ec302bc54ca4356d1d63a610702"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/protocol.go": {
+      "kind": "file",
+      "sha256": "4dfda9a3a4c730dacec6562d987d0f7e3ea5c324dfa841b2b99f8c813ccdcc4e"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/recover_system_linux_test.go": {
+      "kind": "file",
+      "sha256": "fcf23f3390767230240f42fd76362ef2e30b341c4c1ac2d3013f079773baf460"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/recovery.go": {
+      "kind": "file",
+      "sha256": "19fe1b2b4696acdbba8f8903aa17a19c70eb464f81c052a3de1f049c1a2ab1fb"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/recovery_test.go": {
+      "kind": "file",
+      "sha256": "ed7d3a013537293a073850c0f911baec454cb3b2a4fe5ae77175a7628e02935f"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/secrets_rpc_test.go": {
+      "kind": "file",
+      "sha256": "7d651806b882d1447df596489546ce12c562aa4c5db47382e2fca99bdb5ddcc2"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/settings_engine.go": {
+      "kind": "file",
+      "sha256": "ef3d7f4ef64a389b7aeab448828a72f3402960c209f847c365b306a8e6702f1a"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/settings_engine_test.go": {
+      "kind": "file",
+      "sha256": "2edbb4e92157670902f8ca02251da777a7a7f493ec906e8ff42e52b7cb043ce3"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/socket_linux.go": {
+      "kind": "file",
+      "sha256": "8e3e61865ab2ad04cbf3e45ffe635e51c19cea7d58831591738dfa43ae780b60"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/socket_linux_test.go": {
+      "kind": "file",
+      "sha256": "626c0072353bdb77c157456508c266f1eb63e91e5ce12f4f51aeb773d72eb2df"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/store.go": {
+      "kind": "file",
+      "sha256": "59e7a557fab952dcf150d67c46be8e721ccfd001dc00ac6d217debbe3c0cd6b0"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/tunnel_engine.go": {
+      "kind": "file",
+      "sha256": "61033610bf7d587a2620fd71926002deed15ea1eabd142d30081d7da8721925a"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/tunnel_test.go": {
+      "kind": "file",
+      "sha256": "44faef6467cc679950afe900478df929402ae14eab9e271f86b1ae3b5d2a0799"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/wireguard.go": {
+      "kind": "file",
+      "sha256": "86bddc7d19bc863f925b5dc77429d1989745e8aacc81ada5ee4ac7c6dfd7fa54"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/wireguard_linux.go": {
+      "kind": "file",
+      "sha256": "52e20e1144fa5c9dd4fd60fd18bc8a0b4b6cd454a26788be448d41615c249af2"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/wireguard_linux_test.go": {
+      "kind": "file",
+      "sha256": "02654c9752b46a0d8300924d916a9ff5630b1b6686a4ee80b0de67aceba60b73"
+    },
+    "05_Software/nilo_assistant/internal/nethelper/wireguard_test.go": {
+      "kind": "file",
+      "sha256": "470507ee3dcae9f4e78ef8809423a007c5f739a3b1b4d527ad8cc8d848bf2347"
+    },
+    "05_Software/nilo_assistant/internal/network/appliance.go": {
+      "kind": "file",
+      "sha256": "b9b6afd447fc9750947b2f7593780de5e6db4a41c8b29275b4e194713255f8a2"
+    },
+    "05_Software/nilo_assistant/internal/network/appliance_device_networks.go": {
+      "kind": "file",
+      "sha256": "f3773cba86b0ba314a2a79ef4830943d44b02265c46df61a933436d443d90cbd"
+    },
+    "05_Software/nilo_assistant/internal/network/appliance_settings.go": {
+      "kind": "file",
+      "sha256": "13ef662bee7b1f39b123cf7f9deb23340d569d0b5b5bda6cb59967dda5baf0df"
+    },
+    "05_Software/nilo_assistant/internal/network/change_test.go": {
+      "kind": "file",
+      "sha256": "fe9832a8a8a5cb35dc447784f149e3469fc88ec27670bf6bd502a5c115bf2b0d"
+    },
+    "05_Software/nilo_assistant/internal/network/changer_simulated.go": {
+      "kind": "file",
+      "sha256": "2f6e44993e4d64028f7968b16021627ed0a76c311daa9ee9e3b6981500de0538"
+    },
+    "05_Software/nilo_assistant/internal/network/device_network_check.go": {
+      "kind": "file",
+      "sha256": "4cc4a6abbbd114d50ce97dc44a6a3cade92a753620bd921e82a73928b225f838"
+    },
+    "05_Software/nilo_assistant/internal/network/device_network_manager.go": {
+      "kind": "file",
+      "sha256": "9b9767ca03b79ba6cb3a3f1729f96f3051145d18f2f0149a8be4e3c5c1e4ff45"
+    },
+    "05_Software/nilo_assistant/internal/network/device_network_manager_test.go": {
+      "kind": "file",
+      "sha256": "9ddb618d43334418e90dfa4da6f33ab8ccf12310c3b3ac06ba2b8b1fb52a748a"
+    },
+    "05_Software/nilo_assistant/internal/network/device_network_reader.go": {
+      "kind": "file",
+      "sha256": "8193cc71b039a71cdbd195498a6e8ea233d513d74927c82ba3a7dd61976f55ea"
+    },
+    "05_Software/nilo_assistant/internal/network/devicenetwork.go": {
+      "kind": "file",
+      "sha256": "a5c487549bbc12b5e6b642ff122349fee9e4f8d0a7825ea0cedc2a967688114f"
+    },
+    "05_Software/nilo_assistant/internal/network/devicenetwork_test.go": {
+      "kind": "file",
+      "sha256": "639b3edc4c9cc4c6448430356a2c0962bdefdde5763c1f482aac042a2565c11c"
+    },
+    "05_Software/nilo_assistant/internal/network/forwarding_plan.go": {
+      "kind": "file",
+      "sha256": "28ae809b89c9bf794fa22d4ae4e23e7287275ca000a1753a5eb673a54eaf4030"
+    },
+    "05_Software/nilo_assistant/internal/network/forwarding_plan_test.go": {
+      "kind": "file",
+      "sha256": "bb47cc0b43ceeefd350f511023d7700b72d02dd47ab0be0b533191c34083c87e"
+    },
+    "05_Software/nilo_assistant/internal/network/install.go": {
+      "kind": "file",
+      "sha256": "bd19909b3a68391800f1e92ae6fb32e02d202a95e364a743377931a25147739f"
+    },
+    "05_Software/nilo_assistant/internal/network/install_test.go": {
+      "kind": "file",
+      "sha256": "e0f4bf35201cb1886c8d65de92c7a225e4aeb8c31bc8d9e0ce33dd8b3e34bb7e"
+    },
+    "05_Software/nilo_assistant/internal/network/interface_settings.go": {
+      "kind": "file",
+      "sha256": "59c13d13c16416824781f23d836dd7eec71f3ea1097db7f4a27409712ef30dc3"
+    },
+    "05_Software/nilo_assistant/internal/network/interface_settings_test.go": {
+      "kind": "file",
+      "sha256": "b9b428a023fcd1f9655ea2e397b5c1f123370fc06adf612b1b85d3584e998a1a"
+    },
+    "05_Software/nilo_assistant/internal/network/management.go": {
+      "kind": "file",
+      "sha256": "800165360443c6aa723a27dedd2de52adacb244a59666acb8a5da0945a929607"
+    },
+    "05_Software/nilo_assistant/internal/network/management_test.go": {
+      "kind": "file",
+      "sha256": "5ab3650afc65d2c8cc4e220d582c1a7681f5aa9490a3ae2e7d2dd5502e3ca3af"
+    },
+    "05_Software/nilo_assistant/internal/network/model.go": {
+      "kind": "file",
+      "sha256": "24aadba1d4b87ab3143e4a54ce6361ad787e629cda287828c60d30c65e69e1fc"
+    },
+    "05_Software/nilo_assistant/internal/network/operation.go": {
+      "kind": "file",
+      "sha256": "e41178222b9991bbd02263ef024c6f98b8aedce71f89e6f7fa4cb88b54d1367f"
+    },
+    "05_Software/nilo_assistant/internal/network/operation_durability_test.go": {
+      "kind": "file",
+      "sha256": "2a59e8bc6e139e9f907b2e9eb4edf869beb2149d356ee6d0267da580ced6eb7f"
+    },
+    "05_Software/nilo_assistant/internal/network/operation_reconcile_test.go": {
+      "kind": "file",
+      "sha256": "86e12ed77f5dd9fe698ac3cca7af560d86945110e0bfcfb612c1bac4fe602ffb"
+    },
+    "05_Software/nilo_assistant/internal/network/operation_safety_test.go": {
+      "kind": "file",
+      "sha256": "1ea918a40fe376a2a40305d2768dbdb2940944b801041b21ea3d8a88dab82b4d"
+    },
+    "05_Software/nilo_assistant/internal/network/operation_test.go": {
+      "kind": "file",
+      "sha256": "124ce267e688d664d9f1a1b7abc7150375fe34f12886cdc5ad3d3398ed7cc2da"
+    },
+    "05_Software/nilo_assistant/internal/network/persistence.go": {
+      "kind": "file",
+      "sha256": "1d5bd18dc3906eea16b4a1e79cb03f4c4edc7ed4c57f275c368eff79a664c857"
+    },
+    "05_Software/nilo_assistant/internal/network/profile.go": {
+      "kind": "file",
+      "sha256": "72292f74ae2269ced668a04d570fab5f5012c80befc2bd65d80d175984da3d43"
+    },
+    "05_Software/nilo_assistant/internal/network/profile_manager.go": {
+      "kind": "file",
+      "sha256": "520e2e4ef21accc51daf9189d871a96a144af2a03e21e9ba99b7c35ebe637c46"
+    },
+    "05_Software/nilo_assistant/internal/network/profile_manager_test.go": {
+      "kind": "file",
+      "sha256": "6cecf5dd1d2f54b8a1a899a354ff9c9b8549c7a5c3e5b65011cce37e84b81f99"
+    },
+    "05_Software/nilo_assistant/internal/network/profile_test.go": {
+      "kind": "file",
+      "sha256": "c0be6c6622fc2f169749ad8db4f6b2692d508383bda7181bd4969cd18670cacf"
+    },
+    "05_Software/nilo_assistant/internal/network/profiles.go": {
+      "kind": "file",
+      "sha256": "a432f4ee08515ae3b540657e0adb13eb11c02a0ec96c2c8d7e7a41ffdd67513e"
+    },
+    "05_Software/nilo_assistant/internal/network/provider_simulated.go": {
+      "kind": "file",
+      "sha256": "498a0d3e1fba6da6e98ded9e77590cf9807f03848fda7df1a8917535fec871fe"
+    },
+    "05_Software/nilo_assistant/internal/network/provider_simulated_test.go": {
+      "kind": "file",
+      "sha256": "47e443c5d6586c036af49126dbc8b57fd362b583096ffa4f7422ba9bd5e687b3"
+    },
+    "05_Software/nilo_assistant/internal/network/runtime.go": {
+      "kind": "file",
+      "sha256": "e29a6ab128becd7c069b3cf66610cd54d26b504f94030d64ea1aa3dee1473a51"
+    },
+    "05_Software/nilo_assistant/internal/network/runtime_test.go": {
+      "kind": "file",
+      "sha256": "904067ff4721a612023d337883c85fbffdac0bed4850800e233488f857ca2389"
+    },
+    "05_Software/nilo_assistant/internal/network/sampler.go": {
+      "kind": "file",
+      "sha256": "f624f0b46ddc04129be14d8d9bc0c4595ff3b5364d83b9afe2ba44b5bc43da1d"
+    },
+    "05_Software/nilo_assistant/internal/network/sampler_test.go": {
+      "kind": "file",
+      "sha256": "f3c55f91447d9d8bc11760320918b26453ed7b704fdb9bc123360477a7649643"
+    },
+    "05_Software/nilo_assistant/internal/network/service.go": {
+      "kind": "file",
+      "sha256": "9ba8b2ba59e45d66e10a77113a24db9c23b75f4430d86f162a85bb389e8417ad"
+    },
+    "05_Software/nilo_assistant/internal/network/service_test.go": {
+      "kind": "file",
+      "sha256": "b69c23e154aa711cfd1878480e32c0618694950f12bdff2208285a556a33ba6e"
+    },
+    "05_Software/nilo_assistant/internal/network/simulation.go": {
+      "kind": "file",
+      "sha256": "92052134e9e0cab646dc2c5c6af8e384cd9bc410b017daf81155c6119162c09c"
+    },
+    "05_Software/nilo_assistant/internal/network/simulation_device_networks.go": {
+      "kind": "file",
+      "sha256": "03c1ee11258e33c4f943ac559128201a76fbf30819e1027655e6815a0db857d5"
+    },
+    "05_Software/nilo_assistant/internal/network/simulation_settings.go": {
+      "kind": "file",
+      "sha256": "33e3b9d954862fa8a7015dc9f4bad807b49676c8161cbbef4de6996ea79de121"
+    },
+    "05_Software/nilo_assistant/internal/network/simulation_settings_test.go": {
+      "kind": "file",
+      "sha256": "477569d0a335de3380304ba3dede5d0deaaea85bba2c97a257886e4cbb77d327"
+    },
+    "05_Software/nilo_assistant/internal/network/simulation_test.go": {
+      "kind": "file",
+      "sha256": "a055287f95e8a76f3fd584f2e385b52472b62dac4b187db432dcd311e11c55c0"
+    },
+    "05_Software/nilo_assistant/internal/network/statistics.go": {
+      "kind": "file",
+      "sha256": "2d527749716fdd436793386f9c64ae00258d216cd5919ab5eab31cef591e781a"
+    },
+    "05_Software/nilo_assistant/internal/network/statistics_test.go": {
+      "kind": "file",
+      "sha256": "71eda13073a69ec66d8afa63b05d44f2cf47d5b7c535d1047fc28882c325f58a"
+    },
+    "05_Software/nilo_assistant/internal/network/tunnel.go": {
+      "kind": "file",
+      "sha256": "e600d5ee6d3d107c04d32067a74e99e2c149853bed411a1c66ab33eb630a826a"
+    },
+    "05_Software/nilo_assistant/internal/network/wifi.go": {
+      "kind": "file",
+      "sha256": "cb7b0c2c43de365aa24d26a31060fb20986f41c66adc211a56bd7ac6d07d804c"
+    },
+    "05_Software/nilo_assistant/internal/network/wireguard.go": {
+      "kind": "file",
+      "sha256": "00519dbd8ad1391dba654249457d6b155f19bd5fdcdf027c767137ea266fac8f"
+    },
+    "05_Software/nilo_assistant/internal/operation/service.go": {
+      "kind": "file",
+      "sha256": "dc236be524bde98fb6ec4df0595bdb6a47f7df884ef28edecf86d6bf8284eb59"
+    },
+    "05_Software/nilo_assistant/internal/operation/service_test.go": {
+      "kind": "file",
+      "sha256": "70e88d09b2f082f07efa0b7c33ee88110f66cfdd0ce440ccaa5234b7fdce91eb"
+    },
+    "05_Software/nilo_assistant/internal/policy/model.go": {
+      "kind": "file",
+      "sha256": "1c0722c0b9c1792d2f587fc89b1e2c734ad8501b7eb039b150dfccf578b38979"
+    },
+    "05_Software/nilo_assistant/internal/policy/repository.go": {
+      "kind": "file",
+      "sha256": "95557e05e4fad6a00bfea11105f1485df3350658a0f91bc95f493192a787dd11"
+    },
+    "05_Software/nilo_assistant/internal/policy/resolver.go": {
+      "kind": "file",
+      "sha256": "69cdfb5751a3ccc403b3890b2ef80318bc19d88b72feb504f5d185e2c2c7b9e6"
+    },
+    "05_Software/nilo_assistant/internal/policy/resolver_test.go": {
+      "kind": "file",
+      "sha256": "60bdc0afbe031000fbb55b4c1ff8a7950c865eb5033e9c95c38d41c4e8ac74bb"
+    },
+    "05_Software/nilo_assistant/internal/session/repository.go": {
+      "kind": "file",
+      "sha256": "49ab0b65c924cc333f685f13e0cf01f83179a856462a83f06ae1213867a21638"
+    },
+    "05_Software/nilo_assistant/internal/session/service.go": {
+      "kind": "file",
+      "sha256": "436a04dea918459477f7fe0f28223b36113ee67384758ed6c8e9fb85e6d94c69"
+    },
+    "05_Software/nilo_assistant/internal/session/service_test.go": {
+      "kind": "file",
+      "sha256": "ce33894eb27fe81cdedb16da50cffee74025eee642cfb07b19fb98a6d79cf4d4"
+    },
+    "05_Software/nilo_assistant/internal/simulation/catalog.go": {
+      "kind": "file",
+      "sha256": "0169f805c11a17e54403d95ec4617e1b004e2366172bdbc70c0ad23e77460e41"
+    },
+    "05_Software/nilo_assistant/internal/simulation/catalog_test.go": {
+      "kind": "file",
+      "sha256": "de40fa3170aec4012fed48773b6576de263d583c585ca0b48b578fc2d1c42247"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/activity_repository.go": {
+      "kind": "file",
+      "sha256": "bda2b542b4616070d49efcd71823935cc100f6b51a8c1c634cc828af4225dd18"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository.go": {
+      "kind": "file",
+      "sha256": "c1ea7970d2b259b9486f24bc3b42d10702c201aa4b100c17792a0882028f1efe"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository_test.go": {
+      "kind": "file",
+      "sha256": "bacffd4626c3284fea07df41a33c7ab199a937b980ac0b4bf00350e185e23325"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/artifact_repository.go": {
+      "kind": "file",
+      "sha256": "95accafe852fc974457961989e68c5d07eb24a2cf699283f48fed12260b6f4eb"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/audit_repository.go": {
+      "kind": "file",
+      "sha256": "2b632aaf23e5b90f4e51c02f8b39ab875f8d03e995b2fa8e03ebbbfcaa6505bb"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/auth_repository.go": {
+      "kind": "file",
+      "sha256": "e8058e9aa89ae7857b3e7e794eb411732f412c2a8d9282b2687cf84bfe914c21"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/auth_repository_test.go": {
+      "kind": "file",
+      "sha256": "36616829312dae4e781299283e82c4a6669c1a00b9e7a3f1a6d862d5c536d73a"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/config_repository.go": {
+      "kind": "file",
+      "sha256": "394ba91786850596e47e618f06be489ebd57935937f56d5df6fabab968bb62fc"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/config_repository_test.go": {
+      "kind": "file",
+      "sha256": "9bdfdf957140d48df259bf99fed709130421284ff766e66751261fa98d740576"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/db.go": {
+      "kind": "file",
+      "sha256": "27ff477265f22f3464817eddab35d73143afc562f944c9a399f8db9fdaf1f15e"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/db_test.go": {
+      "kind": "file",
+      "sha256": "e91ddcbe63dba962dfac7d9c624784d7fe23335b4a6ee842882b82079caf9e1a"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/device_network_repository.go": {
+      "kind": "file",
+      "sha256": "b0bd81cada344c6199cc24f1be82f0e02d278a3def4fd5190f34e4bfa2536dc6"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/device_network_repository_test.go": {
+      "kind": "file",
+      "sha256": "69f92061c349788c37d764a054b7afa944309e32a8df07ca0c03cd07a94379a5"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/diagnostic_repository.go": {
+      "kind": "file",
+      "sha256": "4e5f1ac4070254083756379f9c2b4bccdcd73b7ae401cf13284c333b3ac4f66a"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/identity_repository.go": {
+      "kind": "file",
+      "sha256": "a6dff39e623f9db1a39495c4e719b7b9ee20b8b3479054f7d69f568da3a9f92a"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/identity_repository_test.go": {
+      "kind": "file",
+      "sha256": "a6f09e86db1738eb4c07c5195617f9a4cb49c9c3e0767ff6b75e13f0cce98148"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/interface_settings_repository.go": {
+      "kind": "file",
+      "sha256": "51167fe751ac5978a353e2c70e807b0623e72179913cda25f760cf67ca0b037a"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/interface_settings_repository_test.go": {
+      "kind": "file",
+      "sha256": "7ebf742fbd3a3804092c55cf6a6b349d2b6a1eb0846ba5fd4cf3a16cb12d5cbf"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations.go": {
+      "kind": "file",
+      "sha256": "d43b6fb9ce62bd0b6e1bff30351e9b83a42d6cd81f954b7a262a2af66b3d7d49"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/001_initial.sql": {
+      "kind": "file",
+      "sha256": "79fbdad8bdf9d4df05e35dcc30325ea83a28143666dc281e22dd9d9aacfb7578"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/002_policy_snapshots.sql": {
+      "kind": "file",
+      "sha256": "3109c2cf834451aa7c84a3e1c89128341fc54ba6e5c79176a3331b550fa0639f"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/003_active_configuration.sql": {
+      "kind": "file",
+      "sha256": "7d0ab94296d75d7b864287920746a1138bbd276c028addec7c94f28feb0c3683"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/004_identity_access_control.sql": {
+      "kind": "file",
+      "sha256": "6dbe92e47840f3f72c572eb57d0b78c289df6946e392958fe959c78e34fa8e95"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/005_network_traffic.sql": {
+      "kind": "file",
+      "sha256": "2a5b3d7cbd45744500d1140f9ff8eeb4b54de04d35b12166aa97c9ccaf03dd16"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/006_appliance_audit_operations.sql": {
+      "kind": "file",
+      "sha256": "1081bc7185c3644e85eb18267482d63675deda431204f1311aa552e5a069b188"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/007_vpn_profiles.sql": {
+      "kind": "file",
+      "sha256": "eb43a541484d1b206a5da4c742ad0020e127374f943de453b4ffcac17624282a"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/008_interface_settings.sql": {
+      "kind": "file",
+      "sha256": "62a51317ff153ccafd4b0a579e498f4a1f51eab4104eabc1cf10eeb7430f4c75"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/009_device_networks.sql": {
+      "kind": "file",
+      "sha256": "668b68dfa57418fa2f9af58ab990f9b1d8668bff0ece5230e9316ce813fa3ab9"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/010_activity.sql": {
+      "kind": "file",
+      "sha256": "3c6256a65aa40ff5dd2e461efab37ed6252eed7364672142982ac1f6074992e3"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/network_operation_repository.go": {
+      "kind": "file",
+      "sha256": "ce936904c564bdc140ae035fa347e501e98bc585ecfcd19afe76c5acf2b15f12"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/network_repository.go": {
+      "kind": "file",
+      "sha256": "452e9f4c71bf677b1b47bca9b91f59e3421f7eced90424841ef798da30900fbe"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/network_repository_test.go": {
+      "kind": "file",
+      "sha256": "b5e6963407f0ada3a5569ac1347e78eea8364a6bb32f2c050348961b768db641"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/operation_repository.go": {
+      "kind": "file",
+      "sha256": "9c34be215e8d5dffc3770be08bd1e30fdab9798699aa497ac2f0db8368d99268"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/operation_repository_test.go": {
+      "kind": "file",
+      "sha256": "9617460426054f28787555ba17f644448e13e5dcf7968bfac6b2c1f34f7149c9"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/policy_repository.go": {
+      "kind": "file",
+      "sha256": "47f9abd96d2cfe8dddef685705c1455e18bf727d090d5402bf5bb98003e45b7c"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/policy_repository_test.go": {
+      "kind": "file",
+      "sha256": "b32cbe0f1e4807a8f54bd4987b863030bb61e31fc1c4c99b1ac01b4be9371e8b"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/session_repository.go": {
+      "kind": "file",
+      "sha256": "0b205c16a6e0d12df9d420cb00e5713613b43c7563474ba9b920aeaa0fca0b07"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/session_repository_test.go": {
+      "kind": "file",
+      "sha256": "939e6c152839bd3462d22b435fd59593511fba77973e01061e3a756a8c342eee"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/vpn_profile_repository.go": {
+      "kind": "file",
+      "sha256": "5e479152ccf6006dfea4bd63d42449778f83b8c9aeef0eea2265587c7099db38"
+    },
+    "05_Software/nilo_assistant/internal/store/sqlite/vpn_profile_repository_test.go": {
+      "kind": "file",
+      "sha256": "61cd3a431b8f7f21dffc57ba3f92fc82880633b0a353a7f8c95409801fc5aa61"
+    },
+    "05_Software/nilo_gui/.env": {
+      "kind": "file",
+      "sha256": "7bc3336031effba03dd04b9bc536293bc9769623ed2e3942902c95d2362df42d"
+    },
+    "05_Software/nilo_gui/.env.mock": {
+      "kind": "file",
+      "sha256": "8873d2802af3029d9fb347f53576d948689c61dacd082fadc485d5ace0d299db"
+    },
+    "05_Software/nilo_gui/.prettierignore": {
+      "kind": "file",
+      "sha256": "7665adf7be2ab08a697c450fdec8e4e24732fb1944ac6077a5eb7bd4f7d95a65"
+    },
+    "05_Software/nilo_gui/.prettierrc.json": {
+      "kind": "file",
+      "sha256": "123288091b90a651c9ac8afac8545b2b3ed0c3b6a5e2ef590e8c5063e3d02ccb"
+    },
+    "05_Software/nilo_gui/README.md": {
+      "kind": "file",
+      "sha256": "b0a0b75c746ef35d9359afa0e81619b73a52f8b170a56f7e4bb212f92671b28a"
+    },
+    "05_Software/nilo_gui/e2e/authentication.spec.ts": {
+      "kind": "file",
+      "sha256": "e6d50b8a230f88fe1e2ff568ba61e4dadb755e66f9a2ce024f916445a98e91d9"
+    },
+    "05_Software/nilo_gui/e2e/bench-core.spec.ts": {
+      "kind": "file",
+      "sha256": "31e56ba1ed88802577458ef0dde09435810778480c10459441a3e8add74f05a1"
+    },
+    "05_Software/nilo_gui/e2e/commands.test.ts": {
+      "kind": "file",
+      "sha256": "5314a3e13d035e24c4ec7fe015a7d127d837e756d5e2c9fbef1ebfe1fe30f1cf"
+    },
+    "05_Software/nilo_gui/e2e/field-display.spec.ts": {
+      "kind": "file",
+      "sha256": "926db2eb58c7f34c7cb08ebf55b74b52a6bdb9bc395a087bd2ecb33469c83599"
+    },
+    "05_Software/nilo_gui/e2e/network.spec.ts": {
+      "kind": "file",
+      "sha256": "a1bf7610d61611dae8364b37603ea82e490b5d99b15c7d498bda87d55ed07b9a"
+    },
+    "05_Software/nilo_gui/e2e/prerequisites.test.ts": {
+      "kind": "file",
+      "sha256": "69441e4a60114af256e15449fd406ceba44061693f32a1dcb424d403bd7dc958"
+    },
+    "05_Software/nilo_gui/e2e/prerequisites.ts": {
+      "kind": "file",
+      "sha256": "2ffb160f16e67b461544e1b1f4881f254fb3e69ab7e8355f0b2e44e51188fe6b"
+    },
+    "05_Software/nilo_gui/e2e/shell.spec.ts": {
+      "kind": "file",
+      "sha256": "62c0172a877ce00aea6b29312b8aecc75c61d662c1e82993693aeb53ca1ef1fd"
+    },
+    "05_Software/nilo_gui/e2e/token-redaction.spec.ts": {
+      "kind": "file",
+      "sha256": "b0c110680cd09af880882edd509ea99ff7d9fec151379127f3011c9ca8c97043"
+    },
+    "05_Software/nilo_gui/e2e/topology.test.ts": {
+      "kind": "file",
+      "sha256": "94003c0fcfe10034ddd03d0fb2e2a33d5a88884335601ed2d0285a5a68df3ec2"
+    },
+    "05_Software/nilo_gui/e2e/topology.ts": {
+      "kind": "file",
+      "sha256": "41cf3c3ae8ce240e3cff2abaacb44442e04c8a3800a48be43b970cebf42f1b54"
+    },
+    "05_Software/nilo_gui/eslint.config.js": {
+      "kind": "file",
+      "sha256": "6825860f3e3c9cb9f27bdcc162787aa0900129c341e975b82d7257d4243fbc65"
+    },
+    "05_Software/nilo_gui/index.html": {
+      "kind": "file",
+      "sha256": "135da67c8c30199d74cd4a3dd1244b7c733ad86da0ea72464f165846e5533f6b"
+    },
+    "05_Software/nilo_gui/package-lock.json": {
+      "kind": "file",
+      "sha256": "6996394cf86f933567b0e3b077d5296e2b72efc67949302fa2f22d53cee63383"
+    },
+    "05_Software/nilo_gui/package.json": {
+      "kind": "file",
+      "sha256": "7c9391b7da12c85b1e481c78c9e80f3e9b388808657c01dbdd46a36069de01bb"
+    },
+    "05_Software/nilo_gui/playwright.config.ts": {
+      "kind": "file",
+      "sha256": "0dd332d56423002aaaddadbc215e5810b0fd72fec380d73f122d4b44f8572eaf"
+    },
+    "05_Software/nilo_gui/public/favicon.svg": {
+      "kind": "file",
+      "sha256": "299599bac4d3d4bb55c41eb8d89436a45356b37e3c659cbc6ff1806236898111"
+    },
+    "05_Software/nilo_gui/src/App.test.tsx": {
+      "kind": "file",
+      "sha256": "f7e6d41034c22d283d2714b7573eb262a0b2d9601d33d84191619346cc7afd61"
+    },
+    "05_Software/nilo_gui/src/App.tsx": {
+      "kind": "file",
+      "sha256": "b5c23ae04b6e33d4c70fbaac9c994e18c6bc53319f27011813f35d27798bb25a"
+    },
+    "05_Software/nilo_gui/src/api/activity.ts": {
+      "kind": "file",
+      "sha256": "63df6024df871bc9f844b7a3f2dfddf97ae9326f1e5a843d1ccd36b90bae3424"
+    },
+    "05_Software/nilo_gui/src/api/client.test.ts": {
+      "kind": "file",
+      "sha256": "32d388f595b4774223e48e34527ef1af8e7550d715f1688e04125ecdead1fff1"
+    },
+    "05_Software/nilo_gui/src/api/client.ts": {
+      "kind": "file",
+      "sha256": "88a743b19a330c49d0cb8ee622b820af133c24544bae6f62516361e1cbe04a24"
+    },
+    "05_Software/nilo_gui/src/api/contract.test.ts": {
+      "kind": "file",
+      "sha256": "ce217f4963f18ef3300b2eaeef3f91475bfea48ce6d52c8fd772ca41482cf802"
+    },
+    "05_Software/nilo_gui/src/api/contract.ts": {
+      "kind": "file",
+      "sha256": "a5a5e2f8446837b8ba1066bc4fcbd80a663ad88b7841654f4f67962e3932d7f8"
+    },
+    "05_Software/nilo_gui/src/api/csrf.ts": {
+      "kind": "file",
+      "sha256": "eea14800ce53a2793b2805f94a44a428833ec2c336a6f73250081a5a0e1dea9b"
+    },
+    "05_Software/nilo_gui/src/api/devicenetworks.ts": {
+      "kind": "file",
+      "sha256": "86f57a936b2b9c8582dc582984b2e0f798425395e3841d68c404fcfba5e07b37"
+    },
+    "05_Software/nilo_gui/src/api/mock.test.ts": {
+      "kind": "file",
+      "sha256": "14a93e84a9747410177783dc1642c279a8d31d6b9d371a806d0b2b06a97c7263"
+    },
+    "05_Software/nilo_gui/src/api/mock.ts": {
+      "kind": "file",
+      "sha256": "8ffc5bcf0a70f4de44fcb3cf03f6d2c0a5fb09b3efa7506cd1d408f55b9814d6"
+    },
+    "05_Software/nilo_gui/src/api/network.test.ts": {
+      "kind": "file",
+      "sha256": "4227abab6f0c4460715eff37d73ab41d58426cb03ca8c80ad6727b56828f7006"
+    },
+    "05_Software/nilo_gui/src/api/permissions.ts": {
+      "kind": "file",
+      "sha256": "5d7f8a6c45fbba47421af28b51ce148141333852aa57c6b78ed57751a67ab7fa"
+    },
+    "05_Software/nilo_gui/src/api/resource.ts": {
+      "kind": "file",
+      "sha256": "22b74cf8b62f4eace7d5e37ffe8ccfdb6a1acc8232f8f82c811788392f0af93e"
+    },
+    "05_Software/nilo_gui/src/api/settings.ts": {
+      "kind": "file",
+      "sha256": "a6a443ca68ead9ccb2491d491f56f70ed29c4a3c732a04d3ab9c81992f4b1fc5"
+    },
+    "05_Software/nilo_gui/src/api/wireguard.test.ts": {
+      "kind": "file",
+      "sha256": "00ab7f1d2f514179f517b584efe5214320d4b841b16c86ee49873511b41aebed"
+    },
+    "05_Software/nilo_gui/src/api/wireguard.ts": {
+      "kind": "file",
+      "sha256": "379f43b45e578d011bfdfc9f28b051bf37c77947c55ef54ab0b035668ac9aa75"
+    },
+    "05_Software/nilo_gui/src/components/AdministrationForms.tsx": {
+      "kind": "file",
+      "sha256": "d24bfc7ce7d89ed74bec5df05971fa7f8e48a1a006a5be780decb03c27e7bd95"
+    },
+    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx": {
+      "kind": "file",
+      "sha256": "ea6d4c5d04e4c91ce8ff2a521d3e5c3f4e5521c38a0bbb6eb8df3cdad9bd92d1"
+    },
+    "05_Software/nilo_gui/src/components/AuthenticationPage.tsx": {
+      "kind": "file",
+      "sha256": "10d0ca31801f55cdef7da92b6abda4929a5a7c6a84d4c9f02c533c77bccd31b3"
+    },
+    "05_Software/nilo_gui/src/components/Modal.test.tsx": {
+      "kind": "file",
+      "sha256": "db8c90fdc0588079c76d151025499605541df86a21a5e18da08c21924022b5ae"
+    },
+    "05_Software/nilo_gui/src/components/Modal.tsx": {
+      "kind": "file",
+      "sha256": "952db94ad39a3bb2dd6b2474fbe7a38c4943f5111981088b19b71019e875d560"
+    },
+    "05_Software/nilo_gui/src/components/RowActions.test.tsx": {
+      "kind": "file",
+      "sha256": "d6c07a8db211cc0384f476dc71fb122016f6919f551354afef668f0acb5051a2"
+    },
+    "05_Software/nilo_gui/src/components/RowActions.tsx": {
+      "kind": "file",
+      "sha256": "006fb6997b60746abad1a3531e71d5c9b39e8c127d9c620b9111834dfdfc2042"
+    },
+    "05_Software/nilo_gui/src/components/SignInScreen.tsx": {
+      "kind": "file",
+      "sha256": "193292f48768a51bef97ed8e6f706cd884877189ef3a564813bf998b9779ff50"
+    },
+    "05_Software/nilo_gui/src/components/help/Field.tsx": {
+      "kind": "file",
+      "sha256": "d2f041e07a887e16f35fade77a6643e8ddab6bcdec119e566852680d1734b779"
+    },
+    "05_Software/nilo_gui/src/components/help/HelpPopover.test.tsx": {
+      "kind": "file",
+      "sha256": "b6fb9f8698ea8988afabd3a0e77c2a82876fe593edaa53b8845135fe05abf314"
+    },
+    "05_Software/nilo_gui/src/components/help/HelpPopover.tsx": {
+      "kind": "file",
+      "sha256": "2db46dad63c2e416562ce33a92ab8281adbac621e7129b1684b36b8c9375f26f"
+    },
+    "05_Software/nilo_gui/src/components/help/WorkflowHelp.tsx": {
+      "kind": "file",
+      "sha256": "67007c57a8e88339cb68df4f385e22ab4009d2286e79d368d540e2df56cf31a2"
+    },
+    "05_Software/nilo_gui/src/components/layers.ts": {
+      "kind": "file",
+      "sha256": "763db9d4480b48fe7218e7254ff0f39833ac1c5ef5a4637193fefff2d7b33bd3"
+    },
+    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx": {
+      "kind": "file",
+      "sha256": "83449452dd58985706ca6d015d4932e9401387996f99b92dd1b61a6db4da54b2"
+    },
+    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.tsx": {
+      "kind": "file",
+      "sha256": "316b5af0ca618e063ba367e9f7bf8a88786bfa80d0327794486aa7288901dbef"
+    },
+    "05_Software/nilo_gui/src/components/network/InstallationProgress.test.tsx": {
+      "kind": "file",
+      "sha256": "d42748687f1a64f1c37630c3934e60738df071c762354c8e872c32f3922cad19"
+    },
+    "05_Software/nilo_gui/src/components/network/InstallationProgress.tsx": {
+      "kind": "file",
+      "sha256": "9e10a53d93a23cd1de7ee2a6d601af8266b5d1eb750a49c737f97170d050cc4d"
+    },
+    "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.test.tsx": {
+      "kind": "file",
+      "sha256": "9e811da54150423e02818a121487af043207104972bd91ca86373cb1c6461488"
+    },
+    "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.tsx": {
+      "kind": "file",
+      "sha256": "e964fe500d91ce9ee326a235631fb7eedc4df3526088e4ae9b91c076515867ca"
+    },
+    "05_Software/nilo_gui/src/components/network/NetworkConfirmation.tsx": {
+      "kind": "file",
+      "sha256": "e69214ba291f4ce8ff90bf5821b4147e0f460b7ec044c7e6baf39fc0293af7fb"
+    },
+    "05_Software/nilo_gui/src/components/network/NetworkOverview.tsx": {
+      "kind": "file",
+      "sha256": "196ffd1d69ce036ff9183f94846a18a38eec82789f62b95824dab3fe40396773"
+    },
+    "05_Software/nilo_gui/src/components/network/TrafficChart.test.tsx": {
+      "kind": "file",
+      "sha256": "cd5e827f6bc3416574c3aeb911785cf6a2a8a10a20b1303d61d6fa7ff6d6b829"
+    },
+    "05_Software/nilo_gui/src/components/network/TrafficChart.tsx": {
+      "kind": "file",
+      "sha256": "554ef9d8e360a3d131feaddbe67acaf317d174fbe745a540354c6c4cea0edef5"
+    },
+    "05_Software/nilo_gui/src/components/network/WireGuardPanel.test.tsx": {
+      "kind": "file",
+      "sha256": "7cfc8b6e18f17e82e7db9fe01d785c6310c75e4125b38a8b486d5f492c5527bb"
+    },
+    "05_Software/nilo_gui/src/components/network/WireGuardPanel.tsx": {
+      "kind": "file",
+      "sha256": "e164e55313a49ffadfa1357d618282cd04dfee7695b78ba37cbd3e6fff6a33fd"
+    },
+    "05_Software/nilo_gui/src/components/network/addressing.ts": {
+      "kind": "file",
+      "sha256": "ae9bb006bc27558278d7a840415756cf584e41bfb4fc2562e99d9d24472be05e"
+    },
+    "05_Software/nilo_gui/src/components/network/views.ts": {
+      "kind": "file",
+      "sha256": "7b1eafe67f95ef212cc943684f20bf08a74486dcf774b12bac438b0dcd892e79"
+    },
+    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx": {
+      "kind": "file",
+      "sha256": "c2073d4bf703831e4d2a5e5abdb659b99a3bce9fddfb0225dc402c9b99d8b064"
+    },
+    "05_Software/nilo_gui/src/components/pages/ActivityPage.tsx": {
+      "kind": "file",
+      "sha256": "b1310bbde56559a40353aed53d93e736e347feaeee899d766031fb7085623414"
+    },
+    "05_Software/nilo_gui/src/components/pages/BenchPage.tsx": {
+      "kind": "file",
+      "sha256": "bbacc0a7a4c93b6e5b12d832fde4f1f9f6179cccdff19be53a8ff127509acbf7"
+    },
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx": {
+      "kind": "file",
+      "sha256": "55a0134ad6806d8889cefb7aa0d64613c30fd6be4edc6c65988c109975ded5bb"
+    },
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx": {
+      "kind": "file",
+      "sha256": "a4964df20a356adcfb1022835fd329cf380e13fe87a599f677e2fc790aae817d"
+    },
+    "05_Software/nilo_gui/src/components/pages/SimplePages.tsx": {
+      "kind": "file",
+      "sha256": "77417d83aecc2efd16d5ee3b000ea9664a1edc8b5911e7b6e66a3ef11e3eb2cd"
+    },
+    "05_Software/nilo_gui/src/components/shell/AppShell.tsx": {
+      "kind": "file",
+      "sha256": "b1c35c17bf3cb16780dd7ff2e9532d2dfdb656b9996dc1febfa0da8524d2f5d6"
+    },
+    "05_Software/nilo_gui/src/components/shell/Icon.tsx": {
+      "kind": "file",
+      "sha256": "5b84ab5727a38ff5c66a21a401a9d9e0874e4f4f22e202dd6bda4d67d148c96f"
+    },
+    "05_Software/nilo_gui/src/components/shell/Menu.tsx": {
+      "kind": "file",
+      "sha256": "0524b9dc3342f8692a29b85688c3812b362724a7351aaa63ea0f2adb3dd8c190"
+    },
+    "05_Software/nilo_gui/src/components/shell/NavDrawer.tsx": {
+      "kind": "file",
+      "sha256": "42a83a6749449bc05e3f43789ea8aac309bb50da671c3c1a5f0a6d7d36c7cb31"
+    },
+    "05_Software/nilo_gui/src/components/shell/NetworkSummary.test.tsx": {
+      "kind": "file",
+      "sha256": "e30e1bed766be20d5ca4baf506365ed3beaca023707701a64a6fc252db98e671"
+    },
+    "05_Software/nilo_gui/src/components/shell/NetworkSummary.tsx": {
+      "kind": "file",
+      "sha256": "7aa815299c7e6e9c793fa05f038c0681d4b9013325136c09a2e4ebd0e6b30f34"
+    },
+    "05_Software/nilo_gui/src/components/shell/SideNav.tsx": {
+      "kind": "file",
+      "sha256": "0a556ae210d2c0f60edb36d75bd1a7c74ad07c54d4ae2d79794920637c9e5ef5"
+    },
+    "05_Software/nilo_gui/src/components/shell/TabStrip.tsx": {
+      "kind": "file",
+      "sha256": "9daf1dddb85dc6238c44c73a6fe8a06e3b348e28676ce249a562dd90f2fcdc8f"
+    },
+    "05_Software/nilo_gui/src/components/shell/TopRow.tsx": {
+      "kind": "file",
+      "sha256": "ea7b02ef2c17732f8a963457ddfa357fc6cb363cc46dc91b22474ad3c9d1975a"
+    },
+    "05_Software/nilo_gui/src/components/shell/pages.ts": {
+      "kind": "file",
+      "sha256": "5216808803f45368f9f5686920e12e91ab56a8eb217170222fed1527f4e33dfb"
+    },
+    "05_Software/nilo_gui/src/components/shell/shell.test.tsx": {
+      "kind": "file",
+      "sha256": "f2011f16ac14aa2ed43f89f77771a77df4dd2bfa3539196ee729552dd77d5fe1"
+    },
+    "05_Software/nilo_gui/src/components/shell/useViewportClass.ts": {
+      "kind": "file",
+      "sha256": "72e270a061596c7718651e07ba66569a231333f84ec9fa134331ba60cd6d0075"
+    },
+    "05_Software/nilo_gui/src/components/shell/useWorkspace.ts": {
+      "kind": "file",
+      "sha256": "591b51de592aa43332bf36fdce6a9e0882d0cb0e11332ba7b3c51b5b7afd375f"
+    },
+    "05_Software/nilo_gui/src/config/devServer.test.ts": {
+      "kind": "file",
+      "sha256": "d996888ed35ad13b8bbd5313d6cadec17b272518eefd854a83220ce54a3df736"
+    },
+    "05_Software/nilo_gui/src/config/environment.test.ts": {
+      "kind": "file",
+      "sha256": "2d4dd2ac34b78ccd4d993c90db028a34fbc224a3cd43afcbb3ad0f5af41c3194"
+    },
+    "05_Software/nilo_gui/src/config/environment.ts": {
+      "kind": "file",
+      "sha256": "d6ea61cba0942e9b8bc403f579398f500e61316adeb4dc1ec07ffae9fc236418"
+    },
+    "05_Software/nilo_gui/src/i18n/LanguageProvider.tsx": {
+      "kind": "file",
+      "sha256": "b27403690e5150ee99e4f8df93bb1b79444a8ddcfcf9c3be1e5b7f1a6fee6249"
+    },
+    "05_Software/nilo_gui/src/i18n/de.ts": {
+      "kind": "file",
+      "sha256": "90b3663e84fe8772b930469f86cbd91ea72e551609038278bb24a7e14079afc0"
+    },
+    "05_Software/nilo_gui/src/i18n/en.ts": {
+      "kind": "file",
+      "sha256": "f2760b16775cbdbbd6ee64febfcf42030dfcb40bb7c8f15d3bee2a7f5dcbbaf8"
+    },
+    "05_Software/nilo_gui/src/i18n/languages.ts": {
+      "kind": "file",
+      "sha256": "d4a68564d17503f563460c5cc79a63bee31043375be861b00a7ef68915ecb55a"
+    },
+    "05_Software/nilo_gui/src/i18n/messages.test.ts": {
+      "kind": "file",
+      "sha256": "77cb7df38e87d7adcd3508135a85384407c350281fa7fe161b97ade49f366d59"
+    },
+    "05_Software/nilo_gui/src/i18n/ro.ts": {
+      "kind": "file",
+      "sha256": "cf54f126662f53b2dd90a4c407b101e636432eb3aa320287c0073282e3353b52"
+    },
+    "05_Software/nilo_gui/src/index.css": {
+      "kind": "file",
+      "sha256": "428486b50254a2ac986644179f24138b5bd41cdc7c7cb3e73ab99161b448f9ea"
+    },
+    "05_Software/nilo_gui/src/layout.test.ts": {
+      "kind": "file",
+      "sha256": "9fc8625eca3fb85626d0e7ef5d5fdbe90f8dbc1e4a400e97c6b0b3ad00f2406d"
+    },
+    "05_Software/nilo_gui/src/main.tsx": {
+      "kind": "file",
+      "sha256": "c165e9dfef9c44623e57dc64918b6f09047ed82584efc99b0037d6e87103a16f"
+    },
+    "05_Software/nilo_gui/src/preferences/store.ts": {
+      "kind": "file",
+      "sha256": "2d2b9265182d9aea9d99dbb8345b0318da3a9a46483d8be853356226be91cc6f"
+    },
+    "05_Software/nilo_gui/src/styles/shell.css": {
+      "kind": "file",
+      "sha256": "27c278e3f78ba72257e7611f84f382d457f97477c595d3c213f0179fbf3947fa"
+    },
+    "05_Software/nilo_gui/src/styles/tokens.css": {
+      "kind": "file",
+      "sha256": "73c1370cb6ca63761fa4260bfcb09fc3de25e261d7b785d12802535ca15d9c7e"
+    },
+    "05_Software/nilo_gui/src/test/render.tsx": {
+      "kind": "file",
+      "sha256": "2b54191877a54d17a2700159a037a28679f93859217d0e8496ff37e5cb7d86e2"
+    },
+    "05_Software/nilo_gui/src/test/setup.ts": {
+      "kind": "file",
+      "sha256": "a071fd77857cf1d8b5beac1e6aacfd3b1d0e7c32c7531e07c95286f1ea6bdadb"
+    },
+    "05_Software/nilo_gui/src/theme/ThemeProvider.tsx": {
+      "kind": "file",
+      "sha256": "d4182f24cd0911aee8b62aedc88c8ddfde6706fd3a71960d348007effbcc03f4"
+    },
+    "05_Software/nilo_gui/src/theme/themes.ts": {
+      "kind": "file",
+      "sha256": "576a4473348a97b8c9cf96580f516044fc9e019e51cbde1c51599620ead2413a"
+    },
+    "05_Software/nilo_gui/src/theme/useSystemColorScheme.ts": {
+      "kind": "file",
+      "sha256": "1aa6aeecef5f555ab3648ceed4e3b9cfbdbfca3e22541ac4fc477b864298f85e"
+    },
+    "05_Software/nilo_gui/src/vite-env.d.ts": {
+      "kind": "file",
+      "sha256": "39d9e557bf10892f17c0996b0ee351362ea8113c7dad9e4f028e62a0dfa0394a"
+    },
+    "05_Software/nilo_gui/tsconfig.app.json": {
+      "kind": "file",
+      "sha256": "83c03a3db1ec529544e17d5208392f807b751474fb03b273fd617e8ed4d60fc9"
+    },
+    "05_Software/nilo_gui/tsconfig.json": {
+      "kind": "file",
+      "sha256": "e8d6f7b50828db3953e21c7e92584f9206b3cd2551b4012507372afbb7fe9ce3"
+    },
+    "05_Software/nilo_gui/tsconfig.node.json": {
+      "kind": "file",
+      "sha256": "1b20329e772e976b2ea4d3930536c0a96e7ebd2d42ac32f19763ceff84aa73e0"
+    },
+    "05_Software/nilo_gui/vite.config.ts": {
+      "kind": "file",
+      "sha256": "d8b54de39ad5ba093785303f1ca580e45d1f17f42474568793b9092227092805"
+    },
+    "05_Software/schemas/integration/v1/event.schema.json": {
+      "kind": "file",
+      "sha256": "8383764235252958bc2fd71974ee077d590a374e3b84a9eda07cece178070aae"
+    },
+    "05_Software/schemas/integration/v1/manifest.schema.json": {
+      "kind": "file",
+      "sha256": "19fbd1467c255f3a03eea3a7a6c6d67c633e8bdd9b272ef3f63903b1d42f2241"
+    },
+    "05_Software/schemas/integration/v1/operation.schema.json": {
+      "kind": "file",
+      "sha256": "8bdf474922b48a3da79c310de84904f907186b24af688d47dcad17283280e512"
+    },
+    "05_Software/scripts/aegis_test.py": {
+      "kind": "file",
+      "sha256": "91102c5df024ae84db7b124c9be613ad4cfcb6255d6677e39f435b84084e4d66"
+    },
+    "05_Software/scripts/test-increment-1.ps1": {
+      "kind": "file",
+      "sha256": "768dc349e78a319d2ee15fa25f167f13b9a9465b3810150ee5dbcbcfa4f66710"
+    },
+    "05_Software/scripts/test-increment-1.sh": {
+      "kind": "file",
+      "sha256": "b555f527b6102abe20d58c24a632781230403b5935485ebdb3f53f4596a890fe"
+    },
+    "05_Software/scripts/tests/test_aegis_test.py": {
+      "kind": "file",
+      "sha256": "a013741262869f19cb98b0b43b3af0a331b2a71a20b14d9c34c1f21a4a56f334"
+    },
+    "05_Software/scripts/tests/test_development_lifecycle.py": {
+      "kind": "file",
+      "sha256": "3e83050fa9f03a05b2836bb9063bf7905840a46baf0d04b8b79ec1aed22e9bff"
+    },
+    "05_Software/scripts/tests/test_toolchain_bootstrap.py": {
+      "kind": "file",
+      "sha256": "6a9d6081a2030f9a4122af9f1cffc98d247b8449ff60dee865ed2a62efc472a1"
+    },
+    "05_Software/scripts/verify-portable-core.ps1": {
+      "kind": "file",
+      "sha256": "a47ef1184e53f01669eca56996890ddac29a4df0f3bf9ba92d2cf3448f5a1853"
+    },
+    "05_Software/scripts/verify-portable-core.sh": {
+      "kind": "file",
+      "sha256": "0f99edf0476daf0b9d4f4a3932a11af037c90f679b108caed0872869311599b1"
+    },
+    "05_Software/tests/README.md": {
+      "kind": "file",
+      "sha256": "2ed17583bbd0441e14776084c81be69d655958ef1bd404c446863d071a7d3735"
+    },
+    "05_Software/tests/contract/.gitignore": {
+      "kind": "file",
+      "sha256": "6feaded4e28ea86e001a6751b4e3d960e8b7c31b9616ff9936b79297086e809b"
+    },
+    "05_Software/tests/contract/README.md": {
+      "kind": "file",
+      "sha256": "7e75699054412c3644565c2a7432d32c1dd630143037559d58c4f8211e22e4ea"
+    },
+    "05_Software/tests/contract/fixtures/protocol-v1/hello.ndjson": {
+      "kind": "file",
+      "sha256": "0ab3633028552c027a65cb7461c8d6f4f5474e8c52429fbc83d1556f4d40f357"
+    },
+    "05_Software/tests/contract/test_integration_contract.py": {
+      "kind": "file",
+      "sha256": "ea867970449b5b84fd0347dc6079a3ba533380a6fa5acf63d5a19333680d5d0d"
+    },
+    "06_SoftwareDocu/Development_and_Simulation_Flow.md": {
+      "kind": "file",
+      "sha256": "a6100098236ffd2d940cf70f5ac6974510349c30f638523a7312c6d6e466ac3e"
+    },
+    "06_SoftwareDocu/Live_Network_Development.md": {
+      "kind": "file",
+      "sha256": "8b3379a3e549ff0e3df417684099254821b1feccd27e81558a9259c3e4419c67"
+    },
+    "06_SoftwareDocu/Local_Hardware_Access.md": {
+      "kind": "file",
+      "sha256": "3d493b36f5af949deb5aeaf53aa8f5708ff3cae2584140c35d6bcc1e29d88528"
+    },
+    "06_SoftwareDocu/Network_Service_Implementation_Status.md": {
+      "kind": "file",
+      "sha256": "d8210c0658da0b4fe1e7d346d8468d6feb7105fdf89eacf371e833203c7e98ec"
+    },
+    "06_SoftwareDocu/README.md": {
+      "kind": "file",
+      "sha256": "2048ffd4513a69e06c9edceedefdc3b96733acb29f4167fad15449c4b1fcfe56"
+    },
+    "07_Delivery/NILO_CLI_and_Authentication.md": {
+      "kind": "file",
+      "sha256": "fb6f30ef83ac48cfcb4e322df098569a4348c7eae8cc718ed3a5d99eb9d78ba3"
+    },
+    "07_Delivery/README.md": {
+      "kind": "file",
+      "sha256": "32053c2d4ccce455d7b0887c4fe2f88c184d023d8e50e94e56f1af28596a0be6"
+    },
+    "09_Others/Preview.mp4": {
+      "kind": "file",
+      "sha256": "f9424aa14274906933d64c22ec54e97bf3e8ba0644cb1a180e6e86898d1b2c6e"
+    },
+    "09_Others/README.md": {
+      "kind": "file",
+      "sha256": "63b12bdf7152279f3f3f95259e31e210f3de706f833914ab43f4ad923c9df01f"
+    },
+    "09_Others/compact-field-ui-20260904/README.md": {
+      "kind": "file",
+      "sha256": "8c00c35aa0cf56d1816a4eb037c900af3b3614e181d28c1fafb6aeb8d9d68440"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1024x600-dark-activity.png": {
+      "kind": "file",
+      "sha256": "9b47c2495b087cc25d4dcf913aef41d18fa0f3796bbba49a39ccc491dd23bebd"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1024x600-dark-bench.png": {
+      "kind": "file",
+      "sha256": "58dbd372a8c7e1ef27815df37a1be54b508cc79f8150e28f3e81f1ce96e4232c"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1024x600-dark-dn-editor.png": {
+      "kind": "file",
+      "sha256": "2c9be98b185c503d393210533d64cb062deb85df89499b8112448fee844ed110"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1024x600-dark-network-full.png": {
+      "kind": "file",
+      "sha256": "bb15a0ccf62426bccd8d609bd9130290339f0b8e964f7c49033cc6d9ff508177"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1024x600-dark-network.png": {
+      "kind": "file",
+      "sha256": "bb15a0ccf62426bccd8d609bd9130290339f0b8e964f7c49033cc6d9ff508177"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1024x600-light-activity.png": {
+      "kind": "file",
+      "sha256": "b812516c9e2fa0b35226d40485522cfa9444052ce719dff0c7d283bba53882e4"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1024x600-light-bench.png": {
+      "kind": "file",
+      "sha256": "c292e163f1640a19daf19136c02c40115135c9a257148163bdb93a0b426f7240"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1024x600-light-dn-editor.png": {
+      "kind": "file",
+      "sha256": "012142e996d7904f0cc0846c6f1fbebea696338786be38a2b43eb9f76a1c76cb"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1024x600-light-network-full.png": {
+      "kind": "file",
+      "sha256": "f57a1079bebfd06c33033efd6e75d2397d771f070704c16ddc1410c3c3395ccd"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1024x600-light-network.png": {
+      "kind": "file",
+      "sha256": "f57a1079bebfd06c33033efd6e75d2397d771f070704c16ddc1410c3c3395ccd"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1366x768-dark-activity.png": {
+      "kind": "file",
+      "sha256": "160bbf410f475d68167dc087e87bcdbdbdfc06412128658eb631579f3ae1d724"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1366x768-dark-bench.png": {
+      "kind": "file",
+      "sha256": "1985d532bdb228326c3387ef0a22ce00b354b6fac7e318646f2f5f4800a86185"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1366x768-dark-dn-editor.png": {
+      "kind": "file",
+      "sha256": "0e0d638ce13514aec79957e565e976aff45b839fcd9d840eabcf37fd88252aae"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1366x768-dark-network-full.png": {
+      "kind": "file",
+      "sha256": "5c1ad41c1c3d5525ebaf0dbd60f2a42c0de396f6e71bd1359d383177e692d020"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1366x768-dark-network.png": {
+      "kind": "file",
+      "sha256": "5c1ad41c1c3d5525ebaf0dbd60f2a42c0de396f6e71bd1359d383177e692d020"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1366x768-light-activity.png": {
+      "kind": "file",
+      "sha256": "1f4e47882b6be80941d20086e14485dbfae720dc75422523f4dcebbf88dde12d"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1366x768-light-bench.png": {
+      "kind": "file",
+      "sha256": "09229fe0dd8478148bba561874a4bc7ff52e51a8e98e531732b35aafabf5f29b"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1366x768-light-dn-editor.png": {
+      "kind": "file",
+      "sha256": "38c8502a49eeea847501dc881da8a2068c720a358395b043731e2115fd27f68a"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1366x768-light-network-full.png": {
+      "kind": "file",
+      "sha256": "754bb2b29d4b64402d45e0d65164398b67c19af33272740d15024b9ab241dff0"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1366x768-light-network.png": {
+      "kind": "file",
+      "sha256": "754bb2b29d4b64402d45e0d65164398b67c19af33272740d15024b9ab241dff0"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1920x1080-dark-activity.png": {
+      "kind": "file",
+      "sha256": "9e6f8fb339254378d27c8aac7ead1a310978389344223c89d931c13ae504604b"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1920x1080-dark-bench.png": {
+      "kind": "file",
+      "sha256": "5db12d133a4a4b47835285afa1fac5ed13d3b6f6664529ad690430297c72b1ba"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1920x1080-dark-dn-editor.png": {
+      "kind": "file",
+      "sha256": "aa0c1fc2709df3d46996f1cbe3984dbce57547d05503d65fa70dbc7113f52964"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1920x1080-dark-network-full.png": {
+      "kind": "file",
+      "sha256": "870490fff2ce56dd2b174d055da9a56d1aec1c21fa5b1abc6065c9e512e3c30c"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1920x1080-dark-network.png": {
+      "kind": "file",
+      "sha256": "870490fff2ce56dd2b174d055da9a56d1aec1c21fa5b1abc6065c9e512e3c30c"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1920x1080-light-activity.png": {
+      "kind": "file",
+      "sha256": "c939d48a860f63fed3911e6c51c54fea629e4af4acb9e145eb312664540c67d2"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1920x1080-light-bench.png": {
+      "kind": "file",
+      "sha256": "75581e373da3dedce1a7a1928515c6eb297ceaada81007efe3c95f5a6c3beebc"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1920x1080-light-dn-editor.png": {
+      "kind": "file",
+      "sha256": "48a4b2f2e819fad6e9b79feeaca25e32c86e769d7e94fd1fba253ac30cf73531"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1920x1080-light-network-full.png": {
+      "kind": "file",
+      "sha256": "f9386ebc332e8563f1548f562e827cf499c58ce8dbdf664b3e1ba3355f49d22b"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-1920x1080-light-network.png": {
+      "kind": "file",
+      "sha256": "f9386ebc332e8563f1548f562e827cf499c58ce8dbdf664b3e1ba3355f49d22b"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-800x480-dark-activity.png": {
+      "kind": "file",
+      "sha256": "ef7a3bd5c0ea0cb854f2f544cdd62ad7a26613416c59a2d41e03e87ad96dc9f3"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-800x480-dark-bench.png": {
+      "kind": "file",
+      "sha256": "143923b6b68df66d3ef7b5aac16945a6e2c0b382e326ccb6d848075974dc1635"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-800x480-dark-dn-editor.png": {
+      "kind": "file",
+      "sha256": "7acb538dba5a9f5d665598534100302eb2cf91f50bc51b10662849d55c68b9e1"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-800x480-dark-network-full.png": {
+      "kind": "file",
+      "sha256": "035515d165fd04424f6cffa09e29871d5e4178c4284eb87921c2da2de3a90769"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-800x480-dark-network.png": {
+      "kind": "file",
+      "sha256": "035515d165fd04424f6cffa09e29871d5e4178c4284eb87921c2da2de3a90769"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-800x480-light-activity.png": {
+      "kind": "file",
+      "sha256": "ba21633d437355047f4101233a8a51f6af564c2e3aa46f08c71dee63b60676a5"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-800x480-light-bench.png": {
+      "kind": "file",
+      "sha256": "58b9013a59164151ffc49e634ed9658711aa682413517039478c3cce551c4480"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-800x480-light-dn-editor.png": {
+      "kind": "file",
+      "sha256": "2e6fd1b27ce8b4ae567f0e09d8cfbe09e5929bb44170975e85080be46cb8330e"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-800x480-light-network-full.png": {
+      "kind": "file",
+      "sha256": "2ed225a737729381a431f46cf9abac4d8905d01f236c2a1cdc73d6da3c1b4069"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-800x480-light-network.png": {
+      "kind": "file",
+      "sha256": "2ed225a737729381a431f46cf9abac4d8905d01f236c2a1cdc73d6da3c1b4069"
+    },
+    "09_Others/compact-field-ui-20260904/after/after-audit.json": {
+      "kind": "file",
+      "sha256": "c07dd07dc18a480a9e565e2985cd5f9cd6d9aea32f9a56cb2ee680d83206b2aa"
+    },
+    "09_Others/compact-field-ui-20260904/after/reflow-320x800-network.png": {
+      "kind": "file",
+      "sha256": "15e23e86bc1eda9c71c4620aea22fe1adbf9141bb96c6d525f945574f909549a"
+    },
+    "09_Others/compact-field-ui-20260904/after/reflow-600x800-network.png": {
+      "kind": "file",
+      "sha256": "ac73d208f5ae72ca3ee823b43307d970eac2dd8a1d58ed3878bb4bdf669e7dd1"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1024x600-dark-bench.png": {
+      "kind": "file",
+      "sha256": "b57cc34eb2bdb4c1e0c4b1dfcc98d600bd0a6db4f85f522aa0671f80b5736e98"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1024x600-dark-dn-editor.png": {
+      "kind": "file",
+      "sha256": "bd0e062b6aa6b88ee452e4bf57bf7eceab54fec41dc8589542c537348f3ee0ab"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1024x600-dark-network-full.png": {
+      "kind": "file",
+      "sha256": "eb745dd3ce86ede7c7a9967e057f5c20a2a6485c2d8c4baa526bcff691d10135"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1024x600-dark-network.png": {
+      "kind": "file",
+      "sha256": "eb745dd3ce86ede7c7a9967e057f5c20a2a6485c2d8c4baa526bcff691d10135"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1024x600-light-bench.png": {
+      "kind": "file",
+      "sha256": "09ee73d4b21ab1a08b38835ca62d01f6f8f1d74a76ea61940918d8dff11df501"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1024x600-light-dn-editor.png": {
+      "kind": "file",
+      "sha256": "90d27a670c9794c91228221f25753bbe83a53345d6c5ba4984119aaba444f69b"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1024x600-light-network-full.png": {
+      "kind": "file",
+      "sha256": "f192336325b129d5841c1fff78921c34299560d27cf75b5b1ded3c34f742892b"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1024x600-light-network.png": {
+      "kind": "file",
+      "sha256": "f192336325b129d5841c1fff78921c34299560d27cf75b5b1ded3c34f742892b"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1366x768-dark-bench.png": {
+      "kind": "file",
+      "sha256": "9555772fa50d353f228744fe10310fff1a38ae0860d5ed9ead9918279298f70f"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1366x768-dark-dn-editor.png": {
+      "kind": "file",
+      "sha256": "3cb7c43440c46f5a5da68b1c79ad23cdb4fb0fd9467db2be515851055149f76a"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1366x768-dark-network-full.png": {
+      "kind": "file",
+      "sha256": "241ed26d0fa07e012151b6dae0539a1726ba1a52a52916eab21acd6027a523e8"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1366x768-dark-network.png": {
+      "kind": "file",
+      "sha256": "241ed26d0fa07e012151b6dae0539a1726ba1a52a52916eab21acd6027a523e8"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1366x768-light-bench.png": {
+      "kind": "file",
+      "sha256": "41a56debb4ddad4af75cbfa5e06518b790cc56a49369a6f9a82051f4a832022b"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1366x768-light-dn-editor.png": {
+      "kind": "file",
+      "sha256": "b8140a04008fe40ef10e9a1e96f029277627efc1f30ab35040a1043be4e0fdd3"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1366x768-light-network-full.png": {
+      "kind": "file",
+      "sha256": "1b58b0b343416824add7be35ec6d648c596951668a7148f0466e64eafee0457b"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1366x768-light-network.png": {
+      "kind": "file",
+      "sha256": "1b58b0b343416824add7be35ec6d648c596951668a7148f0466e64eafee0457b"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1920x1080-dark-bench.png": {
+      "kind": "file",
+      "sha256": "4c7826a20d4e8ba2a05b0c390bdee9c8406420882af6716c714438241eb08618"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1920x1080-dark-dn-editor.png": {
+      "kind": "file",
+      "sha256": "84369779eb37221d05959056aa184e95c4a8543abacbe85aa92c5ad2e6e77ed0"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1920x1080-dark-network-full.png": {
+      "kind": "file",
+      "sha256": "5d636d51b9b32e00cf91e0409a0d5bf03453e1e730f2785bbd7979dedaf8af7a"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1920x1080-dark-network.png": {
+      "kind": "file",
+      "sha256": "5d636d51b9b32e00cf91e0409a0d5bf03453e1e730f2785bbd7979dedaf8af7a"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1920x1080-light-bench.png": {
+      "kind": "file",
+      "sha256": "42af8ca47ce198cb9e9b9c131587210eaf1066e1d44326bff81fca57084b5b57"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1920x1080-light-dn-editor.png": {
+      "kind": "file",
+      "sha256": "17384248d177421695ea0efbcfd0997669fff20dc2463024bc2c3c4c12dd9d22"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1920x1080-light-network-full.png": {
+      "kind": "file",
+      "sha256": "538bf1cf8bf1179f43cfd4170e0f7b7bb02a53d10832c495d38ab49e07719a35"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-1920x1080-light-network.png": {
+      "kind": "file",
+      "sha256": "538bf1cf8bf1179f43cfd4170e0f7b7bb02a53d10832c495d38ab49e07719a35"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-800x480-dark-bench.png": {
+      "kind": "file",
+      "sha256": "78c91bbb67678e4e2836f424d48a939df983e68c0e5864576563dbe81f57e04f"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-800x480-dark-dn-editor.png": {
+      "kind": "file",
+      "sha256": "e10816c4c26dae6d3aa3c23423650757f2f57717b4fe988d63f3191421655a60"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-800x480-dark-network-full.png": {
+      "kind": "file",
+      "sha256": "f033ead6c0eb1ae0d072477c0bb827e39d543cdee8ba7186913fc8b50d3c744b"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-800x480-dark-network.png": {
+      "kind": "file",
+      "sha256": "f033ead6c0eb1ae0d072477c0bb827e39d543cdee8ba7186913fc8b50d3c744b"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-800x480-light-bench.png": {
+      "kind": "file",
+      "sha256": "a5cfba0ba2e77e6196117507842927fd4422e3c7c1c9d7e0f179c9ff6ae3993f"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-800x480-light-dn-editor.png": {
+      "kind": "file",
+      "sha256": "1a624f65acc5b40aafe674cc3d9b3d4417f7c33fea0803e6dc4199aceaabbd57"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-800x480-light-network-full.png": {
+      "kind": "file",
+      "sha256": "c3f4589db57c2ceffa2dc7a0cac05c9aab8dd38a1d57524198a252f18d34dce6"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-800x480-light-network.png": {
+      "kind": "file",
+      "sha256": "c3f4589db57c2ceffa2dc7a0cac05c9aab8dd38a1d57524198a252f18d34dce6"
+    },
+    "09_Others/compact-field-ui-20260904/before/baseline-audit.json": {
+      "kind": "file",
+      "sha256": "a37aff5226de6a77c2bff6533ab0636845f8710f469d4330920e1756af44b61e"
+    },
+    "09_Others/nilo-review-20260902/01-bench-light.png": {
+      "kind": "file",
+      "sha256": "0238c105bf6767e1b84d3d805be2e9141ceec9b55863d48cb1848c4cd9d183bd"
+    },
+    "09_Others/nilo-review-20260902/02-network-light.png": {
+      "kind": "file",
+      "sha256": "872e2b69b5987d2ff9b51fc16b71478fcd54a3dbff6685d78c645136a0c77fd3"
+    },
+    "09_Others/nilo-review-20260902/03-auth-dark.png": {
+      "kind": "file",
+      "sha256": "3fe8525e2aa953bb213ae3f920cf49ebec1e700cade63e87d3ec8a3b228dc3fd"
+    },
+    "09_Others/nilo-review-20260902/04-dialog-dark.png": {
+      "kind": "file",
+      "sha256": "93a703b73ecd70282152e02623f35474a46507146bef62b6a7df3e0363b00d96"
+    },
+    "09_Others/nilo-review-20260902/05-auth-narrow.png": {
+      "kind": "file",
+      "sha256": "ff990038d3f710ce2d6ce523843d1f25b80a4133b2e0fb960c1e11615be4f0a7"
+    },
+    "09_Others/nilo-review-20260902/06-dialog-focus-escape.png": {
+      "kind": "file",
+      "sha256": "39ae17d8dca021f8bc939799506900e7f7ece8868cc084d85506dcaed03d8885"
+    },
+    "09_Others/nilo-review-20260902/07-auth-romanian.png": {
+      "kind": "file",
+      "sha256": "1da6238d76b333f7d9660ba0ad4748f0bd32ab6eb6689ae8236623bbd2ed3dd6"
+    },
+    "09_Others/nilo-review-20260902/08-device-inventory-failed.png": {
+      "kind": "file",
+      "sha256": "4422f1df4fdc5e97ce8ca379dcf8134114865f96817734aa3cf5726049947c21"
+    },
+    "09_Others/nilo-review-20260902/09-integration-false-empty.png": {
+      "kind": "file",
+      "sha256": "91cb9df1c302596825848a118891d0f022263c8e5408a7c831f4d1e3727672be"
+    },
+    "09_Others/nilo-review-20260902/review.md": {
+      "kind": "file",
+      "sha256": "fda36e6a426a2897f2218ea25148f10bd00103d08dc6632e4dcf7ce09f7604f6"
+    },
+    "AGENTS.md": {
+      "kind": "file",
+      "sha256": "95559cb5af762940c31fe39ab37dfdf603b70775f30ad56eb521e039b272addd"
+    },
+    "CHANGELOG.md": {
+      "kind": "file",
+      "sha256": "60e2ec4e50d3f259a3e101444c6d3bd9de72af3a94d49b19b0c1903e5ebaf3ef"
+    },
+    "CLAUDE.md": {
+      "kind": "file",
+      "sha256": "bb795a078dfb58da9fd794c2c2d1d5f2d13e3e9c18146f1a0b5783cf54e2c547"
+    },
+    "QWEN.md": {
+      "kind": "file",
+      "sha256": "60bbcc405f4386ea0f58ddd7c489d5c53bd4829d5cca704d4348d6f453a29c4c"
+    },
+    "README.md": {
+      "kind": "file",
+      "sha256": "453b67cb8441999a2e816bb468f5e1f321b95a407de072a42c427709bd9674d1"
+    },
+    "VERSION": {
+      "kind": "file",
+      "sha256": "e9dd8507f4bf0c6f42458e41aea833ad0bd3f6127272335eee9bf4d58541ed67"
+    }
+  },
+  "head": "8cf243345cd214357d19d9eb7533e46b199a71f0",
+  "schema": 1,
+  "source_globs": [
+    "05_Software/nilo_assistant/",
+    "05_Software/nilo_gui/"
+  ],
+  "stage": "build",
+  "task": "TASK-26db1950",
+  "test_globs": [
+    "05_Software/tests/",
+    "05_Software/scripts/",
+    "05_Software/nilo_assistant/**/*_test.go",
+    "05_Software/nilo_gui/src/*.test.ts",
+    "05_Software/nilo_gui/src/*.test.tsx",
+    "05_Software/nilo_gui/src/**/*.test.ts",
+    "05_Software/nilo_gui/src/**/*.test.tsx"
+  ]
+}

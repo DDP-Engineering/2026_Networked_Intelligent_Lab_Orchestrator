@@ -1,0 +1,90 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+# One requirement = one independently verifiable behavior.
+# Lives at .agentic/requirements/<category>/<id>.toml
+# Required fields: schema, id, title, status, requirement, verification.
+
+schema = 1
+
+# REQ-<CAT>-<8 hex>. CAT is FUNC, UX, NFR, SEC, DATA, PLAT, REL or TEST,
+# and must match the category folder this file sits in.
+id = "REQ-UX-833c9cd3"
+
+title = "Present API tokens as compact credential records"
+
+# draft while being written, active once it is built and tested,
+# retired when the behavior is deliberately removed.
+status = "active"
+
+# Self-contained prose: a reader with no other context must be able to
+# understand and check it. No ticket numbers, no run IDs, no references
+# to other requirements.
+#
+# Recommended shape - EARS. Pick the one pattern that fits; a stated
+# trigger or condition is what the test has to arrange, so surfacing it
+# here is what makes the behavior testable:
+#
+#   ubiquitous  The <system> shall <response>.
+#   event       When <trigger>, the <system> shall <response>.
+#   state       While <state>, the <system> shall <response>.
+#   unwanted    If <condition>, then the <system> shall <response>.
+#   optional    Where <feature is included>, the <system> shall <response>.
+#
+# Two independently verifiable responses need two requirements. Split when
+# either clause can vary, fail, change, or be checked independently; keep an
+# inseparable atomic outcome together. Final prose normally has one "shall".
+# Do not contort prose to fit a pattern - a constraint that reads better
+# plainly is better plainly.
+requirement = """
+The Authentication API tokens page shall request and present tokens, may load
+identities only to label token owners, state plainly when no tokens exist,
+offer a create-token workflow, and render each token as one responsive record
+whose primary fields are name, owner, computed active, expired or revoked
+state, expiration and Actions, whose scopes and other safe metadata are
+available through Details, and whose Actions dialog offers revocation only
+while useful and explains the immediate access impact without exposing a
+secret or verifier.
+"""
+
+# The observation that settles whether the behavior holds - not a
+# restatement of the requirement. Work out setup, input or trigger, action,
+# observable oracle, and a relevant boundary or failure case before reducing
+# them to concise prose here. Do not introduce conditions absent from the
+# requirement or its linked spec.
+#
+# Some behaviors no test can settle: a look-and-see judgement, an install
+# on clean hardware, a printed page. Start this field with "Manual:" or
+# "Inspection:" and name the method, and `check` records the requirement
+# as verified by hand instead of counting it among the tests still owed.
+# The prefix alone is not enough — it has to say what someone does.
+verification = "A component test loads active, expired and revoked tokens plus their owners, fixes the current time, asserts state precedence, wide columns and compact-card labels, opens Details and Actions by pointer and keyboard, checks revocation availability and impact text, and scans rendered output for the supplied secret and verifier canaries."
+
+# Repo-relative, forward slashes. The source files this behavior lives in.
+affected_paths = [
+    "05_Software/nilo_gui/src/components/authentication/ApiTokensPage.tsx",
+    "05_Software/nilo_gui/src/components/AdministrationForms.tsx",
+    "05_Software/nilo_gui/src/components/RowActions.tsx",
+    "05_Software/nilo_gui/src/styles/shell.css",
+]
+
+# "tests/path/test_file.py::test_name" entries. Kept current during build;
+# these select the impacted regression set.
+linked_tests = [
+    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::administration listings > shows every token with its owner, scopes, expiry and revocation state",
+    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::API token creation",
+]
+
+# --- optional below this line ---
+
+# "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "Expiration and revocation are credential state, not secondary decoration, and must be understood before an administrator acts."
+
+created = 2026-09-04
+updated = 2026-09-04

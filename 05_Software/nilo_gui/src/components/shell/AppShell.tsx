@@ -21,6 +21,11 @@ import type { DeviceNetworkChange } from '../../api/devicenetworks';
 import type { InterfaceSettingsDraft, WiFiJoinDraft } from '../../api/settings';
 import type { WireGuardStatus, WireGuardChange } from '../../api/wireguard';
 import type { Resource } from '../../api/resource';
+import {
+  mayManageTokens,
+  mayManageUsers,
+  mayReadActivity,
+} from '../../api/permissions';
 import { useTranslate } from '../../i18n/languages';
 import { AuthenticationPage } from '../AuthenticationPage';
 import { BenchPage } from '../pages/BenchPage';
@@ -411,13 +416,21 @@ export function AppShell({
     if (page.id === 'settings') {
       return <NotAvailablePage nameKey="nav.settings" bodyKey="page.settings.body" />;
     }
-    if (page.id === 'authentication') {
+    if (page.authenticationView !== undefined) {
       return (
         <AuthenticationPage
           client={client}
           credential={credential}
           session={session}
+          view={page.authenticationView}
+          canManageUsers={mayManageUsers(session)}
+          canManageTokens={mayManageTokens(session)}
           onSessionEnded={onSessionEnded}
+          onOpenActivity={
+            mayReadActivity(session)
+              ? () => openActivity({ component: 'identity' })
+              : undefined
+          }
         />
       );
     }
