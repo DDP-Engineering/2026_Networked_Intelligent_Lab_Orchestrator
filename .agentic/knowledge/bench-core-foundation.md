@@ -258,10 +258,16 @@ administrator's username in the details, because the record itself no longer
 exists to be looked up afterwards. A refused deletion (not an administrator,
 last enabled administrator, owned tokens, unknown user or token) appends one
 `identity.user.delete_refused` or `identity.token.delete_refused` event with
-outcome `denied`, the requested subject as label and the reason code, written
-through the ordinary writer after the refusing transaction has rolled back and
-never affecting the refusal itself; a store failure is not a refusal and is not
-recorded. A credential lacking the route permission is refused earlier by the
+outcome `denied`, the requested subject as label (`invalid` or `unknown` when
+none was usable; the unusable input stays out of the record) and the reason
+code, written through the ordinary writer after the refusing transaction has
+rolled back. The refusal never depends on that record, but a record that
+cannot be written is joined to the returned error (`errors.Join`, so
+`errors.Is` still finds the reason and the HTTP code is unchanged); a store
+failure inside the transaction is not a refusal and is not recorded. The remote
+command line treats the listing reads around a change as informational: a 403
+on the pre-deletion listing skips the description, and a failed re-read after
+an applied change is reported with exit 0. A credential lacking the route permission is refused earlier by the
 HTTP access guard as `identity.access.denied`. There is no soft deletion and no
 second mutation path.
 

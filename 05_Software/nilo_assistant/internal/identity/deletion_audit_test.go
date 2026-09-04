@@ -2,6 +2,7 @@ package identity_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"path/filepath"
 	"strings"
@@ -199,6 +200,64 @@ func TestConcurrentDeleteAndDisableLeaveOneEnabledAdministrator(t *testing.T) {
 		if results[0] == nil && len(refusals) != 0 {
 			t.Fatalf("the applied deletion recorded %d refusals, want 0", len(refusals))
 		}
+	}
+}
+
+// A request the service refuses before it can even name a subject is still an
+// attempt, and is recorded as one without carrying the unusable input.
+func TestRefusalsWithoutAUsableSubjectAreStillRecorded(t *testing.T) {
+	t.Parallel()
+
+	f := newFixture(t)
+	administrator := f.bootstrap(t)
+	ctx := context.Background()
+
+	if err := f.service.DeleteUser(ctx, administrator, "no spaces allowed"); err == nil {
+		t.Fatal("an invalid username was accepted")
+	}
+	event := lastEvent(t, f, "identity.user.delete_refused")
+	if event.Outcome != audit.OutcomeDenied || event.TargetLabel == "" || event.SubjectID == "" {
+		t.Fatalf("invalid-username refusal record = %#v", event)
+	}
+	details := map[string]string{}
+	if err := json.Unmarshal(event.Payload, &details); err != nil {
+		t.Fatalf("decode payload: %v", err)
+	}
+	if details["reason"] != "invalid_username" || details["actor_username"] != "admin" {
+		t.Fatalf("invalid-username refusal details = %#v", details)
+	}
+	if strings.Contains(string(event.Payload), "no spaces allowed") || strings.Contains(event.TargetLabel, "no spaces") {
+		t.Fatalf("the unusable input reached the record: %s / %s", event.Payload, event.TargetLabel)
+	}
+
+	if err := f.service.DeleteToken(ctx, administrator, ""); err == nil {
+		t.Fatal("an empty token identifier was accepted")
+	}
+	event = lastEvent(t, f, "identity.token.delete_refused")
+	if event.SubjectID == "" || event.TargetLabel == "" {
+		t.Fatalf("empty-identifier refusal record has no subject: %#v", event)
+	}
+}
+
+// A refusal whose record cannot be written is still refused, and the caller
+// learns that the history is incomplete instead of being told nothing.
+func TestARejectedRefusalRecordIsReportedWithTheRefusal(t *testing.T) {
+	t.Parallel()
+
+	f := newFixture(t)
+	administrator := f.bootstrap(t)
+	f.rejectAuditInsertions(t)
+
+	err := f.service.DeleteUser(context.Background(), administrator, "admin")
+	if !errors.Is(err, identity.ErrLastAdministrator) {
+		t.Fatalf("the refusal reason was lost: %v", err)
+	}
+	if !strings.Contains(err.Error(), "refus") || !strings.Contains(err.Error(), "record") {
+		t.Fatalf("the failed refusal record is not reported: %v", err)
+	}
+	users, listErr := f.service.ListUsers(context.Background())
+	if listErr != nil || len(users) != 1 || !users[0].Enabled() {
+		t.Fatalf("the refused deletion changed the identity: %v %#v", listErr, users)
 	}
 }
 

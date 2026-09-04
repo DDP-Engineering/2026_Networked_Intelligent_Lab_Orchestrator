@@ -135,7 +135,34 @@ func (remote *remoteAdmin) apply(
 		fmt.Fprintln(remote.streams.stderr, err)
 		return 1
 	}
-	return remote.read(ctx, listing, render)
+	fmt.Fprintln(remote.streams.stderr, "change applied")
+	return remote.readAfterChange(ctx, listing, render)
+}
+
+// readAfterChange re-reads the listing once a change has been applied. The
+// change is already the appliance's state, so a listing that cannot be read
+// or rendered is reported as exactly that and never turns the applied change
+// into a reported failure: the exit code stays 0.
+func (remote *remoteAdmin) readAfterChange(ctx context.Context, listing string, render renderer) int {
+	document, err := remote.client.Do(ctx, http.MethodGet, listing, nil)
+	if err != nil {
+		fmt.Fprintf(remote.streams.stderr, "the change was applied, but the listing could not be re-read: %v\n", err)
+		return 0
+	}
+	if remote.options.asJSON {
+		fmt.Fprintln(remote.streams.stdout, string(bytes.TrimSpace(document)))
+		return 0
+	}
+	if err := render(remote.streams.stdout, document); err != nil {
+		fmt.Fprintln(remote.streams.stderr, "the change was applied, but the listing the appliance returned cannot be rendered")
+	}
+	return 0
+}
+
+// isForbidden reports a usable credential that lacks the route's permission.
+func isForbidden(err error) bool {
+	var refusal *apiclient.Error
+	return errors.As(err, &refusal) && refusal.Status == http.StatusForbidden
 }
 
 // runRemoteAdminUser implements the remote `nilo admin user` subcommands over
@@ -143,6 +170,7 @@ func (remote *remoteAdmin) apply(
 func runRemoteAdminUser(
 	ctx context.Context, subcommand string, options adminOptions, username, role string, streams adminIO,
 ) int {
+	username = foldUsername(username)
 	switch subcommand {
 	case "list":
 	case "create", "set-role":
@@ -201,7 +229,7 @@ func runRemoteAdminUser(
 		return remote.apply(ctx, http.MethodPut, subject+"/password", map[string]any{"password": string(password)}, listing, renderUserListing)
 	default:
 		return remote.deleteSubject(ctx, deletionSubject{
-			kind: "user", prompt: "username", id: username,
+			kind: "user", prompt: "username", id: username, fold: true,
 			listing: listing, path: subject, describe: describeUser, render: renderUserListing,
 		})
 	}
@@ -274,6 +302,8 @@ type deletionSubject struct {
 	path     string
 	describe func(document []byte, id string) (string, bool)
 	render   renderer
+	// fold is true for a username, which the appliance folds to lower case.
+	fold bool
 }
 
 // deleteSubject is the destructive path. It states exactly what would be
@@ -283,16 +313,27 @@ type deletionSubject struct {
 // listing read.
 func (remote *remoteAdmin) deleteSubject(ctx context.Context, subject deletionSubject) int {
 	listing, err := remote.client.Do(ctx, http.MethodGet, subject.listing, nil)
-	if err != nil {
+	switch {
+	case err == nil:
+		if description, listed := subject.describe(listing, subject.id); listed {
+			fmt.Fprintln(remote.streams.stderr, description)
+		} else {
+			// An unlisted subject is still sent: an already-deleted or mistyped
+			// name gets the appliance's own answer rather than this command's guess.
+			fmt.Fprintf(remote.streams.stderr, "No listed %s matches %q; the appliance decides.\n", subject.kind, subject.id)
+		}
+	case isForbidden(err):
+		// The listing is a courtesy, not a gate. A token narrowed to the manage
+		// permission alone may delete without being allowed to list, and the
+		// appliance, not this command, decides that.
+		fmt.Fprintf(remote.streams.stderr,
+			"This token may not read the %s listing (forbidden), so the subject cannot be described here; the appliance decides on %s %q.\n",
+			subject.kind, subject.kind, subject.id)
+	default:
+		// Anything else, unreachable or unusable, is a stop: nothing destructive
+		// is attempted on the strength of a prompt alone.
 		fmt.Fprintln(remote.streams.stderr, err)
 		return 1
-	}
-	if description, listed := subject.describe(listing, subject.id); listed {
-		fmt.Fprintln(remote.streams.stderr, description)
-	} else {
-		// An unlisted subject is still sent: an already-deleted or mistyped
-		// name gets the appliance's own answer rather than this command's guess.
-		fmt.Fprintf(remote.streams.stderr, "No listed %s matches %q; the appliance decides.\n", subject.kind, subject.id)
 	}
 	if !remote.options.confirmDelete {
 		if !remote.streams.interactive || remote.streams.stdin == nil {
@@ -301,7 +342,11 @@ func (remote *remoteAdmin) deleteSubject(ctx context.Context, subject deletionSu
 		}
 		fmt.Fprintf(remote.streams.stderr, "Type the %s to confirm: ", subject.prompt)
 		answer, _ := bufio.NewReader(remote.streams.stdin).ReadString('\n')
-		if strings.TrimRight(answer, "\r\n") != subject.id {
+		answer = strings.TrimRight(answer, "\r\n")
+		if subject.fold {
+			answer = foldUsername(answer)
+		}
+		if answer != subject.id {
 			fmt.Fprintln(remote.streams.stderr, "deletion cancelled; nothing deleted")
 			return 1
 		}
@@ -311,7 +356,14 @@ func (remote *remoteAdmin) deleteSubject(ctx context.Context, subject deletionSu
 		return 1
 	}
 	fmt.Fprintf(remote.streams.stderr, "deleted %s %q\n", subject.kind, subject.id)
-	return remote.read(ctx, subject.listing, subject.render)
+	return remote.readAfterChange(ctx, subject.listing, subject.render)
+}
+
+// foldUsername folds a username the way the appliance folds it, so the
+// command describes, addresses and confirms the identity the appliance would
+// actually act on. Validation stays with the appliance.
+func foldUsername(value string) string {
+	return strings.ToLower(strings.TrimSpace(value))
 }
 
 // splitScopes turns "a, b" into ["a","b"]; the appliance validates each one.

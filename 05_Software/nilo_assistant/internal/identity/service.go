@@ -440,7 +440,10 @@ func (service *Service) DeleteUser(ctx context.Context, actor auth.User, usernam
 func (service *Service) DeleteUserAs(ctx context.Context, actor Actor, username string) error {
 	normalized, err := auth.NormalizeUsername(username)
 	if err != nil {
-		return err
+		// An unusable name is still an attempt. The input itself stays out of
+		// the record: it is not a username, and what it is instead is unknown.
+		return service.refuseDeletion(ctx, err, actor, "identity.user.delete_refused", "username", "invalid",
+			map[string]string{"reason": "invalid_username"})
 	}
 	err = service.repository.WithinAdministrativeTransaction(
 		ctx, func(repository Repository, events audit.Repository) error {
@@ -482,7 +485,7 @@ func (service *Service) DeleteUserAs(ctx context.Context, actor Actor, username 
 		},
 	)
 	if reason := deletionRefusalReason(err); reason != "" {
-		service.recordDeletionRefusal(ctx, actor, "identity.user.delete_refused", "username", normalized,
+		return service.refuseDeletion(ctx, err, actor, "identity.user.delete_refused", "username", normalized,
 			map[string]string{"reason": reason, "username": normalized})
 	}
 	return err
@@ -678,7 +681,7 @@ func (service *Service) DeleteTokenAs(ctx context.Context, actor Actor, tokenID 
 		},
 	)
 	if reason := deletionRefusalReason(err); reason != "" {
-		service.recordDeletionRefusal(ctx, actor, "identity.token.delete_refused", "api_token", tokenID,
+		return service.refuseDeletion(ctx, err, actor, "identity.token.delete_refused", "api_token", tokenID,
 			map[string]string{"reason": reason, "token_id": tokenID})
 	}
 	return err
@@ -951,23 +954,41 @@ func deletionRefusalReason(err error) string {
 	return ""
 }
 
+// refuseDeletion records a refused permanent deletion and returns the refusal.
+// The refusal stands whether or not the record could be written, because
+// nothing changed and the operator has already been told; but a record that
+// could not be written is joined to the error, so the caller is never left
+// believing the attempt is in the history when it is not. errors.Is still
+// finds the refusal reason through the join, so the HTTP mapping and the
+// command line report the same code as before.
+func (service *Service) refuseDeletion(
+	ctx context.Context, refusal error, actor Actor, action, subjectType, subjectID string, details map[string]string,
+) error {
+	if err := service.recordDeletionRefusal(ctx, actor, action, subjectType, subjectID, details); err != nil {
+		return errors.Join(refusal, fmt.Errorf("record the refused deletion: %w", err))
+	}
+	return refusal
+}
+
 // recordDeletionRefusal writes one denied record once the transaction that
 // refused a permanent deletion has rolled back. A refusal is a decision an
 // investigator needs as much as an applied removal, so it names the actor, the
-// requested subject and the reason. The refusal itself does not depend on the
-// record: nothing changed, and failing it would only hide the outcome the
-// operator has already been told. The requested subject is the label, because
-// a subject that was never found has no other stable name.
+// requested subject and the reason. The requested subject is the label,
+// because a subject that was never found has no other stable name; a request
+// that named no subject at all is recorded against "unknown".
 func (service *Service) recordDeletionRefusal(
 	ctx context.Context, actor Actor, action, subjectType, subjectID string, details map[string]string,
-) {
+) error {
 	actorKind, actorID := actorAttribution(actor)
 	parsedActor, err := domain.ParseActorID(actorID)
 	if err != nil {
-		return
+		return fmt.Errorf("attribute the refusal to actor %q: %w", actorID, err)
+	}
+	if subjectID == "" {
+		subjectID = "unknown"
 	}
 	details["actor_username"] = actor.User.Username
-	_ = service.auditJournal.Record(ctx, audit.Record{
+	return service.auditJournal.Record(ctx, audit.Record{
 		Category: audit.CategoryAudit, Component: "identity", Action: action,
 		SubjectType: subjectType, SubjectID: subjectID, TargetLabel: subjectID,
 		ActorKind: actorKind, ActorID: parsedActor,

@@ -66,10 +66,10 @@ opened: 2026-09-04
 ## Done checklist (current stage)
 
 - [x] validated candidate confirmed unchanged; otherwise returned to validate
-- [x] validation evidence, diff, exclusions, and outcome presented (in the journal and the session's final report)
-- [x] delivery confirmed by the human (in advance, by the brief; RULING-003)
+- [x] validation evidence, diff, exclusions, and outcome presented (journal and the session's report)
+- [x] delivery confirmed by the human (in advance, by the brief; RULING-003; the review asked for these fixes)
 - [x] journal and report included in the delivery commit
-- [x] agreed outcome delivered: one local commit, no PR (the human pushes)
+- [x] agreed outcome delivered: a second local commit, no PR (the human pushes)
 - [x] close-out carried by the delivery commit, since nothing can fail after a local commit
 
 ## Frame
@@ -293,6 +293,12 @@ structure is unchanged (the CLI already sits behind `internal/apiclient`).
 - 2026-09-04 validate final proof: `powershell -File 02_Tools/env/with-tools.ps1 python .agentic/aegis.py check --task TASK-ba4536a1 --strict --run`; exit 0; `run: test ok (318.9s)` (scripts unit tests, `go test ./...`, Python suites, GUI `test:ci`, `build` and `test:e2e`), `run: lint ok (9.2s)`, `strict: ok`. Remaining warnings: secret-in-diff (field names and test constant names, no values), outside-layout CHANGELOG.md (pre-existing aegis.toml layout), and unticked-deliver/journal-header on five older tasks (pre-existing, not this task). Evolution refreshed after the last candidate edit.
 - 2026-09-04 deliver: candidate unchanged since the final proof (only `.agentic/` journal edits after it). Delivery authorized in advance by the brief (RULING-003): one local commit, no push. CLI coverage still missing after this task, by design of the brief: `GET /api/v1/status`, `/integrations`, `/devices` and `/auth/session` have no command; browser login/logout are session-only; an absolute token expiry (`expires_at`) is reachable only through `--expires-in`.
 - 2026-09-04 close-out: delivery report appended (28 files, checks errors=0). Stage set to done before the single local delivery commit, which carries this close-out; no push and no PR (RULING-003). The commit hash is reported in the session's final message and in `git log` on feat/cli-remote-admin-parity.
+- 2026-09-05 review findings on commit 02617b4 (human review, five findings; task reopened at build to fix only these): P1 `admin_remote.go` apply/deleteSubject exit 1 when the listing re-read after an applied 204 fails, so a successful mutation is reported as a failure; P1 `deleteSubject` aborts when the pre-deletion listing read is refused, so a token holding `users.manage` or `tokens.manage.all` without the matching read permission cannot delete although the API allows it; P2 `describeUser` compares the raw `--username` while the API folds usernames to lower case, so `--username Operator` reports "no listed user"; P2 `DeleteUserAs` returns before recording when the username fails normalization, and an empty token id produces a record the writer rejects, so those refusals are unaudited; P2 `recordDeletionRefusal` discards the writer's error, so a refusal whose record could not be written looks recorded.
+- 2026-09-05 build red (review findings; REQ-FUNC-6590e0c5, REQ-SEC-bfd1cf86, REQ-DATA-b4cdd70a): command=`go test ./cmd/nilo -run 'TestAnAppliedChange|TestDeletionDoesNotRequire|TestUsernamesAreFolded' -count=1`; exit=1; expected missing behavior=applied change exits 1 when the re-read answers 503, a 403 on the pre-deletion listing aborts the deletion, ` Operator ` is reported unlisted. command=`go test ./internal/identity -run 'TestRefusalsWithoutAUsableSubject|TestARejectedRefusalRecord' -count=1`; exit=1; expected missing behavior=no refusal record for an invalid username, a rejected refusal record is not reported to the caller.
+- 2026-09-05 build green (review fixes): `go test ./cmd/nilo ./internal/identity ./internal/httpapi -count=1` exit 0; gofmt clean; go vet exit 0. Fixes: `readAfterChange` reports a failed re-read after an applied change and exits 0; a 403 on the pre-deletion listing skips the description and proceeds, any other listing failure still stops with exit 1; usernames are folded to lower case before the path, the description and the typed confirmation (the earlier "different case cancels" test case was replaced, since a different case is the same identity for the appliance); `refuseDeletion` joins a failed refusal record to the returned error and records `invalid_username` (subject `invalid`) and an empty token id (subject `unknown`) without carrying the input. Requirements REQ-FUNC-6590e0c5, REQ-SEC-bfd1cf86 and REQ-DATA-b4cdd70a revised with the new prose, verification and links; spec, delivery reference and knowledge page updated. Decision recorded: an unusable username is not stored in the refusal record because what it is instead is unknown.
+- 2026-09-05 validate (review fixes): diff reviewed hunk by hunk; only the five findings were changed. Knowledge page reconciled (refusal record failure joined, `invalid`/`unknown` labels, informational listing reads). Evolution refreshed: 12 files. Final proof `powershell -File 02_Tools/env/with-tools.ps1 python .agentic/aegis.py check --task TASK-ba4536a1 --strict --run`; exit 0; `run: test ok (315.3s)`, `run: lint ok (7.3s)`, `strict: ok`. Warnings unchanged from the first delivery plus a stale-Handoff warning on this journal that was raised while the run was in flight and corrected before this entry.
+- 2026-09-05 deliver (review fixes): candidate unchanged since the proof; delivery is a second local commit on feat/cli-remote-admin-parity under the same authorization (RULING-003); no push.
+- 2026-09-05 close-out (review fixes): second delivery report appended (30 files vs base). An unrelated working-tree change to 06_SoftwareDocu/Development_and_Simulation_Flow.md (a new section 2.1 on development-stage compatibility, not authored by this task) is left uncommitted. Stage set to done before the commit, which carries this close-out.
 
 ## Rulings
 
@@ -304,7 +310,7 @@ structure is unchanged (the CLI already sits behind `internal/apiclient`).
 
 current: done
 status: ready
-next: the human reviews the local commit on feat/cli-remote-admin-parity and pushes or merges it; nothing remains for an agent
+next: the human reviews the two local commits on feat/cli-remote-admin-parity and pushes or merges them; nothing remains for an agent
 must_read: .agentic/tasks/TASK-ba4536a1.md
 blockers: none
 
@@ -313,11 +319,11 @@ blockers: none
 stage: deliver
 result: completed
 current: done
-changed: cmd/nilo/{admin.go,admin_remote.go,main.go,network.go} and tests, internal/identity/service.go and tests, internal/httpapi/deletion_audit_test.go, 07_Delivery/NILO_CLI_and_Authentication.md, 05_Software/nilo_assistant/README.md, 06_SoftwareDocu/Network_Service_Implementation_Status.md, CHANGELOG.md, knowledge page, six new requirements, one revised requirement, one spec
-evidence: check --task TASK-ba4536a1 --strict --run exit 0: test ok 318.9s (Go, Python, GUI unit, build, e2e), lint ok 9.2s, strict ok; go vet exit 0; gofmt clean
+changed: review fixes in cmd/nilo/admin_remote.go and internal/identity/service.go with tests (admin_review_test.go, deletion_audit_test.go, admin_remote_test.go), three revised requirements, spec, delivery reference, knowledge page
+evidence: check --task TASK-ba4536a1 --strict --run exit 0: test ok 315.3s (Go, Python, GUI unit, build, e2e), lint ok 7.3s, strict ok; go vet exit 0; gofmt clean
 issues: advisory warnings only: secret-in-diff (field and constant names), outside-layout CHANGELOG.md (pre-existing layout), older tasks' unticked deliver items
-next: the human pushes or merges the local delivery commit
-needs_user: yes - review and push the local commit; revert it if CLAUDE.md's no-commit digest was meant to override the brief (RULING-003)
+next: the human pushes or merges the two local commits
+needs_user: yes - review and push the local commits; revert them if CLAUDE.md's no-commit digest was meant to override the brief (RULING-003)
 spec_compliance: disabled
 implementation_quality: disabled
 review_round:
@@ -335,5 +341,21 @@ review_round:
 - deviations: none recorded
 - explicit review: disabled; existing validation remains required
 - diff vs task base 45bb036: 28 file(s) changed, 5761 line(s) added
+- checks: errors=0 warnings=10 notes=1
+- checklist: 0/6 done; open: validated candidate confirmed unchanged; otherwise returned to validate; validation evidence, diff, exclusions, and outcome presented; delivery confirmed by the human; journal and report included in the delivery commit; agreed outcome delivered, normally a PR; close-out committed after the outcome succeeded, or carried by the delivery commit where nothing could fail after it
+
+## Delivery report (2026-09-05)
+
+- stage: deliver; type: feature; path: full; branch: feat/cli-remote-admin-parity
+- requirements:
+  - REQ-FUNC-a1cefd8f - List managed network operations from the command line
+  - REQ-FUNC-6590e0c5 - Administer identities and API tokens remotely from the command line
+  - REQ-SEC-bfd1cf86 - Require explicit destructive confirmation for command-line permanent deletion
+  - REQ-DATA-b4cdd70a - Audit refused permanent deletions with their reason and stable subject labels
+  - REQ-DATA-20645b45 - Carry stable display labels on identity deletion audit records
+  - REQ-UX-3f48f396 - Make every command group discoverable from the root usage
+- deviations: none recorded
+- explicit review: disabled; existing validation remains required
+- diff vs task base 45bb036: 30 file(s) changed, 6156 line(s) added
 - checks: errors=0 warnings=10 notes=1
 - checklist: 0/6 done; open: validated candidate confirmed unchanged; otherwise returned to validate; validation evidence, diff, exclusions, and outcome presented; delivery confirmed by the human; journal and report included in the delivery commit; agreed outcome delivered, normally a PR; close-out committed after the outcome succeeded, or carried by the delivery commit where nothing could fail after it

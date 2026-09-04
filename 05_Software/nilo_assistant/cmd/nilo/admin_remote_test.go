@@ -34,6 +34,7 @@ type adminStub struct {
 	mutex   sync.Mutex
 	calls   []recordedRequest
 	answers map[string]adminStubAnswer
+	once    map[string]adminStubAnswer
 }
 
 func stubUserListing() map[string]any {
@@ -84,6 +85,17 @@ func (stub *adminStub) answer(route string, status int, body any) {
 	stub.answers[route] = adminStubAnswer{status: status, body: body}
 }
 
+// answerOnce answers the route this way for its next request only, after which
+// the standing answer applies again.
+func (stub *adminStub) answerOnce(route string, status int, body any) {
+	stub.mutex.Lock()
+	defer stub.mutex.Unlock()
+	if stub.once == nil {
+		stub.once = map[string]adminStubAnswer{}
+	}
+	stub.once[route] = adminStubAnswer{status: status, body: body}
+}
+
 func (stub *adminStub) serve(response http.ResponseWriter, request *http.Request) {
 	payload := new(bytes.Buffer)
 	_, _ = payload.ReadFrom(request.Body)
@@ -92,7 +104,13 @@ func (stub *adminStub) serve(response http.ResponseWriter, request *http.Request
 		method: request.Method, path: request.URL.Path, rawQuery: request.URL.RawQuery,
 		authorized: request.Header.Get("Authorization"), body: payload.String(),
 	})
-	answer, known := stub.answers[request.Method+" "+request.URL.Path]
+	route := request.Method + " " + request.URL.Path
+	answer, known := stub.once[route]
+	if known {
+		delete(stub.once, route)
+	} else {
+		answer, known = stub.answers[route]
+	}
 	stub.mutex.Unlock()
 	if !known {
 		// Every other change the API offers answers 204 No Content.
@@ -490,11 +508,14 @@ func TestRemoteUserDeletionRequiresTheUsernameTypedBack(t *testing.T) {
 		}
 	})
 
+	// A username is folded the way the appliance folds it, so a different
+	// case is the same identity (proven in the review tests); anything that
+	// folds to a different name, or to nothing, cancels.
 	for name, answer := range map[string]string{
-		"different case": "Operator\n",
-		"another name":   "admin\n",
-		"empty":          "\n",
-		"end of input":   "",
+		"another name": "admin\n",
+		"a prefix":     "operato\n",
+		"empty":        "\n",
+		"end of input": "",
 	} {
 		answer := answer
 		t.Run("cancelled by "+name, func(t *testing.T) {

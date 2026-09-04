@@ -304,6 +304,20 @@ No other flag is consent. `--acknowledge`, which acknowledges a previewed
 network change, is not an admin option at all and is refused as unknown. A
 refused or cancelled deletion has made exactly one request, the listing read.
 
+That listing read is a courtesy, not a gate. A token that holds `users.manage`
+or `tokens.manage.all` without the matching read permission is answered `403`
+on it; the command then says the subject cannot be described here and still
+asks for consent and sends the deletion, because the appliance, not the
+command, decides what the token may do. Any other failure of that read stops
+the command with exit `1` before anything destructive is attempted. Usernames
+are folded to lower case the way the appliance folds them, so
+`--username Operator` describes, deletes and confirms `operator`.
+
+After any applied change, the command re-reads the listing so you see the
+resulting state. If that re-read fails, the change has still been applied: the
+command says so on standard error and exits `0` rather than reporting a
+success as a failure.
+
 The rules of section 5 hold unchanged: the last enabled administrator cannot be
 deleted (`last_administrator`), an identity that still owns API tokens cannot
 be deleted until they are deleted (`user_has_tokens`), an already-deleted
@@ -662,11 +676,15 @@ transaction has rolled back:
 
 | Action | Subject | Outcome | Reason codes |
 |---|---|---|---|
-| `identity.user.delete_refused` | username | `denied`, severity `warning` | `last_administrator`, `user_has_tokens`, `user_not_found`, `not_administrator` |
+| `identity.user.delete_refused` | username | `denied`, severity `warning` | `last_administrator`, `user_has_tokens`, `user_not_found`, `not_administrator`, `invalid_username` |
 | `identity.token.delete_refused` | api_token | `denied`, severity `warning` | `token_not_found`, `not_administrator` |
 
-Each carries the requested subject as its target label, the actor as for any
-other identity event, and `reason` and `actor_username` in its details. A
+Each carries the requested subject as its target label (`invalid` or
+`unknown` when the request named no usable subject, whose input is kept out of
+the record), the actor as for any other identity event, and `reason` and
+`actor_username` in its details. If the refusal record itself cannot be
+written, the deletion is still refused and the error the caller receives says
+that the attempt could not be recorded. A
 credential that lacks the route's permission never reaches this decision: the
 HTTP boundary refuses it with `403` and records `identity.access.denied` with
 the permission and route, exactly as for every other protected route.

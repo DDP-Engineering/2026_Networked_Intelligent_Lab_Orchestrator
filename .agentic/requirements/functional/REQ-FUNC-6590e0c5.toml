@@ -16,7 +16,8 @@ only from standard input, printing the appliance's document unaltered with `--js
 rendering otherwise, disclosing a newly created token secret exactly once beside a warning that it
 cannot be retrieved later, and exiting 0 on success, 1 when the appliance refuses or cannot be
 reached, and 2 when the local and remote modes are combined, a mode is incomplete, or a flag is
-unknown.
+unknown; a change the appliance has applied is reported as applied even when the listing re-read
+that follows it fails, and usernames are folded to lower case as the appliance folds them.
 """
 
 verification = "Command tests run every remote subcommand against a recording HTTP stub and assert the method, path, JSON body and bearer header of each request; that a password given on standard input reaches only the request body and no output stream; that a 204 answer is followed by a re-read of the listing; that a token creation prints the secret exactly once with a warning on standard error and --json prints only the appliance document on standard output; that --data-dir combined with --server, --server without --token-file, or neither mode exits 2 without a request; that a missing, empty or unreadable token file exits 1 before any request; and that a 401, 403 or 404 answer exits 1 with the appliance's error code. A further test drives the same commands against a real simulation server with a viewer token, a scope-narrowed administrator token and a revoked and an expired token, asserting each is refused with exit 1 and nothing changed, and the existing local --data-dir command tests still pass unchanged."
@@ -26,6 +27,7 @@ affected_paths = [
     "05_Software/nilo_assistant/cmd/nilo/admin_remote.go",
     "05_Software/nilo_assistant/cmd/nilo/main.go",
     "05_Software/nilo_assistant/cmd/nilo/admin_remote_test.go",
+    "05_Software/nilo_assistant/cmd/nilo/admin_review_test.go",
     "05_Software/nilo_assistant/cmd/nilo/admin_live_test.go",
     "05_Software/nilo_assistant/cmd/nilo/admin_test.go",
     "05_Software/nilo_assistant/internal/apiclient/client.go",
@@ -33,6 +35,8 @@ affected_paths = [
 ]
 
 linked_tests = [
+    "05_Software/nilo_assistant/cmd/nilo/admin_review_test.go::TestAnAppliedChangeIsReportedEvenWhenTheListingCannotBeReread",
+    "05_Software/nilo_assistant/cmd/nilo/admin_review_test.go::TestUsernamesAreFoldedTheWayTheApplianceFoldsThem",
     "05_Software/nilo_assistant/cmd/nilo/admin_remote_test.go::TestRemoteUserCommandsCallTheAdministrationRoutes",
     "05_Software/nilo_assistant/cmd/nilo/admin_remote_test.go::TestRemoteTokenCommandsCallTheAdministrationRoutes",
     "05_Software/nilo_assistant/cmd/nilo/admin_remote_test.go::TestRemoteJSONOutputIsTheAppliancesDocument",
@@ -50,4 +54,4 @@ priority = "high"
 rationale = "A Raspberry Pi appliance is administered from another machine; the local commands need write access to the data directory, which a remote administrator does not and should not have."
 
 created = 2026-09-04
-updated = 2026-09-04
+updated = 2026-09-05

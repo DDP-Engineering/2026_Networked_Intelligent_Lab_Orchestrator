@@ -136,6 +136,24 @@ the response body beyond that code.
 `--confirm-delete` on an interactive terminal skips the typed prompt: it is
 the same explicit consent, given up front.
 
+The listing read in step 1 is informational, not a gate. When the appliance
+answers it with `403` (a token that holds `users.manage` or
+`tokens.manage.all` without the matching read permission), the command says
+the subject cannot be described here and continues to the confirmation; any
+other failure of that read (unreachable, `401`, `5xx`) stops the command with
+exit `1` before anything destructive is attempted.
+
+After an applied change (a `204`, or a `201`), the listing re-read is likewise
+informational: if it fails, the command reports on standard error that the
+change was applied but the listing could not be re-read, prints nothing on
+standard output, and exits `0`. A change that the appliance applied is never
+reported as a failure.
+
+Usernames are folded to lower case and trimmed by the command before they are
+placed in a path, described or confirmed, because that is what the appliance
+does with them (`--username Operator` addresses `operator`); the typed
+confirmation is folded the same way. Token identifiers are matched exactly.
+
 ## Examples
 
 ```bash
