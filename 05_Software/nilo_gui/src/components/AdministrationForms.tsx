@@ -307,6 +307,98 @@ export function ConfirmationForm({
   );
 }
 
+export interface PermanentDeletionFormProps extends FormShellProps {
+  /** The exact name that has to be typed back, and that the warning names. */
+  name: string;
+  /** The sentence stating what will be removed and what else it takes. */
+  explanation: ReactNode;
+  /** The label of the control that applies the removal. */
+  confirmLabel: string;
+  /** The field label and help for the name that has to be repeated. */
+  fieldLabel: string;
+  fieldHelp: string;
+  /** The id prefix, so two of these dialogs never share a control id. */
+  prefix: string;
+  onSubmit: () => void;
+  workflowHelp?: ReactNode;
+}
+
+/**
+ * Ask before a removal that nothing can undo.
+ *
+ * A confirmation button alone is what an operator clicks through; this dialog
+ * therefore asks for the record's own name, typed exactly. Two things follow.
+ * The dialog names the subject in a way a mis-aimed click cannot satisfy, and
+ * the warning stays on screen while the name is being typed rather than being
+ * dismissed by the act of confirming.
+ *
+ * Nothing here is a security boundary. Every rule this dialog states is
+ * enforced by Bench Core inside the transaction that applies the removal; the
+ * dialog exists so the person is never surprised by it.
+ */
+export function PermanentDeletionForm({
+  name,
+  explanation,
+  confirmLabel,
+  fieldLabel,
+  fieldHelp,
+  prefix,
+  working,
+  failure,
+  onDismiss,
+  onSubmit,
+  workflowHelp,
+}: PermanentDeletionFormProps) {
+  const t = useTranslate();
+  const [typed, setTyped] = useState('');
+  // Compared exactly, with no trimming. The dialog asks for the name and means
+  // it: accepting a value that merely reads the same leaves a confirmation
+  // weaker than the one the operator was told they were giving.
+  const matches = typed === name;
+
+  return (
+    <form
+      className="dialog-form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (matches) {
+          onSubmit();
+        }
+      }}
+      noValidate
+    >
+      {workflowHelp}
+      <p className="card-copy">{explanation}</p>
+      <p className="field-error" role="alert">
+        {t('auth.deleteWarning')}
+      </p>
+      <Field
+        id={`${prefix}-confirmation`}
+        label={fieldLabel}
+        help={fieldHelp}
+        guidance={t('auth.deleteTypeExactly', { name })}
+      >
+        <input
+          id={`${prefix}-confirmation`}
+          type="text"
+          autoComplete="off"
+          spellCheck={false}
+          value={typed}
+          onChange={(event) => setTyped(event.target.value)}
+        />
+      </Field>
+      <FormFailure failure={failure} />
+      <ModalActions
+        confirmLabel={confirmLabel}
+        working={working}
+        onDismiss={onDismiss}
+        destructive
+        blocked={!matches}
+      />
+    </form>
+  );
+}
+
 export interface CreateTokenFormProps extends FormShellProps {
   /** The identities a token may be created for. */
   identities: BenchCoreIdentity[];

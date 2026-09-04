@@ -563,21 +563,33 @@ not load the other listing; API tokens also reads identities for its owner
 selector:
 
 - identities are listed with their role and enabled state, and can be created
-  with one of the three fixed roles, re-roled, disabled, re-enabled, and have
-  their password reset. Creation time is under **Details**. They are never
-  deleted, so audit records keep naming a real subject, and the last enabled
-  administrator cannot be disabled or demoted;
+  with one of the three fixed roles, re-roled, disabled, re-enabled, have their
+  password reset, and deleted permanently. Creation time is under **Details**.
+  Disabling keeps the record and stops the identity signing in; deleting removes
+  the record and every browser session it holds, and cannot be undone. The last
+  enabled administrator cannot be disabled, demoted or deleted, and an identity
+  that owns API tokens cannot be deleted at all — the tokens are never swept
+  along, and the refusal says to delete them first;
 - tokens are listed with their name, owner, effective state and expiry; scopes
   and creation time are under **Details**. State precedence is revoked, expired,
   then active. Tokens
   and can be created for an existing identity with optional scopes and an
-  optional expiry, and revoked. A token's permissions are its scopes narrowed by
-  its owner's current role, which the creation form states, so a token can never
-  exceed that role.
+  optional expiry, revoked, and deleted permanently. Revoking stops the secret
+  and keeps the record, and is offered only while the token is active; deleting
+  removes the record whatever state it is in. A token's permissions are its
+  scopes narrowed by its owner's current role, which the creation form states,
+  so a token can never exceed that role.
 
-Row **Actions** dialogs identify the record and explain unavailable operations.
+Row **Actions** dialogs identify the record and explain unavailable operations,
+with the two permanent removals in the destructive group beneath them.
 Disabling an identity, resetting a password and revoking a token each ask for an
-explicit confirmation naming the subject. Field popovers and workflow help
+explicit confirmation naming the subject. Each permanent deletion asks for more:
+it states what is removed, keeps a warning visible that it cannot be undone, and
+sends nothing until the identity's username or the token's name has been typed
+back exactly. That is presentation only. Bench Core enforces the last-enabled-
+administrator invariant, the owned-token refusal and the audit record inside the
+one transaction that applies the removal, so a client that skips the dialog
+gains nothing. Field popovers and workflow help
 explain role and scope semantics, access impact, external coordination and
 verification without hiding persistent warnings. A new token's secret is shown once,
 with a copy action and a statement that it cannot be retrieved later; dismissing
@@ -871,9 +883,9 @@ contract/acceptance tests, a long-running authenticated simulation status API,
 deterministic integration and device inventory, identity and access control with
 its HTTP administration routes, a repository-local Windows Node.js and browser
 toolchain, a browser GUI in which a human signs in with a password and
-administers identities and API tokens beside the backend status and the
-simulated inventory, and integrated browser tests that drive that GUI against a
-real WSL2 backend. The `/mcp` endpoint now provides authenticated read-only
+administers identities and API tokens — including their permanent deletion —
+beside the backend status and the simulated inventory, and integrated browser
+tests that drive that GUI against a real WSL2 backend. The `/mcp` endpoint now provides authenticated read-only
 Network status, statistics and WireGuard status tools; it shares the HTTP
 identity service. Appliance TLS startup remains unfinished.
 

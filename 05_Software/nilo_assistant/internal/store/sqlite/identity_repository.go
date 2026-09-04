@@ -194,6 +194,47 @@ func (repository *IdentityRepository) updateUser(ctx context.Context, statement 
 	return nil
 }
 
+// DeleteUser removes one identity row.
+//
+// It is a plain delete, not a soft one: the caller has already decided the
+// record goes, and a row that is only marked would keep answering a username
+// lookup. Foreign keys are on, so this statement also refuses to leave a
+// session or a token pointing at an identity that no longer exists — the
+// service removes the sessions first and refuses while a token remains.
+func (repository *IdentityRepository) DeleteUser(ctx context.Context, id string) error {
+	if err := repository.validate(); err != nil {
+		return err
+	}
+	result, err := repository.execute().ExecContext(ctx, "DELETE FROM users WHERE id = ?", id)
+	if err != nil {
+		return fmt.Errorf("delete identity: %w", err)
+	}
+	removed, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("read identity deletion result: %w", err)
+	}
+	if removed == 0 {
+		return auth.ErrUserNotFound
+	}
+	return nil
+}
+
+// CountAPITokensForUser counts every token an identity owns, whatever state it
+// is in. A revoked or expired token is still a record naming this owner, and a
+// deletion that ignored it would leave the history pointing at nobody.
+func (repository *IdentityRepository) CountAPITokensForUser(ctx context.Context, userID string) (int, error) {
+	if err := repository.validate(); err != nil {
+		return 0, err
+	}
+	var count int
+	if err := repository.execute().QueryRowContext(
+		ctx, "SELECT COUNT(*) FROM mcp_tokens WHERE user_id = ?", userID,
+	).Scan(&count); err != nil {
+		return 0, fmt.Errorf("count identity API tokens: %w", err)
+	}
+	return count, nil
+}
+
 // CreateSession stores one browser session and only the verifiers of its
 // secrets. The stored password verifier the login checked is the condition of
 // the insert itself, so a password reset or a disable that completes while a
@@ -333,6 +374,24 @@ func (repository *IdentityRepository) RevokeUserSessions(ctx context.Context, us
 	return nil
 }
 
+// DeleteUserSessions removes every session row an identity holds.
+//
+// Revocation marks a row and keeps it, which is right while the identity
+// remains. An identity that is being removed cannot leave marked rows behind:
+// they would reference an owner that no longer exists. Removing nothing is not
+// an error, because an identity may simply never have signed in.
+func (repository *IdentityRepository) DeleteUserSessions(ctx context.Context, userID string) error {
+	if err := repository.validate(); err != nil {
+		return err
+	}
+	if _, err := repository.execute().ExecContext(
+		ctx, "DELETE FROM user_sessions WHERE user_id = ?", userID,
+	); err != nil {
+		return fmt.Errorf("delete identity browser sessions: %w", err)
+	}
+	return nil
+}
+
 // CreateAPIToken stores one named token's metadata and only its verifier.
 func (repository *IdentityRepository) CreateAPIToken(ctx context.Context, token auth.APIToken, verifier auth.TokenVerifier) error {
 	if err := repository.validate(); err != nil {
@@ -445,6 +504,53 @@ func (repository *IdentityRepository) RevokeAPIToken(ctx context.Context, id str
 		return fmt.Errorf("read token revocation result: %w", err)
 	}
 	if changed == 0 {
+		return auth.ErrTokenNotFound
+	}
+	return nil
+}
+
+// APITokenByID resolves one token's metadata by its identifier. The verifier is
+// read into a local variable that is discarded, exactly as the listing does, so
+// no caller can be handed one.
+func (repository *IdentityRepository) APITokenByID(ctx context.Context, id string) (auth.APIToken, error) {
+	if err := repository.validate(); err != nil {
+		return auth.APIToken{}, err
+	}
+	row := repository.execute().QueryRowContext(
+		ctx,
+		"SELECT id, user_id, verifier, name, scopes, created_at, expires_at, revoked_at FROM mcp_tokens WHERE id = ?",
+		id,
+	)
+	var verifier []byte
+	token, err := scanAPIToken(row.Scan, &verifier)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return auth.APIToken{}, auth.ErrTokenNotFound
+		}
+		return auth.APIToken{}, err
+	}
+	return token, nil
+}
+
+// DeleteAPIToken removes one token row whatever state it is in.
+//
+// Revocation is conditional on the token still being active, because revoking
+// twice says nothing. Deletion is not: an expired or already revoked record is
+// exactly the kind an administrator clears away, and the row either exists or
+// it does not.
+func (repository *IdentityRepository) DeleteAPIToken(ctx context.Context, id string) error {
+	if err := repository.validate(); err != nil {
+		return err
+	}
+	result, err := repository.execute().ExecContext(ctx, "DELETE FROM mcp_tokens WHERE id = ?", id)
+	if err != nil {
+		return fmt.Errorf("delete API token: %w", err)
+	}
+	removed, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("read token deletion result: %w", err)
+	}
+	if removed == 0 {
 		return auth.ErrTokenNotFound
 	}
 	return nil

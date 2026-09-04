@@ -14,6 +14,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -38,6 +39,11 @@ var (
 	// ErrExpiryNotInFuture reports a token expiry that has already passed, which
 	// would create a credential that is unusable the moment it is disclosed.
 	ErrExpiryNotInFuture = errors.New("token expiry must be in the future")
+	// ErrUserHasTokens reports a deletion refused because the identity still
+	// owns API tokens. Removing them with the identity would destroy credential
+	// records nobody decided to destroy, so the tokens are deleted deliberately
+	// first and this refusal says so.
+	ErrUserHasTokens = errors.New("the identity still owns API tokens")
 )
 
 // Repository is the persistence this package needs, named at the point of use.
@@ -50,6 +56,9 @@ type Repository interface {
 	UpdateUserRole(ctx context.Context, id string, role auth.Role, at time.Time) error
 	SetUserDisabled(ctx context.Context, id string, disabledAt *time.Time, at time.Time) error
 	UpdateUserPassword(ctx context.Context, id, verifier string, at time.Time) error
+	// DeleteUser removes the identity row itself. There is no disabled-and-kept
+	// variant of it: the caller has already decided the record goes.
+	DeleteUser(ctx context.Context, id string) error
 
 	// CreateSession stores the session only while the identity still carries the
 	// password verifier the login checked and is still enabled.
@@ -59,11 +68,23 @@ type Repository interface {
 	SessionBySecret(ctx context.Context, secret string) (auth.SessionRecord, error)
 	RevokeSession(ctx context.Context, id string, at time.Time) error
 	RevokeUserSessions(ctx context.Context, userID string, at time.Time) error
+	// DeleteUserSessions removes every session row an identity holds, which is
+	// what revocation cannot do for an identity that is itself being removed.
+	DeleteUserSessions(ctx context.Context, userID string) error
 
 	CreateAPIToken(ctx context.Context, token auth.APIToken, verifier auth.TokenVerifier) error
 	APITokenBySecret(ctx context.Context, secret string) (auth.APIToken, error)
 	ListAPITokens(ctx context.Context) ([]auth.APIToken, error)
 	RevokeAPIToken(ctx context.Context, id string, at time.Time) error
+	// APITokenByID resolves one token's metadata by its identifier, so a
+	// deletion can describe what it removed without ever touching a verifier.
+	APITokenByID(ctx context.Context, id string) (auth.APIToken, error)
+	// DeleteAPIToken removes the token row itself, revoked or not.
+	DeleteAPIToken(ctx context.Context, id string) error
+	// CountAPITokensForUser counts every token an identity owns, revoked and
+	// expired ones included: a revoked token is still a credential record that
+	// names its owner, and losing it silently would lose that history.
+	CountAPITokensForUser(ctx context.Context, userID string) (int, error)
 
 	// WithinAdministrativeTransaction runs one administrative change and the
 	// audit event it owes as a single database transaction, and gives the change
@@ -401,6 +422,65 @@ func (service *Service) ResetPasswordAs(ctx context.Context, actor Actor, userna
 	return nil
 }
 
+// DeleteUser permanently removes an identity.
+func (service *Service) DeleteUser(ctx context.Context, actor auth.User, username string) error {
+	return service.DeleteUserAs(ctx, UserActor(actor), username)
+}
+
+// DeleteUserAs permanently removes an identity with request credential
+// attribution.
+//
+// This is the one identity change that cannot be undone, so everything it has
+// to be sure of is decided inside the one transaction that applies it: that an
+// enabled administrator is asking, that the appliance keeps an enabled
+// administrator afterwards, that no API token is left naming an owner that no
+// longer exists, and that the event which records the removal is stored. The
+// identity's browser sessions are removed with it, because a session row that
+// outlived its identity is a credential nobody can account for.
+func (service *Service) DeleteUserAs(ctx context.Context, actor Actor, username string) error {
+	normalized, err := auth.NormalizeUsername(username)
+	if err != nil {
+		return err
+	}
+	return service.repository.WithinAdministrativeTransaction(
+		ctx, func(repository Repository, events audit.Repository) error {
+			if err := requireAdministrator(ctx, repository, actor.User); err != nil {
+				return err
+			}
+			subject, err := repository.UserByUsername(ctx, normalized)
+			if err != nil {
+				return err
+			}
+			// Removing an identity removes an administrator as surely as
+			// demoting or disabling one does, and is guarded by the same count
+			// read inside the same transaction.
+			if err := guardLastAdministrator(ctx, repository, subject, true); err != nil {
+				return err
+			}
+			// Owned tokens are refused rather than swept along. A cascade here
+			// would delete credential records, and their history, on the
+			// strength of a decision that was about a person.
+			owned, err := repository.CountAPITokensForUser(ctx, subject.ID)
+			if err != nil {
+				return err
+			}
+			if owned > 0 {
+				return fmt.Errorf("%w: %s", ErrUserHasTokens, subject.Username)
+			}
+			if err := repository.DeleteUserSessions(ctx, subject.ID); err != nil {
+				return err
+			}
+			if err := repository.DeleteUser(ctx, subject.ID); err != nil {
+				return err
+			}
+			return service.record(ctx, events, actor, "identity.user.deleted", "user", subject.ID, map[string]string{
+				"username": subject.Username, "role": string(subject.Role),
+				"enabled": strconv.FormatBool(subject.Enabled()),
+			})
+		},
+	)
+}
+
 // ListUsers returns every identity, enabled or not.
 func (service *Service) ListUsers(ctx context.Context) ([]auth.User, error) {
 	return service.repository.ListUsers(ctx)
@@ -534,6 +614,50 @@ func (service *Service) RevokeTokenAs(ctx context.Context, actor Actor, tokenID 
 			}
 			return service.record(ctx, events, actor, "identity.token.revoked", "api_token", tokenID, map[string]string{
 				"token_id": tokenID,
+			})
+		},
+	)
+}
+
+// DeleteToken permanently removes one API token record.
+func (service *Service) DeleteToken(ctx context.Context, actor auth.User, tokenID string) error {
+	return service.DeleteTokenAs(ctx, UserActor(actor), tokenID)
+}
+
+// DeleteTokenAs permanently removes one API token with request credential
+// attribution.
+//
+// Deletion is deliberately not revocation. Revoking keeps the record and its
+// history and stops the secret; deleting removes the record, which also stops
+// the secret, because the row a bearer secret is matched against is gone. An
+// expired or already revoked token can be deleted too: the record is what is
+// being removed, and its usability was settled long before.
+func (service *Service) DeleteTokenAs(ctx context.Context, actor Actor, tokenID string) error {
+	return service.repository.WithinAdministrativeTransaction(
+		ctx, func(repository Repository, events audit.Repository) error {
+			if err := requireAdministrator(ctx, repository, actor.User); err != nil {
+				return err
+			}
+			// Read before delete, so the event can describe what was removed.
+			// Nothing read here can carry a secret: the metadata has nowhere to
+			// put one and the verifier is never returned.
+			token, err := repository.APITokenByID(ctx, tokenID)
+			if err != nil {
+				return err
+			}
+			if err := repository.DeleteAPIToken(ctx, token.ID); err != nil {
+				return err
+			}
+			expiry, expired := "never", false
+			if token.ExpiresAt != nil {
+				expiry = token.ExpiresAt.UTC().Format(time.RFC3339)
+				expired = !token.ExpiresAt.After(service.now())
+			}
+			return service.record(ctx, events, actor, "identity.token.deleted", "api_token", token.ID, map[string]string{
+				"token_name": token.Name, "owner_id": token.UserID,
+				"scopes": auth.FormatPermissions(token.Scopes), "expires_at": expiry,
+				"revoked": strconv.FormatBool(token.RevokedAt != nil),
+				"expired": strconv.FormatBool(expired),
 			})
 		},
 	)

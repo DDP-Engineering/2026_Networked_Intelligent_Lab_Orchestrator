@@ -55,9 +55,9 @@ editor, and no policy language: the table below is built into NILO.
 | `tokens.read.self` | List one's own API tokens | no | yes | yes |
 | `tokens.manage.self` | Create and revoke one's own API tokens | no | yes | yes |
 | `users.read` | List identities, their roles and their state | no | no | yes |
-| `users.manage` | Create identities, change roles, disable, enable, reset passwords | no | no | yes |
+| `users.manage` | Create identities, change roles, disable, enable, reset passwords, delete permanently | no | no | yes |
 | `tokens.read.all` | List every identity's API tokens | no | no | yes |
-| `tokens.manage.all` | Revoke any identity's API token | no | no | yes |
+| `tokens.manage.all` | Revoke or permanently delete any identity's API token | no | no | yes |
 
 The set covers the functionality this release exposes. Hardware operations,
 firmware flashing, MCP access and artifact retrieval receive their permissions
@@ -144,8 +144,10 @@ at least 12 bytes.
 - **The last administrator survives.** Disabling the last enabled
   administrator, or changing its role away from Administrator, is refused and
   leaves the identity unchanged. You cannot lock yourself out this way.
-- **Identities are disabled, never deleted.** Audit records must keep resolving
-  to a real subject.
+- **These commands disable; they never delete.** There is no
+  `nilo admin user delete` and no `nilo admin token delete`. Permanent deletion
+  is reached through the HTTP API in section 5 and the browser page in
+  section 6, where the confirmation that it needs can actually be asked for.
 - **Disabling or resetting invalidates sessions.** Both immediately revoke
   every browser session that identity holds, server-side, including a session
   a login that checked the replaced password had not yet finished creating.
@@ -234,9 +236,11 @@ the password you just set.
 | `PUT /api/v1/users/{username}/role` | session or bearer | `users.manage` |
 | `PUT /api/v1/users/{username}/enabled` | session or bearer | `users.manage` |
 | `PUT /api/v1/users/{username}/password` | session or bearer | `users.manage` |
+| `DELETE /api/v1/users/{username}` | session or bearer | `users.manage` |
 | `GET /api/v1/tokens` | session or bearer | `tokens.read.all` |
 | `POST /api/v1/tokens` | session or bearer | `tokens.manage.all` |
 | `POST /api/v1/tokens/{id}/revoke` | session or bearer | `tokens.manage.all` |
+| `DELETE /api/v1/tokens/{id}` | session or bearer | `tokens.manage.all` |
 
 Every route that changes something and is authenticated by a session cookie
 must also carry the `X-NILO-CSRF` header. A creation returns what the caller
@@ -249,9 +253,38 @@ for example `{"error":"invalid_role","message":"role must be one of
 administrator, operator or viewer"}`. The codes are `invalid_request`,
 `invalid_username`, `invalid_password`, `invalid_role`, `invalid_name`,
 `invalid_scope`, `invalid_expiry`, `invalid_enabled`, `user_not_found`,
-`token_not_found`, `username_taken` and `last_administrator`. Anything NILO did
-not expect is `500` with `internal_error` and no message: a message built from
-an internal error would hand a caller the shape of the store behind it.
+`token_not_found`, `username_taken`, `last_administrator` and
+`user_has_tokens`. Anything NILO did not expect is `500` with `internal_error`
+and no message: a message built from an internal error would hand a caller the
+shape of the store behind it.
+
+### The two permanent deletions
+
+`DELETE /api/v1/users/{username}` removes the identity row itself. It carries no
+request body and answers `204 No Content`. Three things happen in the one
+transaction that applies it: every browser session that identity holds is
+removed, the identity is removed, and the audit event is appended. It is refused
+with `409` and `last_administrator` while the identity is the last enabled
+administrator, and with `409` and `user_has_tokens` while the identity owns any
+API token — revoked and expired ones included. Owned tokens are never swept
+along: delete them first, deliberately. An administrator may delete their own
+account while another enabled administrator remains; the session doing it stops
+authenticating at once, which is what returns a browser to sign-in.
+
+`DELETE /api/v1/tokens/{id}` removes the token record itself and likewise
+answers `204 No Content`. It is deliberately not revocation:
+
+| | Revoke | Delete |
+|---|---|---|
+| Route | `POST /api/v1/tokens/{id}/revoke` | `DELETE /api/v1/tokens/{id}` |
+| The secret | stops working | stops working |
+| The record | kept, marked revoked | removed |
+| Accepted state | active only | active, expired or revoked |
+| Repeating it | `404 token_not_found` | `404 token_not_found` |
+
+Neither deletion can be undone, and neither has a soft-deleted form to recover
+from. What survives is the Activity history, which keeps naming the subject
+after the subject is gone.
 
 ### Two rejections, deliberately distinct
 
@@ -362,21 +395,39 @@ page some other way is refused there rather than being relied on not to look.
 
 **Users.** Every identity with its username, role and enabled state; creation
 time is under **Details**. The row **Actions** dialog explains unavailable
-choices. You can create a user, change a role, disable and re-enable, and reset
-a password.
-Identities are never deleted, and the last enabled administrator can be neither
-disabled nor demoted. Disabling and resetting a password each ask for an
-explicit confirmation naming the identity, because both take access away
+choices. You can create a user, change a role, disable and re-enable, reset a
+password, and delete the identity permanently. The last enabled administrator
+can be neither disabled, nor demoted, nor deleted, and the dialog says so beside
+each control it has to withhold. Disabling and resetting a password each ask for
+an explicit confirmation naming the identity, because both take access away
 immediately and neither is undone by repeating the control.
+
+**Disable or delete.** Disabling keeps the identity and stops it signing in; it
+can be undone by enabling it again. **Delete permanently** removes the record,
+and its browser sessions with it. Because nothing can bring it back, that dialog
+asks for the username to be typed back exactly, states what will be removed, and
+keeps its warning visible while you type. Nothing is sent until the typed name
+matches, and the confirmation is presentation only: every rule it states is
+enforced by NILO inside the transaction that applies the removal. An identity
+that owns API tokens cannot be deleted, and the refusal says to delete those
+tokens on the API tokens page first — revoking them is not enough.
 
 **API tokens.** Every token's name, owner, effective state and expiry; scopes
 and creation time are under **Details**. Revoked takes precedence over expired,
 which takes precedence over active. Safe metadata never includes a secret,
 which NILO does not store. You can create a named token for an existing identity
-with optional scopes and an optional expiry, and revoke an active token after
-an explicit confirmation. The creation form states that a token's
-permissions are its scopes narrowed by its owner's current role, so selecting
-every scope for a Viewer's token still yields a Viewer's token.
+with optional scopes and an optional expiry, revoke an active token after an
+explicit confirmation, and delete any token permanently. The creation form
+states that a token's permissions are its scopes narrowed by its owner's current
+role, so selecting every scope for a Viewer's token still yields a Viewer's
+token.
+
+**Revoke or delete.** Both are offered in the destructive part of the Actions
+dialog and they are not the same thing. **Revoke** stops the secret and keeps
+the record, and is offered only while the token is active. **Delete
+permanently** removes the record whatever state it is in — active, expired or
+already revoked — and asks for the token name to be typed back exactly, with the
+same persistent warning as an identity deletion.
 
 A new token's secret is shown once, with a copy action and the warning that it
 cannot be retrieved later. Closing the disclosure clears the value from
@@ -413,6 +464,16 @@ does not happen at all. Reads and rejected/no-op mutations add no mutation event
 | `identity.user.password_reset` | user |
 | `identity.token.created` | api_token |
 | `identity.token.revoked` | api_token |
+| `identity.user.deleted` | user |
+| `identity.token.deleted` | api_token |
+
+The two deletion events carry the safe description of what was removed, because
+the record itself no longer exists to be looked up. `identity.user.deleted`
+carries the username, the role and the enabled state the identity had.
+`identity.token.deleted` carries the token name, the owner's user ID, the
+scopes, the expiry and whether the token was already revoked or expired. Neither
+carries a secret or a verifier, and both remain listable and exportable after
+their subject is gone.
 
 Activity can list and export these events with `component=identity`. Login
 attempts use their separate access-audit action and are not mutation events.
@@ -446,7 +507,9 @@ Do not plan around these; they are not in this release.
   else.
 - Custom roles, arbitrary permission editing, single sign-on, multi-factor
   authentication, and email-based account recovery.
-- Token rotation, and permanent deletion of identities or tokens.
+- Token rotation, and permanent deletion from the command line: `nilo admin`
+  disables and revokes only. Permanent deletion is in the HTTP API and the
+  browser page.
 - MCP transport and operation endpoints.
 - Suppressed terminal echo while typing a password. NILO never echoes or prints
   a password itself, but your terminal does while you type it. Prefer piping

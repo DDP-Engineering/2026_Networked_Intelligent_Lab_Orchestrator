@@ -278,9 +278,24 @@ export function identityPath(username: string, action: string): string {
   return `${IDENTITIES_PATH}/${encodeURIComponent(username)}/${action}`;
 }
 
+/** Build the path of one identity itself, which is what a deletion addresses. */
+export function identityResourcePath(username: string): string {
+  return `${IDENTITIES_PATH}/${encodeURIComponent(username)}`;
+}
+
 /** Build the path that revokes one API token. */
 export function tokenRevocationPath(id: string): string {
   return `${TOKENS_PATH}/${encodeURIComponent(id)}/revoke`;
+}
+
+/**
+ * Build the path of one API token itself.
+ *
+ * Revocation is a sub-resource because it is something done to a token that
+ * stays; deletion addresses the token, because afterwards there is none.
+ */
+export function tokenResourcePath(id: string): string {
+  return `${TOKENS_PATH}/${encodeURIComponent(id)}`;
 }
 
 /** Drop a trailing separator so joined paths stay canonical. */

@@ -251,9 +251,11 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 	protected.Handle("PUT /api/v1/users/{username}/role", authorize(auth.PermissionUsersManage, handleSetRole(options.Identity)))
 	protected.Handle("PUT /api/v1/users/{username}/enabled", authorize(auth.PermissionUsersManage, handleSetEnabled(options.Identity)))
 	protected.Handle("PUT /api/v1/users/{username}/password", authorize(auth.PermissionUsersManage, handleResetPassword(options.Identity)))
+	protected.Handle("DELETE /api/v1/users/{username}", authorize(auth.PermissionUsersManage, handleDeleteUser(options.Identity)))
 	protected.Handle("GET /api/v1/tokens", authorize(auth.PermissionTokensReadAll, handleListTokens(options.Identity)))
 	protected.Handle("POST /api/v1/tokens", authorize(auth.PermissionTokensManageAll, handleCreateToken(options.Identity)))
 	protected.Handle("POST /api/v1/tokens/{id}/revoke", authorize(auth.PermissionTokensManageAll, handleRevokeToken(options.Identity)))
+	protected.Handle("DELETE /api/v1/tokens/{id}", authorize(auth.PermissionTokensManageAll, handleDeleteToken(options.Identity)))
 	// Reading one's own session is identity, not authorization, so it carries
 	// no permission; logout is gated by the CSRF check in the middleware.
 	protected.HandleFunc("GET /api/v1/auth/session", handleCurrentSession)

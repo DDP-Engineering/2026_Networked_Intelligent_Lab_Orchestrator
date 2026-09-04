@@ -26,6 +26,10 @@ const ADMINISTRATOR_PASSWORD = 'bench-admin-password-1';
 const OPERATOR = 'bench-operator';
 const OPERATOR_PASSWORD = 'bench-operator-password-1';
 const TOKEN_NAME = 'browser-suite-token';
+// An identity created only to be permanently deleted, so no other test's
+// subject has to be destroyed to prove that deletion works.
+const DISPOSABLE = 'bench-temporary';
+const DISPOSABLE_PASSWORD = 'bench-temporary-password-1';
 
 let topology: DevelopmentTopology | null = null;
 let page: Page;
@@ -209,6 +213,119 @@ test('revokes a token only after an explicit confirmation', async () => {
   await expect(row).toContainText('revoked');
 });
 
+test('refuses to delete an identity that still owns an API token', async () => {
+  await openAuthenticationView('Users');
+  const users = page.getByRole('region', { name: 'Users' });
+
+  await users.getByRole('button', { name: `Actions for ${OPERATOR}` }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Delete permanently' })
+    .click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText('cannot be undone');
+  await expect(dialog).toContainText(OPERATOR);
+
+  // Nothing is sent until the exact username is typed back.
+  const confirm = dialog.getByRole('button', { name: 'Delete permanently' });
+  await expect(confirm).toBeDisabled();
+  await dialog.getByLabel('Confirm the username', { exact: true }).fill('bench-oper');
+  await expect(confirm).toBeDisabled();
+  await dialog.getByLabel('Confirm the username', { exact: true }).fill(OPERATOR);
+  await expect(confirm).toBeEnabled();
+  await expectFieldSized(confirm);
+  await expectFieldSized(dialog.getByLabel('Confirm the username', { exact: true }));
+
+  await confirm.click();
+
+  // Bench Core refuses it: the token created above still names this owner.
+  await expect(page.getByRole('dialog')).toContainText(
+    'An identity that owns API tokens cannot be deleted',
+  );
+  await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(users.getByRole('row', { name: new RegExp(OPERATOR) })).toBeVisible();
+});
+
+test('deletes a revoked API token permanently', async () => {
+  await openAuthenticationView('API tokens');
+  const tokens = page.getByRole('region', { name: 'API Tokens' });
+  const row = tokens.getByRole('row', { name: new RegExp(TOKEN_NAME) });
+  await expect(row).toContainText('revoked');
+
+  // Revoke and Delete are separate entries: the first is spent, the second is
+  // still offered, because what it removes is the record.
+  await row.getByRole('button', { name: `Actions for ${TOKEN_NAME}` }).click();
+  await expect(
+    page.getByRole('dialog').getByRole('button', { name: 'Revoke', exact: true }),
+  ).toBeDisabled();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Delete permanently' })
+    .click();
+
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText('cannot be undone');
+  const confirm = dialog.getByRole('button', { name: 'Delete permanently' });
+  await expect(confirm).toBeDisabled();
+  await dialog.getByLabel('Confirm the token name', { exact: true }).fill(TOKEN_NAME);
+  await confirm.click();
+
+  await expect(
+    page.getByText(`Deleted the token ${TOKEN_NAME} permanently.`),
+  ).toBeVisible();
+  await expect(tokens).not.toContainText(TOKEN_NAME);
+  await expect(page.getByRole('region', { name: 'Users' })).toHaveCount(0);
+});
+
+test('deletes an identity permanently once nothing depends on it', async () => {
+  await openAuthenticationView('Users');
+  const users = page.getByRole('region', { name: 'Users' });
+
+  await page.getByRole('button', { name: 'New user' }).click();
+  const editor = page.getByRole('dialog');
+  await editor.getByRole('textbox', { name: 'Username', exact: true }).fill(DISPOSABLE);
+  await fillSecret(editor.getByLabel('Password', { exact: true }), DISPOSABLE_PASSWORD);
+  await fillSecret(
+    editor.getByLabel('Confirm password', { exact: true }),
+    DISPOSABLE_PASSWORD,
+  );
+  await editor.getByRole('button', { name: 'Create identity' }).click();
+  await expect(users.getByRole('row', { name: new RegExp(DISPOSABLE) })).toBeVisible();
+
+  // Dismissing the confirmation sends nothing.
+  await users.getByRole('button', { name: `Actions for ${DISPOSABLE}` }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Delete permanently' })
+    .click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(users.getByRole('row', { name: new RegExp(DISPOSABLE) })).toBeVisible();
+
+  await users.getByRole('button', { name: `Actions for ${DISPOSABLE}` }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Delete permanently' })
+    .click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel('Confirm the username', { exact: true }).fill(DISPOSABLE);
+  await dialog.getByRole('button', { name: 'Delete permanently' }).click();
+
+  await expect(
+    page.getByText(`Deleted the identity ${DISPOSABLE} permanently.`),
+  ).toBeVisible();
+  await expect(users).not.toContainText(DISPOSABLE);
+
+  // Gone from Bench Core, not merely from this page: the credential no longer
+  // authenticates and a reload does not bring the row back.
+  await page.reload();
+  await openAuthenticationView('Users');
+  await expect(page.getByRole('region', { name: 'Users' })).not.toContainText(
+    DISPOSABLE,
+  );
+});
+
 test('opens the common Activity page filtered to identity mutations', async () => {
   await page.getByRole('button', { name: 'View activity', exact: true }).click();
 
@@ -217,6 +334,10 @@ test('opens the common Activity page filtered to identity mutations', async () =
     page.getByRole('textbox', { name: 'Function', exact: true }),
   ).toHaveValue('identity');
   await expect(page.getByText('identity.token.revoked', { exact: true })).toBeVisible();
+  // The two subjects these name no longer exist; the history that names them
+  // does, and is still reachable through the same component filter.
+  await expect(page.getByText('identity.token.deleted', { exact: true })).toBeVisible();
+  await expect(page.getByText('identity.user.deleted', { exact: true })).toBeVisible();
 });
 
 test('refuses to remove the last enabled administrator', async () => {
@@ -228,6 +349,13 @@ test('refuses to remove the last enabled administrator', async () => {
   ).toBeDisabled();
   await expect(page.getByRole('dialog')).toContainText(
     'The last enabled administrator must remain enabled.',
+  );
+  // The same invariant, stated for the removal that cannot be undone.
+  await expect(
+    page.getByRole('dialog').getByRole('button', { name: 'Delete permanently' }),
+  ).toBeDisabled();
+  await expect(page.getByRole('dialog')).toContainText(
+    'The last enabled administrator cannot be deleted.',
   );
   await page.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click();
   await expect(
@@ -292,6 +420,18 @@ async function openAuthenticationView(name: 'Users' | 'API tokens'): Promise<voi
   await page.getByRole('navigation').getByRole('button', { name, exact: true }).click();
   const regionName = name === 'Users' ? 'Users' : 'API Tokens';
   await expect(page.getByRole('region', { name: regionName })).toBeVisible();
+}
+
+/**
+ * One field control is at least 44 CSS pixels tall.
+ *
+ * The dialogs a deletion opens are new surfaces, and a control a gloved finger
+ * cannot hit is only visible in a browser that has laid the dialog out.
+ */
+async function expectFieldSized(locator: Locator): Promise<void> {
+  const box = await locator.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
 }
 
 /** Sign out, which now lives inside the account menu. */

@@ -5,8 +5,24 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ## [Unreleased]
 
+### Added
+
+- Permanent deletion of identities and API tokens, over
+  `DELETE /api/v1/users/{username}` (`users.manage`) and
+  `DELETE /api/v1/tokens/{id}` (`tokens.manage.all`).
+- Delete in the destructive part of the row Actions dialog, distinct from
+  Disable and Revoke, confirmed by typing the exact username or token name.
+- `identity.user.deleted` and `identity.token.deleted` Activity audit events,
+  appended in the same transaction as the removal. Both stay listable and
+  exportable through `component=identity` once their subject is gone.
+
 ### Changed
 
+- Deleting an identity removes its browser sessions with it, and is refused
+  with `last_administrator` for the last enabled administrator and
+  `user_has_tokens` while it owns any token, revoked and expired included.
+- Deleting a token removes the record in any state and stops its secret;
+  revoking still keeps the record.
 - Authentication administration is now an expandable System group with focused
   Users and API tokens workspaces, responsive record actions, shared field and
   workflow help, and direct links to identity-filtered Activity.

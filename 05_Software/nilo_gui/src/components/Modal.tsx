@@ -167,6 +167,12 @@ export interface ModalActionsProps {
   onDismiss: () => void;
   /** Set for a change that takes access away and cannot be undone by repeating it. */
   destructive?: boolean;
+  /**
+   * Set while the dialog has not yet been given what it needs to submit, such
+   * as the typed confirmation a permanent deletion asks for. Cancel stays
+   * available: only the change is held back.
+   */
+  blocked?: boolean;
 }
 
 /** The submit and cancel pair every dialog ends with. */
@@ -175,6 +181,7 @@ export function ModalActions({
   working,
   onDismiss,
   destructive = false,
+  blocked = false,
 }: ModalActionsProps) {
   const t = useTranslate();
 
@@ -183,7 +190,7 @@ export function ModalActions({
       <button
         type="submit"
         className={`button ${destructive ? 'button-danger' : 'button-primary'}`}
-        disabled={working}
+        disabled={working || blocked}
       >
         {working ? t('auth.working') : confirmLabel}
       </button>

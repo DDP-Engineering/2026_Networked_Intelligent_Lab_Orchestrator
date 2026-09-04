@@ -1437,6 +1437,18 @@ function administer(
       revokeToken(store, decodeURIComponent(revocation[1])),
     );
   }
+  const identityResource = /^\/api\/v1\/users\/([^/]+)$/.exec(path);
+  if (identityResource !== null && request.method === 'DELETE') {
+    return gated(actor, 'users.manage', () =>
+      deleteIdentity(store, decodeURIComponent(identityResource[1])),
+    );
+  }
+  const tokenResource = /^\/api\/v1\/tokens\/([^/]+)$/.exec(path);
+  if (tokenResource !== null && request.method === 'DELETE') {
+    return gated(actor, 'tokens.manage.all', () =>
+      deleteToken(store, decodeURIComponent(tokenResource[1])),
+    );
+  }
 
   // An unrouted path is a mistake in the caller, not a resource with no
   // entries; answering it with a body would hide that.
@@ -1594,6 +1606,50 @@ function createToken(
     token: tokenBody(created),
     secret: `nilo_mock_${created.id}`,
   });
+}
+
+/**
+ * Remove one identity, with the two refusals the appliance owns.
+ *
+ * The token check counts revoked tokens too: revoking is not removing, so an
+ * identity that owns a revoked token still owns a record that names it.
+ */
+function deleteIdentity(
+  store: MockAdministration,
+  username: string,
+): TransportResponse {
+  const identity = store.find(username);
+  if (identity === undefined) {
+    return refusal(404, 'user_not_found', 'no identity carries that username');
+  }
+  if (removesLastAdministrator(store, identity, true)) {
+    return lastAdministrator();
+  }
+  if (store.tokens.some((token) => token.owner === identity.username)) {
+    return refusal(
+      409,
+      'user_has_tokens',
+      'delete every API token this identity owns before deleting the identity',
+    );
+  }
+  store.identities = store.identities.filter(
+    (candidate) => candidate.id !== identity.id,
+  );
+  if (store.session?.id === identity.id) {
+    // The identity that was signed in is gone, so the session it held is too.
+    store.session = null;
+  }
+  return emptyResponse(204);
+}
+
+/** Remove one token record, whatever state it is in. */
+function deleteToken(store: MockAdministration, id: string): TransportResponse {
+  const token = store.tokens.find((candidate) => candidate.id === id);
+  if (token === undefined) {
+    return refusal(404, 'token_not_found', 'no API token carries that identifier');
+  }
+  store.tokens = store.tokens.filter((candidate) => candidate.id !== id);
+  return emptyResponse(204);
 }
 
 function revokeToken(store: MockAdministration, id: string): TransportResponse {

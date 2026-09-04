@@ -127,6 +127,8 @@ function client(session: BenchCoreSession = administrator): BenchCoreClient {
     listTokens: () => Promise.resolve({ apiVersion: 'nilo.http/1', items: [] }),
     createToken: () => Promise.reject(new BenchCoreError('forbidden', 'no')),
     revokeToken: () => Promise.resolve(),
+    deleteIdentity: () => Promise.resolve(),
+    deleteToken: () => Promise.resolve(),
   };
 }
 

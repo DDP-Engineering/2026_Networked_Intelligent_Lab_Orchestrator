@@ -397,6 +397,95 @@ describe('mock identity and token administration', () => {
     ).rejects.toMatchObject({ failure: 'rejected', code: 'last_administrator' });
   });
 
+  it('deletes an identity permanently once nothing depends on it', async () => {
+    const { client } = await signedInMock('admin');
+
+    await client.createIdentity(administrator, {
+      username: 'leaving',
+      role: 'operator',
+      password: 'a-long-enough-password',
+    });
+    await client.deleteIdentity(administrator, 'leaving');
+
+    expect(
+      (await client.listIdentities(administrator)).items.map((entry) => entry.username),
+    ).not.toContain('leaving');
+    await expect(client.deleteIdentity(administrator, 'leaving')).rejects.toMatchObject(
+      { failure: 'rejected', code: 'user_not_found' },
+    );
+  });
+
+  it('refuses to delete an identity that still owns a token, as the backend does', async () => {
+    const { client } = await signedInMock('admin');
+
+    await client.createIdentity(administrator, {
+      username: 'holder',
+      role: 'operator',
+      password: 'a-long-enough-password',
+    });
+    const issued = await client.createToken(administrator, {
+      owner: 'holder',
+      name: 'held',
+      scopes: [],
+      expiresAt: null,
+    });
+
+    await expect(client.deleteIdentity(administrator, 'holder')).rejects.toMatchObject({
+      failure: 'rejected',
+      code: 'user_has_tokens',
+    });
+    // Revoking is not removing: the record still names this owner.
+    await client.revokeToken(administrator, issued.token.id);
+    await expect(client.deleteIdentity(administrator, 'holder')).rejects.toMatchObject({
+      code: 'user_has_tokens',
+    });
+
+    await client.deleteToken(administrator, issued.token.id);
+    await expect(
+      client.deleteIdentity(administrator, 'holder'),
+    ).resolves.toBeUndefined();
+  });
+
+  it('refuses to delete the last enabled administrator, as the backend does', async () => {
+    const { client } = await signedInMock('admin');
+
+    await expect(client.deleteIdentity(administrator, 'admin')).rejects.toMatchObject({
+      failure: 'rejected',
+      code: 'last_administrator',
+    });
+  });
+
+  it('deletes a token whatever state it is in, and only once', async () => {
+    const { client } = await signedInMock('admin');
+
+    const issued = await client.createToken(administrator, {
+      owner: 'viewer',
+      name: 'retired',
+      scopes: [],
+      expiresAt: null,
+    });
+    await client.revokeToken(administrator, issued.token.id);
+
+    await client.deleteToken(administrator, issued.token.id);
+    expect(
+      (await client.listTokens(administrator)).items.map((entry) => entry.id),
+    ).not.toContain(issued.token.id);
+    await expect(
+      client.deleteToken(administrator, issued.token.id),
+    ).rejects.toMatchObject({ failure: 'rejected', code: 'token_not_found' });
+  });
+
+  it('refuses both deletions for an identity without the permission', async () => {
+    const { client } = await signedInMock('operator');
+
+    await expect(client.deleteIdentity(administrator, 'viewer')).rejects.toMatchObject({
+      failure: 'forbidden',
+    });
+    await expect(
+      client.deleteToken(administrator, 'mock-token-1'),
+    ).rejects.toMatchObject({ failure: 'forbidden' });
+  });
+
   it('refuses an unknown scope and an expiry that has already passed', async () => {
     const { client } = await signedInMock('admin');
 

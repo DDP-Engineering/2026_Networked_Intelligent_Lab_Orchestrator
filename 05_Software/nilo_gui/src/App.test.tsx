@@ -162,6 +162,8 @@ function stubClient(overrides: Partial<BenchCoreClient> = {}): BenchCoreClient {
     createToken: () =>
       Promise.reject(new BenchCoreError('forbidden', 'not in this fixture')),
     revokeToken: () => Promise.resolve(),
+    deleteIdentity: () => Promise.resolve(),
+    deleteToken: () => Promise.resolve(),
     ...overrides,
   };
 }

@@ -181,6 +181,24 @@ remaining hardware and reboot acceptance work.
 
 `identity.Service` decides whether an actor may *request* an action. `policy.Resolver` independently decides whether an operation may *run* without a human approval. Neither the Administrator role nor a fully scoped API token changes the second decision, so identity authorization can never become an approval or safety bypass.
 
+Identities and API tokens can also be removed permanently, which is a distinct
+operation from disabling and from revoking rather than a stronger word for
+either. `DELETE /api/v1/users/{username}` (`users.manage`) removes the identity
+row and, in the same transaction, every browser session row it holds; it is
+refused with `last_administrator` while the identity is the last enabled
+administrator and with `user_has_tokens` while it owns any API token, revoked
+and expired ones included, because a cascade would destroy credential records
+on the strength of a decision that was about a person. `DELETE
+/api/v1/tokens/{id}` (`tokens.manage.all`) removes the token row in any state:
+revoking keeps the record and stops the secret, deleting removes the record,
+which also stops the secret because the row a bearer secret is matched against
+is gone. Each successful removal appends exactly one `identity.user.deleted` or
+`identity.token.deleted` event carrying the safe description of what was
+removed — for a user the username, role and prior enabled state; for a token the
+name, owner ID, scopes, expiry and prior revoked/expired state — because the
+record itself no longer exists to be looked up afterwards. There is no soft
+deletion and no second audit path.
+
 Every administrative identity change runs inside one `BEGIN IMMEDIATE`
 transaction supplied by the identity repository, which also supplies the audit
 repository bound to it. `audit.Writer.Compose` supplies the same appliance,
@@ -188,8 +206,11 @@ boot, clock, actor, category, outcome and severity envelope used by other common
 Activity events, then the transaction-bound repository appends it before
 commit. The write lock is taken before the change reads anything, so the
 last-enabled-administrator count is read and enforced without another
-connection or another process changing it in between, and a change whose audit
-event is rejected is rolled back with it rather than surviving unattributed.
+connection or another process changing it in between — for a deletion exactly as
+for a demotion or a disable, so two concurrent removals through separate
+connections can never both be applied — and a change whose audit event is
+rejected is rolled back with it rather than surviving unattributed, which for a
+deletion means the identity, its sessions and the token stay.
 Successful reads and rejected or no-op changes do not create mutation events. A
 browser session is inserted by a statement conditional on the identity still
 carrying the password verifier the login checked and still being enabled, so a

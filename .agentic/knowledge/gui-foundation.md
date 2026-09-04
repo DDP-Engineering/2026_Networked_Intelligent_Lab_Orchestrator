@@ -7,7 +7,8 @@ interface while keeping the deployed appliance boundary static. It gives
 developers a locked, testable React and TypeScript project in which a human
 signs in with a username and password over the server-managed browser session,
 reads backend status and the selected runtime's integration and device inventory,
-and — as an administrator — administers identities and API tokens, without ever
+and — as an administrator — administers identities and API tokens, including
+their permanent deletion, without ever
 suggesting that a simulated result came from physical equipment.
 
 ## Public interface
@@ -149,6 +150,17 @@ contains no network inventory and grants no permissions.
   list scrollbar.
 - `REQ-UX-ae7baff0` - requires an explicit confirmation before a disable, a
   password reset or a revocation.
+- Permanent deletion of an identity or a token sits in the destructive part of
+  the same Actions dialog, textually distinct from Disable and from Revoke. Its
+  dialog states what is removed, keeps a warning that it cannot be undone
+  visible while the field is being filled, and sends nothing until the exact
+  username or token name has been typed back. Dismissing it sends nothing at
+  all. The dialog is presentation: Bench Core enforces the last-enabled-
+  administrator invariant, the owned-token refusal and the audit record inside
+  the transaction that applies the removal. An unavailable deletion states its
+  reason beside the control, and an administrator deleting their own account is
+  returned to sign-in because the session applying it stops authenticating.
+  After a successful deletion only the focused listing is re-read.
 - `REQ-UX-e60cf375` - discloses a new token secret once, with a copy action, and
   never again.
 - `REQ-UX-96852626` - tells an ended session apart from a refused permission.

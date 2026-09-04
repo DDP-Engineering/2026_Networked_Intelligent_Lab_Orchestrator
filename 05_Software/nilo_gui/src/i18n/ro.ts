@@ -304,7 +304,7 @@ export const ro: Catalogue = {
   'auth.usersTitle': 'Autentificare / Utilizatori',
   'auth.tokensTitle': 'Autentificare / Tokenuri API',
   'auth.tokensNote':
-    'Tokenurile sunt credențiale. Expirarea sau revocarea împiedică utilizarea lor ulterioară.',
+    'Tokenurile sunt credențiale. Expirarea sau revocarea împiedică utilizarea ulterioară și păstrează înregistrarea; ștergerea definitivă elimină chiar înregistrarea.',
   'auth.viewActivity': 'Vezi activitatea',
   'auth.column.created': 'Creat',
   'auth.expired': 'expirat',
@@ -314,6 +314,10 @@ export const ro: Catalogue = {
   'auth.permission.tokensManage': 'Sesiunea nu include tokens.manage.all.',
   'auth.lastAdministratorReason':
     'Ultimul administrator activat trebuie să rămână activat.',
+  'auth.lastAdministratorDeleteReason':
+    'Ultimul administrator activat nu poate fi șters. Acordați mai întâi rolul de administrator altei identități și activați-o.',
+  'auth.ownedTokensReason':
+    'O identitate care deține tokenuri API nu poate fi ștearsă. Ștergeți mai întâi acele tokenuri din pagina Tokenuri API; revocarea nu este suficientă.',
   'auth.revocationUnavailable':
     'Acest token este deja expirat sau revocat și nu poate fi revocat din nou.',
   'auth.help.username':
@@ -332,11 +336,15 @@ export const ro: Catalogue = {
     'Lăsați toate permisiunile nealese pentru întregul rol curent al proprietarului; cele alese doar restrâng acel rol.',
   'auth.help.expiry':
     'După acest moment tokenul este respins automat. Câmpul gol înseamnă fără expirare automată.',
+  'auth.help.confirmUsername':
+    'Repetați exact numele de utilizator. Nimic nu este trimis până când nu se potrivește, astfel încât un clic greșit să nu șteargă identitatea nepotrivită.',
+  'auth.help.confirmTokenName':
+    'Repetați exact numele tokenului. Nimic nu este trimis până când nu se potrivește, astfel încât un clic greșit să nu șteargă tokenul nepotrivit.',
   'auth.roleMatrix':
     'Viewer: citește inventarul, Rețeaua și starea. Operator: Viewer plus tokenuri proprii. Administrator: toată administrarea, Activitatea, diagnosticarea, Rețeaua și VPN.',
   'auth.signedInAs': 'Autentificat ca {username} ({role}).',
   'auth.identitiesNote':
-    'Identitățile sunt dezactivate, nu șterse, astfel încât înregistrările de audit să indice în continuare un subiect real.',
+    'Dezactivarea păstrează identitatea și îi oprește autentificarea; ștergerea definitivă elimină chiar înregistrarea și nu poate fi anulată.',
   'auth.csrfMissing':
     'Acest browser nu mai deține tokenul anti-falsificare emis odată cu sesiunea, deci Bench Core va refuza orice modificare. Deconectați-vă și autentificați-vă din nou.',
   'auth.users': 'Utilizatori',
@@ -367,6 +375,8 @@ export const ro: Catalogue = {
   'auth.disable': 'Dezactivează',
   'auth.enable': 'Activează',
   'auth.resetPassword': 'Resetează parola',
+  'auth.deleteUser': 'Șterge definitiv',
+  'auth.deleteToken': 'Șterge definitiv',
   'auth.revoke': 'Revocă',
   'auth.revokeToken': 'Revocă tokenul',
   'auth.createIdentity': 'Creează identitatea',
@@ -381,6 +391,8 @@ export const ro: Catalogue = {
   'auth.dialog.enableUser': 'Activează {username}',
   'auth.dialog.disableUser': 'Dezactivează {username}',
   'auth.dialog.resetPassword': 'Resetează parola lui {username}',
+  'auth.dialog.deleteUser': 'Șterge definitiv {username}',
+  'auth.dialog.deleteToken': 'Șterge definitiv {name}',
   'auth.dialog.newToken': 'Token API nou',
   'auth.dialog.revokeToken': 'Revocă {name}',
   'auth.dialog.secret': 'Secretul pentru {name}',
@@ -392,6 +404,8 @@ export const ro: Catalogue = {
   'auth.field.name': 'Nume',
   'auth.field.scopes': 'Permisiuni',
   'auth.field.expires': 'Expirare (opțional)',
+  'auth.field.confirmUsername': 'Confirmați numele de utilizator',
+  'auth.field.confirmTokenName': 'Confirmați numele tokenului',
   'auth.passwordMismatch': 'Cele două parole nu coincid.',
   'auth.expiryUnreadable':
     'Expirarea nu este o dată și oră pe care această interfață o poate citi.',
@@ -407,6 +421,13 @@ export const ro: Catalogue = {
     'Reactivați {username}? Identitatea se va putea autentifica imediat.',
   'auth.revokeExplanation':
     'Revocați {name}, deținut de {owner}? Secretul său nu mai funcționează de la următoarea cerere și nu poate fi restaurat.',
+  'auth.deleteWarning':
+    'Această acțiune nu poate fi anulată. Înregistrarea este eliminată definitiv din stocare, iar după aceea doar istoricul Activității o mai numește.',
+  'auth.deleteTypeExactly': 'Tastați exact {name} pentru a debloca ștergerea.',
+  'auth.deleteUserExplanation':
+    'Ștergeți definitiv identitatea {username} ({role})? Înregistrarea este eliminată din stocare și fiecare sesiune de browser pe care o deține se încheie imediat. NILO refuză acest lucru cât timp este ultimul administrator activat sau cât timp identitatea deține tokenuri API, inclusiv revocate.',
+  'auth.deleteTokenExplanation':
+    'Ștergeți definitiv tokenul {name}, deținut de {owner}? Înregistrarea și starea sa anterioară sunt eliminate, iar secretul nu mai funcționează imediat. Revocarea, în schimb, oprește secretul și păstrează înregistrarea.',
   'auth.secretExplanation':
     'Aceasta este singura dată când secretul pentru {name} este afișat. Bench Core păstrează doar o amprentă unidirecțională a lui, deci nu mai poate fi recuperat. Copiați-l acum.',
   'auth.secretCopied': 'Secretul tokenului este în clipboard.',
@@ -419,6 +440,8 @@ export const ro: Catalogue = {
   'auth.passwordReset': 'Parola lui {username} a fost înlocuită.',
   'auth.tokenCreated': 'A fost creat tokenul {name} pentru {owner}.',
   'auth.tokenRevoked': 'Tokenul {name} a fost revocat.',
+  'auth.userDeleted': 'Identitatea {username} a fost ștearsă definitiv.',
+  'auth.tokenDeleted': 'Tokenul {name} a fost șters definitiv.',
   'auth.sessionEnded':
     'Sesiunea dumneavoastră s-a încheiat înainte ca aceasta să fie aplicată.',
 
@@ -430,7 +453,7 @@ export const ro: Catalogue = {
   'help.auth.example':
     'Folosiți Viewer pentru observare, Operator pentru lucrul obișnuit și un token strict limitat pentru o singură automatizare.',
   'help.auth.changes':
-    'Schimbările utilizatorului se aplică la următoarea cerere; dezactivarea oprește și sesiunile și tokenurile. Secretele tokenurilor apar o singură dată, iar revocarea este permanentă.',
+    'Schimbările utilizatorului se aplică la următoarea cerere; dezactivarea păstrează înregistrarea și oprește sesiunile și tokenurile. Ștergerea elimină înregistrarea și sesiunile și este refuzată cât timp este ultimul administrator activat sau cât timp mai deține un token. Secretele tokenurilor apar o singură dată; revocarea păstrează înregistrarea, iar ștergerea o elimină.',
   'help.auth.external':
     'Coordonați schimbările de acces și transmiteți parolele sau secretele tokenurilor numai printr-un canal protejat adecvat.',
   'help.auth.verify':

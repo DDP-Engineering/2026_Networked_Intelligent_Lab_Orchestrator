@@ -41,8 +41,14 @@ hostname, LAN, and other non-loopback addresses.
 
 Identity and access control live in `internal/identity`: fixed Administrator,
 Operator and Viewer roles, browser sessions, and scoped API tokens, enforced
-server-side on every protected route. The `nilo admin` commands administer
-them locally. The role and permission model, the command reference, the
+server-side on every protected route. Identities and tokens can also be removed
+permanently over `DELETE /api/v1/users/{username}` and
+`DELETE /api/v1/tokens/{id}`, which is distinct from disabling and from
+revoking: the record itself goes, with the identity's browser sessions, in the
+one transaction that also appends the audit event. The last enabled
+administrator cannot be deleted, and an identity that still owns any API token
+is refused rather than cascaded. The `nilo admin` commands administer identities
+locally and deliberately offer no deletion. The role and permission model, the command reference, the
 authentication routes and the upgrade behavior are documented in
 `../../07_Delivery/NILO_CLI_and_Authentication.md`.
 
