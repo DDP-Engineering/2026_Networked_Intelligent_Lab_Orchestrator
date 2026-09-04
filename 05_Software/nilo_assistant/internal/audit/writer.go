@@ -35,7 +35,7 @@ type Record struct {
 
 	// Details is marshalled into the payload. It must contain only safe values:
 	// no password, key, token, header, cookie, request body or raw subprocess
-	// output reaches an event at any category, including debug.
+	// output reaches an event in either Activity category.
 	Details any
 }
 

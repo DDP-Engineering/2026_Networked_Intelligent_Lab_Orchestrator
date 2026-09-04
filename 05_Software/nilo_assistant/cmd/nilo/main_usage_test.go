@@ -21,11 +21,14 @@ func TestRootUsageNamesEveryCommandGroup(t *testing.T) {
 		t.Fatalf("unknown command error = %v, want exit code 2", err)
 	}
 	for _, want := range []string{
-		"nilo serve", "nilo admin", "nilo network", "nilo activity", "nilo diagnostics",
+		"nilo serve", "nilo admin", "nilo network", "nilo activity",
 		"--data-dir", "--server", "--token-file",
 	} {
 		if !strings.Contains(stderr.String(), want) {
 			t.Fatalf("root usage does not name %q:\n%s", want, stderr.String())
 		}
+	}
+	if strings.Contains(stderr.String(), "nilo diagnostics") {
+		t.Fatalf("root usage still names the removed diagnostics group:\n%s", stderr.String())
 	}
 }

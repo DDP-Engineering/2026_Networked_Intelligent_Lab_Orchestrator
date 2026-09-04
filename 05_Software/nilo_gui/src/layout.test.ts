@@ -260,6 +260,62 @@ describe('field readability', () => {
     expect(cards).toMatch(/content:\s*attr\(data-label\)/);
   });
 
+  it('keeps each WireGuard readiness value next to its label', () => {
+    const fact = declarationsOf(shellCss, '.network-readiness dl > div');
+    expect(fact).toMatch(/grid-template-columns:\s*auto auto/);
+    expect(fact).toMatch(/justify-content:\s*start/);
+    expect(declarationsOf(shellCss, '.network-readiness dd')).toMatch(
+      /text-align:\s*left/,
+    );
+  });
+
+  // REQ-UX-ff989933 for the audit listing: the head, the filter panel and the
+  // rows all reflow, so a seven-inch panel reads the history down the page
+  // rather than sideways off it.
+  it('stacks the activity head and its filters below 56rem', () => {
+    // The chips scroll for the same reason the tab strip does: a head that
+    // grew a second line would take the space the listing needs.
+    expect(declarationsOf(shellCss, '.activity-chips')).toMatch(/overflow-x:\s*auto/);
+    expect(declarationsOf(shellCss, '.activity-chips')).not.toMatch(
+      /flex-wrap:\s*wrap/,
+    );
+    expect(declarationsOf(shellCss, '.activity-chip')).toMatch(
+      /min-height:\s*var\(--target-min\)/,
+    );
+
+    // `.table-scroll` declares `min-height: 0`, so as a flex item of the
+    // scrolling page body it would absorb the whole shrink and clip every row
+    // it holds. The listing scrolls with the page instead.
+    expect(declarationsOf(shellCss, '.activity-page .table-scroll')).toMatch(
+      /flex:\s*none/,
+    );
+
+    const cards = mediaBlock(shellCss, '@media (width <= 56rem) {');
+    expect(cards).toMatch(/\.activity-head-top[^{]*\{[^}]*flex-direction:\s*column/);
+    expect(cards).toMatch(
+      /\.activity-filters,\s*\n?\s*\.activity-filters-more-fields[^{]*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)/,
+    );
+  });
+
+  // REQ-UX-f30891b4: an outcome is never carried by colour alone, so the badge
+  // is a word inside a bordered shape and the tone only repeats it.
+  it('draws an outcome badge from the semantic state tokens, never a literal', () => {
+    const badge = declarationsOf(shellCss, '.status-badge');
+    expect(badge).toMatch(/border:\s*1px solid var\(--border-strong\)/);
+    expect(badge).toMatch(/font-size:\s*var\(--text-label\)/);
+
+    for (const [tone, token] of [
+      ['ok', 'ok'],
+      ['warn', 'warn'],
+      ['danger', 'danger'],
+      ['pending', 'unknown'],
+    ] as const) {
+      expect(declarationsOf(shellCss, `.status-badge-${tone}`)).toMatch(
+        new RegExp(`color:\\s*var\\(--state-${token}\\)`),
+      );
+    }
+  });
+
   it('keeps row actions in a compact viewport-bounded dialog', () => {
     expect(declarationsOf(shellCss, '.modal-actions-dialog')).toMatch(
       /width:\s*min\(27rem, 100%\)/,

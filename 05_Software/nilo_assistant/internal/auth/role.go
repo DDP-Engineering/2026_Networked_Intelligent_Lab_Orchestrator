@@ -43,14 +43,12 @@ const (
 	PermissionVPNManage Permission = "vpn.manage"
 	// PermissionVPNInstall installs the WireGuard tooling.
 	PermissionVPNInstall Permission = "vpn.install"
-	// PermissionActivityRead reads the shared activity history: audit,
-	// operational events and debug records.
+	// PermissionActivityRead reads the shared audit and operational-event history.
 	PermissionActivityRead Permission = "activity.read"
 	// PermissionActivityExport exports a bounded activity selection.
 	PermissionActivityExport Permission = "activity.export"
-	// PermissionDiagnosticsManage starts and stops timed debug sessions and
-	// changes the retention and logging policy.
-	PermissionDiagnosticsManage Permission = "diagnostics.manage"
+	// PermissionActivityRetentionManage changes the Activity retention policy.
+	PermissionActivityRetentionManage Permission = "activity.retention.manage"
 )
 
 // Role is one of the three fixed NILO roles.
@@ -78,7 +76,7 @@ var rolePermissions = map[Role][]Permission{
 	RoleAdministrator: {
 		PermissionActivityExport,
 		PermissionActivityRead,
-		PermissionDiagnosticsManage,
+		PermissionActivityRetentionManage,
 		PermissionInventoryRead,
 		PermissionNetworkManage,
 		PermissionNetworkRead,

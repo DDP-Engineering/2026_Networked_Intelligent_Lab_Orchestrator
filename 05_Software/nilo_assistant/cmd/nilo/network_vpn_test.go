@@ -93,11 +93,10 @@ func TestStartupPreviewShowsSelectedValue(t *testing.T) {
 	}
 }
 
-// TestActivityAndDiagnosticsCommandsCallTheAuthenticatedAPI covers the CLI
-// door of REQ-SEC-d19a7b30 and REQ-FUNC-d4f81a26: every command reaches the
-// activity or diagnostics route with the bearer token and its filters, and an
-// export is copied untouched.
-func TestActivityAndDiagnosticsCommandsCallTheAuthenticatedAPI(t *testing.T) {
+// TestActivityCommandsCallTheAuthenticatedAPI proves every command reaches the
+// Activity route with the bearer token and its filters, and an export is copied
+// untouched.
+func TestActivityCommandsCallTheAuthenticatedAPI(t *testing.T) {
 	for _, tc := range []struct {
 		args         []string
 		path, query  string
@@ -105,6 +104,8 @@ func TestActivityAndDiagnosticsCommandsCallTheAuthenticatedAPI(t *testing.T) {
 	}{
 		{[]string{"list", "--category", "audit", "--operation", "op-1", "--limit", "5"}, "/api/v1/activity", "category=audit&limit=5&operation=op-1", http.MethodGet, ""},
 		{[]string{"export", "--format", "csv", "--component", "network.wifi"}, "/api/v1/activity/export", "component=network.wifi&format=csv", http.MethodGet, ""},
+		{[]string{"retention"}, "/api/v1/activity/retention", "", http.MethodGet, ""},
+		{[]string{"retention", "--retention", "audit=30,event=7", "--quota", "audit=16777216,event=8388608"}, "/api/v1/activity/retention", "", http.MethodPut, `"retention_days":{"audit":30`},
 	} {
 		t.Run(strings.Join(tc.args[:1], " "), func(t *testing.T) {
 			server, calls := networkStub(t, http.StatusOK, map[string]any{"items": []any{}})
@@ -115,40 +116,14 @@ func TestActivityAndDiagnosticsCommandsCallTheAuthenticatedAPI(t *testing.T) {
 			if code != 0 {
 				t.Fatalf("exit=%d: %s", code, stderr)
 			}
-			if len(*calls) != 1 || (*calls)[0].path != tc.path || (*calls)[0].rawQuery != tc.query || (*calls)[0].authorized != "Bearer token-from-file" {
+			if len(*calls) != 1 || (*calls)[0].path != tc.path || (*calls)[0].rawQuery != tc.query || (*calls)[0].method != tc.method || (*calls)[0].authorized != "Bearer token-from-file" {
 				t.Fatalf("calls = %+v", *calls)
+			}
+			if tc.body != "" && !strings.Contains((*calls)[0].body, tc.body) {
+				t.Fatalf("body = %s", (*calls)[0].body)
 			}
 			if !strings.Contains(stdout.String(), "items") {
 				t.Fatalf("stdout = %q", stdout.String())
-			}
-		})
-	}
-	for _, tc := range []struct {
-		args   []string
-		path   string
-		method string
-	}{
-		{[]string{"sessions"}, "/api/v1/diagnostics/sessions", http.MethodGet},
-		{[]string{"start", "--scope", "network.wireguard", "--target", "office", "--minutes", "15"}, "/api/v1/diagnostics/sessions", http.MethodPost},
-		{[]string{"show", "s-1"}, "/api/v1/diagnostics/sessions/s-1", http.MethodGet},
-		{[]string{"stop", "s-1"}, "/api/v1/diagnostics/sessions/s-1/stop", http.MethodPost},
-		{[]string{"settings"}, "/api/v1/diagnostics/settings", http.MethodGet},
-		{[]string{"settings", "--retention", "audit=30,event=7,debug=1", "--quota", "audit=16777216,event=8388608,debug=4194304"}, "/api/v1/diagnostics/settings", http.MethodPut},
-	} {
-		t.Run(strings.Join(tc.args[:1], " "), func(t *testing.T) {
-			server, calls := networkStub(t, http.StatusOK, map[string]any{"id": "s-1", "state": "active"})
-			args := append([]string{}, tc.args...)
-			args = append(args, "--server", server.URL, "--token-file", tokenFile(t, "token-from-file"), "--json")
-			stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
-			code := runDiagnosticsCommand(context.Background(), args, networkIO{stdout: stdout, stderr: stderr})
-			if code != 0 {
-				t.Fatalf("exit=%d: %s", code, stderr)
-			}
-			if len(*calls) != 1 || (*calls)[0].path != tc.path || (*calls)[0].method != tc.method || (*calls)[0].authorized != "Bearer token-from-file" {
-				t.Fatalf("calls = %+v", *calls)
-			}
-			if tc.method == http.MethodPut && !strings.Contains((*calls)[0].body, `"retention_days":{"audit":30`) {
-				t.Fatalf("body = %s", (*calls)[0].body)
 			}
 		})
 	}

@@ -35,7 +35,7 @@ func TestRolePermissionsMatchTheFixedMatrix(t *testing.T) {
 			want: []Permission{
 				PermissionActivityExport,
 				PermissionActivityRead,
-				PermissionDiagnosticsManage,
+				PermissionActivityRetentionManage,
 				PermissionInventoryRead,
 				PermissionNetworkManage,
 				PermissionNetworkRead,
@@ -177,16 +177,16 @@ func TestEffectivePermissionsIntersectScopesWithTheOwnerRole(t *testing.T) {
 	}
 }
 
-// The activity history and the diagnostics controls reveal account and
-// security events and change what the appliance records, so all three of
-// their permissions stay with the Administrator (REQ-SEC-d19a7b30).
-func TestActivityAndDiagnosticsPermissionsBelongToAdministratorsOnly(t *testing.T) {
+// The activity history and retention policy reveal account and security events
+// and control evidence lifetime, so all three permissions stay with the
+// Administrator.
+func TestActivityPermissionsBelongToAdministratorsOnly(t *testing.T) {
 	t.Parallel()
 
 	for _, permission := range []Permission{
 		PermissionActivityRead,
 		PermissionActivityExport,
-		PermissionDiagnosticsManage,
+		PermissionActivityRetentionManage,
 	} {
 		if !RoleAdministrator.Has(permission) {
 			t.Fatalf("Administrator does not hold %s", permission)

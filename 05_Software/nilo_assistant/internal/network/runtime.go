@@ -20,9 +20,6 @@ type MaintenanceOptions struct {
 	// present. It runs on the sampling cadence; a runtime without device
 	// networks leaves it nil.
 	Reconcile func(context.Context) error
-	// Tick runs every second beside the confirmation expiry: the diagnostics
-	// expiry lives here. Optional.
-	Tick func(context.Context) error
 	// Housekeeping runs on its own slow cadence: retention sweeps. Optional.
 	Housekeeping func(context.Context) error
 	Report       func(error)
@@ -87,9 +84,6 @@ func runMaintenanceLoop(ctx context.Context, options MaintenanceOptions, samples
 			}
 		case <-expiry:
 			options.Operations.ExpireDue(ctx)
-			if options.Tick != nil {
-				report(options.Tick(ctx))
-			}
 			report(nil)
 		case <-startup:
 			if options.Startup != nil && !options.Startup.Done() {

@@ -53,10 +53,11 @@ const SHARED = new Set([
   // Product nouns, protocol terms and words the languages share.
   'activity.actor.system',
   'activity.category.audit',
-  'activity.category.debug',
   'activity.col.actor',
   'activity.details',
   'activity.filter.actor',
+  // "Information" is the German noun as well.
+  'activity.severity.info',
   'network.dn.access.local',
   'network.dn.access.wireguard',
   'network.dn.col.status',

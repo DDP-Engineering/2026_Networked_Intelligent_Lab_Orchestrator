@@ -25,7 +25,7 @@ profiles and one active NILO-managed tunnel at a time.
 Build durable operations and audit before new privileged mutations. Protect a
 working management path and implement recovery for firewall/routes as well as
 NetworkManager. Keep secrets outside public metadata, SQLite audit payloads,
-logs and exports. A disabled debug setting must never disable required audit.
+logs and exports. Do not add temporary debug logging or session controls.
 
 Use the existing Windows GUI + WSL2 simulation workflow, pinned tools under
 02_Tools, and isolated Linux topology tests. Implement real appliance behavior

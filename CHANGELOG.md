@@ -31,8 +31,14 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 - Deletion audit records carry the subject's name as their target label and
   the actor's and, for a token, the owner's username, so they read after the
   row is gone without a join.
-- The root `nilo` usage names every command group, including `activity`,
-  `diagnostics` and both `admin` modes.
+- The root `nilo` usage names every current command group, including `activity`
+  and both `admin` modes.
+- Activity now opens newest-first with server-side sorting on every data column,
+  numbered 25/50/100/all pagination, and a filtered record total.
+- Activity component filtering includes an `All network functions` choice that
+  matches the complete `network.*` component family.
+- The Activity export control now shares the filter action row, and the page's
+  scroll rail aligns with the workspace edge.
 - Deleting an identity removes its browser sessions with it, and is refused
   with `last_administrator` for the last enabled administrator and
   `user_has_tokens` while it owns any token, revoked and expired included.
@@ -44,6 +50,12 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 - User and API-token mutations now write the common Activity audit envelope in
   the same transaction as the change, including the real session or bearer-token
   actor and no credential material.
+
+### Removed
+
+- Temporary debug sessions, their session history, generated and historical
+  debug records, API and CLI controls, Activity filter, retention category and
+  storage policy. Activity retention remains for Audit and Events only.
 
 ### Added
 
@@ -141,16 +153,12 @@ one project-level Semantic Version, declared in the root `VERSION` file.
   window and logging health; `GET /api/v1/activity/export` as JSONL or CSV with
   schema version, appliance identity, time range, retained window and redaction
   policy, bounded and formula-neutralized; retention by age and quota with
-  watermarks that disclose gaps; login, access-denial, export, policy, session
-  and runtime re-plan events. `nilo activity list|export`.
-- Timed diagnostics: `POST|GET /api/v1/diagnostics/sessions`, `.../{id}/stop`,
-  `GET|PUT /api/v1/diagnostics/settings`; a session raises one function scope
-  and optional target for 5, 15 or 60 minutes by monotonic time, is interrupted
-  by a restart, and debug records are rate-limited with drops counted.
-  `nilo diagnostics sessions|start|show|stop|settings`. Permissions
-  `activity.read`, `activity.export` and `diagnostics.manage`, Administrator only.
+  watermarks that disclose gaps; login, access-denial, export, policy and runtime
+  re-plan events. `GET|PUT /api/v1/activity/retention` and
+  `nilo activity list|export|retention`. Permissions `activity.read`,
+  `activity.export` and `activity.retention.manage`, Administrator only.
 - Interface: Device networks table and editor, adapter configuration and Wi-Fi
-  dialog, WireGuard rename, the shared Activity page with diagnostics controls,
+  dialog, WireGuard rename, the shared Activity page with retention controls,
   activity links from the Network page already narrowed, reattachment to a
   change still in flight after a reload; English, German and Romanian.
 - Independent recovery: `nilo-nethelper recover` and the root-owned

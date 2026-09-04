@@ -17,9 +17,6 @@ type Health struct {
 	LastFailure   string
 	LastFailureAt time.Time
 	LastSuccessAt time.Time
-	// DroppedDebug counts debug records the rate limit refused, so a bounded
-	// debug log never claims to be complete.
-	DroppedDebug int64
 }
 
 // Monitor wraps the audit repository and watches every append.
@@ -58,13 +55,6 @@ func (monitor *Monitor) List(ctx context.Context, filter audit.Filter) ([]audit.
 
 func (monitor *Monitor) PurgeBefore(ctx context.Context, category audit.Category, cutoff time.Time, limit int) (int, error) {
 	return monitor.inner.PurgeBefore(ctx, category, cutoff, limit)
-}
-
-// DroppedDebug adds to the count of refused debug records.
-func (monitor *Monitor) DroppedDebug(count int) {
-	monitor.mu.Lock()
-	defer monitor.mu.Unlock()
-	monitor.health.DroppedDebug += int64(count)
 }
 
 // Health is a snapshot.

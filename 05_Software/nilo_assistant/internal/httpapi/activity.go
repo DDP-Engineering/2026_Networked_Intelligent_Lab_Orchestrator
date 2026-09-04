@@ -11,13 +11,12 @@ import (
 	"nilo.local/nilo/internal/activity"
 	"nilo.local/nilo/internal/audit"
 	"nilo.local/nilo/internal/auth"
-	"nilo.local/nilo/internal/diagnostics"
 	"nilo.local/nilo/internal/domain"
 	"nilo.local/nilo/internal/identity"
 )
 
-// The shared history, its export, and the timed diagnostics. Reads answer
-// from the activity service; every change the boundary decides on - an
+// The shared history, its export, and its retention policy. Reads answer from
+// the activity service; every change the boundary decides on - an
 // export, a policy change, a refusal - is itself recorded.
 
 // accessGuard is authorize with a journal: a request that carries an identity
@@ -136,11 +135,10 @@ type loggingHealthPayload struct {
 	Failures      int64      `json:"failures"`
 	LastFailure   string     `json:"last_failure,omitempty"`
 	LastFailureAt *time.Time `json:"last_failure_at,omitempty"`
-	DroppedDebug  int64      `json:"dropped_debug"`
 }
 
 func loggingHealthOf(health activity.Health) loggingHealthPayload {
-	payload := loggingHealthPayload{AuditWritable: health.AuditWritable, Failures: health.Failures, LastFailure: health.LastFailure, DroppedDebug: health.DroppedDebug}
+	payload := loggingHealthPayload{AuditWritable: health.AuditWritable, Failures: health.Failures, LastFailure: health.LastFailure}
 	if !health.LastFailureAt.IsZero() {
 		at := health.LastFailureAt.UTC()
 		payload.LastFailureAt = &at
@@ -154,14 +152,23 @@ func activityFilterOf(request *http.Request) (activity.Filter, error) {
 		Category: query.Get("category"), Component: query.Get("component"), Target: query.Get("target"),
 		Actor: query.Get("actor"), Severity: query.Get("severity"), Outcome: query.Get("outcome"),
 		Operation: query.Get("operation"), Action: query.Get("action"), From: query.Get("from"), To: query.Get("to"),
-		Cursor: query.Get("cursor"),
+		Cursor: query.Get("cursor"), Sort: query.Get("sort"), Order: query.Get("order"),
 	}
-	if text := query.Get("limit"); text != "" {
+	if text := query.Get("limit"); text == "all" {
+		filter.All = true
+	} else if text != "" {
 		limit, err := strconv.Atoi(text)
 		if err != nil {
 			return filter, fmt.Errorf("%w: limit", activity.ErrInvalidFilter)
 		}
 		filter.Limit = limit
+	}
+	if text := query.Get("page"); text != "" {
+		page, err := strconv.Atoi(text)
+		if err != nil {
+			return filter, fmt.Errorf("%w: page", activity.ErrInvalidFilter)
+		}
+		filter.Page = page
 	}
 	return filter, nil
 }
@@ -172,12 +179,6 @@ func writeActivityFailure(response http.ResponseWriter, err error) {
 		writeRefusal(response, http.StatusBadRequest, "activity_filter_rejected", err.Error())
 	case errors.Is(err, activity.ErrInvalidPolicy):
 		writeRefusal(response, http.StatusBadRequest, "activity_policy_rejected", err.Error())
-	case errors.Is(err, diagnostics.ErrInvalidSession):
-		writeRefusal(response, http.StatusBadRequest, "diagnostic_session_rejected", err.Error())
-	case errors.Is(err, diagnostics.ErrSessionNotFound):
-		writeError(response, http.StatusNotFound, "diagnostic_session_not_found", "")
-	case errors.Is(err, diagnostics.ErrSessionNotActive):
-		writeRefusal(response, http.StatusConflict, "diagnostic_session_not_active", err.Error())
 	default:
 		writeError(response, http.StatusServiceUnavailable, "activity_unavailable", "")
 	}
@@ -204,9 +205,10 @@ func handleActivityQuery(service *activity.Service) http.HandlerFunc {
 			SchemaVersion  string                           `json:"schema_version"`
 			Items          []eventPayload                   `json:"items"`
 			NextCursor     string                           `json:"next_cursor,omitempty"`
+			Total          int64                            `json:"total"`
 			RetainedWindow map[string]retainedWindowPayload `json:"retained_window"`
 			LoggingHealth  loggingHealthPayload             `json:"logging_health"`
-		}{apiVersion, activity.SchemaVersion, items, page.NextCursor, retainedWindowsOf(page.RetainedWindow), loggingHealthOf(page.LoggingHealth)})
+		}{apiVersion, activity.SchemaVersion, items, page.NextCursor, page.Total, retainedWindowsOf(page.RetainedWindow), loggingHealthOf(page.LoggingHealth)})
 	}
 }
 
@@ -312,7 +314,7 @@ func handleChangePolicy(service *activity.Service, journal AuditJournal) http.Ha
 		}
 		if journal != nil {
 			record := audit.Record{
-				Category: audit.CategoryAudit, Component: "system", Action: "diagnostics.policy.changed",
+				Category: audit.CategoryAudit, Component: "system", Action: "activity.retention.changed",
 				SubjectType: "activity", SubjectID: "policy", Outcome: audit.OutcomeApplied, Severity: audit.SeverityInfo,
 				Details: map[string]any{"before": policyPayloadOf(before), "after": policyPayloadOf(proposed)},
 			}
@@ -322,108 +324,5 @@ func handleChangePolicy(service *activity.Service, journal AuditJournal) http.Ha
 			_ = journal.Record(request.Context(), record)
 		}
 		writeJSON(response, http.StatusOK, policyPayloadOf(proposed))
-	}
-}
-
-type sessionPayload struct {
-	ID        string     `json:"id"`
-	Scope     string     `json:"scope"`
-	Target    string     `json:"target"`
-	ActorID   string     `json:"actor_id"`
-	Minutes   int        `json:"minutes"`
-	StartedAt time.Time  `json:"started_at"`
-	ExpiresAt time.Time  `json:"expires_at"`
-	State     string     `json:"state"`
-	EndedAt   *time.Time `json:"ended_at,omitempty"`
-	EndReason string     `json:"end_reason,omitempty"`
-	// Effective is the level the session's scope and target have now.
-	Effective string `json:"effective"`
-}
-
-func sessionPayloadOf(service *diagnostics.Service, session diagnostics.Session) sessionPayload {
-	payload := sessionPayload{
-		ID: session.ID, Scope: string(session.Scope), Target: session.Target, ActorID: session.ActorID, Minutes: session.Minutes,
-		StartedAt: session.StartedAt.UTC(), ExpiresAt: session.ExpiresAt.UTC(), State: string(session.State), EndReason: session.EndReason,
-		Effective: string(service.Effective(session.Scope, session.Target)),
-	}
-	if session.EndedAt != nil {
-		ended := session.EndedAt.UTC()
-		payload.EndedAt = &ended
-	}
-	return payload
-}
-
-func diagnosticsActor(request *http.Request) diagnostics.Actor {
-	actor, ok := actorFrom(request.Context())
-	if !ok {
-		return diagnostics.Actor{Kind: audit.ActorKindAnonymous}
-	}
-	kind, id := actorIdentity(actor)
-	return diagnostics.Actor{Kind: kind, ID: id.String()}
-}
-
-func handleListSessions(service *diagnostics.Service) http.HandlerFunc {
-	return func(response http.ResponseWriter, request *http.Request) {
-		sessions, err := service.List(request.Context())
-		if err != nil {
-			writeActivityFailure(response, err)
-			return
-		}
-		items := make([]sessionPayload, 0, len(sessions))
-		for _, session := range sessions {
-			items = append(items, sessionPayloadOf(service, session))
-		}
-		scopes := make([]string, 0, len(diagnostics.Scopes))
-		for _, scope := range diagnostics.Scopes {
-			scopes = append(scopes, string(scope))
-		}
-		writeJSON(response, http.StatusOK, struct {
-			APIVersion string           `json:"api_version"`
-			Items      []sessionPayload `json:"items"`
-			Scopes     []string         `json:"scopes"`
-			Durations  []int            `json:"durations"`
-		}{apiVersion, items, scopes, diagnostics.Durations})
-	}
-}
-
-func handleStartSession(service *diagnostics.Service) http.HandlerFunc {
-	return func(response http.ResponseWriter, request *http.Request) {
-		var body struct {
-			Scope   string `json:"scope"`
-			Target  string `json:"target"`
-			Minutes int    `json:"minutes"`
-		}
-		if err := decodeOperationRequest(request, &body); err != nil {
-			writeError(response, http.StatusBadRequest, "network_request_invalid", "")
-			return
-		}
-		session, err := service.Start(request.Context(), diagnosticsActor(request), diagnostics.Scope(body.Scope), body.Target, body.Minutes)
-		if err != nil {
-			writeActivityFailure(response, err)
-			return
-		}
-		writeJSON(response, http.StatusCreated, sessionPayloadOf(service, session))
-	}
-}
-
-func handleReadSession(service *diagnostics.Service) http.HandlerFunc {
-	return func(response http.ResponseWriter, request *http.Request) {
-		session, err := service.Get(request.Context(), request.PathValue("id"))
-		if err != nil {
-			writeActivityFailure(response, err)
-			return
-		}
-		writeJSON(response, http.StatusOK, sessionPayloadOf(service, session))
-	}
-}
-
-func handleStopSession(service *diagnostics.Service) http.HandlerFunc {
-	return func(response http.ResponseWriter, request *http.Request) {
-		session, err := service.Stop(request.Context(), diagnosticsActor(request), request.PathValue("id"))
-		if err != nil {
-			writeActivityFailure(response, err)
-			return
-		}
-		writeJSON(response, http.StatusOK, sessionPayloadOf(service, session))
 	}
 }

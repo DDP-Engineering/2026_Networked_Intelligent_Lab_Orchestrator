@@ -11,7 +11,7 @@ import type {
 } from '../../api/contract';
 import {
   PERMISSION_ACTIVITY_EXPORT,
-  PERMISSION_DIAGNOSTICS_MANAGE,
+  PERMISSION_ACTIVITY_RETENTION_MANAGE,
   PERMISSION_NETWORK_MANAGE,
   PERMISSION_VPN_MANAGE,
   PERMISSION_VPN_INSTALL,
@@ -226,26 +226,13 @@ export function AppShell({
       client.exportActivity(credential, filter, format),
     [client, credential],
   );
-  const readSessions = useCallback(
-    () => client.listDiagnosticSessions(credential),
+  const readRetention = useCallback(
+    () => client.getActivityRetention(credential),
     [client, credential],
   );
-  const startSession = useCallback(
-    (scope: string, target: string, minutes: number) =>
-      client.startDiagnosticSession(credential, scope, target, minutes),
-    [client, credential],
-  );
-  const stopSession = useCallback(
-    (id: string) => client.stopDiagnosticSession(credential, id),
-    [client, credential],
-  );
-  const readSettings = useCallback(
-    () => client.getDiagnosticSettings(credential),
-    [client, credential],
-  );
-  const saveSettings = useCallback(
-    (settings: Parameters<typeof client.setDiagnosticSettings>[1]) =>
-      client.setDiagnosticSettings(credential, settings),
+  const saveRetention = useCallback(
+    (settings: Parameters<typeof client.setActivityRetention>[1]) =>
+      client.setActivityRetention(credential, settings),
     [client, credential],
   );
 
@@ -396,14 +383,11 @@ export function AppShell({
           readActivity={readActivity}
           exportActivity={exportActivity}
           canExport={session.permissions.includes(PERMISSION_ACTIVITY_EXPORT)}
-          canManageDiagnostics={session.permissions.includes(
-            PERMISSION_DIAGNOSTICS_MANAGE,
+          canManageRetention={session.permissions.includes(
+            PERMISSION_ACTIVITY_RETENTION_MANAGE,
           )}
-          readSessions={readSessions}
-          startSession={startSession}
-          stopSession={stopSession}
-          readSettings={readSettings}
-          saveSettings={saveSettings}
+          readRetention={readRetention}
+          saveRetention={saveRetention}
         />
       );
     }

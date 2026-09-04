@@ -22,8 +22,8 @@ acceptance on a controlled device, and no production device network exists.
 | P4 device-network contracts and planning | Done. Model, validation, pure planner, persistence, CRUD through the acknowledged lifecycle, computed status (disabled/active/waiting/conflict), connection check facts, access instructions, HTTP routes, CLI, simulation and appliance managers |
 | P5 local forwarding and recovery | Done on isolated Linux. The helper renders one owned nftables table from a durable inventory written before any rule, owns the forwarding switch only where it turned it on, recovers a device-network change from its inventory snapshot, checks its table every ten seconds, and refuses a foreign table. Container proof: a client reaches a Modbus server behind the appliance with only a route to it, the unauthorized source is refused, the timer restoration removes everything, and an established session ends at the removal |
 | P6 VPN forwarding and translation | Done on isolated Linux. Return-route validation against the profile's AllowedIPs; container proof with a disposable hub, a remote client and two sites whose devices share 192.168.0.130, reached independently at 10.7.1.130 and 10.7.2.130, never through the internal address or from an unauthorized source, with an 8 MiB transfer and tunnel loss leaving the other site untouched |
-| P7 Activity, events and diagnostics | Done. `activity.read`, `activity.export`, `diagnostics.manage`; server-paginated filtered history with retained window and logging health; JSONL/CSV export with metadata, bounds and formula neutralization; retention by age and quota in bounded batches with watermarks; timed debug sessions with monotonic expiry and restart interruption; login, access-denial, export, policy, session and reconcile events |
-| P8 integrated GUI | Done against the contract mock and the component tests. Device networks table and editor, adapter configuration and Wi-Fi dialog, WireGuard rename, Activity page with diagnostics controls, activity links from the Network page, reattachment after a reload, en/de/ro |
+| P7 Activity, events and retention | Done. `activity.read`, `activity.export`, `activity.retention.manage`; server-paginated filtered history with retained window and logging health; JSONL/CSV export with metadata, bounds and formula neutralization; retention by age and quota in bounded batches with watermarks; login, access-denial, export, policy and reconcile events |
+| P8 integrated GUI | Done against the contract mock and the component tests. Device networks table and editor, adapter configuration and Wi-Fi dialog, WireGuard rename, Activity page with retention controls, activity links from the Network page, reattachment after a reload, en/de/ro |
 | P9 appliance startup and system acceptance | Partly done. `nilo-nethelper.service`, `nilo-nethelper-recovery.timer` and the HTTPS appliance service are installed, enabled and running on the bench Pi; ARM64 and x86-64 builds complete. No VM crash, pending-operation reboot or offline-startup scenario was run |
 | P10 Raspberry Pi and device acceptance | Partly observed on the bench Pi 4 (Debian 13, NetworkManager 1.52.1). NILO assigned `192.168.0.1/24` to the wired adapter, enabled a local-only Device Network, installed its `inet nilo` nftables rules and routed the Windows client at `192.168.1.13` to the ILC151GSM at `192.168.0.130` with three ICMP replies and no loss. TCP 502 and 503 were refused, while TCP 504 returned a valid Modbus function-3 response from both Pi and Windows through NILO: unit 1, holding register 0, value 1. USB hotplug, power-cycle and vendor download remain unverified |
 | P11 final reconciliation | Done for this checkpoint; see the journal's Stage report |
@@ -97,22 +97,23 @@ checkpoint; the helper repairs a vanished table every ten seconds and reports a
 foreign one instead of replacing it. The planner refuses VPN sources the
 selected profile cannot route back.
 
-### P7 - Activity and diagnostics
+### P7 - Activity and retention
 
-`internal/activity` answers `GET /api/v1/activity` (category, function, target,
-actor, severity, outcome, operation, action, time window, cursor, limit) with the
-retained window per category, the watermark retention left and the logging
-health from a monitor on every audit append; `GET /api/v1/activity/export`
+`internal/activity` answers `GET /api/v1/activity` (category, component or
+component family, target, actor, severity, outcome, operation, action, time
+window, sort/order, cursor or numbered page, and 25/50/100/all limit) with the
+filtered total, retained window per category, the watermark retention left and
+the logging health from a monitor on every audit append; `GET /api/v1/activity/export`
 streams JSONL or CSV with schema version, appliance identity, time range,
 retained window, redaction policy and a trailer that says whether the bound was
 hit. `Housekeeper.Sweep` purges by age then by quota in batches of 500, keeps
 the evidence of a pending operation, records watermarks and one event per sweep
-that removed something. `internal/diagnostics` runs timed sessions for fixed
-function scopes (5/15/60 minutes, monotonic expiry, one per scope and target,
-interrupted on restart) and writes debug records only while a scope is raised,
-rate-limited per scope with drops counted. Coverage added: login success and
-failure, access denial, operation stages as debug detail, runtime re-plans of
-device networks, retention sweeps, exports, session lifecycle, policy changes.
+that removed something. `GET|PUT /api/v1/activity/retention` and
+`nilo activity retention` manage that policy under
+`activity.retention.manage`. Temporary debug sessions, generated records and
+their historical entries have been removed. Coverage includes login success and failure, access denial,
+runtime re-plans of device networks, retention sweeps, exports and policy
+changes.
 
 ### P8 - the interface
 
@@ -140,12 +141,12 @@ enables it beside the service and warns when `nft` is absent.
 ## What runs
 
 Simulation and appliance profiles compose the same service, operation manager,
-device-network manager, activity service, diagnostics service and maintenance
-loop. The simulation keeps device networks and adapter settings in SQLite and
+device-network manager, Activity service and maintenance loop. The simulation
+keeps device networks and adapter settings in SQLite and
 forwards in memory; the appliance forwards through the helper. The maintenance
 loop samples every five seconds, re-plans device networks on the same cadence,
-expires unconfirmed changes and debug sessions every second, retries the
-startup tunnel every thirty seconds and sweeps retention every five minutes.
+expires unconfirmed changes, retries the startup tunnel every thirty seconds
+and sweeps retention every five minutes.
 
 ## Remaining work
 
@@ -203,8 +204,7 @@ nilo admin user list --server URL --token-file TOKEN_FILE
 nilo admin token delete --id TOKEN_ID --confirm-delete --server URL --token-file TOKEN_FILE
 nilo activity list --category audit --operation OPERATION_ID --server URL --token-file TOKEN_FILE
 nilo activity export --format csv --out activity.csv --server URL --token-file TOKEN_FILE
-nilo diagnostics start --scope network.wireguard --target office --minutes 15 --server URL --token-file TOKEN_FILE
-nilo diagnostics settings --retention audit=90,event=14,debug=1 --quota audit=268435456,event=134217728,debug=67108864 --server URL --token-file TOKEN_FILE
+nilo activity retention --retention audit=90,event=14 --quota audit=268435456,event=134217728 --server URL --token-file TOKEN_FILE
 ```
 
 Mutations print a preview, then need `yes` or `--acknowledge`; connectivity

@@ -86,8 +86,8 @@ it('shows readiness without claiming an empty profile inventory or offering mana
   expect(screen.queryByLabelText('Profile name')).not.toBeInTheDocument();
 });
 
-// REQ-UX-823c3e13: every readiness value belongs to one compact fact so the
-// browser can place the label on the left and its value on the right.
+// REQ-UX-823c3e13: every readiness value belongs to one compact fact so it can
+// sit directly beside the label instead of becoming detached across the row.
 it('groups every expanded readiness label with its value', () => {
   renderInShell(<WireGuardDiagnostics status={status} collapsible={false} />);
 

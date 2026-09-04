@@ -15,7 +15,6 @@ import (
 	"nilo.local/nilo/internal/activity"
 	"nilo.local/nilo/internal/app"
 	"nilo.local/nilo/internal/buildinfo"
-	"nilo.local/nilo/internal/diagnostics"
 	"nilo.local/nilo/internal/httpapi"
 	"nilo.local/nilo/internal/mcp"
 	"nilo.local/nilo/internal/network"
@@ -101,9 +100,6 @@ func run(ctx context.Context, arguments []string) int {
 	}
 	if len(arguments) > 0 && arguments[0] == "activity" {
 		return runActivityCommand(ctx, arguments[1:], networkIO{stdout: os.Stdout, stderr: os.Stderr, stdin: os.Stdin, interactive: networkTerminal()})
-	}
-	if len(arguments) > 0 && arguments[0] == "diagnostics" {
-		return runDiagnosticsCommand(ctx, arguments[1:], networkIO{stdout: os.Stdout, stderr: os.Stderr, stdin: os.Stdin, interactive: networkTerminal()})
 	}
 	if len(arguments) > 0 && arguments[0] == "serve" {
 		return runServe(ctx, arguments[1:])
@@ -205,26 +201,12 @@ func runServe(ctx context.Context, arguments []string) int {
 		fmt.Fprintln(os.Stderr, developmentAdministratorNotice(created))
 	}
 
-	// The shared history and the timed diagnostics. A session from an earlier
-	// boot is recorded as interrupted before anything is served.
+	// The shared Activity history and its retention policy.
 	activityService, err := activity.NewService(activity.Options{
 		Store: application.ActivityRepository(), ApplianceID: application.ApplianceRuntime().Identity.ID,
 		Now: func() time.Time { return time.Now().UTC() }, Monitor: application.AuditMonitor(),
 	})
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return 1
-	}
-	diagnosticsService, err := diagnostics.NewService(diagnostics.Options{
-		Store: application.DiagnosticRepository(), Audit: application.AuditWriter(),
-		BootID: application.ApplianceRuntime().BootID, Now: func() time.Time { return time.Now().UTC() },
-		Dropped: application.AuditMonitor().DroppedDebug,
-	})
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return 1
-	}
-	if err := diagnosticsService.Reconcile(ctx); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
 	}
@@ -285,7 +267,6 @@ func runServe(ctx context.Context, arguments []string) int {
 		// developer's machine would be a liability with no purpose.
 		Stager:   secretStagerFor(provider),
 		Recovery: recoveryObserverFor(provider),
-		Debug:    diagnosticsService,
 	})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -338,7 +319,6 @@ func runServe(ctx context.Context, arguments []string) int {
 		defer close(maintenanceDone)
 		network.RunMaintenanceWith(maintenanceCtx, network.MaintenanceOptions{
 			Sampler: sampler, Operations: operations, Startup: startup, Reconcile: reconcileDeviceNetworks,
-			Tick: diagnosticsService.Expire,
 			Housekeeping: func(ctx context.Context) error {
 				_, err := housekeeper.Sweep(ctx)
 				return err
@@ -362,7 +342,7 @@ func runServe(ctx context.Context, arguments []string) int {
 		Identity: application.IdentityService(), Profile: *profile, Build: buildinfo.Current(),
 		Catalog: catalog, Network: networkService, Operations: operations,
 		MCP: mcpHandler, CookieSecurity: cookieSecurity,
-		Activity: activityService, Diagnostics: diagnosticsService, Audit: application.AuditWriter(),
+		Activity: activityService, Audit: application.AuditWriter(),
 	})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -408,11 +388,10 @@ const rootUsage = `usage: nilo <command> [options]
   nilo admin ...                               identities and API tokens: locally with --data-dir,
                                                or remotely with --server URL --token-file PATH
   nilo network ...                             appliance network state and previewed changes
-  nilo activity ...                            audit, event and debug history: list and export
-  nilo diagnostics ...                         timed debug sessions and the retention policy
+  nilo activity ...                            audit and event history: list and export
 
 Run a command group without arguments for its own usage. The remote groups
-(admin, network, activity, diagnostics) take --server URL and --token-file PATH;
+(admin, network, activity) take --server URL and --token-file PATH;
 the token is read from that file and never from an argument.`
 
 func writeUsage() {

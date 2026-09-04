@@ -81,7 +81,7 @@ export const BENCH_CORE_PERMISSIONS = [
   'vpn.install',
   'activity.read',
   'activity.export',
-  'diagnostics.manage',
+  'activity.retention.manage',
 ] as const;
 
 /** One of the permissions above. */
@@ -90,7 +90,8 @@ export type BenchCorePermission = (typeof BENCH_CORE_PERMISSIONS)[number];
 /** Permission required to read network status and traffic history. Every role holds it. */
 export const PERMISSION_ACTIVITY_READ: BenchCorePermission = 'activity.read';
 export const PERMISSION_ACTIVITY_EXPORT: BenchCorePermission = 'activity.export';
-export const PERMISSION_DIAGNOSTICS_MANAGE: BenchCorePermission = 'diagnostics.manage';
+export const PERMISSION_ACTIVITY_RETENTION_MANAGE: BenchCorePermission =
+  'activity.retention.manage';
 export const PERMISSION_NETWORK_READ: BenchCorePermission = 'network.read';
 
 /** Permission required to enable and disable interfaces. Administrators only. */
