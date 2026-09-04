@@ -8,7 +8,7 @@ Workspace: `F:\2026_Networked_Intelligent_Lab_Orchestrator`. Current branch: `ma
 
 Turn a Raspberry Pi running NILO into a configurable gateway for arbitrary Ethernet devices. An operator connects the Pi to an Internet hotspot or local management network and connects a second interface to the device network. From a computer, the operator can reach existing device IPs, or translated addresses, through a local route or WireGuard. Existing engineering tools perform application downloads; existing Modbus TCP clients communicate with device servers.
 
-Provide an attributable local audit trail on every NILO, operational events, and temporary debug logging selectable by function and target. Keep the Network GUI concise: Interfaces, WireGuard profiles, Device networks; show history through a shared Activity page.
+Provide an attributable local audit trail on every NILO and operational events with bounded retention. Keep the Network GUI concise: Interfaces, WireGuard profiles, Device networks; show history through a shared Activity page.
 
 The product term is **Device networks**. Do not label the feature Cabinet, PLC network, or PLC gateway. PLCs are acceptance examples, not the domain model. Use **Device-side interface**, **Device subnet**, **Target IP address**, **Exposed address/subnet**, and an optional **Location**.
 
@@ -16,7 +16,7 @@ The product term is **Device networks**. Do not label the feature Cabinet, PLC n
 
 The user explicitly requested interface selection including newly detected USB adapters; configurable device-side addressing; a preserved management connection; add/edit/enable/disable/delete; access with and without WireGuard; several imported WireGuard profiles with selected activation; access to devices with duplicate static IPs at different sites; and per-NILO event auditing with adjustable granularity. Application download means transferring a new device application, not replacing its firmware/bootloader.
 
-The following are implementation defaults proposed in this plan, rather than previously implemented features: one active managed WireGuard profile, IPv4 device forwarding first, local/WireGuard/both access modes, source NAT by default, 90/14/1-day history targets, timed debug sessions, and the permission additions below. Record them during scope reconciliation. Routine implementation choices can be resolved from this document; questions about live infrastructure remain prerequisites for site acceptance, not blockers to building the software.
+The following are implementation defaults proposed in this plan, rather than previously implemented features: one active managed WireGuard profile, IPv4 device forwarding first, local/WireGuard/both access modes, source NAT by default, 90/14/1-day history targets, and the permission additions below. Record them during scope reconciliation. Routine implementation choices can be resolved from this document; questions about live infrastructure remain prerequisites for site acceptance, not blockers to building the software.
 
 ## 2. Authority and working rules
 
@@ -45,11 +45,11 @@ The following was inspected in the working tree on 2026-09-03. Recheck before im
 | WireGuard | Simulation import/remove/activate/deactivate/startup selection; validated parser; live readiness and acknowledged tooling installation | Live import/storage/mapping/inventory/switching/startup; profile rename; persistence |
 | Database | `internal/store/sqlite/db.go`: modernc SQLite, WAL, FULL synchronous mode, single connection; migrations through `005_network_traffic` | Additive migrations for this milestone; preserve all existing data and migration digests |
 | Audit | `internal/audit/audit.go`, `internal/store/sqlite/audit_repository.go`: append/list, sequence, actor/action/subject/JSON/UTC time | Full Network coverage; appliance identity; outcomes/correlation; query/export UI; retention; logging health |
-| Identity | `internal/identity/service.go`: account/token changes and audit share a database transaction | Login/session outcome coverage audit, fixed permissions for Activity and Diagnostics |
+| Identity | `internal/identity/service.go`: account/token changes and audit share a database transaction | Login/session outcome coverage audit and fixed Activity permissions |
 | HTTP/CLI/MCP | `internal/httpapi/network*.go`, `cmd/nilo/network*.go`, `internal/apiclient`, `internal/mcp` | Extend common contracts; do not create a second management authorization path |
-| GUI | `src/components/pages/NetworkPage.tsx`, `src/components/network/`, `src/api/{client,contract,mock,wireguard}.ts` | Configuration editors, Device networks, Activity, timed Diagnostics, operation recovery after reload |
+| GUI | `src/components/pages/NetworkPage.tsx`, `src/components/network/`, `src/api/{client,contract,mock,wireguard}.ts` | Configuration editors, Device networks, Activity and retention, operation recovery after reload |
 | Appliance entry | `cmd/nilo/network_runtime*.go`, `internal/app/app.go`, `internal/httpapi/serving.go` | Compose persistence/logging/new services; startup reconciliation and readiness |
-| Verification | `02_Tools/tests/network/`, `nilo_gui/e2e/network.spec.ts`, Go/component/script tests | Routed multi-node fixtures, duplicate addresses, audit/debug coverage, VM/systemd/reboot and Pi proof |
+| Verification | `02_Tools/tests/network/`, `nilo_gui/e2e/network.spec.ts`, Go/component/script tests | Routed multi-node fixtures, duplicate addresses, Activity coverage, VM/systemd/reboot and Pi proof |
 
 The implementation status is maintained in `06_SoftwareDocu/Network_Service_Implementation_Status.md`. Existing Linux readiness or simulated profile activation must not be presented as working live WireGuard management.
 
@@ -63,7 +63,7 @@ The implementation status is maintained in `06_SoftwareDocu/Network_Service_Impl
 - Saved device networks targeting one host or a whole IPv4 subnet, over a selected local interface, managed WireGuard profile, or both explicitly selected paths.
 - Original-address routing and translated host/subnet access for duplicate addresses; restrictive forwarding rules and source NAT by default.
 - Last-management-path protection, transaction preview, independent rollback, durable reconciliation and startup behavior.
-- Per-appliance audit, operational events, timed per-function/per-target debug, Activity search and export.
+- Per-appliance audit, operational events, Activity search, export and bounded retention.
 - GUI/CLI management parity and authenticated read-only MCP observations.
 
 ### Excluded from this milestone
@@ -161,11 +161,12 @@ Connection checks report separate facts: local adapter/link, local route/configu
 
 Show copyable client/router/hub route instructions and the exact target address to enter in engineering software. Generated instructions contain no private keys and clearly identify the machine on which each step belongs. Do not automatically run them on another host.
 
-### 6.4 Activity and Diagnostics
+### 6.4 Activity and retention
 
-Activity is a shared page, with Audit / Events / Debug filters, time range, function, target, actor, severity, outcome and operation ID. Paginate on the server. Selecting an entry expands safe before/after values and related operation events. Network and other functional pages link to Activity with filters already selected.
+Activity is a shared page, with Audit / Events filters, time range, function, target, actor, severity, outcome and operation ID. Paginate on the server. Selecting an entry expands safe before/after values and related operation events. Network and other functional pages link to Activity with filters already selected.
 
-Diagnostics controls: function, optional target, Normal/Debug, 5/15/60-minute duration, Start/Stop and Export. Show the effective scope and expiry compactly. Backend collection continues when the page is closed. No permanent global debug toggle; explicitly stop or expire it. Diagnostics can later be used by other services without giving each a separate logging stack.
+Activity retention controls set the maximum age and storage quota for the Audit
+and Events categories. Temporary debug logging is not part of the product.
 
 ## 7. Backend architecture and ownership
 
@@ -174,13 +175,12 @@ flowchart TD
     UI[GUI / CLI] --> API[Authenticated HTTP API]
     MCP[Read-only MCP] --> READ[Safe service observations]
     API --> NET[Network service and durable operation manager]
-    API --> ACT[Activity / diagnostics service]
+    API --> ACT[Activity and retention service]
     READ --> NET
     NET --> DB[(Existing SQLite database)]
     NET --> AUD[Shared audit writer]
     ACT --> AUD
     AUD --> DB
-    ACT --> LOG[Bounded diagnostic storage]
     NET --> PROVIDER{Runtime provider}
     PROVIDER --> SIM[Deterministic simulation]
     PROVIDER --> RPC[Restricted helper socket]
@@ -239,11 +239,11 @@ The network stack and SQLite cannot be committed atomically. Use a durable state
 - Test MTU/path-MTU discovery, large bidirectional TCP transfers and reconnects through the actual VPN path. A ping-only acceptance is inadequate for engineering downloads.
 - On startup, keep exposure closed while pending operations reconcile. Then apply confirmed interface intent, connect the selected startup VPN when its uplink exists, and enable only device networks whose configured prerequisites are satisfied. A missing adapter/VPN produces a waiting state and bounded retry.
 
-## 10. Audit and diagnostic design
+## 10. Audit and Activity design
 
 ### 10.1 Separate purposes
 
-Audit is always collected for accountable actions and results. Operational events record meaningful state changes and failures. Debug adds temporary internal detail. Collection belongs in backend services/adapters and covers GUI, CLI, API, startup and autonomous recovery, not just button clicks. Suppressing debug must never suppress required audit. This separation, secret exclusion and bounded resource use follow the [OWASP logging guidance](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html).
+Audit is always collected for accountable actions and results. Operational events record meaningful state changes and failures. Collection belongs in backend services/adapters and covers GUI, CLI, API, startup and autonomous recovery, not just button clicks. Secret exclusion and bounded resource use follow the [OWASP logging guidance](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html).
 
 Reuse `audit_events`; do not create a competing generic audit store. The existing append/list API is not tamper-proof against a host administrator. Do not advertise forensic immutability; remote independent storage could be a later feature.
 
@@ -266,32 +266,24 @@ Configuration events contain safe before/after fields, not entire imported files
 | Device networks | Create/edit/enable/disable/delete; exposure/routing change; dependencies unavailable/restored; explicit connectivity-check summary |
 | Recovery | Deadline expiry; core/helper/NM restart reconciliation; restore result; conflicting or unknown state |
 | Identity | Existing user/token lifecycle events; login success/failure; access denial; logout/session invalidation where observable |
-| Diagnostics | Debug requested/started/stopped/expired; policy/retention changes; export requests/results |
+| Activity | Retention policy changes and export requests/results |
 | Appliance | Service start/stop when observed; new boot/recovered unclean shutdown; time synchronization changes; storage/audit degradation |
 
 Do not log every GUI poll or counter sample as audit. Bound repeated failure events with rate limiting and explicit suppression counts. Modbus measurement values belong in future telemetry storage, not the audit table. Packet-by-packet logging is excluded.
 
 Record requested, applied, confirmed and recovered outcomes separately where they differ. If side effects occurred but completion recording failed, do not report a clean success: reconcile using operation ID/helper outcomes and deduplicate replays. Persist a monotonic sequence allocator independent of retained rows: the current MAX(sequence)+1 approach must not reuse a cursor after retention deletes all records.
 
-### 10.4 Per-function debug
+### 10.4 Storage, retention and export
 
-Define scopes such as `network.interfaces`, `network.wifi`, `network.wireguard`, `network.device_networks`, `network.recovery`, `identity` and `system`. Function-level scope is stable product behavior, not a list of every internal code function. Optional target ID narrows the scope. Parent Network selection covers its subfunctions.
+Proposed initial defaults: audit 90 days and operational events 14 days. Treat them as configurable retention targets subject to explicit quotas, not unlimited storage promises. Suggested budgets for an initial Pi installation are audit 256 MiB of logical records and operational events 128 MiB; measure index/WAL/filesystem overhead and reserve free disk headroom during testing before fixing shipped defaults.
 
-Use backend-controlled sessions with actor, scope, target, start and expiry; one effective policy per scope/target with deterministic overlap handling. Offer 5/15/60 minutes, maximum 60; log overrides and expiry. Expire using monotonic time within a boot and return to Normal on restart, recording interrupted sessions. Time adjustments or a closed browser cannot make debug permanent. Restrict runtime reconfiguration to NILO's logger; do not automatically enable global NetworkManager verbose logging or packet capture.
-
-Debug records include operation ID, state transitions, selected safe route decisions, timing, retry count and sanitized error codes. Bounded queues, per-event limits and rate limits protect service responsiveness; dropped debug records produce a count, not a silent claim of completeness.
-
-### 10.5 Storage, retention and export
-
-Proposed initial defaults: audit 90 days; operational events 14 days; debug 24 hours. Treat them as configurable retention targets subject to explicit quotas, not unlimited storage promises. Suggested separate budgets for an initial Pi installation: audit 256 MiB of logical records, operational 128 MiB, debug 64 MiB; measure index/WAL/filesystem overhead and reserve free disk headroom during testing before fixing shipped defaults.
-
-Keep audit/configuration in the existing database and high-volume diagnostics in a separate bounded database or rotated structured files. Choose one diagnostic backend during design; do not implement both. Housekeeping runs in bounded batches off request paths. Size controls must include WAL/rotation overhead. Do not weaken existing FULL durability or make ordinary network operations wait on debug storage.
+Keep Activity and configuration in the existing database. Housekeeping runs in bounded batches off request paths. Size controls must include WAL/filesystem overhead. Do not weaken existing FULL durability.
 
 Purge expired records according to administrator policy; no arbitrary edit/delete UI for individual audit events. Record policy changes and retention watermarks so an expired query can disclose the gap. If capacity pressure shortens retention, show the actual retained window. Preserve pending-operation/recovery evidence until reconciliation. On audit-capacity/write failure, stop new attributable configuration mutations before side effects and display degraded status; keep reads, established forwarding and recovery available. Test this policy explicitly.
 
-Exports are authenticated, filtered, size-bounded and streamed as JSONL/CSV with schema version, appliance identity, time range, retained-window information and redaction policy. A diagnostic bundle can add sanitized configuration and version metadata but never secret files or arbitrary filesystem paths. Retention/export are audited. Local storage continues without Internet; central collection is deferred.
+Exports are authenticated, filtered, size-bounded and streamed as JSONL/CSV with schema version, appliance identity, time range, retained-window information and redaction policy. Retention/export are audited. Local storage continues without Internet; central collection is deferred.
 
-### 10.6 Limits of observed activity
+### 10.5 Limits of observed activity
 
 When NILO only routes traffic, it cannot certify a vendor application download's success or identify a software version from a TCP connection. Report network facts only. A future vendor integration can attach a verified result; an operator-entered maintenance note must be labelled as an operator statement. The same applies to Modbus application outcomes when no NILO protocol integration observes them.
 
@@ -309,7 +301,7 @@ Allocate new migration numbers only after checking the current ledger; never edi
 | Device networks | Interface reference, scope/target, addressing/translation, ingress permissions, services, startup intent, revision |
 | Network operations | Actor/action/target, safe normalized parameters, revision/state/deadline, helper reference, errors and timestamps |
 | Audit extension | Appliance/boot/category/outcome/correlation fields or versioned payload; monotonic cursor allocator and retention watermark |
-| Diagnostic sessions/settings | Scope/target/actor/expiry, retention and storage policy; redacted values only |
+| Activity retention | Per-category age and storage quota policy; redacted values only |
 
 Persist observed state only when it has a freshness/observation timestamp; do not restore stale observations as truth after restart. Foreign-key deletion policies must not erase audit history or silently remove referenced profiles. New repositories must join transactions through an explicit unit-of-work interface; avoid nested database calls that deadlock the existing one-connection pool.
 
@@ -328,16 +320,15 @@ Reuse `/api/v1/network/operations/{id}` and its acknowledge/confirm/rollback lif
 | `/network/device-networks/{id}/access-instructions` | Safe local/client/hub instructions and unmet prerequisites |
 | `/network/operations` | Paginated recent/pending operations for reload/restart reattachment |
 | `/activity` and `/activity/export` | Filtered authorized audit/operational history and export |
-| `/diagnostics/sessions` and `/{id}` | Start/read/stop timed debug sessions |
-| `/diagnostics/settings` | Read/change authorized retention, quota and logging policy |
+| `/activity/retention` | Read/change authorized Activity retention and quota policy |
 
-All paths above are under `/api/v1`; exact verbs/status codes are finalized at specify. Bounds are part of the contract: page size, lookback, payload, import count/bytes, probe time, export size and debug duration. Use stable error codes, UTC deadlines and cursor pagination. Revalidate permissions on acknowledge/confirm/rollback, not only at preview.
+All paths above are under `/api/v1`; exact verbs/status codes are finalized at specify. Bounds are part of the contract: page size, lookback, payload, import count/bytes, probe time and export size. Use stable error codes, UTC deadlines and cursor pagination. Revalidate permissions on acknowledge/confirm/rollback, not only at preview.
 
 ### 11.3 Permissions and adapters
 
-Retain `network.read`, `network.manage`, `vpn.manage`, `vpn.install`. Proposed fixed additions: `activity.read`, `activity.export`, `diagnostics.manage`. Initially grant the new global-history and diagnostic permissions to Administrator; do not reveal account/security events to Viewer or Operator through a network-status permission. A future scoped operational-history permission can be added explicitly. Every API token remains the intersection of role and scope, including after role changes/revocation.
+Retain `network.read`, `network.manage`, `vpn.manage`, `vpn.install`. Proposed fixed additions: `activity.read`, `activity.export`, `activity.retention.manage`. Initially grant the new global-history and retention permissions to Administrator; do not reveal account/security events to Viewer or Operator through a network-status permission. A future scoped operational-history permission can be added explicitly. Every API token remains the intersection of role and scope, including after role changes/revocation.
 
-Add matching CLI subcommands under `nilo network`, plus a small `nilo activity` / `nilo diagnostics` surface if needed. CLI calls the authenticated API and does not invoke privileged local code directly. Do not expose secret values as command-line flags or terminal output. Extend MCP only with authorized bounded reads; no mutation, debug-enable or credential tool.
+Add matching CLI subcommands under `nilo network` and a small `nilo activity` surface. CLI calls the authenticated API and does not invoke privileged local code directly. Do not expose secret values as command-line flags or terminal output. Extend MCP only with authorized bounded reads; no mutation or credential tool.
 
 ## 12. Implementation sequence
 
@@ -398,12 +389,12 @@ Each phase ends with runnable behavior and focused proof. Keep incomplete phases
 - Test tunnel loss/switching, overlapping address rejection, unauthorized sources, inactive referenced profiles and large TCP transfers.
 - Exit: both identical target IPs are independently reachable through distinct exposed addresses and cannot be reached through an unselected path.
 
-### P7 — Activity, operational events and timed Diagnostics
+### P7 — Activity, operational events and retention
 
-- Complete coverage matrix, retention/quotas, cursor queries/export, diagnostic session lifecycle and logging health.
-- Build shared Activity page and contextual links; timed debug controls filter backend functions/targets.
-- Test role/token scope, close-browser/restart expiry, storage saturation, duplicate replay and redaction across every output.
-- Exit: an administrator can explain a network change from intent to final outcome and obtain a bounded safe debug export for a chosen target.
+- Complete coverage matrix, retention/quotas, cursor queries/export and logging health.
+- Build the shared Activity page, retention controls and contextual links.
+- Test role/token scope, storage saturation, duplicate replay and redaction across every output.
+- Exit: an administrator can explain a network change from intent to final outcome and obtain a bounded safe Activity export.
 
 ### P8 — Integrated GUI and adapter completion
 
@@ -462,7 +453,7 @@ These are plan-local IDs, not fabricated AEGIS requirement IDs. At P0, link each
 | AU-02 | Database failure cannot leave an unrecorded accepted mutation or block recovery | Fault injection before/after each side-effect boundary |
 | AU-03 | Appliance identity survives restart; independent devices/clones do not share identity | Provisioning/migration tests |
 | AU-04 | Event ordering/cursors survive clock changes, retention and empty tables | Fake-clock and persistent-sequence tests |
-| AU-05 | Debug scopes/targets expire despite closed browser and reset on reboot | Service/API/browser and restart tests |
+| AU-05 | No temporary debug controls, endpoints, records or retention category exist | Service/API/browser and schema tests |
 | AU-06 | Secrets never enter API, logs, history, errors or exports | Sentinel-secret tests at all sinks and failure paths |
 | AU-07 | Quotas/retention/export stay bounded and expose gaps/degradation | Storage pressure, batch, pagination/export tests |
 | AU-08 | Roles, scopes, revocation and CSRF apply consistently | Negative HTTP/CLI/MCP tests |
@@ -539,7 +530,7 @@ Implementation completion requires all of the following, with missing hardware p
 - Multiple real saved WireGuard profiles, selected activation/startup, external-profile preservation and verified secret storage.
 - Generic Device networks with persistent addressing, original/translated local/VPN access and management protection.
 - Independent multi-resource rollback and startup/reboot reconciliation, including established-flow closure and unrelated-resource preservation.
-- Complete required audit events, reliable per-device identity/correlation, timed debug, Activity/export and bounded storage.
+- Complete required audit events, reliable per-device identity/correlation, Activity/export and bounded storage.
 - Passing final configured gate, separate routed Linux/VM evidence, inspected GUI and documented Pi/device results.
 - Current requirements/specs/knowledge/status/changelog and an honest remaining-work list.
 - No staging, commit, push, version change or unrequested live deployment.

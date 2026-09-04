@@ -1,7 +1,7 @@
 import { BENCH_CORE_API_VERSION, type ParseResult } from './contract';
 
 /**
- * The shared history and the timed diagnostics.
+ * The shared history and its retention policy.
  *
  * An activity page is what the appliance answered: the items in sequence
  * order, the cursor for the next page, the retained window the answer was
@@ -11,10 +11,9 @@ import { BENCH_CORE_API_VERSION, type ParseResult } from './contract';
 
 export const ACTIVITY_PATH = '/api/v1/activity';
 export const ACTIVITY_EXPORT_PATH = '/api/v1/activity/export';
-export const DIAGNOSTICS_SESSIONS_PATH = '/api/v1/diagnostics/sessions';
-export const DIAGNOSTICS_SETTINGS_PATH = '/api/v1/diagnostics/settings';
+export const ACTIVITY_RETENTION_PATH = '/api/v1/activity/retention';
 
-export const ACTIVITY_CATEGORIES = ['audit', 'event', 'debug'] as const;
+export const ACTIVITY_CATEGORIES = ['audit', 'event'] as const;
 export type ActivityCategory = (typeof ACTIVITY_CATEGORIES)[number];
 
 export interface ActivityEvent {
@@ -52,15 +51,26 @@ export interface LoggingHealth {
   auditWritable: boolean;
   failures: number;
   lastFailure: string;
-  droppedDebug: number;
 }
 
 export interface ActivityPage {
   items: ActivityEvent[];
   nextCursor: string;
+  total: number;
   retainedWindow: Record<string, RetainedWindow>;
   loggingHealth: LoggingHealth;
 }
+
+export const ACTIVITY_SORT_FIELDS = [
+  'time',
+  'activity',
+  'outcome',
+  'actor',
+  'target',
+] as const;
+export type ActivitySort = (typeof ACTIVITY_SORT_FIELDS)[number];
+export type ActivitySortOrder = 'asc' | 'desc';
+export type ActivityPageSize = 25 | 50 | 100 | 'all';
 
 /** The filters a query may carry; empty values are not sent. */
 export interface ActivityFilter {
@@ -75,7 +85,10 @@ export interface ActivityFilter {
   from?: string;
   to?: string;
   cursor?: string;
-  limit?: number;
+  limit?: number | 'all';
+  page?: number;
+  sort?: ActivitySort;
+  order?: ActivitySortOrder;
 }
 
 export function activityQuery(
@@ -95,43 +108,9 @@ export function activityQuery(
   return encoded === '' ? '' : `?${encoded}`;
 }
 
-export const DIAGNOSTIC_STATES = [
-  'active',
-  'stopped',
-  'expired',
-  'replaced',
-  'interrupted',
-] as const;
-export type DiagnosticState = (typeof DIAGNOSTIC_STATES)[number];
-
-export interface DiagnosticSession {
-  id: string;
-  scope: string;
-  target: string;
-  actorId: string;
-  minutes: number;
-  startedAt: Date;
-  expiresAt: Date;
-  state: DiagnosticState;
-  endedAt: Date | null;
-  endReason: string;
-  effective: 'normal' | 'debug';
-}
-
-export interface DiagnosticSessions {
-  items: DiagnosticSession[];
-  scopes: string[];
-  durations: number[];
-}
-
-export interface DiagnosticSettings {
+export interface ActivityRetentionSettings {
   retentionDays: Record<string, number>;
   quotaBytes: Record<string, number>;
-}
-
-export function diagnosticSessionPath(id: string, action?: string): string {
-  const base = `${DIAGNOSTICS_SESSIONS_PATH}/${encodeURIComponent(id)}`;
-  return action === undefined ? base : `${base}/${action}`;
 }
 
 function object(value: unknown, where: string): Record<string, unknown> {
@@ -233,70 +212,23 @@ export function parseActivityPageBody(value: unknown): ParseResult<ActivityPage>
         readEvent(item, `activity item ${index + 1}`),
       ),
       nextCursor: text(body, 'next_cursor'),
+      total: number(body, 'total'),
       retainedWindow,
       loggingHealth: {
         auditWritable: health.audit_writable !== false,
         failures: number(health, 'failures'),
         lastFailure: text(health, 'last_failure'),
-        droppedDebug: number(health, 'dropped_debug'),
       },
     };
   });
 }
 
-function readSession(value: unknown, where: string): DiagnosticSession {
-  const body = object(value, where);
-  const state = text(body, 'state');
-  if (!DIAGNOSTIC_STATES.includes(state as DiagnosticState)) {
-    throw new Error(`the ${where} reports the unknown state ${state}`);
-  }
-  return {
-    id: text(body, 'id'),
-    scope: text(body, 'scope'),
-    target: text(body, 'target'),
-    actorId: text(body, 'actor_id'),
-    minutes: number(body, 'minutes'),
-    startedAt: instant(body, 'started_at'),
-    expiresAt: instant(body, 'expires_at'),
-    state: state as DiagnosticState,
-    endedAt: optionalInstant(body, 'ended_at'),
-    endReason: text(body, 'end_reason'),
-    effective: text(body, 'effective') === 'debug' ? 'debug' : 'normal',
-  };
-}
-
-export function parseDiagnosticSessionBody(
+export function parseActivityRetentionSettingsBody(
   value: unknown,
-): ParseResult<DiagnosticSession> {
-  return attempt(() => readSession(value, 'diagnostic session'));
-}
-
-export function parseDiagnosticSessionsBody(
-  value: unknown,
-): ParseResult<DiagnosticSessions> {
+): ParseResult<ActivityRetentionSettings> {
   return attempt(() => {
-    const body = object(value, 'diagnostic sessions');
-    version(body, 'diagnostic sessions');
-    if (!Array.isArray(body.items))
-      throw new Error('the diagnostic sessions have no items');
-    const scopes = Array.isArray(body.scopes) ? body.scopes.map(String) : [];
-    const durations = Array.isArray(body.durations)
-      ? body.durations.filter((item): item is number => typeof item === 'number')
-      : [];
-    return {
-      items: body.items.map((item, index) => readSession(item, `session ${index + 1}`)),
-      scopes,
-      durations,
-    };
-  });
-}
-
-export function parseDiagnosticSettingsBody(
-  value: unknown,
-): ParseResult<DiagnosticSettings> {
-  return attempt(() => {
-    const body = object(value, 'diagnostic settings');
-    version(body, 'diagnostic settings');
+    const body = object(value, 'activity retention settings');
+    version(body, 'activity retention settings');
     const days = object(body.retention_days ?? {}, 'retention days');
     const bytes = object(body.quota_bytes ?? {}, 'quota bytes');
     const retentionDays: Record<string, number> = {};

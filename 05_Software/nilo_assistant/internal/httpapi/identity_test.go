@@ -18,7 +18,6 @@ import (
 	"nilo.local/nilo/internal/activity"
 	"nilo.local/nilo/internal/audit"
 	"nilo.local/nilo/internal/auth"
-	"nilo.local/nilo/internal/diagnostics"
 	"nilo.local/nilo/internal/identity"
 	"nilo.local/nilo/internal/network"
 	"nilo.local/nilo/internal/simulation"
@@ -116,17 +115,13 @@ func newAPIFixture(
 	if err != nil {
 		t.Fatalf("network.NewService: %v", err)
 	}
-	// The shared history and the timed diagnostics, wired the way serve does.
+	// The shared Activity history, wired the way serve does.
 	activityService, err := activity.NewService(activity.Options{Store: sqlite.NewActivityRepository(database), ApplianceID: "test-appliance", Now: clock.Now, Monitor: auditMonitor})
 	if err != nil {
 		t.Fatalf("activity.NewService: %v", err)
 	}
-	diagnosticsService, err := diagnostics.NewService(diagnostics.Options{Store: sqlite.NewDiagnosticRepository(database), Audit: auditWriter, BootID: "test-boot", Now: clock.Now, Dropped: auditMonitor.DroppedDebug})
-	if err != nil {
-		t.Fatalf("diagnostics.NewService: %v", err)
-	}
 	operations, err := network.NewOperationManager(network.OperationManagerOptions{
-		Changer: provider, Observer: provider, Audit: auditWriter, Debug: diagnosticsService,
+		Changer: provider, Observer: provider, Audit: auditWriter,
 		Now: clock.Now, NewID: func() string { return uuid.NewString() },
 	})
 	if err != nil {
@@ -135,7 +130,7 @@ func newAPIFixture(
 	handler, err := NewHandler(HandlerOptions{
 		Identity: service, Profile: "simulation", Catalog: catalog,
 		Network: networkService, Operations: operations, CookieSecurity: cookies,
-		Activity: activityService, Diagnostics: diagnosticsService, Audit: auditWriter,
+		Activity: activityService, Audit: auditWriter,
 	})
 	if err != nil {
 		t.Fatalf("NewHandler: %v", err)

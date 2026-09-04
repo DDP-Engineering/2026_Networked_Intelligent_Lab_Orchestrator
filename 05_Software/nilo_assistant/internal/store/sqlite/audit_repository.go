@@ -132,48 +132,26 @@ func (repository *AuditRepository) List(ctx context.Context, filter audit.Filter
 		envelope_version, appliance_id, boot_id, category, component,
 		actor_kind, outcome, severity, operation_id, target_label, time_source
 		FROM audit_events`
-	conditions := make([]string, 0, 11)
-	arguments := make([]any, 0, 12)
-	if filter.ActorID.String() != "00000000-0000-0000-0000-000000000000" {
-		conditions = append(conditions, "actor_id = ?")
-		arguments = append(arguments, filter.ActorID.String())
-	}
-	// A fixed list rather than a map, so one filter always produces one SQL text
-	// and each placeholder keeps its own value.
-	for _, match := range []struct{ column, value string }{
-		{"action", filter.Action},
-		{"subject_type", filter.SubjectType},
-		{"subject_id", filter.SubjectID},
-		{"category", string(filter.Category)},
-		{"component", filter.Component},
-		{"outcome", string(filter.Outcome)},
-		{"severity", string(filter.Severity)},
-		{"operation_id", filter.OperationID},
-	} {
-		if match.value != "" {
-			conditions = append(conditions, match.column+" = ?")
-			arguments = append(arguments, match.value)
-		}
-	}
-	if filter.AfterSequence > 0 {
-		conditions = append(conditions, "sequence > ?")
-		arguments = append(arguments, filter.AfterSequence)
-	}
-	if !filter.From.IsZero() {
-		conditions = append(conditions, "created_at >= ?")
-		arguments = append(arguments, filter.From.UTC().Format(time.RFC3339Nano))
-	}
-	if !filter.To.IsZero() {
-		conditions = append(conditions, "created_at < ?")
-		arguments = append(arguments, filter.To.UTC().Format(time.RFC3339Nano))
-	}
+	conditions, arguments := auditFilterConditions(filter, true)
 	if len(conditions) > 0 {
 		query += " WHERE " + strings.Join(conditions, " AND ")
 	}
-	query += " ORDER BY sequence ASC"
+	if filter.Sort == "" {
+		query += " ORDER BY sequence ASC"
+	} else {
+		direction := "ASC"
+		if filter.Order == audit.SortDescending {
+			direction = "DESC"
+		}
+		query += " ORDER BY " + auditSortExpression(filter.Sort) + " " + direction + ", sequence " + direction
+	}
 	if filter.Limit > 0 {
 		query += " LIMIT ?"
 		arguments = append(arguments, filter.Limit)
+		if filter.Offset > 0 {
+			query += " OFFSET ?"
+			arguments = append(arguments, filter.Offset)
+		}
 	}
 	rows, err := repository.execute().QueryContext(ctx, query, arguments...)
 	if err != nil {
@@ -192,6 +170,100 @@ func (repository *AuditRepository) List(ctx context.Context, filter audit.Filter
 		return nil, fmt.Errorf("iterate audit events: %w", err)
 	}
 	return events, nil
+}
+
+// Count reports the complete filtered result size. Cursor and page bounds are
+// deliberately ignored so the UI can calculate real page numbers.
+func (repository *AuditRepository) Count(ctx context.Context, filter audit.Filter) (int64, error) {
+	if err := repository.validateDatabase(); err != nil {
+		return 0, err
+	}
+	if err := filter.Validate(); err != nil {
+		return 0, err
+	}
+	conditions, arguments := auditFilterConditions(filter, false)
+	query := "SELECT COUNT(*) FROM audit_events"
+	if len(conditions) > 0 {
+		query += " WHERE " + strings.Join(conditions, " AND ")
+	}
+	var count int64
+	if err := repository.execute().QueryRowContext(ctx, query, arguments...).Scan(&count); err != nil {
+		return 0, fmt.Errorf("count audit events: %w", err)
+	}
+	return count, nil
+}
+
+func auditFilterConditions(filter audit.Filter, includeCursor bool) ([]string, []any) {
+	conditions := make([]string, 0, 12)
+	arguments := make([]any, 0, 14)
+	if filter.ActorID.String() != "00000000-0000-0000-0000-000000000000" {
+		conditions = append(conditions, "actor_id = ?")
+		arguments = append(arguments, filter.ActorID.String())
+	}
+	for _, match := range []struct{ column, value string }{
+		{"action", filter.Action},
+		{"subject_type", filter.SubjectType},
+		{"subject_id", filter.SubjectID},
+		{"category", string(filter.Category)},
+		{"outcome", string(filter.Outcome)},
+		{"severity", string(filter.Severity)},
+		{"operation_id", filter.OperationID},
+	} {
+		if match.value != "" {
+			conditions = append(conditions, match.column+" = ?")
+			arguments = append(arguments, match.value)
+		}
+	}
+	if strings.HasSuffix(filter.Component, ".*") {
+		prefix := strings.TrimSuffix(filter.Component, "*")
+		conditions = append(conditions, `component LIKE ? ESCAPE '\'`)
+		arguments = append(arguments, escapeLike(prefix)+"%")
+	} else if filter.Component != "" {
+		conditions = append(conditions, "component = ?")
+		arguments = append(arguments, filter.Component)
+	}
+	if includeCursor && filter.Sort != "" && filter.AfterSequence > 0 {
+		expression := auditSortExpression(filter.Sort)
+		operator := ">"
+		if filter.Order == audit.SortDescending {
+			operator = "<"
+		}
+		conditions = append(conditions, fmt.Sprintf("(%s %s ? OR (%s = ? AND sequence %s ?))", expression, operator, expression, operator))
+		arguments = append(arguments, filter.CursorValue, filter.CursorValue, filter.AfterSequence)
+	} else if includeCursor && filter.AfterSequence > 0 {
+		conditions = append(conditions, "sequence > ?")
+		arguments = append(arguments, filter.AfterSequence)
+	}
+	if !filter.From.IsZero() {
+		conditions = append(conditions, "created_at >= ?")
+		arguments = append(arguments, filter.From.UTC().Format(time.RFC3339Nano))
+	}
+	if !filter.To.IsZero() {
+		conditions = append(conditions, "created_at < ?")
+		arguments = append(arguments, filter.To.UTC().Format(time.RFC3339Nano))
+	}
+	return conditions, arguments
+}
+
+func auditSortExpression(field audit.SortField) string {
+	switch field {
+	case audit.SortTime:
+		return "strftime('%Y-%m-%dT%H:%M:%fZ', created_at)"
+	case audit.SortActivity:
+		return "action"
+	case audit.SortOutcome:
+		return "COALESCE(outcome, '')"
+	case audit.SortActor:
+		return "COALESCE(actor_kind, '') || char(31) || actor_id"
+	case audit.SortTarget:
+		return "COALESCE(NULLIF(target_label, ''), subject_id)"
+	default:
+		return "sequence"
+	}
+}
+
+func escapeLike(value string) string {
+	return strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(value)
 }
 
 func scanEvent(rows *sql.Rows) (audit.Event, error) {

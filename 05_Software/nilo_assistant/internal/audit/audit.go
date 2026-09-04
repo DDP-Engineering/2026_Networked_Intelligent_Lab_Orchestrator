@@ -24,16 +24,12 @@ var (
 // recorded nothing here", never an asserted value.
 const EnvelopeVersion = 2
 
-// Category separates the three reasons a record exists. Audit is always
-// collected for accountable actions and their results; events record
-// meaningful state changes and failures; debug is temporary internal detail.
-// Turning debug off never turns audit off.
+// Category separates accountable actions from operational events.
 type Category string
 
 const (
 	CategoryAudit Category = "audit"
 	CategoryEvent Category = "event"
-	CategoryDebug Category = "debug"
 )
 
 // ActorKind says what sort of thing acted, so a system action and a failed
@@ -92,7 +88,7 @@ const (
 )
 
 var (
-	knownCategories = map[Category]bool{CategoryAudit: true, CategoryEvent: true, CategoryDebug: true}
+	knownCategories = map[Category]bool{CategoryAudit: true, CategoryEvent: true}
 	knownActorKinds = map[ActorKind]bool{
 		ActorKindUser: true, ActorKindToken: true,
 		ActorKindSystem: true, ActorKindAnonymous: true,
@@ -199,6 +195,25 @@ func (event Event) validateEnvelope() error {
 	return nil
 }
 
+// SortField names one operator-visible Activity table column.
+type SortField string
+
+const (
+	SortTime     SortField = "time"
+	SortActivity SortField = "activity"
+	SortOutcome  SortField = "outcome"
+	SortActor    SortField = "actor"
+	SortTarget   SortField = "target"
+)
+
+// SortOrder controls the direction of an explicitly sorted listing.
+type SortOrder string
+
+const (
+	SortAscending  SortOrder = "asc"
+	SortDescending SortOrder = "desc"
+)
+
 // Filter selects an ordered audit-event subset. Zero values select all rows.
 type Filter struct {
 	ActorID       domain.ActorID
@@ -206,7 +221,13 @@ type Filter struct {
 	SubjectType   string
 	SubjectID     string
 	AfterSequence int64
-	Limit         int
+	// CursorValue is the primary sort value of the last row on the previous
+	// page. Sequence is the deterministic tie-breaker.
+	CursorValue string
+	Limit       int
+	Offset      int
+	Sort        SortField
+	Order       SortOrder
 
 	// Category, Component, Outcome, Severity and OperationID narrow the
 	// envelope. A row written before the envelope existed matches none of them,
@@ -223,11 +244,23 @@ type Filter struct {
 }
 
 func (filter Filter) Validate() error {
-	if filter.AfterSequence < 0 || filter.Limit < 0 {
+	if filter.AfterSequence < 0 || filter.Limit < 0 || filter.Offset < 0 {
 		return fmt.Errorf("%w: filter bounds cannot be negative", ErrInvalidEvent)
 	}
 	if !filter.From.IsZero() && !filter.To.IsZero() && !filter.To.After(filter.From) {
 		return fmt.Errorf("%w: time window must end after it starts", ErrInvalidEvent)
+	}
+	if filter.Sort != "" {
+		switch filter.Sort {
+		case SortTime, SortActivity, SortOutcome, SortActor, SortTarget:
+		default:
+			return fmt.Errorf("%w: unknown sort field %q", ErrInvalidEvent, filter.Sort)
+		}
+		if filter.Order != SortAscending && filter.Order != SortDescending {
+			return fmt.Errorf("%w: sorted listings need asc or desc order", ErrInvalidEvent)
+		}
+	} else if filter.Order != "" || filter.CursorValue != "" {
+		return fmt.Errorf("%w: sort order and cursor value need a sort field", ErrInvalidEvent)
 	}
 	return nil
 }

@@ -43,6 +43,18 @@ It does not attempt to prove:
 
 Those properties require later Linux VM, ARM64, and hardware-in-the-loop gates.
 
+### 2.1 Development-stage compatibility policy
+
+While NILO remains in active development, superseded functionality is removed
+directly. Do not add backward-compatibility aliases, parallel old/new API or CLI
+contracts, integration shims, or state/data conversion solely to preserve an
+earlier development build. Development state is disposable and should be reset
+or deleted when its owning feature is removed.
+
+An exception requires an explicit user decision to preserve a particular
+contract or dataset. Cleanup that deletes obsolete development data is allowed;
+it must not retain or translate that data into the replacement design.
+
 ## 3. Development topology
 
 ```text

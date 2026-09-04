@@ -7,19 +7,13 @@ import {
 import {
   ACTIVITY_EXPORT_PATH,
   ACTIVITY_PATH,
-  DIAGNOSTICS_SESSIONS_PATH,
-  DIAGNOSTICS_SETTINGS_PATH,
+  ACTIVITY_RETENTION_PATH,
   activityQuery,
-  diagnosticSessionPath,
   parseActivityPageBody,
-  parseDiagnosticSessionBody,
-  parseDiagnosticSessionsBody,
-  parseDiagnosticSettingsBody,
+  parseActivityRetentionSettingsBody,
   type ActivityFilter,
   type ActivityPage,
-  type DiagnosticSession,
-  type DiagnosticSessions,
-  type DiagnosticSettings,
+  type ActivityRetentionSettings,
 } from './activity';
 import {
   DEVICE_NETWORKS_PATH,
@@ -259,19 +253,11 @@ export interface BenchCoreClient {
     filter: ActivityFilter,
     format: 'jsonl' | 'csv',
   ): Promise<string>;
-  listDiagnosticSessions(credential: Credential): Promise<DiagnosticSessions>;
-  startDiagnosticSession(
+  getActivityRetention(credential: Credential): Promise<ActivityRetentionSettings>;
+  setActivityRetention(
     credential: Credential,
-    scope: string,
-    target: string,
-    minutes: number,
-  ): Promise<DiagnosticSession>;
-  stopDiagnosticSession(credential: Credential, id: string): Promise<DiagnosticSession>;
-  getDiagnosticSettings(credential: Credential): Promise<DiagnosticSettings>;
-  setDiagnosticSettings(
-    credential: Credential,
-    settings: DiagnosticSettings,
-  ): Promise<DiagnosticSettings>;
+    settings: ActivityRetentionSettings,
+  ): Promise<ActivityRetentionSettings>;
 
   signIn(username: string, password: string): Promise<BenchCoreSession>;
   currentSession(credential: Credential): Promise<BenchCoreSession>;
@@ -565,44 +551,22 @@ export function createBenchCoreClient(
       }),
     exportActivity: (credential, filter, format) =>
       exchangeText(ACTIVITY_EXPORT_PATH + activityQuery(filter, format), credential),
-    listDiagnosticSessions: (credential) =>
+    getActivityRetention: (credential) =>
       exchange({
-        path: DIAGNOSTICS_SESSIONS_PATH,
+        path: ACTIVITY_RETENTION_PATH,
         credential,
-        parse: parseDiagnosticSessionsBody,
+        parse: parseActivityRetentionSettingsBody,
       }),
-    startDiagnosticSession: (credential, scope, target, minutes) =>
+    setActivityRetention: (credential, settings) =>
       exchange({
-        path: DIAGNOSTICS_SESSIONS_PATH,
-        credential,
-        method: 'POST',
-        body: { scope, target, minutes },
-        parse: parseDiagnosticSessionBody,
-      }),
-    stopDiagnosticSession: (credential, id) =>
-      exchange({
-        path: diagnosticSessionPath(id, 'stop'),
-        credential,
-        method: 'POST',
-        body: {},
-        parse: parseDiagnosticSessionBody,
-      }),
-    getDiagnosticSettings: (credential) =>
-      exchange({
-        path: DIAGNOSTICS_SETTINGS_PATH,
-        credential,
-        parse: parseDiagnosticSettingsBody,
-      }),
-    setDiagnosticSettings: (credential, settings) =>
-      exchange({
-        path: DIAGNOSTICS_SETTINGS_PATH,
+        path: ACTIVITY_RETENTION_PATH,
         credential,
         method: 'PUT',
         body: {
           retention_days: settings.retentionDays,
           quota_bytes: settings.quotaBytes,
         },
-        parse: parseDiagnosticSettingsBody,
+        parse: parseActivityRetentionSettingsBody,
       }),
 
     signIn: (username, password) =>

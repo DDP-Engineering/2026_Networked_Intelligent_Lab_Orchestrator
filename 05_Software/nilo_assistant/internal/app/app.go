@@ -187,14 +187,6 @@ func (application *App) ActivityRepository() *sqlite.ActivityRepository {
 	return sqlite.NewActivityRepository(application.database)
 }
 
-// DiagnosticRepository returns the timed debug sessions.
-func (application *App) DiagnosticRepository() *sqlite.DiagnosticRepository {
-	if application == nil || application.database == nil {
-		return nil
-	}
-	return sqlite.NewDiagnosticRepository(application.database)
-}
-
 // AuditRepository returns the append-and-read event store, which the Activity
 // page reads and retention sweeps. Writes go through AuditWriter, so that every
 // recorded event carries a complete envelope.

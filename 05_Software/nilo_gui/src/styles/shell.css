@@ -1711,14 +1711,15 @@ input[type='radio'] {
 }
 .network-readiness dl > div {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto auto;
+  justify-content: start;
   align-items: baseline;
   gap: var(--space-2);
   min-width: 0;
 }
 .network-readiness dd {
   margin: 0;
-  text-align: right;
+  text-align: left;
 }
 .network-readiness > p {
   margin: var(--space-2) 0 0;
@@ -1807,9 +1808,120 @@ input[type='radio'] {
 
 /* ---------- activity ---------- */
 
+/*
+ * The audit listing is the page; everything else is a control on it. The head
+ * carries the title and category chips, so the
+ * chips are read as scope rather than as one more filter, and the panel below
+ * holds only what narrows the listing further.
+ */
+.activity-head {
+  align-items: stretch;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* Activity is a data workspace, so its scroll rail belongs at the right edge
+   of the workspace rather than at the generic reading-width boundary. */
+.activity-page .page-body {
+  max-width: none;
+}
+
+.activity-head-top {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+}
+
+.activity-head-text {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+/* The export control is a real button rather than the top row's quiet trigger:
+   it is the page's only action and has to be findable. */
+.activity-export {
+  border-color: var(--border-strong);
+  background: var(--surface-raised);
+  color: var(--text-strong);
+  font-size: var(--text-body);
+}
+
+.activity-export:hover {
+  border-color: var(--accent);
+  background: var(--surface-hover);
+}
+
+/* Category as chips: three targets of the control height that scroll rather
+   than wrap, so the head never grows a second line on a field display. */
+.activity-chips {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-bottom: var(--space-1);
+}
+
+.activity-chip {
+  min-height: var(--target-min);
+  padding: var(--space-1) var(--space-4);
+  flex: none;
+  border-radius: 999px;
+  font-size: var(--text-dense);
+}
+
+.activity-chip-on {
+  border-color: var(--accent);
+  background: var(--accent-subtle);
+  color: var(--text-strong);
+  font-weight: 600;
+}
+
+/* What the listing can be trusted to contain, above the listing itself. */
+.activity-banner {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.activity-banner-state {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-label);
+}
+
+.activity-banner-retention {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-label);
+}
+
+.activity-banner-count {
+  white-space: nowrap;
+}
+
+.activity-banner-gap {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-label);
+}
+
+.activity-banner-category {
+  color: var(--text);
+  font-weight: 600;
+}
+
 .activity-filters {
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
   align-items: end;
+  margin-top: 0;
 }
 
 /* A date input's intrinsic width is wider than its track; without this the
@@ -1819,10 +1931,217 @@ input[type='radio'] {
 .activity-filters .field select {
   min-width: 0;
 }
+
 .activity-filters .form-actions,
-.activity-filters p {
+.activity-filters-more,
+.activity-filter-note {
   grid-column: 1 / -1;
 }
+
+.activity-filters-more-fields {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.activity-filters .form-actions {
+  align-items: center;
+}
+
+.activity-filters .form-actions .menu {
+  margin-left: auto;
+}
+
+.activity-filter-count {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-label);
+}
+
+.activity-filter-note {
+  margin: 0;
+  color: var(--accent);
+  font-size: var(--text-label);
+}
+
+/* The action leads its cell; the function it belongs to follows in secondary
+   text rather than taking a column of its own. */
+.activity-action {
+  display: block;
+  color: var(--text-strong);
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
+.activity-value {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.activity-table td {
+  vertical-align: top;
+}
+
+.activity-sort {
+  min-height: var(--target-min);
+  padding: var(--space-1) 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.activity-sort:hover {
+  border-color: transparent;
+  color: var(--accent);
+}
+
+.activity-sort-mark {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/*
+ * The listing scrolls with the page rather than inside a box of its own.
+ *
+ * `.table-scroll` declares `min-height: 0`, which as a flex item of the
+ * scrolling page body means it absorbs the whole shrink: with a head, a health
+ * strip and nine filters above it, the box collapses to nothing and clips every
+ * row it holds. It keeps its own horizontal scroll for the six columns on a
+ * narrow panel; the vertical scrolling is the page's.
+ */
+.activity-page .table-scroll {
+  flex: none;
+}
+
+.activity-pagination {
+  display: flex;
+  align-items: end;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.activity-pagination .field {
+  grid-template-columns: auto auto;
+  align-items: center;
+}
+
+.activity-pagination select {
+  width: auto;
+  min-height: var(--control-height);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--control-radius);
+  background: var(--surface-base);
+  color: var(--text-strong);
+  font: inherit;
+}
+
+.activity-page-size select {
+  min-width: 7rem;
+}
+
+.activity-page-numbers {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.activity-page-numbers .button {
+  min-width: var(--target-min);
+  padding-inline: var(--space-2);
+}
+
+.activity-page-total {
+  align-self: center;
+  color: var(--text-muted);
+  font-size: var(--text-label);
+  white-space: nowrap;
+}
+
+/*
+ * An outcome badge. The word inside it is the signal; the tone and the mark
+ * beside it repeat that signal for a reader who is scanning, which is why
+ * neither is ever the only thing carrying the state.
+ */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  color: var(--text);
+  font-size: var(--text-label);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-badge-mark {
+  font-family: var(--font-mono);
+}
+
+.status-badge-ok {
+  border-color: var(--state-ok);
+  background: var(--state-ok-surface);
+  color: var(--state-ok);
+}
+
+.status-badge-pending {
+  border-color: var(--state-unknown);
+  background: var(--state-unknown-surface);
+  color: var(--state-unknown);
+}
+
+.status-badge-warn {
+  border-color: var(--state-warn);
+  background: var(--state-warn-surface);
+  color: var(--state-warn);
+}
+
+.status-badge-danger {
+  border-color: var(--state-danger);
+  background: var(--state-danger-surface);
+  color: var(--state-danger);
+}
+
+.status-badge-unknown {
+  border-color: var(--border-strong);
+  background: var(--state-unknown-surface);
+  color: var(--text-muted);
+}
+
+/* One section of the details dialog: the envelope, then Before and After, or
+   the structured record when the appliance wrote no comparison. */
+.activity-detail-section {
+  margin-top: var(--space-4);
+}
+
+.activity-detail-section h4 {
+  margin: 0 0 var(--space-2);
+  color: var(--text-strong);
+  font-size: var(--text-body);
+  font-weight: 600;
+}
+
+.activity-structured {
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--control-radius);
+  background: var(--surface-sunken);
+}
+
+.activity-structured dt {
+  font-family: var(--font-mono);
+}
+
+.activity-value-list {
+  margin: 0;
+  padding-left: var(--space-5);
+}
+
 .activity-details {
   margin: var(--space-1) 0 0;
   max-height: 16rem;
@@ -1833,6 +2152,47 @@ input[type='radio'] {
   font-family: var(--font-mono);
   font-size: var(--text-label);
   white-space: pre-wrap;
+}
+
+/*
+ * On a compact or constrained display the filter panel is a drawer, closed
+ * until it is wanted: nine fields and two buttons would otherwise push the
+ * first record below a 600-pixel viewport, and a listing that opens on its
+ * own controls is not record-first. The summary carries the count, so a
+ * filter in effect is never a filter out of sight.
+ */
+/* The summary keeps its list-item marker; the count follows the word inline. */
+.activity-filter-drawer-count {
+  margin-left: var(--space-3);
+  color: var(--text-muted);
+  font-size: var(--text-label);
+  font-weight: normal;
+}
+
+.activity-filter-drawer .activity-filters {
+  margin-top: var(--space-2);
+}
+
+/* Administration of the log, below the log and closed until it is wanted. */
+.activity-retention {
+  margin-top: var(--space-2);
+}
+
+.activity-retention h3 {
+  margin: 0 0 var(--space-3);
+}
+
+.activity-retention section {
+  padding-top: var(--space-2);
+}
+
+.activity-retention-form {
+  grid-template-columns: repeat(2, minmax(12rem, 18rem));
+  max-width: 42rem;
+}
+
+.activity-retention-form .form-actions {
+  grid-column: 1 / -1;
 }
 
 /* ---------- compact field viewport: labeled rail ---------- */
@@ -2006,5 +2366,38 @@ input[type='radio'] {
   }
   .help-panel {
     max-width: calc(100vw - 1rem);
+  }
+  /* The head stacks rather than squeezing the export control against the
+     title, and every filter takes the full width it needs to be typed into. */
+  .activity-head-top {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .activity-filters,
+  .activity-filters-more-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .activity-filters .form-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .activity-filters .form-actions .menu {
+    margin-left: 0;
+  }
+  .activity-pagination {
+    align-items: stretch;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  .activity-retention-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .activity-retention-form .form-actions {
+    grid-column: auto;
+  }
+  /* A record card states its outcome on its own line; the badge must not be
+     pushed off the card edge by the label beside it. */
+  .activity-table td .status-badge {
+    white-space: normal;
   }
 }

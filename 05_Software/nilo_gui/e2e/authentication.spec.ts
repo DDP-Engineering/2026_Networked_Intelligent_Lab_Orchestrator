@@ -331,7 +331,7 @@ test('opens the common Activity page filtered to identity mutations', async () =
 
   await expect(page.getByRole('heading', { name: 'Activity', level: 2 })).toBeVisible();
   await expect(
-    page.getByRole('textbox', { name: 'Function', exact: true }),
+    page.getByRole('combobox', { name: 'Component', exact: true }),
   ).toHaveValue('identity');
   await expect(page.getByText('identity.token.revoked', { exact: true })).toBeVisible();
   // The two subjects these name no longer exist; the history that names them

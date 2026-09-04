@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"nilo.local/nilo/internal/apiclient"
@@ -16,10 +17,12 @@ import (
 
 const activityUsage = `usage: nilo activity <command>
 
-  list    [--category audit|event|debug] [--component F] [--target T] [--actor ID]
+  list    [--category audit|event] [--component F] [--target T] [--actor ID]
           [--severity S] [--outcome O] [--operation ID] [--action A]
           [--from RFC3339] [--to RFC3339] [--cursor C] [--limit N]
   export  --format jsonl|csv [same filters] [--out FILE]
+  retention [--retention audit=90,event=14]
+            [--quota audit=268435456,event=134217728]
 
 Shared options: --server URL --token-file PATH [--ca-file PATH] [--json]`
 
@@ -60,6 +63,23 @@ func collectFilters(name string, arguments []string, streams networkIO, extra fu
 	return options, values, true
 }
 
+// parseCategoryValues turns "audit=90,event=14" into a JSON-ready map.
+func parseCategoryValues(text string) (map[string]int64, error) {
+	values := map[string]int64{}
+	for _, field := range strings.Split(text, ",") {
+		name, value, found := strings.Cut(strings.TrimSpace(field), "=")
+		if !found {
+			return nil, fmt.Errorf("%q is not category=value", field)
+		}
+		number, err := strconv.ParseInt(strings.TrimSpace(value), 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("%q is not a number", value)
+		}
+		values[strings.TrimSpace(name)] = number
+	}
+	return values, nil
+}
+
 // runActivityCommand implements `nilo activity`.
 func runActivityCommand(ctx context.Context, arguments []string, streams networkIO) int {
 	if len(arguments) == 0 {
@@ -92,6 +112,33 @@ func runActivityCommand(ctx context.Context, arguments []string, streams network
 		}
 		values.Set("format", format)
 		return activityDownload(ctx, options, streams, "/api/v1/activity/export?"+values.Encode(), out)
+	case "retention":
+		var retention, quota string
+		options, remaining, ok := parseNetworkFlags("activity retention", arguments[1:], streams, func(flags *flag.FlagSet) {
+			flags.StringVar(&retention, "retention", "", "retention days per category, for example audit=90,event=14")
+			flags.StringVar(&quota, "quota", "", "quota bytes per category")
+		})
+		if !ok || len(remaining) != 0 {
+			return 2
+		}
+		if retention == "" && quota == "" {
+			return networkRequest(ctx, options, streams, http.MethodGet, "/api/v1/activity/retention", nil)
+		}
+		if retention == "" || quota == "" {
+			fmt.Fprintln(streams.stderr, "a policy change needs both --retention and --quota")
+			return 2
+		}
+		days, err := parseCategoryValues(retention)
+		if err != nil {
+			fmt.Fprintln(streams.stderr, err)
+			return 2
+		}
+		bytes, err := parseCategoryValues(quota)
+		if err != nil {
+			fmt.Fprintln(streams.stderr, err)
+			return 2
+		}
+		return networkRequest(ctx, options, streams, http.MethodPut, "/api/v1/activity/retention", map[string]any{"retention_days": days, "quota_bytes": bytes})
 	default:
 		fmt.Fprintf(streams.stderr, "unknown activity command %q\n%s\n", arguments[0], activityUsage)
 		return 2
