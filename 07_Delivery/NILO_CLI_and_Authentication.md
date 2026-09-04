@@ -88,12 +88,29 @@ consequences worth relying on:
 
 ## 3. The `nilo admin` command line
 
-### What it is, and what it is not
+`nilo admin` administers identities and API tokens in one of two modes. A
+command uses exactly one of them:
 
-The administration commands are the **local** administration boundary. They do
-not authenticate the operator running them, because write access to the NILO
-data directory is already equivalent to full control of its database; a
-password prompt there would add ceremony without adding a boundary.
+| | Local mode | Remote mode |
+|---|---|---|
+| Selected by | `--data-dir D` | `--server URL --token-file PATH` |
+| Runs | on the appliance, against its data directory | anywhere that reaches the appliance's HTTPS listener |
+| Authority | write access to the data directory | the token owner's role, narrowed by the token's scopes, checked by NILO on every request |
+| Actor recorded | `--actor`, an enabled administrator named for attribution | the token that made the request; there is no `--actor` |
+| Permanent deletion | not offered | `user delete` and `token delete`, behind an explicit confirmation |
+| Output | JSON | readable by default; the appliance's own JSON document with `--json` |
+
+Combining `--data-dir` with `--server` or `--token-file`, or giving one remote
+option without the other, is a usage error (exit `2`) that opens nothing and
+contacts nothing. So is `--actor` in remote mode, or `--json`, `--ca-file` and
+`--confirm-delete` in local mode. `nilo admin bootstrap` is local only.
+
+### Local mode: what it is, and what it is not
+
+The local commands are the **local** administration boundary. They do not
+authenticate the operator running them, because write access to the NILO data
+directory is already equivalent to full control of its database; a password
+prompt there would add ceremony without adding a boundary.
 
 `--actor` names an existing **enabled administrator** whose identity is
 recorded as the audit actor. It is attribution, not authentication. A
@@ -102,17 +119,37 @@ non-administrator or disabled `--actor` is refused.
 Protect the data directory with filesystem permissions accordingly. Anyone who
 can write to it can administer NILO.
 
+### Remote mode: what it is
+
+The remote commands are an ordinary API client. They call the same identity
+administration routes the browser Authentication page calls (section 5), with
+the bearer token read from `--token-file`, and NILO decides every request the
+way it decides a browser's: the token must be usable, its owner's role
+narrowed by its scopes must hold the route's permission, and every identity
+rule in section 5 applies inside the appliance. The command adds no rule of
+its own and can obtain nothing the same token could not obtain with `curl`.
+
+The token is read from the file named by `--token-file` and from nowhere else.
+There is no flag that accepts a token value, because a command line is
+readable by every other process on the host and survives in shell history. A
+missing, empty or unreadable token file is reported before any request is
+made. `--ca-file` pins the certificate authority of a private listener.
+
 ### Rules that hold for every command
 
-- `--data-dir` is required and must be an absolute path.
-- Passwords are read from **standard input**, never from a command argument, so
-  they never enter a process listing or shell history.
-- No command prints a password back.
-- Output is JSON on standard output; diagnostics go to standard error.
-- Exit `0` on success, `1` on a rejected or failed operation, `2` on a usage
-  error.
+- Passwords are read from **standard input**, never from a command argument,
+  in both modes. `user create` and `user reset-password` read the password
+  twice and refuse a mismatch; the appliance enforces the minimum of 12 bytes.
+- No command prints a password back, in any mode, on any stream.
+- Data goes to standard output; prompts, confirmations, warnings and errors go
+  to standard error. Local output is JSON. Remote output is readable by
+  default and, with `--json`, the appliance's own document and nothing else on
+  standard output, so a script reads exactly what the API said.
+- Exit `0` on success, `1` on a rejected or failed operation (including a
+  refusal by the appliance, an unreachable appliance and a cancelled
+  confirmation), `2` on a usage error.
 
-### Command reference
+### Local command reference
 
 ```text
 nilo admin bootstrap      --data-dir D --username U
@@ -130,9 +167,149 @@ nilo admin token revoke   --data-dir D --actor A --id T
 `R` is `administrator`, `operator` or `viewer`. Usernames are folded to lower
 case and may contain letters, digits, `-`, `_` and `.`.
 
-`bootstrap`, `user create` and `user reset-password` read a password from
-standard input. Each reads it twice and refuses a mismatch. A password must be
-at least 12 bytes.
+### Remote command reference
+
+Every remote command takes `--server URL --token-file PATH [--ca-file PATH]
+[--json]`, written here as `...`:
+
+```text
+nilo admin user list           ...
+nilo admin user create         ... --username U --role R
+nilo admin user set-role       ... --username U --role R
+nilo admin user enable         ... --username U
+nilo admin user disable        ... --username U
+nilo admin user reset-password ... --username U
+nilo admin user delete         ... --username U [--confirm-delete]
+nilo admin token list          ...
+nilo admin token create        ... --owner U --name N [--scopes a,b] [--expires-in 720h]
+nilo admin token revoke        ... --id T
+nilo admin token delete        ... --id T [--confirm-delete]
+```
+
+| Command | Request | On success |
+|---|---|---|
+| `user list` | `GET /api/v1/users` | the listing |
+| `user create` | `POST /api/v1/users` | the new identity |
+| `user set-role` | `PUT /api/v1/users/{u}/role` | the re-read listing |
+| `user enable`, `user disable` | `PUT /api/v1/users/{u}/enabled` | the re-read listing |
+| `user reset-password` | `PUT /api/v1/users/{u}/password` | the re-read listing |
+| `user delete` | `DELETE /api/v1/users/{u}` | the re-read listing |
+| `token list` | `GET /api/v1/tokens` | the listing |
+| `token create` | `POST /api/v1/tokens` | the token and, once, its secret |
+| `token revoke` | `POST /api/v1/tokens/{id}/revoke` | the re-read listing |
+| `token delete` | `DELETE /api/v1/tokens/{id}` | the re-read listing |
+
+A refusal exits `1` and prints the appliance's stable error code on standard
+error, for example `the appliance refused the request: last_administrator
+(HTTP 409)`. The codes are those of section 5; `forbidden` is a usable token
+without the route's permission and `unauthorized` is a token that cannot be
+used at all (revoked, expired, unknown, or whose owner is disabled).
+
+### Administering a Raspberry Pi appliance remotely
+
+The appliance is served over HTTPS at `https://nilo.local`. On the appliance
+itself, once, issue an administrator token in local mode and copy it to the
+administration workstation with the permissions of a private key:
+
+```bash
+sudo nilo admin token create --data-dir /var/lib/nilo --actor admin \
+  --owner admin --name workstation-admin --expires-in 720h
+```
+
+```bash
+install -m 0600 /dev/null ~/.config/nilo/admin.token
+# paste the token value printed once by the command above into that file
+```
+
+From the workstation, list the identities:
+
+```bash
+nilo admin user list --server https://nilo.local --token-file ~/.config/nilo/admin.token
+```
+
+```text
+USERNAME  ROLE           STATE    ID
+admin     administrator  enabled  0199...
+operator  operator       enabled  0199...
+```
+
+Add an operator, with the password piped in from a secret manager rather than
+typed:
+
+```bash
+printf '%s\n%s\n' "$OPERATOR_PASSWORD" "$OPERATOR_PASSWORD" | \
+  nilo admin user create --username line-3 --role operator \
+    --server https://nilo.local --token-file ~/.config/nilo/admin.token
+```
+
+Issue a narrowed token for a script and store the secret at once; it is shown
+exactly once and the warning on standard error says so:
+
+```bash
+nilo admin token create --owner line-3 --name line-3-monitor \
+  --scopes status.read,network.read --expires-in 720h \
+  --server https://nilo.local --token-file ~/.config/nilo/admin.token --json
+```
+
+```json
+{"api_version":"nilo.http/1","token":{"id":"0199...","name":"line-3-monitor","owner":"line-3",
+ "scopes":["network.read","status.read"],"created_at":"2026-09-04T09:00:00Z",
+ "expires_at":"2026-10-04T09:00:00Z","revoked":false,"revoked_at":null},"secret":"nilo_..."}
+```
+
+Disable an identity, then revoke a token, from a private listener with its own
+certificate authority:
+
+```bash
+nilo admin user disable --username line-3 \
+  --server https://nilo.local --token-file ~/.config/nilo/admin.token --ca-file ~/.config/nilo/nilo-ca.pem
+nilo admin token revoke --id 0199... \
+  --server https://nilo.local --token-file ~/.config/nilo/admin.token --ca-file ~/.config/nilo/nilo-ca.pem
+```
+
+### Permanent deletion from the command line
+
+`user delete` and `token delete` are the only destructive commands, and they
+are explicit twice over. First the command reads the listing and states on
+standard error exactly what it is about to remove:
+
+```text
+This permanently deletes user "line-3" (id 0199..., role operator, disabled). Its browser sessions are removed with it.
+This permanently deletes API token 0199... (name "line-3-monitor", owner line-3, revoked, expires 2026-10-04T09:00:00Z). The record cannot be recovered.
+```
+
+Then it needs consent, and only one of two things counts as consent:
+
+- **On a terminal**, the username or token ID typed back exactly:
+
+  ```text
+  $ nilo admin user delete --username line-3 --server https://nilo.local --token-file ~/.config/nilo/admin.token
+  This permanently deletes user "line-3" (id 0199..., role operator, disabled). Its browser sessions are removed with it.
+  Type the username to confirm: line-3
+  deleted user "line-3"
+  ```
+
+  Anything else prints `deletion cancelled; nothing deleted` and exits `1`.
+- **Without a terminal** (a script, a pipe), the dedicated `--confirm-delete`
+  flag. Without it the command prints `noninteractive deletion requires
+  --confirm-delete; nothing deleted` and exits `2`. The flag is also accepted on
+  a terminal, as the same consent given up front.
+
+  ```bash
+  nilo admin token delete --id 0199... --confirm-delete \
+    --server https://nilo.local --token-file ~/.config/nilo/admin.token --json </dev/null
+  ```
+
+No other flag is consent. `--acknowledge`, which acknowledges a previewed
+network change, is not an admin option at all and is refused as unknown. A
+refused or cancelled deletion has made exactly one request, the listing read.
+
+The rules of section 5 hold unchanged: the last enabled administrator cannot be
+deleted (`last_administrator`), an identity that still owns API tokens cannot
+be deleted until they are deleted (`user_has_tokens`), an already-deleted
+subject answers `user_not_found` or `token_not_found`, and a subject the
+listing does not know is still sent so that the appliance, not the command,
+gives that answer. Every attempt, applied or refused, is on record (section 7).
 
 ### Invariants the commands enforce
 
@@ -142,17 +319,18 @@ at least 12 bytes.
   command with no `--actor`: it attributes the creation to the administrator it
   creates.
 - **The last administrator survives.** Disabling the last enabled
-  administrator, or changing its role away from Administrator, is refused and
-  leaves the identity unchanged. You cannot lock yourself out this way.
-- **These commands disable; they never delete.** There is no
-  `nilo admin user delete` and no `nilo admin token delete`. Permanent deletion
-  is reached through the HTTP API in section 5 and the browser page in
-  section 6, where the confirmation that it needs can actually be asked for.
+  administrator, changing its role away from Administrator, or deleting it, is
+  refused and leaves the identity unchanged, including when two such changes
+  race through separate connections. You cannot lock yourself out this way.
+- **The local commands disable; they never delete.** There is no local
+  `user delete` or `token delete`: the confirmation a deletion needs is asked
+  for in remote mode, over the HTTP API in section 5 and the browser page in
+  section 6.
 - **Disabling or resetting invalidates sessions.** Both immediately revoke
   every browser session that identity holds, server-side, including a session
   a login that checked the replaced password had not yet finished creating.
-- **Safe to run beside a running server.** An administration command opens the
-  data directory without starting the appliance, so it leaves running
+- **Safe to run beside a running server.** A local administration command opens
+  the data directory without starting the appliance, so it leaves running
   operations and the equipment they hold exactly as it found them.
 - **A token secret is shown once.** `token create` is the only command that
   ever prints a secret. NILO stores only a one-way verifier of it, so no later
@@ -314,7 +492,7 @@ state.
 
 |  | Browser session | API token |
 |---|---|---|
-| Established by | password login | `nilo admin token create` |
+| Established by | password login | `nilo admin token create` or the API tokens page |
 | Carried in | `nilo_session` cookie | `Authorization: Bearer` header |
 | Lifetime | 12 hours, absolute | none, or `--expires-in` |
 | Revocable server-side | yes, per session or per identity | yes, per token |
@@ -468,15 +646,34 @@ does not happen at all. Reads and rejected/no-op mutations add no mutation event
 | `identity.token.deleted` | api_token |
 
 The two deletion events carry the safe description of what was removed, because
-the record itself no longer exists to be looked up. `identity.user.deleted`
-carries the username, the role and the enabled state the identity had.
-`identity.token.deleted` carries the token name, the owner's user ID, the
-scopes, the expiry and whether the token was already revoked or expired. Neither
-carries a secret or a verifier, and both remain listable and exportable after
-their subject is gone.
+the record itself no longer exists to be looked up, and they are written so that
+they read on their own: the subject's name is the event's target label (the
+username, or the token name), and the details carry the acting administrator's
+username. `identity.user.deleted` carries the username, the role and the
+enabled state the identity had. `identity.token.deleted` carries the token name,
+the owner's user ID and username, the scopes, the expiry and whether the token
+was already revoked or expired. Neither carries a secret or a verifier, and both
+remain listable and exportable after their subject is gone, without joining the
+event to any table.
 
-Activity can list and export these events with `component=identity`. Login
-attempts use their separate access-audit action and are not mutation events.
+A **refused** deletion is on record too. It is not a mutation event, because
+nothing changed; it is a denied decision, written after the refusing
+transaction has rolled back:
+
+| Action | Subject | Outcome | Reason codes |
+|---|---|---|---|
+| `identity.user.delete_refused` | username | `denied`, severity `warning` | `last_administrator`, `user_has_tokens`, `user_not_found`, `not_administrator` |
+| `identity.token.delete_refused` | api_token | `denied`, severity `warning` | `token_not_found`, `not_administrator` |
+
+Each carries the requested subject as its target label, the actor as for any
+other identity event, and `reason` and `actor_username` in its details. A
+credential that lacks the route's permission never reaches this decision: the
+HTTP boundary refuses it with `403` and records `identity.access.denied` with
+the permission and route, exactly as for every other protected route.
+
+Activity can list and export these events with `component=identity`; the
+refusals are the ones with `outcome=denied`. Login attempts use their separate
+access-audit action and are not mutation events.
 
 ## 8. Upgrading an existing installation
 
@@ -507,9 +704,9 @@ Do not plan around these; they are not in this release.
   else.
 - Custom roles, arbitrary permission editing, single sign-on, multi-factor
   authentication, and email-based account recovery.
-- Token rotation, and permanent deletion from the command line: `nilo admin`
-  disables and revokes only. Permanent deletion is in the HTTP API and the
-  browser page.
+- Token rotation, and permanent deletion in local mode: the `--data-dir`
+  commands disable and revoke only. Permanent deletion is in the HTTP API, the
+  browser page and the remote command line.
 - MCP transport and operation endpoints.
 - Suppressed terminal echo while typing a password. NILO never echoes or prints
   a password itself, but your terminal does while you type it. Prefer piping

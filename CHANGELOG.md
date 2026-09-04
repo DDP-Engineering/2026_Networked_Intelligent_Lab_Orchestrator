@@ -7,6 +7,16 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Added
 
+- `nilo network operation list`, the listing of recent and pending managed
+  changes the browser uses to reattach after a reload.
+- Remote mode for `nilo admin user` and `nilo admin token` over `--server` and
+  `--token-file`, calling the identity administration routes with the same
+  permissions as the browser; the local `--data-dir` commands are unchanged.
+- `nilo admin user delete` and `nilo admin token delete` in remote mode, which
+  print exactly what will be removed and need the subject typed back on a
+  terminal or the dedicated `--confirm-delete` flag without one.
+- `identity.user.delete_refused` and `identity.token.delete_refused` denied
+  audit records naming the actor, the requested subject and the reason.
 - Permanent deletion of identities and API tokens, over
   `DELETE /api/v1/users/{username}` (`users.manage`) and
   `DELETE /api/v1/tokens/{id}` (`tokens.manage.all`).
@@ -18,6 +28,11 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Changed
 
+- Deletion audit records carry the subject's name as their target label and
+  the actor's and, for a token, the owner's username, so they read after the
+  row is gone without a join.
+- The root `nilo` usage names every command group, including `activity`,
+  `diagnostics` and both `admin` modes.
 - Deleting an identity removes its browser sessions with it, and is refused
   with `last_administrator` for the last enabled administrator and
   `user_has_tokens` while it owns any token, revoked and expired included.

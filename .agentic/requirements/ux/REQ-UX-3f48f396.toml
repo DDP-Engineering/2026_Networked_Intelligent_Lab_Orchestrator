@@ -1,0 +1,34 @@
+schema = 1
+
+id = "REQ-UX-3f48f396"
+
+title = "Make every command group discoverable from the root usage"
+
+status = "active"
+
+requirement = """
+When `nilo` is invoked without a recognized command, the command-line interface shall print a
+usage on standard error that names the `serve`, `admin`, `network`, `activity` and `diagnostics`
+command groups, states that `admin` runs locally with `--data-dir` or remotely with `--server`
+and `--token-file`, and exit 2.
+"""
+
+verification = "A command test runs the built binary with an unknown command and asserts exit 2 and that standard error names serve, admin, network, activity and diagnostics together with --data-dir, --server and --token-file."
+
+affected_paths = [
+    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/nilo_assistant/cmd/nilo/main_usage_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/cmd/nilo/main_usage_test.go::TestRootUsageNamesEveryCommandGroup",
+    "05_Software/nilo_assistant/cmd/nilo/main_test.go::TestNiloCLIContract",
+]
+
+spec = ""
+
+priority = "normal"
+rationale = "The activity and diagnostics groups exist but the root usage does not mention them, so an operator at the console cannot find them."
+
+created = 2026-09-04
+updated = 2026-09-04

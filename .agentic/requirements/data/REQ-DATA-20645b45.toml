@@ -1,0 +1,38 @@
+schema = 1
+
+id = "REQ-DATA-20645b45"
+
+title = "Carry stable display labels on identity deletion audit records"
+
+status = "active"
+
+requirement = """
+When an identity or an API token is permanently deleted, Bench Core shall write the applied
+deletion audit record with the subject's display name as its target label (the username, or the
+token name) and with the acting administrator's username and, for a token, its owner's username in
+its details, so the record reads on its own after the identity or token row no longer exists and
+without joining the record to any other table.
+"""
+
+verification = "A service test deletes a token and then its owner, reads both records back from the audit repository after the rows are gone and asserts the target label, actor username and owner username without reading the identity tables; an HTTP test deletes through the routes and asserts the labels in the stored events; a live command test asserts the labels after a remote deletion; every serialized field is scanned for password, secret and verifier canaries."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/identity/service.go",
+    "05_Software/nilo_assistant/internal/identity/service_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/deletion_audit_test.go",
+    "05_Software/nilo_assistant/cmd/nilo/admin_live_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/identity/service_test.go::TestDeletionsAreAuditedOnceWithCompleteSafeDetails",
+    "05_Software/nilo_assistant/internal/httpapi/deletion_audit_test.go::TestRefusedAndAppliedDeletionsReadFromTheHistoryAlone",
+    "05_Software/nilo_assistant/cmd/nilo/admin_live_test.go::TestRemoteAdministrationAgainstARealApplianceHonoursRolesScopesAndCredentialState",
+]
+
+spec = ""
+
+priority = "high"
+rationale = "A deletion record that names only an identifier becomes unreadable the moment the identifier's row is gone, which is exactly when the record is needed."
+
+created = 2026-09-04
+updated = 2026-09-04

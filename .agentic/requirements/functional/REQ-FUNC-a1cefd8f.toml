@@ -1,0 +1,39 @@
+schema = 1
+
+id = "REQ-FUNC-a1cefd8f"
+
+title = "List managed network operations from the command line"
+
+status = "active"
+
+requirement = """
+When an operator invokes `nilo network operation list` with the shared server and token-file
+options, the command-line interface shall request the appliance's managed network operation
+listing over the authenticated network API with the file-sourced bearer token and print that
+listing, unaltered with `--json` and indented otherwise, exiting 0 on success, 1 when the appliance
+refuses or cannot be reached, and 2 when an extra argument or a filter flag is supplied, because the
+listing route accepts no filters.
+"""
+
+verification = "A command test runs `network operation list` against a recording HTTP stub and asserts exactly one authenticated GET to /api/v1/network/operations with no query string, exit 0, and with --json the stub's document byte-for-byte on standard output; a run with an extra argument or an unknown --state flag exits 2 and makes no request; a stub answering 403 yields exit 1 with the appliance's error code on standard error; the live appliance test lists operations through a real simulation server."
+
+affected_paths = [
+    "05_Software/nilo_assistant/cmd/nilo/network.go",
+    "05_Software/nilo_assistant/cmd/nilo/network_operation_list_test.go",
+    "05_Software/nilo_assistant/cmd/nilo/admin_live_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/cmd/nilo/network_operation_list_test.go::TestOperationListCallsTheListingRoute",
+    "05_Software/nilo_assistant/cmd/nilo/network_operation_list_test.go::TestOperationListTakesNoFiltersOrArguments",
+    "05_Software/nilo_assistant/cmd/nilo/network_operation_list_test.go::TestOperationListRefusalExitsOneWithTheApplianceCode",
+    "05_Software/nilo_assistant/cmd/nilo/admin_live_test.go::TestRemoteAdministrationAgainstARealApplianceHonoursRolesScopesAndCredentialState",
+]
+
+spec = ""
+
+priority = "normal"
+rationale = "The browser lists operations to reattach to a pending change after a reload; a script needs the same view to find the operation it must confirm."
+
+created = 2026-09-04
+updated = 2026-09-04

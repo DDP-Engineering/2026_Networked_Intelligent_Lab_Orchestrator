@@ -27,6 +27,13 @@ nilo admin user reset-password --data-dir <absolute-path> --actor <administrator
 nilo admin token create --data-dir <absolute-path> --actor <administrator> --owner <name> --name <label> [--scopes a,b] [--expires-in 720h]
 nilo admin token list --data-dir <absolute-path>
 nilo admin token revoke --data-dir <absolute-path> --actor <administrator> --id <token-id>
+
+nilo admin user list|create|set-role|enable|disable|reset-password|delete ... --server <url> --token-file <path> [--ca-file <pem>] [--json] [--confirm-delete]
+nilo admin token list|create|revoke|delete ... --server <url> --token-file <path> [--ca-file <pem>] [--json] [--confirm-delete]
+
+nilo network ... --server <url> --token-file <path>
+nilo activity list|export ... --server <url> --token-file <path>
+nilo diagnostics ... --server <url> --token-file <path>
 ```
 
 The simulation server exposes `POST /api/v1/auth/login`, and the authenticated
@@ -48,8 +55,12 @@ revoking: the record itself goes, with the identity's browser sessions, in the
 one transaction that also appends the audit event. The last enabled
 administrator cannot be deleted, and an identity that still owns any API token
 is refused rather than cascaded. The `nilo admin` commands administer identities
-locally and deliberately offer no deletion. The role and permission model, the command reference, the
-authentication routes and the upgrade behavior are documented in
+locally with `--data-dir`, where they deliberately offer no deletion, or
+remotely with `--server` and `--token-file`, where they are an ordinary client
+of the same routes and offer `user delete` and `token delete` behind a typed
+confirmation or `--confirm-delete`. A refused deletion is recorded as a denied
+audit event with its reason. The role and permission model, the command
+reference, the authentication routes and the upgrade behavior are documented in
 `../../07_Delivery/NILO_CLI_and_Authentication.md`.
 
 For the complete Windows-browser and WSL2-backend workflow, including exact

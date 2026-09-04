@@ -32,6 +32,7 @@ const networkUsage = `usage: nilo network <command>
   device-networks create --file PATH|update ID --file PATH
   device-networks enable ID|disable ID|delete ID
   device-networks check ID [--tcp-port N]
+  operation list                      recent and pending managed changes
   operation status ID                 read one managed change
   operation acknowledge ID --revision R
   operation confirm ID                keep a change inside its window
@@ -182,6 +183,19 @@ func networkInterface(ctx context.Context, arguments []string, streams networkIO
 }
 
 func networkOperation(ctx context.Context, arguments []string, streams networkIO) int {
+	// The listing is the one operation action without an identifier. The route
+	// takes no filters, so none are offered: an argument here is a mistake.
+	if len(arguments) >= 1 && arguments[0] == "list" {
+		options, remaining, ok := parseNetworkFlags("operation list", arguments[1:], streams, nil)
+		if !ok {
+			return 2
+		}
+		if len(remaining) != 0 {
+			fmt.Fprintln(streams.stderr, "operation list takes no arguments or filters: the appliance offers none")
+			return 2
+		}
+		return networkRequest(ctx, options, streams, http.MethodGet, "/api/v1/network/operations", nil)
+	}
 	if len(arguments) < 2 {
 		fmt.Fprintln(streams.stderr, "operation requires an action and an operation identifier")
 		return 2

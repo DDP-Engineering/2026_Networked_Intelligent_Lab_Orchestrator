@@ -1,6 +1,21 @@
 # Bench Core foundation
 
-## Purpose
+## Routing
+
+Select this page for the Go Bench Core under `05_Software/nilo_assistant/`:
+the `nilo` command line (`serve`, `admin` in local and remote mode, `network`,
+`activity`, `diagnostics`), the authenticated `/api/v1` HTTP routes and their
+permissions, identities, sessions, API tokens and their audit events, network
+operations, the simulation catalog, and the SQLite repositories. Start at
+`cmd/nilo/main.go` for a command, `internal/httpapi/server.go` for a route
+(the one permission table), `internal/identity/service.go` for an identity
+rule, and `internal/network/operation.go` for a managed change; the focused
+tests sit beside each file. The browser interface belongs to *Browser GUI
+foundation*; the privileged NetworkManager helper and its system tests are in
+`internal/nethelper/` and `02_Tools/tests/network/`; the Python integration
+packages belong to *Integration platform*.
+
+## Purpose and boundaries
 
 The Go Bench Core owns validated configuration, immutable operation state, identity and access control, policy and approvals, durable sessions and evidence, application startup reconciliation, and the authenticated HTTP boundary. It exposes read-only Network MCP tools; live interface networking and WireGuard readiness use a separate privileged NetworkManager helper; hardware-family integrations and live WireGuard management remain unimplemented.
 
@@ -9,11 +24,39 @@ Two authorization decisions live here and stay separate. `identity.Service` deci
 ## Public interface
 
 `nilo network` calls the authenticated `/api/v1/network` interface for status,
-statistics, interfaces, WireGuard and separate operation acknowledgement,
-confirmation and rollback. `/mcp` offers exactly the three read tools over the
-same service. WireGuard reads expose safe metadata only.
+statistics, interfaces, WireGuard, device networks, the operation listing and
+separate operation acknowledgement, confirmation and rollback. `/mcp` offers
+exactly the three read tools over the same service. WireGuard reads expose safe
+metadata only.
 
-`cmd/nilo` provides version reporting, the `serve-foundation-check` composition smoke command, development token issuance, the `nilo admin` local administration commands, and explicit simulation/appliance servers. Protected HTTP contracts provide login, logout, the current session, status, deterministic integration and device inventory for the selected simulation scenario, the identity listing, and the identity and token administration routes the browser Authentication page drives. Internal consumers compose the foundation with `app.Open` and authorize through `app.IdentityService()`, submit work through `operation.Service`, resolve policy through `policy.Resolver`, and use the narrow repository interfaces owned by the domain packages. Only a starting server composes with `app.New`, which is `app.Open` followed by startup reconciliation; every other command opens the appliance without touching the operations recorded in it.
+`nilo admin user|token` run in exactly one of two modes: local (`--data-dir`,
+write access is the authority, `--actor` is attribution, no deletion) or remote
+(`--server` with `--token-file`, an ordinary `internal/apiclient` client of the
+identity administration routes, where the appliance authorizes the token on
+every request and `user delete` / `token delete` exist behind a typed
+confirmation or `--confirm-delete`). Ambiguous or incomplete mode options exit 2
+before anything is opened or contacted. The root usage names every group.
+
+`cmd/nilo` provides version reporting, the `serve-foundation-check` composition smoke command, development token issuance, the `nilo admin` local and remote administration commands, the `network`, `activity` and `diagnostics` API clients, and explicit simulation/appliance servers. Protected HTTP contracts provide login, logout, the current session, status, deterministic integration and device inventory for the selected simulation scenario, the identity listing, and the identity and token administration routes the browser Authentication page drives. Internal consumers compose the foundation with `app.Open` and authorize through `app.IdentityService()`, submit work through `operation.Service`, resolve policy through `policy.Resolver`, and use the narrow repository interfaces owned by the domain packages. Only a starting server composes with `app.New`, which is `app.Open` followed by startup reconciliation; every other command opens the appliance without touching the operations recorded in it.
+
+## Invariants
+
+- Every protected route declares its permission in `server.go`; the command
+  line is an API client and adds no authorization or identity rule of its own.
+- A token's permissions are its owner's current role intersected with its
+  scopes, resolved from stored state on every request.
+- No credential is accepted on a command line: tokens come from `--token-file`,
+  passwords from standard input; no response, log, audit event, export or error
+  message carries a password, secret or verifier.
+- An identity change and its audit event commit in one `BEGIN IMMEDIATE`
+  transaction; one enabled administrator always remains; a refused change
+  leaves the subject untouched.
+- Permanent deletion is explicit (typed confirmation or `--confirm-delete`),
+  distinct from disable and revoke, and every attempt, applied or refused, is
+  on record with labels that outlive the row.
+- Network changes go through preview, acknowledgement, confirmation and
+  rollback; a noninteractive mutation needs `--acknowledge`, which is never
+  consent for anything else.
 
 ## Key behaviors
 
@@ -47,6 +90,20 @@ same service. WireGuard reads expose safe metadata only.
   every administration route server-side, attribute every change to the actual
   request credential (user ID for a session, token ID for bearer) rather than
   any body field, and serialize no verifier of any kind.
+- `REQ-FUNC-a1cefd8f` - `nilo network operation list` reads the operation
+  listing the browser reattaches with; the route has no filters, so the command
+  offers none.
+- `REQ-FUNC-6590e0c5`, `REQ-SEC-7861a0b2` and `REQ-UX-3f48f396` - administer
+  identities and tokens remotely over the administration routes with the token
+  read only from a file, in exactly one mode per command, with readable or
+  `--json` output, and name every command group in the root usage.
+- `REQ-SEC-bfd1cf86` - a command-line permanent deletion states its subject and
+  proceeds only on the subject typed back or `--confirm-delete`; no other flag
+  is consent.
+- `REQ-DATA-b4cdd70a` and `REQ-DATA-20645b45` - record every refused deletion
+  as a denied event with its reason, and write applied deletion events with the
+  subject's label and the actor's and owner's usernames so they read after the
+  row is gone.
 
 ## Architecture
 
@@ -195,9 +252,18 @@ which also stops the secret because the row a bearer secret is matched against
 is gone. Each successful removal appends exactly one `identity.user.deleted` or
 `identity.token.deleted` event carrying the safe description of what was
 removed — for a user the username, role and prior enabled state; for a token the
-name, owner ID, scopes, expiry and prior revoked/expired state — because the
-record itself no longer exists to be looked up afterwards. There is no soft
-deletion and no second audit path.
+name, owner ID and owner username, scopes, expiry and prior revoked/expired
+state — with the subject's name as the event's target label and the acting
+administrator's username in the details, because the record itself no longer
+exists to be looked up afterwards. A refused deletion (not an administrator,
+last enabled administrator, owned tokens, unknown user or token) appends one
+`identity.user.delete_refused` or `identity.token.delete_refused` event with
+outcome `denied`, the requested subject as label and the reason code, written
+through the ordinary writer after the refusing transaction has rolled back and
+never affecting the refusal itself; a store failure is not a refusal and is not
+recorded. A credential lacking the route permission is refused earlier by the
+HTTP access guard as `identity.access.denied`. There is no soft deletion and no
+second mutation path.
 
 Every administrative identity change runs inside one `BEGIN IMMEDIATE`
 transaction supplied by the identity repository, which also supplies the audit
@@ -211,7 +277,8 @@ for a demotion or a disable, so two concurrent removals through separate
 connections can never both be applied — and a change whose audit event is
 rejected is rolled back with it rather than surviving unattributed, which for a
 deletion means the identity, its sessions and the token stay.
-Successful reads and rejected or no-op changes do not create mutation events. A
+Successful reads and rejected or no-op changes do not create mutation events;
+a refused permanent deletion creates a denied event instead. A
 browser session is inserted by a statement conditional on the identity still
 carrying the password verifier the login checked and still being enabled, so a
 completed password reset cannot be overtaken by a login already in flight.
@@ -229,6 +296,7 @@ The simulation catalog is deliberately dependency-free and cannot discover or co
 - `internal/network/persistence.go`, `internal/store/sqlite/network_operation_repository.go` - the durable record of a managed change, holding public metadata only and refusing a record whose parameters name a secret.
 - `internal/httpapi/network*.go`, `internal/mcp/`, `internal/apiclient/` - shared authenticated Network adapters.
 - `cmd/nilo/network*.go` - Network CLI with interactive or explicit acknowledgement; confirmation remains separate.
+- `cmd/nilo/admin.go`, `cmd/nilo/admin_remote.go` - the administration commands: mode resolution and the local data-directory path in the first, the remote API client, readable renderings and the deletion confirmation in the second. `admin_remote_test.go` proves the requests against a recording stub; `admin_live_test.go` proves roles, scopes and credential state against a real `nilo serve` subprocess.
 
 - `05_Software/nilo_assistant/cmd/nilo/` - command entry point and CLI contract tests.
 - `05_Software/nilo_assistant/internal/app/` - foundation composition and startup reconciliation.

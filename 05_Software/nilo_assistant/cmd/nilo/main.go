@@ -94,7 +94,7 @@ func run(ctx context.Context, arguments []string) int {
 		return 0
 	}
 	if len(arguments) > 0 && arguments[0] == "admin" {
-		return runAdminCommand(ctx, arguments[1:], adminIO{stdin: os.Stdin, stdout: os.Stdout, stderr: os.Stderr})
+		return runAdminCommand(ctx, arguments[1:], adminIO{stdin: os.Stdin, stdout: os.Stdout, stderr: os.Stderr, interactive: networkTerminal()})
 	}
 	if len(arguments) > 0 && arguments[0] == "network" {
 		return runNetworkCommand(ctx, arguments[1:], networkIO{stdout: os.Stdout, stderr: os.Stderr, stdin: os.Stdin, interactive: networkTerminal()})
@@ -395,8 +395,26 @@ func runServe(ctx context.Context, arguments []string) int {
 	return 0
 }
 
+// rootUsage names every command group, so an operator at the console can find
+// them all from one place; each group prints its own usage when run alone.
+const rootUsage = `usage: nilo <command> [options]
+
+  nilo version                                 build information as JSON
+  nilo serve --profile simulation|appliance --data-dir D --bind ADDR
+             [--scenario healthy|unavailable] [--session-cookies development-localhost|https]
+             [--gui-dir DIR --tls-cert PEM --tls-key PEM --nethelper-socket PATH]
+  nilo serve-foundation-check --data-dir D     open and reconcile the data directory once
+  nilo development issue-token --data-dir D    issue a development bearer token
+  nilo admin ...                               identities and API tokens: locally with --data-dir,
+                                               or remotely with --server URL --token-file PATH
+  nilo network ...                             appliance network state and previewed changes
+  nilo activity ...                            audit, event and debug history: list and export
+  nilo diagnostics ...                         timed debug sessions and the retention policy
+
+Run a command group without arguments for its own usage. The remote groups
+(admin, network, activity, diagnostics) take --server URL and --token-file PATH;
+the token is read from that file and never from an argument.`
+
 func writeUsage() {
-	fmt.Fprintln(os.Stderr, "usage: nilo version | nilo serve-foundation-check --data-dir <absolute-path> | nilo development issue-token --data-dir <absolute-path> | nilo admin ... | nilo serve --profile simulation|appliance [--scenario healthy|unavailable] [--session-cookies development-localhost|https] --data-dir <absolute-path> --bind <address> [--gui-dir <built-gui> --tls-cert <pem> --tls-key <pem> --nethelper-socket <socket>]")
-	fmt.Fprintln(os.Stderr, adminUsage)
-	fmt.Fprintln(os.Stderr, networkUsage)
+	fmt.Fprintln(os.Stderr, rootUsage)
 }

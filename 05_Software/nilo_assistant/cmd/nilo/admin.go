@@ -26,6 +26,10 @@ type adminIO struct {
 	stdin  io.Reader
 	stdout io.Writer
 	stderr io.Writer
+	// interactive is true when standard input is a terminal, which is what
+	// decides whether a destructive confirmation can be asked for or must be
+	// given up front with a flag.
+	interactive bool
 }
 
 func runAdminCommand(ctx context.Context, arguments []string, streams adminIO) int {
@@ -46,7 +50,9 @@ func runAdminCommand(ctx context.Context, arguments []string, streams adminIO) i
 	}
 }
 
-const adminUsage = `usage:
+const adminUsage = `usage: nilo admin <command>
+
+Local mode, on the appliance (write access to the data directory is the authority):
   nilo admin bootstrap --data-dir <absolute-path> --username <name>
   nilo admin user list --data-dir <absolute-path>
   nilo admin user create --data-dir <absolute-path> --actor <administrator> --username <name> --role administrator|operator|viewer
@@ -58,7 +64,18 @@ const adminUsage = `usage:
   nilo admin token list --data-dir <absolute-path>
   nilo admin token revoke --data-dir <absolute-path> --actor <administrator> --id <token-id>
 
-Passwords are read from standard input, never from an argument.`
+Remote mode, over the authenticated API (the appliance authorizes the token on every request):
+  nilo admin user list|create|set-role|enable|disable|reset-password|delete ... --server URL --token-file PATH
+  nilo admin token list|create|revoke|delete ... --server URL --token-file PATH
+  The same --username, --role, --owner, --name, --scopes, --expires-in and --id arguments apply;
+  there is no --actor, because the appliance attributes the change to the token in use.
+  Options: [--ca-file PATH] [--json] [--confirm-delete]
+
+A command uses exactly one mode: --data-dir, or --server together with --token-file.
+The token is read from that file and nowhere else, and passwords are read from
+standard input, never from an argument. A permanent deletion prints what it will
+remove and needs the subject typed back on a terminal, or --confirm-delete when
+there is no terminal; the local commands disable and revoke but never delete.`
 
 // withIdentityService opens the data directory once and hands the composed
 // identity service to one command. It opens the appliance rather than starting
@@ -127,12 +144,28 @@ func runAdminUser(ctx context.Context, arguments []string, streams adminIO) int 
 	subcommand := arguments[0]
 	flags := flag.NewFlagSet("admin user "+subcommand, flag.ContinueOnError)
 	flags.SetOutput(streams.stderr)
-	dataDir := flags.String("data-dir", "", "absolute runtime data directory")
-	actor := flags.String("actor", "", "username of the enabled administrator performing the change")
+	var options adminOptions
+	options.bind(flags)
+	actor := flags.String("actor", "", "local mode: username of the enabled administrator performing the change")
 	username := flags.String("username", "", "username of the affected identity")
 	roleValue := flags.String("role", "", "administrator, operator or viewer")
 	if err := flags.Parse(arguments[1:]); err != nil || flags.NArg() != 0 {
 		fmt.Fprintln(streams.stderr, adminUsage)
+		return 2
+	}
+	mode, err := options.mode(*actor)
+	if err != nil {
+		fmt.Fprintln(streams.stderr, err)
+		fmt.Fprintln(streams.stderr, adminUsage)
+		return 2
+	}
+	if mode == adminModeRemote {
+		return runRemoteAdminUser(ctx, subcommand, options, *username, *roleValue, streams)
+	}
+	if subcommand == "delete" {
+		// The local commands disable and never delete; the confirmation a
+		// deletion needs is asked for in remote mode, where it can be.
+		fmt.Fprintln(streams.stderr, "user delete is a remote-mode command: pass --server and --token-file instead of --data-dir")
 		return 2
 	}
 	if subcommand != "list" && (*actor == "" || *username == "") {
@@ -150,7 +183,7 @@ func runAdminUser(ctx context.Context, arguments []string, streams adminIO) int 
 		password = read
 	}
 
-	return withIdentityService(ctx, *dataDir, streams, func(service *identity.Service) error {
+	return withIdentityService(ctx, options.dataDir, streams, func(service *identity.Service) error {
 		if subcommand == "list" {
 			return writeUserListing(ctx, service, streams.stdout)
 		}
@@ -208,19 +241,33 @@ func runAdminToken(ctx context.Context, arguments []string, streams adminIO) int
 	subcommand := arguments[0]
 	flags := flag.NewFlagSet("admin token "+subcommand, flag.ContinueOnError)
 	flags.SetOutput(streams.stderr)
-	dataDir := flags.String("data-dir", "", "absolute runtime data directory")
-	actor := flags.String("actor", "", "username of the enabled administrator performing the change")
+	var options adminOptions
+	options.bind(flags)
+	actor := flags.String("actor", "", "local mode: username of the enabled administrator performing the change")
 	owner := flags.String("owner", "", "username the token acts as")
 	name := flags.String("name", "", "human-readable token name")
 	scopes := flags.String("scopes", "", "comma-separated permissions narrowing the owner's role")
 	expiresIn := flags.Duration("expires-in", 0, "token lifetime, for example 720h; omit for no expiry")
-	tokenID := flags.String("id", "", "identifier of the token to revoke")
+	tokenID := flags.String("id", "", "identifier of the token to revoke or delete")
 	if err := flags.Parse(arguments[1:]); err != nil || flags.NArg() != 0 {
 		fmt.Fprintln(streams.stderr, adminUsage)
 		return 2
 	}
+	mode, err := options.mode(*actor)
+	if err != nil {
+		fmt.Fprintln(streams.stderr, err)
+		fmt.Fprintln(streams.stderr, adminUsage)
+		return 2
+	}
+	if mode == adminModeRemote {
+		return runRemoteAdminToken(ctx, subcommand, options, *owner, *name, *scopes, *expiresIn, *tokenID, streams)
+	}
+	if subcommand == "delete" {
+		fmt.Fprintln(streams.stderr, "token delete is a remote-mode command: pass --server and --token-file instead of --data-dir")
+		return 2
+	}
 
-	return withIdentityService(ctx, *dataDir, streams, func(service *identity.Service) error {
+	return withIdentityService(ctx, options.dataDir, streams, func(service *identity.Service) error {
 		if subcommand == "list" {
 			views, err := service.ListTokens(ctx)
 			if err != nil {
