@@ -95,11 +95,8 @@ function client(session: BenchCoreSession = administrator): BenchCoreClient {
     getAccessInstructions: () => Promise.reject(new Error('not part of this fixture')),
     listActivity: () => Promise.reject(new Error('not part of this fixture')),
     exportActivity: () => Promise.reject(new Error('not part of this fixture')),
-    listDiagnosticSessions: () => Promise.reject(new Error('not part of this fixture')),
-    startDiagnosticSession: () => Promise.reject(new Error('not part of this fixture')),
-    stopDiagnosticSession: () => Promise.reject(new Error('not part of this fixture')),
-    getDiagnosticSettings: () => Promise.reject(new Error('not part of this fixture')),
-    setDiagnosticSettings: () => Promise.reject(new Error('not part of this fixture')),
+    getActivityRetention: () => Promise.reject(new Error('not part of this fixture')),
+    setActivityRetention: () => Promise.reject(new Error('not part of this fixture')),
     getStatus: () => Promise.resolve(status),
     getIntegrations: () => Promise.resolve(integrations),
     getDevices: () => Promise.resolve(devices),
@@ -467,7 +464,7 @@ describe('the navigation', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'View activity' }));
 
-    expect(await screen.findByLabelText('Function')).toHaveValue('identity');
+    expect(await screen.findByLabelText('Component')).toHaveValue('identity');
   });
 
   // REQ-UX-b718864e: one nested Network group, five routable destinations.

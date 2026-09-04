@@ -219,16 +219,6 @@ type OperationManagerOptions struct {
 	// It is optional: the simulation has no helper and keeps its adopted
 	// operations as they were recorded.
 	Recovery RecoveryObserver
-	// Debug receives the state transitions as debug detail. It is optional and
-	// decides for itself whether the function's scope is raised; a nil sink
-	// and a normal scope both record nothing, and neither touches the audit.
-	Debug DebugSink
-}
-
-// DebugSink is where temporary internal detail goes. The diagnostics service
-// provides one; it writes only while a timed session raises the scope.
-type DebugSink interface {
-	Trace(ctx context.Context, scope, target, operationID, code string, details any)
 }
 
 // RecoveryOutcome is the helper's own account of the last change it made.
@@ -247,8 +237,7 @@ type RecoveryObserver interface {
 }
 
 // componentOf names the product function an action belongs to, which is what
-// the Activity page filters on and what a debug session scopes to. It is a
-// function scope, not a Go package.
+// the Activity page filters on. It is a function scope, not a Go package.
 func componentOf(action Action) string {
 	switch action {
 	case ActionInterfaceDisable, ActionInterfaceEnable, ActionInterfaceSettings:
@@ -440,25 +429,6 @@ func (manager *OperationManager) PendingIDs(context.Context) ([]string, error) {
 	return []string{manager.inFlight}, nil
 }
 
-// trace hands one stage to the debug sink with its timing, which is the
-// detail an operator raising the function's scope is after.
-func (manager *OperationManager) trace(ctx context.Context, operation *Operation, outcome audit.Outcome, failure string) {
-	if manager.options.Debug == nil {
-		return
-	}
-	details := map[string]any{
-		"state": string(operation.State), "outcome": string(outcome), "revision": operation.Revision,
-		"elapsed_ms": manager.options.Now().Sub(operation.CreatedAt).Milliseconds(),
-	}
-	if failure != "" {
-		details["failure"] = failure
-	}
-	if !operation.ConfirmDeadline.IsZero() {
-		details["confirm_deadline"] = operation.ConfirmDeadline.UTC().Format(time.RFC3339)
-	}
-	manager.options.Debug.Trace(ctx, componentOf(operation.Action), operation.Target, operation.ID, "operation."+string(outcome), details)
-}
-
 // journal records one stage of one change. A failure is returned to the caller,
 // which decides whether it can proceed: before a side effect it cannot, and
 // after one it must.
@@ -477,7 +447,6 @@ func (manager *OperationManager) journal(
 	if outcome == audit.OutcomeRecovered {
 		severity = audit.SeverityWarning
 	}
-	manager.trace(ctx, operation, outcome, failure)
 	return manager.options.Audit.Record(ctx, audit.Record{
 		Category:    audit.CategoryAudit,
 		Component:   componentOf(operation.Action),

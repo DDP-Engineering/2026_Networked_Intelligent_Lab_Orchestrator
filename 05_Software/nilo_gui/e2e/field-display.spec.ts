@@ -392,7 +392,103 @@ test('1024x600: the other pages stay readable without sideways scrolling', async
   }
 });
 
+// The audit listing is the page an operator reads longest, so it is exercised
+// at both field viewports rather than only walked past: the chips re-query, a
+// record opens in a dialog that fits, and nothing scrolls the document
+// sideways at 800x480 where the six columns become labelled records.
+for (const viewport of VIEWPORTS.filter((candidate) => candidate.field)) {
+  const size = `${viewport.width}x${viewport.height}`;
+  test(`${size}: the activity listing reads as records and opens one in a dialog`, async () => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await openActivity();
+
+    const chips = page.getByRole('group', { name: 'Category' });
+    await expect(
+      chips.getByRole('button', { name: 'All', exact: true }),
+    ).toHaveAttribute('aria-pressed', 'true');
+    await chips.getByRole('button', { name: 'Audit', exact: true }).click();
+    await expect(
+      chips.getByRole('button', { name: 'Audit', exact: true }),
+    ).toHaveAttribute('aria-pressed', 'true');
+    await expectNoDocumentOverflow();
+
+    // Records first: the whole filter panel is a closed drawer here, and the
+    // first record starts inside the viewport without scrolling.
+    await expect(page.getByRole('form', { name: 'Filters' })).toBeHidden();
+    // The row, not its Details control: as a labelled card at 800 pixels the
+    // control is the last line, and the record has begun well above it.
+    const recordBox = await page
+      .locator('.activity-table tbody tr')
+      .first()
+      .boundingBox();
+    expect(recordBox, 'first record').not.toBeNull();
+    expect(recordBox?.y ?? Number.POSITIVE_INFINITY).toBeLessThan(viewport.height);
+
+    // Opening the drawer, then the three less frequent filters behind their
+    // own disclosure, must not push anything off the side of a 800-pixel panel.
+    await page.locator('summary', { hasText: 'Filters' }).first().click();
+    await expect(page.getByRole('form', { name: 'Filters' })).toBeVisible();
+    await page.getByText('More filters', { exact: true }).click();
+    await expect(page.getByLabel('Operation ID')).toBeVisible();
+    await expectNoDocumentOverflow();
+    await expectFieldTargets();
+    await page.locator('summary', { hasText: 'Filters' }).first().click();
+    await expect(page.getByRole('form', { name: 'Filters' })).toBeHidden();
+
+    const details = page.getByRole('button', { name: /^Details for entry / }).first();
+    await details.click();
+    const dialog = page.getByRole('dialog', { name: /^Activity entry / });
+    await expect(dialog).toContainText('Event ID');
+    await expect(dialog).toContainText('Time source');
+    await expectInsideViewport(dialog);
+    await expectReadableText();
+    await expectFieldTargets();
+    await review(`${size}-light-activity-details`);
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+
+    // Retention is the only administration below the Activity log.
+    await expect(page.getByText('Temporary debug logging')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Debug' })).toHaveCount(0);
+    await expect(page.getByLabel('Debug retention (days)')).toHaveCount(0);
+    await expect(page.getByLabel('Debug quota (MiB)')).toHaveCount(0);
+    await page.getByText('Activity retention', { exact: true }).click();
+    await expect(page.getByRole('form', { name: 'Retention policy' })).toBeVisible();
+    await expectNoDocumentOverflow();
+    await expectFieldTargets();
+    await review(`${size}-light-activity-retention`);
+  });
+}
+
 /* ---------- helpers ---------- */
+
+/**
+ * Open Activity on a page that has just been reloaded.
+ *
+ * The suite shares one browser page, and this screen keeps the chosen category
+ * and the two disclosures in component state, so a run that inherited them from
+ * the previous viewport would be asserting the last test's leftovers.
+ */
+async function openActivity(): Promise<void> {
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Bench', level: 2 })).toBeVisible();
+  const viewport = page.viewportSize();
+  const constrained =
+    viewport !== null && (viewport.width <= 896 || viewport.height <= 520);
+  if (constrained) {
+    await page.getByRole('button', { name: 'Menu', exact: true }).click();
+    await page
+      .getByRole('dialog', { name: 'Navigation' })
+      .getByRole('button', { name: 'Activity', exact: true })
+      .click();
+  } else {
+    await page
+      .getByRole('navigation')
+      .getByRole('button', { name: 'Activity', exact: true })
+      .click();
+  }
+  await expect(page.getByRole('heading', { name: 'Activity', level: 2 })).toBeVisible();
+}
 
 async function signIn(): Promise<void> {
   await page.getByLabel('Username').fill(ADMINISTRATOR);

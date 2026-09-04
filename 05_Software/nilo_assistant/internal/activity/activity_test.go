@@ -61,7 +61,11 @@ func (store *memoryStore) List(_ context.Context, filter audit.Filter) ([]audit.
 		if filter.Category != "" && event.Category != filter.Category {
 			continue
 		}
-		if filter.Component != "" && event.Component != filter.Component {
+		if strings.HasSuffix(filter.Component, ".*") {
+			if !strings.HasPrefix(event.Component, strings.TrimSuffix(filter.Component, "*")) {
+				continue
+			}
+		} else if filter.Component != "" && event.Component != filter.Component {
 			continue
 		}
 		if filter.Outcome != "" && event.Outcome != filter.Outcome {
@@ -76,7 +80,7 @@ func (store *memoryStore) List(_ context.Context, filter audit.Filter) ([]audit.
 		if filter.Action != "" && event.Action != filter.Action {
 			continue
 		}
-		if event.Sequence <= filter.AfterSequence {
+		if filter.Sort == "" && event.Sequence <= filter.AfterSequence {
 			continue
 		}
 		if !filter.From.IsZero() && event.CreatedAt.Before(filter.From) {
@@ -86,11 +90,48 @@ func (store *memoryStore) List(_ context.Context, filter audit.Filter) ([]audit.
 			continue
 		}
 		matches = append(matches, event)
-		if filter.Limit > 0 && len(matches) == filter.Limit {
-			break
+	}
+	if filter.Sort != "" {
+		sort.SliceStable(matches, func(left, right int) bool {
+			leftValue, rightValue := sortValue(matches[left], filter.Sort), sortValue(matches[right], filter.Sort)
+			less := leftValue < rightValue || (leftValue == rightValue && matches[left].Sequence < matches[right].Sequence)
+			if filter.Order == audit.SortDescending {
+				return !less && (leftValue != rightValue || matches[left].Sequence != matches[right].Sequence)
+			}
+			return less
+		})
+		if filter.AfterSequence > 0 {
+			remaining := matches[:0]
+			for _, event := range matches {
+				value := sortValue(event, filter.Sort)
+				after := value > filter.CursorValue || (value == filter.CursorValue && event.Sequence > filter.AfterSequence)
+				if filter.Order == audit.SortDescending {
+					after = value < filter.CursorValue || (value == filter.CursorValue && event.Sequence < filter.AfterSequence)
+				}
+				if after {
+					remaining = append(remaining, event)
+				}
+			}
+			matches = remaining
 		}
 	}
+	if filter.Offset >= len(matches) {
+		return []audit.Event{}, nil
+	}
+	if filter.Offset > 0 {
+		matches = matches[filter.Offset:]
+	}
+	if filter.Limit > 0 && len(matches) > filter.Limit {
+		matches = matches[:filter.Limit]
+	}
 	return matches, nil
+}
+
+func (store *memoryStore) Count(ctx context.Context, filter audit.Filter) (int64, error) {
+	filter.AfterSequence, filter.CursorValue = 0, ""
+	filter.Limit, filter.Offset = 0, 0
+	events, err := store.List(ctx, filter)
+	return int64(len(events)), err
 }
 
 func (store *memoryStore) PurgeBefore(ctx context.Context, category audit.Category, cutoff time.Time, limit int) (int, error) {
@@ -262,7 +303,7 @@ func TestQueryFiltersEveryFieldAndPages(t *testing.T) {
 	f.now = f.now.Add(time.Minute)
 	f.record(t, audit.Record{Category: audit.CategoryEvent, Component: "network.wireguard", Action: "vpn.startup", SubjectType: "profile", SubjectID: "office", Severity: audit.SeverityWarning, Outcome: audit.OutcomeFailed})
 	f.now = f.now.Add(time.Minute)
-	f.record(t, audit.Record{Category: audit.CategoryDebug, Component: "network.device_networks", Action: "device_network.plan", SubjectType: "device_network", SubjectID: "line3"})
+	f.record(t, audit.Record{Component: "network.device_networks", Action: "device_network.plan", SubjectType: "device_network", SubjectID: "line3"})
 
 	for name, filter := range map[string]Filter{
 		"category":  {Category: "event"},
@@ -305,11 +346,59 @@ func TestQueryFiltersEveryFieldAndPages(t *testing.T) {
 	}
 	// The retained window says what the answer was drawn from.
 	window := first.RetainedWindow[audit.CategoryAudit]
-	if window.Count != 2 || window.Oldest.IsZero() || window.Newest.Before(window.Oldest) {
+	if window.Count != 3 || window.Oldest.IsZero() || window.Newest.Before(window.Oldest) {
 		t.Fatalf("retained audit window = %+v", window)
 	}
 	if first.LoggingHealth.AuditWritable != true {
 		t.Fatalf("logging health = %+v", first.LoggingHealth)
+	}
+}
+
+func TestQuerySortsAndPagesWithAnOpaqueCursor(t *testing.T) {
+	f := newFixture(t)
+	ctx := context.Background()
+	for _, action := range []string{"zebra", "alpha", "middle"} {
+		f.record(t, audit.Record{Action: action})
+		f.now = f.now.Add(time.Minute)
+	}
+
+	first, err := f.service.Query(ctx, Filter{Sort: "activity", Order: "asc", Limit: 2})
+	if err != nil {
+		t.Fatalf("first sorted page: %v", err)
+	}
+	if len(first.Items) != 2 || first.Items[0].Action != "alpha" || first.Items[1].Action != "middle" {
+		t.Fatalf("first sorted page = %+v", first.Items)
+	}
+	if first.NextCursor == "" || first.NextCursor == "2" {
+		t.Fatalf("sorted cursor = %q, want an opaque cursor", first.NextCursor)
+	}
+	second, err := f.service.Query(ctx, Filter{Sort: "activity", Order: "asc", Limit: 2, Cursor: first.NextCursor})
+	if err != nil {
+		t.Fatalf("second sorted page: %v", err)
+	}
+	if len(second.Items) != 1 || second.Items[0].Action != "zebra" {
+		t.Fatalf("second sorted page = %+v", second.Items)
+	}
+	if _, err := f.service.Query(ctx, Filter{Sort: "time", Order: "desc", Cursor: first.NextCursor}); err == nil {
+		t.Fatal("a cursor issued for another sort was accepted")
+	}
+
+	numbered, err := f.service.Query(ctx, Filter{
+		Sort: "activity", Order: "asc", Limit: 2, Page: 2,
+	})
+	if err != nil {
+		t.Fatalf("numbered page: %v", err)
+	}
+	if numbered.Total != 3 || len(numbered.Items) != 1 || numbered.Items[0].Action != "zebra" {
+		t.Fatalf("numbered page = total %d, items %+v", numbered.Total, numbered.Items)
+	}
+
+	all, err := f.service.Query(ctx, Filter{Sort: "time", Order: "desc", All: true})
+	if err != nil {
+		t.Fatalf("all records: %v", err)
+	}
+	if all.Total != 3 || len(all.Items) != 3 || all.Items[0].Action != "middle" {
+		t.Fatalf("all records = total %d, items %+v", all.Total, all.Items)
 	}
 }
 
@@ -403,15 +492,15 @@ func TestHousekeepingPurgesByAgeAndQuotaAndDisclosesTheGap(t *testing.T) {
 	f.now = start.Add(-100 * 24 * time.Hour)
 	f.record(t, audit.Record{Action: "interface.disable", OperationID: "pending-op", Outcome: audit.OutcomeApplied})
 	f.record(t, audit.Record{Action: "interface.enable", OperationID: "old-op", Outcome: audit.OutcomeConfirmed})
-	// Debug rows within age but over a tiny quota.
+	// Event rows within age but over a tiny quota.
 	f.now = start.Add(-time.Hour)
 	for index := 0; index < 20; index++ {
 		f.now = f.now.Add(time.Second)
-		f.record(t, audit.Record{Category: audit.CategoryDebug, Action: "debug.step", Details: map[string]string{"padding": strings.Repeat("x", 60000)}})
+		f.record(t, audit.Record{Category: audit.CategoryEvent, Action: "runtime.step", Details: map[string]string{"padding": strings.Repeat("x", 60000)}})
 	}
 	f.now = start
 	policy := DefaultPolicy()
-	policy.QuotaBytes[audit.CategoryDebug] = 1 << 20
+	policy.QuotaBytes[audit.CategoryEvent] = 1 << 20
 	if err := f.service.SavePolicy(ctx, policy); err != nil {
 		t.Fatal(err)
 	}
@@ -426,7 +515,7 @@ func TestHousekeepingPurgesByAgeAndQuotaAndDisclosesTheGap(t *testing.T) {
 	if err != nil {
 		t.Fatalf("sweep: %v", err)
 	}
-	if report.Removed[audit.CategoryAudit] != 1 || report.Removed[audit.CategoryDebug] == 0 {
+	if report.Removed[audit.CategoryAudit] != 1 || report.Removed[audit.CategoryEvent] == 0 {
 		t.Fatalf("report = %+v", report)
 	}
 	remaining, _ := f.store.List(ctx, audit.Filter{Category: audit.CategoryAudit, Action: "interface.disable"})
@@ -434,16 +523,16 @@ func TestHousekeepingPurgesByAgeAndQuotaAndDisclosesTheGap(t *testing.T) {
 		t.Fatal("pending operation evidence was purged")
 	}
 	windows, _ := f.store.RetainedWindow(ctx)
-	if windows[audit.CategoryDebug].Bytes > policy.QuotaBytes[audit.CategoryDebug] {
-		t.Fatalf("debug still over quota: %+v", windows[audit.CategoryDebug])
+	if windows[audit.CategoryEvent].Bytes > policy.QuotaBytes[audit.CategoryEvent] {
+		t.Fatalf("events still over quota: %+v", windows[audit.CategoryEvent])
 	}
-	page, err := f.service.Query(ctx, Filter{Category: "debug"})
+	page, err := f.service.Query(ctx, Filter{Category: "event"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	window := page.RetainedWindow[audit.CategoryDebug]
+	window := page.RetainedWindow[audit.CategoryEvent]
 	if !window.Truncated || window.PurgedBefore.IsZero() || window.PurgeReason != "quota" {
-		t.Fatalf("debug window does not disclose the gap: %+v", window)
+		t.Fatalf("event window does not disclose the gap: %+v", window)
 	}
 	if page.RetainedWindow[audit.CategoryAudit].PurgeReason != "age" {
 		t.Fatalf("audit window does not disclose the age purge: %+v", page.RetainedWindow[audit.CategoryAudit])
@@ -467,7 +556,7 @@ func TestPolicyIsValidatedAndDefaulted(t *testing.T) {
 	f := newFixture(t)
 	ctx := context.Background()
 	policy, err := f.service.Policy(ctx)
-	if err != nil || policy.RetentionDays[audit.CategoryAudit] != 90 || policy.RetentionDays[audit.CategoryDebug] != 1 {
+	if err != nil || policy.RetentionDays[audit.CategoryAudit] != 90 || policy.RetentionDays[audit.CategoryEvent] != 14 {
 		t.Fatalf("default policy = %+v %v", policy, err)
 	}
 	bad := DefaultPolicy()
@@ -476,7 +565,7 @@ func TestPolicyIsValidatedAndDefaulted(t *testing.T) {
 		t.Fatalf("err = %v", err)
 	}
 	bad = DefaultPolicy()
-	delete(bad.QuotaBytes, audit.CategoryDebug)
+	delete(bad.QuotaBytes, audit.CategoryEvent)
 	if err := f.service.SavePolicy(ctx, bad); !errors.Is(err, ErrInvalidPolicy) {
 		t.Fatalf("err = %v", err)
 	}
@@ -508,9 +597,8 @@ func TestLoggingHealthReportsAuditFailures(t *testing.T) {
 	if err := writer.Record(ctx, audit.Record{Category: audit.CategoryAudit, Component: "system", Action: "x", SubjectType: "s", SubjectID: "1", ActorKind: audit.ActorKindSystem, Outcome: audit.OutcomeApplied, Severity: audit.SeverityInfo}); err != nil {
 		t.Fatal(err)
 	}
-	monitor.DroppedDebug(3)
 	page, _ = monitored.Query(ctx, Filter{})
-	if !page.LoggingHealth.AuditWritable || page.LoggingHealth.DroppedDebug != 3 {
+	if !page.LoggingHealth.AuditWritable {
 		t.Fatalf("health after recovery = %+v", page.LoggingHealth)
 	}
 	// The health answer never carries the failure text verbatim beyond a
@@ -518,5 +606,4 @@ func TestLoggingHealthReportsAuditFailures(t *testing.T) {
 	if strings.ContainsAny(page.LoggingHealth.LastFailure, "\n\r") {
 		t.Fatal("unsanitized failure text")
 	}
-	_ = sort.Strings
 }

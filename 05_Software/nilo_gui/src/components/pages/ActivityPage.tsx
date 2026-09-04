@@ -1,17 +1,30 @@
-import { Fragment, useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
 import type {
-  ActivityEvent,
   ActivityFilter,
   ActivityPage as ActivityPageBody,
-  DiagnosticSession,
-  DiagnosticSessions,
-  DiagnosticSettings,
+  ActivityPageSize,
+  ActivityRetentionSettings,
+  ActivitySort,
 } from '../../api/activity';
 import { ACTIVITY_CATEGORIES } from '../../api/activity';
 import { BenchCoreError } from '../../api/client';
 import type { MessageKey } from '../../i18n/en';
 import { useTranslate } from '../../i18n/languages';
+import { ActivityEventTable } from '../activity/ActivityEventTable';
+import { ActivityHealthBanner } from '../activity/ActivityHealthBanner';
+import {
+  MORE_FILTER_FIELDS,
+  PRIMARY_FILTER_FIELDS,
+  activeFilterCount,
+  appliedOf,
+  draftOf,
+  withoutPanelFilters,
+  type PanelFilterField,
+} from '../activity/filters';
+import { CATEGORY_KEYS, COMPONENT_FILTER_OPTIONS } from '../activity/vocabulary';
+import { Menu, MenuAction } from '../shell/Menu';
+import { useViewportClass } from '../shell/useViewportClass';
 
 export interface ActivityPageProps {
   /** The filter the page opens with, for example from a network table. */
@@ -19,37 +32,23 @@ export interface ActivityPageProps {
   readActivity: (filter: ActivityFilter) => Promise<ActivityPageBody>;
   exportActivity?: (filter: ActivityFilter, format: 'jsonl' | 'csv') => Promise<string>;
   canExport: boolean;
-  canManageDiagnostics: boolean;
-  readSessions?: () => Promise<DiagnosticSessions>;
-  startSession?: (
-    scope: string,
-    target: string,
-    minutes: number,
-  ) => Promise<DiagnosticSession>;
-  stopSession?: (id: string) => Promise<DiagnosticSession>;
-  readSettings?: () => Promise<DiagnosticSettings>;
-  saveSettings?: (settings: DiagnosticSettings) => Promise<DiagnosticSettings>;
+  canManageRetention: boolean;
+  readRetention?: () => Promise<ActivityRetentionSettings>;
+  saveRetention?: (
+    settings: ActivityRetentionSettings,
+  ) => Promise<ActivityRetentionSettings>;
 }
 
-const CATEGORY_KEYS: Record<string, MessageKey> = {
-  audit: 'activity.category.audit',
-  event: 'activity.category.event',
-  debug: 'activity.category.debug',
-};
-
-const ACTOR_KEYS: Record<string, MessageKey> = {
-  system: 'activity.actor.system',
-  anonymous: 'activity.actor.anonymous',
-  token: 'activity.actor.token',
-  user: 'activity.actor.user',
-};
-
-const SESSION_STATE_KEYS: Record<DiagnosticSession['state'], MessageKey> = {
-  active: 'diagnostics.state.active',
-  stopped: 'diagnostics.state.stopped',
-  expired: 'diagnostics.state.expired',
-  replaced: 'diagnostics.state.replaced',
-  interrupted: 'diagnostics.state.interrupted',
+const FILTER_LABELS: Record<PanelFilterField, MessageKey> = {
+  from: 'activity.filter.from',
+  to: 'activity.filter.to',
+  actor: 'activity.filter.actor',
+  target: 'activity.filter.target',
+  action: 'activity.filter.action',
+  outcome: 'activity.filter.outcome',
+  component: 'activity.filter.component',
+  severity: 'activity.filter.severity',
+  operation: 'activity.filter.operation',
 };
 
 type Reading<T> =
@@ -63,39 +62,189 @@ function describe(error: unknown): string {
       : String(error);
 }
 
+const DEFAULT_ACTIVITY_QUERY: Pick<
+  ActivityFilter,
+  'sort' | 'order' | 'limit' | 'page' | 'cursor'
+> = {
+  sort: 'time',
+  order: 'desc',
+  limit: 25,
+  page: 1,
+  cursor: '',
+};
+
+interface ActivityPaginationProps {
+  total: number;
+  page: number;
+  size: ActivityPageSize;
+  onPage: (page: number) => void;
+  onSize: (size: ActivityPageSize) => void;
+}
+
+function ActivityPagination({
+  total,
+  page,
+  size,
+  onPage,
+  onSize,
+}: ActivityPaginationProps) {
+  const t = useTranslate();
+  const pageCount = size === 'all' ? 1 : Math.max(Math.ceil(total / size), 1);
+  const selectedPage = Math.min(page, pageCount);
+  const pageNumbers = [
+    ...new Set([
+      1,
+      selectedPage - 2,
+      selectedPage - 1,
+      selectedPage,
+      selectedPage + 1,
+      selectedPage + 2,
+      pageCount,
+    ]),
+  ]
+    .filter((number) => number >= 1 && number <= pageCount)
+    .sort((left, right) => left - right);
+
+  return (
+    <nav className="activity-pagination" aria-label={t('activity.pagination')}>
+      <div className="field activity-page-size">
+        <label htmlFor="activity-page-size">{t('activity.pagination.size')}</label>
+        <select
+          id="activity-page-size"
+          value={String(size)}
+          onChange={(event) => {
+            const value = event.target.value;
+            onSize(value === 'all' ? 'all' : (Number(value) as 25 | 50 | 100));
+          }}
+        >
+          {[25, 50, 100].map((value) => (
+            <option key={value} value={value}>
+              {value}
+            </option>
+          ))}
+          <option value="all">{t('activity.pagination.all')}</option>
+        </select>
+      </div>
+      <button
+        type="button"
+        className="button"
+        disabled={selectedPage <= 1}
+        onClick={() => onPage(selectedPage - 1)}
+      >
+        {t('activity.pagination.previous')}
+      </button>
+      <div
+        className="activity-page-numbers"
+        role="group"
+        aria-label={t('activity.pagination.page')}
+      >
+        {pageNumbers.map((number, index) => (
+          <Fragment key={number}>
+            {index > 0 && number - pageNumbers[index - 1] > 1 && (
+              <span aria-hidden="true">…</span>
+            )}
+            <button
+              type="button"
+              className={`button ${number === selectedPage ? 'button-primary' : ''}`}
+              aria-label={t('activity.pagination.select', { page: number })}
+              aria-current={number === selectedPage ? 'page' : undefined}
+              onClick={() => {
+                if (number !== selectedPage) onPage(number);
+              }}
+            >
+              {number}
+            </button>
+          </Fragment>
+        ))}
+      </div>
+      <span className="activity-page-total">
+        {t('activity.pagination.total', { pages: pageCount, records: total })}
+      </span>
+      <button
+        type="button"
+        className="button"
+        disabled={selectedPage >= pageCount}
+        onClick={() => onPage(selectedPage + 1)}
+      >
+        {t('activity.pagination.next')}
+      </button>
+    </nav>
+  );
+}
+
 /**
- * The shared Activity page: audit, operational events and debug detail read
- * through one filtered, server-paginated query, with export and the timed
- * diagnostics controls beside it. Nothing here is inferred: every row is what
+ * The shared Activity page: audit and operational events read through one
+ * filtered, server-paginated query, with export and retention controls beside
+ * it. Nothing here is inferred: every row is what
  * the appliance recorded, and the retained window says what it still holds.
+ *
+ * The page is organised around the records rather than around its controls. The
+ * category is three chips beside the title because it is the one filter that is
+ * always in play; the six filters an operator reaches for stay visible and the
+ * three that are used once a month sit behind a disclosure. Retention is
+ * administration of the log rather than the log itself, so it is collapsed
+ * below the listing.
  */
 export function ActivityPage({
   initialFilter = {},
   readActivity,
   exportActivity,
   canExport,
-  canManageDiagnostics,
-  readSessions,
-  startSession,
-  stopSession,
-  readSettings,
-  saveSettings,
+  canManageRetention,
+  readRetention,
+  saveRetention,
 }: ActivityPageProps) {
   const t = useTranslate();
-  const [draft, setDraft] = useState<ActivityFilter>(initialFilter);
-  const [filter, setFilter] = useState<ActivityFilter>(initialFilter);
+  // The draft renders the caller's instants in the local control; the applied
+  // filter keeps them exactly as they arrived, because a round trip through a
+  // control that has no seconds would move the window the caller asked for.
+  const [draft, setDraft] = useState<ActivityFilter>(() =>
+    draftOf({ ...DEFAULT_ACTIVITY_QUERY, ...initialFilter }),
+  );
+  const [filter, setFilter] = useState<ActivityFilter>(() => ({
+    ...DEFAULT_ACTIVITY_QUERY,
+    ...initialFilter,
+    cursor: '',
+  }));
   const [page, setPage] = useState<Reading<ActivityPageBody>>({ state: 'reading' });
-  const [older, setOlder] = useState<ActivityEvent[]>([]);
-  const [expanded, setExpanded] = useState<string | null>(null);
   const [exportNote, setExportNote] = useState('');
-  const [sessions, setSessions] = useState<Reading<DiagnosticSessions>>({
-    state: 'reading',
-  });
-  const [scope, setScope] = useState('network');
-  const [target, setTarget] = useState('');
-  const [minutes, setMinutes] = useState(15);
-  const [settings, setSettings] = useState<DiagnosticSettings | null>(null);
-  const [diagnosticsNote, setDiagnosticsNote] = useState('');
+  // The disclosure opens on its own whenever one of the filters behind it is
+  // in effect, so a count of one is never a count of something hidden.
+  const [moreOpen, setMoreOpen] = useState(() =>
+    MORE_FILTER_FIELDS.some((field) => String(initialFilter[field] ?? '') !== ''),
+  );
+  const [settings, setSettings] = useState<ActivityRetentionSettings | null>(null);
+  const [retentionNote, setRetentionNote] = useState('');
+
+  // On a field display the records come first: the whole filter panel sits
+  // behind a disclosure that opens only when it is wanted.
+  const viewport = useViewportClass();
+  const collapsible = viewport !== 'wide';
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  // A page load in flight must not be able to append to a listing that has
+  // since been re-queried under different filters.
+  const generation = useRef(0);
+
+  /**
+   * The one way the applied filter changes.
+   *
+   * The previous page is taken down in the same event as the new query is
+   * chosen: rows read under one filter must never stand beneath the count and
+   * the export of another, however briefly, on a screen that is read as
+   * evidence. The generation moves here too, synchronously, so an older page
+   * still in flight has already been disowned by the time the effect asks for
+   * the new one — and its loading state is reset with everything else, rather
+   * than left to a `finally` that no longer recognises the listing.
+   */
+  const applyQuery = (next: ActivityFilter) => {
+    generation.current += 1;
+    setFilter(next);
+    setPage({ state: 'reading' });
+  };
+
+  const applyFilter = (next: ActivityFilter) =>
+    applyQuery({ ...next, page: 1, cursor: '' });
 
   const reload = useCallback(
     async (abandoned: () => boolean) => {
@@ -103,7 +252,6 @@ export function ActivityPage({
         const value = await readActivity({ ...filter, cursor: '' });
         if (abandoned()) return;
         setPage({ state: 'read', value });
-        setOlder([]);
       } catch {
         if (!abandoned()) setPage({ state: 'failed' });
       }
@@ -121,59 +269,36 @@ export function ActivityPage({
     };
   }, [reload]);
 
-  const reloadDiagnostics = useCallback(async () => {
-    if (readSessions === undefined) return;
-    try {
-      setSessions({ state: 'read', value: await readSessions() });
-    } catch {
-      setSessions({ state: 'failed' });
-    }
-    if (readSettings !== undefined) {
-      try {
-        setSettings(await readSettings());
-      } catch {
-        setSettings(null);
-      }
-    }
-  }, [readSessions, readSettings]);
-
   useEffect(() => {
-    if (!canManageDiagnostics) return;
-    // Started from inside an async wrapper, matching the other pages: a
-    // microtask separates the effect from the first state change.
+    if (!canManageRetention || readRetention === undefined) return;
+    let abandoned = false;
     void (async () => {
-      await reloadDiagnostics();
+      try {
+        const value = await readRetention();
+        if (!abandoned) setSettings(value);
+      } catch {
+        if (!abandoned) setSettings(null);
+      }
     })();
-  }, [canManageDiagnostics, reloadDiagnostics]);
+    return () => {
+      abandoned = true;
+    };
+  }, [canManageRetention, readRetention]);
 
-  const loadOlder = async () => {
-    if (page.state !== 'read' || page.value.nextCursor === '') return;
-    const last =
-      older.length > 0
-        ? older[older.length - 1]
-        : page.value.items[page.value.items.length - 1];
-    try {
-      const next = await readActivity({
-        ...filter,
-        cursor: String(last?.sequence ?? ''),
-      });
-      setOlder([...older, ...next.items]);
-      setPage({ state: 'read', value: { ...page.value, nextCursor: next.nextCursor } });
-    } catch {
-      setPage({ state: 'failed' });
-    }
-  };
+  const rows = page.state === 'read' ? page.value.items : [];
 
   const runExport = async (format: 'jsonl' | 'csv') => {
     if (exportActivity === undefined) return;
     try {
+      // The applied filter, never the draft: an export must contain what the
+      // listing above it contains.
       const text = await exportActivity(filter, format);
-      const rows =
+      const rowCount =
         format === 'jsonl'
           ? Math.max(text.trim().split('\n').length - 2, 0)
           : text.split('\n').filter((line) => line !== '' && !line.startsWith('#'))
               .length - 1;
-      setExportNote(t('activity.export.done').replace('{rows}', String(rows)));
+      setExportNote(t('activity.export.done', { rows: rowCount }));
       const blob = new Blob([text], {
         type: format === 'csv' ? 'text/csv' : 'application/x-ndjson',
       });
@@ -188,113 +313,208 @@ export function ActivityPage({
     }
   };
 
-  const start = async () => {
-    if (startSession === undefined) return;
-    try {
-      await startSession(scope, target.trim(), minutes);
-      setDiagnosticsNote('');
-      await reloadDiagnostics();
-    } catch (error) {
-      setDiagnosticsNote(t('diagnostics.failed').replace('{detail}', describe(error)));
-    }
-  };
-
-  const stop = async (id: string) => {
-    if (stopSession === undefined) return;
-    try {
-      await stopSession(id);
-      setDiagnosticsNote('');
-      await reloadDiagnostics();
-    } catch (error) {
-      setDiagnosticsNote(t('diagnostics.failed').replace('{detail}', describe(error)));
-    }
-  };
-
   const save = async () => {
-    if (saveSettings === undefined || settings === null) return;
+    if (saveRetention === undefined || settings === null) return;
     try {
-      setSettings(await saveSettings(settings));
-      setDiagnosticsNote(t('diagnostics.saved'));
+      setSettings(await saveRetention(settings));
+      setRetentionNote(t('activity.retention.saved'));
     } catch (error) {
-      setDiagnosticsNote(t('diagnostics.failed').replace('{detail}', describe(error)));
+      setRetentionNote(t('activity.retention.failed', { detail: describe(error) }));
     }
   };
 
-  const filterField = (key: keyof ActivityFilter, label: MessageKey, type = 'text') => (
-    <div className="field">
-      <label htmlFor={`activity-${key}`}>{t(label)}</label>
-      <input
-        id={`activity-${key}`}
-        type={type}
-        value={String(draft[key] ?? '')}
-        onChange={(event) => setDraft({ ...draft, [key]: event.target.value })}
-      />
+  /**
+   * Select a category chip. The listing re-queries at once, and only the
+   * category moves: a filter that has been typed but not applied stays a draft,
+   * because a chip is not an Apply control in disguise.
+   */
+  const selectCategory = (category: string) => {
+    setDraft({ ...draft, category });
+    applyFilter({ ...filter, category, cursor: '' });
+  };
+
+  /**
+   * Narrow to one operation. Every other filter goes, the category included:
+   * the stages of one change are not all audit records, and a chip left in
+   * place would hide the half of the operation being asked for.
+   */
+  const showOperation = (operationId: string) => {
+    const next = {
+      ...DEFAULT_ACTIVITY_QUERY,
+      category: '',
+      operation: operationId,
+    };
+    setDraft(draftOf(next));
+    applyFilter(next);
+    setMoreOpen(true);
+  };
+
+  const sortBy = (field: ActivitySort) => {
+    const order = filter.sort === field && filter.order === 'asc' ? 'desc' : 'asc';
+    const next: ActivityFilter = { ...filter, sort: field, order };
+    setDraft({ ...draft, sort: field, order, page: 1, cursor: '' });
+    applyFilter(next);
+  };
+
+  const filterField = (field: PanelFilterField) => (
+    <div className="field" key={field}>
+      <label htmlFor={`activity-${field}`}>{t(FILTER_LABELS[field])}</label>
+      {field === 'component' ? (
+        <select
+          id="activity-component"
+          value={String(draft.component ?? '')}
+          onChange={(event) => setDraft({ ...draft, component: event.target.value })}
+        >
+          {!COMPONENT_FILTER_OPTIONS.some(
+            (option) => option.value === String(draft.component ?? ''),
+          ) && <option value={draft.component}>{draft.component}</option>}
+          {COMPONENT_FILTER_OPTIONS.map((option) => (
+            <option key={option.value || 'all'} value={option.value}>
+              {t(option.label)}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <input
+          id={`activity-${field}`}
+          type={field === 'from' || field === 'to' ? 'datetime-local' : 'text'}
+          value={String(draft[field] ?? '')}
+          onChange={(event) => setDraft({ ...draft, [field]: event.target.value })}
+        />
+      )}
     </div>
   );
 
-  const rows = page.state === 'read' ? [...page.value.items, ...older] : [];
+  const active = activeFilterCount(filter);
+  const category = draft.category ?? '';
+  const countText =
+    active === 0
+      ? t('activity.filter.none')
+      : t('activity.filter.active', { count: active });
+
+  const filters = (
+    <form
+      className="form activity-filters"
+      aria-label={t('activity.filters')}
+      onSubmit={(event) => {
+        event.preventDefault();
+        applyFilter(appliedOf(draft));
+        if (collapsible) setFiltersOpen(false);
+      }}
+    >
+      {PRIMARY_FILTER_FIELDS.map((field) => filterField(field))}
+      <details
+        className="form-group activity-filters-more"
+        open={moreOpen}
+        onToggle={(event) => setMoreOpen(event.currentTarget.open)}
+      >
+        <summary>{t('activity.filter.more')}</summary>
+        <div className="activity-filters-more-fields">
+          {MORE_FILTER_FIELDS.map((field) => filterField(field))}
+        </div>
+      </details>
+      <div className="form-actions">
+        <button type="submit" className="button button-primary">
+          {t('activity.apply')}
+        </button>
+        <button
+          type="button"
+          className="button"
+          onClick={() => {
+            setDraft(withoutPanelFilters(draft));
+            applyFilter(withoutPanelFilters(filter));
+            if (collapsible) setFiltersOpen(false);
+          }}
+        >
+          {t('activity.clear')}
+        </button>
+        <p className="activity-filter-count" role="status">
+          {countText}
+        </p>
+        {canExport && exportActivity !== undefined && (
+          <Menu label={t('activity.export')} triggerClass="activity-export">
+            {(close) => (
+              <>
+                <MenuAction
+                  onSelect={() => {
+                    close();
+                    void runExport('csv');
+                  }}
+                >
+                  {t('activity.export.csv')}
+                </MenuAction>
+                <MenuAction
+                  onSelect={() => {
+                    close();
+                    void runExport('jsonl');
+                  }}
+                >
+                  {t('activity.export.jsonl')}
+                </MenuAction>
+                <p className="menu-foot">{t('activity.export.scope')}</p>
+              </>
+            )}
+          </Menu>
+        )}
+      </div>
+      {exportNote !== '' && (
+        <p className="activity-filter-note" role="status">
+          {exportNote}
+        </p>
+      )}
+    </form>
+  );
 
   return (
     <div className="page activity-page">
-      <header className="page-head">
-        <h2>{t('activity.title')}</h2>
+      <header className="page-head activity-head">
+        <div className="activity-head-top">
+          <div className="activity-head-text">
+            <h2>{t('activity.title')}</h2>
+            <p className="page-sub">{t('activity.subtitle')}</p>
+          </div>
+        </div>
+        <div
+          className="activity-chips"
+          role="group"
+          aria-label={t('activity.filter.category')}
+        >
+          {(['', ...ACTIVITY_CATEGORIES] as const).map((candidate) => (
+            <button
+              key={candidate === '' ? 'all' : candidate}
+              type="button"
+              className={`activity-chip ${category === candidate ? 'activity-chip-on' : ''}`}
+              aria-pressed={category === candidate}
+              onClick={() => selectCategory(candidate)}
+            >
+              {t(candidate === '' ? 'activity.category.all' : CATEGORY_KEYS[candidate])}
+            </button>
+          ))}
+        </div>
       </header>
       <div className="page-body">
-        <form
-          className="form activity-filters"
-          aria-label={t('activity.apply')}
-          onSubmit={(event) => {
-            event.preventDefault();
-            setFilter({ ...draft, cursor: '' });
-          }}
-        >
-          <div className="field">
-            <label htmlFor="activity-category">{t('activity.filter.category')}</label>
-            <select
-              id="activity-category"
-              value={draft.category ?? ''}
-              onChange={(event) => setDraft({ ...draft, category: event.target.value })}
-            >
-              <option value="">{t('activity.category.all')}</option>
-              {ACTIVITY_CATEGORIES.map((category) => (
-                <option key={category} value={category}>
-                  {t(CATEGORY_KEYS[category])}
-                </option>
-              ))}
-            </select>
-          </div>
-          {filterField('component', 'activity.filter.component')}
-          {filterField('target', 'activity.filter.target')}
-          {filterField('actor', 'activity.filter.actor')}
-          {filterField('severity', 'activity.filter.severity')}
-          {filterField('outcome', 'activity.filter.outcome')}
-          {filterField('operation', 'activity.filter.operation')}
-          {filterField('from', 'activity.filter.from', 'datetime-local')}
-          {filterField('to', 'activity.filter.to', 'datetime-local')}
-          <div className="form-actions">
-            <button type="submit">{t('activity.apply')}</button>
-            <button
-              type="button"
-              onClick={() => {
-                setDraft({});
-                setFilter({});
-              }}
-            >
-              {t('activity.clear')}
-            </button>
-            {canExport && exportActivity !== undefined && (
-              <>
-                <button type="button" onClick={() => void runExport('jsonl')}>
-                  {t('activity.export.jsonl')}
-                </button>
-                <button type="button" onClick={() => void runExport('csv')}>
-                  {t('activity.export.csv')}
-                </button>
-              </>
-            )}
-          </div>
-          {exportNote !== '' && <p role="status">{exportNote}</p>}
-        </form>
+        {page.state === 'read' && (
+          <ActivityHealthBanner
+            loggingHealth={page.value.loggingHealth}
+            retainedWindow={page.value.retainedWindow}
+          />
+        )}
+
+        {collapsible ? (
+          <details
+            className="form-group activity-filter-drawer"
+            open={filtersOpen}
+            onToggle={(event) => setFiltersOpen(event.currentTarget.open)}
+          >
+            <summary>
+              {t('activity.filters')}
+              <span className="activity-filter-drawer-count">{countText}</span>
+            </summary>
+            {filters}
+          </details>
+        ) : (
+          filters
+        )}
 
         {page.state === 'reading' && <p>{t('activity.reading')}</p>}
         {page.state === 'failed' && (
@@ -302,335 +522,86 @@ export function ActivityPage({
         )}
         {page.state === 'read' && (
           <>
-            <p className="network-secondary" role="status">
-              {page.value.loggingHealth.auditWritable
-                ? t('activity.health.ok')
-                : t('activity.health.degraded').replace(
-                    '{failure}',
-                    page.value.loggingHealth.lastFailure,
-                  )}
-              {page.value.loggingHealth.droppedDebug > 0 &&
-                ` ${t('activity.health.dropped').replace('{count}', String(page.value.loggingHealth.droppedDebug))}`}
-            </p>
-            <p className="network-secondary">
-              {Object.entries(page.value.retainedWindow).map(([category, window]) => (
-                <span key={category}>
-                  {t('activity.retained')
-                    .replace('{count}', String(window.count))
-                    .replace(
-                      '{category}',
-                      t(CATEGORY_KEYS[category] ?? 'activity.category.all'),
-                    )}
-                  {window.truncated && window.purgedBefore !== null && (
-                    <>
-                      {' '}
-                      {t('activity.gap')
-                        .replace('{time}', window.purgedBefore.toLocaleString())
-                        .replace('{reason}', window.purgeReason)}
-                    </>
-                  )}
-                  {'  '}
-                </span>
-              ))}
-            </p>
             {rows.length === 0 ? (
               <p>{t('activity.empty')}</p>
             ) : (
-              <div className="table-scroll">
-                <table className="data-table record-table">
-                  <thead>
-                    <tr>
-                      <th scope="col">{t('activity.col.time')}</th>
-                      <th scope="col">{t('activity.col.outcome')}</th>
-                      <th scope="col">{t('activity.col.action')}</th>
-                      <th scope="col">{t('activity.col.target')}</th>
-                      <th scope="col">{t('activity.col.actor')}</th>
-                      <th scope="col">{t('activity.details')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((event) => (
-                      <Fragment key={event.id}>
-                        <tr>
-                          <td data-label={t('activity.col.time')}>
-                            {event.createdAt.toLocaleString()}
-                          </td>
-                          <td data-label={t('activity.col.outcome')}>
-                            {event.outcome}
-                            {event.severity !== 'info' && (
-                              <small className="network-secondary">
-                                {event.severity}
-                              </small>
-                            )}
-                          </td>
-                          <td data-label={t('activity.col.action')}>
-                            <code>{event.action}</code>
-                          </td>
-                          <td data-label={t('activity.col.target')}>
-                            {event.targetLabel !== '' &&
-                            event.targetLabel !== event.subjectId ? (
-                              <>
-                                {event.targetLabel}
-                                <small className="network-secondary">
-                                  {event.subjectId}
-                                </small>
-                              </>
-                            ) : (
-                              event.subjectId
-                            )}
-                          </td>
-                          <td data-label={t('activity.col.actor')}>
-                            {t(ACTOR_KEYS[event.actorKind] ?? 'activity.actor.user')}
-                          </td>
-                          <td className="record-cell-actions">
-                            <button
-                              type="button"
-                              className="button network-detail-toggle"
-                              aria-expanded={expanded === event.id}
-                              aria-controls={`activity-details-${event.id}`}
-                              aria-label={`${t('activity.details')} ${event.sequence}`}
-                              onClick={() =>
-                                setExpanded(expanded === event.id ? null : event.id)
-                              }
-                            >
-                              {t('activity.details')}
-                            </button>
-                          </td>
-                        </tr>
-                        {expanded === event.id && (
-                          <tr className="record-details">
-                            <td
-                              colSpan={6}
-                              id={`activity-details-${event.id}`}
-                              role="region"
-                              aria-label={`${t('activity.details')} ${event.sequence}`}
-                            >
-                              <dl className="record-facts">
-                                <div>
-                                  <dt>{t('activity.col.category')}</dt>
-                                  <dd>
-                                    {t(
-                                      CATEGORY_KEYS[event.category] ??
-                                        'activity.category.all',
-                                    )}
-                                  </dd>
-                                </div>
-                                <div>
-                                  <dt>{t('activity.col.component')}</dt>
-                                  <dd>{event.component}</dd>
-                                </div>
-                                <div>
-                                  <dt>{t('activity.filter.actor')}</dt>
-                                  <dd>{event.actorId}</dd>
-                                </div>
-                              </dl>
-                              {event.operationId !== '' && (
-                                <p>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setDraft({ operation: event.operationId });
-                                      setFilter({ operation: event.operationId });
-                                    }}
-                                  >
-                                    {t('activity.operation').replace(
-                                      '{id}',
-                                      event.operationId,
-                                    )}
-                                  </button>
-                                </p>
-                              )}
-                              <pre className="activity-details">
-                                {JSON.stringify(event.details, null, 2)}
-                              </pre>
-                            </td>
-                          </tr>
-                        )}
-                      </Fragment>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <ActivityEventTable
+                events={rows}
+                sort={filter.sort}
+                order={filter.order}
+                onSort={sortBy}
+                onShowOperation={showOperation}
+              />
             )}
-            {page.value.nextCursor !== '' && (
-              <button type="button" onClick={() => void loadOlder()}>
-                {t('activity.more')}
-              </button>
-            )}
+            <ActivityPagination
+              total={page.value.total}
+              page={filter.page ?? 1}
+              size={(filter.limit ?? 25) as ActivityPageSize}
+              onPage={(selected) => applyQuery({ ...filter, page: selected })}
+              onSize={(size) => {
+                const next = { ...filter, limit: size, page: 1, cursor: '' };
+                setDraft({ ...draft, limit: size, page: 1, cursor: '' });
+                applyQuery(next);
+              }}
+            />
           </>
         )}
 
-        {canManageDiagnostics && readSessions !== undefined && (
-          <section aria-labelledby="activity-diagnostics">
-            <h3 id="activity-diagnostics">{t('diagnostics.title')}</h3>
-            <form
-              className="form"
-              aria-label={t('diagnostics.start')}
-              onSubmit={(event) => {
-                event.preventDefault();
-                void start();
-              }}
-            >
-              <div className="field">
-                <label htmlFor="diagnostics-scope">{t('diagnostics.scope')}</label>
-                <select
-                  id="diagnostics-scope"
-                  value={scope}
-                  onChange={(event) => setScope(event.target.value)}
-                >
-                  {(sessions.state === 'read'
-                    ? sessions.value.scopes
-                    : ['network']
-                  ).map((candidate) => (
-                    <option key={candidate} value={candidate}>
-                      {candidate}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="field">
-                <label htmlFor="diagnostics-target">{t('diagnostics.target')}</label>
-                <input
-                  id="diagnostics-target"
-                  value={target}
-                  onChange={(event) => setTarget(event.target.value)}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="diagnostics-minutes">{t('diagnostics.minutes')}</label>
-                <select
-                  id="diagnostics-minutes"
-                  value={minutes}
-                  onChange={(event) => setMinutes(Number(event.target.value))}
-                >
-                  {(sessions.state === 'read'
-                    ? sessions.value.durations
-                    : [5, 15, 60]
-                  ).map((candidate) => (
-                    <option key={candidate} value={candidate}>
-                      {t('diagnostics.minutesValue').replace(
-                        '{minutes}',
-                        String(candidate),
-                      )}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-actions">
-                <button type="submit">{t('diagnostics.start')}</button>
-              </div>
-            </form>
-            {diagnosticsNote !== '' && <p role="status">{diagnosticsNote}</p>}
-            {sessions.state === 'failed' && (
-              <p className="notice notice-unknown">{t('diagnostics.unreadable')}</p>
-            )}
-            {sessions.state === 'read' && sessions.value.items.length === 0 && (
-              <p>{t('diagnostics.none')}</p>
-            )}
-            {sessions.state === 'read' && sessions.value.items.length > 0 && (
-              <div className="table-scroll">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th scope="col">{t('diagnostics.scope')}</th>
-                      <th scope="col">{t('diagnostics.target')}</th>
-                      <th scope="col">{t('network.table.state')}</th>
-                      <th scope="col">{t('diagnostics.minutes')}</th>
-                      <th scope="col">{t('network.table.actions')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sessions.value.items.map((session) => (
-                      <tr key={session.id}>
-                        <th scope="row">{session.scope}</th>
-                        <td>{session.target || '—'}</td>
-                        <td>
-                          {t(SESSION_STATE_KEYS[session.state])}
-                          {session.state === 'active' && (
-                            <small className="network-secondary">
-                              {t('diagnostics.expires').replace(
-                                '{time}',
-                                session.expiresAt.toLocaleTimeString(),
-                              )}
-                            </small>
-                          )}
-                        </td>
-                        <td>
-                          {t('diagnostics.minutesValue').replace(
-                            '{minutes}',
-                            String(session.minutes),
-                          )}
-                        </td>
-                        <td>
-                          {session.state === 'active' && stopSession !== undefined && (
-                            <button
-                              type="button"
-                              aria-label={`${t('diagnostics.stop')} ${session.scope}`}
-                              onClick={() => void stop(session.id)}
-                            >
-                              {t('diagnostics.stop')}
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            {settings !== null && saveSettings !== undefined && (
+        {canManageRetention && settings !== null && saveRetention !== undefined && (
+          <details className="form-group activity-retention">
+            <summary>{t('activity.retention')}</summary>
+            <section aria-label={t('activity.retention')}>
+              <h3>{t('activity.retention.title')}</h3>
+              <p className="page-foot">{t('activity.retention.intro')}</p>
               <form
-                className="form"
-                aria-label={t('diagnostics.settings')}
+                className="form activity-retention-form"
+                aria-label={t('activity.retention.title')}
                 onSubmit={(event) => {
                   event.preventDefault();
                   void save();
                 }}
               >
-                <h4>{t('diagnostics.settings')}</h4>
-                {ACTIVITY_CATEGORIES.map((category) => (
-                  <Fragment key={category}>
+                {ACTIVITY_CATEGORIES.map((candidate) => (
+                  <Fragment key={candidate}>
                     <div className="field">
-                      <label htmlFor={`retention-${category}`}>
-                        {t('diagnostics.retention').replace(
-                          '{category}',
-                          t(CATEGORY_KEYS[category]),
-                        )}
+                      <label htmlFor={`retention-${candidate}`}>
+                        {t('activity.retention.days', {
+                          category: t(CATEGORY_KEYS[candidate]),
+                        })}
                       </label>
                       <input
-                        id={`retention-${category}`}
+                        id={`retention-${candidate}`}
                         inputMode="numeric"
-                        value={String(settings.retentionDays[category] ?? '')}
+                        value={String(settings.retentionDays[candidate] ?? '')}
                         onChange={(event) =>
                           setSettings({
                             ...settings,
                             retentionDays: {
                               ...settings.retentionDays,
-                              [category]: Number(event.target.value),
+                              [candidate]: Number(event.target.value),
                             },
                           })
                         }
                       />
                     </div>
                     <div className="field">
-                      <label htmlFor={`quota-${category}`}>
-                        {t('diagnostics.quota').replace(
-                          '{category}',
-                          t(CATEGORY_KEYS[category]),
-                        )}
+                      <label htmlFor={`quota-${candidate}`}>
+                        {t('activity.retention.quota', {
+                          category: t(CATEGORY_KEYS[candidate]),
+                        })}
                       </label>
                       <input
-                        id={`quota-${category}`}
+                        id={`quota-${candidate}`}
                         inputMode="numeric"
                         value={String(
-                          Math.round((settings.quotaBytes[category] ?? 0) / 1048576),
+                          Math.round((settings.quotaBytes[candidate] ?? 0) / 1048576),
                         )}
                         onChange={(event) =>
                           setSettings({
                             ...settings,
                             quotaBytes: {
                               ...settings.quotaBytes,
-                              [category]: Number(event.target.value) * 1048576,
+                              [candidate]: Number(event.target.value) * 1048576,
                             },
                           })
                         }
@@ -639,11 +610,14 @@ export function ActivityPage({
                   </Fragment>
                 ))}
                 <div className="form-actions">
-                  <button type="submit">{t('diagnostics.save')}</button>
+                  <button type="submit" className="button button-primary">
+                    {t('activity.retention.save')}
+                  </button>
                 </div>
               </form>
-            )}
-          </section>
+              {retentionNote !== '' && <p role="status">{retentionNote}</p>}
+            </section>
+          </details>
         )}
       </div>
     </div>

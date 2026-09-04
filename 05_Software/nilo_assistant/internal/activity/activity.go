@@ -2,6 +2,7 @@ package activity
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/csv"
 	"encoding/json"
 	"errors"
@@ -44,6 +45,7 @@ const (
 // Store is what the service reads and sweeps.
 type Store interface {
 	audit.Repository
+	Count(ctx context.Context, filter audit.Filter) (int64, error)
 	RetainedWindow(ctx context.Context) (map[audit.Category]Window, error)
 	PurgeExpired(ctx context.Context, category audit.Category, cutoff time.Time, limit int, keep []string) (int, error)
 	PurgeOldest(ctx context.Context, category audit.Category, limit int) (int, time.Time, error)
@@ -95,6 +97,17 @@ type Filter struct {
 	To        string
 	Cursor    string
 	Limit     int
+	Page      int
+	All       bool
+	Sort      string
+	Order     string
+}
+
+type pageCursor struct {
+	Sort     string `json:"sort"`
+	Order    string `json:"order"`
+	Value    string `json:"value"`
+	Sequence int64  `json:"sequence"`
 }
 
 // RetainedWindow is what one category holds, together with what retention
@@ -113,6 +126,7 @@ type RetainedWindow struct {
 type Page struct {
 	Items          []audit.Event
 	NextCursor     string
+	Total          int64
 	RetainedWindow map[audit.Category]RetainedWindow
 	LoggingHealth  Health
 }
@@ -121,7 +135,7 @@ func (filter Filter) toAudit() (audit.Filter, error) {
 	var parsed audit.Filter
 	if filter.Category != "" {
 		category := audit.Category(filter.Category)
-		if category != audit.CategoryAudit && category != audit.CategoryEvent && category != audit.CategoryDebug {
+		if category != audit.CategoryAudit && category != audit.CategoryEvent {
 			return parsed, fmt.Errorf("%w: unknown category %q", ErrInvalidFilter, filter.Category)
 		}
 		parsed.Category = category
@@ -140,6 +154,15 @@ func (filter Filter) toAudit() (audit.Filter, error) {
 		parsed.Outcome = audit.Outcome(filter.Outcome)
 	}
 	parsed.Component, parsed.SubjectID, parsed.OperationID, parsed.Action = filter.Component, filter.Target, filter.Operation, filter.Action
+	if filter.Sort != "" {
+		parsed.Sort = audit.SortField(filter.Sort)
+		parsed.Order = audit.SortOrder(filter.Order)
+		if parsed.Order == "" {
+			parsed.Order = audit.SortAscending
+		}
+	} else if filter.Order != "" {
+		return parsed, fmt.Errorf("%w: order needs a sort field", ErrInvalidFilter)
+	}
 	var err error
 	if filter.From != "" {
 		if parsed.From, err = time.Parse(time.RFC3339, filter.From); err != nil {
@@ -152,18 +175,44 @@ func (filter Filter) toAudit() (audit.Filter, error) {
 		}
 	}
 	if filter.Cursor != "" {
-		after, err := strconv.ParseInt(filter.Cursor, 10, 64)
-		if err != nil || after < 0 {
-			return parsed, fmt.Errorf("%w: cursor is not one this appliance issued", ErrInvalidFilter)
+		if filter.Page > 0 {
+			return parsed, fmt.Errorf("%w: page and cursor cannot be combined", ErrInvalidFilter)
 		}
-		parsed.AfterSequence = after
+		if parsed.Sort == "" {
+			after, err := strconv.ParseInt(filter.Cursor, 10, 64)
+			if err != nil || after < 0 {
+				return parsed, fmt.Errorf("%w: cursor is not one this appliance issued", ErrInvalidFilter)
+			}
+			parsed.AfterSequence = after
+		} else {
+			cursor, err := decodeCursor(filter.Cursor)
+			if err != nil || cursor.Sort != filter.Sort || cursor.Order != string(parsed.Order) || cursor.Sequence <= 0 {
+				return parsed, fmt.Errorf("%w: cursor is not one this appliance issued", ErrInvalidFilter)
+			}
+			parsed.CursorValue, parsed.AfterSequence = cursor.Value, cursor.Sequence
+		}
 	}
-	if filter.Limit < 0 || filter.Limit > MaximumPageSize {
+	if filter.Page < 0 {
+		return parsed, fmt.Errorf("%w: page cannot be negative", ErrInvalidFilter)
+	}
+	if filter.All && filter.Page > 1 {
+		return parsed, fmt.Errorf("%w: all records only has page 1", ErrInvalidFilter)
+	}
+	if filter.Limit < 0 || (!filter.All && filter.Limit > MaximumPageSize) {
 		return parsed, fmt.Errorf("%w: limit must be between 1 and %d", ErrInvalidFilter, MaximumPageSize)
 	}
 	parsed.Limit = filter.Limit
-	if parsed.Limit == 0 {
+	if filter.All {
+		parsed.Limit = 0
+	} else if parsed.Limit == 0 {
 		parsed.Limit = DefaultPageSize
+	}
+	if filter.Page > 0 && !filter.All {
+		maxInt := int(^uint(0) >> 1)
+		if filter.Page > 1 && filter.Page-1 > maxInt/parsed.Limit {
+			return parsed, fmt.Errorf("%w: page is too large", ErrInvalidFilter)
+		}
+		parsed.Offset = (filter.Page - 1) * parsed.Limit
 	}
 	if err := parsed.Validate(); err != nil {
 		return parsed, fmt.Errorf("%w: %v", ErrInvalidFilter, err)
@@ -177,17 +226,34 @@ func (service *Service) Query(ctx context.Context, filter Filter) (Page, error) 
 	if err != nil {
 		return Page{}, err
 	}
-	// One more than the page says whether there is a next page, without a
-	// second count query.
-	parsed.Limit++
+	countFilter := parsed
+	countFilter.AfterSequence, countFilter.CursorValue = 0, ""
+	countFilter.Limit, countFilter.Offset = 0, 0
+	total, err := service.options.Store.Count(ctx, countFilter)
+	if err != nil {
+		return Page{}, err
+	}
+	usesNumberedPages := filter.Page > 0 || filter.All
+	if !filter.All && !usesNumberedPages {
+		// Cursor clients retain the existing one-extra-row contract.
+		parsed.Limit++
+	}
 	events, err := service.options.Store.List(ctx, parsed)
 	if err != nil {
 		return Page{}, err
 	}
-	page := Page{Items: events}
-	if len(events) == parsed.Limit {
+	page := Page{Items: events, Total: total}
+	if !usesNumberedPages && len(events) == parsed.Limit {
 		page.Items = events[:parsed.Limit-1]
-		page.NextCursor = strconv.FormatInt(page.Items[len(page.Items)-1].Sequence, 10)
+		last := page.Items[len(page.Items)-1]
+		if parsed.Sort == "" {
+			page.NextCursor = strconv.FormatInt(last.Sequence, 10)
+		} else {
+			page.NextCursor = encodeCursor(pageCursor{
+				Sort: string(parsed.Sort), Order: string(parsed.Order),
+				Value: sortValue(last, parsed.Sort), Sequence: last.Sequence,
+			})
+		}
 	}
 	if page.Items == nil {
 		page.Items = []audit.Event{}
@@ -197,6 +263,43 @@ func (service *Service) Query(ctx context.Context, filter Filter) (Page, error) 
 	}
 	page.LoggingHealth = service.health()
 	return page, nil
+}
+
+func encodeCursor(cursor pageCursor) string {
+	encoded, _ := json.Marshal(cursor)
+	return base64.RawURLEncoding.EncodeToString(encoded)
+}
+
+func decodeCursor(value string) (pageCursor, error) {
+	var cursor pageCursor
+	encoded, err := base64.RawURLEncoding.DecodeString(value)
+	if err != nil {
+		return cursor, err
+	}
+	if err := json.Unmarshal(encoded, &cursor); err != nil {
+		return cursor, err
+	}
+	return cursor, nil
+}
+
+func sortValue(event audit.Event, field audit.SortField) string {
+	switch field {
+	case audit.SortTime:
+		return event.CreatedAt.UTC().Format("2006-01-02T15:04:05.000Z")
+	case audit.SortActivity:
+		return event.Action
+	case audit.SortOutcome:
+		return string(event.Outcome)
+	case audit.SortActor:
+		return string(event.ActorKind) + "\x1f" + event.ActorID.String()
+	case audit.SortTarget:
+		if event.TargetLabel != "" {
+			return event.TargetLabel
+		}
+		return event.SubjectID
+	default:
+		return ""
+	}
 }
 
 func (service *Service) health() Health {
@@ -297,7 +400,9 @@ func (service *Service) Export(ctx context.Context, filter Filter, format Format
 	if format != FormatJSONL && format != FormatCSV {
 		return ExportSummary{}, fmt.Errorf("%w: format must be jsonl or csv", ErrInvalidFilter)
 	}
-	filter.Cursor, filter.Limit = "", 0
+	// Page controls describe presentation, not export scope. Export always
+	// streams the complete filtered selection in the chosen sort order.
+	filter.Cursor, filter.Limit, filter.Page, filter.All = "", 0, 0, false
 	parsed, err := filter.toAudit()
 	if err != nil {
 		return ExportSummary{}, err
@@ -368,10 +473,10 @@ func (service *Service) Export(ctx context.Context, filter Filter, format Format
 		}
 	}
 	var summary ExportSummary
-	after := parsed.AfterSequence
+	after, afterValue := parsed.AfterSequence, parsed.CursorValue
 	for {
 		batch := parsed
-		batch.AfterSequence, batch.Limit = after, exportBatch
+		batch.AfterSequence, batch.CursorValue, batch.Limit = after, afterValue, exportBatch
 		events, err := service.options.Store.List(ctx, batch)
 		if err != nil {
 			return summary, err
@@ -386,6 +491,7 @@ func (service *Service) Export(ctx context.Context, filter Filter, format Format
 			}
 			summary.Rows++
 			after = event.Sequence
+			afterValue = sortValue(event, parsed.Sort)
 		}
 		if summary.Truncated || len(events) < exportBatch {
 			break

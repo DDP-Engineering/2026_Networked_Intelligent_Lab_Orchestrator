@@ -199,7 +199,7 @@ const ROLE_PERMISSIONS: Readonly<Record<BenchCoreRole, BenchCorePermission[]>> =
     'vpn.manage',
     'activity.read',
     'activity.export',
-    'diagnostics.manage',
+    'activity.retention.manage',
   ],
 };
 
@@ -260,16 +260,14 @@ class MockAdministration {
   operations = new Map<string, MockOperation>();
   /** Saved device networks, in the wire shape the routes return. */
   deviceNetworks = new Map<string, Record<string, unknown>>();
-  /** The shared history, appended by every managed change and session. */
+  /** The shared history, appended by every managed change. */
   activity: Record<string, unknown>[] = [];
-  /** Timed debug sessions. */
-  sessions = new Map<string, Record<string, unknown>>();
   policy: {
     retention_days: Record<string, number>;
     quota_bytes: Record<string, number>;
   } = {
-    retention_days: { audit: 90, event: 14, debug: 1 },
-    quota_bytes: { audit: 268435456, event: 134217728, debug: 67108864 },
+    retention_days: { audit: 90, event: 14 },
+    quota_bytes: { audit: 268435456, event: 134217728 },
   };
   /** The device-network draft a preview proposed, applied on acknowledgement. */
   pendingDrafts = new Map<
@@ -281,7 +279,7 @@ class MockAdministration {
 
   /** Append one history entry with the envelope the appliance would add. */
   record(
-    category: 'audit' | 'event' | 'debug',
+    category: 'audit' | 'event',
     component: string,
     action: string,
     outcome: string,
@@ -572,7 +570,7 @@ function answer(
   if (path.startsWith('/api/v1/network/')) {
     return manageNetwork(store, actor, path, query, request);
   }
-  if (path.startsWith('/api/v1/activity') || path.startsWith('/api/v1/diagnostics')) {
+  if (path.startsWith('/api/v1/activity')) {
     return observe(store, actor, path, query, request);
   }
   return administer(store, actor, path, request);
@@ -920,17 +918,6 @@ const MOCK_WIFI_NETWORKS = [
   { ssid: 'corp-enterprise', security: 'unsupported', strength: 55, supported: false },
 ];
 
-const MOCK_SCOPES = [
-  'network',
-  'network.interfaces',
-  'network.wifi',
-  'network.wireguard',
-  'network.device_networks',
-  'network.recovery',
-  'identity',
-  'system',
-];
-
 /** The wire shape of one saved device network built from a submitted draft. */
 function mockDeviceNetworkBody(
   id: string,
@@ -990,9 +977,8 @@ function mockDeviceNetworkBody(
 }
 
 /**
- * The shared history and the timed diagnostics, mirroring the Go routes: a
- * filtered page with a sequence cursor, an export in both formats, sessions
- * with fixed scopes and durations, and the policy.
+ * The shared history and retention policy, mirroring the Go routes: a filtered
+ * page with a sequence cursor, an export in both formats, and the policy.
  */
 function observe(
   store: MockAdministration,
@@ -1004,14 +990,15 @@ function observe(
   const body = decodeBody(request);
   const parameters = new URLSearchParams(query);
   const filtered = () => {
-    const after = Number(parameters.get('cursor') ?? '0');
-    return store.activity.filter((event) => {
+    const selected = store.activity.filter((event) => {
       const matches = (key: string, field: string) => {
         const wanted = parameters.get(key);
+        if (key === 'component' && wanted?.endsWith('.*')) {
+          return String(event[field]).startsWith(wanted.slice(0, -1));
+        }
         return wanted === null || wanted === '' || String(event[field]) === wanted;
       };
       return (
-        Number(event.sequence) > after &&
         matches('category', 'category') &&
         matches('component', 'component') &&
         matches('target', 'subject_id') &&
@@ -1022,22 +1009,48 @@ function observe(
         matches('action', 'action')
       );
     });
+    const sort = parameters.get('sort');
+    const order = parameters.get('order') === 'desc' ? -1 : 1;
+    const value = (event: Record<string, unknown>) => {
+      if (sort === 'time') return String(event.created_at ?? '');
+      if (sort === 'activity') return String(event.action ?? '');
+      if (sort === 'outcome') return String(event.outcome ?? '');
+      if (sort === 'actor')
+        return `${String(event.actor_kind ?? '')}\u001f${String(event.actor_id ?? '')}`;
+      if (sort === 'target')
+        return String(event.target_label || event.subject_id || '');
+      return Number(event.sequence ?? 0);
+    };
+    selected.sort((left, right) => {
+      const a = value(left);
+      const b = value(right);
+      if (a < b) return -1 * order;
+      if (a > b) return order;
+      return (Number(left.sequence) - Number(right.sequence)) * order;
+    });
+    return selected;
   };
   if (path === '/api/v1/activity' && request.method === 'GET') {
     return gated(actor, 'activity.read', () => {
-      const limit = Math.min(
-        Math.max(Number(parameters.get('limit') ?? '100'), 1),
-        500,
-      );
       const events = filtered();
-      const items = events.slice(0, limit);
+      const rawLimit = parameters.get('limit') ?? '100';
+      const limit =
+        rawLimit === 'all'
+          ? events.length
+          : Math.min(Math.max(Number(rawLimit), 1), 500);
+      const page = Math.max(Number(parameters.get('page') ?? '1'), 1);
+      const offset = rawLimit === 'all' ? 0 : (page - 1) * limit;
+      const items = events.slice(offset, offset + limit);
       const last = items[items.length - 1];
       return jsonResponse(200, {
         api_version: BENCH_CORE_API_VERSION,
         schema_version: 'nilo.activity/1',
         items,
         next_cursor:
-          events.length > limit && last !== undefined ? String(last.sequence) : '',
+          offset + limit < events.length && last !== undefined
+            ? String(last.sequence)
+            : '',
+        total: events.length,
         retained_window: {
           audit: {
             count: store.activity.filter((event) => event.category === 'audit').length,
@@ -1047,12 +1060,8 @@ function observe(
             count: store.activity.filter((event) => event.category === 'event').length,
             truncated: false,
           },
-          debug: {
-            count: store.activity.filter((event) => event.category === 'debug').length,
-            truncated: false,
-          },
         },
-        logging_health: { audit_writable: true, failures: 0, dropped_debug: 0 },
+        logging_health: { audit_writable: true, failures: 0 },
       });
     });
   }
@@ -1098,132 +1107,13 @@ function observe(
       return { status: 200, ok: true, text: () => Promise.resolve(text) };
     });
   }
-  if (path === '/api/v1/diagnostics/sessions' && request.method === 'GET') {
-    return gated(actor, 'diagnostics.manage', () =>
-      jsonResponse(200, {
-        api_version: BENCH_CORE_API_VERSION,
-        items: [...store.sessions.values()]
-          .reverse()
-          .map((session) => sessionView(store, session)),
-        scopes: MOCK_SCOPES,
-        durations: [5, 15, 60],
-      }),
-    );
-  }
-  if (path === '/api/v1/diagnostics/sessions' && request.method === 'POST') {
-    const scope = String(body.scope ?? '');
-    const minutes = Number(body.minutes ?? 0);
-    if (!MOCK_SCOPES.includes(scope)) {
-      return refusal(
-        400,
-        'diagnostic_session_rejected',
-        `unknown function scope ${scope}`,
-      );
-    }
-    if (![5, 15, 60].includes(minutes)) {
-      return refusal(
-        400,
-        'diagnostic_session_rejected',
-        'duration must be 5, 15 or 60 minutes',
-      );
-    }
-    return gated(actor, 'diagnostics.manage', () => {
-      const target = String(body.target ?? '');
-      for (const [id, session] of store.sessions) {
-        if (
-          session.state === 'active' &&
-          session.scope === scope &&
-          session.target === target
-        ) {
-          store.sessions.set(id, {
-            ...session,
-            state: 'replaced',
-            ended_at: new Date().toISOString(),
-            end_reason: 'replaced',
-          });
-        }
-      }
-      const id = store.nextId('session');
-      const now = new Date();
-      const session = {
-        id,
-        scope,
-        target,
-        actor_id: actor.identity.id,
-        minutes,
-        started_at: now.toISOString(),
-        expires_at: new Date(now.getTime() + minutes * 60_000).toISOString(),
-        state: 'active',
-        ended_at: null,
-        end_reason: '',
-      };
-      store.sessions.set(id, session);
-      store.record(
-        'audit',
-        'system',
-        'diagnostics.session.started',
-        'applied',
-        'diagnostic_session',
-        id,
-        actor,
-        '',
-        {
-          scope,
-          target,
-          minutes,
-        },
-      );
-      return jsonResponse(201, sessionView(store, session));
-    });
-  }
-  const session = path.match(
-    /^\/api\/v1\/diagnostics\/sessions\/([^/]+)(?:\/(stop))?$/,
-  );
-  if (session) {
-    const id = decodeURIComponent(session[1]);
-    const held = store.sessions.get(id);
-    if (held === undefined) {
-      return refusal(404, 'diagnostic_session_not_found');
-    }
-    if (session[2] === undefined) {
-      return gated(actor, 'diagnostics.manage', () =>
-        jsonResponse(200, sessionView(store, held)),
-      );
-    }
-    return gated(actor, 'diagnostics.manage', () => {
-      if (held.state !== 'active') {
-        return refusal(
-          409,
-          'diagnostic_session_not_active',
-          'the session is not active',
-        );
-      }
-      const stopped = {
-        ...held,
-        state: 'stopped',
-        ended_at: new Date().toISOString(),
-        end_reason: 'stopped by the operator',
-      };
-      store.sessions.set(id, stopped);
-      store.record(
-        'audit',
-        'system',
-        'diagnostics.session.stopped',
-        'applied',
-        'diagnostic_session',
-        id,
-        actor,
-      );
-      return jsonResponse(200, sessionView(store, stopped));
-    });
-  }
-  if (path === '/api/v1/diagnostics/settings' && request.method === 'GET') {
-    return gated(actor, 'diagnostics.manage', () =>
+  if (path === '/api/v1/activity/retention' && request.method === 'GET') {
+    return gated(actor, 'activity.retention.manage', () =>
       jsonResponse(200, { api_version: BENCH_CORE_API_VERSION, ...store.policy }),
     );
   }
-  if (path === '/api/v1/diagnostics/settings' && request.method === 'PUT') {
-    return gated(actor, 'diagnostics.manage', () => {
+  if (path === '/api/v1/activity/retention' && request.method === 'PUT') {
+    return gated(actor, 'activity.retention.manage', () => {
       const days =
         typeof body.retention_days === 'object' && body.retention_days !== null
           ? (body.retention_days as Record<string, number>)
@@ -1232,7 +1122,7 @@ function observe(
         typeof body.quota_bytes === 'object' && body.quota_bytes !== null
           ? (body.quota_bytes as Record<string, number>)
           : {};
-      for (const category of ['audit', 'event', 'debug']) {
+      for (const category of ['audit', 'event']) {
         const retention = days[category];
         const quota = bytes[category];
         if (typeof retention !== 'number' || retention < 1 || retention > 3650) {
@@ -1255,7 +1145,7 @@ function observe(
       store.record(
         'audit',
         'system',
-        'diagnostics.policy.changed',
+        'activity.retention.changed',
         'applied',
         'activity',
         'policy',
@@ -1273,21 +1163,6 @@ function observe(
     });
   }
   return refusal(404, 'not_found');
-}
-
-/** One session with the level its scope and target have now. */
-function sessionView(
-  store: MockAdministration,
-  session: Record<string, unknown>,
-): Record<string, unknown> {
-  const raised = [...store.sessions.values()].some(
-    (candidate) =>
-      candidate.state === 'active' &&
-      (candidate.scope === session.scope ||
-        String(session.scope).startsWith(`${String(candidate.scope)}.`)) &&
-      (candidate.target === '' || candidate.target === session.target),
-  );
-  return { ...session, effective: raised ? 'debug' : 'normal' };
 }
 
 /**

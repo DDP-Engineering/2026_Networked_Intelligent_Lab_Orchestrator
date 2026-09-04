@@ -1,6 +1,6 @@
-// Package activity is the shared history: the audit, event and debug records
-// read through one filtered, paginated query, exported within bounds, and kept
-// within an administrator's retention policy.
+// Package activity is the shared history: audit and event records read through
+// one filtered, paginated query, exported within bounds, and kept within an
+// administrator's retention policy.
 package activity
 
 import (
@@ -27,16 +27,16 @@ type Policy struct {
 	QuotaBytes    map[audit.Category]int64 `json:"quota_bytes"`
 }
 
-// DefaultPolicy is what ships: audit 90 days, events 14, debug 1, with the
-// budgets sized for an initial Pi installation.
+// DefaultPolicy is what ships: audit 90 days and events 14, with budgets sized
+// for an initial Pi installation.
 func DefaultPolicy() Policy {
 	return Policy{
-		RetentionDays: map[audit.Category]int{audit.CategoryAudit: 90, audit.CategoryEvent: 14, audit.CategoryDebug: 1},
-		QuotaBytes:    map[audit.Category]int64{audit.CategoryAudit: 256 << 20, audit.CategoryEvent: 128 << 20, audit.CategoryDebug: 64 << 20},
+		RetentionDays: map[audit.Category]int{audit.CategoryAudit: 90, audit.CategoryEvent: 14},
+		QuotaBytes:    map[audit.Category]int64{audit.CategoryAudit: 256 << 20, audit.CategoryEvent: 128 << 20},
 	}
 }
 
-var categories = []audit.Category{audit.CategoryAudit, audit.CategoryEvent, audit.CategoryDebug}
+var categories = []audit.Category{audit.CategoryAudit, audit.CategoryEvent}
 
 // Validate refuses a policy that leaves any category unbounded or absurd.
 func (policy Policy) Validate() error {

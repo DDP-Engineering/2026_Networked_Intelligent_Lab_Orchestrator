@@ -13,7 +13,6 @@ import (
 	"nilo.local/nilo/internal/audit"
 	"nilo.local/nilo/internal/auth"
 	"nilo.local/nilo/internal/buildinfo"
-	"nilo.local/nilo/internal/diagnostics"
 	"nilo.local/nilo/internal/identity"
 	"nilo.local/nilo/internal/network"
 	"nilo.local/nilo/internal/simulation"
@@ -114,10 +113,9 @@ type HandlerOptions struct {
 	// access simply has no route there.
 	MCP            http.Handler
 	CookieSecurity CookieSecurity
-	// Activity and Diagnostics serve the shared history and the timed debug
-	// controls. They are optional: a handler without them has no such routes.
-	Activity    *activity.Service
-	Diagnostics *diagnostics.Service
+	// Activity serves the shared history and its retention policy. It is
+	// optional: a handler without it has no such routes.
+	Activity *activity.Service
 	// Audit records what the boundary itself decides: an export, a policy
 	// change, a refused request. Optional.
 	Audit AuditJournal
@@ -215,19 +213,13 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 		authorize(auth.PermissionNetworkManage, handleCheckDeviceNetwork(options.Network)))
 	protected.Handle("GET /api/v1/network/device-networks/{id}/access-instructions",
 		authorize(auth.PermissionNetworkRead, handleAccessInstructions(options.Network)))
-	// The shared history and the timed diagnostics, each behind its own fixed
-	// permission (REQ-SEC-d19a7b30).
+	// The shared history and its retention policy, each behind its own fixed
+	// permission.
 	if options.Activity != nil {
 		protected.Handle("GET /api/v1/activity", authorize(auth.PermissionActivityRead, handleActivityQuery(options.Activity)))
 		protected.Handle("GET /api/v1/activity/export", authorize(auth.PermissionActivityExport, handleActivityExport(options.Activity, options.Audit)))
-		protected.Handle("GET /api/v1/diagnostics/settings", authorize(auth.PermissionDiagnosticsManage, handleReadPolicy(options.Activity)))
-		protected.Handle("PUT /api/v1/diagnostics/settings", authorize(auth.PermissionDiagnosticsManage, handleChangePolicy(options.Activity, options.Audit)))
-	}
-	if options.Diagnostics != nil {
-		protected.Handle("GET /api/v1/diagnostics/sessions", authorize(auth.PermissionDiagnosticsManage, handleListSessions(options.Diagnostics)))
-		protected.Handle("POST /api/v1/diagnostics/sessions", authorize(auth.PermissionDiagnosticsManage, handleStartSession(options.Diagnostics)))
-		protected.Handle("GET /api/v1/diagnostics/sessions/{id}", authorize(auth.PermissionDiagnosticsManage, handleReadSession(options.Diagnostics)))
-		protected.Handle("POST /api/v1/diagnostics/sessions/{id}/stop", authorize(auth.PermissionDiagnosticsManage, handleStopSession(options.Diagnostics)))
+		protected.Handle("GET /api/v1/activity/retention", authorize(auth.PermissionActivityRetentionManage, handleReadPolicy(options.Activity)))
+		protected.Handle("PUT /api/v1/activity/retention", authorize(auth.PermissionActivityRetentionManage, handleChangePolicy(options.Activity, options.Audit)))
 	}
 	protected.Handle("POST /api/v1/network/wireguard/preview",
 		authorize(auth.PermissionVPNManage, handlePreviewWireGuardChange(options.Operations)))

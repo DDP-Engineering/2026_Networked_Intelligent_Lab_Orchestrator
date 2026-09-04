@@ -270,6 +270,48 @@ func TestAuditEnvelopeRoundTripsAndLeavesOlderRowsReadable(t *testing.T) {
 	}
 }
 
+func TestAuditListSupportsComponentFamiliesAndStableSorting(t *testing.T) {
+	ctx := context.Background()
+	repository := NewAuditRepository(openTemporaryDatabase(t))
+	actor := mustActor(t, "5f6d2e10-0000-4000-8000-00000000000c")
+	base := time.Date(2026, 9, 4, 10, 0, 0, 0, time.UTC)
+
+	items := []audit.Event{
+		enveloped(actor, 1, base),
+		enveloped(actor, 2, base.Add(time.Minute)),
+		enveloped(actor, 3, base.Add(2*time.Minute)),
+	}
+	items[0].Component, items[0].Action = "network.wireguard", "zebra"
+	items[1].Component, items[1].Action = "identity", "ignored"
+	items[2].Component, items[2].Action = "network.interfaces", "alpha"
+	for _, item := range items {
+		if err := repository.Append(ctx, item); err != nil {
+			t.Fatalf("append %s: %v", item.Action, err)
+		}
+	}
+
+	listed, err := repository.List(ctx, audit.Filter{
+		Component: "network.*", Sort: audit.SortActivity, Order: audit.SortAscending,
+	})
+	if err != nil {
+		t.Fatalf("list network family: %v", err)
+	}
+	if len(listed) != 2 || listed[0].Action != "alpha" || listed[1].Action != "zebra" {
+		t.Fatalf("sorted network family = %+v", listed)
+	}
+
+	next, err := repository.List(ctx, audit.Filter{
+		Component: "network.*", Sort: audit.SortActivity, Order: audit.SortAscending,
+		CursorValue: listed[0].Action, AfterSequence: listed[0].Sequence,
+	})
+	if err != nil {
+		t.Fatalf("list after sorted cursor: %v", err)
+	}
+	if len(next) != 1 || next[0].Action != "zebra" {
+		t.Fatalf("sorted page after alpha = %+v", next)
+	}
+}
+
 // TestAuditSequenceNeverRepeatsAfterRetentionEmptiesTheTable covers
 // REQ-DATA-2c8b5f79. MAX(sequence)+1 is correct only while nothing is ever
 // deleted, and this milestone deletes.
