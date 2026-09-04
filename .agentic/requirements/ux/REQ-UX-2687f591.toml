@@ -1,0 +1,48 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-UX-2687f591"
+
+title = "Adapt the shell navigation and top row to compact and constrained viewports"
+
+status = "active"
+
+requirement = """
+When the viewport is at most 72rem wide the browser interface shall show a compact navigation rail that keeps every entry label visible; when the viewport is at most 56rem wide or at most 520 pixels tall it shall replace the rail with a labeled Menu control that opens a navigation drawer listing every entry with its label, keep the selected page named in text in the page header, keep the tab strip scrolling inside its own region, keep the network summary and the single SIM or LIVE indicator visible, and move the appearance and language selections into the account menu.
+"""
+
+verification = "A component test installs a constrained media query, renders the signed-in shell and asserts the Menu control opens a drawer whose Network entry is a labeled button that opens the page and closes the drawer with focus returned, that the appearance and language choices are offered inside the account menu, that exactly one runtime status indicator remains, and that Escape closes the drawer; a browser test at 1024x600 asserts the rail labels are visible and at 800x480 asserts the drawer path reaches Network with no document-level horizontal scrolling."
+
+affected_paths = [
+    "05_Software/nilo_gui/src/components/shell/AppShell.tsx",
+    "05_Software/nilo_gui/src/components/shell/TopRow.tsx",
+    "05_Software/nilo_gui/src/components/shell/SideNav.tsx",
+    "05_Software/nilo_gui/src/components/shell/NavDrawer.tsx",
+    "05_Software/nilo_gui/src/components/shell/useViewportClass.ts",
+    "05_Software/nilo_gui/src/styles/shell.css",
+    "05_Software/nilo_gui/src/test/render.tsx",
+    "05_Software/nilo_gui/src/components/shell/Icon.tsx",
+    "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
+    "05_Software/nilo_gui/src/layout.test.ts",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::opens a labeled navigation drawer from a Menu control and returns focus",
+    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::closes the drawer with Escape",
+    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::keeps the labeled rail on a compact field viewport",
+    "05_Software/nilo_gui/src/layout.test.ts::narrows the navigation to a labeled compact rail on a field viewport",
+    "05_Software/nilo_gui/src/layout.test.ts::replaces the rail with a drawer on a constrained viewport",
+    "05_Software/nilo_gui/e2e/field-display.spec.ts::the shell and the Network page are readable and complete",
+]
+
+spec = ""
+priority = "high"
+rationale = "An unlabeled icon rail is not navigation an operator can learn on a panel they use occasionally."
+
+created = 2026-09-04
+updated = 2026-09-04

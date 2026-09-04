@@ -8,8 +8,66 @@ import type {
   NetworkStatus,
   StatisticsPeriod,
 } from '../../api/contract';
+import type { DeviceNetwork } from '../../api/devicenetworks';
+import type { WireGuardStatus } from '../../api/wireguard';
 import { renderInShell } from '../../test/render';
 import { NetworkPage } from './NetworkPage';
+
+const lineThree: DeviceNetwork = {
+  id: 'dn-1',
+  name: 'Line 3',
+  location: 'Hall B',
+  deviceInterface: '02:00:00:00:00:01',
+  applianceAddress: '192.168.0.1/24',
+  deviceSubnet: '192.168.0.0/24',
+  scope: 'host',
+  target: '192.168.0.130',
+  addressing: 'original',
+  exposed: '192.168.0.130',
+  access: 'local',
+  localInterface: '02:00:00:00:00:01',
+  localSources: ['192.168.10.0/24'],
+  vpnProfileId: '',
+  vpnSources: [],
+  services: {
+    protocols: ['tcp'],
+    tcpPorts: [504],
+    udpPorts: [],
+    preserveSource: false,
+  },
+  enabled: true,
+  revision: 'r1',
+  state: 'active',
+  detail: '',
+  applied: true,
+  observedAt: new Date('2026-09-04T10:00:00Z'),
+};
+
+const officeActive: WireGuardStatus = {
+  reported: true,
+  measuredBy: 'simulation',
+  networkManagerAvailable: true,
+  networkManagerVersion: 'simulated',
+  kernelSupported: true,
+  helperAvailable: true,
+  canInstall: false,
+  tools: [],
+  detail: '',
+  profiles: [
+    {
+      id: 'office',
+      name: 'Office',
+      interface: 'sim-wg',
+      niloOwned: true,
+      active: true,
+      autoconnect: true,
+      lastHandshake: null,
+      addresses: ['10.7.0.2/24'],
+      dns: [],
+      peers: [{ endpoint: 'vpn.example.test:51820', allowedIPs: ['10.7.0.0/24'] }],
+    },
+  ],
+};
 
 const status: NetworkStatus = {
   measuredBy: 'simulation',
@@ -30,7 +88,15 @@ const status: NetworkStatus = {
       notControllableReason: '',
       adapterId: '02:00:00:00:00:01',
       ssid: '',
-      settings: null,
+      settings: {
+        saved: true,
+        applied: true,
+        revision: 'r1',
+        method: 'static',
+        managementProtected: true,
+        neverDefault: false,
+        ssid: '',
+      },
     },
     {
       id: 'sim-lo',
@@ -104,12 +170,30 @@ interface PageOverrides {
   acknowledgeOperation?: (id: string, revision: string) => Promise<NetworkOperation>;
   confirmOperation?: (id: string) => Promise<NetworkOperation>;
   rollbackOperation?: (id: string) => Promise<NetworkOperation>;
+  listOperations?: () => Promise<NetworkOperation[]>;
   canManageInterfaces?: boolean;
+  readDeviceNetworks?: () => Promise<DeviceNetwork[]>;
+  wireGuardStatus?: WireGuardStatus | null;
+  previewInterfaceSettings?: () => Promise<NetworkOperation>;
 }
 
-function renderPage(overrides: PageOverrides = {}) {
+type NetworkView = 'overview' | 'adapters' | 'device-access' | 'vpn' | 'diagnostics';
+
+/** Open the row's compact Actions dialog and choose one action by its full name. */
+function chooseAction(rowName: string, action: RegExp | string): void {
+  fireEvent.click(screen.getByRole('button', { name: `Actions for ${rowName}` }));
+  fireEvent.click(
+    within(screen.getByRole('dialog', { name: `Actions for ${rowName}` })).getByRole(
+      'button',
+      { name: action },
+    ),
+  );
+}
+
+function renderPage(overrides: PageOverrides = {}, view: NetworkView = 'overview') {
   return renderInShell(
     <NetworkPage
+      view={view}
       readNetworkStatus={overrides.getNetworkStatus ?? (() => Promise.resolve(status))}
       readNetworkStatistics={
         overrides.getNetworkStatistics ?? (() => Promise.resolve(statistics))
@@ -128,16 +212,85 @@ function renderPage(overrides: PageOverrides = {}) {
         overrides.rollbackOperation ??
         (() => Promise.resolve({ ...awaitingConfirmation, state: 'rolled_back' }))
       }
+      listOperations={overrides.listOperations}
       canManageInterfaces={overrides.canManageInterfaces ?? false}
       benchCoreReachable
+      readDeviceNetworks={overrides.readDeviceNetworks}
+      wireGuardStatus={overrides.wireGuardStatus ?? null}
+      previewInterfaceSettings={overrides.previewInterfaceSettings}
     />,
     { theme: 'light', language: 'en' },
   );
 }
 
 describe('NetworkPage', () => {
+  // REQ-UX-b555166c: each destination carries only its own concern.
+  it.each([
+    [
+      'overview',
+      'Network / Overview',
+      'Overview',
+      ['Interfaces', 'WireGuard profiles', 'Statistics'],
+    ],
+    [
+      'adapters',
+      'Network / Network adapters',
+      'Interfaces',
+      ['Overview', 'WireGuard profiles', 'Statistics'],
+    ],
+    [
+      'device-access',
+      'Network / Device access',
+      'Device networks',
+      ['Overview', 'Interfaces', 'WireGuard profiles', 'Statistics'],
+    ],
+    [
+      'vpn',
+      'Network / VPN profiles',
+      'WireGuard profiles',
+      ['Overview', 'Interfaces', 'Device networks', 'Statistics'],
+    ],
+    [
+      'diagnostics',
+      'Network / Diagnostics',
+      'Statistics',
+      ['Overview', 'Interfaces', 'Device networks', 'WireGuard profiles'],
+    ],
+  ] as const)(
+    'renders only the %s destination',
+    async (view, pageTitle, present, absent) => {
+      renderPage(
+        {
+          readDeviceNetworks: () => Promise.resolve([lineThree]),
+          wireGuardStatus: officeActive,
+        },
+        view,
+      );
+
+      expect(
+        await screen.findByRole('heading', { name: pageTitle, level: 2 }),
+      ).toBeVisible();
+      if (present === 'Overview') {
+        expect(await screen.findByRole('region', { name: present })).toBeVisible();
+      } else {
+        expect(await screen.findByRole('heading', { name: present })).toBeVisible();
+      }
+      for (const heading of absent) {
+        expect(screen.queryByRole('heading', { name: heading })).toBeNull();
+      }
+    },
+  );
+
+  it('requests traffic history only from Diagnostics', async () => {
+    const getNetworkStatistics = vi.fn(() => Promise.resolve(statistics));
+    renderPage({ getNetworkStatistics }, 'adapters');
+    await screen.findAllByText('enp1s0');
+    await Promise.resolve();
+    expect(getNetworkStatistics).not.toHaveBeenCalled();
+  });
+
   it('lists addresses and gateways without repeating the shell simulation indicator', async () => {
-    renderPage();
+    renderPage({}, 'adapters');
 
     expect((await screen.findAllByText('enp1s0')).length).toBeGreaterThan(0);
     expect(screen.getByText('192.168.10.24/24')).toBeInTheDocument();
@@ -150,24 +303,112 @@ describe('NetworkPage', () => {
     expect(screen.queryByText(/simulated environment/i)).not.toBeInTheDocument();
   });
 
-  it('makes the reason for a read-only device available on its name', async () => {
-    renderPage();
+  it('states the reason for a read-only device in its details, not in a tooltip', async () => {
+    const { container } = renderPage({}, 'adapters');
     await screen.findAllByText('enp1s0');
+    expect(container.querySelector('[title]')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Details lo' }));
     expect(
-      screen.getByTitle(/the loopback device is not an appliance connection/i),
-    ).toBeInTheDocument();
+      screen.getByText(/the loopback device is not an appliance connection/i),
+    ).toBeVisible();
   });
 
-  it('presents the three areas the plan asks for', async () => {
-    renderPage();
-    for (const heading of [/interfaces/i, /wireguard/i, /statistics/i]) {
-      expect(await screen.findByRole('heading', { name: heading })).toBeInTheDocument();
+  // REQ-UX-ff989933: the essential columns stay, everything else is in the
+  // explicit details, and several actions are one compact dialog.
+  it('keeps the essential columns and puts the secondary values behind Details', async () => {
+    renderPage({ canManageInterfaces: true }, 'adapters');
+    await screen.findAllByText('enp1s0');
+
+    for (const column of ['Interface', 'State', 'IP address', 'Gateway', 'Actions']) {
+      expect(screen.getByRole('columnheader', { name: column })).toBeVisible();
     }
+    expect(screen.queryByRole('columnheader', { name: /link/i })).toBeNull();
+    expect(screen.queryByText('1000 Mbit/s')).toBeNull();
+
+    const details = screen.getByRole('button', { name: 'Details enp1s0' });
+    expect(details).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(details);
+    expect(details).toHaveAttribute('aria-expanded', 'true');
+    const facts = screen.getByRole('region', { name: 'Details enp1s0' });
+    expect(within(facts).getByText('1000 Mbit/s')).toBeVisible();
+    expect(within(facts).getByText(/12\.5 kB\/s/)).toBeVisible();
+    expect(within(facts).getByText(/3\.1 kB\/s/)).toBeVisible();
+    expect(within(facts).getByText('02:00:00:00:00:01')).toBeVisible();
+    expect(within(facts).getByText(/protected as a management path/i)).toBeVisible();
+    expect(within(facts).getByText(/static/)).toBeVisible();
+    expect(screen.getByRole('table').closest('.table-scroll')).not.toBeNull();
+  });
+
+  it('offers every interface action from one dialog, with visible object context', async () => {
+    renderPage(
+      {
+        canManageInterfaces: true,
+        previewInterfaceSettings: () => Promise.resolve(previewed),
+      },
+      'adapters',
+    );
+    await screen.findAllByText('enp1s0');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Actions for enp1s0' }));
+    const dialog = screen.getByRole('dialog', { name: 'Actions for enp1s0' });
+    expect(within(dialog).getByText('Network interface')).toBeVisible();
+    expect(within(dialog).getByText('Connected')).toBeVisible();
+    expect(
+      within(dialog).getByRole('button', { name: 'Disable enp1s0' }),
+    ).toBeEnabled();
+    expect(
+      within(dialog).getByRole('button', { name: /Configure enp1s0/ }),
+    ).toBeEnabled();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('dialog', { name: 'Actions for enp1s0' })).toBeNull();
+
+    // Loopback offers no action, so it has no Actions control either.
+    expect(screen.queryByRole('button', { name: 'Actions for lo' })).toBeNull();
+    // The details stay explicit and separate from the action dialog.
+    expect(screen.getByRole('button', { name: 'Details lo' })).toBeVisible();
+  });
+
+  // REQ-UX-cde0b9e2: one overview, and only the facts that decide the next step.
+  it('summarizes the uplink, the device side, the active profile and what is pending', async () => {
+    renderPage({
+      readDeviceNetworks: () => Promise.resolve([lineThree]),
+      wireGuardStatus: officeActive,
+    });
+    const overview = await screen.findByRole('region', { name: 'Overview' });
+    expect(within(overview).getAllByText(/enp1s0/).length).toBeGreaterThan(0);
+    expect(within(overview).getByText(/192\.168\.10\.24\/24/)).toBeVisible();
+    expect(within(overview).getByText(/192\.168\.0\.1\/24/)).toBeVisible();
+    expect(within(overview).getByText('Office')).toBeVisible();
+    expect(within(overview).getByText(/nothing pending/i)).toBeVisible();
+    expect(within(overview).queryByText(/simulated environment/i)).toBeNull();
+  });
+
+  it('says none where there is no device network and no active profile', async () => {
+    renderPage({ readDeviceNetworks: () => Promise.resolve([]) });
+    const overview = await screen.findByRole('region', { name: 'Overview' });
+    expect(within(overview).getByText(/enp1s0/)).toBeVisible();
+    expect(within(overview).getAllByText('None')).toHaveLength(2);
+  });
+
+  it('names a change awaiting confirmation in the overview', async () => {
+    renderPage({ listOperations: () => Promise.resolve([awaitingConfirmation]) });
+    const overview = await screen.findByRole('region', { name: 'Overview' });
+    expect(within(overview).getByText(/interface\.disable/)).toBeVisible();
+  });
+
+  // REQ-UX-4570c081: the rollback window is in the confirmation, never only in help.
+  it('states the two-minute rollback window in the confirmation itself', async () => {
+    renderPage({ canManageInterfaces: true }, 'adapters');
+    await screen.findAllByText('enp1s0');
+    chooseAction('enp1s0', 'Disable enp1s0');
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText(/within two minutes/i)).toBeVisible();
+    expect(within(dialog).getByText(/restored automatically/i)).toBeVisible();
   });
 
   it('asks for a different window when a period is chosen', async () => {
     const getNetworkStatistics = vi.fn(() => Promise.resolve(statistics));
-    renderPage({ getNetworkStatistics });
+    renderPage({ getNetworkStatistics }, 'diagnostics');
 
     await waitFor(() => expect(getNetworkStatistics).toHaveBeenCalled());
     const before = getNetworkStatistics.mock.calls.length;
@@ -179,53 +420,72 @@ describe('NetworkPage', () => {
   });
 
   it('marks a series that stopped refreshing rather than letting it look current', async () => {
-    renderPage({
-      getNetworkStatistics: () =>
-        Promise.resolve({
-          ...statistics,
-          stale: true,
-          points: statistics.points.map((point) => ({ ...point, stale: true })),
-        }),
-    });
+    renderPage(
+      {
+        getNetworkStatistics: () =>
+          Promise.resolve({
+            ...statistics,
+            stale: true,
+            points: statistics.points.map((point) => ({ ...point, stale: true })),
+          }),
+      },
+      'diagnostics',
+    );
     expect(await screen.findByText(/no longer being refreshed/i)).toBeInTheDocument();
   });
 
   it('states that nothing was measured rather than drawing an empty window as zero', async () => {
-    renderPage({
-      getNetworkStatistics: () =>
-        Promise.resolve({ ...statistics, stale: true, points: [] }),
-    });
+    renderPage(
+      {
+        getNetworkStatistics: () =>
+          Promise.resolve({ ...statistics, stale: true, points: [] }),
+      },
+      'diagnostics',
+    );
     expect(await screen.findByText(/no traffic was measured/i)).toBeInTheDocument();
   });
 
   // Bench Core authorizes every request on its own, so hiding a control is
   // presentation. It still must not be offered to somebody who cannot use it.
   it('offers no interface controls to an identity that cannot manage them', async () => {
-    renderPage({ canManageInterfaces: false });
+    renderPage({ canManageInterfaces: false }, 'adapters');
     await screen.findAllByText('enp1s0');
     expect(screen.queryByRole('button', { name: /disable/i })).toBeNull();
   });
 
   it('offers a control only for a device that is actually controllable', async () => {
-    renderPage({ canManageInterfaces: true });
+    renderPage({ canManageInterfaces: true }, 'adapters');
     await screen.findAllByText('enp1s0');
 
     // The wired device can be disabled; loopback carries no control at all.
-    expect(screen.getAllByRole('button', { name: /disable enp1s0/i })).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Actions for enp1s0' }));
+    expect(
+      within(screen.getByRole('dialog', { name: 'Actions for enp1s0' })).getAllByRole(
+        'button',
+        {
+          name: /disable enp1s0/i,
+        },
+      ),
+    ).toHaveLength(1);
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('button', { name: /actions for lo/i })).toBeNull();
     expect(screen.queryByRole('button', { name: /disable lo/i })).toBeNull();
   });
 
   it('shows the exact change before it asks for agreement, and changes nothing until then', async () => {
     const previewInterfaceChange = vi.fn(() => Promise.resolve(previewed));
     const acknowledgeOperation = vi.fn(() => Promise.resolve(awaitingConfirmation));
-    renderPage({
-      canManageInterfaces: true,
-      previewInterfaceChange,
-      acknowledgeOperation,
-    });
+    renderPage(
+      {
+        canManageInterfaces: true,
+        previewInterfaceChange,
+        acknowledgeOperation,
+      },
+      'adapters',
+    );
     await screen.findAllByText('enp1s0');
 
-    fireEvent.click(screen.getByRole('button', { name: /disable enp1s0/i }));
+    chooseAction('enp1s0', /disable enp1s0/i);
 
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText(/sim-enp1s0/)).toBeInTheDocument();
@@ -241,10 +501,10 @@ describe('NetworkPage', () => {
 
   it('abandons a previewed change without acknowledging it', async () => {
     const acknowledgeOperation = vi.fn(() => Promise.resolve(awaitingConfirmation));
-    renderPage({ canManageInterfaces: true, acknowledgeOperation });
+    renderPage({ canManageInterfaces: true, acknowledgeOperation }, 'adapters');
     await screen.findAllByText('enp1s0');
 
-    fireEvent.click(screen.getByRole('button', { name: /disable enp1s0/i }));
+    chooseAction('enp1s0', /disable enp1s0/i);
     const dialog = await screen.findByRole('dialog');
     fireEvent.click(within(dialog).getByRole('button', { name: /cancel/i }));
 
@@ -253,10 +513,10 @@ describe('NetworkPage', () => {
   });
 
   it('counts the confirmation window down and offers both ways out', async () => {
-    renderPage({ canManageInterfaces: true });
+    renderPage({ canManageInterfaces: true }, 'adapters');
     await screen.findAllByText('enp1s0');
 
-    fireEvent.click(screen.getByRole('button', { name: /disable enp1s0/i }));
+    chooseAction('enp1s0', /disable enp1s0/i);
     fireEvent.click(
       within(await screen.findByRole('dialog')).getByRole('button', {
         name: /^apply$/i,
@@ -275,10 +535,10 @@ describe('NetworkPage', () => {
     const confirmOperation = vi.fn(() =>
       Promise.resolve({ ...awaitingConfirmation, state: 'confirmed' as const }),
     );
-    renderPage({ canManageInterfaces: true, confirmOperation });
+    renderPage({ canManageInterfaces: true, confirmOperation }, 'adapters');
     await screen.findAllByText('enp1s0');
 
-    fireEvent.click(screen.getByRole('button', { name: /disable enp1s0/i }));
+    chooseAction('enp1s0', /disable enp1s0/i);
     fireEvent.click(
       within(await screen.findByRole('dialog')).getByRole('button', {
         name: /^apply$/i,
@@ -288,17 +548,25 @@ describe('NetworkPage', () => {
 
     await waitFor(() => expect(confirmOperation).toHaveBeenCalledWith('operation-1'));
     await waitFor(() => expect(screen.queryByRole('timer')).toBeNull());
-    expect(screen.getByRole('button', { name: /disable enp1s0/i })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Actions for enp1s0' }));
+    expect(
+      within(screen.getByRole('dialog', { name: 'Actions for enp1s0' })).getByRole(
+        'button',
+        {
+          name: /disable enp1s0/i,
+        },
+      ),
+    ).toBeEnabled();
   });
 
   it('restores the previous state when the administrator asks for it', async () => {
     const rollbackOperation = vi.fn(() =>
       Promise.resolve({ ...awaitingConfirmation, state: 'rolled_back' as const }),
     );
-    renderPage({ canManageInterfaces: true, rollbackOperation });
+    renderPage({ canManageInterfaces: true, rollbackOperation }, 'adapters');
     await screen.findAllByText('enp1s0');
 
-    fireEvent.click(screen.getByRole('button', { name: /disable enp1s0/i }));
+    chooseAction('enp1s0', /disable enp1s0/i);
     fireEvent.click(
       within(await screen.findByRole('dialog')).getByRole('button', {
         name: /^apply$/i,
@@ -315,18 +583,21 @@ describe('NetworkPage', () => {
   // A rollback that could not be verified is the one outcome that must not be
   // reported quietly, because the appliance may be in neither state.
   it('reports a rollback that was not verified prominently', async () => {
-    renderPage({
-      canManageInterfaces: true,
-      rollbackOperation: () =>
-        Promise.resolve({
-          ...awaitingConfirmation,
-          state: 'rollback_failed',
-          failure: 'the previous connection was not observed after restoring',
-        }),
-    });
+    renderPage(
+      {
+        canManageInterfaces: true,
+        rollbackOperation: () =>
+          Promise.resolve({
+            ...awaitingConfirmation,
+            state: 'rollback_failed',
+            failure: 'the previous connection was not observed after restoring',
+          }),
+      },
+      'adapters',
+    );
     await screen.findAllByText('enp1s0');
 
-    fireEvent.click(screen.getByRole('button', { name: /disable enp1s0/i }));
+    chooseAction('enp1s0', /disable enp1s0/i);
     fireEvent.click(
       within(await screen.findByRole('dialog')).getByRole('button', {
         name: /^apply$/i,
@@ -345,22 +616,25 @@ describe('NetworkPage', () => {
   it('draws one mark per measured minute, positioned by time', async () => {
     const from = new Date('2026-09-03T09:45:00Z');
     const at = (minute: number) => new Date(from.getTime() + minute * 60_000);
-    renderPage({
-      getNetworkStatistics: () =>
-        Promise.resolve({
-          ...statistics,
-          from,
-          to: new Date(from.getTime() + 15 * 60_000),
-          // Minutes 0, 1 and 3 measured; minute 2 was never observed.
-          points: [0, 1, 3].map((minute) => ({
-            ...statistics.points[0],
-            minuteStart: at(minute),
-            rxBytes: 1000 * (minute + 1),
-          })),
-        }),
-    });
+    renderPage(
+      {
+        getNetworkStatistics: () =>
+          Promise.resolve({
+            ...statistics,
+            from,
+            to: new Date(from.getTime() + 15 * 60_000),
+            // Minutes 0, 1 and 3 measured; minute 2 was never observed.
+            points: [0, 1, 3].map((minute) => ({
+              ...statistics.points[0],
+              minuteStart: at(minute),
+              rxBytes: 1000 * (minute + 1),
+            })),
+          }),
+      },
+      'diagnostics',
+    );
 
-    const chart = await screen.findByRole('img', { name: /traffic/i });
+    const chart = await screen.findByRole('group', { name: /traffic/i });
     const marks = chart.querySelectorAll('[data-minute]');
     expect(marks).toHaveLength(3);
 
@@ -379,18 +653,21 @@ describe('NetworkPage', () => {
   });
 
   it('says in words what the chart shows, for a reader who cannot see it', async () => {
-    renderPage();
-    const chart = await screen.findByRole('img', { name: /traffic/i });
+    renderPage({}, 'diagnostics');
+    const chart = await screen.findByRole('group', { name: /traffic/i });
     expect(chart.getAttribute('aria-label')).toMatch(/1 measured minute/i);
   });
 
   it('draws no chart when nothing was measured, and says so instead', async () => {
-    renderPage({
-      getNetworkStatistics: () =>
-        Promise.resolve({ ...statistics, stale: true, points: [] }),
-    });
+    renderPage(
+      {
+        getNetworkStatistics: () =>
+          Promise.resolve({ ...statistics, stale: true, points: [] }),
+      },
+      'diagnostics',
+    );
     expect(await screen.findByText(/no traffic was measured/i)).toBeInTheDocument();
-    expect(screen.queryByRole('img', { name: /traffic/i })).toBeNull();
+    expect(screen.queryByRole('group', { name: /traffic/i })).toBeNull();
   });
 
   it('charts the interface the operator chose', async () => {
@@ -399,7 +676,7 @@ describe('NetworkPage', () => {
     const getNetworkStatistics = vi.fn((interfaceId: string) =>
       Promise.resolve({ ...statistics, interfaceId }),
     );
-    renderPage({ getNetworkStatistics });
+    renderPage({ getNetworkStatistics }, 'diagnostics');
     await screen.findAllByText('enp1s0');
     await waitFor(() => expect(getNetworkStatistics).toHaveBeenCalled());
 
@@ -413,7 +690,7 @@ describe('NetworkPage', () => {
   });
 
   it('shows which period is selected', async () => {
-    renderPage();
+    renderPage({}, 'diagnostics');
     await screen.findAllByText('enp1s0');
 
     expect(screen.getByRole('button', { name: '15 minutes' })).toHaveAttribute(

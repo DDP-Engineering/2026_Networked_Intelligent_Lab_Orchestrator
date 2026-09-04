@@ -80,7 +80,7 @@ export function BenchPage({
             scenario={integrations.ok ? integrations.value.scenario : ''}
           >
             {integrations.ok ? (
-              <table className="data-table">
+              <table className="data-table record-table">
                 <thead>
                   <tr>
                     <th scope="col">{t('integration.displayName')}</th>
@@ -95,8 +95,12 @@ export function BenchPage({
                         {integration.displayName}
                         <span className="row-id cell-mono">{integration.id}</span>
                       </th>
-                      <td className="cell-mono">{integration.status}</td>
-                      <td className="cell-mono">{integration.operations.join(', ')}</td>
+                      <td className="cell-mono" data-label={t('bench.state')}>
+                        {integration.status}
+                      </td>
+                      <td className="cell-mono" data-label={t('bench.operations')}>
+                        {integration.operations.join(', ')}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -114,7 +118,7 @@ export function BenchPage({
             scenario={devices.ok ? devices.value.scenario : ''}
           >
             {devices.ok ? (
-              <table className="data-table">
+              <table className="data-table record-table">
                 <thead>
                   <tr>
                     <th scope="col">{t('integration.displayName')}</th>
@@ -130,9 +134,15 @@ export function BenchPage({
                         {device.displayName}
                         <span className="row-id cell-mono">{device.id}</span>
                       </th>
-                      <td className="cell-mono">{device.status}</td>
-                      <td className="cell-mono">{device.integrationId}</td>
-                      <td className="cell-mono">{device.kind}</td>
+                      <td className="cell-mono" data-label={t('bench.availability')}>
+                        {device.status}
+                      </td>
+                      <td className="cell-mono" data-label={t('bench.integration')}>
+                        {device.integrationId}
+                      </td>
+                      <td className="cell-mono" data-label={t('bench.kind')}>
+                        {device.kind}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

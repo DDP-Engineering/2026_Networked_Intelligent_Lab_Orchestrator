@@ -59,13 +59,15 @@ test('shows readiness-only telemetry without inferring tunnel state', async () =
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page
     .getByRole('navigation')
-    .getByRole('button', { name: 'Network', exact: true })
+    .getByRole('button', { name: 'Diagnostics', exact: true })
+    .click();
+  const readiness = page.locator('section[aria-labelledby="network-readiness"]');
+  await expect(readiness.getByText('1.0.20210914', { exact: true })).toBeVisible();
+  await page
+    .getByRole('navigation')
+    .getByRole('button', { name: 'VPN profiles', exact: true })
     .click();
   const panel = page.locator('section[aria-labelledby="network-wireguard"]');
-  await expect(panel.locator('details')).not.toHaveAttribute('open');
-  await panel.getByText('Diagnostics', { exact: true }).click();
-  await expect(panel.getByText('1.0.20210914', { exact: true })).toBeVisible();
-  await panel.getByText('Diagnostics', { exact: true }).click();
   await expect(panel).toContainText('WireGuard profiles have not been reported.');
   await expect(panel.getByRole('button')).toHaveCount(0);
   await page.locator('.network-trigger').click();
@@ -82,6 +84,27 @@ test('shows readiness-only telemetry without inferring tunnel state', async () =
   // The subsequent existing cases own a fresh sign-in.
   await page.context().clearCookies();
 });
+
+/** Open one row's compact Actions dialog and choose an action by its full name. */
+async function rowAction(row: string, action: string) {
+  await page.getByRole('button', { name: `Actions for ${row}`, exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: `Actions for ${row}` });
+  await dialog.getByRole('button', { name: new RegExp(`^${action}`) }).click();
+}
+
+/** Assert whether an action is enabled or withheld, then close the dialog. */
+async function expectRowAction(row: string, action: string, enabled: boolean) {
+  await page.getByRole('button', { name: `Actions for ${row}`, exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: `Actions for ${row}` });
+  const item = dialog.getByRole('button', { name: new RegExp(`^${action}`) });
+  if (enabled) {
+    await expect(item).toBeEnabled();
+  } else {
+    await expect(item).toBeDisabled();
+  }
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+}
 
 async function applyPreview() {
   const dialog = page.getByRole('dialog');
@@ -154,7 +177,7 @@ test('shows acknowledged installation progress and its verified result', async (
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page
     .getByRole('navigation')
-    .getByRole('button', { name: 'Network', exact: true })
+    .getByRole('button', { name: 'VPN profiles', exact: true })
     .click();
   await page
     .getByRole('button', { name: 'Install WireGuard tools', exact: true })
@@ -169,8 +192,8 @@ test('shows acknowledged installation progress and its verified result', async (
     page.getByRole('button', { name: 'Install WireGuard tools', exact: true }),
   ).toBeDisabled();
   await expect(
-    page.getByRole('button', { name: 'Disable enp1s0', exact: true }),
-  ).toBeDisabled();
+    page.getByRole('button', { name: 'Actions for enp1s0', exact: true }),
+  ).toHaveCount(0);
   await expect(
     page.getByRole('button', { name: 'Keep change', exact: true }),
   ).toHaveCount(0);
@@ -183,7 +206,10 @@ test('shows acknowledged installation progress and its verified result', async (
   await expect(
     page.getByText('WireGuard tools are installed and verified.', { exact: true }),
   ).toBeVisible();
-  await page.getByText('Diagnostics', { exact: true }).click();
+  await page
+    .getByRole('navigation')
+    .getByRole('button', { name: 'Diagnostics', exact: true })
+    .click();
   await expect(page.getByText('1.0.20210914', { exact: true })).toBeVisible();
   await page.unrouteAll();
   await page.context().clearCookies();
@@ -198,9 +224,9 @@ test('reports simulated changes, restores them and permits another change', asyn
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page
     .getByRole('navigation')
-    .getByRole('button', { name: 'Network', exact: true })
+    .getByRole('button', { name: 'Network adapters', exact: true })
     .click();
-  await page.getByRole('button', { name: 'Disable enp1s0', exact: true }).click();
+  await rowAction('enp1s0', 'Disable enp1s0');
   await applyPreview();
   await expect(
     page
@@ -210,10 +236,8 @@ test('reports simulated changes, restores them and permits another change', asyn
   await page.getByRole('button', { name: 'Keep change', exact: true }).focus();
   await page.keyboard.press('Enter');
   await expect(page.getByText('The change was kept.', { exact: true })).toBeVisible();
-  await expect(
-    page.getByRole('button', { name: 'Enable enp1s0', exact: true }),
-  ).toBeEnabled();
-  await page.getByRole('button', { name: 'Enable enp1s0', exact: true }).click();
+  await expectRowAction('enp1s0', 'Enable enp1s0', true);
+  await rowAction('enp1s0', 'Enable enp1s0');
   await applyPreview();
   await page
     .getByRole('button', { name: 'Restore previous state', exact: true })
@@ -221,7 +245,7 @@ test('reports simulated changes, restores them and permits another change', asyn
   await expect(
     page.getByText('The previous state was restored.', { exact: true }),
   ).toBeVisible();
-  await page.getByRole('button', { name: 'Enable enp1s0', exact: true }).click();
+  await rowAction('enp1s0', 'Enable enp1s0');
   await applyPreview();
   await page.getByRole('button', { name: 'Keep change', exact: true }).click();
 });
@@ -229,6 +253,10 @@ test('reports simulated changes, restores them and permits another change', asyn
 test('imports, selects startup and toggles a simulated WireGuard tunnel', async () => {
   const conf =
     '[Interface]\nPrivateKey = AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\nAddress = 10.20.0.2/32, fd00:20::2/128\nDNS = 10.20.0.1\n[Peer]\nPublicKey = ERERERERERERERERERERERERERERERERERERERERERE=\nAllowedIPs = 10.20.0.0/24, fd00:20::/64\nEndpoint = vpn.example.test:51820\nPersistentKeepalive = 0\n';
+  await page
+    .getByRole('navigation')
+    .getByRole('button', { name: 'VPN profiles', exact: true })
+    .click();
   await page.getByRole('button', { name: 'Import profile', exact: true }).click();
   await page.getByLabel('Profile name', { exact: true }).fill('test-office');
   await page
@@ -240,17 +268,19 @@ test('imports, selects startup and toggles a simulated WireGuard tunnel', async 
     });
   await page.getByRole('button', { name: 'Preview import', exact: true }).click();
   await applyPreview();
-  await expect(
-    page.getByRole('button', { name: 'Enable test-office', exact: true }),
-  ).toBeVisible();
+  await expectRowAction('test-office', 'Enable test-office', true);
   await expect(page.getByText('10.20.0.2/32', { exact: true })).toBeVisible();
+  // The endpoint, DNS and routes are secondary: one Details away, never dropped.
+  await expect(page.getByText('vpn.example.test:51820', { exact: true })).toHaveCount(
+    0,
+  );
+  await page.getByRole('button', { name: 'Details test-office', exact: true }).click();
   await expect(page.getByText('vpn.example.test:51820', { exact: true })).toBeVisible();
-  await page.getByText('Details', { exact: true }).click();
   await expect(page.getByText('10.20.0.1', { exact: true })).toBeVisible();
   await expect(
     page.getByText('10.20.0.0/24, fd00:20::/64', { exact: true }),
   ).toBeVisible();
-  await page.getByText('Details', { exact: true }).click();
+  await page.getByRole('button', { name: 'Details test-office', exact: true }).click();
   await page.getByRole('button', { name: 'Import profile', exact: true }).click();
   await expect(page.getByLabel('Profile name', { exact: true })).toHaveCount(0);
   await page
@@ -264,13 +294,11 @@ test('imports, selects startup and toggles a simulated WireGuard tunnel', async 
       exact: true,
     }),
   ).toBeChecked();
-  await page.getByRole('button', { name: 'Enable test-office', exact: true }).click();
+  await rowAction('test-office', 'Enable test-office');
   await applyPreview();
   await page.getByRole('button', { name: 'Keep change', exact: true }).click();
-  await expect(
-    page.getByRole('button', { name: 'Disable test-office', exact: true }),
-  ).toBeVisible();
-  await page.getByRole('button', { name: 'Disable test-office', exact: true }).click();
+  await expectRowAction('test-office', 'Disable test-office', true);
+  await rowAction('test-office', 'Disable test-office');
   await applyPreview();
   await page.getByRole('button', { name: 'Keep change', exact: true }).click();
   await expect(
@@ -279,14 +307,16 @@ test('imports, selects startup and toggles a simulated WireGuard tunnel', async 
       exact: true,
     }),
   ).toBeChecked();
-  await expect(
-    page.getByRole('button', { name: 'Remove test-office', exact: true }),
-  ).toBeVisible();
+  await expectRowAction('test-office', 'Remove test-office', true);
 });
 
 test('unconfirmed changes restore automatically and real sampling produces history', async () => {
   test.setTimeout(180_000);
-  await page.getByRole('button', { name: 'Disable enp1s0', exact: true }).click();
+  await page
+    .getByRole('navigation')
+    .getByRole('button', { name: 'Network adapters', exact: true })
+    .click();
+  await rowAction('enp1s0', 'Disable enp1s0');
   await applyPreview();
   await expect(page.getByRole('timer')).toBeVisible();
   // No accelerated server clock and no request to the rollback route: this
@@ -294,9 +324,7 @@ test('unconfirmed changes restore automatically and real sampling produces histo
   await expect(
     page.getByText('The previous state was restored.', { exact: true }),
   ).toBeVisible({ timeout: 140_000 });
-  await expect(
-    page.getByRole('button', { name: 'Disable enp1s0', exact: true }),
-  ).toBeEnabled();
+  await expectRowAction('enp1s0', 'Disable enp1s0', true);
   const history = await page.request.get(
     new URL(
       '/api/v1/network/statistics?interface=sim-enp1s0&period=15m',
@@ -318,6 +346,10 @@ test('unconfirmed changes restore automatically and real sampling produces histo
       fullPage: true,
     });
   if (process.env.NILO_NETWORK_REVIEW === '1') {
+    await page
+      .getByRole('navigation')
+      .getByRole('button', { name: 'Diagnostics', exact: true })
+      .click();
     await page
       .getByRole('heading', { name: 'Statistics', exact: true })
       .scrollIntoViewIfNeeded();

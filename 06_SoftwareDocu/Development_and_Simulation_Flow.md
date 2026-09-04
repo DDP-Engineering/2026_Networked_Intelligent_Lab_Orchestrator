@@ -488,13 +488,22 @@ token or newly created API token secret is written to any of those either.
 open page tabs, and the network, `SIM`, appearance, language and account
 controls; there is no second tab strip and no page title above the workspace.
 The left navigation lists the working entries and the integrations Bench Core
-actually reports, with a bottom-anchored cluster of **Network, Plugins,
-Authentication, Settings** and **About**. Network is a built-in appliance
-capability, not an integration, which is why it sits there. Choosing an entry
+actually reports, with a bottom-anchored cluster of **Network, Activity,
+Plugins, Authentication, Settings** and **About**. Network is a collapsible
+built-in group with **Overview, Network adapters, Device access, VPN profiles**
+and **Diagnostics**. Choosing the group root opens Overview; choosing any entry
 opens it as a tab; tabs activate on click, move with the arrow, Home and End
 keys, close from their own control, and fall back to the nearest remaining
-neighbour. Below roughly 60rem the navigation narrows to icons, which keep their
-accessible names.
+neighbour.
+
+The shell has three layouts, decided by the viewport and used by the stylesheet
+and the interface alike. Above 72rem it is the full rail. At or below 72rem —
+the seven-inch panel's usual 1024x600 — the rail narrows but every entry keeps
+its visible label. At or below 56rem wide, or 520 pixels high, the rail gives
+way to a **Menu** control that opens a labelled navigation drawer; Escape closes
+it and focus returns to the control. The appearance and language selections
+move into the account menu there, while the tabs, the network summary and the
+single `SIM`/`LIVE` indicator stay in the row.
 
 **Appearance and language.** The appearance menu offers **Light**, **Dark** and
 **System**; System follows the operating system or browser preference and
@@ -510,8 +519,12 @@ language.
 WireGuard profiles, applies acknowledged in-memory changes and samples traffic
 into minute history in SQLite. Connectivity changes must be confirmed within
 120 seconds or are restored. The GUI polls the actual operation result and
-reports browser reachability separately. Live NetworkManager management, root
-key storage and crash/reboot recovery are unfinished; the browser-only mock
+reports browser reachability separately. Overview summarizes the next decision;
+Network adapters, Device access and VPN profiles own configuration; Diagnostics
+owns WireGuard readiness and traffic history. The history chart identifies RX
+and TX, labels its byte and time scales, preserves unmeasured gaps and exposes
+the exact selected minute by pointer, touch or keyboard. Live NetworkManager
+management, root key storage and crash/reboot recovery are unfinished; the browser-only mock
 does not implement the full new lifecycle. See
 [Network implementation status](Network_Service_Implementation_Status.md).
 
@@ -573,6 +586,67 @@ identity list or a token list with more entries than fit scrolls inside its own
 compartment rather than scrolling the page. Below roughly 64rem the two
 administration panels stack and scroll in the workspace instead of being
 clipped.
+
+### The compact field interface
+
+The interface is sized for a seven-inch appliance display as well as a desktop
+monitor. `1024x600` is the primary field viewport and `800x480` the constrained
+fallback; both are read at 100% browser zoom.
+
+One semantic type scale lives in `src/styles/tokens.css` and nothing else
+declares a size: page titles are 22px, section titles 18px, body and control
+text 16px, dense table values and navigation labels 15px, and labels, help and
+secondary status 14px. No operator-facing text is smaller than 14px, in either
+theme, and no table is made to fit by shrinking it. Every button, input, select,
+tab, navigation entry and row action is at least 44 by 44 pixels, and a checkbox
+sits inside a label of that height.
+
+Each list — Interfaces, WireGuard profiles, Device networks, Activity, the bench
+inventories, the identity and token listings — is one markup that renders as a
+table on a wide display and as a stack of labelled cards below 56rem. The
+essential columns stay in the row; every other value is one **Details** control
+away, in an expansion that is announced as a region, and several actions on one
+item are offered from a single **Actions** control. It opens a compact dialog
+above the page, where the object type and current status remain visible, every
+action is a large button, disabled entries state why, destructive choices are
+separated, and Cancel returns focus without moving the page. Because the dialog
+is attached to the document rather than the table, a table scrollbar cannot
+clip it. Nothing is silently dropped at a narrow width.
+
+Dialogs are bounded to the viewport: a head with the title and a close control,
+a body that scrolls, and the action bar stuck to the bottom of that body. At or
+below 56rem wide, or 640 pixels high, a configuration dialog becomes a
+full-screen sheet. Escape closes the topmost layer only, so a help popover over
+an editor closes the popover and leaves the editor open.
+
+**Help has three levels.** Persistent guidance sits under a field when the
+operator needs it to choose a valid value, and it never disappears. A help
+control beside a setting's label opens a popover with a short definition and an
+example; it opens on click, tap and keyboard, exposes `aria-expanded` and the
+panel, closes on Escape, outside activation or its own close control with focus
+returned, allows one open at a time, and repositions to stay in view. Hover is
+an extra, never a requirement, and no explanation lives only in a `title`
+attribute. **How to configure** in the device-network editor and the adapter
+dialog opens the workflow help: the goal, the values to have ready, an
+addressing example, what NILO will change, what must already be configured on
+another computer, router, VPN hub or device, and how to verify and recover.
+
+Safety information stays outside help. The confirmation window and automatic
+rollback, the countdown, a failed rollback, a refused change, field validation
+and the external-route prerequisite are all persistent text beside the control
+or in the confirmation dialog.
+
+The Network group opens with one Overview page — management or uplink adapter
+with its address, device side with its address, the active WireGuard profile or
+None, and whatever needs attention. Network adapters, Device access, VPN profiles
+and Diagnostics then expose only their assigned concern. The device-network
+editor is grouped as Identity,
+Device side, Access path, Addressing, Services, a collapsed Advanced, and a
+Review that states in plain language which adapter carries which address, which
+sources may reach which target, whether WireGuard is involved, whether source
+NAT is used and whether the management connection could be affected. Ports stay
+editable: 502 is shown as an example because a device may be set to another
+port such as 504.
 
 To develop the interface with no WSL2 backend at all, use mock mode:
 
@@ -669,10 +743,28 @@ with no page reload and no second token.
 
 `e2e/shell.spec.ts` covers what only a browser settles about the shell: that
 the header really is one row within the agreed height, that the lower cluster is
-the five core entries with Network among them, that tabs open and close with the
-documented fallback, that the Network page reports nothing it was not told, that
+the core entries with the nested Network group among them, that focused Network
+destinations open separate tabs, that tabs close with the documented fallback,
+that the Network pages report nothing they were not told, that
 a theme and a language survive a real reload together with the session, and that
 a narrow viewport narrows the navigation without clipping or naming nothing.
+
+`e2e/field-display.spec.ts` covers the compact field interface at `1920x1080`,
+`1366x768`, `1024x600` and `800x480` in the light and dark themes: the labelled
+rail and the navigation drawer, the Network overview, the details of an
+interface, a profile and a device network on their focused pages, Diagnostics,
+the row action dialogs, field help
+opened and closed by pointer and by keyboard and kept inside the viewport, the
+adapter and device-network editors reaching their final actions, the full-screen
+sheet, an invalid address and an invalid port refused beside their fields, a
+change awaiting confirmation named in the overview and restored, and the other
+pages. At every viewport it asserts that no visible text renders below 14
+pixels, that nothing scrolls the document sideways, that no explanation lives
+only in a `title` attribute, and — at the two field sizes — that no interactive
+target is below 44 by 44 pixels. It is proof in CSS pixels; acceptance on the
+physical seven-inch panel is a separate, still-outstanding step. Run it with
+`NILO_FIELD_REVIEW=1` to keep one screenshot per viewport and theme under
+`test-results/field/`.
 
 `e2e/authentication.spec.ts` covers the human path against its own backend, with
 a real administrator it bootstraps through the real command line, passing the

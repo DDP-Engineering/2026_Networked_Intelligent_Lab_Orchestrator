@@ -119,7 +119,9 @@ device networks, retention sweeps, exports, session lifecycle, policy changes.
 `src/api/{devicenetworks,activity,settings}.ts` parse the new resources;
 `DeviceNetworksPanel`, `InterfaceSettingsDialog`, the WireGuard rename control
 and `ActivityPage` present them; the `activity` core page sits behind
-`activity.read`; the Network page picks up an operation still applying or
+`activity.read`; Network is a collapsible group with focused Overview, Network
+adapters, Device access, VPN profiles and Diagnostics pages; each page picks up
+an operation still applying or
 awaiting confirmation after a reload from `GET /api/v1/network/operations`, and
 links to Activity already narrowed. The contract mock answers every new route
 through the same acknowledged lifecycle, so the interface behaves identically
@@ -153,8 +155,37 @@ startup tunnel every thirty seconds and sweeps retention every five minutes.
 | Wi-Fi | Join a real personal network on a real radio; the container has no wireless device |
 | Hardware | USB adapter hotplug, power-cycle recovery, broader Modbus validation against the PLC's documented register map, and vendor application download with an authorized tool |
 | Events | Adapter appeared/disappeared/rebound, handshake availability transitions, time-synchronization changes, service start/stop |
-| Interface | Browser tests for the Activity page and the device-network editor against the real development topology; the compatible-connection chooser for enabling an adapter with no previous connection |
+| Interface | Browser tests for the Activity page against the real development topology; the compatible-connection chooser for enabling an adapter with no previous connection; acceptance of the compact field layouts on the physical seven-inch panel |
 | Requirements | The ones whose verification names hardware, a VM or a browser stay `draft` |
+
+## Compact field interface (2026-09-04, TASK-9ca3f883)
+
+The Network interface was re-laid out for the seven-inch appliance display under a
+separate GUI task; no backend, contract, permission or confirmation behaviour
+changed. Network is now one collapsible navigation group with separate Overview,
+Network adapters, Device access, VPN profiles and Diagnostics workspace tabs.
+Overview shows the uplink, device side, active profile and what needs attention;
+the three configuration pages each
+render as a table with the essential columns and a labelled-card reflow below
+56rem, with every secondary value in an explicit Details region and every action
+in one compact per-row Actions dialog above the page. The dialog names the
+object type and current status, states why an entry is withheld, separates
+destructive choices and cannot be clipped by the table's scroll area. The
+device-network editor is grouped Identity, Device side, Access path, Addressing,
+Services, Advanced (collapsed) and Review, validates address, prefix, source and
+port formats beside the field before any preview, and keeps ports editable with
+502 as an example only. Settings carry a help popover that works without hover,
+persistent guidance under the fields that need it, and a How to configure help
+for the device-network and adapter workflows that names the external route a
+management computer, router or VPN hub still needs and says a probe from NILO
+does not prove remote access. Diagnostics owns WireGuard readiness and traffic
+history. Its traffic chart labels RX and TX, byte volume per measured minute
+and time, keeps missing samples as gaps, and presents exact values for a minute
+selected by pointer, touch or keyboard. Readiness labels and values use compact
+horizontal facts, while the Statistics title, interface and period controls
+share one header, so Diagnostics needs no initial vertical scroll at 1024x600
+and larger. `e2e/field-display.spec.ts` proves the five destinations at the four
+viewports in both themes; the physical panel is still unverified.
 
 ## CLI examples
 

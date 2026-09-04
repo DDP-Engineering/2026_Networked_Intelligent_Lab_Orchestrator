@@ -1,0 +1,42 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-UX-2de87216"
+
+title = "Fit dialogs inside the viewport with reachable title, close and actions"
+
+status = "active"
+
+requirement = """
+The browser interface shall keep every dialog inside the viewport height, presenting a visible title and a labeled close control at the top, scrolling the body inside the dialog, keeping the final action controls visible at the bottom while the body scrolls, and on a viewport at most 56rem wide or at most 640 pixels tall rendering configuration dialogs as full-screen sheets; Escape shall close the top dismissible layer and return focus to the control that opened it.
+"""
+
+verification = "A component test renders a dialog with a long body and asserts the title, the close control and the action bar are present, that Escape dismisses it and focus returns to the opener; a stylesheet test asserts the dialog is bounded to 100dvh with an internally scrolling body, sticky actions and a full-screen sheet media query; a browser test at 800x480 opens the device-network editor, scrolls its body and asserts the Preview control and the title remain within the viewport."
+
+affected_paths = [
+    "05_Software/nilo_gui/src/components/Modal.tsx",
+    "05_Software/nilo_gui/src/components/layers.ts",
+    "05_Software/nilo_gui/src/components/network/NetworkConfirmation.tsx",
+    "05_Software/nilo_gui/src/styles/shell.css",
+    "05_Software/nilo_gui/src/components/Modal.test.tsx",
+    "05_Software/nilo_gui/src/layout.test.ts",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/src/components/Modal.test.tsx::shows a title, a labeled close control and the actions, and returns focus on Escape",
+    "05_Software/nilo_gui/src/components/Modal.test.tsx::moves focus into the dialog and back to the opener when it closes",
+    "05_Software/nilo_gui/src/layout.test.ts::bounds a dialog to the viewport with a scrolling body and sticky actions",
+    "05_Software/nilo_gui/e2e/field-display.spec.ts::the shell and the Network page are readable and complete",
+]
+
+spec = ""
+priority = "high"
+rationale = "A dialog taller than a 480 pixel viewport hides the very control that applies or cancels the change."
+
+created = 2026-09-04
+updated = 2026-09-04

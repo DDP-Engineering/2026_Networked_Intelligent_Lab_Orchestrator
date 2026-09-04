@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 
 import type {
   NetworkOperation,
@@ -7,9 +7,10 @@ import type {
   StatisticsPeriod,
 } from '../../api/contract';
 import { STATISTICS_PERIODS } from '../../api/contract';
+import type { MessageKey } from '../../i18n/en';
 import { useTranslate } from '../../i18n/languages';
 import { TrafficChart } from '../network/TrafficChart';
-import { WireGuardPanel } from '../network/WireGuardPanel';
+import { WireGuardDiagnostics, WireGuardPanel } from '../network/WireGuardPanel';
 import { NetworkConfirmation } from '../network/NetworkConfirmation';
 import { InstallationProgress } from '../network/InstallationProgress';
 import type { WireGuardChange, WireGuardStatus } from '../../api/wireguard';
@@ -29,8 +30,14 @@ import type { NetworkInterface } from '../../api/contract';
 import { BenchCoreError } from '../../api/client';
 import { DeviceNetworksPanel } from '../network/DeviceNetworksPanel';
 import { InterfaceSettingsDialog } from '../network/InterfaceSettingsDialog';
+import { NetworkOverview } from '../network/NetworkOverview';
+import { uplinkOf } from '../network/addressing';
+import type { NetworkView } from '../network/views';
+import { DetailsToggle, RowActions, type RowAction } from '../RowActions';
 
 export interface NetworkPageProps {
+  /** The one focused Network destination this workspace tab owns. */
+  view: NetworkView;
   /** Reads the appliance's current network state. */
   readNetworkStatus: () => Promise<NetworkStatus>;
   /** Reads one interface's traffic over one window. */
@@ -95,6 +102,14 @@ const PERIOD_LABEL_KEYS = {
   '24h': 'network.period.24h',
 } as const;
 
+const VIEW_TITLE_KEYS: Record<NetworkView, MessageKey> = {
+  overview: 'nav.network.overview',
+  adapters: 'nav.network.adapters',
+  'device-access': 'nav.network.deviceAccess',
+  vpn: 'nav.network.vpn',
+  diagnostics: 'nav.network.diagnostics',
+};
+
 /** Bytes per second, rendered at a scale an operator reads at a glance. */
 function formatRate(bytesPerSecond: number): string {
   if (bytesPerSecond <= 0) {
@@ -121,6 +136,7 @@ function formatRate(bytesPerSecond: number): string {
  * a window with no traffic observations is never drawn as zero.
  */
 export function NetworkPage({
+  view,
   readNetworkStatus,
   readNetworkStatistics,
   previewInterfaceChange,
@@ -148,6 +164,7 @@ export function NetworkPage({
   const [deviceNetworks, setDeviceNetworks] = useState<DeviceNetwork[] | null>(null);
   const [deviceNetworksUnreadable, setDeviceNetworksUnreadable] = useState(false);
   const [configuring, setConfiguring] = useState<NetworkInterface | null>(null);
+  const [expandedInterface, setExpandedInterface] = useState<string | null>(null);
   const [refusal, setRefusal] = useState('');
   const [proposal, setProposal] = useState<NetworkOperation | null>(null);
   const [running, setRunning] = useState<NetworkOperation | null>(null);
@@ -257,7 +274,7 @@ export function NetworkPage({
   }, [listOperations]);
 
   useEffect(() => {
-    if (selected === null) {
+    if (view !== 'diagnostics' || selected === null) {
       return;
     }
     let abandoned = false;
@@ -272,7 +289,7 @@ export function NetworkPage({
       abandoned = true;
       clearInterval(refresh);
     };
-  }, [reloadStatistics, selected, period]);
+  }, [reloadStatistics, selected, period, view]);
 
   // The countdown is driven from the deadline the appliance sent, not from a
   // number this page counts down on its own: the window belongs to the
@@ -377,9 +394,11 @@ export function NetworkPage({
   );
 
   return (
-    <div className="page network-page">
+    <div className={`page network-page network-page-${view}`}>
       <header className="page-head">
-        <h2>{t('network.title')}</h2>
+        <h2>
+          {t('network.title')} / {t(VIEW_TITLE_KEYS[view])}
+        </h2>
         {onOpenActivity !== undefined && (
           <button
             type="button"
@@ -496,182 +515,276 @@ export function NetworkPage({
           </NetworkConfirmation>
         )}
 
-        <section aria-labelledby="network-interfaces">
-          <h3 id="network-interfaces">{t('network.interfaces.title')}</h3>
-
-          {status.state === 'reading' && <p>{t('network.reading')}</p>}
-          {status.state === 'failed' && (
-            <p className="notice notice-unknown">{t('network.unreadable')}</p>
-          )}
-          {status.state === 'read' && (
-            <>
-              {status.value.interfaces.length === 0 ? (
-                <p>{t('network.noInterfaces')}</p>
-              ) : (
-                <div className="table-scroll">
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th scope="col">{t('network.table.interface')}</th>
-                        <th scope="col">{t('network.table.state')}</th>
-                        <th scope="col">{t('network.table.address')}</th>
-                        <th scope="col">{t('network.table.gateway')}</th>
-                        <th scope="col">{t('network.table.link')}</th>
-                        <th scope="col">{t('network.table.traffic')}</th>
-                        {canManageInterfaces && (
-                          <th scope="col">{t('network.table.actions')}</th>
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {status.value.interfaces.map((entry) => (
-                        <tr key={entry.id}>
-                          <th
-                            scope="row"
-                            title={entry.notControllableReason || undefined}
-                          >
-                            {entry.name}
-                            <small className="network-secondary">{entry.kind}</small>
-                          </th>
-                          <td>
-                            <span className="network-state">
-                              <span
-                                className={`state-dot ${entry.state === 'connected' ? 'state-ok' : 'state-unknown'}`}
-                                aria-hidden="true"
-                              />
-                              {entry.state === 'connected'
-                                ? t('network.state.connected')
-                                : entry.state === 'disconnected'
-                                  ? t('network.state.disconnected')
-                                  : t('network.state.unavailable')}
-                            </span>
-                          </td>
-                          <td>
-                            {[...entry.ipv4, ...entry.ipv6].length === 0 ? (
-                              <span className="cell-unknown">
-                                <span title={t('network.notReported')}>—</span>
-                              </span>
-                            ) : (
-                              [...entry.ipv4, ...entry.ipv6].map((address) => (
-                                <div key={address}>{address}</div>
-                              ))
-                            )}
-                          </td>
-                          <td className="network-address">
-                            {[entry.gateway4, entry.gateway6].filter(Boolean).length ===
-                            0 ? (
-                              <span title={t('network.notReported')}>—</span>
-                            ) : (
-                              [entry.gateway4, entry.gateway6]
-                                .filter(Boolean)
-                                .map((gateway) => <div key={gateway}>{gateway}</div>)
-                            )}
-                          </td>
-                          <td>
-                            {entry.linkCapacityMbps > 0 ? (
-                              `${entry.linkCapacityMbps} Mbit/s`
-                            ) : (
-                              <span className="cell-unknown">
-                                <span title={t('network.notReported')}>—</span>
-                              </span>
-                            )}
-                          </td>
-                          <td className="network-rates">
-                            <div title={t('network.table.rx')}>
-                              ↓ {formatRate(entry.rxBytesPerSecond)}
-                            </div>
-                            <div title={t('network.table.tx')}>
-                              ↑ {formatRate(entry.txBytesPerSecond)}
-                            </div>
-                          </td>
-                          {canManageInterfaces && (
-                            <td>
-                              {entry.controllable && (
-                                <button
-                                  type="button"
-                                  aria-label={t(
-                                    entry.state === 'connected'
-                                      ? 'network.action.disable'
-                                      : 'network.action.enable',
-                                  ).replace('{name}', entry.name)}
-                                  disabled={
-                                    running !== null &&
-                                    [
-                                      'applying',
-                                      'awaiting_confirmation',
-                                      'rolling_back',
-                                      'rollback_failed',
-                                    ].includes(running.state)
-                                  }
-                                  onClick={() => {
-                                    void propose(
-                                      entry.id,
-                                      entry.state === 'connected'
-                                        ? 'disable'
-                                        : 'enable',
-                                    );
-                                  }}
-                                >
-                                  {t(
-                                    entry.state === 'connected'
-                                      ? 'network.wg.disable'
-                                      : 'network.wg.enable',
-                                  )}
-                                </button>
-                              )}
-                              {entry.controllable &&
-                                entry.adapterId !== '' &&
-                                previewInterfaceSettings !== undefined && (
-                                  <button
-                                    type="button"
-                                    aria-label={`${t('network.settings.configure')} ${entry.name}`}
-                                    disabled={busy}
-                                    onClick={() => setConfiguring(entry)}
-                                  >
-                                    {t('network.settings.configure')}
-                                  </button>
-                                )}
-                              {entry.settings !== null && entry.settings.saved && (
-                                <small className="network-secondary">
-                                  {t('network.settings.saved').replace(
-                                    '{method}',
-                                    entry.settings.method,
-                                  )}
-                                  {!entry.settings.applied &&
-                                    ` (${t('network.settings.notApplied')})`}
-                                </small>
-                              )}
-                            </td>
-                          )}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </>
-          )}
-        </section>
-
-        {configuring !== null && previewInterfaceSettings !== undefined && (
-          <InterfaceSettingsDialog
-            target={configuring}
-            busy={busy}
-            previewSettings={(interfaceId, settings) =>
-              proposeOrRefuse(previewInterfaceSettings(interfaceId, settings))
-            }
-            scanWiFi={scanWiFi}
-            previewJoin={
-              previewWiFiJoin === undefined
-                ? undefined
-                : (interfaceId, join) =>
-                    proposeOrRefuse(previewWiFiJoin(interfaceId, join))
-            }
-            onDismiss={() => setConfiguring(null)}
+        {view === 'overview' && status.state === 'reading' && (
+          <p>{t('network.reading')}</p>
+        )}
+        {view === 'overview' && status.state === 'failed' && (
+          <p className="notice notice-unknown">{t('network.unreadable')}</p>
+        )}
+        {view === 'overview' && status.state === 'read' && (
+          <NetworkOverview
+            interfaces={status.value.interfaces}
+            deviceNetworks={deviceNetworks}
+            wireGuard={wireGuardStatus}
+            running={running}
           />
         )}
 
-        {readDeviceNetworks !== undefined && (
+        {view === 'adapters' && (
+          <section aria-labelledby="network-interfaces">
+            <h3 id="network-interfaces">{t('network.interfaces.title')}</h3>
+
+            {status.state === 'reading' && <p>{t('network.reading')}</p>}
+            {status.state === 'failed' && (
+              <p className="notice notice-unknown">{t('network.unreadable')}</p>
+            )}
+            {status.state === 'read' && (
+              <>
+                {status.value.interfaces.length === 0 ? (
+                  <p>{t('network.noInterfaces')}</p>
+                ) : (
+                  <div className="table-scroll">
+                    <table className="data-table record-table">
+                      <thead>
+                        <tr>
+                          <th scope="col">{t('network.table.interface')}</th>
+                          <th scope="col">{t('network.table.state')}</th>
+                          <th scope="col">{t('network.table.address')}</th>
+                          <th scope="col">{t('network.table.gateway')}</th>
+                          <th scope="col">{t('network.table.actions')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {status.value.interfaces.map((entry) => {
+                          const detailsId = `network-interface-${entry.id}`;
+                          const expanded = expandedInterface === entry.id;
+                          const uplink = uplinkOf(status.value.interfaces);
+                          const deviceSide = (deviceNetworks ?? []).some(
+                            (network) =>
+                              entry.adapterId !== '' &&
+                              network.deviceInterface === entry.adapterId,
+                          );
+                          const role =
+                            uplink?.id === entry.id
+                              ? t('network.role.uplink')
+                              : deviceSide
+                                ? t('network.role.deviceSide')
+                                : '';
+                          const stateLabel =
+                            entry.state === 'connected'
+                              ? t('network.state.connected')
+                              : entry.state === 'disconnected'
+                                ? t('network.state.disconnected')
+                                : t('network.state.unavailable');
+                          const notReported = (
+                            <span className="cell-unknown">
+                              {t('network.notReported')}
+                            </span>
+                          );
+                          const actions: RowAction[] = [];
+                          if (canManageInterfaces && entry.controllable) {
+                            actions.push({
+                              label: t(
+                                entry.state === 'connected'
+                                  ? 'network.action.disable'
+                                  : 'network.action.enable',
+                              ).replace('{name}', entry.name),
+                              onSelect: () =>
+                                void propose(
+                                  entry.id,
+                                  entry.state === 'connected' ? 'disable' : 'enable',
+                                ),
+                              disabled: busy,
+                              reason: busy ? t('network.busyReason') : undefined,
+                            });
+                            if (
+                              entry.adapterId !== '' &&
+                              previewInterfaceSettings !== undefined
+                            ) {
+                              actions.push({
+                                label: t('network.action.configure', {
+                                  name: entry.name,
+                                }),
+                                onSelect: () => setConfiguring(entry),
+                                disabled: busy,
+                                reason: busy ? t('network.busyReason') : undefined,
+                              });
+                            }
+                          }
+                          return (
+                            <Fragment key={entry.id}>
+                              <tr>
+                                <th scope="row">
+                                  {entry.name}
+                                  <small className="network-secondary">
+                                    {entry.kind}
+                                    {role === '' ? '' : ` · ${role}`}
+                                  </small>
+                                </th>
+                                <td data-label={t('network.table.state')}>
+                                  <span className="network-state">
+                                    <span
+                                      className={`state-dot ${entry.state === 'connected' ? 'state-ok' : 'state-unknown'}`}
+                                      aria-hidden="true"
+                                    />
+                                    {stateLabel}
+                                  </span>
+                                </td>
+                                <td
+                                  className="network-address"
+                                  data-label={t('network.table.address')}
+                                >
+                                  {[...entry.ipv4, ...entry.ipv6].length === 0
+                                    ? notReported
+                                    : [...entry.ipv4, ...entry.ipv6].map((address) => (
+                                        <div key={address}>{address}</div>
+                                      ))}
+                                </td>
+                                <td
+                                  className="network-address"
+                                  data-label={t('network.table.gateway')}
+                                >
+                                  {[entry.gateway4, entry.gateway6].filter(Boolean)
+                                    .length === 0
+                                    ? notReported
+                                    : [entry.gateway4, entry.gateway6]
+                                        .filter(Boolean)
+                                        .map((gateway) => (
+                                          <div key={gateway}>{gateway}</div>
+                                        ))}
+                                </td>
+                                <td className="record-cell-actions">
+                                  <RowActions
+                                    name={entry.name}
+                                    typeLabel={t('actions.kind.interface')}
+                                    status={stateLabel}
+                                    actions={actions}
+                                  >
+                                    <DetailsToggle
+                                      name={entry.name}
+                                      expanded={expanded}
+                                      controls={detailsId}
+                                      onToggle={() =>
+                                        setExpandedInterface(expanded ? null : entry.id)
+                                      }
+                                    />
+                                  </RowActions>
+                                </td>
+                              </tr>
+                              {expanded && (
+                                <tr className="record-details">
+                                  <td colSpan={5}>
+                                    <div
+                                      id={detailsId}
+                                      role="region"
+                                      aria-label={`${t('network.details')} ${entry.name}`}
+                                    >
+                                      <dl className="record-facts">
+                                        <div>
+                                          <dt>{t('network.fact.link')}</dt>
+                                          <dd>
+                                            {entry.linkCapacityMbps > 0
+                                              ? `${entry.linkCapacityMbps} Mbit/s`
+                                              : notReported}
+                                          </dd>
+                                        </div>
+                                        <div>
+                                          <dt>{t('network.table.rx')}</dt>
+                                          <dd>{formatRate(entry.rxBytesPerSecond)}</dd>
+                                        </div>
+                                        <div>
+                                          <dt>{t('network.table.tx')}</dt>
+                                          <dd>{formatRate(entry.txBytesPerSecond)}</dd>
+                                        </div>
+                                        <div>
+                                          <dt>{t('network.fact.adapterId')}</dt>
+                                          <dd>{entry.adapterId || notReported}</dd>
+                                        </div>
+                                        {entry.kind === 'wifi' && (
+                                          <div>
+                                            <dt>{t('network.fact.ssid')}</dt>
+                                            <dd>{entry.ssid || notReported}</dd>
+                                          </div>
+                                        )}
+                                        <div>
+                                          <dt>{t('network.fact.saved')}</dt>
+                                          <dd>
+                                            {entry.settings !== null &&
+                                            entry.settings.saved ? (
+                                              <>
+                                                <div>
+                                                  {t('network.settings.saved').replace(
+                                                    '{method}',
+                                                    entry.settings.method,
+                                                  )}
+                                                  {!entry.settings.applied &&
+                                                    ` (${t('network.settings.notApplied')})`}
+                                                </div>
+                                                <div>
+                                                  {t(
+                                                    entry.settings.managementProtected
+                                                      ? 'network.fact.protected'
+                                                      : 'network.fact.notProtected',
+                                                  )}
+                                                </div>
+                                                {entry.settings.neverDefault && (
+                                                  <div>
+                                                    {t('network.fact.neverDefault')}
+                                                  </div>
+                                                )}
+                                              </>
+                                            ) : (
+                                              t('network.fact.notSaved')
+                                            )}
+                                          </dd>
+                                        </div>
+                                        <div>
+                                          <dt>{t('network.fact.control')}</dt>
+                                          <dd>
+                                            {entry.controllable
+                                              ? t('network.fact.controllable')
+                                              : entry.notControllableReason ||
+                                                notReported}
+                                          </dd>
+                                        </div>
+                                      </dl>
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </Fragment>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            )}
+          </section>
+        )}
+
+        {view === 'adapters' &&
+          configuring !== null &&
+          previewInterfaceSettings !== undefined && (
+            <InterfaceSettingsDialog
+              target={configuring}
+              busy={busy}
+              previewSettings={(interfaceId, settings) =>
+                proposeOrRefuse(previewInterfaceSettings(interfaceId, settings))
+              }
+              scanWiFi={scanWiFi}
+              previewJoin={
+                previewWiFiJoin === undefined
+                  ? undefined
+                  : (interfaceId, join) =>
+                      proposeOrRefuse(previewWiFiJoin(interfaceId, join))
+              }
+              onDismiss={() => setConfiguring(null)}
+            />
+          )}
+
+        {view === 'device-access' && readDeviceNetworks !== undefined && (
           <DeviceNetworksPanel
             networks={deviceNetworks}
             interfaces={status.state === 'read' ? status.value.interfaces : []}
@@ -706,88 +819,103 @@ export function NetworkPage({
           />
         )}
 
-        <WireGuardPanel
-          busy={busy}
-          status={wireGuardStatus}
-          canManage={canManageVPN && !busy}
-          canInstall={canInstallVPN}
-          propose={(change) => {
-            if (previewWireGuardChange === undefined) return;
-            setProposalDetail(
-              change.action === 'autostart'
-                ? `${t('network.wg.startup')}: ${t(change.enabled ? 'network.wg.enabled' : 'network.wg.disabled')}`
-                : '',
-            );
-            void previewWireGuardChange(change)
-              .then(setProposal)
-              .catch(() => setOperationUnavailable(true));
-          }}
-        />
+        {view === 'vpn' && (
+          <WireGuardPanel
+            busy={busy}
+            status={wireGuardStatus}
+            canManage={canManageVPN && !busy}
+            canInstall={canInstallVPN}
+            showDiagnostics={false}
+            propose={(change) => {
+              if (previewWireGuardChange === undefined) return;
+              setProposalDetail(
+                change.action === 'autostart'
+                  ? `${t('network.wg.startup')}: ${t(change.enabled ? 'network.wg.enabled' : 'network.wg.disabled')}`
+                  : '',
+              );
+              void previewWireGuardChange(change)
+                .then(setProposal)
+                .catch(() => setOperationUnavailable(true));
+            }}
+          />
+        )}
 
-        <section aria-labelledby="network-statistics">
-          <h3 id="network-statistics">{t('network.statistics.title')}</h3>
-
-          <div className="network-toolbar">
-            {/* Which interface the chart is about is the operator's choice, not
-              whichever device happened to be listed first. */}
-            {status.state === 'read' && status.value.interfaces.length > 0 && (
-              <p>
-                <label htmlFor="network-chart-interface">
-                  {t('network.chart.interface')}
-                </label>{' '}
-                <select
-                  id="network-chart-interface"
-                  value={selected ?? ''}
-                  onChange={(event) => setSelected(event.target.value)}
-                >
-                  {status.value.interfaces.map((entry) => (
-                    <option key={entry.id} value={entry.id}>
-                      {entry.name}
-                    </option>
-                  ))}
-                </select>
-              </p>
-            )}
-
-            <div
-              className="period-group"
-              role="group"
-              aria-label={t('network.period.label')}
+        {view === 'diagnostics' && (
+          <>
+            <WireGuardDiagnostics status={wireGuardStatus} collapsible={false} />
+            <section
+              className="network-statistics"
+              aria-labelledby="network-statistics"
             >
-              {STATISTICS_PERIODS.map((candidate) => (
-                <button
-                  key={candidate}
-                  type="button"
-                  aria-pressed={candidate === period}
-                  onClick={() => setPeriod(candidate)}
-                >
-                  {t(PERIOD_LABEL_KEYS[candidate])}
-                </button>
-              ))}
-            </div>
-          </div>
+              <div className="network-statistics-head">
+                <h3 id="network-statistics">{t('network.statistics.title')}</h3>
 
-          {statistics.state === 'reading' && <p>{t('network.reading')}</p>}
-          {statistics.state === 'failed' && (
-            <p className="notice notice-unknown">
-              {t('network.statistics.unreadable')}
-            </p>
-          )}
-          {statistics.state === 'read' && (
-            <>
-              {statistics.value.stale && (
-                <p className="notice notice-unknown">{t('network.statistics.stale')}</p>
+                <div className="network-toolbar">
+                  {/* Which interface the chart is about is the operator's choice, not
+                whichever device happened to be listed first. */}
+                  {status.state === 'read' && status.value.interfaces.length > 0 && (
+                    <p>
+                      <label htmlFor="network-chart-interface">
+                        {t('network.chart.interface')}
+                      </label>{' '}
+                      <select
+                        id="network-chart-interface"
+                        value={selected ?? ''}
+                        onChange={(event) => setSelected(event.target.value)}
+                      >
+                        {status.value.interfaces.map((entry) => (
+                          <option key={entry.id} value={entry.id}>
+                            {entry.name}
+                          </option>
+                        ))}
+                      </select>
+                    </p>
+                  )}
+
+                  <div
+                    className="period-group"
+                    role="group"
+                    aria-label={t('network.period.label')}
+                  >
+                    {STATISTICS_PERIODS.map((candidate) => (
+                      <button
+                        key={candidate}
+                        type="button"
+                        aria-pressed={candidate === period}
+                        onClick={() => setPeriod(candidate)}
+                      >
+                        {t(PERIOD_LABEL_KEYS[candidate])}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {statistics.state === 'reading' && <p>{t('network.reading')}</p>}
+              {statistics.state === 'failed' && (
+                <p className="notice notice-unknown">
+                  {t('network.statistics.unreadable')}
+                </p>
               )}
-              {statistics.value.points.length === 0 ? (
-                <p>{t('network.statistics.empty')}</p>
-              ) : (
+              {statistics.state === 'read' && (
                 <>
-                  <TrafficChart statistics={statistics.value} />
+                  {statistics.value.stale && (
+                    <p className="notice notice-unknown">
+                      {t('network.statistics.stale')}
+                    </p>
+                  )}
+                  {statistics.value.points.length === 0 ? (
+                    <p>{t('network.statistics.empty')}</p>
+                  ) : (
+                    <>
+                      <TrafficChart statistics={statistics.value} />
+                    </>
+                  )}
                 </>
               )}
-            </>
-          )}
-        </section>
+            </section>
+          </>
+        )}
 
         {!benchCoreReachable && (
           <p className="notice notice-unknown" role="alert">

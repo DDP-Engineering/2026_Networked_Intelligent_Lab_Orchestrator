@@ -11,7 +11,12 @@ import type {
   IntegrationInventory,
 } from '../../api/contract';
 import { PREFERENCE_KEYS } from '../../preferences/store';
-import { installColorScheme, renderInShell } from '../../test/render';
+import {
+  installColorScheme,
+  installViewportClass,
+  renderInShell,
+  restoreMatchMedia,
+} from '../../test/render';
 
 const status: BenchCoreStatus = {
   apiVersion: 'nilo.http/1',
@@ -144,6 +149,7 @@ function openFromNav(name: RegExp | string): void {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  restoreMatchMedia();
   localStorage.clear();
   document.cookie = 'nilo_csrf=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
   document.documentElement.removeAttribute('data-theme');
@@ -228,6 +234,66 @@ describe('the one compact top row', () => {
       within(workspace).getByRole('heading', { name: 'Bench', level: 2 }),
     ).toBeVisible();
     expect(container.querySelectorAll('.page-head')).toHaveLength(1);
+  });
+});
+
+describe('the constrained shell', () => {
+  // REQ-UX-2687f591: below the compact rail, navigation is a labeled drawer
+  // and the lower-priority selections move into the account menu.
+  it('opens a labeled navigation drawer from a Menu control and returns focus', async () => {
+    installViewportClass('constrained');
+    const { container } = renderShell();
+    await benchPage();
+
+    const menu = screen.getByRole('button', { name: 'Menu' });
+    expect(menu).toBeVisible();
+    fireEvent.click(menu);
+
+    const drawer = screen.getByRole('dialog', { name: 'Navigation' });
+    const network = within(drawer).getByRole('button', { name: 'Network' });
+    expect(network).toHaveTextContent('Network');
+    fireEvent.click(network);
+
+    expect(screen.queryByRole('dialog', { name: 'Navigation' })).toBeNull();
+    expect(
+      screen.getByRole('heading', { name: 'Network / Overview', level: 2 }),
+    ).toBeVisible();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Menu' }));
+
+    // The runtime indicator and the network summary stay; the theme and
+    // language menus fold into the account menu.
+    const row = container.querySelector('.toprow') as HTMLElement;
+    expect(within(row).getByRole('status', { name: /runtime profile/i })).toBeVisible();
+    expect(within(row).getByRole('button', { name: 'Network' })).toBeVisible();
+    expect(within(row).queryByRole('button', { name: 'Appearance' })).toBeNull();
+    expect(within(row).queryByRole('button', { name: 'Language' })).toBeNull();
+    fireEvent.click(within(row).getByRole('button', { name: 'Account' }));
+    const account = screen.getByRole('menu');
+    expect(within(account).getByRole('menuitemradio', { name: 'Dark' })).toBeVisible();
+    expect(
+      within(account).getByRole('menuitemradio', { name: 'Deutsch' }),
+    ).toBeVisible();
+    expect(screen.getAllByRole('status', { name: /runtime profile/i })).toHaveLength(1);
+  });
+
+  it('closes the drawer with Escape', async () => {
+    installViewportClass('constrained');
+    renderShell();
+    await benchPage();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Menu' }));
+    expect(screen.getByRole('dialog', { name: 'Navigation' })).toBeVisible();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('dialog', { name: 'Navigation' })).toBeNull();
+  });
+
+  it('keeps the labeled rail on a compact field viewport', async () => {
+    installViewportClass('compact');
+    renderShell();
+    await benchPage();
+
+    expect(screen.queryByRole('button', { name: 'Menu' })).toBeNull();
+    expect(nav().getByRole('button', { name: 'Network' })).toHaveTextContent('Network');
   });
 });
 
@@ -317,7 +383,9 @@ describe('the tabs', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Close Bench' }));
 
-    expect(screen.getByRole('heading', { name: 'Network', level: 2 })).toBeVisible();
+    expect(
+      screen.getByRole('heading', { name: 'Network / Overview', level: 2 }),
+    ).toBeVisible();
     expect(tabs().queryByRole('tab', { name: /bench/i })).toBeNull();
   });
 
@@ -329,7 +397,9 @@ describe('the tabs', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Close About' }));
 
-    expect(screen.getByRole('heading', { name: 'Network', level: 2 })).toBeVisible();
+    expect(
+      screen.getByRole('heading', { name: 'Network / Overview', level: 2 }),
+    ).toBeVisible();
   });
 
   it('falls back to the right neighbour when the first tab closes', async () => {
@@ -340,7 +410,9 @@ describe('the tabs', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Close Bench' }));
 
-    expect(screen.getByRole('heading', { name: 'Network', level: 2 })).toBeVisible();
+    expect(
+      screen.getByRole('heading', { name: 'Network / Overview', level: 2 }),
+    ).toBeVisible();
   });
 
   it('states that no page is open when the last tab closes', async () => {
@@ -355,14 +427,47 @@ describe('the tabs', () => {
 });
 
 describe('the navigation', () => {
+  // REQ-UX-b718864e: one nested Network group, five routable destinations.
+  it('expands Network into five focused pages without duplicating their tabs', async () => {
+    renderShell();
+    await benchPage();
+
+    for (const name of [
+      'Overview',
+      'Network adapters',
+      'Device access',
+      'VPN profiles',
+      'Diagnostics',
+    ]) {
+      expect(nav().getByRole('button', { name })).toBeVisible();
+    }
+
+    openFromNav('Device access');
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Network / Device access',
+        level: 2,
+      }),
+    ).toBeVisible();
+    openFromNav('Device access');
+    expect(tabs().getAllByRole('tab', { name: 'Device access' })).toHaveLength(1);
+
+    fireEvent.click(nav().getByRole('button', { name: 'Collapse Network' }));
+    expect(nav().queryByRole('button', { name: 'Device access' })).toBeNull();
+    expect(tabs().getByRole('tab', { name: 'Device access' })).toBeVisible();
+    fireEvent.click(nav().getByRole('button', { name: 'Expand Network' }));
+    expect(nav().getByRole('button', { name: 'Device access' })).toBeVisible();
+  });
+
   it('puts Network in the lower core cluster, not among the instruments', async () => {
     const { container } = renderShell();
     await benchPage();
 
-    const lower = within(container.querySelector('.nav-lower') as HTMLElement);
-    const names = lower
-      .getAllByRole('button')
-      .map((entry) => entry.textContent?.trim());
+    const names = Array.from(
+      container.querySelectorAll(
+        '.nav-lower > .nav-list > li > .nav-entry, .nav-lower > .nav-list > li > .nav-group-row > .nav-entry',
+      ),
+    ).map((entry) => entry.textContent?.trim());
 
     expect(names).toEqual([
       'Network',
@@ -560,7 +665,9 @@ describe('the network presentation', () => {
 
     openFromNav('Network');
 
-    expect(screen.getByRole('heading', { name: 'Network', level: 2 })).toBeVisible();
+    expect(
+      screen.getByRole('heading', { name: 'Network / Overview', level: 2 }),
+    ).toBeVisible();
     expect(
       await screen.findByText(/appliance network state could not be read/i),
     ).toBeVisible();

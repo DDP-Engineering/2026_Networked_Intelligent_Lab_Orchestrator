@@ -1,0 +1,42 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-UX-cde0b9e2"
+
+title = "Summarize the appliance network in one concise overview"
+
+status = "active"
+
+requirement = """
+When the Network page has read the appliance state, it shall show one overview at the top containing only the management or uplink interface with its address, the device-side interface with its address when a device network is configured, the active WireGuard profile or None, and any pending operation, warning or recovery failure, without repeating the simulation statement.
+"""
+
+verification = "A component test renders the Network page with a connected uplink, one device network on a second adapter and an active profile and asserts the overview names the uplink and its address, the device-side adapter and its address and the profile name; with no device network and no active profile it asserts the overview reads none for both and shows no simulation sentence; with an operation awaiting confirmation it asserts the overview names it."
+
+affected_paths = [
+    "05_Software/nilo_gui/src/components/network/NetworkOverview.tsx",
+    "05_Software/nilo_gui/src/components/network/addressing.ts",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
+    "05_Software/nilo_gui/src/i18n/en.ts",
+    "05_Software/nilo_gui/src/i18n/de.ts",
+    "05_Software/nilo_gui/src/i18n/ro.ts",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::summarizes the uplink, the device side, the active profile and what is pending",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::says none where there is no device network and no active profile",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::names a change awaiting confirmation in the overview",
+]
+
+spec = ""
+priority = "normal"
+rationale = "On a small display the first screen must answer where NILO is reachable and what it is doing."
+
+created = 2026-09-04
+updated = 2026-09-04

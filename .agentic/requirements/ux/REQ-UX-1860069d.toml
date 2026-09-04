@@ -1,0 +1,44 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-UX-1860069d"
+
+title = "Explain complex Network workflows with a localized how-to-configure help"
+
+status = "active"
+
+requirement = """
+The device-network editor and the adapter configuration dialog shall offer a How to configure control that opens localized help stating the goal of the workflow, the values the operator needs before starting, a small non-secret addressing example, what NILO will change, what must already be configured on another computer, router, VPN hub or device, and how to verify the result and recover if communication fails, using generic device terminology and never implying that a local probe proves remote access.
+"""
+
+verification = "A component test opens the How to configure help from the device-network editor and asserts the six sections are present with the example addresses 192.168.0.1/24 and 192.168.0.130, the external-route sentence and the recovery sentence, that Escape closes it with focus returned, and that the adapter configuration dialog offers the same control; the catalogue test asserts every help key exists in German and Romanian."
+
+affected_paths = [
+    "05_Software/nilo_gui/src/components/help/WorkflowHelp.tsx",
+    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.tsx",
+    "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.tsx",
+    "05_Software/nilo_gui/src/i18n/en.ts",
+    "05_Software/nilo_gui/src/i18n/de.ts",
+    "05_Software/nilo_gui/src/i18n/ro.ts",
+    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx",
+    "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.test.tsx",
+    "05_Software/nilo_gui/src/i18n/messages.test.ts",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx::explains how to configure a device network on request",
+    "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.test.tsx::opens the how-to help with the six sections",
+    "05_Software/nilo_gui/src/i18n/messages.test.ts::defines every English key in de",
+]
+
+spec = ""
+priority = "normal"
+rationale = "A device network involves two subnets, a source restriction and a translation choice; a popover is too short to explain their relationship."
+
+created = 2026-09-04
+updated = 2026-09-04

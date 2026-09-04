@@ -1,0 +1,43 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-UX-8859ce12"
+
+title = "Group Network editors by operator task with a plain-language review"
+
+status = "active"
+
+requirement = """
+The device-network editor shall group its settings in the order Identity, Device side, Access path, Addressing, Services, Advanced and Review, keeping Advanced closed until requested, placing a validation message directly after an invalid field, keeping protocol ports editable with 502 shown only as an example, and stating in the review, in plain language, which interface receives which address, which sources may reach which target, whether WireGuard is involved, whether translation or source NAT is used and whether the management connection could be affected; the adapter configuration dialog shall group Addressing, DNS and Protection with the same field help.
+"""
+
+verification = "A component test opens the device-network editor and asserts the seven groups appear in order with Advanced collapsed, enters an address without a prefix and a port of 70000 and asserts a message appears after each field with no preview requested, enters port 504 and asserts the preview carries 504, and asserts the review names the device-side adapter with 192.168.0.1/24, the target 192.168.0.130, the local source range, and states that source NAT is used and WireGuard is not; a second test opens the adapter dialog and asserts its three groups."
+
+affected_paths = [
+    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.tsx",
+    "05_Software/nilo_gui/src/components/network/addressing.ts",
+    "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.tsx",
+    "05_Software/nilo_gui/src/i18n/en.ts",
+    "05_Software/nilo_gui/src/i18n/de.ts",
+    "05_Software/nilo_gui/src/i18n/ro.ts",
+    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx",
+    "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.test.tsx",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx::groups the editor by task, validates beside the field and reviews in plain language",
+    "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.test.tsx::flags a static address without a prefix beside the field and previews nothing",
+    "05_Software/nilo_gui/e2e/field-display.spec.ts::the shell and the Network page are readable and complete",
+]
+
+spec = ""
+priority = "normal"
+rationale = "A flat form of seventeen fields gives the operator no order to work in and no statement of what will happen."
+
+created = 2026-09-04
+updated = 2026-09-04

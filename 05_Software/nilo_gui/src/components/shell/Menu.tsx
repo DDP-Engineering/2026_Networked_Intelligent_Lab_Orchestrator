@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 
+import { useLayer } from '../layers';
 import { Icon } from './Icon';
 
 export interface MenuProps {
@@ -11,14 +12,16 @@ export interface MenuProps {
   triggerClass?: string;
   /** Whether to draw the chevron that marks this as a menu. */
   chevron?: boolean;
+  /** Which edge of the trigger the panel lines up with. */
+  align?: 'start' | 'end';
   /** The panel's contents. */
   children: (close: () => void) => ReactNode;
 }
 
 /**
- * One top-row popover: appearance, language, account and the network summary.
+ * One popover menu: the top-row controls and every row's Actions.
  *
- * All four behave identically on purpose — Escape closes, a click outside
+ * All of them behave identically on purpose — Escape closes, a click outside
  * closes, focus returns to the trigger — so a person learns the behaviour once.
  * The panel is positioned by the trigger's own stacking context rather than by
  * measurement, which keeps it correct when the row reflows on a narrow screen.
@@ -28,12 +31,14 @@ export function Menu({
   ariaLabel,
   triggerClass,
   chevron = true,
+  align = 'end',
   children,
 }: MenuProps) {
   const [open, setOpen] = useState(false);
   const container = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const panelId = useId();
+  const onTop = useLayer(open);
 
   const close = useCallback(() => setOpen(false), []);
 
@@ -53,7 +58,7 @@ export function Menu({
       return;
     }
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
+      if (event.key === 'Escape' && onTop()) {
         close();
       }
     }
@@ -68,7 +73,7 @@ export function Menu({
       document.removeEventListener('keydown', onKeyDown);
       document.removeEventListener('mousedown', onPointerDown);
     };
-  }, [open, close]);
+  }, [open, close, onTop]);
 
   return (
     <div className="menu" ref={container}>
@@ -83,10 +88,14 @@ export function Menu({
         onClick={() => setOpen((current) => !current)}
       >
         {label}
-        {chevron ? <Icon name="chevron" size={14} /> : null}
+        {chevron ? <Icon name="chevron" size={16} /> : null}
       </button>
       {open ? (
-        <div className="menu-panel" id={panelId} role="menu">
+        <div
+          className={`menu-panel ${align === 'start' ? 'menu-panel-start' : ''}`}
+          id={panelId}
+          role="menu"
+        >
           {children(close)}
         </div>
       ) : null}
@@ -102,7 +111,7 @@ export interface MenuItemProps {
   children: ReactNode;
 }
 
-/** One selectable row in a menu panel. */
+/** One selectable row in a menu panel: a choice among alternatives. */
 export function MenuItem({
   onSelect,
   selected = false,
@@ -119,7 +128,42 @@ export function MenuItem({
     >
       <span className="menu-item-icon">{icon}</span>
       <span className="menu-item-label">{children}</span>
-      {selected ? <Icon name="check" size={15} /> : null}
+      {selected ? <Icon name="check" size={16} /> : null}
+    </button>
+  );
+}
+
+export interface MenuActionProps {
+  onSelect: () => void;
+  disabled?: boolean;
+  /** Why the action is disabled; shown under the label, never only on hover. */
+  reason?: string;
+  danger?: boolean;
+  children: ReactNode;
+}
+
+/** One action in a menu panel: something that happens, not a choice. */
+export function MenuAction({
+  onSelect,
+  disabled = false,
+  reason,
+  danger = false,
+  children,
+}: MenuActionProps) {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      className={`menu-item ${danger ? 'menu-item-danger' : ''}`}
+      disabled={disabled}
+      onClick={onSelect}
+    >
+      <span className="menu-item-label">
+        {children}
+        {disabled && reason !== undefined && reason !== '' ? (
+          <span className="menu-item-reason">{reason}</span>
+        ) : null}
+      </span>
     </button>
   );
 }

@@ -67,7 +67,7 @@ export function AboutPage({ status }: AboutPageProps) {
           </section>
         ) : (
           <div className="table-scroll">
-            <table className="data-table">
+            <table className="data-table record-table">
               <thead>
                 <tr>
                   <th scope="col">{t('about.component')}</th>
@@ -166,7 +166,7 @@ export function IntegrationPage({ integration, devices }: IntegrationPageProps) 
           <p className="empty">{t('integration.noDevices')}</p>
         ) : (
           <div className="table-scroll">
-            <table className="data-table">
+            <table className="data-table record-table">
               <thead>
                 <tr>
                   <th scope="col">{t('integration.displayName')}</th>
@@ -180,10 +180,18 @@ export function IntegrationPage({ integration, devices }: IntegrationPageProps) 
                 {owned.map((device) => (
                   <tr key={device.id}>
                     <th scope="row">{device.displayName}</th>
-                    <td className="cell-mono">{device.id}</td>
-                    <td className="cell-mono">{device.status}</td>
-                    <td className="cell-mono">{device.kind}</td>
-                    <td className="cell-mono">{device.capabilities.join(', ')}</td>
+                    <td className="cell-mono" data-label={t('integration.identifier')}>
+                      {device.id}
+                    </td>
+                    <td className="cell-mono" data-label={t('bench.availability')}>
+                      {device.status}
+                    </td>
+                    <td className="cell-mono" data-label={t('bench.kind')}>
+                      {device.kind}
+                    </td>
+                    <td className="cell-mono" data-label={t('bench.capabilities')}>
+                      {device.capabilities.join(', ')}
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -17,6 +17,14 @@ export const ro: Catalogue = {
   'nav.section.core': 'Sistem',
   'nav.bench': 'Bench',
   'nav.network': 'Rețea',
+  'nav.network.overview': 'Prezentare generală',
+  'nav.network.overviewTab': 'Prezentare rețea',
+  'nav.network.adapters': 'Adaptoare de rețea',
+  'nav.network.deviceAccess': 'Acces dispozitive',
+  'nav.network.vpn': 'Profiluri VPN',
+  'nav.network.diagnostics': 'Diagnosticare',
+  'nav.network.expand': 'Extinde Rețea',
+  'nav.network.collapse': 'Restrânge Rețea',
   'nav.plugins': 'Plugin-uri',
   'nav.authentication': 'Autentificare',
   'nav.settings': 'Setări',
@@ -130,6 +138,7 @@ export const ro: Catalogue = {
   'failure.resource.devices': 'inventarul de dispozitive',
 
   'network.title': 'Rețea',
+  'network.diagnostics.wireguard': 'Disponibilitate WireGuard',
   'network.subtitle': 'Rețeaua aparatului',
   'network.summary.open': 'Deschide Rețea',
   'network.unavailable.title': 'Raportarea rețelei aparatului nu este încă disponibilă',
@@ -163,6 +172,13 @@ export const ro: Catalogue = {
   'network.chart.interface': 'Interfață',
   'network.chart.label':
     'Trafic pentru {interface} pe {period}: {count} minute măsurate.',
+  'network.chart.legend': 'Legendă pentru direcția traficului',
+  'network.chart.rxLegend': 'RX · Primit',
+  'network.chart.txLegend': 'TX · Trimis',
+  'network.chart.volumeAxis': 'Trafic pe minut măsurat',
+  'network.chart.timeAxis': 'Timp',
+  'network.chart.selected': 'Minut selectat',
+  'network.chart.sample': '{time} · RX primit {rx} · TX trimis {tx} · Total {total}',
   'network.fact.interface': 'Conexiunea interfeței',
   'network.fact.tunnel': 'Tunel',
   'network.fact.handshake': 'Ultima negociere',
@@ -226,7 +242,7 @@ export const ro: Catalogue = {
     'Alege un fișier de configurație de maximum 48 KiB și un nume.',
   'network.wg.pollFailed':
     'Starea curentă a operației nu este disponibilă. Bench Core controlează în continuare restaurarea.',
-  'network.wireguard.title': 'WireGuard',
+  'network.wireguard.title': 'Profiluri WireGuard',
   'network.wireguard.notReported':
     'Disponibilitatea WireGuard, profilurile și tunelul activ nu sunt încă raportate de acest echipament.',
   'network.statistics.title': 'Statistici',
@@ -445,7 +461,7 @@ export const ro: Catalogue = {
   'network.dn.copy': 'Copiază pașii',
   'network.settings.configure': 'Configurează',
   'network.settings.dialog': 'Configurează {name}',
-  'network.settings.method': 'Adresare',
+  'network.settings.method': 'Sursa adresei',
   'network.settings.method.static': 'Statică',
   'network.settings.method.automatic': 'Automată (DHCP)',
   'network.settings.address': 'Adresă IPv4 cu lungimea prefixului',
@@ -538,4 +554,196 @@ export const ro: Catalogue = {
   'diagnostics.saved': 'Politica a fost salvată.',
   'diagnostics.failed': 'Aparatul a refuzat cererea: {detail}',
   'diagnostics.unreadable': 'Diagnosticarea nu a putut fi citită.',
+  // Compact field interface: shell, dialogs and help
+  'nav.menu': 'Meniu',
+  'nav.drawer': 'Navigare',
+  'dialog.close': 'Închide',
+  'help.for': 'Ajutor pentru {name}',
+  'help.close': 'Închide ajutorul',
+  'help.howTo': 'Cum se configurează',
+  'help.section.goal': 'Scop',
+  'help.section.needs': 'Ce vă trebuie înainte de a începe',
+  'help.section.example': 'Exemplu de adresare',
+  'help.section.changes': 'Ce va schimba NILO',
+  'help.section.external': 'Ce trebuie configurat deja în altă parte',
+  'help.section.verify': 'Verificare și recuperare',
+  'actions.for': 'Acțiuni pentru {name}',
+  'actions.choose': 'Alegeți o acțiune. Nimic nu se schimbă până nu selectați una.',
+  'actions.type': 'Tip',
+  'actions.status': 'Stare curentă',
+  'actions.kind.interface': 'Interfață de rețea',
+  'actions.kind.wireguardProfile': 'Profil WireGuard',
+  'actions.kind.deviceNetwork': 'Rețea de dispozitive',
+  // Compact field interface: Network overview, lists, editors and help
+  'network.overview.title': 'Prezentare generală',
+  'network.overview.uplink': 'Administrare / uplink',
+  'network.overview.deviceSide': 'Partea dispozitivului',
+  'network.overview.profile': 'Profil WireGuard activ',
+  'network.overview.attention': 'Necesită atenție',
+  'network.overview.none': 'Niciunul',
+  'network.overview.nothingPending': 'Nimic în așteptare',
+  'network.overview.awaiting': '{action} pe {target} așteaptă confirmarea dvs.',
+  'network.overview.applying': '{action} pe {target} se aplică.',
+  'network.overview.rollingBack': '{action} pe {target} se restaurează.',
+  'network.overview.failed': '{action} pe {target} nu s-a încheiat în siguranță.',
+  'network.overview.networkAttention': 'Rețeaua de dispozitive {name}: {state}.',
+  'network.role.uplink': 'Uplink',
+  'network.role.deviceSide': 'Partea dispozitivului',
+  'network.fact.link': 'Viteza legăturii',
+  'network.fact.adapterId': 'Identitatea adaptorului',
+  'network.fact.saved': 'Configurație salvată',
+  'network.fact.notSaved': 'Nicio configurație salvată',
+  'network.fact.protected': 'Protejat ca rută de administrare',
+  'network.fact.notProtected': 'Neprotejat ca rută de administrare',
+  'network.fact.neverDefault': 'Nu preia niciodată ruta implicită',
+  'network.fact.control': 'Control',
+  'network.fact.controllable': 'Gestionat de NILO',
+  'network.fact.ssid': 'Rețea wireless',
+  'network.busyReason': 'O altă modificare este în curs.',
+  'network.action.configure': 'Configurează {name}',
+  'network.wg.interface': 'Interfața tunelului',
+  'network.wg.ownership': 'Responsabil',
+  'network.wg.owned': 'Gestionat de NILO',
+  'network.wg.removeActive': 'Un profil activ nu poate fi eliminat.',
+  'network.wg.help.startup':
+    'NILO încearcă să conecteze acest profil după o repornire. Activarea unui profil este separată de autorizarea unei rețele de dispozitive să îl folosească.',
+  'network.wg.help.file':
+    'Un fișier de configurare WireGuard de la hub-ul VPN. Cheia privată este stocată doar pe echipament și nu mai este afișată niciodată.',
+  'network.dn.fact.location': 'Locație',
+  'network.dn.fact.subnet': 'Subrețeaua dispozitivului',
+  'network.dn.fact.localAccess': 'Acces local prin',
+  'network.dn.fact.localSources': 'Surse locale autorizate',
+  'network.dn.fact.vpn': 'Profil WireGuard',
+  'network.dn.fact.vpnSources': 'Surse VPN autorizate',
+  'network.dn.fact.services': 'Servicii',
+  'network.dn.fact.tcpPorts': 'Porturi TCP',
+  'network.dn.fact.udpPorts': 'Porturi UDP',
+  'network.dn.allPorts': 'toate porturile',
+  'network.dn.fact.source': 'Adresa sursă',
+  'network.dn.snat': 'Răspunsurile revin prin NILO (NAT sursă)',
+  'network.dn.preserve':
+    'Adresa sursă a clientului este păstrată; dispozitivul are nevoie de o rută de întoarcere',
+  'network.dn.fact.startup': 'După o repornire',
+  'network.dn.startupOn': 'Activată din nou',
+  'network.dn.startupOff': 'Rămâne dezactivată',
+  'network.dn.fact.observed': 'Observată la',
+  'network.dn.noneListed': 'niciuna listată',
+  'network.dn.group.identity': 'Identitate',
+  'network.dn.group.deviceSide': 'Partea dispozitivului',
+  'network.dn.group.access': 'Calea de acces',
+  'network.dn.group.addressing': 'Adresare',
+  'network.dn.group.services': 'Servicii',
+  'network.dn.group.advanced': 'Avansat',
+  'network.dn.group.review': 'Verificare',
+  'network.dn.field.protocols': 'Protocoale',
+  'network.dn.help.deviceInterface':
+    'Adaptorul Ethernet sau USB cablat spre rețeaua dispozitivului. NILO îi reține identitatea hardware, așa că alegerea rezistă unei redenumiri sau reconectări.',
+  'network.dn.help.applianceAddress':
+    'Adresa proprie a NILO în subrețeaua dispozitivului, cu lungimea prefixului. Trebuie să fie liberă și în aceeași subrețea cu dispozitivul. Nu înlocuiește adresa dispozitivului și se aplică adaptorului separat, din „Configurează”.',
+  'network.dn.help.scope':
+    'Un dispozitiv expune o singură adresă existentă a dispozitivului. Întreaga subrețea expune fiecare adresă din subrețeaua dispozitivului.',
+  'network.dn.help.target':
+    'Adresa pe care dispozitivul o are deja în propria rețea, de exemplu 192.168.0.130.',
+  'network.dn.help.addressing':
+    'Originală: clienții folosesc adresa reală a dispozitivului. Tradusă: clienții folosesc o adresă expusă alternativă, ceea ce face ca două locații cu aceeași subrețea de dispozitive să fie accesibile una lângă alta.',
+  'network.dn.help.exposed':
+    'Adresa (pentru un dispozitiv) sau prefixul de aceeași dimensiune (pentru o subrețea) pe care clienții îl vor folosi în locul celui original.',
+  'network.dn.help.access':
+    'Local: clienți din partea de administrare a NILO. WireGuard: clienți care sosesc printr-un profil de tunel salvat. Ambele: pe oricare cale.',
+  'network.dn.help.localInterface':
+    'Adaptorul din partea de administrare prin care pot intra clienții locali.',
+  'network.dn.help.sources':
+    'Adresele sau prefixele clienților care pot iniția o conexiune, de exemplu 192.168.10.0/24. Este o restricție de acces, nu intervalul țintă.',
+  'network.dn.help.vpnProfile':
+    'Tunelul salvat prin care sosesc clienții de la distanță. Profilul trebuie să fie activ pentru ca rețeaua de dispozitive să se aplice; activarea lui este un pas separat.',
+  'network.dn.help.ports':
+    'Porturile de aplicație permise. Modbus TCP folosește de obicei 502, dar un dispozitiv poate fi setat pe alt port, cum ar fi 504; introduceți ce folosește dispozitivul cu adevărat. Gol înseamnă toate porturile.',
+  'network.dn.help.preserveSource':
+    'Implicit, NILO rescrie adresa sursă a clientului cu propria adresă (NAT sursă), astfel încât răspunsurile revin prin NILO fără a schimba gateway-ul dispozitivului. Păstrarea sursei lasă dispozitivul să vadă clientul real, dar dispozitivul are atunci nevoie de o rută înapoi spre rețeaua clientului.',
+  'network.dn.guidance.applianceAddress':
+    'Liberă și în aceeași subrețea cu dispozitivul: pentru un dispozitiv la 192.168.0.130, de exemplu 192.168.0.1/24. Adaptorul trebuie să poarte deja această adresă („Configurează” în lista de interfețe).',
+  'network.dn.guidance.sources':
+    'Ce adrese de client pot iniția o conexiune. Aceasta restrânge accesul; nu este intervalul țintă.',
+  'network.dn.guidance.vpn':
+    'Profilul trebuie să fie activ pentru ca rețeaua să se aplice; activarea lui este un pas separat în lista profilurilor WireGuard.',
+  'network.dn.guidance.ports':
+    '502 este doar un exemplu; introduceți portul pe care dispozitivul îl folosește cu adevărat, de exemplu 504. Gol înseamnă toate porturile.',
+  'network.dn.guidance.preserveSource':
+    'Dispozitivul are atunci nevoie de o rută înapoi spre rețeaua clientului. Păstrați NAT sursă dacă nu ați configurat acea rută.',
+  'network.dn.invalid.name': 'Este necesar un nume.',
+  'network.dn.invalid.adapter': 'Alegeți adaptorul dinspre dispozitiv.',
+  'network.dn.invalid.cidr':
+    'Introduceți o adresă IPv4 cu lungimea prefixului, de exemplu 192.168.0.1/24.',
+  'network.dn.invalid.address': 'Introduceți o adresă IPv4, de exemplu 192.168.0.130.',
+  'network.dn.invalid.exposed':
+    'Introduceți o adresă IPv4 (un dispozitiv) sau un prefix de aceeași dimensiune cu subrețeaua dispozitivului (întreaga subrețea).',
+  'network.dn.invalid.sources':
+    'Introduceți adrese sau prefixe IPv4 separate prin virgulă, de exemplu 192.168.10.0/24.',
+  'network.dn.invalid.ports':
+    'Porturile sunt numere întregi între 1 și 65535, separate prin virgulă.',
+  'network.dn.invalid.profile': 'Alegeți un profil WireGuard.',
+  'network.dn.review.deviceSide':
+    '{adapter} trebuie să poarte {address}. NILO redirecționează pe acest adaptor; adresa nu se atribuie de aici.',
+  'network.dn.review.target': 'Țintă accesibilă: {target}.',
+  'network.dn.review.local': 'Sursele locale {sources} o pot atinge prin {adapter}.',
+  'network.dn.review.localNone':
+    'Niciun interval de surse locale nu este listat încă, deci niciun client local nu este autorizat.',
+  'network.dn.review.vpn':
+    'Profil WireGuard {profile}: sursele {sources} o pot atinge prin tunel după ce profilul este activ.',
+  'network.dn.review.vpnNone': 'WireGuard nu este implicat.',
+  'network.dn.review.original': 'Clienții folosesc adresa originală a dispozitivului.',
+  'network.dn.review.translated': 'Clienții folosesc adresa tradusă {exposed}.',
+  'network.dn.review.snat':
+    'Răspunsurile revin prin NILO (NAT sursă); dispozitivul își păstrează propriul gateway.',
+  'network.dn.review.preserve':
+    'Adresa sursă a clientului este păstrată; dispozitivul are nevoie de o rută de întoarcere spre rețeaua clientului.',
+  'network.dn.review.services': 'Servicii permise: {services}.',
+  'network.dn.review.management':
+    'Această rețea de dispozitive nu schimbă nicio adresă de adaptor, deci conexiunea dvs. de administrare este afectată doar dacă {adapter} este calea prin care sunteți conectat.',
+  'network.dn.unnamed': 'adaptorul selectat',
+  'help.dn.title': 'Cum se configurează o rețea de dispozitive',
+  'help.dn.goal':
+    'Atingerea unui dispozitiv, sau a unei întregi subrețele de dispozitive, din spatele NILO, de la un computer din rețeaua de administrare sau printr-un tunel WireGuard, fără a schimba dispozitivul.',
+  'help.dn.needs':
+    'Adresa și subrețeaua dispozitivului, o adresă liberă pentru NILO în acea subrețea, adaptorul cablat spre dispozitiv, intervalul de adrese ale clienților care se pot conecta și portul TCP sau UDP pe care dispozitivul îl folosește cu adevărat.\nPentru acces de la distanță, un profil WireGuard salvat și intervalul de clienți care sosește prin el.',
+  'help.dn.example':
+    'Computer de administrare: 192.168.1.13. Uplink NILO: o adresă din 192.168.1.0/24. Partea dispozitivului la NILO: 192.168.0.1/24 pe al doilea adaptor. Dispozitiv: 192.168.0.130. Serviciu: portul TCP folosit de dispozitiv, de exemplu 502 sau 504.',
+  'help.dn.changes':
+    'NILO instalează reguli de redirecționare care admit sursele autorizate spre țintă pe porturile permise, traduce adresa dacă ați ales una tradusă și, implicit, rescrie sursa clientului cu propria adresă, astfel încât răspunsurile revin prin NILO.\nAdresa echipamentului nu se atribuie de aici: dați mai întâi adaptorului dinspre dispozitiv această adresă, din „Configurează”. O rețea ale cărei condiții nu sunt încă îndeplinite afișează „În așteptare”.',
+  'help.dn.external':
+    'Computerul de administrare, sau routerul său, are nevoie de o rută spre adresa dispozitivului (sau spre adresa expusă) prin adresa pe care NILO o are pe partea de administrare. Un hub VPN are nevoie de intervalul expus în AllowedIPs ale profilului NILO. Dispozitivul nu are nevoie de nicio schimbare cât timp NAT sursă este activ; dacă păstrați sursa clientului, dispozitivul are nevoie de o rută înapoi spre rețeaua clientului.',
+  'help.dn.verify':
+    'Folosiți „Verifică conexiunea”: raportează separat dacă adaptorul este prezent, adresa este aplicată, redirecționarea este instalată și dacă ținta a răspuns la o sondare din NILO. O sondare din NILO nu dovedește că un client de la distanță poate atinge dispozitivul; testați și de la client.\nO modificare neconfirmată în două minute este restaurată automat, iar Dezactivează sau Șterge elimină redirecționarea imediat.',
+  'help.if.title': 'Cum se configurează un adaptor',
+  'help.if.goal':
+    'Oferirea unui adaptor a adresării de care are nevoie: automată pe uplink sau o adresă fixă pe partea dispozitivului.',
+  'help.if.needs':
+    'Adresa și lungimea prefixului, gateway-ul dacă acest adaptor este uplink-ul și dacă acest adaptor este o cale prin care administrați NILO.',
+  'help.if.example':
+    'Uplink: Automat (DHCP), protejat ca rută de administrare. Partea dispozitivului: Static 192.168.0.1/24, fără gateway, niciodată ruta implicită.',
+  'help.if.changes':
+    'NILO scrie propriul profil de conexiune pentru adaptor, legat de identitatea hardware, și îl activează; profilul sistemului de operare este păstrat și revine la restaurare. Serverele DNS se iau din rețea sau din lista dvs.',
+  'help.if.external':
+    'O adresă statică trebuie să fie liberă în acea rețea. Un adaptor dinspre dispozitiv nu are, de regulă, gateway implicit; uplink-ul păstrează ruta implicită. Dacă luați adresa unui dispozitiv sau a unui server DHCP, ambele încetează să funcționeze.',
+  'help.if.verify':
+    'După aplicare, lista de interfețe arată adresa purtată de adaptor. O modificare neconfirmată în două minute este restaurată automat. O modificare care nu ar lăsa nicio cale de administrare utilizabilă este refuzată înainte de a fi aplicată.',
+  'network.settings.group.addressing': 'Adresare',
+  'network.settings.group.dns': 'DNS',
+  'network.settings.group.protection': 'Protecție',
+  'network.settings.help.method':
+    'Automat preia o adresă de la un server DHCP din acea rețea. Static folosește adresa introdusă. Un gateway dinspre dispozitiv folosește de regulă o adresă statică, pentru ca dispozitivul să găsească NILO mereu în același loc.',
+  'network.settings.help.address':
+    'Adresa IPv4 proprie a adaptorului cu lungimea prefixului, de exemplu 192.168.0.1/24.',
+  'network.settings.help.gateway':
+    'Următorul salt pentru traficul care părăsește acest adaptor. Lăsați gol pe un adaptor dinspre dispozitiv; uplink-ul păstrează ruta implicită.',
+  'network.settings.help.dns':
+    'Serverele de nume folosite cât timp acest adaptor este activ. Preluarea lor din rețea este potrivită pentru uplink.',
+  'network.settings.help.protect':
+    'Marchează acest adaptor drept cale prin care administrați NILO. O modificare care nu ar lăsa nicio cale de administrare utilizabilă este refuzată.',
+  'network.settings.help.neverDefault':
+    'Împiedică acest adaptor să preia ruta implicită, astfel încât traficul spre Internet rămâne pe uplink.',
+  'network.settings.guidance.gateway':
+    'Un adaptor dinspre dispozitiv nu are, de regulă, gateway implicit; uplink-ul păstrează ruta implicită.',
+  'network.settings.guidance.protect':
+    'O modificare care ar lăsa ultima cale de administrare inutilizabilă este refuzată înainte de a fi aplicată.',
 };

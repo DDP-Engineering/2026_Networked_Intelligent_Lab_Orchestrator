@@ -1,0 +1,1336 @@
+{
+  "reports": [
+    {
+      "anchor_created_at": "2026-09-04T08:37:47.361291Z",
+      "anchor_head": "542cf362ce0ffef95e58794457857678422372ee",
+      "anchor_id": "55ec9785aca018a9",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "5d2f221a01363b8de3772e030a982339b93b870b9b0bf65847516e9e39ba7744"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_gui/e2e/field-display.spec.ts",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "e5b4261aa4d470957acdbfa307dc503561ff3b34cbd288f19c6cbfb3e122b1c3"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "31f33f421293174e6929bb0679453c94c24bc460a19c39d34ea536dc50a8d2f5"
+          },
+          "path": "05_Software/nilo_gui/e2e/network.spec.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "76c110af90307f09b23fba76236dbabb72e8c68ce637fee3f9447f57b9c2205f"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "8980669cd434a7a6c01f985a1c6c9a38f4dd0ca3c9a4cca4b2dac22f9c0995b0"
+          },
+          "path": "05_Software/nilo_gui/e2e/shell.spec.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "10d0ca31801f55cdef7da92b6abda4929a5a7c6a84d4c9f02c533c77bccd31b3"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "0cf3f94a60e0dd30149313b22d18cbee7e228f8b3ff9f5d34cfec548017353d1"
+          },
+          "path": "05_Software/nilo_gui/src/components/AuthenticationPage.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "db8c90fdc0588079c76d151025499605541df86a21a5e18da08c21924022b5ae"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "76055457c4350ac35fc7f366aff58e89399535fd59ccde500cf66c0faf5d04a4"
+          },
+          "path": "05_Software/nilo_gui/src/components/Modal.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "a824ef063e3fe6321f4e22d6a850fb620b144ab75ea5420347d96ac67833e952"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "9bb122729e57e89959e85158c93bd99234ffc072b3f8aeffde5b3857449da3c8"
+          },
+          "path": "05_Software/nilo_gui/src/components/Modal.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "19372af498b4560fc4be74c49b0ff1022ae6d5aba49275cfb55b96cdd668aa9f"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_gui/src/components/RowActions.tsx",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d2f041e07a887e16f35fade77a6643e8ddab6bcdec119e566852680d1734b779"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_gui/src/components/help/Field.tsx",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b6fb9f8698ea8988afabd3a0e77c2a82876fe593edaa53b8845135fe05abf314"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "9c7bbc00f75ebe8f7086c6439d8fadc9d286e3e9ff77f6c9589353f15c976b77"
+          },
+          "path": "05_Software/nilo_gui/src/components/help/HelpPopover.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "2db46dad63c2e416562ce33a92ab8281adbac621e7129b1684b36b8c9375f26f"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_gui/src/components/help/HelpPopover.tsx",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "67007c57a8e88339cb68df4f385e22ab4009d2286e79d368d540e2df56cf31a2"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_gui/src/components/help/WorkflowHelp.tsx",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "763db9d4480b48fe7218e7254ff0f39833ac1c5ef5a4637193fefff2d7b33bd3"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_gui/src/components/layers.ts",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "0d12ebcdc5e773559ea4c7c3e7097847d1dfd8aebb2a231018eebd9b6ed9f9ed"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "316a8b47d1478180f70022168dd2edffb6c71ed24788c36467972be5c35f7f53"
+          },
+          "path": "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "0d0eed2c372cf21984f60d2ca3467d36c2ce2af86ad40cb439537eec3ac4bda6"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "e5d947134b3be53f8f2f17c46ec9b2e604dabc6258726c5522804c5a0d4ff4a2"
+          },
+          "path": "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "9e811da54150423e02818a121487af043207104972bd91ca86373cb1c6461488"
+          },
+          "area": "tests",
+          "before": null,
+          "path": "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.test.tsx",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "e964fe500d91ce9ee326a235631fb7eedc4df3526088e4ae9b91c076515867ca"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "dece537ce412429044e186101ba44a5c642fd490f2caad4a457cf14bdfa6b611"
+          },
+          "path": "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "196ffd1d69ce036ff9183f94846a18a38eec82789f62b95824dab3fe40396773"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_gui/src/components/network/NetworkOverview.tsx",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "eae85baa55073ff325f9e99a27271124f98d4fc1f56d10adae1178698a294304"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "947f029b134169396e4051dc4a9558df857ccca4e3fe33fdc5c57aa7dd42195a"
+          },
+          "path": "05_Software/nilo_gui/src/components/network/WireGuardPanel.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "c9ced9dd323f6e816b67d737e572f2278c461a039e22c980cd5acaddd86cc9d6"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "615594d1df7af6675b45cb5565c0eed71b45e8324ab422692a14f94703ae38c5"
+          },
+          "path": "05_Software/nilo_gui/src/components/network/WireGuardPanel.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ae9bb006bc27558278d7a840415756cf584e41bfb4fc2562e99d9d24472be05e"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_gui/src/components/network/addressing.ts",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "c2073d4bf703831e4d2a5e5abdb659b99a3bce9fddfb0225dc402c9b99d8b064"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "68b2c4bd956613331b4969c7b4b05d0d2a353235f4827ef1854ddc2c0138014e"
+          },
+          "path": "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b1310bbde56559a40353aed53d93e736e347feaeee899d766031fb7085623414"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "13af83f757b508ec84b45b2eebbdb634be95e5f203754723d2ccbc38aaf854ad"
+          },
+          "path": "05_Software/nilo_gui/src/components/pages/ActivityPage.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "bbacc0a7a4c93b6e5b12d832fde4f1f9f6179cccdff19be53a8ff127509acbf7"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "a0fa8254afab9f1e04852d3659789bbff19707b527e277ea354a6a09088cfcb1"
+          },
+          "path": "05_Software/nilo_gui/src/components/pages/BenchPage.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b53e8a873c59dbe779407de16332a5adb327b04cd778f38106d549dc31b9b7d0"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "d7250f0dfc45280738d4b2cbd033c6d4b91c7e2eea3a09d233cc217d5f84857d"
+          },
+          "path": "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "f3db61298e8ec08aac0900db8429e9299b6caeef75415c651c4d436af9cf7276"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "21c4e5f815bab3c34f4df706a4b576ae22d9fc51b55e9f95e79518f0679d05ff"
+          },
+          "path": "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "77417d83aecc2efd16d5ee3b000ea9664a1edc8b5911e7b6e66a3ef11e3eb2cd"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "74934e860f7b8e73d56ed35f38ca87d2a02b7bf4a4f5b73ee879ae729ecb67dd"
+          },
+          "path": "05_Software/nilo_gui/src/components/pages/SimplePages.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "a8134359399f4377573d0ac307852446ac7c49a40745c64c9c72990dacb0b469"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "436635fd67d661b67d4d2737754aa9e00d80e8a4320552983fad3971a4804f1f"
+          },
+          "path": "05_Software/nilo_gui/src/components/shell/AppShell.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "5b84ab5727a38ff5c66a21a401a9d9e0874e4f4f22e202dd6bda4d67d148c96f"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "b1acf4ee9c1ceaa1fab52fd3b644389c7d1558cfaa780ccf992cff72180e448a"
+          },
+          "path": "05_Software/nilo_gui/src/components/shell/Icon.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "0524b9dc3342f8692a29b85688c3812b362724a7351aaa63ea0f2adb3dd8c190"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "c304a95623e441a7474b887c4855148bbc96f2a11d81f82770a212d92a5552e0"
+          },
+          "path": "05_Software/nilo_gui/src/components/shell/Menu.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "42a83a6749449bc05e3f43789ea8aac309bb50da671c3c1a5f0a6d7d36c7cb31"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_gui/src/components/shell/NavDrawer.tsx",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "6810667f5d9ae3eac54046a34803e0c207bc146f4571e613ba588fcf6436deef"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "c04ae431990013ee3ca9642aa16adb90285059228cc52ed6dccc3ca97e404452"
+          },
+          "path": "05_Software/nilo_gui/src/components/shell/SideNav.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ea7b02ef2c17732f8a963457ddfa357fc6cb363cc46dc91b22474ad3c9d1975a"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "c92312743bfe4e0a9306d34fb63c31d50bfaf153d50b389625f7c364f981b6fe"
+          },
+          "path": "05_Software/nilo_gui/src/components/shell/TopRow.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "5bbd920190e17bdf18df5b5be7dca12f6ca85f71f4ff899297871fd7899694db"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "c466ba69ec9e72b091fddd62e11947d14a6fb3d142f84c6bf1ab4dfbb98dee71"
+          },
+          "path": "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "72e270a061596c7718651e07ba66569a231333f84ec9fa134331ba60cd6d0075"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_gui/src/components/shell/useViewportClass.ts",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "3c0768afba26b2c97a6a1d65e0e1b52ec4944f8fc0c9f89cea60571ac54137d8"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "7339d4af84ed2a95f4f73fe310cacda65ba8a998526bfc3aa10bf46aa0fb2daf"
+          },
+          "path": "05_Software/nilo_gui/src/i18n/de.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "5160951eb805ea7ae38d5338290de34e0e526f6d091f9365628a65abf82aab90"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "21f8e4b9c68257168fa6fcd0c05bc4b88ce76932876ad6e15a5b7757a0c61509"
+          },
+          "path": "05_Software/nilo_gui/src/i18n/en.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "77cb7df38e87d7adcd3508135a85384407c350281fa7fe161b97ade49f366d59"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "331ce5d21fe901b81a076fca471b41ab7f884ab2d9ab03733ded0ef2111b1bd6"
+          },
+          "path": "05_Software/nilo_gui/src/i18n/messages.test.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "90fe7cc894ca83473601df6507f48ae4b29c81b26b08125806220fd11db9fb35"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "c4b035a624552efc75a98a4aa52002358a1bd2d8c00a0171b50825c8fad0c27e"
+          },
+          "path": "05_Software/nilo_gui/src/i18n/ro.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "428486b50254a2ac986644179f24138b5bd41cdc7c7cb3e73ab99161b448f9ea"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "557feb5400ef98dfde04d19a1c6ff9cc88b10c9f66d062acdb1ae8eeecb50149"
+          },
+          "path": "05_Software/nilo_gui/src/index.css",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b21e362bcfab7d3b79dc49352f013fb023124cfbf0995516a86fb29386b80ee7"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "7409b069ff3dbe2e54a02ab38a1ac95853ca13862f60668da6b6908cc48bc19d"
+          },
+          "path": "05_Software/nilo_gui/src/layout.test.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "a575e2871d8cdfa1b68145201330ee2ac23d68cc3140bb669ab1a0e93e42da06"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "9046373e625e01fb8184c7a24e77565c03a658e8b19bb4728e126b053684a8cf"
+          },
+          "path": "05_Software/nilo_gui/src/styles/shell.css",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "73c1370cb6ca63761fa4260bfcb09fc3de25e261d7b785d12802535ca15d9c7e"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "a77cf48bd396f9ce23eb1de9dce68bfa8fc53dc5d6d8a918471193d1411a5f81"
+          },
+          "path": "05_Software/nilo_gui/src/styles/tokens.css",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "2b54191877a54d17a2700159a037a28679f93859217d0e8496ff37e5cb7d86e2"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "81ce84feddd7a7254bfe7342fc127e285a15df570f83a3d2893fdb28d98e2453"
+          },
+          "path": "05_Software/nilo_gui/src/test/render.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "845c095255b1d9c2c79f6961f6606a3b26c73fda98695569a73cad5aaae2efc0"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "394f77e02c8d94049250f85c1fdfc18e4a4e73f97264a14767754f2711af17e2"
+          },
+          "path": "06_SoftwareDocu/Development_and_Simulation_Flow.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "767b22412bce575cbaf62e8cf7906375194ac497f4dd2f044896b75592b4a835"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "dd289c2d6d0fe3c892f5474a362d4ba1198843bca8193a4373f4f89784ae4853"
+          },
+          "path": "06_SoftwareDocu/Network_Service_Implementation_Status.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "8c00c35aa0cf56d1816a4eb037c900af3b3614e181d28c1fafb6aeb8d9d68440"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/README.md",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "9b47c2495b087cc25d4dcf913aef41d18fa0f3796bbba49a39ccc491dd23bebd"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1024x600-dark-activity.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "58dbd372a8c7e1ef27815df37a1be54b508cc79f8150e28f3e81f1ce96e4232c"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1024x600-dark-bench.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "2c9be98b185c503d393210533d64cb062deb85df89499b8112448fee844ed110"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1024x600-dark-dn-editor.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "bb15a0ccf62426bccd8d609bd9130290339f0b8e964f7c49033cc6d9ff508177"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1024x600-dark-network-full.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "bb15a0ccf62426bccd8d609bd9130290339f0b8e964f7c49033cc6d9ff508177"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1024x600-dark-network.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b812516c9e2fa0b35226d40485522cfa9444052ce719dff0c7d283bba53882e4"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1024x600-light-activity.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "c292e163f1640a19daf19136c02c40115135c9a257148163bdb93a0b426f7240"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1024x600-light-bench.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "012142e996d7904f0cc0846c6f1fbebea696338786be38a2b43eb9f76a1c76cb"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1024x600-light-dn-editor.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "f57a1079bebfd06c33033efd6e75d2397d771f070704c16ddc1410c3c3395ccd"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1024x600-light-network-full.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "f57a1079bebfd06c33033efd6e75d2397d771f070704c16ddc1410c3c3395ccd"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1024x600-light-network.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "160bbf410f475d68167dc087e87bcdbdbdfc06412128658eb631579f3ae1d724"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1366x768-dark-activity.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "1985d532bdb228326c3387ef0a22ce00b354b6fac7e318646f2f5f4800a86185"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1366x768-dark-bench.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "0e0d638ce13514aec79957e565e976aff45b839fcd9d840eabcf37fd88252aae"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1366x768-dark-dn-editor.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "5c1ad41c1c3d5525ebaf0dbd60f2a42c0de396f6e71bd1359d383177e692d020"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1366x768-dark-network-full.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "5c1ad41c1c3d5525ebaf0dbd60f2a42c0de396f6e71bd1359d383177e692d020"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1366x768-dark-network.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "1f4e47882b6be80941d20086e14485dbfae720dc75422523f4dcebbf88dde12d"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1366x768-light-activity.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "09229fe0dd8478148bba561874a4bc7ff52e51a8e98e531732b35aafabf5f29b"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1366x768-light-bench.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "38c8502a49eeea847501dc881da8a2068c720a358395b043731e2115fd27f68a"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1366x768-light-dn-editor.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "754bb2b29d4b64402d45e0d65164398b67c19af33272740d15024b9ab241dff0"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1366x768-light-network-full.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "754bb2b29d4b64402d45e0d65164398b67c19af33272740d15024b9ab241dff0"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1366x768-light-network.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "9e6f8fb339254378d27c8aac7ead1a310978389344223c89d931c13ae504604b"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1920x1080-dark-activity.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "5db12d133a4a4b47835285afa1fac5ed13d3b6f6664529ad690430297c72b1ba"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1920x1080-dark-bench.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "aa0c1fc2709df3d46996f1cbe3984dbce57547d05503d65fa70dbc7113f52964"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1920x1080-dark-dn-editor.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "870490fff2ce56dd2b174d055da9a56d1aec1c21fa5b1abc6065c9e512e3c30c"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1920x1080-dark-network-full.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "870490fff2ce56dd2b174d055da9a56d1aec1c21fa5b1abc6065c9e512e3c30c"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1920x1080-dark-network.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "c939d48a860f63fed3911e6c51c54fea629e4af4acb9e145eb312664540c67d2"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1920x1080-light-activity.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "75581e373da3dedce1a7a1928515c6eb297ceaada81007efe3c95f5a6c3beebc"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1920x1080-light-bench.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "48a4b2f2e819fad6e9b79feeaca25e32c86e769d7e94fd1fba253ac30cf73531"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1920x1080-light-dn-editor.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "f9386ebc332e8563f1548f562e827cf499c58ce8dbdf664b3e1ba3355f49d22b"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1920x1080-light-network-full.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "f9386ebc332e8563f1548f562e827cf499c58ce8dbdf664b3e1ba3355f49d22b"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-1920x1080-light-network.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ef7a3bd5c0ea0cb854f2f544cdd62ad7a26613416c59a2d41e03e87ad96dc9f3"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-800x480-dark-activity.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "143923b6b68df66d3ef7b5aac16945a6e2c0b382e326ccb6d848075974dc1635"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-800x480-dark-bench.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "7acb538dba5a9f5d665598534100302eb2cf91f50bc51b10662849d55c68b9e1"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-800x480-dark-dn-editor.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "035515d165fd04424f6cffa09e29871d5e4178c4284eb87921c2da2de3a90769"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-800x480-dark-network-full.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "035515d165fd04424f6cffa09e29871d5e4178c4284eb87921c2da2de3a90769"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-800x480-dark-network.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ba21633d437355047f4101233a8a51f6af564c2e3aa46f08c71dee63b60676a5"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-800x480-light-activity.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "58b9013a59164151ffc49e634ed9658711aa682413517039478c3cce551c4480"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-800x480-light-bench.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "2e6fd1b27ce8b4ae567f0e09d8cfbe09e5929bb44170975e85080be46cb8330e"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-800x480-light-dn-editor.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "2ed225a737729381a431f46cf9abac4d8905d01f236c2a1cdc73d6da3c1b4069"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-800x480-light-network-full.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "2ed225a737729381a431f46cf9abac4d8905d01f236c2a1cdc73d6da3c1b4069"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-800x480-light-network.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "c07dd07dc18a480a9e565e2985cd5f9cd6d9aea32f9a56cb2ee680d83206b2aa"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/after-audit.json",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "15e23e86bc1eda9c71c4620aea22fe1adbf9141bb96c6d525f945574f909549a"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/reflow-320x800-network.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ac73d208f5ae72ca3ee823b43307d970eac2dd8a1d58ed3878bb4bdf669e7dd1"
+          },
+          "area": "other",
+          "before": null,
+          "path": "09_Others/compact-field-ui-20260904/after/reflow-600x800-network.png",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "eaa391232e6848ce9293a11553b7894c73237700fa2a80673520e96bcce9dac4"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "9227d73b0ee2f728c2b8ffb879954e0e8125cc81d328ba18e31002761c417279"
+          },
+          "path": "CHANGELOG.md",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 44,
+            "modified": 3,
+            "removed": 0,
+            "unchanged": 133
+          },
+          "source": {
+            "added": 10,
+            "modified": 23,
+            "removed": 0,
+            "unchanged": 214
+          },
+          "tests": {
+            "added": 1,
+            "modified": 9,
+            "removed": 0,
+            "unchanged": 126
+          }
+        },
+        "status": {
+          "added": 55,
+          "modified": 35,
+          "removed": 0,
+          "unchanged": 473
+        }
+      },
+      "current_head": "542cf362ce0ffef95e58794457857678422372ee",
+      "evolution_stage": "validate",
+      "evolved_at": "2026-09-04T09:38:05.067741Z"
+    },
+    {
+      "anchor_created_at": "2026-09-04T09:49:00.918043Z",
+      "anchor_head": "542cf362ce0ffef95e58794457857678422372ee",
+      "anchor_id": "4612ff28c0e2e393",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "4e4dc3c5e69f1e484b75c40d7b573cef0ba63f7a4872a71646c81fb1383edb58"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "5d2f221a01363b8de3772e030a982339b93b870b9b0bf65847516e9e39ba7744"
+          },
+          "path": "05_Software/nilo_gui/e2e/field-display.spec.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "01ca029930ce3907b54d46b1e17d99003dd26ab650ff411e4441c5d8b03110b0"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "e5b4261aa4d470957acdbfa307dc503561ff3b34cbd288f19c6cbfb3e122b1c3"
+          },
+          "path": "05_Software/nilo_gui/e2e/network.spec.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "795812dc56b44f391793bce664da022cb65448c1ac39d5663c69b3c99f192260"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "a824ef063e3fe6321f4e22d6a850fb620b144ab75ea5420347d96ac67833e952"
+          },
+          "path": "05_Software/nilo_gui/src/components/Modal.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d6c07a8db211cc0384f476dc71fb122016f6919f551354afef668f0acb5051a2"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "f5a91f51340e79ac590a97ebdce7fa6d0064dd777d154dfdaacdc6c5941989ef"
+          },
+          "path": "05_Software/nilo_gui/src/components/RowActions.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "e77e85313fe18afd3c826f701f37e1521445df525c7ab95976298cdc3c3407a6"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "19372af498b4560fc4be74c49b0ff1022ae6d5aba49275cfb55b96cdd668aa9f"
+          },
+          "path": "05_Software/nilo_gui/src/components/RowActions.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "83449452dd58985706ca6d015d4932e9401387996f99b92dd1b61a6db4da54b2"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "0d12ebcdc5e773559ea4c7c3e7097847d1dfd8aebb2a231018eebd9b6ed9f9ed"
+          },
+          "path": "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "316b5af0ca618e063ba367e9f7bf8a88786bfa80d0327794486aa7288901dbef"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "0d0eed2c372cf21984f60d2ca3467d36c2ce2af86ad40cb439537eec3ac4bda6"
+          },
+          "path": "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "6bdf6fe08647e2029b339ff31f7165ca9d0618f408c3e9afd63d7f26fc22cb53"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "eae85baa55073ff325f9e99a27271124f98d4fc1f56d10adae1178698a294304"
+          },
+          "path": "05_Software/nilo_gui/src/components/network/WireGuardPanel.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b0c64220a649d1cb23b85f9128a2d918b6fc3a083e763de696b34280f1959de6"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "c9ced9dd323f6e816b67d737e572f2278c461a039e22c980cd5acaddd86cc9d6"
+          },
+          "path": "05_Software/nilo_gui/src/components/network/WireGuardPanel.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "954e4139f710605c0ca66cc2317d8da5d4288900154fd89b4113475131e78c2e"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "b53e8a873c59dbe779407de16332a5adb327b04cd778f38106d549dc31b9b7d0"
+          },
+          "path": "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ebc2c5db51aaaac70df990c0f3c7d289c305eefe0743cc5abe401a2a722b9fda"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "f3db61298e8ec08aac0900db8429e9299b6caeef75415c651c4d436af9cf7276"
+          },
+          "path": "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "25f72b8abc76575471182022282f4b9eac0c4aea46e6b7240e7187c955cfba51"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "3c0768afba26b2c97a6a1d65e0e1b52ec4944f8fc0c9f89cea60571ac54137d8"
+          },
+          "path": "05_Software/nilo_gui/src/i18n/de.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "feb27f740aa823a69cae77f867cf9984037c70d29ab2ee67a63e78600da38e67"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "5160951eb805ea7ae38d5338290de34e0e526f6d091f9365628a65abf82aab90"
+          },
+          "path": "05_Software/nilo_gui/src/i18n/en.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "29f9621f12db86a721d5e3b47bbaca164495d2e005425bf2e864809cae166274"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "90fe7cc894ca83473601df6507f48ae4b29c81b26b08125806220fd11db9fb35"
+          },
+          "path": "05_Software/nilo_gui/src/i18n/ro.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "25277838c7bbda553390647af2dbececf1eb41f0e95bb6d1c7069cf970d8f48d"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "b21e362bcfab7d3b79dc49352f013fb023124cfbf0995516a86fb29386b80ee7"
+          },
+          "path": "05_Software/nilo_gui/src/layout.test.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "39587d681123b16731e64a95d11b87ab2bf6c0d7081ec0279472842b09e101ff"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "a575e2871d8cdfa1b68145201330ee2ac23d68cc3140bb669ab1a0e93e42da06"
+          },
+          "path": "05_Software/nilo_gui/src/styles/shell.css",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "06b9f248fbbca7da256b50a6450184fa91cb56dc36038e75064935078ae06041"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "845c095255b1d9c2c79f6961f6606a3b26c73fda98695569a73cad5aaae2efc0"
+          },
+          "path": "06_SoftwareDocu/Development_and_Simulation_Flow.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "892622fea50e924d3df0854e2c93c6e9e8829f21d581f4b4fd5d412b69980cbf"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "767b22412bce575cbaf62e8cf7906375194ac497f4dd2f044896b75592b4a835"
+          },
+          "path": "06_SoftwareDocu/Network_Service_Implementation_Status.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "4d08dc74fa86798c3b996a9a09d336a42813a332ac5374d4e2d925d48b7fe390"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "eaa391232e6848ce9293a11553b7894c73237700fa2a80673520e96bcce9dac4"
+          },
+          "path": "CHANGELOG.md",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 0,
+            "modified": 3,
+            "removed": 0,
+            "unchanged": 177
+          },
+          "source": {
+            "added": 0,
+            "modified": 11,
+            "removed": 0,
+            "unchanged": 236
+          },
+          "tests": {
+            "added": 0,
+            "modified": 5,
+            "removed": 0,
+            "unchanged": 132
+          }
+        },
+        "status": {
+          "added": 0,
+          "modified": 19,
+          "removed": 0,
+          "unchanged": 545
+        }
+      },
+      "current_head": "542cf362ce0ffef95e58794457857678422372ee",
+      "evolution_stage": "build",
+      "evolved_at": "2026-09-04T10:06:42.603123Z"
+    }
+  ],
+  "schema": 1,
+  "task": "TASK-9ca3f883"
+}

@@ -7,6 +7,30 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Added
 
+- Compact field interface for the seven-inch appliance display: one semantic
+  type scale with no operator-facing text below 14 pixels, 44-pixel controls and
+  touch targets, a navigation rail that keeps its labels and a labelled drawer
+  on a constrained viewport, and dialogs that fit the viewport with a reachable
+  title, close control and sticky actions, becoming full-screen sheets on a
+  small display.
+- Progressive help: persistent guidance under the fields that need it, an
+  accessible help popover that opens by click, tap and keyboard and never
+  requires hover, and a How to configure help for the device-network and adapter
+  workflows with an addressing example and the external routes still needed
+  elsewhere. Safety, validation, confirmation and rollback information stays
+  outside help.
+- Network overview naming the uplink, the device side, the active WireGuard
+  profile and whatever needs attention; Interfaces, WireGuard profiles and
+  Device networks as responsive records with explicit Details and one Actions
+  dialog per row that stays above table scrolling, identifies the object and
+  status, explains disabled choices and separates destructive actions; and a
+  device-network editor grouped by task with format
+  validation beside each field and a plain-language review before the preview.
+- `e2e/field-display.spec.ts`: browser coverage at 1920x1080, 1366x768, 1024x600
+  and 800x480 in both themes, asserting readable text, 44-pixel field targets,
+  no document-level horizontal scrolling and the help, drawer and sheet
+  behaviour.
+
 - Interface shell following the saved design direction in
   `00_Planning/GUI_Design/`: one compact 46-pixel top row carrying the NILO
   wordmark, the open page tabs and the network, simulation, appearance,
@@ -180,6 +204,13 @@ one project-level Semantic Version, declared in the root `VERSION` file.
   upgrade behavior.
 
 ### Changed
+
+- Split Network into an expandable System group with focused Overview, Network
+  adapters, Device access, VPN profiles and Diagnostics workspace tabs.
+- Clarified the Diagnostics traffic chart with RX/TX legend, byte and time
+  scales, preserved measurement gaps and an exact selectable-minute readout.
+- Compacted Diagnostics readiness and statistics controls so its initial chart
+  fits without vertical scrolling at 1024x600 and larger.
 
 - Simplified Network tables with IPs, gateways and WireGuard endpoints; moved diagnostics and import behind compact controls and kept one runtime badge.
 

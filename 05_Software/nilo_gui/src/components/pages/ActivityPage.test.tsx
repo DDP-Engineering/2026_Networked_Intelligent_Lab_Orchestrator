@@ -87,8 +87,21 @@ describe('ActivityPage', () => {
     expect(readActivity.mock.calls[1][0]).toMatchObject({ cursor: '2' });
     expect(screen.queryByRole('button', { name: 'Older entries' })).toBeNull();
 
+    // REQ-UX-f30891b4: time, outcome, action, subject and actor stay in the
+    // row; category and function are in the explicit details with the raw
+    // record.
+    expect(screen.queryByRole('columnheader', { name: 'Category' })).toBeNull();
+    expect(screen.queryByRole('columnheader', { name: 'Function' })).toBeNull();
+    for (const column of ['Time', 'Outcome', 'Action', 'Target', 'Actor']) {
+      expect(screen.getByRole('columnheader', { name: column })).toBeVisible();
+    }
+    expect(screen.queryByText('network.interfaces')).toBeNull();
+
     // A row expands to its safe details and can narrow to its operation.
     fireEvent.click(screen.getByRole('button', { name: 'Details 1' }));
+    const details = screen.getByRole('region', { name: 'Details 1' });
+    expect(within(details).getByText('Audit')).toBeVisible();
+    expect(within(details).getByText('network.interfaces')).toBeVisible();
     expect(screen.getByText(/"state": "requested"/)).toBeVisible();
     fireEvent.click(
       screen.getByRole('button', { name: /Show every stage of operation op-1/ }),

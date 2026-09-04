@@ -337,16 +337,14 @@ export function ActivityPage({
               <p>{t('activity.empty')}</p>
             ) : (
               <div className="table-scroll">
-                <table className="data-table">
+                <table className="data-table record-table">
                   <thead>
                     <tr>
                       <th scope="col">{t('activity.col.time')}</th>
-                      <th scope="col">{t('activity.col.category')}</th>
-                      <th scope="col">{t('activity.col.component')}</th>
+                      <th scope="col">{t('activity.col.outcome')}</th>
                       <th scope="col">{t('activity.col.action')}</th>
                       <th scope="col">{t('activity.col.target')}</th>
                       <th scope="col">{t('activity.col.actor')}</th>
-                      <th scope="col">{t('activity.col.outcome')}</th>
                       <th scope="col">{t('activity.details')}</th>
                     </tr>
                   </thead>
@@ -354,17 +352,21 @@ export function ActivityPage({
                     {rows.map((event) => (
                       <Fragment key={event.id}>
                         <tr>
-                          <td>{event.createdAt.toLocaleString()}</td>
-                          <td>
-                            {t(
-                              CATEGORY_KEYS[event.category] ?? 'activity.category.all',
+                          <td data-label={t('activity.col.time')}>
+                            {event.createdAt.toLocaleString()}
+                          </td>
+                          <td data-label={t('activity.col.outcome')}>
+                            {event.outcome}
+                            {event.severity !== 'info' && (
+                              <small className="network-secondary">
+                                {event.severity}
+                              </small>
                             )}
                           </td>
-                          <td>{event.component}</td>
-                          <td>
+                          <td data-label={t('activity.col.action')}>
                             <code>{event.action}</code>
                           </td>
-                          <td>
+                          <td data-label={t('activity.col.target')}>
                             {event.targetLabel !== '' &&
                             event.targetLabel !== event.subjectId ? (
                               <>
@@ -377,22 +379,15 @@ export function ActivityPage({
                               event.subjectId
                             )}
                           </td>
-                          <td title={event.actorId}>
+                          <td data-label={t('activity.col.actor')}>
                             {t(ACTOR_KEYS[event.actorKind] ?? 'activity.actor.user')}
                           </td>
-                          <td>
-                            {event.outcome}
-                            {event.severity !== 'info' && (
-                              <small className="network-secondary">
-                                {event.severity}
-                              </small>
-                            )}
-                          </td>
-                          <td>
+                          <td className="record-cell-actions">
                             <button
                               type="button"
-                              className="network-detail-toggle"
+                              className="button network-detail-toggle"
                               aria-expanded={expanded === event.id}
+                              aria-controls={`activity-details-${event.id}`}
                               aria-label={`${t('activity.details')} ${event.sequence}`}
                               onClick={() =>
                                 setExpanded(expanded === event.id ? null : event.id)
@@ -403,8 +398,32 @@ export function ActivityPage({
                           </td>
                         </tr>
                         {expanded === event.id && (
-                          <tr>
-                            <td colSpan={8}>
+                          <tr className="record-details">
+                            <td
+                              colSpan={6}
+                              id={`activity-details-${event.id}`}
+                              role="region"
+                              aria-label={`${t('activity.details')} ${event.sequence}`}
+                            >
+                              <dl className="record-facts">
+                                <div>
+                                  <dt>{t('activity.col.category')}</dt>
+                                  <dd>
+                                    {t(
+                                      CATEGORY_KEYS[event.category] ??
+                                        'activity.category.all',
+                                    )}
+                                  </dd>
+                                </div>
+                                <div>
+                                  <dt>{t('activity.col.component')}</dt>
+                                  <dd>{event.component}</dd>
+                                </div>
+                                <div>
+                                  <dt>{t('activity.filter.actor')}</dt>
+                                  <dd>{event.actorId}</dd>
+                                </div>
+                              </dl>
                               {event.operationId !== '' && (
                                 <p>
                                   <button

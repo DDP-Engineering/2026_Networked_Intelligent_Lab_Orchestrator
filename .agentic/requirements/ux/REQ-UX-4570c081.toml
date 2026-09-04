@@ -1,0 +1,42 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-UX-4570c081"
+
+title = "Keep safety, validation and confirmation information persistent outside help"
+
+status = "active"
+
+requirement = """
+The browser interface shall present the confirmation window and automatic rollback, the pending-confirmation countdown, a failed or unverified rollback, a refused change, field validation messages and the prerequisite that another computer, router, VPN hub or device may still need a route as persistent visible text beside the affected control or in the confirmation dialog, and never only inside a help popover or tooltip.
+"""
+
+verification = "A component test renders the device-network editor with every help popover closed and asserts the appliance-address guidance, the source-address consequence and the field validation message are visible beside their fields, and renders the confirmation dialog and asserts the rollback window sentence is visible; the existing countdown, rollback-failure and refusal tests remain green."
+
+affected_paths = [
+    "05_Software/nilo_gui/src/components/help/Field.tsx",
+    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.tsx",
+    "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.tsx",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
+    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx",
+    "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.test.tsx",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx::groups the editor by task, validates beside the field and reviews in plain language",
+    "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.test.tsx::groups addressing, DNS and protection, with help beside the settings",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::states the two-minute rollback window in the confirmation itself",
+]
+
+spec = ""
+priority = "high"
+rationale = "A tooltip that carries the rollback deadline is a deadline nobody on a touch panel can read."
+
+created = 2026-09-04
+updated = 2026-09-04

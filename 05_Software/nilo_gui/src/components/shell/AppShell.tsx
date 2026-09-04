@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useEffect, useState } from 'react';
+import { useCallback, useMemo, useEffect, useRef, useState } from 'react';
 
 import type { BenchCoreClient, Credential } from '../../api/client';
 import type {
@@ -27,8 +27,11 @@ import { BenchPage } from '../pages/BenchPage';
 import { ActivityPage } from '../pages/ActivityPage';
 import { NetworkPage } from '../pages/NetworkPage';
 import { AboutPage, IntegrationPage, NotAvailablePage } from '../pages/SimplePages';
+import { Icon } from './Icon';
+import { NavDrawer } from './NavDrawer';
 import { SideNav } from './SideNav';
 import { TopRow } from './TopRow';
+import { useViewportClass } from './useViewportClass';
 import { buildPages, findPage, integrationPageId, type PageDescriptor } from './pages';
 import { usePruneClosedPages, type Workspace } from './useWorkspace';
 
@@ -72,6 +75,19 @@ export function AppShell({
   onSessionEnded,
 }: AppShellProps) {
   const t = useTranslate();
+  const viewport = useViewportClass();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  // Focus returns to the Menu control whenever the drawer closes, whichever
+  // way it closed and whether or not the pointer that opened it left focus
+  // there; a finger on a panel does not.
+  const drawerWasOpen = useRef(false);
+  useEffect(() => {
+    if (drawerWasOpen.current && !drawerOpen) {
+      menuButton.current?.focus();
+    }
+    drawerWasOpen.current = drawerOpen;
+  }, [drawerOpen]);
   const [networkStatus, setNetworkStatus] = useState<NetworkStatus | null>(null);
   const [wireGuard, setWireGuard] = useState<WireGuardStatus | null>(null);
   const [benchCoreReachable, setBenchCoreReachable] = useState(true);
@@ -236,10 +252,32 @@ export function AppShell({
     .map((id) => findPage(pages, id))
     .filter((page): page is PageDescriptor => page !== undefined);
   const active = workspace.active === null ? null : findPage(pages, workspace.active);
+  // On a constrained viewport the rail is gone; the same navigation opens as a
+  // drawer, and choosing an entry closes it so the page it opened is on screen.
+  const openFromDrawer = (id: string) => {
+    setDrawerOpen(false);
+    workspace.open_(id);
+  };
 
   return (
     <div className="shell">
       <div className="shell-brand">
+        {viewport === 'constrained' && (
+          <button
+            type="button"
+            ref={menuButton}
+            className="shell-menu"
+            aria-haspopup="dialog"
+            aria-expanded={drawerOpen}
+            // Named on the button itself, because the visible word gives way
+            // on a very narrow viewport while the icon stays.
+            aria-label={t('nav.menu')}
+            onClick={() => setDrawerOpen(true)}
+          >
+            <Icon name="menu" size={20} />
+            <span className="shell-menu-label">{t('nav.menu')}</span>
+          </button>
+        )}
         <span className="brand-mark" aria-hidden="true">
           N
         </span>
@@ -247,6 +285,7 @@ export function AppShell({
       </div>
 
       <TopRow
+        viewport={viewport}
         simulation={status.simulation}
         networkStatus={networkStatus}
         wireGuardStatus={wireGuard}
@@ -261,12 +300,24 @@ export function AppShell({
         nameOf={nameOf}
       />
 
-      <SideNav
-        pages={pages}
-        active={workspace.active}
-        onOpen={workspace.open_}
-        nameOf={nameOf}
-      />
+      {viewport !== 'constrained' && (
+        <SideNav
+          pages={pages}
+          active={workspace.active}
+          onOpen={workspace.open_}
+          nameOf={nameOf}
+        />
+      )}
+      {drawerOpen && (
+        <NavDrawer onDismiss={() => setDrawerOpen(false)}>
+          <SideNav
+            pages={pages}
+            active={workspace.active}
+            onOpen={openFromDrawer}
+            nameOf={nameOf}
+          />
+        </NavDrawer>
+      )}
 
       <main
         className="shell-workspace"
@@ -303,9 +354,10 @@ export function AppShell({
         />
       );
     }
-    if (page.id === 'network') {
+    if (page.networkView !== undefined) {
       return (
         <NetworkPage
+          view={page.networkView}
           readNetworkStatus={readNetworkStatus}
           readNetworkStatistics={readNetworkStatistics}
           previewInterfaceChange={previewInterfaceChange}

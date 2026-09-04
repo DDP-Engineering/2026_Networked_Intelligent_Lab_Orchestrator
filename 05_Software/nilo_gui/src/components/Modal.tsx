@@ -1,6 +1,9 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
 import { useTranslate } from '../i18n/languages';
+import { useLayer } from './layers';
+import { Icon } from './shell/Icon';
 
 /**
  * The dialog's focusable stops, in tab order.
@@ -25,6 +28,13 @@ export interface ModalProps {
   title: string;
   /** Called when the dialog is dismissed without applying anything. */
   onDismiss: () => void;
+  /**
+   * `dialog` is a centred panel that becomes a full-screen sheet on a short
+   * or narrow viewport; `drawer` is anchored to the left edge and holds the
+   * navigation on a constrained viewport; `actions` keeps a short choice list
+   * compact on a 1024 by 600 field display.
+   */
+  variant?: 'dialog' | 'drawer' | 'actions';
   children: ReactNode;
 }
 
@@ -35,21 +45,33 @@ export interface ModalProps {
  * row, so an in-progress state, a failure and a confirmation each have one
  * place to appear instead of six.
  *
+ * Three parts, so a dialog fits a 480-pixel viewport: a head with the title
+ * and a close control that never scrolls away, a body that scrolls on its own,
+ * and the `.modal-actions` bar a form ends with, which sticks to the bottom of
+ * that body while it scrolls.
+ *
  * It is a plain element rather than `<dialog>`: the modal semantics a screen
  * reader needs are `role="dialog"` and `aria-modal`, and building on the
  * element would add a browser API whose behavior differs between the browser
  * and the component test environment for no gain here.
  */
-export function Modal({ title, onDismiss, children }: ModalProps) {
+export function Modal({ title, onDismiss, variant = 'dialog', children }: ModalProps) {
+  const t = useTranslate();
   const panel = useRef<HTMLDivElement>(null);
+  const body = useRef<HTMLDivElement>(null);
   const titleId = useId();
+  const onTop = useLayer(true);
 
-  // Focus moves into the dialog when it opens and returns to whatever opened
-  // it when it closes, so a keyboard user is never left on a control that has
-  // gone away.
+  // Focus moves into the dialog when it opens — to the first control of its
+  // body, or to the close control when the body has none — and returns to
+  // whatever opened it when it closes, so a keyboard user is never left on a
+  // control that has gone away.
   useEffect(() => {
     const opener = document.activeElement;
-    if (panel.current !== null) {
+    const first = body.current === null ? undefined : focusableWithin(body.current)[0];
+    if (first !== undefined) {
+      first.focus();
+    } else if (panel.current !== null) {
       focusableWithin(panel.current)[0]?.focus();
     }
     return () => {
@@ -61,13 +83,13 @@ export function Modal({ title, onDismiss, children }: ModalProps) {
 
   useEffect(() => {
     function dismissOnEscape(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
+      if (event.key === 'Escape' && onTop()) {
         onDismiss();
       }
     }
     document.addEventListener('keydown', dismissOnEscape);
     return () => document.removeEventListener('keydown', dismissOnEscape);
-  }, [onDismiss]);
+  }, [onDismiss, onTop]);
 
   // Tab is confined to the dialog in both directions. `aria-modal` tells a
   // screen reader the rest of the page is unavailable, but it moves no focus, so
@@ -102,30 +124,38 @@ export function Modal({ title, onDismiss, children }: ModalProps) {
     return () => document.removeEventListener('keydown', confineTab);
   }, []);
 
-  return (
+  const drawer = variant === 'drawer';
+  const actions = variant === 'actions';
+  return createPortal(
     <div
-      className="modal-backdrop"
-      // Only a press that both starts and ends on the backdrop dismisses, so a
-      // drag that began inside the dialog does not discard a half-typed form.
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
-          onDismiss();
-        }
-      }}
+      className={`modal-backdrop ${drawer ? 'modal-backdrop-drawer' : ''} ${actions ? 'modal-backdrop-actions' : ''}`}
     >
       <div
-        className="modal"
+        className={`modal ${drawer ? 'modal-drawer' : ''} ${actions ? 'modal-actions-dialog' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         ref={panel}
       >
-        <h3 className="modal-title" id={titleId}>
-          {title}
-        </h3>
-        {children}
+        <div className="modal-head">
+          <h3 className="modal-title" id={titleId}>
+            {title}
+          </h3>
+          <button
+            type="button"
+            className="modal-close"
+            aria-label={t('dialog.close')}
+            onClick={onDismiss}
+          >
+            <Icon name="close" size={20} />
+          </button>
+        </div>
+        <div className="modal-body" ref={body}>
+          {children}
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

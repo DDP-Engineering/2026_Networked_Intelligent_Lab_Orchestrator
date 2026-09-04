@@ -197,7 +197,7 @@ export function AuthenticationPage({
             empty={t('auth.noIdentities')}
             resource={t('auth.resource.identities')}
           >
-            <table className="data-table">
+            <table className="data-table record-table">
               <thead>
                 <tr>
                   <th scope="col">{t('auth.column.username')}</th>
@@ -210,9 +210,13 @@ export function AuthenticationPage({
                 {knownIdentities.map((identity) => (
                   <tr key={identity.id}>
                     <th scope="row">{identity.username}</th>
-                    <td className="cell-mono">{identity.role}</td>
-                    <td>{identity.enabled ? t('auth.enabled') : t('auth.disabled')}</td>
-                    <td className="row-actions">
+                    <td className="cell-mono" data-label={t('auth.column.role')}>
+                      {identity.role}
+                    </td>
+                    <td data-label={t('auth.column.state')}>
+                      {identity.enabled ? t('auth.enabled') : t('auth.disabled')}
+                    </td>
+                    <td className="row-actions record-cell-actions">
                       <button
                         type="button"
                         className="button"
@@ -264,7 +268,7 @@ export function AuthenticationPage({
             empty={t('auth.noTokens')}
             resource={t('auth.resource.tokens')}
           >
-            <table className="data-table">
+            <table className="data-table record-table">
               <thead>
                 <tr>
                   <th scope="col">{t('auth.column.name')}</th>
@@ -279,15 +283,21 @@ export function AuthenticationPage({
                 {(tokens.phase === 'ready' ? tokens.items : []).map((token) => (
                   <tr key={token.id}>
                     <th scope="row">{token.name}</th>
-                    <td className="cell-mono">{token.owner}</td>
-                    <td>
+                    <td className="cell-mono" data-label={t('auth.column.owner')}>
+                      {token.owner}
+                    </td>
+                    <td data-label={t('auth.column.scopes')}>
                       {token.scopes.length === 0
                         ? t('auth.wholeRole')
                         : token.scopes.join(', ')}
                     </td>
-                    <td className="cell-mono">{token.expiresAt ?? t('auth.never')}</td>
-                    <td>{token.revoked ? t('auth.revoked') : t('auth.active')}</td>
-                    <td className="row-actions">
+                    <td className="cell-mono" data-label={t('auth.column.expires')}>
+                      {token.expiresAt ?? t('auth.never')}
+                    </td>
+                    <td data-label={t('auth.column.state')}>
+                      {token.revoked ? t('auth.revoked') : t('auth.active')}
+                    </td>
+                    <td className="row-actions record-cell-actions">
                       {token.revoked ? null : (
                         <button
                           type="button"

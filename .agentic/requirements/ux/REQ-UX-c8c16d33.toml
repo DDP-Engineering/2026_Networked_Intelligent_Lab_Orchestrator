@@ -1,0 +1,39 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-UX-c8c16d33"
+
+title = "Render operator-facing text at readable field sizes"
+
+status = "active"
+
+requirement = """
+The browser interface shall render ordinary body and control text at 16 CSS pixels, dense table values and navigation labels at no less than 15 pixels, and every operator-facing label, help, status and secondary line at no less than 14 pixels, in the light, dark and system themes, using one semantic type scale declared as design tokens rather than component-local sizes, and it shall not render any operator-facing text in all capitals with widened letter spacing.
+"""
+
+verification = "A stylesheet test asserts the token file declares the title, section, body, dense and label sizes with the body at 16px and no size token below 14px, that the shell stylesheet declares no font-size below 14px and no text-transform uppercase, and that the document body uses the body token; a browser test walks every visible text node at 1920x1080, 1366x768, 1024x600 and 800x480 in both themes and finds none rendered below 14px."
+
+affected_paths = [
+    "05_Software/nilo_gui/src/styles/tokens.css",
+    "05_Software/nilo_gui/src/styles/shell.css",
+    "05_Software/nilo_gui/src/index.css",
+    "05_Software/nilo_gui/src/layout.test.ts",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/src/layout.test.ts::declares the type scale as tokens with the body at 16px and nothing below 14px",
+    "05_Software/nilo_gui/src/layout.test.ts::sizes every component from the scale, never below 14px and never in capitals",
+    "05_Software/nilo_gui/e2e/field-display.spec.ts::the shell and the Network page are readable and complete",
+]
+
+spec = ""
+priority = "high"
+rationale = "A seven-inch panel and outdoor laptop use cannot rely on 10 to 12 pixel text; addresses and ports must be read exactly."
+
+created = 2026-09-04
+updated = 2026-09-04

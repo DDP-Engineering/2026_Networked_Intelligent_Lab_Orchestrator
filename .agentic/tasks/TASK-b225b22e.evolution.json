@@ -1,0 +1,588 @@
+{
+  "reports": [
+    {
+      "anchor_created_at": "2026-09-04T10:37:26.451860Z",
+      "anchor_head": "542cf362ce0ffef95e58794457857678422372ee",
+      "anchor_id": "d7e2d104a2928c67",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "6660e1761401496db1f90d0faecb27b2dd23bed9d19b9ba178971800e5c38f66"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "4e4dc3c5e69f1e484b75c40d7b573cef0ba63f7a4872a71646c81fb1383edb58"
+          },
+          "path": "05_Software/nilo_gui/e2e/field-display.spec.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "a1bf7610d61611dae8364b37603ea82e490b5d99b15c7d498bda87d55ed07b9a"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "01ca029930ce3907b54d46b1e17d99003dd26ab650ff411e4441c5d8b03110b0"
+          },
+          "path": "05_Software/nilo_gui/e2e/network.spec.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "62c0172a877ce00aea6b29312b8aecc75c61d662c1e82993693aeb53ca1ef1fd"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "76c110af90307f09b23fba76236dbabb72e8c68ce637fee3f9447f57b9c2205f"
+          },
+          "path": "05_Software/nilo_gui/e2e/shell.spec.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "faec68d139f6b1eb987c9b8d99ad7f12628c451cd710e18ca1fa71aaf27e9ad1"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "b0c64220a649d1cb23b85f9128a2d918b6fc3a083e763de696b34280f1959de6"
+          },
+          "path": "05_Software/nilo_gui/src/components/network/WireGuardPanel.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "7b1eafe67f95ef212cc943684f20bf08a74486dcf774b12bac438b0dcd892e79"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_gui/src/components/network/views.ts",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "850894e0d8460d7eabd6fa4795f0385c2a888fc87e29c6a3642f377b801a7766"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "4bbbca67295340d9efbeca3d5b30e31aeaf9f13eeeefb7bf49a3a463371cfcec"
+          },
+          "path": "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "4e2cd30dbd5947c4587abca887a915ebae182a7e0a65bffa9c114eeb5072602c"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "ebc2c5db51aaaac70df990c0f3c7d289c305eefe0743cc5abe401a2a722b9fda"
+          },
+          "path": "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b1c35c17bf3cb16780dd7ff2e9532d2dfdb656b9996dc1febfa0da8524d2f5d6"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "a8134359399f4377573d0ac307852446ac7c49a40745c64c9c72990dacb0b469"
+          },
+          "path": "05_Software/nilo_gui/src/components/shell/AppShell.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "0a556ae210d2c0f60edb36d75bd1a7c74ad07c54d4ae2d79794920637c9e5ef5"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "6810667f5d9ae3eac54046a34803e0c207bc146f4571e613ba588fcf6436deef"
+          },
+          "path": "05_Software/nilo_gui/src/components/shell/SideNav.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "5216808803f45368f9f5686920e12e91ab56a8eb217170222fed1527f4e33dfb"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "91aca3ec1f4cfe171d689887f9337530e4dc7352bdbd76e7956f9b54e098696a"
+          },
+          "path": "05_Software/nilo_gui/src/components/shell/pages.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "f2011f16ac14aa2ed43f89f77771a77df4dd2bfa3539196ee729552dd77d5fe1"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "d3a6b6350219bc4b0e08eb2676dd006e7da733fa225c5e8ab2c5140367682c12"
+          },
+          "path": "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "8446c26706f980fecc29c217ff888fdc227d3fb9c86776d9262d9f556c2fe7cb"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "25f72b8abc76575471182022282f4b9eac0c4aea46e6b7240e7187c955cfba51"
+          },
+          "path": "05_Software/nilo_gui/src/i18n/de.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "cadcf494be0d3bfb665ddd8cab821d3d9799333dde51da941f5d1926c2d04bb9"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "feb27f740aa823a69cae77f867cf9984037c70d29ab2ee67a63e78600da38e67"
+          },
+          "path": "05_Software/nilo_gui/src/i18n/en.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "fd87aad949c60e6f83f72af0e4683b0f1295d1686409b3cfd12552a6ab2c09fe"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "29f9621f12db86a721d5e3b47bbaca164495d2e005425bf2e864809cae166274"
+          },
+          "path": "05_Software/nilo_gui/src/i18n/ro.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "9fc8625eca3fb85626d0e7ef5d5fdbe90f8dbc1e4a400e97c6b0b3ad00f2406d"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "25277838c7bbda553390647af2dbececf1eb41f0e95bb6d1c7069cf970d8f48d"
+          },
+          "path": "05_Software/nilo_gui/src/layout.test.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "6f45204e924551ed4897d7bd8590b3e13ec602b1ed8950fcb72e96829bd1befc"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "39587d681123b16731e64a95d11b87ab2bf6c0d7081ec0279472842b09e101ff"
+          },
+          "path": "05_Software/nilo_gui/src/styles/shell.css",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "6b6edfe4af34575c56d9bf538d4bbdc2f875308512612ef89a8a2b4cd678f188"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "06b9f248fbbca7da256b50a6450184fa91cb56dc36038e75064935078ae06041"
+          },
+          "path": "06_SoftwareDocu/Development_and_Simulation_Flow.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "71131b38483b714f4663d0e99932767a92e189bd3fcc3f27284230c5ae209d58"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "892622fea50e924d3df0854e2c93c6e9e8829f21d581f4b4fd5d412b69980cbf"
+          },
+          "path": "06_SoftwareDocu/Network_Service_Implementation_Status.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "773983f4774fc709c1377dbb6f7447c06c91d1512a6275a5e96b7f53ba926a5a"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "4d08dc74fa86798c3b996a9a09d336a42813a332ac5374d4e2d925d48b7fe390"
+          },
+          "path": "CHANGELOG.md",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 0,
+            "modified": 3,
+            "removed": 0,
+            "unchanged": 177
+          },
+          "source": {
+            "added": 1,
+            "modified": 12,
+            "removed": 0,
+            "unchanged": 235
+          },
+          "tests": {
+            "added": 0,
+            "modified": 3,
+            "removed": 0,
+            "unchanged": 134
+          }
+        },
+        "status": {
+          "added": 1,
+          "modified": 18,
+          "removed": 0,
+          "unchanged": 546
+        }
+      },
+      "current_head": "542cf362ce0ffef95e58794457857678422372ee",
+      "evolution_stage": "validate",
+      "evolved_at": "2026-09-04T11:05:09.132512Z"
+    },
+    {
+      "anchor_created_at": "2026-09-04T11:22:03.464990Z",
+      "anchor_head": "542cf362ce0ffef95e58794457857678422372ee",
+      "anchor_id": "14231810780d055e",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "72f301c8a578bb517b2d99bf344d2f28d99b6b4e1baa4efee5d5a02d466b587b"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "6660e1761401496db1f90d0faecb27b2dd23bed9d19b9ba178971800e5c38f66"
+          },
+          "path": "05_Software/nilo_gui/e2e/field-display.spec.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "cd5e827f6bc3416574c3aeb911785cf6a2a8a10a20b1303d61d6fa7ff6d6b829"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "d32e069b71e1e0e1dd49087217ff8bdaa0db736c85dd704e44add95a576af704"
+          },
+          "path": "05_Software/nilo_gui/src/components/network/TrafficChart.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "554ef9d8e360a3d131feaddbe67acaf317d174fbe745a540354c6c4cea0edef5"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "a173fda193209a0ef8851c7d0ee1362929022a0d221f18927f7ef8bd5abc9526"
+          },
+          "path": "05_Software/nilo_gui/src/components/network/TrafficChart.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "55a0134ad6806d8889cefb7aa0d64613c30fd6be4edc6c65988c109975ded5bb"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "850894e0d8460d7eabd6fa4795f0385c2a888fc87e29c6a3642f377b801a7766"
+          },
+          "path": "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "90b3663e84fe8772b930469f86cbd91ea72e551609038278bb24a7e14079afc0"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "8446c26706f980fecc29c217ff888fdc227d3fb9c86776d9262d9f556c2fe7cb"
+          },
+          "path": "05_Software/nilo_gui/src/i18n/de.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "f2760b16775cbdbbd6ee64febfcf42030dfcb40bb7c8f15d3bee2a7f5dcbbaf8"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "cadcf494be0d3bfb665ddd8cab821d3d9799333dde51da941f5d1926c2d04bb9"
+          },
+          "path": "05_Software/nilo_gui/src/i18n/en.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "cf54f126662f53b2dd90a4c407b101e636432eb3aa320287c0073282e3353b52"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "fd87aad949c60e6f83f72af0e4683b0f1295d1686409b3cfd12552a6ab2c09fe"
+          },
+          "path": "05_Software/nilo_gui/src/i18n/ro.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "4534725dbf7d611dd02e9fd30480cf6300bcd1e4f82bbf0b65f7d8397b73a5f5"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "6f45204e924551ed4897d7bd8590b3e13ec602b1ed8950fcb72e96829bd1befc"
+          },
+          "path": "05_Software/nilo_gui/src/styles/shell.css",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "a6100098236ffd2d940cf70f5ac6974510349c30f638523a7312c6d6e466ac3e"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "6b6edfe4af34575c56d9bf538d4bbdc2f875308512612ef89a8a2b4cd678f188"
+          },
+          "path": "06_SoftwareDocu/Development_and_Simulation_Flow.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d000022f3eb7c9b0c3aff82fb11ec6a8a574e28f68188880ec4da81c9ea80617"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "71131b38483b714f4663d0e99932767a92e189bd3fcc3f27284230c5ae209d58"
+          },
+          "path": "06_SoftwareDocu/Network_Service_Implementation_Status.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "4b4604267df224d7911449bcbef66511e2fdfa73e355039944e4182f5262346e"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "773983f4774fc709c1377dbb6f7447c06c91d1512a6275a5e96b7f53ba926a5a"
+          },
+          "path": "CHANGELOG.md",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 0,
+            "modified": 3,
+            "removed": 0,
+            "unchanged": 177
+          },
+          "source": {
+            "added": 0,
+            "modified": 6,
+            "removed": 0,
+            "unchanged": 242
+          },
+          "tests": {
+            "added": 0,
+            "modified": 2,
+            "removed": 0,
+            "unchanged": 136
+          }
+        },
+        "status": {
+          "added": 0,
+          "modified": 11,
+          "removed": 0,
+          "unchanged": 555
+        }
+      },
+      "current_head": "542cf362ce0ffef95e58794457857678422372ee",
+      "evolution_stage": "validate",
+      "evolved_at": "2026-09-04T11:46:55.759416Z"
+    },
+    {
+      "anchor_created_at": "2026-09-04T12:27:02.528322Z",
+      "anchor_head": "542cf362ce0ffef95e58794457857678422372ee",
+      "anchor_id": "ff288708a3653803",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "7cfc8b6e18f17e82e7db9fe01d785c6310c75e4125b38a8b486d5f492c5527bb"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "296846d574979f4de8a39eb491f6e3f7805cfc6f196e67db544cb6eff00ea26b"
+          },
+          "path": "05_Software/nilo_gui/src/components/network/WireGuardPanel.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "e164e55313a49ffadfa1357d618282cd04dfee7695b78ba37cbd3e6fff6a33fd"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "faec68d139f6b1eb987c9b8d99ad7f12628c451cd710e18ca1fa71aaf27e9ad1"
+          },
+          "path": "05_Software/nilo_gui/src/components/network/WireGuardPanel.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "a4964df20a356adcfb1022835fd329cf380e13fe87a599f677e2fc790aae817d"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "4e2cd30dbd5947c4587abca887a915ebae182a7e0a65bffa9c114eeb5072602c"
+          },
+          "path": "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "27c278e3f78ba72257e7611f84f382d457f97477c595d3c213f0179fbf3947fa"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "4534725dbf7d611dd02e9fd30480cf6300bcd1e4f82bbf0b65f7d8397b73a5f5"
+          },
+          "path": "05_Software/nilo_gui/src/styles/shell.css",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d8210c0658da0b4fe1e7d346d8468d6feb7105fdf89eacf371e833203c7e98ec"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "d000022f3eb7c9b0c3aff82fb11ec6a8a574e28f68188880ec4da81c9ea80617"
+          },
+          "path": "06_SoftwareDocu/Network_Service_Implementation_Status.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "60e2ec4e50d3f259a3e101444c6d3bd9de72af3a94d49b19b0c1903e5ebaf3ef"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "4b4604267df224d7911449bcbef66511e2fdfa73e355039944e4182f5262346e"
+          },
+          "path": "CHANGELOG.md",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 0,
+            "modified": 2,
+            "removed": 0,
+            "unchanged": 178
+          },
+          "source": {
+            "added": 0,
+            "modified": 3,
+            "removed": 0,
+            "unchanged": 245
+          },
+          "tests": {
+            "added": 0,
+            "modified": 1,
+            "removed": 0,
+            "unchanged": 137
+          }
+        },
+        "status": {
+          "added": 0,
+          "modified": 6,
+          "removed": 0,
+          "unchanged": 560
+        }
+      },
+      "current_head": "542cf362ce0ffef95e58794457857678422372ee",
+      "evolution_stage": "build",
+      "evolved_at": "2026-09-04T12:36:40.262721Z"
+    }
+  ],
+  "schema": 1,
+  "task": "TASK-b225b22e"
+}

@@ -9,6 +9,10 @@
  *
  * The System branch is CSS rather than script, which is what makes it follow the
  * device without a reload and without the interface re-rendering.
+ *
+ * The metrics below the palette are the readability contract for a seven-inch
+ * field display: one semantic type scale, nothing operator-facing below the
+ * label size, and one control height that is also the minimum touch target.
  */
 
 :root {
@@ -23,7 +27,7 @@
   /* Text, from most to least prominent. */
   --text-strong: #0b1417;
   --text: #24373d;
-  --text-muted: #5e747c;
+  --text-muted: #566a72;
   --text-on-accent: #ffffff;
 
   /* Lines. */
@@ -48,10 +52,40 @@
   --focus-ring: #10796f;
   --shadow-overlay: 0 12px 32px rgb(11 20 23 / 16%);
 
+  /* The type scale. Sizes are pixels on purpose: the panel is read at 100%
+     zoom and an address has to be the same size wherever it appears. */
+  --text-title: 22px;
+  --text-section: 18px;
+  --text-body: 16px;
+  --text-dense: 15px;
+  --text-label: 14px;
+  --line-title: 1.25;
+  --line-section: 1.3;
+  --line-body: 1.45;
+  --line-dense: 1.4;
+  --line-label: 1.4;
+
+  /* Controls and touch targets. One height for every button, input and
+     select, and the same value as the smallest target a finger may be given. */
+  --control-height: 44px;
+  --target-min: 44px;
+  --control-radius: 4px;
+
+  /* Spacing scale. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* Readable line length on a large display; a field display uses it all. */
+  --content-max-width: 100rem;
+
   /* Metrics the shell grid and its children share. */
   --row-height: 46px;
   --nav-width: 216px;
-  --nav-width-narrow: 60px;
+  --nav-width-compact: 168px;
   --boundary-height: 24px;
 
   --font-sans:
@@ -74,7 +108,7 @@
 
   --text-strong: #f2f7f9;
   --text: #d4e0e4;
-  --text-muted: #8fa5ae;
+  --text-muted: #9bb0b8;
   --text-on-accent: #06181a;
 
   --border: #1d3039;
@@ -110,7 +144,7 @@
 
     --text-strong: #f2f7f9;
     --text: #d4e0e4;
-    --text-muted: #8fa5ae;
+    --text-muted: #9bb0b8;
     --text-on-accent: #06181a;
 
     --border: #1d3039;

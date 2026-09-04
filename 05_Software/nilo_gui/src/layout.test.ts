@@ -127,12 +127,158 @@ describe('single-viewport layout', () => {
     );
   });
 
-  it('narrows the navigation rather than clipping it on a small viewport', () => {
-    const narrow = shellCss.slice(shellCss.indexOf('@media (width <= 60rem)'));
+  it('narrows the navigation to a labeled compact rail on a field viewport', () => {
+    const compact = mediaBlock(shellCss, '@media (width <= 72rem)');
 
-    expect(narrow).toMatch(/grid-template-columns:\s*var\(--nav-width-narrow\)/);
-    expect(narrow).toContain('.nav-label');
-    expect(narrow).not.toContain('display: none;\n  }\n\n  .sidenav');
+    expect(compact).toMatch(/grid-template-columns:\s*var\(--nav-width-compact\)/);
+    // The labels stay: a rail of bare icons is not navigation an operator can
+    // learn on a panel used occasionally.
+    expect(compact).not.toMatch(/\.nav-label[^{]*\{[^}]*display:\s*none/);
+  });
+
+  it('replaces the rail with a drawer on a constrained viewport', () => {
+    const constrained = mediaBlock(
+      shellCss,
+      '@media (width <= 56rem), (height <= 520px)',
+    );
+
+    expect(constrained).toMatch(/grid-template-columns:\s*auto minmax\(0, 1fr\)/);
+    expect(constrained).toMatch(/\.sidenav[^{]*\{[^}]*display:\s*none/);
+    expect(constrained).toMatch(/\.shell-menu[^{]*\{[^}]*display:\s*(inline-)?flex/);
+  });
+});
+
+/** One @media block, from its query to the matching closing brace. */
+function mediaBlock(css: string, query: string): string {
+  const start = css.indexOf(query);
+  if (start === -1) {
+    throw new Error(`no media block for ${query}`);
+  }
+  let depth = 0;
+  for (let index = css.indexOf('{', start); index < css.length; index += 1) {
+    if (css[index] === '{') depth += 1;
+    if (css[index] === '}') {
+      depth -= 1;
+      if (depth === 0) return css.slice(start, index + 1);
+    }
+  }
+  throw new Error(`unterminated media block for ${query}`);
+}
+
+/** Every font-size declaration in a stylesheet, as written. */
+function fontSizes(css: string): string[] {
+  return [...css.matchAll(/font-size:\s*([^;]+);/g)].map((match) => match[1].trim());
+}
+
+describe('field readability', () => {
+  // REQ-UX-c8c16d33: one semantic type scale, nothing below 14px.
+  it('declares the type scale as tokens with the body at 16px and nothing below 14px', () => {
+    const root = declarationsOf(tokensCss, ':root');
+    const sizes = Object.fromEntries(
+      [...root.matchAll(/(--text-(?:title|section|body|dense|label)):\s*(\d+)px/g)].map(
+        (match) => [match[1], Number(match[2])],
+      ),
+    );
+
+    expect(Object.keys(sizes).sort()).toEqual([
+      '--text-body',
+      '--text-dense',
+      '--text-label',
+      '--text-section',
+      '--text-title',
+    ]);
+    expect(sizes['--text-body']).toBe(16);
+    expect(sizes['--text-dense']).toBeGreaterThanOrEqual(15);
+    expect(sizes['--text-label']).toBeGreaterThanOrEqual(14);
+    expect(Math.min(...Object.values(sizes))).toBeGreaterThanOrEqual(14);
+    expect(declarationsOf(indexCss, 'body')).toMatch(/font-size:\s*var\(--text-body\)/);
+  });
+
+  it('sizes every component from the scale, never below 14px and never in capitals', () => {
+    for (const size of fontSizes(shellCss)) {
+      if (size.startsWith('var(--text-') || size === 'inherit') continue;
+      const px = /^(\d+(?:\.\d+)?)px$/.exec(size);
+      const rem = /^(\d+(?:\.\d+)?)rem$/.exec(size);
+      if (px) {
+        expect(Number(px[1]), size).toBeGreaterThanOrEqual(14);
+      } else if (rem) {
+        expect(Number(rem[1]) * 16, size).toBeGreaterThanOrEqual(14);
+      } else {
+        throw new Error(`font-size ${size} is not a token, px or rem value`);
+      }
+    }
+    expect(shellCss).not.toMatch(/text-transform:\s*uppercase/);
+  });
+
+  // REQ-UX-c5f7c0cd: 44 pixel targets on field layouts.
+  it('gives controls a 44 pixel target from one token', () => {
+    const root = declarationsOf(tokensCss, ':root');
+    expect(root).toMatch(/--control-height:\s*44px/);
+    expect(root).toMatch(/--target-min:\s*44px/);
+
+    expect(declarationsOf(shellCss, 'button')).toMatch(
+      /min-height:\s*var\(--control-height\)/,
+    );
+    expect(declarationsOf(shellCss, '.field input')).toMatch(
+      /min-height:\s*var\(--control-height\)/,
+    );
+    expect(declarationsOf(shellCss, '.nav-entry')).toMatch(
+      /min-height:\s*var\(--control-height\)/,
+    );
+    expect(declarationsOf(shellCss, '.nav-group-toggle')).toMatch(
+      /min-height:\s*var\(--target-min\)/,
+    );
+    expect(declarationsOf(shellCss, '.nav-group-toggle')).toMatch(
+      /min-width:\s*var\(--target-min\)/,
+    );
+    expect(declarationsOf(shellCss, '.nav-entry-child')).toMatch(
+      /min-height:\s*var\(--target-min\)/,
+    );
+    expect(declarationsOf(shellCss, '.tab-close')).toMatch(
+      /min-width:\s*var\(--target-min\)/,
+    );
+    expect(declarationsOf(shellCss, '.help-trigger')).toMatch(
+      /min-width:\s*var\(--target-min\)/,
+    );
+  });
+
+  // REQ-UX-2de87216: dialogs fit and become sheets.
+  it('bounds a dialog to the viewport with a scrolling body and sticky actions', () => {
+    expect(declarationsOf(shellCss, '.modal')).toMatch(/max-height:\s*100dvh/);
+    expect(declarationsOf(shellCss, '.modal-body')).toMatch(/overflow-y:\s*auto/);
+    expect(declarationsOf(shellCss, '.modal-actions')).toMatch(/position:\s*sticky/);
+    expect(declarationsOf(shellCss, '.modal-actions')).toMatch(/bottom:\s*0/);
+
+    const sheet = mediaBlock(shellCss, '@media (width <= 56rem), (height <= 640px)');
+    expect(sheet).toMatch(/\.modal[^{]*\{[^}]*height:\s*100dvh/);
+  });
+
+  // REQ-UX-ff989933: one markup, reflowed to labeled cards below 56rem.
+  it('turns record tables into labeled cards below 56rem', () => {
+    const cards = mediaBlock(shellCss, '@media (width <= 56rem) {');
+    expect(cards).toMatch(/\.record-table thead[^{]*\{[^}]*display:\s*none/);
+    expect(cards).toMatch(/content:\s*attr\(data-label\)/);
+  });
+
+  it('keeps row actions in a compact viewport-bounded dialog', () => {
+    expect(declarationsOf(shellCss, '.modal-actions-dialog')).toMatch(
+      /width:\s*min\(27rem, 100%\)/,
+    );
+    expect(declarationsOf(shellCss, '.action-dialog-action')).toMatch(/width:\s*100%/);
+    expect(declarationsOf(shellCss, '.action-dialog-action')).toMatch(
+      /min-height:\s*var\(--target-min\)/,
+    );
+    expect(declarationsOf(shellCss, '.action-dialog-danger-list')).toMatch(
+      /border-top:/,
+    );
+
+    const shortFieldDisplay = mediaBlock(
+      shellCss,
+      '@media (width > 56rem) and (height <= 640px)',
+    );
+    expect(shortFieldDisplay).toMatch(
+      /\.modal-actions-dialog[^{]*\{[^}]*max-height:\s*calc\(100dvh - 2 \* var\(--space-3\)\)/,
+    );
   });
 });
 

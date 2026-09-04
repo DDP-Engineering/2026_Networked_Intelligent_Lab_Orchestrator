@@ -56,7 +56,7 @@ test('puts the wordmark, tabs and every control on one row', async () => {
 
   const row = page.locator('.toprow');
   await expect(row.getByRole('tablist', { name: 'Open pages' })).toBeVisible();
-  await expect(row.getByRole('button', { name: 'Network' })).toBeVisible();
+  await expect(row.getByRole('button', { name: 'Network', exact: true })).toBeVisible();
   await expect(row.getByRole('button', { name: 'Appearance' })).toBeVisible();
   await expect(row.getByRole('button', { name: 'Language' })).toBeVisible();
   await expect(row.getByRole('button', { name: 'Account' })).toBeVisible();
@@ -81,7 +81,11 @@ test('puts the wordmark, tabs and every control on one row', async () => {
 test('anchors Network in the lower cluster, not among the instruments', async () => {
   const lower = page.locator('.nav-lower');
 
-  await expect(lower.getByRole('button')).toHaveText([
+  await expect(
+    lower.locator(
+      '> .nav-list > li > .nav-entry, > .nav-list > li > .nav-group-row > .nav-entry',
+    ),
+  ).toHaveText([
     'Network',
     'Activity',
     'Plugins',
@@ -90,16 +94,19 @@ test('anchors Network in the lower cluster, not among the instruments', async ()
     'About',
   ]);
   await expect(
-    page.locator('.nav-upper').getByRole('button', { name: 'Network' }),
+    page.locator('.nav-upper').getByRole('button', { name: 'Network', exact: true }),
   ).toHaveCount(0);
 });
 
 test('opens and closes pages as tabs', async () => {
   const tabs = page.getByRole('tablist', { name: 'Open pages' });
 
-  await page.locator('.nav-lower').getByRole('button', { name: 'Network' }).click();
+  await page
+    .locator('.nav-lower')
+    .getByRole('button', { name: 'Network', exact: true })
+    .click();
   await expect(
-    page.getByRole('heading', { name: 'Network', exact: true }),
+    page.getByRole('heading', { name: 'Network / Overview', exact: true }),
   ).toBeVisible();
   await expect(tabs.getByRole('tab')).toHaveCount(2);
 
@@ -109,15 +116,24 @@ test('opens and closes pages as tabs', async () => {
   // Closing the active tab falls back to its left neighbour.
   await page.getByRole('button', { name: 'Close About' }).click();
   await expect(
-    page.getByRole('heading', { name: 'Network', exact: true }),
+    page.getByRole('heading', { name: 'Network / Overview', exact: true }),
   ).toBeVisible();
   await expect(tabs.getByRole('tab')).toHaveCount(2);
 });
 
 test('reports the appliance network state the backend actually served', async () => {
   await expect(
-    page.getByRole('heading', { name: 'Network', exact: true }),
+    page.getByRole('heading', { name: 'Network / Overview', exact: true }),
   ).toBeVisible();
+
+  // Overview states where NILO is reachable before the focused pages add detail.
+  await expect(page.getByRole('region', { name: 'Overview' })).toContainText(
+    'enp1s0 · 192.168.10.24/24',
+  );
+  await page
+    .getByRole('navigation')
+    .getByRole('button', { name: 'Network adapters', exact: true })
+    .click();
 
   // Bench Core now serves the simulated catalog on /api/v1/network/status, so
   // the page reports what it was given rather than saying nothing is available.
@@ -125,7 +141,14 @@ test('reports the appliance network state the backend actually served', async ()
   // The row, specifically: the chart's interface chooser lists the same names,
   // so a plain text match would resolve to two elements.
   await expect(page.getByRole('rowheader', { name: /enp1s0/ })).toBeVisible();
-  await expect(page.getByText('192.168.10.24/24')).toBeVisible();
+  // In the interfaces row specifically: the overview above names the same
+  // address, so a plain text match would resolve to two elements.
+  await expect(
+    page
+      .getByRole('row')
+      .filter({ has: page.getByRole('rowheader', { name: /enp1s0/ }) })
+      .getByText('192.168.10.24/24', { exact: true }),
+  ).toBeVisible();
 
   await expect(page.getByRole('status', { name: /runtime profile/i })).toHaveCount(1);
   await expect(
@@ -133,7 +156,6 @@ test('reports the appliance network state the backend actually served', async ()
   ).toHaveCount(0);
   await expect(page.getByRole('columnheader', { name: 'Gateway' })).toBeVisible();
   await expect(page.getByText('192.168.10.1', { exact: true })).toBeVisible();
-
   // None of the illustrative values from the design references is present.
   const body = (await page.locator('body').innerText()).replace(/\s+/g, ' ');
   for (const value of [
@@ -155,7 +177,7 @@ test('keeps the theme and the language across a reload, with the session', async
   await page.getByRole('button', { name: 'Language' }).click();
   await page.getByRole('menuitemradio', { name: 'Deutsch' }).click();
   await expect(
-    page.locator('.nav-lower').getByRole('button', { name: 'Netzwerk' }),
+    page.locator('.nav-lower').getByRole('button', { name: 'Netzwerk', exact: true }),
   ).toBeVisible();
 
   await page.reload();
@@ -165,26 +187,33 @@ test('keeps the theme and the language across a reload, with the session', async
   await expect(page.locator('html')).toHaveAttribute('lang', 'de');
   await expect(page.getByRole('heading', { name: 'Sign in to NILO' })).toHaveCount(0);
   await expect(
-    page.locator('.nav-lower').getByRole('button', { name: 'Netzwerk' }),
+    page.locator('.nav-lower').getByRole('button', { name: 'Netzwerk', exact: true }),
   ).toBeVisible();
 
   // Back to English so the remaining assertions read in one language.
   await page.getByRole('button', { name: 'Sprache' }).click();
   await page.getByRole('menuitemradio', { name: 'English' }).click();
   await expect(
-    page.locator('.nav-lower').getByRole('button', { name: 'Network' }),
+    page.locator('.nav-lower').getByRole('button', { name: 'Network', exact: true }),
   ).toBeVisible();
 });
 
-test('narrows the navigation on a small viewport without clipping it', async () => {
+test('narrows the navigation to a labeled rail on a small viewport without clipping it', async () => {
   await page.setViewportSize({ width: 900, height: 720 });
 
-  // The labels give way, but every entry is still there, still named for a
-  // screen reader, and still clickable.
-  await expect(page.locator('.nav-lower').getByRole('button')).toHaveCount(6);
+  // The rail narrows, but every entry is still there with its visible label,
+  // still named for a screen reader, and still clickable.
   await expect(
-    page.locator('.nav-lower').getByRole('button', { name: 'Network' }),
+    page.locator(
+      '.nav-lower > .nav-list > li > .nav-entry, .nav-lower > .nav-list > li > .nav-group-row > .nav-entry',
+    ),
+  ).toHaveCount(6);
+  await expect(
+    page.locator('.nav-lower').getByRole('button', { name: 'Network', exact: true }),
   ).toBeVisible();
+  await expect(
+    page.locator('.nav-lower').getByRole('button', { name: 'Network', exact: true }),
+  ).toHaveText('Network');
   const boxes = await page
     .locator('.nav-lower button')
     .evaluateAll((elements) =>

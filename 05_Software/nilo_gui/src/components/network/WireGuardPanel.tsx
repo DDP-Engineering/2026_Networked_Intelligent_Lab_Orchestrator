@@ -1,19 +1,31 @@
 import { Fragment, useState } from 'react';
 import type { WireGuardChange, WireGuardStatus } from '../../api/wireguard';
 import { useTranslate } from '../../i18n/languages';
+import { DetailsToggle, RowActions, type RowAction } from '../RowActions';
 
+/**
+ * The WireGuard profiles.
+ *
+ * One markup per profile: name, state, tunnel address and the startup
+ * selection in the row, everything else behind Details, and every permitted
+ * change in one compact Actions dialog. Proposals go through the page's preview; nothing
+ * here applies anything.
+ */
 export function WireGuardPanel({
   status,
   canManage,
   canInstall,
   propose,
   busy = false,
+  showDiagnostics = true,
 }: {
   status: WireGuardStatus | null;
   canManage: boolean;
   canInstall: boolean;
   propose: (change: WireGuardChange) => void;
   busy?: boolean;
+  /** Kept for standalone use; the Network VPN page moves it to Diagnostics. */
+  showDiagnostics?: boolean;
 }) {
   const t = useTranslate();
   const manageProfiles = canManage && !status?.readinessOnly;
@@ -36,7 +48,10 @@ export function WireGuardPanel({
       setError(true);
     }
   };
-  const missing = <span title={t('network.notReported')}>—</span>;
+  const missing = <span className="cell-unknown">{t('network.notReported')}</span>;
+  const canChange = (profile: WireGuardStatus['profiles'][number]) =>
+    manageProfiles && profile.niloOwned && status?.helperAvailable === true;
+
   return (
     <section aria-labelledby="network-wireguard">
       <div className="network-section-head">
@@ -60,202 +75,221 @@ export function WireGuardPanel({
         <p>{t('network.wg.empty')}</p>
       ) : (
         <div className="table-scroll">
-          <table className="data-table">
+          <table className="data-table record-table">
             <thead>
               <tr>
                 <th scope="col">{t('auth.field.name')}</th>
                 <th scope="col">{t('network.table.state')}</th>
                 <th scope="col">{t('network.table.address')}</th>
-                <th scope="col">{t('network.wg.endpoint')}</th>
                 <th scope="col">{t('network.wg.startup')}</th>
                 <th scope="col">{t('network.table.actions')}</th>
               </tr>
             </thead>
             <tbody>
-              {status.profiles.map((profile) => (
-                <Fragment key={profile.id}>
-                  <tr>
-                    <th scope="row">
-                      {profile.name}
-                      <small className="network-secondary">
-                        {profile.interface || '—'}
-                      </small>
-                      {!profile.niloOwned && (
-                        <small className="network-secondary">
-                          {t('network.wg.external')}
-                        </small>
-                      )}
-                    </th>
-                    <td>
-                      <span className="network-state">
-                        <span
-                          className={`state-dot ${profile.active ? 'state-ok' : 'state-unknown'}`}
-                          aria-hidden="true"
-                        />
-                        {t(
-                          profile.active
-                            ? 'network.tunnel.active'
-                            : 'network.tunnel.inactive',
+              {status.profiles.map((profile) => {
+                const detailsId = `network-profile-${profile.id}`;
+                const expanded = expandedProfile === profile.id;
+                const actions: RowAction[] = canChange(profile)
+                  ? [
+                      {
+                        label: `${t(profile.active ? 'network.wg.disable' : 'network.wg.enable')} ${profile.name}`,
+                        onSelect: () =>
+                          propose({
+                            action: profile.active ? 'deactivate' : 'activate',
+                            target: profile.id,
+                          }),
+                      },
+                      {
+                        label: `${t('network.wg.remove')} ${profile.name}`,
+                        onSelect: () =>
+                          propose({ action: 'remove', target: profile.id }),
+                        disabled: profile.active,
+                        reason: profile.active
+                          ? t('network.wg.removeActive')
+                          : undefined,
+                        danger: true,
+                      },
+                    ]
+                  : [];
+                const stateLabel = t(
+                  profile.active ? 'network.tunnel.active' : 'network.tunnel.inactive',
+                );
+                const endpoints = [
+                  ...new Set(
+                    (profile.peers ?? []).map((peer) => peer.endpoint).filter(Boolean),
+                  ),
+                ];
+                const routes = [
+                  ...new Set((profile.peers ?? []).flatMap((peer) => peer.allowedIPs)),
+                ];
+                return (
+                  <Fragment key={profile.id}>
+                    <tr>
+                      <th scope="row">
+                        {profile.name}
+                        {!profile.niloOwned && (
+                          <small className="network-secondary">
+                            {t('network.wg.external')}
+                          </small>
                         )}
-                      </span>
-                    </td>
-                    <td className="network-address">
-                      {profile.addresses?.length
-                        ? profile.addresses.map((address) => (
-                            <div key={address}>{address}</div>
-                          ))
-                        : missing}
-                    </td>
-                    <td className="network-address">
-                      {profile.peers?.some((peer) => peer.endpoint)
-                        ? [
-                            ...new Set(
-                              profile.peers
-                                .map((peer) => peer.endpoint)
-                                .filter(Boolean),
-                            ),
-                          ].map((endpoint) => <div key={endpoint}>{endpoint}</div>)
-                        : missing}
-                    </td>
-                    <td>
-                      {manageProfiles && profile.niloOwned && status.helperAvailable ? (
-                        <input
-                          type="checkbox"
-                          aria-label={`${t('network.wg.startup')}: ${profile.name}`}
-                          checked={profile.autoconnect}
-                          onChange={(event) =>
-                            propose({
-                              action: 'autostart',
-                              target: profile.id,
-                              enabled: event.target.checked,
-                            })
-                          }
-                        />
-                      ) : (
-                        t(
-                          profile.autoconnect
-                            ? 'network.wg.enabled'
-                            : 'network.wg.disabled',
-                        )
-                      )}
-                    </td>
-                    <td>
-                      <div className="network-actions">
-                        {manageProfiles &&
-                          profile.niloOwned &&
-                          status.helperAvailable && (
-                            <>
-                              <button
-                                type="button"
-                                aria-label={`${t(profile.active ? 'network.wg.disable' : 'network.wg.enable')} ${profile.name}`}
-                                onClick={() =>
-                                  propose({
-                                    action: profile.active ? 'deactivate' : 'activate',
-                                    target: profile.id,
-                                  })
-                                }
-                              >
-                                {t(
-                                  profile.active
-                                    ? 'network.wg.disable'
-                                    : 'network.wg.enable',
-                                )}
-                              </button>
-                              {!profile.active && (
-                                <button
-                                  type="button"
-                                  aria-label={`${t('network.wg.remove')} ${profile.name}`}
-                                  onClick={() =>
-                                    propose({ action: 'remove', target: profile.id })
-                                  }
-                                >
-                                  {t('network.wg.remove')}
-                                </button>
-                              )}
-                            </>
-                          )}
-                      </div>
-                      <button
-                        type="button"
-                        className="network-detail-toggle"
-                        aria-label={`${t('network.details')} ${profile.name}`}
-                        aria-expanded={expandedProfile === profile.id}
-                        aria-controls={`network-profile-${profile.id}`}
-                        onClick={() =>
-                          setExpandedProfile(
-                            expandedProfile === profile.id ? null : profile.id,
-                          )
-                        }
+                      </th>
+                      <td data-label={t('network.table.state')}>
+                        <span className="network-state">
+                          <span
+                            className={`state-dot ${profile.active ? 'state-ok' : 'state-unknown'}`}
+                            aria-hidden="true"
+                          />
+                          {stateLabel}
+                        </span>
+                      </td>
+                      <td
+                        className="network-address"
+                        data-label={t('network.table.address')}
                       >
-                        {t('network.details')}
-                      </button>
-                    </td>
-                  </tr>
-                  {expandedProfile === profile.id && (
-                    <tr id={`network-profile-${profile.id}`}>
-                      <td colSpan={6}>
-                        <dl className="network-profile-facts">
-                          <div>
-                            <dt>{t('network.fact.handshake')}</dt>
-                            <dd>
-                              {profile.lastHandshake?.toLocaleString() ?? missing}
-                            </dd>
-                          </div>
-                          <div>
-                            <dt>DNS</dt>
-                            <dd>{profile.dns?.join(', ') || missing}</dd>
-                          </div>
-                          {manageProfiles && profile.niloOwned && (
-                            <div>
-                              <dt>{t('network.wg.rename')}</dt>
-                              <dd>
-                                <form
-                                  className="network-import"
-                                  onSubmit={(event) => {
-                                    event.preventDefault();
-                                    if (renaming.trim() === '') return;
-                                    propose({
-                                      action: 'rename',
-                                      target: profile.id,
-                                      name: renaming.trim(),
-                                    });
-                                    setRenaming('');
-                                  }}
-                                >
-                                  <label>
-                                    {t('network.wg.newName')}
-                                    <input
-                                      maxLength={64}
-                                      value={renaming}
-                                      onChange={(event) =>
-                                        setRenaming(event.target.value)
-                                      }
-                                    />
-                                  </label>
-                                  <button type="submit">
-                                    {t('network.wg.rename')}
-                                  </button>
-                                </form>
-                              </dd>
-                            </div>
-                          )}
-                          <div>
-                            <dt>{t('network.wg.routes')}</dt>
-                            <dd>
-                              {[
-                                ...new Set(
-                                  profile.peers?.flatMap((peer) => peer.allowedIPs) ??
-                                    [],
-                                ),
-                              ].join(', ') || missing}
-                            </dd>
-                          </div>
-                        </dl>
+                        {profile.addresses?.length
+                          ? profile.addresses.map((address) => (
+                              <div key={address}>{address}</div>
+                            ))
+                          : missing}
+                      </td>
+                      <td data-label={t('network.wg.startup')}>
+                        {canChange(profile) ? (
+                          <label className="field-check">
+                            <input
+                              type="checkbox"
+                              aria-label={`${t('network.wg.startup')}: ${profile.name}`}
+                              checked={profile.autoconnect}
+                              onChange={(event) =>
+                                propose({
+                                  action: 'autostart',
+                                  target: profile.id,
+                                  enabled: event.target.checked,
+                                })
+                              }
+                            />
+                            <span>
+                              {t(
+                                profile.autoconnect
+                                  ? 'network.wg.enabled'
+                                  : 'network.wg.disabled',
+                              )}
+                            </span>
+                          </label>
+                        ) : (
+                          t(
+                            profile.autoconnect
+                              ? 'network.wg.enabled'
+                              : 'network.wg.disabled',
+                          )
+                        )}
+                      </td>
+                      <td className="record-cell-actions">
+                        <RowActions
+                          name={profile.name}
+                          typeLabel={t('actions.kind.wireguardProfile')}
+                          status={stateLabel}
+                          actions={actions}
+                        >
+                          <DetailsToggle
+                            name={profile.name}
+                            expanded={expanded}
+                            controls={detailsId}
+                            onToggle={() =>
+                              setExpandedProfile(expanded ? null : profile.id)
+                            }
+                          />
+                        </RowActions>
                       </td>
                     </tr>
-                  )}
-                </Fragment>
-              ))}
+                    {expanded && (
+                      <tr className="record-details">
+                        <td colSpan={5}>
+                          <div
+                            id={detailsId}
+                            role="region"
+                            aria-label={`${t('network.details')} ${profile.name}`}
+                          >
+                            <dl className="record-facts">
+                              <div>
+                                <dt>{t('network.wg.endpoint')}</dt>
+                                <dd>
+                                  {endpoints.length > 0
+                                    ? endpoints.map((endpoint) => (
+                                        <div key={endpoint}>{endpoint}</div>
+                                      ))
+                                    : missing}
+                                </dd>
+                              </div>
+                              <div>
+                                <dt>{t('network.fact.handshake')}</dt>
+                                <dd>
+                                  {profile.lastHandshake?.toLocaleString() ?? missing}
+                                </dd>
+                              </div>
+                              <div>
+                                <dt>DNS</dt>
+                                <dd>{profile.dns?.join(', ') || missing}</dd>
+                              </div>
+                              <div>
+                                <dt>{t('network.wg.routes')}</dt>
+                                <dd>{routes.join(', ') || missing}</dd>
+                              </div>
+                              <div>
+                                <dt>{t('network.wg.interface')}</dt>
+                                <dd>{profile.interface || missing}</dd>
+                              </div>
+                              <div>
+                                <dt>{t('network.wg.ownership')}</dt>
+                                <dd>
+                                  {t(
+                                    profile.niloOwned
+                                      ? 'network.wg.owned'
+                                      : 'network.wg.external',
+                                  )}
+                                </dd>
+                              </div>
+                              {manageProfiles && profile.niloOwned && (
+                                <div>
+                                  <dt>{t('network.wg.rename')}</dt>
+                                  <dd>
+                                    <form
+                                      className="network-import"
+                                      onSubmit={(event) => {
+                                        event.preventDefault();
+                                        if (renaming.trim() === '') return;
+                                        propose({
+                                          action: 'rename',
+                                          target: profile.id,
+                                          name: renaming.trim(),
+                                        });
+                                        setRenaming('');
+                                      }}
+                                    >
+                                      <label>
+                                        {t('network.wg.newName')}
+                                        <input
+                                          maxLength={64}
+                                          value={renaming}
+                                          onChange={(event) =>
+                                            setRenaming(event.target.value)
+                                          }
+                                        />
+                                      </label>
+                                      <button type="submit">
+                                        {t('network.wg.rename')}
+                                      </button>
+                                    </form>
+                                  </dd>
+                                </div>
+                              )}
+                            </dl>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -289,7 +323,12 @@ export function WireGuardPanel({
             />
           </label>
           <button type="submit">{t('network.wg.import')}</button>
-          {error && <p role="alert">{t('network.wg.invalidFile')}</p>}
+          <p className="field-guidance">{t('network.wg.help.file')}</p>
+          {error && (
+            <p role="alert" className="field-error">
+              {t('network.wg.invalidFile')}
+            </p>
+          )}
         </form>
       )}
 
@@ -302,38 +341,66 @@ export function WireGuardPanel({
           {t('network.wg.install')}
         </button>
       )}
-      {status !== null && (
-        <details className="network-diagnostics">
-          <summary>{t('network.wg.diagnostics')}</summary>
-          <dl>
-            <dt>{t('network.wg.manager')}</dt>
-            <dd>
-              {status.networkManagerAvailable
-                ? status.networkManagerVersion
-                : t('network.wg.missing')}
-            </dd>
-            <dt>{t('network.wg.kernel')}</dt>
-            <dd>
-              {t(
-                status.kernelSupported ? 'network.wg.available' : 'network.wg.missing',
-              )}
-            </dd>
-            <dt>{t('network.wg.helper')}</dt>
-            <dd>
-              {t(
-                status.helperAvailable ? 'network.wg.available' : 'network.wg.missing',
-              )}
-            </dd>
-            {status.tools.map((tool) => (
-              <div key={tool.name}>
-                <dt>{tool.name}</dt>
-                <dd>{tool.installed ? tool.version : t('network.wg.missing')}</dd>
-              </div>
-            ))}
-          </dl>
-          {status.detail && <p>{status.detail}</p>}
-        </details>
-      )}
+      {showDiagnostics && <WireGuardDiagnostics status={status} />}
+    </section>
+  );
+}
+
+/** WireGuard and helper readiness, shown on the focused Diagnostics page. */
+export function WireGuardDiagnostics({
+  status,
+  collapsible = true,
+}: {
+  status: WireGuardStatus | null;
+  collapsible?: boolean;
+}) {
+  const t = useTranslate();
+  if (status === null) return null;
+  const facts = (
+    <>
+      <dl>
+        <div>
+          <dt>{t('network.wg.manager')}</dt>
+          <dd>
+            {status.networkManagerAvailable
+              ? status.networkManagerVersion
+              : t('network.wg.missing')}
+          </dd>
+        </div>
+        <div>
+          <dt>{t('network.wg.kernel')}</dt>
+          <dd>
+            {t(status.kernelSupported ? 'network.wg.available' : 'network.wg.missing')}
+          </dd>
+        </div>
+        <div>
+          <dt>{t('network.wg.helper')}</dt>
+          <dd>
+            {t(status.helperAvailable ? 'network.wg.available' : 'network.wg.missing')}
+          </dd>
+        </div>
+        {status.tools.map((tool) => (
+          <div key={tool.name}>
+            <dt>{tool.name}</dt>
+            <dd>{tool.installed ? tool.version : t('network.wg.missing')}</dd>
+          </div>
+        ))}
+      </dl>
+      {status.detail && <p>{status.detail}</p>}
+    </>
+  );
+  return collapsible ? (
+    <details className="network-diagnostics">
+      <summary>{t('network.wg.diagnostics')}</summary>
+      {facts}
+    </details>
+  ) : (
+    <section
+      className="network-diagnostics network-readiness"
+      aria-labelledby="network-readiness"
+    >
+      <h3 id="network-readiness">{t('network.diagnostics.wireguard')}</h3>
+      {facts}
     </section>
   );
 }

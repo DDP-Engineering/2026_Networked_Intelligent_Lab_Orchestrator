@@ -64,3 +64,35 @@ export function installColorScheme(
     }
   };
 }
+
+/**
+ * Report a viewport class to the shell, which reads it through `matchMedia`.
+ *
+ * jsdom has no layout, so the compact and constrained shells can only be
+ * exercised by answering the two media queries the shell asks. Anything else
+ * a component asks (the colour scheme, for instance) answers false.
+ */
+const originalMatchMedia = window.matchMedia;
+
+export function installViewportClass(cls: 'wide' | 'compact' | 'constrained'): void {
+  window.matchMedia = ((query: string) => ({
+    matches:
+      query.includes('56rem') || query.includes('520px')
+        ? cls === 'constrained'
+        : query.includes('72rem')
+          ? cls !== 'wide'
+          : false,
+    media: query,
+    onchange: null,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    addListener: () => {},
+    removeListener: () => {},
+    dispatchEvent: () => false,
+  })) as unknown as typeof window.matchMedia;
+}
+
+/** Put back whatever `matchMedia` the environment had before a test stubbed it. */
+export function restoreMatchMedia(): void {
+  window.matchMedia = originalMatchMedia;
+}

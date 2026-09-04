@@ -8,6 +8,9 @@ import type {
 } from '../../api/settings';
 import { useTranslate } from '../../i18n/languages';
 import { Modal } from '../Modal';
+import { Field } from '../help/Field';
+import { HelpPopover } from '../help/HelpPopover';
+import { WorkflowHelp } from '../help/WorkflowHelp';
 
 export interface InterfaceSettingsDialogProps {
   target: NetworkInterface;
@@ -24,10 +27,16 @@ export interface InterfaceSettingsDialogProps {
   onDismiss: () => void;
 }
 
+const CIDR = /^\d+\.\d+\.\d+\.\d+\/\d+$/;
+
 /**
  * The adapter configuration editor: addressing for any adapter, and on a
  * wireless adapter the networks in range and a join. The password is typed
  * once, sent once, and never displayed or stored here.
+ *
+ * Three groups — Addressing, DNS, Protection — each setting with its help
+ * beside the label, the consequences that matter stated under the field, and
+ * a how-to-configure help for the whole workflow.
  */
 export function InterfaceSettingsDialog({
   target,
@@ -49,7 +58,7 @@ export function InterfaceSettingsDialog({
   const [neverDefault, setNeverDefault] = useState(
     target.settings?.neverDefault ?? false,
   );
-  const [invalid, setInvalid] = useState(false);
+  const [addressError, setAddressError] = useState('');
   const [scan, setScan] = useState<WiFiScan | null>(null);
   const [scanFailed, setScanFailed] = useState(false);
   const [ssid, setSsid] = useState(target.ssid);
@@ -59,11 +68,11 @@ export function InterfaceSettingsDialog({
   const wireless = target.kind === 'wifi';
 
   const submitSettings = async () => {
-    if (method === 'static' && !/^\d+\.\d+\.\d+\.\d+\/\d+$/.test(address.trim())) {
-      setInvalid(true);
+    if (method === 'static' && !CIDR.test(address.trim())) {
+      setAddressError(t('network.settings.invalid'));
       return;
     }
-    setInvalid(false);
+    setAddressError('');
     const operation = await previewSettings(target.id, {
       method,
       address: method === 'static' ? address.trim() : '',
@@ -103,111 +112,164 @@ export function InterfaceSettingsDialog({
     if (operation !== null) onDismiss();
   };
 
+  const checkbox = (
+    id: string,
+    label: string,
+    checked: boolean,
+    onChange: (next: boolean) => void,
+    help?: string,
+    guidance?: string,
+  ) => (
+    <div className="field">
+      <div className="field-label-row">
+        <label htmlFor={id}>
+          <input
+            id={id}
+            type="checkbox"
+            checked={checked}
+            onChange={(event) => onChange(event.target.checked)}
+          />
+          {label}
+        </label>
+        {help === undefined ? null : (
+          <HelpPopover name={label}>
+            <p>{help}</p>
+          </HelpPopover>
+        )}
+      </div>
+      {guidance === undefined ? null : <p className="field-guidance">{guidance}</p>}
+    </div>
+  );
+
   return (
     <Modal
       title={t('network.settings.dialog').replace('{name}', target.name)}
       onDismiss={onDismiss}
     >
-      {target.settings !== null && target.settings.saved && (
-        <p className="card-copy">
-          {t('network.settings.saved').replace('{method}', target.settings.method)}
-          {!target.settings.applied && ` (${t('network.settings.notApplied')})`}
-        </p>
-      )}
+      <div className="network-section-head">
+        {target.settings !== null && target.settings.saved ? (
+          <p className="card-copy">
+            {t('network.settings.saved').replace('{method}', target.settings.method)}
+            {!target.settings.applied && ` (${t('network.settings.notApplied')})`}
+          </p>
+        ) : (
+          <span />
+        )}
+        <WorkflowHelp prefix="help.if" title={t('help.if.title')} />
+      </div>
       <form
         className="dialog-form"
         aria-label={t('network.settings.configure')}
+        noValidate
         onSubmit={(event) => {
           event.preventDefault();
           void submitSettings();
         }}
       >
-        <div className="field">
-          <label htmlFor="settings-method">{t('network.settings.method')}</label>
-          <select
+        <fieldset
+          className="form-group"
+          aria-label={t('network.settings.group.addressing')}
+        >
+          <legend>{t('network.settings.group.addressing')}</legend>
+          <Field
             id="settings-method"
-            value={method}
-            onChange={(event) =>
-              setMethod(event.target.value === 'static' ? 'static' : 'automatic')
-            }
+            label={t('network.settings.method')}
+            help={<p>{t('network.settings.help.method')}</p>}
           >
-            <option value="automatic">{t('network.settings.method.automatic')}</option>
-            <option value="static">{t('network.settings.method.static')}</option>
-          </select>
-        </div>
-        {method === 'static' && (
-          <>
-            <div className="field">
-              <label htmlFor="settings-address">{t('network.settings.address')}</label>
-              <input
+            <select
+              id="settings-method"
+              value={method}
+              onChange={(event) =>
+                setMethod(event.target.value === 'static' ? 'static' : 'automatic')
+              }
+            >
+              <option value="automatic">
+                {t('network.settings.method.automatic')}
+              </option>
+              <option value="static">{t('network.settings.method.static')}</option>
+            </select>
+          </Field>
+          {method === 'static' && (
+            <>
+              <Field
                 id="settings-address"
-                value={address}
-                onChange={(event) => setAddress(event.target.value)}
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="settings-gateway">{t('network.settings.gateway')}</label>
-              <input
+                label={t('network.settings.address')}
+                help={<p>{t('network.settings.help.address')}</p>}
+                error={addressError}
+              >
+                <input
+                  id="settings-address"
+                  value={address}
+                  placeholder="192.168.0.1/24"
+                  onChange={(event) => {
+                    setAddress(event.target.value);
+                    setAddressError('');
+                  }}
+                />
+              </Field>
+              <Field
                 id="settings-gateway"
-                value={gateway}
-                onChange={(event) => setGateway(event.target.value)}
+                label={t('network.settings.gateway')}
+                help={<p>{t('network.settings.help.gateway')}</p>}
+                guidance={t('network.settings.guidance.gateway')}
+              >
+                <input
+                  id="settings-gateway"
+                  value={gateway}
+                  onChange={(event) => setGateway(event.target.value)}
+                />
+              </Field>
+            </>
+          )}
+        </fieldset>
+
+        <fieldset className="form-group" aria-label={t('network.settings.group.dns')}>
+          <legend>{t('network.settings.group.dns')}</legend>
+          {checkbox(
+            'settings-dns-automatic',
+            t('network.settings.dnsAutomatic'),
+            dnsAutomatic,
+            setDnsAutomatic,
+            t('network.settings.help.dns'),
+          )}
+          {!dnsAutomatic && (
+            <Field id="settings-dns" label={t('network.settings.dns')}>
+              <input
+                id="settings-dns"
+                value={dns}
+                onChange={(event) => setDns(event.target.value)}
               />
-            </div>
-          </>
-        )}
-        <div className="field">
-          <label htmlFor="settings-dns-automatic">
-            <input
-              id="settings-dns-automatic"
-              type="checkbox"
-              checked={dnsAutomatic}
-              onChange={(event) => setDnsAutomatic(event.target.checked)}
-            />{' '}
-            {t('network.settings.dnsAutomatic')}
-          </label>
-        </div>
-        {!dnsAutomatic && (
-          <div className="field">
-            <label htmlFor="settings-dns">{t('network.settings.dns')}</label>
-            <input
-              id="settings-dns"
-              value={dns}
-              onChange={(event) => setDns(event.target.value)}
-            />
-          </div>
-        )}
-        <div className="field">
-          <label htmlFor="settings-protect">
-            <input
-              id="settings-protect"
-              type="checkbox"
-              checked={protect}
-              onChange={(event) => setProtect(event.target.checked)}
-            />{' '}
-            {t('network.settings.protect')}
-          </label>
-        </div>
-        <div className="field">
-          <label htmlFor="settings-never-default">
-            <input
-              id="settings-never-default"
-              type="checkbox"
-              checked={neverDefault}
-              onChange={(event) => setNeverDefault(event.target.checked)}
-            />{' '}
-            {t('network.settings.neverDefault')}
-          </label>
-        </div>
-        {invalid && (
-          <p role="alert" className="field-error">
-            {t('network.settings.invalid')}
-          </p>
-        )}
+            </Field>
+          )}
+        </fieldset>
+
+        <fieldset
+          className="form-group"
+          aria-label={t('network.settings.group.protection')}
+        >
+          <legend>{t('network.settings.group.protection')}</legend>
+          {checkbox(
+            'settings-protect',
+            t('network.settings.protect'),
+            protect,
+            setProtect,
+            t('network.settings.help.protect'),
+            t('network.settings.guidance.protect'),
+          )}
+          {checkbox(
+            'settings-never-default',
+            t('network.settings.neverDefault'),
+            neverDefault,
+            setNeverDefault,
+            t('network.settings.help.neverDefault'),
+          )}
+        </fieldset>
+
         <div className="modal-actions">
-          <button type="submit" disabled={busy}>
+          <button type="submit" className="button button-primary" disabled={busy}>
             {t('network.settings.preview')}
           </button>
-          <button type="button" onClick={onDismiss}>
+          <button type="button" className="button" onClick={onDismiss}>
             {t('auth.cancel')}
           </button>
         </div>
@@ -223,7 +285,7 @@ export function InterfaceSettingsDialog({
           }}
         >
           <h4>{t('network.wifi.title')}</h4>
-          <div className="modal-actions">
+          <div className="form-actions">
             <button type="button" onClick={() => void runScan()}>
               {t('network.wifi.scan')}
             </button>
@@ -276,16 +338,14 @@ export function InterfaceSettingsDialog({
               </table>
             </div>
           )}
-          <div className="field">
-            <label htmlFor="wifi-ssid">{t('network.wifi.ssid')}</label>
+          <Field id="wifi-ssid" label={t('network.wifi.ssid')}>
             <input
               id="wifi-ssid"
               value={ssid}
               onChange={(event) => setSsid(event.target.value)}
             />
-          </div>
-          <div className="field">
-            <label htmlFor="wifi-security">{t('network.wifi.security')}</label>
+          </Field>
+          <Field id="wifi-security" label={t('network.wifi.security')}>
             <select
               id="wifi-security"
               value={security}
@@ -295,10 +355,9 @@ export function InterfaceSettingsDialog({
               <option value="wpa2-personal">wpa2-personal</option>
               <option value="wpa3-personal">wpa3-personal</option>
             </select>
-          </div>
+          </Field>
           {security !== 'open' && (
-            <div className="field">
-              <label htmlFor="wifi-password">{t('network.wifi.password')}</label>
+            <Field id="wifi-password" label={t('network.wifi.password')}>
               <input
                 id="wifi-password"
                 type="password"
@@ -306,21 +365,15 @@ export function InterfaceSettingsDialog({
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
               />
-            </div>
+            </Field>
           )}
-          <div className="field">
-            <label htmlFor="wifi-startup">
-              <input
-                id="wifi-startup"
-                type="checkbox"
-                checked={startup}
-                onChange={(event) => setStartup(event.target.checked)}
-              />{' '}
-              {t('network.wifi.startup')}
-            </label>
-          </div>
+          {checkbox('wifi-startup', t('network.wifi.startup'), startup, setStartup)}
           <div className="modal-actions">
-            <button type="submit" disabled={busy || ssid.trim() === ''}>
+            <button
+              type="submit"
+              className="button button-primary"
+              disabled={busy || ssid.trim() === ''}
+            >
               {t('network.wifi.join')}
             </button>
           </div>

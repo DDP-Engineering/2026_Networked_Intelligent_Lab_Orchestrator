@@ -1,0 +1,40 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-UX-f30891b4"
+
+title = "Apply the field readability rules to the other pages"
+
+status = "active"
+
+requirement = """
+The Bench, Activity, Authentication, About and not-yet-available pages shall use the same type scale, control sizes, record-table reflow and dialog behavior as the Network page so that each is usable at 1024 by 600 without document-level horizontal scrolling, and the Activity list shall keep time, outcome and severity, action, subject and actor visible at field widths while moving category, function and raw detail into its explicit details expansion.
+"""
+
+verification = "A component test renders the Activity page and asserts the details expansion carries the category and function of an entry while time, outcome, action, subject and actor remain in the row; a browser test at 1024x600 opens Bench, Activity, Authentication and About and asserts no document-level horizontal overflow and no text below 14px."
+
+affected_paths = [
+    "05_Software/nilo_gui/src/components/pages/ActivityPage.tsx",
+    "05_Software/nilo_gui/src/components/pages/BenchPage.tsx",
+    "05_Software/nilo_gui/src/components/pages/SimplePages.tsx",
+    "05_Software/nilo_gui/src/components/AuthenticationPage.tsx",
+    "05_Software/nilo_gui/src/styles/shell.css",
+    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx::opens with the given filters, pages by cursor and discloses the gap",
+    "05_Software/nilo_gui/e2e/field-display.spec.ts::the other pages stay readable without sideways scrolling",
+]
+
+spec = ""
+priority = "normal"
+rationale = ""
+
+created = 2026-09-04
+updated = 2026-09-04

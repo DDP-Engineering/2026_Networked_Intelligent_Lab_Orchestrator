@@ -16,6 +16,14 @@ export const en = {
   'nav.section.core': 'System',
   'nav.bench': 'Bench',
   'nav.network': 'Network',
+  'nav.network.overview': 'Overview',
+  'nav.network.overviewTab': 'Network overview',
+  'nav.network.adapters': 'Network adapters',
+  'nav.network.deviceAccess': 'Device access',
+  'nav.network.vpn': 'VPN profiles',
+  'nav.network.diagnostics': 'Diagnostics',
+  'nav.network.expand': 'Expand Network',
+  'nav.network.collapse': 'Collapse Network',
   'nav.plugins': 'Plugins',
   'nav.authentication': 'Authentication',
   'nav.settings': 'Settings',
@@ -136,6 +144,7 @@ export const en = {
 
   // Network
   'network.title': 'Network',
+  'network.diagnostics.wireguard': 'WireGuard readiness',
   'network.subtitle': 'Appliance network',
   'network.summary.open': 'Open Network',
   'network.unavailable.title': 'Appliance network reporting is not yet available',
@@ -170,6 +179,13 @@ export const en = {
   'network.chart.interface': 'Interface',
   'network.chart.label':
     'Traffic for {interface} over {period}: {count} measured minutes.',
+  'network.chart.legend': 'Traffic direction legend',
+  'network.chart.rxLegend': 'RX · Received',
+  'network.chart.txLegend': 'TX · Sent',
+  'network.chart.volumeAxis': 'Traffic per measured minute',
+  'network.chart.timeAxis': 'Time',
+  'network.chart.selected': 'Selected minute',
+  'network.chart.sample': '{time} · RX {rx} · TX {tx} · Total {total}',
   'network.fact.interface': 'Interface connection',
   'network.fact.tunnel': 'Tunnel',
   'network.fact.handshake': 'Last handshake',
@@ -232,7 +248,7 @@ export const en = {
   'network.wg.invalidFile': 'Choose a named configuration file of at most 48 KiB.',
   'network.wg.pollFailed':
     'The latest operation status is unavailable. Recovery remains controlled by Bench Core.',
-  'network.wireguard.title': 'WireGuard',
+  'network.wireguard.title': 'WireGuard profiles',
   'network.wireguard.notReported':
     'WireGuard readiness, profiles and the active tunnel are not reported by this appliance yet.',
   'network.statistics.title': 'Statistics',
@@ -453,7 +469,7 @@ export const en = {
   'network.dn.copy': 'Copy steps',
   'network.settings.configure': 'Configure',
   'network.settings.dialog': 'Configure {name}',
-  'network.settings.method': 'Addressing',
+  'network.settings.method': 'Address source',
   'network.settings.method.static': 'Static',
   'network.settings.method.automatic': 'Automatic (DHCP)',
   'network.settings.address': 'IPv4 address with prefix length',
@@ -544,6 +560,198 @@ export const en = {
   'diagnostics.saved': 'The policy was saved.',
   'diagnostics.failed': 'The appliance refused the request: {detail}',
   'diagnostics.unreadable': 'The diagnostics could not be read.',
+  // Compact field interface: shell, dialogs and help
+  'nav.menu': 'Menu',
+  'nav.drawer': 'Navigation',
+  'dialog.close': 'Close',
+  'help.for': 'Help for {name}',
+  'help.close': 'Close help',
+  'help.howTo': 'How to configure',
+  'help.section.goal': 'Goal',
+  'help.section.needs': 'What you need before you start',
+  'help.section.example': 'Addressing example',
+  'help.section.changes': 'What NILO will change',
+  'help.section.external': 'What must already be configured elsewhere',
+  'help.section.verify': 'Verify and recover',
+  'actions.for': 'Actions for {name}',
+  'actions.choose': 'Choose an action. Nothing changes until you select one.',
+  'actions.type': 'Type',
+  'actions.status': 'Current status',
+  'actions.kind.interface': 'Network interface',
+  'actions.kind.wireguardProfile': 'WireGuard profile',
+  'actions.kind.deviceNetwork': 'Device network',
+  // Compact field interface: Network overview, lists, editors and help
+  'network.overview.title': 'Overview',
+  'network.overview.uplink': 'Management / uplink',
+  'network.overview.deviceSide': 'Device side',
+  'network.overview.profile': 'Active WireGuard profile',
+  'network.overview.attention': 'Needs attention',
+  'network.overview.none': 'None',
+  'network.overview.nothingPending': 'Nothing pending',
+  'network.overview.awaiting': '{action} on {target} is waiting for your confirmation.',
+  'network.overview.applying': '{action} on {target} is being applied.',
+  'network.overview.rollingBack': '{action} on {target} is being restored.',
+  'network.overview.failed': '{action} on {target} did not complete safely.',
+  'network.overview.networkAttention': 'Device network {name}: {state}.',
+  'network.role.uplink': 'Uplink',
+  'network.role.deviceSide': 'Device side',
+  'network.fact.link': 'Link speed',
+  'network.fact.adapterId': 'Adapter identity',
+  'network.fact.saved': 'Saved configuration',
+  'network.fact.notSaved': 'No saved configuration',
+  'network.fact.protected': 'Protected as a management path',
+  'network.fact.notProtected': 'Not protected as a management path',
+  'network.fact.neverDefault': 'Never takes the default route',
+  'network.fact.control': 'Control',
+  'network.fact.controllable': 'Managed by NILO',
+  'network.fact.ssid': 'Wireless network',
+  'network.busyReason': 'Another change is in progress.',
+  'network.action.configure': 'Configure {name}',
+  'network.wg.interface': 'Tunnel interface',
+  'network.wg.ownership': 'Ownership',
+  'network.wg.owned': 'Managed by NILO',
+  'network.wg.removeActive': 'An active profile cannot be removed.',
+  'network.wg.help.startup':
+    'NILO tries to connect this profile after a restart. Activating a profile is separate from authorizing a device network to use it.',
+  'network.wg.help.file':
+    'A WireGuard configuration file from your VPN hub. Its private key is stored on the appliance only and is never shown again.',
+  'network.dn.fact.location': 'Location',
+  'network.dn.fact.subnet': 'Device subnet',
+  'network.dn.fact.localAccess': 'Local access through',
+  'network.dn.fact.localSources': 'Authorized local sources',
+  'network.dn.fact.vpn': 'WireGuard profile',
+  'network.dn.fact.vpnSources': 'Authorized VPN sources',
+  'network.dn.fact.services': 'Services',
+  'network.dn.fact.tcpPorts': 'TCP ports',
+  'network.dn.fact.udpPorts': 'UDP ports',
+  'network.dn.allPorts': 'every port',
+  'network.dn.fact.source': 'Source address',
+  'network.dn.snat': 'Replies return through NILO (source NAT)',
+  'network.dn.preserve':
+    'Client source address preserved; the device needs a return route',
+  'network.dn.fact.startup': 'After a restart',
+  'network.dn.startupOn': 'Enabled again',
+  'network.dn.startupOff': 'Stays disabled',
+  'network.dn.fact.observed': 'Observed at',
+  'network.dn.noneListed': 'none listed',
+  'network.dn.group.identity': 'Identity',
+  'network.dn.group.deviceSide': 'Device side',
+  'network.dn.group.access': 'Access path',
+  'network.dn.group.addressing': 'Addressing',
+  'network.dn.group.services': 'Services',
+  'network.dn.group.advanced': 'Advanced',
+  'network.dn.group.review': 'Review',
+  'network.dn.field.protocols': 'Protocols',
+  'network.dn.help.deviceInterface':
+    'The Ethernet or USB adapter cabled toward the device network. NILO remembers its hardware identity, so the choice survives a rename or a replug.',
+  'network.dn.help.applianceAddress':
+    "NILO's own address on the device subnet, with its prefix length. It must be unused and in the same subnet as the device. It does not replace the device's address, and it is applied to the adapter separately, under Configure.",
+  'network.dn.help.scope':
+    'One device exposes a single existing device address. The whole subnet exposes every address in the device subnet.',
+  'network.dn.help.target':
+    'The address the device already has on its own network, for example 192.168.0.130.',
+  'network.dn.help.addressing':
+    'Original: clients use the real device address. Translated: clients use an alternate exposed address, which is what makes two sites with the same device subnet reachable side by side.',
+  'network.dn.help.exposed':
+    'The address (for one device) or the prefix of the same size (for a subnet) that clients will use instead of the original one.',
+  'network.dn.help.access':
+    'Local: clients on the management side of NILO. WireGuard: clients arriving through a saved tunnel profile. Both: either way.',
+  'network.dn.help.localInterface':
+    'The management-side adapter from which local clients may enter.',
+  'network.dn.help.sources':
+    'The client addresses or prefixes that may start a connection, for example 192.168.10.0/24. This is an access restriction, not the target range.',
+  'network.dn.help.vpnProfile':
+    'The saved tunnel remote clients arrive through. The profile must be active for the device network to apply; activating it is a separate step.',
+  'network.dn.help.ports':
+    'The application ports to allow. Modbus TCP commonly uses 502, but a device may be set to another port such as 504; enter what the device really uses. Empty means every port.',
+  'network.dn.help.preserveSource':
+    'By default NILO rewrites the client source address to its own (source NAT), so replies return through NILO without changing the device gateway. Preserving the source lets the device see the real client, but the device then needs a route back to that client network.',
+  'network.dn.guidance.applianceAddress':
+    'Unused, and in the same subnet as the device: for a device at 192.168.0.130, for example 192.168.0.1/24. The adapter must already carry this address (Configure on the Interfaces list).',
+  'network.dn.guidance.sources':
+    'Which client addresses may start a connection. This restricts access; it is not the target range.',
+  'network.dn.guidance.vpn':
+    'The profile must be active for the network to apply; activating it is a separate step on the WireGuard profiles list.',
+  'network.dn.guidance.ports':
+    '502 is an example only; enter the port the device really uses, for example 504. Empty means every port.',
+  'network.dn.guidance.preserveSource':
+    'The device then needs a route back to the client network. Keep source NAT unless you have set that route.',
+  'network.dn.invalid.name': 'A name is required.',
+  'network.dn.invalid.adapter': 'Choose the device-side adapter.',
+  'network.dn.invalid.cidr':
+    'Enter an IPv4 address with a prefix length, for example 192.168.0.1/24.',
+  'network.dn.invalid.address': 'Enter an IPv4 address, for example 192.168.0.130.',
+  'network.dn.invalid.exposed':
+    'Enter an IPv4 address (one device) or a prefix of the same size as the device subnet (whole subnet).',
+  'network.dn.invalid.sources':
+    'Enter IPv4 addresses or prefixes separated by commas, for example 192.168.10.0/24.',
+  'network.dn.invalid.ports':
+    'Ports are whole numbers between 1 and 65535, separated by commas.',
+  'network.dn.invalid.profile': 'Choose a WireGuard profile.',
+  'network.dn.review.deviceSide':
+    '{adapter} must carry {address}. NILO forwards on that adapter; it does not assign the address from here.',
+  'network.dn.review.target': 'Reachable target: {target}.',
+  'network.dn.review.local': 'Local sources {sources} may reach it through {adapter}.',
+  'network.dn.review.localNone':
+    'No local source range is listed yet, so no local client is authorized.',
+  'network.dn.review.vpn':
+    'WireGuard profile {profile}: sources {sources} may reach it through the tunnel once the profile is active.',
+  'network.dn.review.vpnNone': 'WireGuard is not involved.',
+  'network.dn.review.original': 'Clients use the original device address.',
+  'network.dn.review.translated': 'Clients use the translated address {exposed}.',
+  'network.dn.review.snat':
+    'Replies return through NILO (source NAT); the device keeps its own gateway.',
+  'network.dn.review.preserve':
+    'The client source address is preserved; the device needs a return route to the client network.',
+  'network.dn.review.services': 'Allowed services: {services}.',
+  'network.dn.review.management':
+    'This device network changes no adapter address, so your management connection is affected only if {adapter} is the path you are connected through.',
+  'network.dn.unnamed': 'the selected adapter',
+  'help.dn.title': 'How to configure a device network',
+  'help.dn.goal':
+    'Reach one device, or a whole device subnet, behind NILO from a computer on your management network or through a WireGuard tunnel, without changing the device itself.',
+  'help.dn.needs':
+    "The device's address and subnet, a free address for NILO in that subnet, the adapter cabled toward the device, the client address range that may connect, and the TCP or UDP port the device really uses.\nIf remote access is wanted, a saved WireGuard profile and the client range that arrives through it.",
+  'help.dn.example':
+    'Management computer: 192.168.1.13. NILO uplink: an address in 192.168.1.0/24. NILO device side: 192.168.0.1/24 on the second adapter. Device: 192.168.0.130. Service: the TCP port the device uses, for example 502 or 504.',
+  'help.dn.changes':
+    'NILO installs forwarding rules that admit the authorized sources to the target on the allowed ports, translates the address if you chose a translated one, and by default rewrites the client source to its own address so replies come back through NILO.\nIt does not assign the appliance address here: give the device-side adapter that address first, under Configure. A network whose prerequisites do not hold yet shows Waiting.',
+  'help.dn.external':
+    'The management computer, or its router, needs a route to the device address (or the exposed address) through the address NILO has on the management side. A VPN hub needs the exposed range in the AllowedIPs of the NILO profile. The device needs no change while source NAT is on; if you preserve the client source, the device needs a route back to the client network.',
+  'help.dn.verify':
+    'Use Check connection: it reports separately whether the adapter is present, the address is applied, the forwarding is installed and the target answered a probe from NILO. A probe from NILO does not prove that a remote client can reach the device; test from the client as well.\nA change that is not confirmed within two minutes is restored automatically, and Disable or Delete removes the forwarding at once.',
+  'help.if.title': 'How to configure an adapter',
+  'help.if.goal':
+    'Give one adapter the addressing it needs: automatic on the uplink, or a fixed address on the device side.',
+  'help.if.needs':
+    'The address and prefix length, the gateway if this adapter is the uplink, and whether this adapter is a path you manage NILO through.',
+  'help.if.example':
+    'Uplink: Automatic (DHCP), protected as a management path. Device side: Static 192.168.0.1/24, no gateway, never the default route.',
+  'help.if.changes':
+    'NILO writes its own connection profile for the adapter, bound to its hardware identity, and activates it; the operating system profile is kept and comes back on restoration. DNS servers are taken from the network or from your list.',
+  'help.if.external':
+    'A static address must be free on that network. A device-side adapter normally has no default gateway; the uplink keeps the default route. If you take the address a device or a DHCP server uses, both stop working.',
+  'help.if.verify':
+    'After applying, the Interfaces list shows the address the adapter carries. A change that is not confirmed within two minutes is restored automatically. A change that would leave no usable management path is refused before it is applied.',
+  'network.settings.group.addressing': 'Addressing',
+  'network.settings.group.dns': 'DNS',
+  'network.settings.group.protection': 'Protection',
+  'network.settings.help.method':
+    'Automatic takes an address from a DHCP server on that network. Static uses the address you enter. A device-side gateway normally uses a static address so the device always finds NILO at the same place.',
+  'network.settings.help.address':
+    "The adapter's own IPv4 address with its prefix length, for example 192.168.0.1/24.",
+  'network.settings.help.gateway':
+    'The next hop for traffic leaving this adapter. Leave it empty on a device-side adapter; the uplink keeps the default route.',
+  'network.settings.help.dns':
+    'Name servers used when this adapter is active. Taking them from the network is right for the uplink.',
+  'network.settings.help.protect':
+    'Marks this adapter as a path you manage NILO through. A change that would leave no usable management path is refused.',
+  'network.settings.help.neverDefault':
+    'Keeps this adapter from taking the default route, so Internet-bound traffic stays on the uplink.',
+  'network.settings.guidance.gateway':
+    'A device-side adapter normally has no default gateway; the uplink keeps the default route.',
+  'network.settings.guidance.protect':
+    'A change that would leave the last management path unusable is refused before it is applied.',
 } as const;
 
 /** Every key the interface may ask for. */

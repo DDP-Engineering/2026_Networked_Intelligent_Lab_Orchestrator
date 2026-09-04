@@ -1,0 +1,43 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-UX-2b0b6d59"
+
+title = "Offer settings help through an accessible popover that never requires hover"
+
+status = "active"
+
+requirement = """
+Where a setting carries help, the browser interface shall place a help control beside its label with a localized accessible name naming the setting, which opens a popover containing text and simple examples on click, tap and keyboard activation and optionally on hover or focus, exposes its expanded state and the popover to assistive technology, stays open while its content is read, closes on Escape, on activation outside it or on its close control with focus returned to the help control, allows only one settings popover open at a time, repositions to stay within the viewport, and never uses the native title attribute as its only implementation.
+"""
+
+verification = "A component test activates a help control with a mouse click, with Enter from the keyboard and with a pointer event, asserts the popover text is visible and associated through aria-expanded and aria-controls, asserts Escape closes it and returns focus to the control, asserts opening a second help closes the first, and asserts no help content exists only in a title attribute; a browser test at 1024x600 and 800x480 opens a help popover by pointer and by keyboard and asserts it lies within the viewport."
+
+affected_paths = [
+    "05_Software/nilo_gui/src/components/help/HelpPopover.tsx",
+    "05_Software/nilo_gui/src/components/help/Field.tsx",
+    "05_Software/nilo_gui/src/components/layers.ts",
+    "05_Software/nilo_gui/src/styles/shell.css",
+    "05_Software/nilo_gui/src/components/help/HelpPopover.test.tsx",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/src/components/help/HelpPopover.test.tsx::opens on click with an accessible name, and Escape returns focus",
+    "05_Software/nilo_gui/src/components/help/HelpPopover.test.tsx::opens from the keyboard and from a coarse pointer",
+    "05_Software/nilo_gui/src/components/help/HelpPopover.test.tsx::keeps only one settings help open at a time and closes on outside activation",
+    "05_Software/nilo_gui/src/components/help/HelpPopover.test.tsx::carries its content as text, not as a title attribute",
+    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx::offers settings help beside the label that opens by click and closes with Escape",
+    "05_Software/nilo_gui/e2e/field-display.spec.ts::the shell and the Network page are readable and complete",
+]
+
+spec = ""
+priority = "high"
+rationale = "Hover does not exist on a touch panel, and a title attribute is unreadable there."
+
+created = 2026-09-04
+updated = 2026-09-04

@@ -7,6 +7,7 @@ import { Menu, MenuItem } from './Menu';
 import { NetworkSummary } from './NetworkSummary';
 import { TabStrip } from './TabStrip';
 import type { PageDescriptor } from './pages';
+import type { ViewportClass } from './useViewportClass';
 
 const THEME_ICON: Record<Theme, IconName> = {
   light: 'light',
@@ -33,6 +34,12 @@ export interface TopRowProps {
   onOpen: (id: string) => void;
   onSignOut: () => void;
   nameOf: (page: PageDescriptor) => string;
+  /**
+   * Which shell the viewport calls for. On a constrained one the appearance
+   * and language menus fold into the account menu, so the row keeps the tabs,
+   * the network summary and the runtime indicator.
+   */
+  viewport?: ViewportClass;
 }
 
 /**
@@ -57,8 +64,10 @@ export function TopRow({
   onOpen,
   onSignOut,
   nameOf,
+  viewport = 'wide',
 }: TopRowProps) {
   const t = useTranslate();
+  const constrained = viewport === 'constrained';
   const { theme, resolved, setTheme } = useTheme();
   const { language, setLanguage } = useLanguage();
   const short = LANGUAGES.find((entry) => entry.code === language)?.short ?? 'EN';
@@ -111,66 +120,74 @@ export function TopRow({
           {t(simulation ? 'top.simulation' : 'top.appliance')}
         </span>
 
-        <Menu
-          ariaLabel={t('top.appearance')}
-          label={
-            <>
-              <Icon name={THEME_ICON[theme]} size={16} />
-              <span className="control-label">{t(THEME_LABEL[theme])}</span>
-            </>
-          }
-        >
-          {(close) => (
-            <>
-              <p className="menu-title">{t('top.appearance')}</p>
-              {THEMES.map((candidate) => (
-                <MenuItem
-                  key={candidate}
-                  selected={theme === candidate}
-                  icon={<Icon name={THEME_ICON[candidate]} size={16} />}
-                  onSelect={() => {
-                    setTheme(candidate);
-                    close();
-                  }}
-                >
-                  {t(THEME_LABEL[candidate])}
-                </MenuItem>
-              ))}
-              <p className="menu-foot">
-                {t('top.appearance.follows')}
-                {theme === 'system' ? ` · ${t(THEME_LABEL[resolved])}` : ''}
-              </p>
-            </>
-          )}
-        </Menu>
+        {constrained ? null : (
+          <>
+            <Menu
+              ariaLabel={t('top.appearance')}
+              label={
+                <>
+                  <Icon name={THEME_ICON[theme]} size={16} />
+                  <span className="control-label">{t(THEME_LABEL[theme])}</span>
+                </>
+              }
+            >
+              {(close) => (
+                <>
+                  <p className="menu-title">{t('top.appearance')}</p>
+                  {THEMES.map((candidate) => (
+                    <MenuItem
+                      key={candidate}
+                      selected={theme === candidate}
+                      icon={<Icon name={THEME_ICON[candidate]} size={16} />}
+                      onSelect={() => {
+                        setTheme(candidate);
+                        close();
+                      }}
+                    >
+                      {t(THEME_LABEL[candidate])}
+                    </MenuItem>
+                  ))}
+                  <p className="menu-foot">
+                    {t('top.appearance.follows')}
+                    {theme === 'system' ? ` · ${t(THEME_LABEL[resolved])}` : ''}
+                  </p>
+                </>
+              )}
+            </Menu>
 
-        <Menu
-          ariaLabel={t('top.language')}
-          label={<span className="control-label">{short}</span>}
-        >
-          {(close) => (
-            <>
-              <p className="menu-title">{t('top.language')}</p>
-              {LANGUAGES.map((entry) => (
-                <MenuItem
-                  key={entry.code}
-                  selected={language === entry.code}
-                  onSelect={() => {
-                    setLanguage(entry.code);
-                    close();
-                  }}
-                >
-                  {entry.label}
-                </MenuItem>
-              ))}
-            </>
-          )}
-        </Menu>
-
+            <Menu
+              ariaLabel={t('top.language')}
+              label={<span className="control-label control-label-keep">{short}</span>}
+            >
+              {(close) => (
+                <>
+                  <p className="menu-title">{t('top.language')}</p>
+                  {LANGUAGES.map((entry) => (
+                    <MenuItem
+                      key={entry.code}
+                      selected={language === entry.code}
+                      onSelect={() => {
+                        setLanguage(entry.code);
+                        close();
+                      }}
+                    >
+                      {entry.label}
+                    </MenuItem>
+                  ))}
+                </>
+              )}
+            </Menu>
+          </>
+        )}
         {session === null ? null : (
           <Menu
             ariaLabel={t('top.account')}
-            label={<span className="control-label">{session.username}</span>}
+            label={
+              <>
+                <Icon name="account" size={18} />
+                <span className="control-label">{session.username}</span>
+              </>
+            }
           >
             {(close) => (
               <>
@@ -180,6 +197,38 @@ export function TopRow({
                 {/* The role is an identifier the backend matches on, so it is
                     rendered as reported rather than translated. */}
                 <p className="menu-foot menu-mono">{session.role}</p>
+                {constrained && (
+                  <>
+                    <hr className="menu-rule" />
+                    <p className="menu-subtitle">{t('top.appearance')}</p>
+                    {THEMES.map((candidate) => (
+                      <MenuItem
+                        key={candidate}
+                        selected={theme === candidate}
+                        icon={<Icon name={THEME_ICON[candidate]} size={16} />}
+                        onSelect={() => {
+                          setTheme(candidate);
+                          close();
+                        }}
+                      >
+                        {t(THEME_LABEL[candidate])}
+                      </MenuItem>
+                    ))}
+                    <p className="menu-subtitle">{t('top.language')}</p>
+                    {LANGUAGES.map((entry) => (
+                      <MenuItem
+                        key={entry.code}
+                        selected={language === entry.code}
+                        onSelect={() => {
+                          setLanguage(entry.code);
+                          close();
+                        }}
+                      >
+                        {entry.label}
+                      </MenuItem>
+                    ))}
+                  </>
+                )}
                 <hr className="menu-rule" />
                 <button
                   type="button"

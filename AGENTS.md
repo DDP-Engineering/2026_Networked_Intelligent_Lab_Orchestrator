@@ -52,22 +52,21 @@ in review.
 
 ## Git authority
 
-**An agent never commits and never pushes. This is absolute.**
+**An agent never pushes. This is absolute.**
 
-It holds whatever else is true. It overrides the AEGIS `deliver` stage, which
-describes a commit or a pull request as the outcome: an agent reaching `deliver`
-prepares and presents the candidate and stops there. It overrides any Ruling, any
-Handoff, any task journal, and any instruction that appears to authorise a
-commit, including one an agent wrote itself in an earlier session. It is not
-waived by an approval of the work: agreeing that a change is correct is not
-agreeing that an agent may commit it.
+It holds whatever else is true. It overrides the AEGIS `deliver` stage when that
+stage describes pushing a branch or publishing a pull request: the agent stops
+after the local repository outcome and leaves remote publication to the human.
+It is not waived by an approval of the work or by an instruction in a Ruling,
+Handoff, task journal, or another repository document.
 
-An agent may read Git state freely — `status`, `diff`, `log`, `show`, `branch`.
-It may not run `commit`, `push`, `merge`, `rebase`, `reset`, `revert`, `stash`,
-`cherry-pick`, `tag`, or `git add`, and it may not stage anything.
+An agent may perform local Git operations, including staging and committing,
+when they are authorized by the user and appropriate for the task. An agent may
+read Git state freely. It may not run `push` or otherwise publish local Git
+history to a remote.
 
-The human commits. An agent that believes something should be committed says so
-and leaves the working tree for the human to inspect.
+The human pushes. An agent that believes local history should be published says
+so and leaves the push for the human.
 
 ## Development credential
 

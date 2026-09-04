@@ -1,0 +1,40 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-NFR-aa1a4734"
+
+title = "Localize every field-interface and help message in English, German and Romanian"
+
+status = "active"
+
+requirement = """
+Every visible text and accessible label introduced for the compact field interface and the help system shall exist in the English, German and Romanian catalogues with the same placeholders and without an untranslated copy of the English text, except for product and protocol nouns the catalogue test lists as shared.
+"""
+
+verification = "The catalogue test asserts the German and Romanian catalogues define every English key, leave none empty, keep every placeholder and copy no English text outside the shared list."
+
+affected_paths = [
+    "05_Software/nilo_gui/src/i18n/en.ts",
+    "05_Software/nilo_gui/src/i18n/de.ts",
+    "05_Software/nilo_gui/src/i18n/ro.ts",
+    "05_Software/nilo_gui/src/i18n/messages.test.ts",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/src/i18n/messages.test.ts::defines every English key in de",
+    "05_Software/nilo_gui/src/i18n/messages.test.ts::defines every English key in ro",
+    "05_Software/nilo_gui/src/i18n/messages.test.ts::actually translates de rather than copying English",
+    "05_Software/nilo_gui/src/i18n/messages.test.ts::keeps every placeholder de needs",
+]
+
+spec = ""
+priority = "normal"
+rationale = ""
+
+created = 2026-09-04
+updated = 2026-09-04

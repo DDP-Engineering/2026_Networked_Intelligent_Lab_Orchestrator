@@ -40,8 +40,6 @@ const SHARED = new Set([
   'network.interface.lan',
   'network.interface.vpn',
   'network.interface.wifi',
-  // A product name. Translating it would name something that does not exist.
-  'network.wireguard.title',
   // "Tunnel" is the German word for it as well.
   'network.fact.tunnel',
   'about.build',
@@ -67,6 +65,12 @@ const SHARED = new Set([
   'network.settings.gateway',
   'network.wifi.strength',
   'network.wifi.title',
+  // Navigation is the German word as well.
+  'nav.drawer',
+  // Shared product nouns, abbreviations and words the languages share.
+  'network.role.uplink',
+  'network.fact.control',
+  'network.settings.group.dns',
 ]);
 
 describe('the message catalogues', () => {

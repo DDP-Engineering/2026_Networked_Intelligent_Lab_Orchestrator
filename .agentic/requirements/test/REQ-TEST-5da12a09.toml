@@ -1,0 +1,38 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-TEST-5da12a09"
+
+title = "Prove the field-display layouts in a browser at the required viewports"
+
+status = "active"
+
+requirement = """
+The integrated browser suite shall drive a real browser against a real Bench Core at 1920x1080, 1366x768, 1024x600 and 800x480 in the light and dark themes and verify navigation to Network, the details of an interface, a profile and a device network, field help opened and closed by pointer and keyboard, each major editor opened to its final action controls, validation of an invalid address and port, a pending confirmation state, the absence of document-level horizontal overflow, no rendered text below 14 pixels and, at the two field sizes, no interactive target below 44 pixels, plus the navigation drawer and full-screen sheet at 800x480, writing review screenshots only when asked.
+"""
+
+verification = "Running the browser suite passes the field-display specification for every viewport and theme; a run with NILO_FIELD_REVIEW=1 leaves one screenshot per viewport and theme for the shell and the Network page under test-results/field."
+
+affected_paths = [
+    "05_Software/nilo_gui/e2e/field-display.spec.ts",
+    "05_Software/nilo_gui/e2e/network.spec.ts",
+    "05_Software/nilo_gui/e2e/shell.spec.ts",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/e2e/field-display.spec.ts::the shell and the Network page are readable and complete",
+    "05_Software/nilo_gui/e2e/field-display.spec.ts::a change awaiting confirmation is stated in the overview and restored",
+    "05_Software/nilo_gui/e2e/field-display.spec.ts::the other pages stay readable without sideways scrolling",
+]
+
+spec = ""
+priority = "normal"
+rationale = "Automated viewport proof is the closest this repository can get to the seven-inch panel; the physical display remains a separate acceptance."
+
+created = 2026-09-04
+updated = 2026-09-04

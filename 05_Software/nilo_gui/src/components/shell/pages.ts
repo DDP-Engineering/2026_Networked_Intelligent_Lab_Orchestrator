@@ -2,6 +2,7 @@ import { mayAdminister, mayReadActivity } from '../../api/permissions';
 import type { BenchCoreIntegration, BenchCoreSession } from '../../api/contract';
 import type { MessageKey } from '../../i18n/en';
 import type { IconName } from './Icon';
+import type { NetworkView } from '../network/views';
 
 /**
  * Which navigation group an entry belongs to.
@@ -21,6 +22,14 @@ export interface PageDescriptor {
   titleKey?: MessageKey;
   /** The backend-reported name of an integration page, never translated. */
   title?: string;
+  /** Parent page whose nested navigation list contains this destination. */
+  parentId?: string;
+  /** A shorter label for a group row than the page's workspace-tab title. */
+  navigationTitleKey?: MessageKey;
+  /** The label used when a page-owning group repeats its landing page below. */
+  overviewTitleKey?: MessageKey;
+  /** The focused Network content this page renders. */
+  networkView?: NetworkView;
   /**
    * Whether the page does something. An entry that is not available is still
    * shown, because the navigation shape is agreed, but it is marked so that
@@ -29,13 +38,52 @@ export interface PageDescriptor {
   available: boolean;
 }
 
-/** The five fixed entries of the bottom cluster, in their agreed order. */
+/** Fixed entries of the bottom cluster, including Network's child pages. */
 const CORE_PAGES: PageDescriptor[] = [
   {
     id: 'network',
     cluster: 'core',
     icon: 'network',
-    titleKey: 'nav.network',
+    titleKey: 'nav.network.overviewTab',
+    navigationTitleKey: 'nav.network',
+    overviewTitleKey: 'nav.network.overview',
+    networkView: 'overview',
+    available: true,
+  },
+  {
+    id: 'network:adapters',
+    parentId: 'network',
+    cluster: 'core',
+    icon: 'settings',
+    titleKey: 'nav.network.adapters',
+    networkView: 'adapters',
+    available: true,
+  },
+  {
+    id: 'network:device-access',
+    parentId: 'network',
+    cluster: 'core',
+    icon: 'instrument',
+    titleKey: 'nav.network.deviceAccess',
+    networkView: 'device-access',
+    available: true,
+  },
+  {
+    id: 'network:vpn',
+    parentId: 'network',
+    cluster: 'core',
+    icon: 'authentication',
+    titleKey: 'nav.network.vpn',
+    networkView: 'vpn',
+    available: true,
+  },
+  {
+    id: 'network:diagnostics',
+    parentId: 'network',
+    cluster: 'core',
+    icon: 'about',
+    titleKey: 'nav.network.diagnostics',
+    networkView: 'diagnostics',
     available: true,
   },
   {

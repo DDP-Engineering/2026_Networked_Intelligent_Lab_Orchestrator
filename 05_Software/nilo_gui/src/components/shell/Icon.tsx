@@ -16,10 +16,13 @@ export type IconName =
   | 'about'
   | 'close'
   | 'chevron'
+  | 'chevronUp'
   | 'check'
   | 'light'
   | 'dark'
-  | 'system';
+  | 'system'
+  | 'menu'
+  | 'account';
 
 const PATHS: Record<IconName, string> = {
   // A bench surface with a trace across it.
@@ -40,11 +43,16 @@ const PATHS: Record<IconName, string> = {
   about: 'M12 3a9 9 0 100 18 9 9 0 000-18zm0 5v1m0 3v5',
   close: 'M6 6l12 12M18 6L6 18',
   chevron: 'M7 10l5 5 5-5',
+  chevronUp: 'M7 14l5-5 5 5',
   check: 'M5 12.5l4.5 4.5L19 7',
   light:
     'M12 8a4 4 0 100 8 4 4 0 000-8zM12 3v2m0 14v2M3 12h2m14 0h2M6 6l1.5 1.5M16.5 16.5L18 18M18 6l-1.5 1.5M7.5 16.5L6 18',
   dark: 'M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z',
   system: 'M4 5h16v10H4zM9 19h6M12 15v4',
+  // Three lines: the navigation drawer.
+  menu: 'M4 7h16M4 12h16M4 17h16',
+  // A person: the account menu.
+  account: 'M12 12a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 0114 0',
 };
 
 export interface IconProps {
