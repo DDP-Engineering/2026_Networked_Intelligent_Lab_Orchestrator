@@ -440,9 +440,12 @@ func (service *Service) DeleteUser(ctx context.Context, actor auth.User, usernam
 func (service *Service) DeleteUserAs(ctx context.Context, actor Actor, username string) error {
 	normalized, err := auth.NormalizeUsername(username)
 	if err != nil {
-		return err
+		// An unusable name is still an attempt. The input itself stays out of
+		// the record: it is not a username, and what it is instead is unknown.
+		return service.refuseDeletion(ctx, err, actor, "identity.user.delete_refused", "username", "invalid",
+			map[string]string{"reason": "invalid_username"})
 	}
-	return service.repository.WithinAdministrativeTransaction(
+	err = service.repository.WithinAdministrativeTransaction(
 		ctx, func(repository Repository, events audit.Repository) error {
 			if err := requireAdministrator(ctx, repository, actor.User); err != nil {
 				return err
@@ -473,12 +476,19 @@ func (service *Service) DeleteUserAs(ctx context.Context, actor Actor, username 
 			if err := repository.DeleteUser(ctx, subject.ID); err != nil {
 				return err
 			}
-			return service.record(ctx, events, actor, "identity.user.deleted", "user", subject.ID, map[string]string{
+			// The label and the usernames keep the record readable once the
+			// row is gone; the actor's name is stored for the same reason.
+			return service.recordLabeled(ctx, events, actor, "identity.user.deleted", "user", subject.ID, subject.Username, map[string]string{
 				"username": subject.Username, "role": string(subject.Role),
-				"enabled": strconv.FormatBool(subject.Enabled()),
+				"enabled": strconv.FormatBool(subject.Enabled()), "actor_username": actor.User.Username,
 			})
 		},
 	)
+	if reason := deletionRefusalReason(err); reason != "" {
+		return service.refuseDeletion(ctx, err, actor, "identity.user.delete_refused", "username", normalized,
+			map[string]string{"reason": reason, "username": normalized})
+	}
+	return err
 }
 
 // ListUsers returns every identity, enabled or not.
@@ -633,7 +643,7 @@ func (service *Service) DeleteToken(ctx context.Context, actor auth.User, tokenI
 // expired or already revoked token can be deleted too: the record is what is
 // being removed, and its usability was settled long before.
 func (service *Service) DeleteTokenAs(ctx context.Context, actor Actor, tokenID string) error {
-	return service.repository.WithinAdministrativeTransaction(
+	err := service.repository.WithinAdministrativeTransaction(
 		ctx, func(repository Repository, events audit.Repository) error {
 			if err := requireAdministrator(ctx, repository, actor.User); err != nil {
 				return err
@@ -645,6 +655,15 @@ func (service *Service) DeleteTokenAs(ctx context.Context, actor Actor, tokenID 
 			if err != nil {
 				return err
 			}
+			// The owner's name is read now because the record must still read
+			// after the owner itself is deleted; a missing owner row is an
+			// empty name, not a failure of the deletion.
+			owner := ""
+			if user, err := repository.UserByID(ctx, token.UserID); err == nil {
+				owner = user.Username
+			} else if !errors.Is(err, auth.ErrUserNotFound) {
+				return err
+			}
 			if err := repository.DeleteAPIToken(ctx, token.ID); err != nil {
 				return err
 			}
@@ -653,14 +672,19 @@ func (service *Service) DeleteTokenAs(ctx context.Context, actor Actor, tokenID 
 				expiry = token.ExpiresAt.UTC().Format(time.RFC3339)
 				expired = !token.ExpiresAt.After(service.now())
 			}
-			return service.record(ctx, events, actor, "identity.token.deleted", "api_token", token.ID, map[string]string{
-				"token_name": token.Name, "owner_id": token.UserID,
+			return service.recordLabeled(ctx, events, actor, "identity.token.deleted", "api_token", token.ID, token.Name, map[string]string{
+				"token_name": token.Name, "owner_id": token.UserID, "owner": owner,
 				"scopes": auth.FormatPermissions(token.Scopes), "expires_at": expiry,
 				"revoked": strconv.FormatBool(token.RevokedAt != nil),
-				"expired": strconv.FormatBool(expired),
+				"expired": strconv.FormatBool(expired), "actor_username": actor.User.Username,
 			})
 		},
 	)
+	if reason := deletionRefusalReason(err); reason != "" {
+		return service.refuseDeletion(ctx, err, actor, "identity.token.delete_refused", "api_token", tokenID,
+			map[string]string{"reason": reason, "token_id": tokenID})
+	}
+	return err
 }
 
 // Login verifies a password and establishes one browser session.
@@ -868,26 +892,30 @@ func requireAdministrator(ctx context.Context, repository Repository, actor auth
 	return nil
 }
 
-// record appends one audit event through the transaction of the change it
-// attributes. Payloads carry names and roles only; no password, token secret or
-// verifier ever reaches the audit history.
+// record appends one applied audit event through the transaction of the change
+// it attributes. Payloads carry names and roles only; no password, token secret
+// or verifier ever reaches the audit history.
 func (service *Service) record(
 	ctx context.Context, events audit.Repository, actor Actor, action, subjectType, subjectID string,
 	payload map[string]string,
 ) error {
-	actorID := actor.User.ID
-	actorKind := audit.ActorKindUser
-	if actor.Credential == CredentialToken {
-		actorID = actor.TokenID
-		actorKind = audit.ActorKindToken
-	}
+	return service.recordLabeled(ctx, events, actor, action, subjectType, subjectID, "", payload)
+}
+
+// recordLabeled is record with the subject's display label, for an event that
+// has to stay readable after the subject row itself is gone.
+func (service *Service) recordLabeled(
+	ctx context.Context, events audit.Repository, actor Actor, action, subjectType, subjectID, label string,
+	payload map[string]string,
+) error {
+	actorKind, actorID := actorAttribution(actor)
 	parsedActor, err := domain.ParseActorID(actorID)
 	if err != nil {
 		return fmt.Errorf("parse audit actor %q: %w", actorID, err)
 	}
 	event, err := service.auditJournal.Compose(audit.Record{
 		Category: audit.CategoryAudit, Component: "identity", Action: action,
-		SubjectType: subjectType, SubjectID: subjectID,
+		SubjectType: subjectType, SubjectID: subjectID, TargetLabel: label,
 		ActorKind: actorKind, ActorID: parsedActor,
 		Outcome: audit.OutcomeApplied, Severity: audit.SeverityInfo,
 		Details: payload,
@@ -896,4 +924,75 @@ func (service *Service) record(
 		return err
 	}
 	return events.Append(ctx, event)
+}
+
+// actorAttribution is the audit view of an actor: a session is attributed to
+// the user, a bearer request to the token that made it.
+func actorAttribution(actor Actor) (audit.ActorKind, string) {
+	if actor.Credential == CredentialToken {
+		return audit.ActorKindToken, actor.TokenID
+	}
+	return audit.ActorKindUser, actor.User.ID
+}
+
+// deletionRefusalReason maps a refused deletion to its stable reason code. It
+// returns "" for anything that is not a refusal but a failure of the store
+// itself, which is reported to the caller and is not a decision to record.
+func deletionRefusalReason(err error) string {
+	switch {
+	case errors.Is(err, ErrNotAdministrator):
+		return "not_administrator"
+	case errors.Is(err, ErrLastAdministrator):
+		return "last_administrator"
+	case errors.Is(err, ErrUserHasTokens):
+		return "user_has_tokens"
+	case errors.Is(err, auth.ErrUserNotFound):
+		return "user_not_found"
+	case errors.Is(err, auth.ErrTokenNotFound):
+		return "token_not_found"
+	}
+	return ""
+}
+
+// refuseDeletion records a refused permanent deletion and returns the refusal.
+// The refusal stands whether or not the record could be written, because
+// nothing changed and the operator has already been told; but a record that
+// could not be written is joined to the error, so the caller is never left
+// believing the attempt is in the history when it is not. errors.Is still
+// finds the refusal reason through the join, so the HTTP mapping and the
+// command line report the same code as before.
+func (service *Service) refuseDeletion(
+	ctx context.Context, refusal error, actor Actor, action, subjectType, subjectID string, details map[string]string,
+) error {
+	if err := service.recordDeletionRefusal(ctx, actor, action, subjectType, subjectID, details); err != nil {
+		return errors.Join(refusal, fmt.Errorf("record the refused deletion: %w", err))
+	}
+	return refusal
+}
+
+// recordDeletionRefusal writes one denied record once the transaction that
+// refused a permanent deletion has rolled back. A refusal is a decision an
+// investigator needs as much as an applied removal, so it names the actor, the
+// requested subject and the reason. The requested subject is the label,
+// because a subject that was never found has no other stable name; a request
+// that named no subject at all is recorded against "unknown".
+func (service *Service) recordDeletionRefusal(
+	ctx context.Context, actor Actor, action, subjectType, subjectID string, details map[string]string,
+) error {
+	actorKind, actorID := actorAttribution(actor)
+	parsedActor, err := domain.ParseActorID(actorID)
+	if err != nil {
+		return fmt.Errorf("attribute the refusal to actor %q: %w", actorID, err)
+	}
+	if subjectID == "" {
+		subjectID = "unknown"
+	}
+	details["actor_username"] = actor.User.Username
+	return service.auditJournal.Record(ctx, audit.Record{
+		Category: audit.CategoryAudit, Component: "identity", Action: action,
+		SubjectType: subjectType, SubjectID: subjectID, TargetLabel: subjectID,
+		ActorKind: actorKind, ActorID: parsedActor,
+		Outcome: audit.OutcomeDenied, Severity: audit.SeverityWarning,
+		Details: details,
+	})
 }

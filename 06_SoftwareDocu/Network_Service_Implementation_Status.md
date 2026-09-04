@@ -198,6 +198,10 @@ nilo network vpn profiles rename ID --name "Head office" --server URL --token-fi
 nilo network device-networks create --file line-3.json --server URL --token-file TOKEN_FILE
 nilo network device-networks enable ID --server URL --token-file TOKEN_FILE
 nilo network device-networks check ID --tcp-port 502 --server URL --token-file TOKEN_FILE
+nilo network operation list --server URL --token-file TOKEN_FILE
+nilo network operation confirm OPERATION_ID --server URL --token-file TOKEN_FILE
+nilo admin user list --server URL --token-file TOKEN_FILE
+nilo admin token delete --id TOKEN_ID --confirm-delete --server URL --token-file TOKEN_FILE
 nilo activity list --category audit --operation OPERATION_ID --server URL --token-file TOKEN_FILE
 nilo activity export --format csv --out activity.csv --server URL --token-file TOKEN_FILE
 nilo activity retention --retention audit=90,event=14 --quota audit=268435456,event=134217728 --server URL --token-file TOKEN_FILE
@@ -205,7 +209,12 @@ nilo activity retention --retention audit=90,event=14 --quota audit=268435456,ev
 
 Mutations print a preview, then need `yes` or `--acknowledge`; connectivity
 changes still need `network operation confirm OPERATION_ID` before their
-deadline. Acknowledgement never implies confirmation.
+deadline. Acknowledgement never implies confirmation. `network operation list`
+is the same listing the browser uses to reattach to a pending change after a
+reload; it takes no filters because the route offers none. The `admin` group
+uses the same `--server` and `--token-file` options in its remote mode; a
+permanent deletion there needs the subject typed back or `--confirm-delete`,
+and `--acknowledge` is not an admin option.
 
 ## Verification entry points
 

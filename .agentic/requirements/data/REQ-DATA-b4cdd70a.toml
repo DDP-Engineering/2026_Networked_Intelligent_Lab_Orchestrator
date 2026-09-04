@@ -1,0 +1,49 @@
+schema = 1
+
+id = "REQ-DATA-b4cdd70a"
+
+title = "Audit refused permanent deletions with their reason and stable subject labels"
+
+status = "active"
+
+requirement = """
+If a permanent deletion of an identity or an API token is refused by Bench Core because the actor
+is not an enabled administrator, the subject is the last enabled administrator, the identity still
+owns API tokens, the subject does not exist, or the request names no usable subject, then Bench
+Core shall append exactly one audit record with action `identity.user.delete_refused` or
+`identity.token.delete_refused`, category `audit`, component `identity`, outcome `denied`,
+severity `warning`, the requesting actor, the requested subject as target label (`invalid` or
+`unknown` when the request named none, keeping the unusable input out of the record), and a
+stable reason code with the actor's username in its details, while the subject remains unchanged
+and no `identity.user.deleted` or `identity.token.deleted` record is written; when that record
+cannot be written, the deletion stays refused and the returned error also reports that the attempt
+could not be recorded.
+"""
+
+verification = "Service tests attempt each refusal (non-administrator actor, last enabled administrator, owned tokens, unknown username, unknown token identifier, invalid username, empty token identifier) and assert exactly one denied record per attempt carrying the reason code, actor username and subject label, that no deleted record exists and the subject is unchanged, and that an unusable input is absent from the record; a test that rejects audit insertions asserts the refusal error still matches its reason and mentions the failed record; an HTTP test drives a refused deletion through the route and finds the denied record in the audit store; a concurrency test has one connection delete and another disable two administrators at the same time and asserts one enabled administrator remains and a losing deletion recorded its refusal; payloads are scanned for password, secret and verifier canaries."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/identity/service.go",
+    "05_Software/nilo_assistant/internal/identity/deletion_audit_test.go",
+    "05_Software/nilo_assistant/internal/identity/service_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/deletion_audit_test.go",
+    "05_Software/nilo_assistant/cmd/nilo/admin_live_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/identity/deletion_audit_test.go::TestRefusedDeletionsAreRecordedWithTheirReason",
+    "05_Software/nilo_assistant/internal/identity/deletion_audit_test.go::TestRefusalsWithoutAUsableSubjectAreStillRecorded",
+    "05_Software/nilo_assistant/internal/identity/deletion_audit_test.go::TestARejectedRefusalRecordIsReportedWithTheRefusal",
+    "05_Software/nilo_assistant/internal/identity/deletion_audit_test.go::TestConcurrentDeleteAndDisableLeaveOneEnabledAdministrator",
+    "05_Software/nilo_assistant/internal/identity/service_test.go::TestRefusedAndMissingDeletionsRecordNoEvent",
+    "05_Software/nilo_assistant/internal/httpapi/deletion_audit_test.go::TestRefusedAndAppliedDeletionsReadFromTheHistoryAlone",
+    "05_Software/nilo_assistant/cmd/nilo/admin_live_test.go::TestRemoteAdministrationAgainstARealApplianceHonoursRolesScopesAndCredentialState",
+]
+
+spec = ""
+
+priority = "high"
+rationale = "A refused destructive attempt is as accountable as an applied one, and an investigator must see who tried, what, and why it was refused."
+
+created = 2026-09-04
+updated = 2026-09-05

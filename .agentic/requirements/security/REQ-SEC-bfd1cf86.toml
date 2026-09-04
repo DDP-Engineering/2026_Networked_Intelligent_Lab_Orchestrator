@@ -1,0 +1,46 @@
+schema = 1
+
+id = "REQ-SEC-bfd1cf86"
+
+title = "Require explicit destructive confirmation for command-line permanent deletion"
+
+status = "active"
+
+requirement = """
+When a remote `nilo admin user delete` or `nilo admin token delete` is invoked, the command-line
+interface shall print the exact identity or token that would be removed on standard error (or, when
+the appliance forbids the listing read to this token, state that the subject cannot be described
+and name it) and send the deletion request only after the operator types that subject's username
+(folded to lower case as the appliance folds it) or token identifier (exactly) back on an
+interactive terminal, or, while standard input is not a terminal, only when the dedicated
+`--confirm-delete` flag is present; a mismatched or empty confirmation exits 1, a missing
+`--confirm-delete` exits 2, and a listing read that fails for any reason other than a forbidden
+answer exits 1, in every case without sending any state-changing request, and no other flag,
+`--acknowledge` included, is accepted as consent.
+"""
+
+verification = "Command tests run both deletions against a recording stub: interactive mode with the subject typed back (a username in any case) sends DELETE and exits 0; a different name, a prefix or an empty answer exits 1 and records only the listing GET; noninteractive mode without --confirm-delete exits 2 and records only the listing GET; with --confirm-delete it sends DELETE; --acknowledge is rejected as an unknown flag with exit 2 and no request; the subject's username or token identifier and its safe metadata appear on standard error before any prompt; a 403 on the listing read skips the description and still deletes, while a 401 on it exits 1 with no deletion sent; and a 404 or 409 answer to the deletion exits 1 with the appliance's error code."
+
+affected_paths = [
+    "05_Software/nilo_assistant/cmd/nilo/admin_remote.go",
+    "05_Software/nilo_assistant/cmd/nilo/admin_remote_test.go",
+    "05_Software/nilo_assistant/cmd/nilo/admin_review_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/cmd/nilo/admin_review_test.go::TestDeletionDoesNotRequireTheReadPermission",
+    "05_Software/nilo_assistant/cmd/nilo/admin_review_test.go::TestUsernamesAreFoldedTheWayTheApplianceFoldsThem",
+    "05_Software/nilo_assistant/cmd/nilo/admin_remote_test.go::TestRemoteUserDeletionRequiresTheUsernameTypedBack",
+    "05_Software/nilo_assistant/cmd/nilo/admin_remote_test.go::TestRemoteTokenDeletionRequiresTheTokenIDTypedBack",
+    "05_Software/nilo_assistant/cmd/nilo/admin_remote_test.go::TestNoninteractiveDeletionRequiresConfirmDelete",
+    "05_Software/nilo_assistant/cmd/nilo/admin_remote_test.go::TestDeletingAnUnlistedSubjectIsDecidedByTheAppliance",
+    "05_Software/nilo_assistant/cmd/nilo/admin_remote_test.go::TestRemoteAdminRefusalsExitOneWithTheApplianceCode",
+]
+
+spec = "specs/REQ-FUNC-6590e0c5.md"
+
+priority = "high"
+rationale = "Permanent deletion cannot be undone, and a flag meant for previewed network changes must not double as consent to destroy an identity."
+
+created = 2026-09-04
+updated = 2026-09-05

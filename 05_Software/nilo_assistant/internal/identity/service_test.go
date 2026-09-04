@@ -1190,9 +1190,15 @@ func TestDeletionsAreAuditedOnceWithCompleteSafeDetails(t *testing.T) {
 		t.Fatalf("token deletion subject = %s/%s, want api_token/%s",
 			tokenEvent.SubjectType, tokenEvent.SubjectID, issued.Token.ID)
 	}
+	// The label and the usernames are what keep the record readable once the
+	// token and its owner rows are gone: nothing here needs a join.
+	if tokenEvent.TargetLabel != "retired" {
+		t.Fatalf("token deletion target label = %q, want the token name", tokenEvent.TargetLabel)
+	}
 	assertDetails(t, tokenEvent, map[string]string{
-		"token_name": "retired", "owner_id": operator.ID, "scopes": "status.read",
+		"token_name": "retired", "owner_id": operator.ID, "owner": "operator", "scopes": "status.read",
 		"expires_at": expiry.UTC().Format(time.RFC3339), "revoked": "false", "expired": "false",
+		"actor_username": "admin",
 	})
 
 	userEvent := onlyEvent(t, f, "identity.user.deleted")
@@ -1201,8 +1207,11 @@ func TestDeletionsAreAuditedOnceWithCompleteSafeDetails(t *testing.T) {
 		t.Fatalf("user deletion subject = %s/%s, want user/%s",
 			userEvent.SubjectType, userEvent.SubjectID, operator.ID)
 	}
+	if userEvent.TargetLabel != "operator" {
+		t.Fatalf("user deletion target label = %q, want the username", userEvent.TargetLabel)
+	}
 	assertDetails(t, userEvent, map[string]string{
-		"username": "operator", "role": "operator", "enabled": "false",
+		"username": "operator", "role": "operator", "enabled": "false", "actor_username": "admin",
 	})
 
 	// The subjects are gone; the history that names them is not, and is still
