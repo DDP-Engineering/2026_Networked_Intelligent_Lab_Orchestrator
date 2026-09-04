@@ -493,7 +493,16 @@ async function exerciseAuthentication(viewport: (typeof VIEWPORTS)[number]) {
   await expect(actions).toContainText(
     'The last enabled administrator must remain enabled.',
   );
+  // The permanent removal is offered in the destructive group and is refused
+  // here for its own stated reason, at every viewport this suite covers.
+  await expect(
+    actions.getByRole('button', { name: 'Delete permanently' }),
+  ).toBeDisabled();
+  await expect(actions).toContainText(
+    'The last enabled administrator cannot be deleted.',
+  );
   await expectInsideViewport(actions);
+  if (viewport.field) await expectFieldTargets();
   await actions.getByRole('button', { name: 'Cancel' }).click();
 
   await page.getByRole('button', { name: 'New user', exact: true }).click();

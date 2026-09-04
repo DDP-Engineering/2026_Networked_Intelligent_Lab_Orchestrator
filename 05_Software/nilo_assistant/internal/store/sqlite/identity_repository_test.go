@@ -393,3 +393,126 @@ func TestCreateSessionRefusesASupersededPasswordVerifier(t *testing.T) {
 }
 
 var _ identity.Repository = (*IdentityRepository)(nil)
+
+// TestIdentityRepositoryRemovesRowsRatherThanMarkingThem states what
+// permanent deletion means at the only layer that can answer it: the row is
+// gone from the file, a session belonging to a removed identity is gone with
+// it, and the foreign key still refuses to strand an owned token even if a
+// caller above ever forgot to check.
+func TestIdentityRepositoryRemovesRowsRatherThanMarkingThem(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	path := filepath.Join(t.TempDir(), "nilo.db")
+	database, err := Open(ctx, path)
+	if err != nil {
+		t.Fatalf("open database: %v", err)
+	}
+	t.Cleanup(func() { _ = database.Close() })
+	repository := NewIdentityRepository(database)
+	created := time.Date(2026, 9, 2, 9, 0, 0, 0, time.UTC)
+	expiry := created.Add(24 * time.Hour)
+
+	user := auth.User{
+		ID:               "0199a3b0-0000-7000-8000-00000000010a",
+		Username:         "leaving",
+		Role:             auth.RoleOperator,
+		PasswordVerifier: "$argon2id$v=19$m=65536,t=3,p=2$placeholder$placeholder",
+		CreatedAt:        created,
+		UpdatedAt:        created,
+	}
+	if err := repository.CreateUser(ctx, user); err != nil {
+		t.Fatalf("CreateUser: %v", err)
+	}
+	token := auth.APIToken{
+		ID: "0199a3b0-0000-7000-8000-00000000010b", UserID: user.ID, Name: "owned",
+		Scopes: []auth.Permission{auth.PermissionStatusRead}, CreatedAt: created, ExpiresAt: &expiry,
+	}
+	if err := repository.CreateAPIToken(
+		ctx, token, auth.TokenVerifier(sha256.Sum256([]byte("nilo_owned"))),
+	); err != nil {
+		t.Fatalf("CreateAPIToken: %v", err)
+	}
+	session := auth.SessionRecord{
+		ID: "0199a3b0-0000-7000-8000-00000000010c", UserID: user.ID,
+		CSRFVerifier: auth.ComputeSessionVerifier("csrf-value"),
+		CreatedAt:    created, ExpiresAt: expiry,
+	}
+	if err := repository.CreateSession(
+		ctx, session, auth.ComputeSessionVerifier("session-value"), user.PasswordVerifier,
+	); err != nil {
+		t.Fatalf("CreateSession: %v", err)
+	}
+
+	owned, err := repository.CountAPITokensForUser(ctx, user.ID)
+	if err != nil {
+		t.Fatalf("CountAPITokensForUser: %v", err)
+	}
+	if owned != 1 {
+		t.Fatalf("owned tokens = %d, want 1", owned)
+	}
+	if err := repository.RevokeAPIToken(ctx, token.ID, created.Add(time.Hour)); err != nil {
+		t.Fatalf("RevokeAPIToken: %v", err)
+	}
+	if owned, err = repository.CountAPITokensForUser(ctx, user.ID); err != nil || owned != 1 {
+		t.Fatalf("owned tokens after revocation = %d (%v), want 1: revoking is not removing", owned, err)
+	}
+	// The identity still owns a token, so the key refuses to remove it. This is
+	// the last line of defence behind the service's own refusal.
+	if err := repository.DeleteUser(ctx, user.ID); err == nil {
+		t.Fatal("an identity that still owns a token was deleted")
+	}
+
+	stored, err := repository.APITokenByID(ctx, token.ID)
+	if err != nil {
+		t.Fatalf("APITokenByID: %v", err)
+	}
+	if stored.Name != "owned" || stored.UserID != user.ID || stored.RevokedAt == nil ||
+		stored.ExpiresAt == nil || !stored.ExpiresAt.Equal(expiry) || len(stored.Scopes) != 1 {
+		t.Fatalf("token read by identifier = %#v", stored)
+	}
+	if err := repository.DeleteAPIToken(ctx, token.ID); err != nil {
+		t.Fatalf("DeleteAPIToken: %v", err)
+	}
+	if _, err := repository.APITokenByID(ctx, token.ID); !errors.Is(err, auth.ErrTokenNotFound) {
+		t.Fatalf("APITokenByID after deletion = %v, want ErrTokenNotFound", err)
+	}
+	if err := repository.DeleteAPIToken(ctx, token.ID); !errors.Is(err, auth.ErrTokenNotFound) {
+		t.Fatalf("DeleteAPIToken twice = %v, want ErrTokenNotFound", err)
+	}
+
+	if err := repository.DeleteUserSessions(ctx, user.ID); err != nil {
+		t.Fatalf("DeleteUserSessions: %v", err)
+	}
+	if err := repository.DeleteUser(ctx, user.ID); err != nil {
+		t.Fatalf("DeleteUser: %v", err)
+	}
+	if err := repository.DeleteUser(ctx, user.ID); !errors.Is(err, auth.ErrUserNotFound) {
+		t.Fatalf("DeleteUser twice = %v, want ErrUserNotFound", err)
+	}
+	if _, err := repository.UserByUsername(ctx, "leaving"); !errors.Is(err, auth.ErrUserNotFound) {
+		t.Fatalf("UserByUsername after deletion = %v, want ErrUserNotFound", err)
+	}
+	if _, err := repository.SessionBySecret(ctx, "session-value"); !errors.Is(err, auth.ErrSessionNotFound) {
+		t.Fatalf("SessionBySecret after deletion = %v, want ErrSessionNotFound", err)
+	}
+
+	// And the rows themselves, read straight out of the file the appliance
+	// keeps: nothing marked, nothing left.
+	for _, remaining := range []struct {
+		what  string
+		query string
+	}{
+		{"identities", "SELECT COUNT(*) FROM users WHERE id = ?"},
+		{"browser sessions", "SELECT COUNT(*) FROM user_sessions WHERE user_id = ?"},
+		{"API tokens", "SELECT COUNT(*) FROM mcp_tokens WHERE user_id = ?"},
+	} {
+		var count int
+		if err := database.SQL().QueryRowContext(ctx, remaining.query, user.ID).Scan(&count); err != nil {
+			t.Fatalf("count remaining %s: %v", remaining.what, err)
+		}
+		if count != 0 {
+			t.Fatalf("%d %s rows survived the deletion", count, remaining.what)
+		}
+	}
+}

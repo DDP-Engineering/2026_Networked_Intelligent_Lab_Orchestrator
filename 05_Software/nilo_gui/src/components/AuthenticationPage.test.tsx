@@ -98,6 +98,8 @@ function stubClient(overrides: Partial<BenchCoreClient> = {}): BenchCoreClient {
     createToken: () =>
       Promise.resolve({ token: activeToken, secret: 'nilo_fixture_secret_value' }),
     revokeToken: () => Promise.resolve(),
+    deleteIdentity: () => Promise.resolve(),
+    deleteToken: () => Promise.resolve(),
     ...overrides,
   };
 }
@@ -466,6 +468,311 @@ describe('confirmation before an irreversible change', () => {
 
     expect(await screen.findByText(/revoked the token bench-ci/i)).toBeVisible();
     expect(revokeToken).toHaveBeenCalledExactlyOnceWith(CREDENTIAL, 'token-1');
+  });
+});
+
+describe('permanent deletion', () => {
+  const secondAdministrator: BenchCoreIdentity = {
+    id: 'identity-3',
+    username: 'second-admin',
+    role: 'administrator',
+    enabled: true,
+    createdAt: '2026-09-02T09:15:00Z',
+  };
+  const revokedToken: BenchCoreToken = {
+    id: 'token-2',
+    name: 'retired-ci',
+    owner: 'bench-operator',
+    scopes: [],
+    createdAt: '2026-09-02T09:20:00Z',
+    expiresAt: null,
+    revoked: true,
+    revokedAt: '2026-09-02T09:30:00Z',
+  };
+
+  /** Open one row's Actions dialog without choosing anything in it. */
+  function openIdentityActions(username: string): void {
+    fireEvent.click(
+      within(identityRow(username)).getByRole('button', {
+        name: `Actions for ${username}`,
+      }),
+    );
+  }
+
+  it('offers deletion in the destructive section, apart from the ordinary actions', async () => {
+    renderPage(stubClient());
+    await screen.findByRole('region', { name: 'Users' });
+
+    openIdentityActions('bench-operator');
+    const destructive = dialog().querySelector('.action-dialog-danger-list');
+    expect(destructive).not.toBeNull();
+    expect(
+      within(destructive as HTMLElement).getByRole('button', {
+        name: /delete permanently/i,
+      }),
+    ).toBeVisible();
+    // The reversible action stays in the ordinary group above it.
+    const ordinary = dialog().querySelectorAll('.action-dialog-list')[0];
+    expect(
+      within(ordinary as HTMLElement).getByRole('button', { name: /change role/i }),
+    ).toBeVisible();
+  });
+
+  it('warns that the removal is permanent and sends nothing when dismissed', async () => {
+    const client = stubClient();
+    const deleteIdentity = vi.spyOn(client, 'deleteIdentity');
+    renderPage(client);
+    await screen.findByRole('region', { name: 'Users' });
+
+    openIdentityAction('bench-operator', /delete permanently/i);
+    expect(dialog()).toHaveTextContent('bench-operator');
+    expect(within(dialog()).getByText(/cannot be undone/i)).toBeVisible();
+    expect(
+      within(dialog()).getAllByText(/removed from storage/i).length,
+    ).toBeGreaterThan(0);
+
+    fireEvent.click(within(dialog()).getByRole('button', { name: /cancel/i }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(deleteIdentity).not.toHaveBeenCalled();
+  });
+
+  it('holds the deletion back until the exact username is typed', async () => {
+    const client = stubClient();
+    const deleteIdentity = vi.spyOn(client, 'deleteIdentity');
+    renderPage(client);
+    await screen.findByRole('region', { name: 'Users' });
+
+    openIdentityAction('bench-operator', /delete permanently/i);
+    const confirm = () =>
+      within(dialog()).getByRole('button', { name: /^delete permanently$/i });
+    expect(confirm()).toBeDisabled();
+
+    fireEvent.change(within(dialog()).getByLabelText('Confirm the username'), {
+      target: { value: 'bench-operato' },
+    });
+    expect(confirm()).toBeDisabled();
+    fireEvent.change(within(dialog()).getByLabelText('Confirm the username'), {
+      target: { value: 'admin' },
+    });
+    expect(confirm()).toBeDisabled();
+    // Exact means exact: a value that merely reads the same is not the name.
+    fireEvent.change(within(dialog()).getByLabelText('Confirm the username'), {
+      target: { value: ' bench-operator ' },
+    });
+    expect(confirm()).toBeDisabled();
+    fireEvent.change(within(dialog()).getByLabelText('Confirm the username'), {
+      target: { value: 'Bench-Operator' },
+    });
+    expect(confirm()).toBeDisabled();
+
+    fireEvent.change(within(dialog()).getByLabelText('Confirm the username'), {
+      target: { value: 'bench-operator' },
+    });
+    expect(confirm()).toBeEnabled();
+    fireEvent.click(confirm());
+
+    expect(
+      await screen.findByText(/deleted the identity bench-operator permanently/i),
+    ).toBeVisible();
+    expect(deleteIdentity).toHaveBeenCalledExactlyOnceWith(
+      CREDENTIAL,
+      'bench-operator',
+    );
+  });
+
+  it('re-reads only the identity listing after a deletion', async () => {
+    const client = stubClient();
+    const listIdentities = vi.spyOn(client, 'listIdentities');
+    const listTokens = vi.spyOn(client, 'listTokens');
+    renderPage(client);
+    await screen.findByRole('region', { name: 'Users' });
+    expect(listIdentities).toHaveBeenCalledTimes(1);
+
+    openIdentityAction('bench-operator', /delete permanently/i);
+    fireEvent.change(within(dialog()).getByLabelText('Confirm the username'), {
+      target: { value: 'bench-operator' },
+    });
+    fireEvent.click(
+      within(dialog()).getByRole('button', { name: /^delete permanently$/i }),
+    );
+
+    await waitFor(() => expect(listIdentities).toHaveBeenCalledTimes(2));
+    expect(listTokens).not.toHaveBeenCalled();
+  });
+
+  it('says why the last enabled administrator cannot be deleted', async () => {
+    const client = stubClient();
+    const deleteIdentity = vi.spyOn(client, 'deleteIdentity');
+    renderPage(client);
+    await screen.findByRole('region', { name: 'Users' });
+
+    openIdentityActions('admin');
+    const remove = within(dialog()).getByRole('button', {
+      name: /delete permanently/i,
+    });
+    expect(remove).toBeDisabled();
+    expect(
+      within(dialog()).getByText(/last enabled administrator cannot be deleted/i),
+    ).toBeVisible();
+
+    fireEvent.click(remove);
+    expect(deleteIdentity).not.toHaveBeenCalled();
+  });
+
+  it('offers deletion of an administrator once another enabled one exists', async () => {
+    renderPage(
+      stubClient({
+        listIdentities: () =>
+          Promise.resolve({
+            apiVersion: 'nilo.http/1',
+            items: [administrator, secondAdministrator],
+          }),
+      }),
+    );
+    await screen.findByRole('region', { name: 'Users' });
+
+    openIdentityActions('admin');
+    expect(
+      within(dialog()).getByRole('button', { name: /delete permanently/i }),
+    ).toBeEnabled();
+  });
+
+  it('explains a refusal caused by API tokens the identity still owns', async () => {
+    renderPage(
+      stubClient({
+        deleteIdentity: () =>
+          Promise.reject(
+            new BenchCoreError(
+              'rejected',
+              'delete every API token this identity owns before deleting the identity',
+              'user_has_tokens',
+            ),
+          ),
+      }),
+    );
+    await screen.findByRole('region', { name: 'Users' });
+
+    openIdentityAction('bench-operator', /delete permanently/i);
+    fireEvent.change(within(dialog()).getByLabelText('Confirm the username'), {
+      target: { value: 'bench-operator' },
+    });
+    fireEvent.click(
+      within(dialog()).getByRole('button', { name: /^delete permanently$/i }),
+    );
+
+    expect(
+      await screen.findByText(/an identity that owns api tokens cannot be deleted/i),
+    ).toBeVisible();
+    expect(screen.getByRole('dialog')).toBeVisible();
+  });
+
+  it('returns to sign-in when an administrator deletes their own account', async () => {
+    const client = stubClient({
+      listIdentities: () =>
+        Promise.resolve({
+          apiVersion: 'nilo.http/1',
+          items: [administrator, secondAdministrator],
+        }),
+    });
+    const listIdentities = vi.spyOn(client, 'listIdentities');
+    const { onSessionEnded } = renderPage(client);
+    await screen.findByRole('region', { name: 'Users' });
+
+    openIdentityAction('admin', /delete permanently/i);
+    fireEvent.change(within(dialog()).getByLabelText('Confirm the username'), {
+      target: { value: 'admin' },
+    });
+    fireEvent.click(
+      within(dialog()).getByRole('button', { name: /^delete permanently$/i }),
+    );
+
+    await waitFor(() => expect(onSessionEnded).toHaveBeenCalled());
+    // The credential that read the listing is gone, so nothing re-reads it.
+    expect(listIdentities).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps Revoke and Delete distinct on a token, and offers both', async () => {
+    renderPage(stubClient(), vi.fn(), 'tokens');
+    await screen.findByRole('region', { name: 'API Tokens' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Actions for bench-ci' }));
+    const destructive = dialog().querySelector('.action-dialog-danger-list');
+    expect(
+      within(destructive as HTMLElement).getByRole('button', { name: /^revoke$/i }),
+    ).toBeEnabled();
+    expect(
+      within(destructive as HTMLElement).getByRole('button', {
+        name: /delete permanently/i,
+      }),
+    ).toBeEnabled();
+  });
+
+  it('deletes a revoked token, which can no longer be revoked', async () => {
+    const client = stubClient({
+      listTokens: () =>
+        Promise.resolve({ apiVersion: 'nilo.http/1', items: [revokedToken] }),
+    });
+    const deleteToken = vi.spyOn(client, 'deleteToken');
+    renderPage(client, vi.fn(), 'tokens');
+    await screen.findByRole('region', { name: 'API Tokens' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Actions for retired-ci' }));
+    expect(within(dialog()).getByRole('button', { name: /^revoke$/i })).toBeDisabled();
+    fireEvent.click(
+      within(dialog()).getByRole('button', { name: /delete permanently/i }),
+    );
+
+    expect(within(dialog()).getByText(/cannot be undone/i)).toBeVisible();
+    const confirm = () =>
+      within(dialog()).getByRole('button', { name: /^delete permanently$/i });
+    expect(confirm()).toBeDisabled();
+    fireEvent.change(within(dialog()).getByLabelText('Confirm the token name'), {
+      target: { value: 'retired-ci' },
+    });
+    fireEvent.click(confirm());
+
+    expect(
+      await screen.findByText(/deleted the token retired-ci permanently/i),
+    ).toBeVisible();
+    expect(deleteToken).toHaveBeenCalledExactlyOnceWith(CREDENTIAL, 'token-2');
+  });
+
+  it('sends no token deletion when the dialog is dismissed', async () => {
+    const client = stubClient();
+    const deleteToken = vi.spyOn(client, 'deleteToken');
+    renderPage(client, vi.fn(), 'tokens');
+    await screen.findByRole('region', { name: 'API Tokens' });
+
+    openTokenAction('bench-ci', /delete permanently/i);
+    expect(dialog()).toHaveTextContent('bench-ci');
+    fireEvent.click(within(dialog()).getByRole('button', { name: /cancel/i }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(deleteToken).not.toHaveBeenCalled();
+  });
+
+  it('offers neither deletion to a session that may not manage', async () => {
+    renderInShell(
+      <AuthenticationPage
+        client={stubClient()}
+        credential={CREDENTIAL}
+        session={session}
+        view="users"
+        canManageUsers={false}
+        onSessionEnded={vi.fn()}
+      />,
+      { theme: 'light', language: 'en' },
+    );
+    await screen.findByRole('region', { name: 'Users' });
+
+    openIdentityActions('bench-operator');
+    expect(
+      within(dialog()).getByRole('button', { name: /delete permanently/i }),
+    ).toBeDisabled();
+    // Every action the session may not take says the same thing, beside it.
+    expect(
+      within(dialog()).getAllByText(/does not include users\.manage/i).length,
+    ).toBe(4);
   });
 });
 

@@ -315,9 +315,9 @@ export const en = {
   'auth.tokensTitle': 'Authentication / API tokens',
   'auth.signedInAs': 'Signed in as {username} ({role}).',
   'auth.identitiesNote':
-    'Identities are disabled rather than deleted, so audit records keep naming a real subject.',
+    'Disabling keeps the identity and stops it signing in; permanent deletion removes the record itself and cannot be undone.',
   'auth.tokensNote':
-    'Tokens are credentials. Expiration or revocation prevents future use.',
+    'Tokens are credentials. Expiry or revocation prevents future use and keeps the record; permanent deletion removes the record itself.',
   'auth.viewActivity': 'View activity',
   'auth.csrfMissing':
     'This browser no longer holds the request-forgery token issued with the session, so Bench Core will refuse any change. Sign out and sign in again.',
@@ -351,6 +351,8 @@ export const en = {
   'auth.disable': 'Disable',
   'auth.enable': 'Enable',
   'auth.resetPassword': 'Reset password',
+  'auth.deleteUser': 'Delete permanently',
+  'auth.deleteToken': 'Delete permanently',
   'auth.revoke': 'Revoke',
   'auth.revokeToken': 'Revoke token',
   'auth.createIdentity': 'Create identity',
@@ -364,6 +366,10 @@ export const en = {
   'auth.permission.usersManage': 'Your session does not include users.manage.',
   'auth.permission.tokensManage': 'Your session does not include tokens.manage.all.',
   'auth.lastAdministratorReason': 'The last enabled administrator must remain enabled.',
+  'auth.lastAdministratorDeleteReason':
+    'The last enabled administrator cannot be deleted. Give another identity the administrator role and enable it first.',
+  'auth.ownedTokensReason':
+    'An identity that owns API tokens cannot be deleted. Delete those tokens on the API tokens page first; revoking them is not enough.',
   'auth.revocationUnavailable':
     'This token is already expired or revoked and cannot be revoked again.',
 
@@ -373,6 +379,8 @@ export const en = {
   'auth.dialog.enableUser': 'Enable {username}',
   'auth.dialog.disableUser': 'Disable {username}',
   'auth.dialog.resetPassword': 'Reset the password of {username}',
+  'auth.dialog.deleteUser': 'Delete {username} permanently',
+  'auth.dialog.deleteToken': 'Delete {name} permanently',
   'auth.dialog.newToken': 'New API token',
   'auth.dialog.revokeToken': 'Revoke {name}',
   'auth.dialog.secret': 'The secret for {name}',
@@ -384,6 +392,8 @@ export const en = {
   'auth.field.name': 'Name',
   'auth.field.scopes': 'Scopes',
   'auth.field.expires': 'Expires (optional)',
+  'auth.field.confirmUsername': 'Confirm the username',
+  'auth.field.confirmTokenName': 'Confirm the token name',
   'auth.help.username':
     'A stable sign-in name. It is normalized and cannot impersonate another identity.',
   'auth.help.role':
@@ -400,6 +410,10 @@ export const en = {
     "Leave every scope clear for the owner's full current role; selected scopes only narrow that role.",
   'auth.help.expiry':
     'After this instant the token is rejected automatically. Leaving it empty means no automatic expiry.',
+  'auth.help.confirmUsername':
+    'Repeat the username exactly. Nothing is sent until it matches, so a mis-aimed click cannot delete the wrong identity.',
+  'auth.help.confirmTokenName':
+    'Repeat the token name exactly. Nothing is sent until it matches, so a mis-aimed click cannot delete the wrong token.',
   'auth.roleMatrix':
     'Viewer: read inventory, Network and status. Operator: Viewer plus self-token access. Administrator: all administration, Activity, diagnostics, Network and VPN permissions.',
   'auth.passwordMismatch': 'The two passwords do not match.',
@@ -416,6 +430,13 @@ export const en = {
     'Re-enable {username}? It will be able to sign in again immediately.',
   'auth.revokeExplanation':
     'Revoke {name}, owned by {owner}? Its secret stops working on the next request and cannot be restored.',
+  'auth.deleteWarning':
+    'This cannot be undone. The record is removed from storage permanently, and only the Activity history will still name it.',
+  'auth.deleteTypeExactly': 'Type {name} exactly to enable the deletion.',
+  'auth.deleteUserExplanation':
+    'Delete the identity {username} ({role}) permanently? The record is removed from storage and every browser session it holds ends at once. NILO refuses this while the identity is the last enabled administrator, or while it still owns any API token, revoked ones included.',
+  'auth.deleteTokenExplanation':
+    'Delete the token {name}, owned by {owner}, permanently? The record and its history of state are removed and the secret stops working at once. Revoking instead stops the secret and keeps the record.',
   'auth.secretExplanation':
     'This is the only time the secret for {name} is shown. Bench Core stores only a one-way verifier of it, so it cannot be retrieved later. Copy it now.',
   'auth.secretCopied': 'The token secret is on the clipboard.',
@@ -429,6 +450,8 @@ export const en = {
   'auth.passwordReset': 'The password of {username} was replaced.',
   'auth.tokenCreated': 'Created the token {name} for {owner}.',
   'auth.tokenRevoked': 'Revoked the token {name}.',
+  'auth.userDeleted': 'Deleted the identity {username} permanently.',
+  'auth.tokenDeleted': 'Deleted the token {name} permanently.',
   'auth.sessionEnded': 'Your session ended before this could be applied.',
 
   'help.auth.title': 'Authentication workflow',
@@ -439,7 +462,7 @@ export const en = {
   'help.auth.example':
     'Use Viewer for observation, Operator for routine bench work, and a narrowly scoped token for one automation.',
   'help.auth.changes':
-    'User changes apply on the next request; disabling a user also stops its sessions and tokens. Token secrets are shown only once, and revocation is permanent.',
+    'User changes apply on the next request; disabling a user keeps the record and stops its sessions and tokens. Deleting a user removes the record and its sessions, and is refused while it is the last enabled administrator or still owns a token. Token secrets are shown only once; revoking keeps the record and deleting removes it.',
   'help.auth.external':
     'Coordinate access-impacting changes and transfer passwords or token secrets only through an appropriate protected channel.',
   'help.auth.verify':

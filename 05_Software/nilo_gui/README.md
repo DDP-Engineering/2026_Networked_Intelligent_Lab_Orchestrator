@@ -194,11 +194,19 @@ all three requests with the credential already held.
 **Authentication** appears in the navigation only for an identity holding the
 administration permissions. It administers identities on one side and API tokens
 on the other. Identities can be created with one of the three fixed roles,
-re-roled, disabled, re-enabled, and have their password reset; they are never
-deleted, so audit records keep naming a real subject. Tokens can be created for
-an existing identity with a name, optional scopes and an optional expiry, and
-revoked. Disabling, resetting a password and revoking each ask for an explicit
+re-roled, disabled, re-enabled, have their password reset, and be deleted
+permanently. Tokens can be created for an existing identity with a name,
+optional scopes and an optional expiry, revoked, and deleted permanently.
+Disabling, resetting a password and revoking each ask for an explicit
 confirmation naming the subject.
+
+Disabling and revoking keep the record; permanent deletion removes it, and an
+identity's browser sessions with it. Each deletion asks for the exact username
+or token name to be typed back under a warning that it cannot be undone. The
+last enabled administrator cannot be deleted, disabled or demoted, and an
+identity that owns API tokens cannot be deleted until those tokens are deleted
+themselves — revoking them is not enough. Bench Core enforces all of this
+server-side; the dialog only says so first.
 
 A new token's secret is shown once, with a copy action and a statement that it
 cannot be retrieved later. Dismissing it or reloading the page does not bring it

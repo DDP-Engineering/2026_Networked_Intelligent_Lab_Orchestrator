@@ -15,6 +15,7 @@ import {
   ChangeRoleForm,
   ConfirmationForm,
   CreateIdentityForm,
+  PermanentDeletionForm,
   ResetPasswordForm,
 } from '../AdministrationForms';
 import { Modal } from '../Modal';
@@ -26,7 +27,8 @@ type Dialog =
   | { kind: 'create' }
   | { kind: 'role'; identity: BenchCoreIdentity }
   | { kind: 'enabled'; identity: BenchCoreIdentity; enabled: boolean }
-  | { kind: 'password'; identity: BenchCoreIdentity };
+  | { kind: 'password'; identity: BenchCoreIdentity }
+  | { kind: 'delete'; identity: BenchCoreIdentity };
 
 export interface UsersPageProps {
   client: BenchCoreClient;
@@ -59,6 +61,11 @@ export function UsersPage({
       if (error instanceof BenchCoreError && error.failure === 'unauthorized') {
         onSessionEnded();
         return t('auth.sessionEnded');
+      }
+      // One refusal is answered in the reader's language rather than with the
+      // appliance's English sentence, because it names the next thing to do.
+      if (error instanceof BenchCoreError && error.code === 'user_has_tokens') {
+        return t('auth.ownedTokensReason');
       }
       return error instanceof BenchCoreError
         ? error.detail
@@ -94,14 +101,19 @@ export function UsersPage({
     };
   }, [classify, client, credential]);
   const apply = useCallback(
-    async (change: () => Promise<void>, succeeded: string) => {
+    // `refresh` is cleared by the one change that ends the session applying it:
+    // re-reading the listing would then be a request the appliance is right to
+    // refuse, reported as a failure of a change that in fact succeeded.
+    async (change: () => Promise<void>, succeeded: string, refresh = true) => {
       setWorking(true);
       setFailure('');
       try {
         await change();
         setNotice(succeeded);
         setDialog(null);
-        await reload();
+        if (refresh) {
+          await reload();
+        }
       } catch (error) {
         setFailure(classify(error));
       } finally {
@@ -210,6 +222,19 @@ export function UsersPage({
                     reason: canManage ? undefined : unavailable,
                     danger: true,
                     onSelect: () => setDialog({ kind: 'password', identity }),
+                  },
+                  {
+                    // Bench Core owns both refusals; naming them here only
+                    // spares the operator a request that cannot succeed.
+                    label: t('auth.deleteUser'),
+                    disabled: !canManage || lastAdministrator,
+                    reason: !canManage
+                      ? unavailable
+                      : lastAdministrator
+                        ? t('auth.lastAdministratorDeleteReason')
+                        : undefined,
+                    danger: true,
+                    onSelect: () => setDialog({ kind: 'delete', identity }),
                   },
                 ];
                 return (
@@ -346,6 +371,42 @@ export function UsersPage({
             }
           />
         );
+      case 'delete':
+        return (
+          <PermanentDeletionForm
+            workflowHelp={
+              <WorkflowHelp prefix="help.auth" title={t('help.auth.title')} />
+            }
+            name={dialog.identity.username}
+            prefix="delete-user"
+            explanation={t('auth.deleteUserExplanation', {
+              username: dialog.identity.username,
+              role: dialog.identity.role,
+            })}
+            confirmLabel={t('auth.deleteUser')}
+            fieldLabel={t('auth.field.confirmUsername')}
+            fieldHelp={t('auth.help.confirmUsername')}
+            working={working}
+            failure={failure}
+            onDismiss={close}
+            onSubmit={() => {
+              const own = dialog.identity.username === session.username;
+              void apply(
+                async () => {
+                  await client.deleteIdentity(credential, dialog.identity.username);
+                  // Removing one's own identity ends the session that did it,
+                  // so the page returns to sign-in rather than reading on with
+                  // a credential the appliance no longer knows.
+                  if (own) {
+                    onSessionEnded();
+                  }
+                },
+                t('auth.userDeleted', { username: dialog.identity.username }),
+                !own,
+              );
+            }}
+          />
+        );
       case 'password':
         return (
           <ResetPasswordForm
@@ -384,5 +445,7 @@ function dialogTitle(dialog: Dialog, t: Translate) {
       });
     case 'password':
       return t('auth.dialog.resetPassword', { username: dialog.identity.username });
+    case 'delete':
+      return t('auth.dialog.deleteUser', { username: dialog.identity.username });
   }
 }

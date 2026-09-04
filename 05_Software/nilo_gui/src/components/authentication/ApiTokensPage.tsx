@@ -14,6 +14,7 @@ import { useTranslate } from '../../i18n/languages';
 import {
   ConfirmationForm,
   CreateTokenForm,
+  PermanentDeletionForm,
   TokenSecretDisclosure,
 } from '../AdministrationForms';
 import { Modal } from '../Modal';
@@ -24,6 +25,7 @@ import { AdministrationPanel, type Listing } from './AdministrationPanel';
 type Dialog =
   | { kind: 'create' }
   | { kind: 'revoke'; token: BenchCoreToken }
+  | { kind: 'delete'; token: BenchCoreToken }
   | { kind: 'secret'; name: string; secret: string };
 export interface ApiTokensPageProps {
   client: BenchCoreClient;
@@ -191,6 +193,15 @@ export function ApiTokensPage({
                     danger: true,
                     onSelect: () => setDialog({ kind: 'revoke', token }),
                   },
+                  {
+                    // Deletion is offered for every state, because what it
+                    // removes is the record rather than the token's usability.
+                    label: t('auth.deleteToken'),
+                    disabled: !canManage,
+                    reason: canManage ? undefined : unavailable,
+                    danger: true,
+                    onSelect: () => setDialog({ kind: 'delete', token }),
+                  },
                 ];
                 return (
                   <Fragment key={token.id}>
@@ -311,6 +322,35 @@ export function ApiTokensPage({
             }
           />
         );
+      case 'delete':
+        return (
+          <PermanentDeletionForm
+            workflowHelp={
+              <WorkflowHelp prefix="help.auth" title={t('help.auth.title')} />
+            }
+            name={dialog.token.name}
+            prefix="delete-token"
+            explanation={t('auth.deleteTokenExplanation', {
+              name: dialog.token.name,
+              owner: dialog.token.owner,
+            })}
+            confirmLabel={t('auth.deleteToken')}
+            fieldLabel={t('auth.field.confirmTokenName')}
+            fieldHelp={t('auth.help.confirmTokenName')}
+            working={working}
+            failure={failure}
+            onDismiss={close}
+            onSubmit={() =>
+              void apply(
+                async () => {
+                  await client.deleteToken(credential, dialog.token.id);
+                  return null;
+                },
+                t('auth.tokenDeleted', { name: dialog.token.name }),
+              )
+            }
+          />
+        );
       case 'secret':
         return (
           <TokenSecretDisclosure
@@ -336,6 +376,8 @@ function dialogTitle(dialog: Dialog, t: Translate) {
       return t('auth.dialog.newToken');
     case 'revoke':
       return t('auth.dialog.revokeToken', { name: dialog.token.name });
+    case 'delete':
+      return t('auth.dialog.deleteToken', { name: dialog.token.name });
     case 'secret':
       return t('auth.dialog.secret', { name: dialog.name });
   }

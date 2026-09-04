@@ -54,6 +54,7 @@ import {
   STATUS_PATH,
   TOKENS_PATH,
   identityPath,
+  identityResourcePath,
   interfacePreviewPath,
   networkOperationPath,
   networkStatisticsPath,
@@ -71,6 +72,7 @@ import {
   parseStatusBody,
   parseTokensBody,
   resourceUrl,
+  tokenResourcePath,
   tokenRevocationPath,
   type BenchCoreIdentity,
   type BenchCoreRole,
@@ -295,10 +297,26 @@ export interface BenchCoreClient {
     username: string,
     password: string,
   ): Promise<void>;
+  /**
+   * Remove one identity permanently.
+   *
+   * This is not the disable above with a stronger word: nothing it removes can
+   * be restored, and Bench Core refuses it while the identity is the last
+   * enabled administrator or still owns any API token.
+   */
+  deleteIdentity(credential: Credential, username: string): Promise<void>;
 
   listTokens(credential: Credential): Promise<TokenInventory>;
   createToken(credential: Credential, token: NewToken): Promise<IssuedToken>;
   revokeToken(credential: Credential, id: string): Promise<void>;
+  /**
+   * Remove one API token record permanently.
+   *
+   * Revoking stops the secret and keeps the record; this removes the record,
+   * whatever state it was in. The two are separate operations because they
+   * answer different questions.
+   */
+  deleteToken(credential: Credential, id: string): Promise<void>;
 }
 
 export interface BenchCoreClientOptions {
@@ -631,6 +649,12 @@ export function createBenchCoreClient(
         method: 'PUT',
         body: { password },
       }),
+    deleteIdentity: (credential, username) =>
+      exchange<void>({
+        path: identityResourcePath(username),
+        credential,
+        method: 'DELETE',
+      }),
 
     listTokens: (credential) =>
       exchange({ path: TOKENS_PATH, credential, parse: parseTokensBody }),
@@ -649,6 +673,8 @@ export function createBenchCoreClient(
       }),
     revokeToken: (credential, id) =>
       exchange<void>({ path: tokenRevocationPath(id), credential, method: 'POST' }),
+    deleteToken: (credential, id) =>
+      exchange<void>({ path: tokenResourcePath(id), credential, method: 'DELETE' }),
   };
 }
 

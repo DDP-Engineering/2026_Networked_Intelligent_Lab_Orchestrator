@@ -197,6 +197,24 @@ func handleResetPassword(service *identity.Service) http.HandlerFunc {
 	}
 }
 
+// handleDeleteUser removes one identity permanently. It carries no body: the
+// only thing it needs is the subject in the path and the actor in the context,
+// and a body would be one more place for a client to try to name an actor.
+func handleDeleteUser(service *identity.Service) http.HandlerFunc {
+	return func(response http.ResponseWriter, request *http.Request) {
+		actor, username, ok := administrativeSubject(response, request)
+		if !ok {
+			return
+		}
+		if err := service.DeleteUserAs(request.Context(), actor, username); err != nil {
+			writeAdministrationFailure(response, err)
+			return
+		}
+		// No body: the identity this would have described is gone.
+		response.WriteHeader(http.StatusNoContent)
+	}
+}
+
 func handleListTokens(service *identity.Service) http.HandlerFunc {
 	return func(response http.ResponseWriter, request *http.Request) {
 		views, err := service.ListTokens(request.Context())
@@ -266,6 +284,32 @@ func handleRevokeToken(service *identity.Service) http.HandlerFunc {
 			return
 		}
 		if err := service.RevokeTokenAs(request.Context(), actor, request.PathValue("id")); err != nil {
+			writeAdministrationFailure(response, err)
+			return
+		}
+		response.WriteHeader(http.StatusNoContent)
+	}
+}
+
+// handleDeleteToken removes one API token record permanently, whether it is
+// active, expired or already revoked. Revocation remains a separate route:
+// it keeps the record and its history, and this one does not.
+func handleDeleteToken(service *identity.Service) http.HandlerFunc {
+	return func(response http.ResponseWriter, request *http.Request) {
+		actor, ok := actorFrom(request.Context())
+		if !ok {
+			writeUnauthorized(response)
+			return
+		}
+		if err := service.DeleteTokenAs(request.Context(), actor, request.PathValue("id")); err != nil {
+			// The shared mapping says "no active token", which is right for
+			// revocation and wrong here: this route accepts an inactive one and
+			// is only refused when the record does not exist at all.
+			if errors.Is(err, auth.ErrTokenNotFound) {
+				writeRefusal(response, http.StatusNotFound, "token_not_found",
+					"no API token carries that identifier")
+				return
+			}
 			writeAdministrationFailure(response, err)
 			return
 		}
@@ -393,6 +437,7 @@ const (
 	enabledMessage      = "enabled must be true or false"
 	scopeMessage        = "every scope must name a permission this appliance defines"
 	expiryMessage       = "expiry must be an RFC 3339 instant in the future"
+	ownedTokensMessage  = "delete every API token this identity owns before deleting the identity"
 )
 
 func passwordMessage() string {
@@ -414,6 +459,8 @@ func writeAdministrationFailure(response http.ResponseWriter, err error) {
 	case errors.Is(err, auth.ErrTokenNotFound):
 		writeRefusal(response, http.StatusNotFound, "token_not_found",
 			"no active API token carries that identifier")
+	case errors.Is(err, identity.ErrUserHasTokens):
+		writeRefusal(response, http.StatusConflict, "user_has_tokens", ownedTokensMessage)
 	case errors.Is(err, identity.ErrLastAdministrator):
 		writeRefusal(response, http.StatusConflict, "last_administrator",
 			"the last enabled administrator must remain an enabled administrator")

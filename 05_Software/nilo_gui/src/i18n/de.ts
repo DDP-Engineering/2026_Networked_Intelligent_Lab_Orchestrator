@@ -311,7 +311,7 @@ export const de: Catalogue = {
   'auth.usersTitle': 'Authentifizierung / Benutzer',
   'auth.tokensTitle': 'Authentifizierung / API-Token',
   'auth.tokensNote':
-    'Token sind Anmeldedaten. Ablauf oder Widerruf verhindert ihre weitere Verwendung.',
+    'Token sind Anmeldedaten. Ablauf oder Widerruf verhindert die weitere Verwendung und behält den Datensatz; das endgültige Löschen entfernt den Datensatz selbst.',
   'auth.viewActivity': 'Aktivitäten anzeigen',
   'auth.column.created': 'Erstellt',
   'auth.expired': 'abgelaufen',
@@ -321,6 +321,10 @@ export const de: Catalogue = {
   'auth.permission.tokensManage': 'Ihre Sitzung enthält tokens.manage.all nicht.',
   'auth.lastAdministratorReason':
     'Der letzte aktivierte Administrator muss aktiviert bleiben.',
+  'auth.lastAdministratorDeleteReason':
+    'Der letzte aktivierte Administrator kann nicht gelöscht werden. Geben Sie zuerst einer anderen Identität die Administratorrolle und aktivieren Sie sie.',
+  'auth.ownedTokensReason':
+    'Eine Identität mit eigenen API-Token kann nicht gelöscht werden. Löschen Sie diese Token zuerst auf der Seite API-Token; ein Widerruf genügt nicht.',
   'auth.revocationUnavailable':
     'Dieses Token ist bereits abgelaufen oder widerrufen und kann nicht erneut widerrufen werden.',
   'auth.help.username':
@@ -339,11 +343,15 @@ export const de: Catalogue = {
     'Keine Berechtigung auswählen, um die gesamte aktuelle Rolle des Eigentümers zu verwenden; ausgewählte Berechtigungen schränken sie nur ein.',
   'auth.help.expiry':
     'Nach diesem Zeitpunkt wird das Token automatisch abgelehnt. Leer bedeutet kein automatischer Ablauf.',
+  'auth.help.confirmUsername':
+    'Wiederholen Sie den Benutzernamen genau. Vorher wird nichts gesendet, damit ein Fehlklick nicht die falsche Identität löscht.',
+  'auth.help.confirmTokenName':
+    'Wiederholen Sie den Tokennamen genau. Vorher wird nichts gesendet, damit ein Fehlklick nicht das falsche Token löscht.',
   'auth.roleMatrix':
     'Viewer: Inventar, Netzwerk und Status lesen. Operator: Viewer plus eigene Token. Administrator: gesamte Verwaltung, Aktivitäten, Diagnose, Netzwerk und VPN.',
   'auth.signedInAs': 'Angemeldet als {username} ({role}).',
   'auth.identitiesNote':
-    'Identitäten werden deaktiviert statt gelöscht, damit Auditeinträge weiterhin ein reales Subjekt benennen.',
+    'Deaktivieren behält die Identität und verhindert die Anmeldung; das endgültige Löschen entfernt den Datensatz selbst und lässt sich nicht rückgängig machen.',
   'auth.csrfMissing':
     'Dieser Browser besitzt das mit der Sitzung ausgegebene CSRF-Token nicht mehr, daher lehnt Bench Core jede Änderung ab. Melden Sie sich ab und erneut an.',
   'auth.users': 'Benutzer',
@@ -374,6 +382,8 @@ export const de: Catalogue = {
   'auth.disable': 'Deaktivieren',
   'auth.enable': 'Aktivieren',
   'auth.resetPassword': 'Passwort zurücksetzen',
+  'auth.deleteUser': 'Endgültig löschen',
+  'auth.deleteToken': 'Endgültig löschen',
   'auth.revoke': 'Widerrufen',
   'auth.revokeToken': 'Token widerrufen',
   'auth.createIdentity': 'Identität anlegen',
@@ -388,6 +398,8 @@ export const de: Catalogue = {
   'auth.dialog.enableUser': '{username} aktivieren',
   'auth.dialog.disableUser': '{username} deaktivieren',
   'auth.dialog.resetPassword': 'Passwort von {username} zurücksetzen',
+  'auth.dialog.deleteUser': '{username} endgültig löschen',
+  'auth.dialog.deleteToken': '{name} endgültig löschen',
   'auth.dialog.newToken': 'Neues API-Token',
   'auth.dialog.revokeToken': '{name} widerrufen',
   'auth.dialog.secret': 'Das Geheimnis für {name}',
@@ -399,6 +411,8 @@ export const de: Catalogue = {
   'auth.field.name': 'Name',
   'auth.field.scopes': 'Berechtigungen',
   'auth.field.expires': 'Ablauf (optional)',
+  'auth.field.confirmUsername': 'Benutzernamen bestätigen',
+  'auth.field.confirmTokenName': 'Tokennamen bestätigen',
   'auth.passwordMismatch': 'Die beiden Passwörter stimmen nicht überein.',
   'auth.expiryUnreadable':
     'Der Ablaufzeitpunkt ist kein Datum mit Uhrzeit, das diese Oberfläche lesen kann.',
@@ -414,6 +428,14 @@ export const de: Catalogue = {
     '{username} wieder aktivieren? Die Identität kann sich sofort wieder anmelden.',
   'auth.revokeExplanation':
     '{name} widerrufen, Eigentümer {owner}? Das Geheimnis funktioniert ab der nächsten Anfrage nicht mehr und lässt sich nicht wiederherstellen.',
+  'auth.deleteWarning':
+    'Dies lässt sich nicht rückgängig machen. Der Datensatz wird endgültig aus dem Speicher entfernt, nur die Aktivitätshistorie benennt ihn danach noch.',
+  'auth.deleteTypeExactly':
+    'Geben Sie {name} genau so ein, um das Löschen freizugeben.',
+  'auth.deleteUserExplanation':
+    'Die Identität {username} ({role}) endgültig löschen? Der Datensatz wird aus dem Speicher entfernt und jede Browsersitzung dieser Identität endet sofort. NILO lehnt dies ab, solange es der letzte aktivierte Administrator ist oder solange die Identität noch API-Token besitzt, auch widerrufene.',
+  'auth.deleteTokenExplanation':
+    'Das Token {name}, Eigentümer {owner}, endgültig löschen? Der Datensatz und sein bisheriger Zustand werden entfernt und das Geheimnis funktioniert sofort nicht mehr. Ein Widerruf stoppt stattdessen das Geheimnis und behält den Datensatz.',
   'auth.secretExplanation':
     'Dies ist das einzige Mal, dass das Geheimnis für {name} angezeigt wird. Bench Core speichert davon nur eine Einwegprüfsumme, es lässt sich später nicht mehr abrufen. Kopieren Sie es jetzt.',
   'auth.secretCopied': 'Das Token-Geheimnis liegt in der Zwischenablage.',
@@ -426,6 +448,8 @@ export const de: Catalogue = {
   'auth.passwordReset': 'Das Passwort von {username} wurde ersetzt.',
   'auth.tokenCreated': 'Token {name} für {owner} angelegt.',
   'auth.tokenRevoked': 'Token {name} widerrufen.',
+  'auth.userDeleted': 'Identität {username} endgültig gelöscht.',
+  'auth.tokenDeleted': 'Token {name} endgültig gelöscht.',
   'auth.sessionEnded': 'Ihre Sitzung endete, bevor dies angewendet werden konnte.',
 
   'help.auth.title': 'Arbeitsablauf für Authentifizierung',
@@ -436,7 +460,7 @@ export const de: Catalogue = {
   'help.auth.example':
     'Viewer zum Beobachten, Operator für reguläre Laborarbeit und ein eng begrenztes Token für eine Automatisierung verwenden.',
   'help.auth.changes':
-    'Benutzeränderungen gelten bei der nächsten Anfrage; das Deaktivieren beendet auch Sitzungen und Token. Token-Geheimnisse erscheinen nur einmal, ein Widerruf ist dauerhaft.',
+    'Benutzeränderungen gelten bei der nächsten Anfrage; das Deaktivieren behält den Datensatz und beendet Sitzungen und Token. Das Löschen entfernt Datensatz und Sitzungen und wird abgelehnt, solange es der letzte aktivierte Administrator ist oder noch Token gehören. Token-Geheimnisse erscheinen nur einmal; Widerrufen behält den Datensatz, Löschen entfernt ihn.',
   'help.auth.external':
     'Zugriffsänderungen abstimmen und Passwörter oder Token-Geheimnisse nur über einen geeigneten geschützten Kanal übermitteln.',
   'help.auth.verify':
