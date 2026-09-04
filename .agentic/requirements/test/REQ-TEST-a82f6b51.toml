@@ -1,0 +1,32 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-TEST-a82f6b51"
+
+title = "Record hardware and device acceptance separately from simulated results"
+
+status = "draft"
+
+requirement = """
+Evidence for Raspberry Pi, physical adapter, real Modbus server and vendor engineering-tool acceptance shall be recorded as separate observations naming the actual hardware and tool, and a case not performed shall be recorded as unverified rather than inferred from a simulated or containerized result.
+"""
+
+verification = "Inspection: read the task journal and the implementation status document and confirm every hardware acceptance case is either an observation naming the device and tool used, or an explicit unverified entry."
+
+affected_paths = [
+    "06_SoftwareDocu/Network_Service_Implementation_Status.md",
+]
+
+linked_tests = []
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = ""
+
+created = 2026-09-03
+updated = 2026-09-04

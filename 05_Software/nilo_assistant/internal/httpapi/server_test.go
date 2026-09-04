@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"nilo.local/nilo/internal/buildinfo"
+	"nilo.local/nilo/internal/network"
 	"nilo.local/nilo/internal/simulation"
 )
 
@@ -96,10 +97,24 @@ func TestStatusReturnsVersionedSimulationBuildInformation(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewCatalog: %v", err)
 	}
+	provider := network.NewSimulatedProvider()
+	networkService, err := network.NewService(network.ServiceOptions{Provider: provider})
+	if err != nil {
+		t.Fatalf("network.NewService: %v", err)
+	}
+	operations, err := network.NewOperationManager(network.OperationManagerOptions{
+		Changer: network.NewSimulatedChanger(), Observer: network.NewProviderObserver(provider),
+		Now: time.Now, NewID: func() string { return "operation-1" },
+	})
+	if err != nil {
+		t.Fatalf("network.NewOperationManager: %v", err)
+	}
 	handler, err := NewHandler(HandlerOptions{
 		Identity:       f.service,
 		Profile:        "simulation",
 		Catalog:        catalog,
+		Network:        networkService,
+		Operations:     operations,
 		CookieSecurity: CookieDevelopmentLocalhost,
 		Build: buildinfo.Info{
 			Name: "nilo", Version: "test-version", IntegrationProtocol: "nilo.integration/1",

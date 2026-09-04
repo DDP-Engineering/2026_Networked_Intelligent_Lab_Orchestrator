@@ -41,10 +41,13 @@ func TestOpenConfiguresDurableDatabaseAndMigratesAllFoundationTables(t *testing.
 	}
 
 	wantTables := []string{
-		"app_policies", "approval_records", "artifacts", "audit_events",
-		"config_versions", "device_policies", "mcp_tokens", "operation_policy_overrides",
-		"operation_requests", "policy_snapshots", "resource_leases", "schema_migrations", "sessions",
-		"user_sessions", "users",
+		"activity_policy", "app_policies", "appliance_identity", "approval_records", "artifacts",
+		"audit_events", "audit_sequence",
+		"config_versions", "device_networks", "device_policies", "diagnostic_sessions", "mcp_tokens", "network_interface_settings", "network_operations",
+		"network_traffic_minute",
+		"operation_policy_overrides",
+		"operation_requests", "policy_snapshots", "resource_leases", "retention_watermarks", "schema_migrations", "sessions",
+		"user_sessions", "users", "vpn_profiles",
 	}
 	if gotTables := nonInternalTableNames(t, db.SQL()); !slices.Equal(gotTables, wantTables) {
 		t.Fatalf("non-internal tables = %q, want %q", gotTables, wantTables)

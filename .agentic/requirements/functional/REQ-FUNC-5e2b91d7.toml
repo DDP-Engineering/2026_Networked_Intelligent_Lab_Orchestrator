@@ -1,0 +1,66 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-FUNC-5e2b91d7"
+
+title = "Apply and persist static or automatic IPv4 settings for a managed interface"
+
+status = "active"
+
+requirement = """
+When an administrator acknowledges an interface settings change, the appliance shall apply the requested IPv4 method, address, prefix, gateway and DNS servers to the NILO-owned connection and persist that intent so it survives a restart.
+"""
+
+verification = "A service and NetworkManager fixture test applies a static address and a DHCP method in turn, reads the applied connection back, restarts the service and reads the same intent."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/interface_settings.go",
+    "05_Software/nilo_assistant/internal/network/simulation_settings.go",
+    "05_Software/nilo_assistant/internal/network/simulation.go",
+    "05_Software/nilo_assistant/internal/network/appliance.go",
+    "05_Software/nilo_assistant/internal/network/appliance_settings.go",
+    "05_Software/nilo_assistant/internal/network/operation.go",
+    "05_Software/nilo_assistant/internal/network/wireguard.go",
+    "05_Software/nilo_assistant/internal/nethelper/settings_engine.go",
+    "05_Software/nilo_assistant/internal/nethelper/engine.go",
+    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
+    "05_Software/nilo_assistant/internal/nethelper/client.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_settings_linux.go",
+    "05_Software/nilo_assistant/internal/httpapi/network_operations.go",
+    "05_Software/nilo_assistant/internal/httpapi/network.go",
+    "05_Software/nilo_assistant/internal/httpapi/server.go",
+    "05_Software/nilo_assistant/cmd/nilo/network_settings.go",
+    "05_Software/nilo_assistant/cmd/nilo/network.go",
+    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/nilo_assistant/internal/app/app.go",
+    "05_Software/nilo_assistant/internal/network/interface_settings_test.go",
+    "05_Software/nilo_assistant/internal/network/simulation_settings_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/network_settings_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/settings_engine_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_settings_linux_test.go",
+    "05_Software/nilo_assistant/cmd/nilo/network_vpn_test.go",
+    "05_Software/nilo_gui/src/api/settings.ts",
+    "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.tsx",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/interface_settings_test.go::TestInterfaceSettingsValidateEveryField",
+    "05_Software/nilo_assistant/internal/network/simulation_settings_test.go::TestSimulationAppliesAndPersistsInterfaceSettings",
+    "05_Software/nilo_assistant/internal/httpapi/network_settings_test.go::TestInterfaceSettingsRouteAppliesAndReportsTheBinding",
+    "05_Software/nilo_assistant/internal/httpapi/network_settings_test.go::TestSettingsRoutesAreAdministratorOnly",
+    "05_Software/nilo_assistant/internal/nethelper/settings_engine_test.go::TestSettingsChangeIsCheckpointedAndBoundToTheAdapter",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_settings_linux_test.go::TestNetworkManagerSettingsSystem",
+    "05_Software/nilo_assistant/cmd/nilo/network_vpn_test.go::TestNetworkVPNCommandsUsePreviewAndSeparateAcknowledgement",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = ""
+
+created = 2026-09-03
+updated = 2026-09-04

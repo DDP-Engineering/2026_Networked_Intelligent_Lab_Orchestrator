@@ -1,0 +1,35 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-SEC-3f8c90a2"
+
+title = "Terminate established flows when a device network is disabled, deleted or restricted"
+
+status = "active"
+
+requirement = """
+When a device network is disabled, deleted or narrowed by a service restriction, the appliance shall terminate the established connections its previous grant allowed, while leaving connections unrelated to that device network in place.
+"""
+
+verification = "An isolated Linux test holds a long-lived TCP flow through the device network and another unrelated flow, disables the device network, and asserts the first drops and the second survives."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/nethelper/nftables_render.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/nethelper/nftables_linux_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/nftables_render_test.go",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = "Deleting a NAT rule alone leaves the existing conntrack mapping working."
+
+created = 2026-09-03
+updated = 2026-09-04

@@ -21,13 +21,14 @@ import type { MessageKey } from './i18n/en';
 import { AppShell } from './components/shell/AppShell';
 import { useWorkspace } from './components/shell/useWorkspace';
 import { SignInScreen, type SignInRefusal } from './components/SignInScreen';
-import type { ApiMode } from './config/environment';
+import type { ApiMode, RuntimeProfile } from './config/environment';
 
 export interface AppProps {
   /** The Bench Core client this session talks to. */
   client: BenchCoreClient;
   /** Whether that client reaches a real backend or the contract mock. */
   apiMode: ApiMode;
+  runtimeProfile?: RuntimeProfile;
   /**
    * The Bench Core endpoint to show the developer. Requests themselves are
    * origin-relative and forwarded there, so this is a label, not a target.
@@ -117,7 +118,7 @@ async function settle<T>(request: Promise<T>): Promise<Resource<T>> {
  * cookie. Every screen keeps the SIMULATION marking and the physical-equipment
  * boundary statement visible.
  */
-function App({ client, apiMode, endpoint }: AppProps) {
+function App({ client, apiMode, endpoint, runtimeProfile = 'simulation' }: AppProps) {
   const t = useTranslate();
   const [shell, setShell] = useState<Shell>({ phase: 'restoring' });
   // Owned here rather than in the shell so a refresh, which passes through the
@@ -275,6 +276,7 @@ function App({ client, apiMode, endpoint }: AppProps) {
       <SignInScreen
         endpoint={endpoint}
         apiMode={apiMode}
+        runtimeProfile={runtimeProfile}
         notice={shell.notice}
         working={shell.working}
         refusal={shell.refusal}
@@ -291,16 +293,18 @@ function App({ client, apiMode, endpoint }: AppProps) {
       <section className="card" aria-labelledby="connection-title">
         <div className="card-head">
           <p className="eyebrow">{t('app.name')}</p>
-          <span className="card-sim">
-            <span
-              className="sim-badge"
-              role="status"
-              aria-label={t('top.simulation.label')}
-            >
-              <span className="state-dot state-warn" aria-hidden="true" />
-              {t('top.simulation')}
+          {runtimeProfile === 'simulation' && (
+            <span className="card-sim">
+              <span
+                className="sim-badge"
+                role="status"
+                aria-label={t('top.simulation.label')}
+              >
+                <span className="state-dot state-warn" aria-hidden="true" />
+                {t('top.simulation')}
+              </span>
             </span>
-          </span>
+          )}
         </div>
 
         {shell.phase === 'refused' ? (
@@ -342,7 +346,15 @@ function App({ client, apiMode, endpoint }: AppProps) {
           </>
         )}
 
-        <p className="card-boundary">{t('boundary.statement')}</p>
+        <p className="card-boundary">
+          {t(
+            runtimeProfile === 'simulation'
+              ? 'boundary.statement'
+              : runtimeProfile === 'appliance'
+                ? 'boundary.appliance'
+                : 'boundary.unknown',
+          )}
+        </p>
       </section>
     </div>
   );

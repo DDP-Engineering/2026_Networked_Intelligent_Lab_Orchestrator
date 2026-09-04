@@ -6,7 +6,7 @@ The browser GUI foundation provides NILO's native Windows development
 interface while keeping the deployed appliance boundary static. It gives
 developers a locked, testable React and TypeScript project in which a human
 signs in with a username and password over the server-managed browser session,
-reads the backend status with the simulated integration and device inventory,
+reads backend status and the selected runtime's integration and device inventory,
 and — as an administrator — administers identities and API tokens, without ever
 suggesting that a simulated result came from physical equipment.
 
@@ -58,15 +58,25 @@ a direct cross-origin call would be preflighted, and Bench Core answers no
 `OPTIONS` request and sends no CORS headers. An appliance serves the built
 assets from Bench Core itself, where the same paths are already same-origin.
 
+## Runtime presentation
+
+Built assets served by Bench Core receive a `nilo-runtime-profile` HTML meta tag.
+The startup entry point uses it to label sign-in/loading/failure screens; mock
+and Vite development retain simulation defaults, while an unlabelled production
+page reports unknown runtime. Authenticated status remains authoritative for the
+workspace. Appliance pages show live networking and empty instrument inventory,
+and the production sign-in endpoint label uses the serving origin. The metadata
+contains no network inventory and grants no permissions.
+
 ## Key behaviors
 
 - `REQ-PLAT-e1a2a591` - pins direct and transitive dependencies with exact
   versions, integrity metadata, and a static Vite production build.
 - `REQ-TEST-031b1658` - includes frontend formatting, linting, tests, and build
   in the Windows repository gates.
-- `REQ-UX-188a4860` - keeps the NILO development identity, the SIMULATION
-  runtime profile, and the physical-equipment boundary statement visible on
-  every screen.
+- `REQ-UX-188a4860` - keeps one persistent runtime badge after authentication;
+  sign-in explains the development boundary;
+  appliance and unknown runtimes receive truthful labels instead.
 - `REQ-FUNC-8a5491d8` - requests the versioned status resource with the entered
   bearer token and returns the reported profile, status, simulation flag, and
   build identity as typed values.
@@ -179,6 +189,7 @@ flowchart LR
     catalogue["i18n: en, de, ro over one key set"]
     prefs["preferences/store: nilo.theme and nilo.language"]
     admin["AuthenticationPage: users and API tokens"]
+    netpage["NetworkPage: interfaces, WireGuard, statistics, controls, countdown"]
     modal["Modal: focused administrative forms"]
     env["config/environment: mode and base URL"]
     client["api/client: resources, session and administration"]
@@ -192,6 +203,8 @@ flowchart LR
     shell --> sidenav
     shell --> pages
     pages --> admin
+    pages --> netpage
+    netpage --> client
     admin --> modal
     toprow --> tokens
     toprow --> catalogue
@@ -221,13 +234,31 @@ flowchart LR
     browser --> proxy
 ```
 
+`AppShell` binds the Network read/change callbacks and refreshes status,
+WireGuard and browser reachability separately. `NetworkPage` polls active
+operations, renders a countdown and uses `NetworkConfirmation` for native
+modal focus containment. `WireGuardPanel` proposes profile changes without
+applying them; acknowledgement is separate. `api/wireguard.ts` validates the
+wire contract and exposes only safe profile metadata. `e2e/network.spec.ts`
+also covers `readiness_only`: the panel reports readiness without offering profile
+controls or claiming an empty inventory, and the summary keeps tunnel and handshake
+state unreported. The marker is optional for older/full responses. The same spec
+also verifies acknowledged tool installation, `InstallationProgress` phases,
+disabled competing actions and terminal success. An optional operation `progress`
+string is parsed at the API boundary; no raw package command output is displayed.
+The install capability is independent of profile-management readiness, including
+when kernel evidence is unknown. Actual APT behavior has separate Linux tests.
+The spec
+exercises the real Windows-browser/WSL2 flow including the full 120-second
+rollback window. Browser mock parity and operation reattachment after reload
+remain unfinished, as listed in the Network implementation status document.
+
 `App` owns the whole conversation: which credential is in use, who it belongs
 to, and which page is open. Its shell is `restoring`, `signed-out`,
 `connecting`, `refused`, or `active`. Every page load starts in `restoring`,
 because the only way to learn whether somebody is signed in is to ask Bench Core
-who the browser's cookies belong to. Nothing outside `api/contract.ts` knows the
-wire field names, and only `AuthenticationPage` calls the network besides the
-shell.
+who the browser's cookies belong to. The API adapters own wire parsing; pages receive typed values and callbacks.
+Network changes carry only their typed request parameters to those adapters.
 
 Hiding the Authentication navigation entry is presentation, never a permission:
 Bench Core authorizes every request on its own, so an identity that reaches the
@@ -242,6 +273,10 @@ from an unusable device inventory while the status and the other inventory stay
 visible.
 
 ## Files
+
+- `src/api/wireguard.ts` - bounded readiness/profile parsing and typed change requests.
+- `src/components/network/{WireGuardPanel,NetworkConfirmation}.tsx` - profile controls and native acknowledgement modal.
+- `e2e/network.spec.ts` - isolated real-backend Network browser scenarios.
 
 - `05_Software/nilo_gui/package.json` and `package-lock.json` - exact commands,
   dependency versions, transitive resolution, and integrity hashes.
@@ -327,3 +362,38 @@ visible.
 - `05_Software/nilo_gui/README.md` - exact local restore, development, quality,
   build, configuration, and authentication commands.
 - `05_Software/scripts/aegis_test.py` - Windows repository-gate integration.
+
+## Compact Network overview (2026-09-03)
+
+The authenticated shell uses one SIM/LIVE badge, without a footer disclaimer. Network lists show addresses and gateways, plus WireGuard configured addresses and peer endpoints. The API parser retains only public profile metadata. DNS, routes, handshake and readiness diagnostics are collapsed; Import profile opens the form. Completed notices are dismissible; pending confirmation, rollback failures and stale data remain explicit. Gateway fields are additive; an older running backend leaves them unreported until restarted. Do not restart a user simulation session merely to populate these fields: simulated profiles are in memory.
+
+## Device networks, adapter configuration and Activity (2026-09-04)
+
+- `src/api/devicenetworks.ts`, `src/api/activity.ts`, `src/api/settings.ts`
+  parse the device-network, activity/diagnostics and adapter-settings resources;
+  `contract.ts` gained `adapter_id`, `ssid` and `settings` on an interface, the
+  operations listing, and the `activity.read`, `activity.export` and
+  `diagnostics.manage` permissions; `wireguard.ts` gained the `rename` change.
+  The client exposes one method per route and `exportActivity` returns the
+  export as the text the appliance wrote.
+- `src/api/mock.ts` answers every new route through the same acknowledged
+  lifecycle, keeps device networks, sessions, the policy and an activity
+  history in memory, and gives device-network and Wi-Fi changes a confirmation
+  window as the appliance does.
+- `components/network/DeviceNetworksPanel.tsx`: table (intent and observation
+  are separate columns), editor dialog, enable/disable/delete through previews,
+  check and instructions dialogs, activity link narrowed to the network.
+  `InterfaceSettingsDialog.tsx`: addressing form and, on a wireless adapter,
+  scan and join with a password that is typed once and never displayed.
+  `WireGuardPanel.tsx`: rename in the profile details.
+- `pages/ActivityPage.tsx`: filters as a responsive grid, server paging by
+  cursor, retained window and logging health, JSONL/CSV export, and the
+  diagnostics section (sessions with fixed scopes and durations, the retention
+  policy). `shell/pages.ts` adds the `activity` core page after Network, shown
+  to an identity holding `activity.read`; `AppShell` keeps the filter a Network
+  page link chose and remounts the page with it.
+- `pages/NetworkPage.tsx` reads `GET /api/v1/network/operations` on mount and
+  picks up a change still applying or awaiting confirmation; a refused preview
+  is shown with the appliance's reason rather than as an outage.
+- Catalogues: 154 keys added to en, de and ro; `messages.test.ts` lists the
+  words the languages share.

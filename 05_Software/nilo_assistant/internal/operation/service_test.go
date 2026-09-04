@@ -572,6 +572,13 @@ func (repository *memoryAudit) List(context.Context, audit.Filter) ([]audit.Even
 	return append([]audit.Event(nil), repository.events...), nil
 }
 
+// PurgeBefore exists because retention is part of the repository contract. This
+// fixture keeps every event for the length of one test, so there is nothing to
+// expire and it reports that honestly rather than pretending to sweep.
+func (repository *memoryAudit) PurgeBefore(context.Context, audit.Category, time.Time, int) (int, error) {
+	return 0, nil
+}
+
 type fakeRunner struct {
 	mu           sync.Mutex
 	execute      func(context.Context, protocol.ExecuteRequest, protocol.EventSink) (protocol.ExecuteResult, error)

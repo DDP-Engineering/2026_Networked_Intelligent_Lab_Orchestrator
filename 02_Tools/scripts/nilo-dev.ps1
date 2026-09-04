@@ -203,7 +203,11 @@ function Start-Backend {
         "mkdir -p $directory/bin",
         "cd $assistant",
         "../../02_Tools/env/with-tools.sh go build -o $binary ./cmd/nilo",
-        ("$binary serve --profile simulation --scenario {0} --data-dir {1} --bind 127.0.0.1:{2}" -f `
+        # --development-administrator creates a first administrator with a fixed,
+        # published password so a developer can sign in immediately. Bench Core
+        # refuses the flag on any profile but simulation, and it never touches an
+        # administrator that already exists.
+        ("$binary serve --profile simulation --scenario {0} --data-dir {1} --bind 127.0.0.1:{2} --development-administrator" -f `
                 $settings.Scenario, $directory, $settings.BackendPort)
     ) -join ' && '
     $script += "`nprintf '\n[nilo-dev] Bench Core has stopped. Press Enter to close this window.\n'`nread _"
@@ -332,10 +336,18 @@ function Write-StartSummary {
     Write-Host "frontend port: $($settings.FrontendPort)"
     Write-Host "backend endpoint: http://127.0.0.1:$($settings.BackendPort)"
     Write-Host "browser URL: $($endpoints.Frontend)"
+    Write-Host ''
+    Write-Host 'Sign in with the development administrator:'
+    Write-Host '  username: admin'
+    Write-Host '  password: admin_password'
+    Write-Host 'It is created on first start, only on the simulation profile, and only'
+    Write-Host 'when no administrator exists yet. It is never created on any other profile.'
     if ($DataDirectory) {
+        Write-Host ''
         Write-Host "backend data directory (WSL Linux filesystem): $DataDirectory"
         Write-Host ''
-        Write-Host 'Issue a development bearer token to paste into the interface:'
+        Write-Host 'A development bearer token, if you want one instead, reads the bench at'
+        Write-Host 'the Viewer level and carries no management permission:'
         Write-Host "  $(Get-TokenCommand -DataDirectory $DataDirectory)"
         Write-Host 'This command never stores or prints a token itself.'
     }

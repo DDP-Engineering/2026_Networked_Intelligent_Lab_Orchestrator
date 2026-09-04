@@ -1,0 +1,52 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-SEC-c62481fe"
+
+title = "Keep network secrets out of every response, log, audit record and export"
+
+status = "draft"
+
+requirement = """
+The appliance shall keep WireGuard private and preshared keys and Wi-Fi passwords out of every API response, log line, audit record, diagnostic record, error message and export, including on failure paths, and shall store them only in protected root-owned storage.
+"""
+
+verification = "A sentinel-secret test drives import, apply, failure and export paths with a known secret value and asserts it appears in no response body, log, database row or export."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/persistence.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/network_operation_repository.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository_test.go",
+    "05_Software/nilo_assistant/internal/network/operation_durability_test.go",
+    "05_Software/nilo_assistant/internal/network/tunnel.go",
+    "05_Software/nilo_assistant/internal/nethelper/tunnel_engine.go",
+    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
+    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/tunnel_test.go",
+    "05_Software/nilo_assistant/internal/network/wifi.go",
+    "05_Software/nilo_assistant/internal/nethelper/settings_engine.go",
+    "05_Software/nilo_assistant/internal/nethelper/keystore.go",
+    "05_Software/nilo_assistant/internal/httpapi/network_settings_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/secrets_rpc_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository_test.go::TestNetworkOperationParametersRejectSecretText",
+    "05_Software/nilo_assistant/internal/network/operation_durability_test.go::TestAnOperationRecordCarriesNoSecret",
+    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go::TestApplianceSystemHTTPSAndHelperRecovery",
+    "05_Software/nilo_assistant/internal/nethelper/tunnel_test.go::TestInventoryIsReadOnlyAndCarriesNoKey",
+    "05_Software/nilo_assistant/internal/httpapi/network_settings_test.go::TestWiFiRoutesNeverReturnThePassword",
+    "05_Software/nilo_assistant/internal/nethelper/secrets_rpc_test.go::TestTheResponseTypeHasNowhereToPutASecret",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = ""
+
+created = 2026-09-03
+updated = 2026-09-04

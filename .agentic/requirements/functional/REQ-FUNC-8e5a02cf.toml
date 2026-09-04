@@ -1,0 +1,35 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-FUNC-8e5a02cf"
+
+title = "Keep two sites with identical target addresses independently addressable"
+
+status = "active"
+
+requirement = """
+When two appliances expose device networks whose targets share the same address, each appliance shall answer only for its own exposed prefix, so a client reaching one exposed address cannot reach the other site's target.
+"""
+
+verification = "A two-gateway, one-hub, one-client WireGuard fixture reaches the same target address at two distinct exposed addresses and asserts each response comes from the intended site."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/nethelper/nftables_render.go",
+    "05_Software/nilo_assistant/internal/network/forwarding_plan.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/nethelper/nftables_vpn_linux_test.go",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = ""
+
+created = 2026-09-03
+updated = 2026-09-04

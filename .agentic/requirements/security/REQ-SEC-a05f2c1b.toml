@@ -1,0 +1,45 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-SEC-a05f2c1b"
+
+title = "Fail device network exposure closed when its selected transport is unavailable"
+
+status = "active"
+
+requirement = """
+While a device network selects WireGuard access only, the appliance shall install a persistent deny guard before enabling forwarding, so that a tunnel outage, a profile switch or a missing route cannot send that device network's traffic over a local network.
+"""
+
+verification = "An isolated Linux test brings the tunnel down during concurrent probes and observes no device traffic leaving over the local interface."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/forwarding_plan.go",
+    "05_Software/nilo_assistant/internal/network/forwarding_plan_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/forwarding.go",
+    "05_Software/nilo_assistant/internal/nethelper/nftables_render.go",
+    "05_Software/nilo_assistant/internal/nethelper/nftables_linux.go",
+    "05_Software/nilo_assistant/internal/network/device_network_manager.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/forwarding_plan_test.go::TestAVPNOnlyPlanWaitsWhenTheTunnelIsNotThere",
+    "05_Software/nilo_assistant/internal/network/forwarding_plan_test.go::TestThePlanGuardsBeforeItGrants",
+    "05_Software/nilo_assistant/internal/nethelper/forwarding_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/nftables_render_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/nftables_linux_test.go",
+    "05_Software/nilo_assistant/internal/network/device_network_manager_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/nftables_vpn_linux_test.go",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = ""
+
+created = 2026-09-03
+updated = 2026-09-04

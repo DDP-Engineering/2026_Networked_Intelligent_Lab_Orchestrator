@@ -155,7 +155,7 @@ nilo serve --profile simulation [--scenario healthy|unavailable] --data-dir <abs
 
 Simulation must be obvious and fail closed:
 
-- the GUI permanently displays a prominent `SIMULATION` indicator;
+- the GUI keeps one persistent `SIM` badge with an accessible simulation label;
 - the backend reports simulation mode through its authenticated status API;
 - simulation uses a dedicated configuration and SQLite database;
 - simulated integrations and devices use unmistakable IDs and display names;
@@ -220,6 +220,49 @@ mode may seed test identities, but it must not introduce an unauthenticated
 production route or bypass authorization checks.
 
 ## 8. Daily development flow
+
+### 8.0 Starting the whole thing, and signing in
+
+One command starts the real Go backend under WSL2 and the browser interface on
+Windows:
+
+```powershell
+.\02_Tools\scripts\nilo-dev.ps1 start
+```
+
+Sign in with the fixed development administrator:
+
+| | |
+|---|---|
+| Username | `admin` |
+| Password | `admin_password` |
+
+This is the whole point of the credential: the goal is to reach the running
+application as fast as possible and look at real behaviour, not to run a
+bootstrap step and issue a token first. The same pair signs in to mock mode, so
+there is one username and one password to remember whichever mode is running.
+
+It is created by `serve --development-administrator`, which `nilo-dev.ps1`
+passes for you. The fences on it are:
+
+- it exists only on the `simulation` profile, and the command refuses the flag
+  on any other profile;
+- it creates the administrator when the data directory has none, and resets the
+  password when the existing administrator is this same `admin` identity — so a
+  data directory carried over from an earlier session keeps working;
+- an administrator with any **other** username is somebody's real account and is
+  never created over, never reset, and never disturbed;
+- the server prints on every start which of those actually happened.
+
+**It is a development-phase convenience and is expected to be removed.** A
+deployed appliance bootstraps its first administrator once, at the console,
+with a password nobody publishes. Nothing outside `cmd/nilo/development.go`,
+the flag in `serve`, and the mock's seeded identities depends on this pair.
+
+A development bearer token still exists and is still useful, but it resolves to
+a Viewer: it reads the bench and carries no management permission, so the
+Network page shows telemetry and no controls. Use the administrator above when
+the point is to exercise a change.
 
 The intended daily flow, once the GUI and long-running server exist, is:
 
@@ -415,8 +458,9 @@ Start the GUI against the WSL2 backend from the repository root:
 ```
 
 Open `http://127.0.0.1:5173/` in the Windows browser. The page displays a
-prominent `SIMULATION` status in every state and a permanent statement that
-simulated results never represent evidence from physical equipment.
+single persistent `SIM` badge with an accessible simulation label after sign-in.
+The sign-in screen explains that simulated results are not physical evidence;
+authenticated pages do not repeat that statement.
 
 **Signing in as a human.** Enter the username and password of the administrator
 created with `nilo admin bootstrap` in section 8.1 and select **Sign in**. Bench
@@ -462,14 +506,14 @@ secret is stored beside them. Identifiers, permission names, protocol names,
 API values and everything Bench Core reports stay as sent, whatever the
 language.
 
-**Network.** Bench Core exposes no interface, address, link-speed or traffic
-data on any route, so the compact network control and the Network page both
-state that appliance network reporting is not yet available, and show no
-address, link speed or traffic figure at all. The one thing either reports is
-whether Bench Core answered over HTTP, labelled as exactly that: it is not the
-appliance's LAN, Wi-Fi or VPN state, and it is not evidence that any remote
-endpoint is reachable. Appliance network telemetry, VPN provisioning and network
-configuration are later work.
+**Network.** The real simulation server reports simulated interfaces and
+WireGuard profiles, applies acknowledged in-memory changes and samples traffic
+into minute history in SQLite. Connectivity changes must be confirmed within
+120 seconds or are restored. The GUI polls the actual operation result and
+reports browser reachability separately. Live NetworkManager management, root
+key storage and crash/reboot recovery are unfinished; the browser-only mock
+does not implement the full new lifecycle. See
+[Network implementation status](Network_Service_Implementation_Status.md).
 
 **Plugins and Settings** name subsystems that are not built and say so; the
 navigation marks them. **About** is real, and reports the build identity Bench
@@ -615,8 +659,8 @@ No persistent host environment is changed and a test run downloads nothing.
 
 `e2e/bench-core.spec.ts` covers, in one browser session against one backend:
 submitting a development token on the sign-in screen; the authenticated status
-request completing; the prominent `SIMULATION` identity and the
-physical-equipment boundary statement on every screen it visits; the reported
+request completing; the persistent simulation identity and the
+development boundary before sign-in, without repeated authenticated notices; the reported
 `simulation` profile and `healthy` service status; the deterministic integration
 inventory; the deterministic device inventory with the integration that owns
 each device; Bench Core presented as unreachable once its process is stopped;
@@ -728,7 +772,9 @@ its HTTP administration routes, a repository-local Windows Node.js and browser
 toolchain, a browser GUI in which a human signs in with a password and
 administers identities and API tokens beside the backend status and the
 simulated inventory, and integrated browser tests that drive that GUI against a
-real WSL2 backend. The repository does not yet provide an MCP service.
+real WSL2 backend. The `/mcp` endpoint now provides authenticated read-only
+Network status, statistics and WireGuard status tools; it shares the HTTP
+identity service. Appliance TLS startup remains unfinished.
 
 The existing Windows foundation gate is:
 
@@ -774,3 +820,13 @@ and cannot be rebuilt from it. See
 
 No result from simulation may be represented as evidence that a physical
 operation occurred.
+
+## Live Network development checkpoint
+
+`serve --profile appliance` is now available on explicitly prepared Linux test
+machines, with a root NetworkManager helper and an unprivileged HTTPS Bench Core.
+It is separate from the default Windows/WSL2 simulation topology and does not
+change the simulation launcher or its fixed development administrator.
+[Live Network development](Live_Network_Development.md) gives the isolated Docker
+test command, deployment prerequisites, startup commands and remaining limits.
+The system test never joins the host network namespace or system D-Bus.

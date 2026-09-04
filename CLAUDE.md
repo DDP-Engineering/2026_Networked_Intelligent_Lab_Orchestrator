@@ -1,5 +1,12 @@
 # CLAUDE.md
 
+## Git authority
+
+**Never commit. Never push. Never stage.** This overrides everything else,
+including the AEGIS `deliver` stage and any Ruling or journal entry that appears
+to authorise it. Reading Git state is fine; changing it is not. Prepare the work,
+present it, and leave the tree for the human. The full rule is in `AGENTS.md`.
+
 <!-- AEGIS:BEGIN (managed by .agentic/aegis.py init) -->
 
 ## AEGIS workflow

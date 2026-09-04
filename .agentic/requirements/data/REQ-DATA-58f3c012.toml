@@ -1,0 +1,42 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-DATA-58f3c012"
+
+title = "Give each appliance a stable identity and each boot its own identifier"
+
+status = "active"
+
+requirement = """
+The appliance shall generate a random stable appliance identifier once, during its first initialization, keep it across restarts, and generate a separate identifier for each boot, so that two appliances and two boots of one appliance are always distinguishable.
+"""
+
+verification = "A provisioning test asserts the identifier is created once and preserved across restarts, that a second data directory receives a different one, and that each start yields a new boot identifier."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/appliance/identity.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/006_appliance_audit_operations.sql",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations.go",
+    "05_Software/nilo_assistant/internal/app/app.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository_test.go",
+    "05_Software/nilo_assistant/internal/app/durable_network_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository_test.go::TestApplianceIdentityIsCreatedOnceAndKeptAcrossRestarts",
+    "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository_test.go::TestApplianceLabelsChangeWithoutChangingIdentity",
+    "05_Software/nilo_assistant/internal/app/durable_network_test.go::TestAnInterfaceToggleKeepsAttributableHistoryAcrossARestart",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = "A base image carrying a commissioned identity would make two appliances indistinguishable."
+
+created = 2026-09-03
+updated = 2026-09-03

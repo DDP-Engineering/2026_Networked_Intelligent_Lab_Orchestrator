@@ -1,0 +1,35 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-UX-4e08d371"
+
+title = "Present Interfaces, WireGuard profiles and Device networks as three concise tables"
+
+status = "draft"
+
+requirement = """
+The Network page shall present Interfaces, WireGuard profiles and Device networks as three concise tables with one runtime badge for the page, shall reveal editor fields only when the selection they depend on is made, and shall keep configured intent, applied state and remote reachability visually distinct.
+"""
+
+verification = "Component tests assert the three tables, the conditional editor fields and the single badge; an inspected browser screenshot confirms the layout at a narrow and a wide viewport."
+
+affected_paths = [
+    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.tsx",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = ""
+
+created = 2026-09-03
+updated = 2026-09-04

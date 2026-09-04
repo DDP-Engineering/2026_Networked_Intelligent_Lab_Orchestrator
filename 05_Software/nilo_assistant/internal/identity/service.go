@@ -135,6 +135,16 @@ type Options struct {
 	SessionLifetime    time.Duration
 	LoginFailureLimit  int
 	LoginFailureWindow time.Duration
+	// Audit records login outcomes with the full envelope. It is optional;
+	// without it the administrative changes are still recorded through their
+	// own transaction, and only the login outcomes go unrecorded.
+	Audit LoginJournal
+}
+
+// LoginJournal records a login outcome. A failed login has no identity: it is
+// recorded as an anonymous actor with the attempted name as a label.
+type LoginJournal interface {
+	Record(ctx context.Context, record audit.Record) error
 }
 
 // Service enforces the identity invariants once, for every interface.
@@ -144,6 +154,7 @@ type Service struct {
 	random          io.Reader
 	sessionLifetime time.Duration
 	throttle        *auth.LoginThrottle
+	loginJournal    LoginJournal
 	dummyVerifier   string
 }
 
@@ -170,6 +181,7 @@ func NewService(options Options) (*Service, error) {
 	return &Service{
 		repository:      options.Repository,
 		now:             func() time.Time { return options.Now().UTC() },
+		loginJournal:    options.Audit,
 		random:          options.Random,
 		sessionLifetime: options.SessionLifetime,
 		throttle:        auth.NewLoginThrottle(options.LoginFailureLimit, options.LoginFailureWindow),
@@ -503,6 +515,10 @@ func (service *Service) Login(ctx context.Context, username string, password []b
 	}
 	if verifyErr != nil || !matched || lookupErr != nil || !user.Enabled() || !user.CanPasswordLogin() {
 		service.throttle.RecordFailure(normalized, now)
+		service.recordLogin(ctx, audit.Record{
+			ActorKind: audit.ActorKindAnonymous, Outcome: audit.OutcomeDenied, Severity: audit.SeverityWarning,
+			Action: "identity.login.failed", SubjectType: "username", SubjectID: normalized, TargetLabel: normalized,
+		})
 		return LoginResult{}, ErrInvalidCredentials
 	}
 
@@ -525,7 +541,26 @@ func (service *Service) Login(ctx context.Context, username string, password []b
 		return LoginResult{}, err
 	}
 	service.throttle.Reset(normalized)
+	if actor, err := domain.ParseActorID(user.ID); err == nil {
+		service.recordLogin(ctx, audit.Record{
+			ActorKind: audit.ActorKindUser, ActorID: actor, Outcome: audit.OutcomeApplied, Severity: audit.SeverityInfo,
+			Action: "identity.login.succeeded", SubjectType: "user", SubjectID: user.ID, TargetLabel: user.Username,
+			Details: map[string]string{"session_id": created.ID},
+		})
+	}
 	return LoginResult{Session: created, User: user}, nil
+}
+
+// recordLogin writes one login outcome where a journal is configured. The
+// outcome of the login itself does not depend on the record being written:
+// a login is not a change to the appliance, and refusing it would lock the
+// administrator out exactly when the store needs attention.
+func (service *Service) recordLogin(ctx context.Context, record audit.Record) {
+	if service.loginJournal == nil {
+		return
+	}
+	record.Category, record.Component = audit.CategoryAudit, "identity"
+	_ = service.loginJournal.Record(ctx, record)
 }
 
 // Logout invalidates one browser session server-side.

@@ -1,0 +1,39 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-SEC-d19a7b30"
+
+title = "Gate activity history and diagnostics behind three fixed permissions"
+
+status = "active"
+
+requirement = """
+The appliance shall authorize activity reads with activity.read, activity exports with activity.export and diagnostic session and policy changes with diagnostics.manage, shall grant all three only to the administrator role, and shall apply them to every door including API tokens narrowed by scope.
+"""
+
+verification = "Negative HTTP and CLI tests assert each route refuses a viewer, an operator, a scoped token lacking the permission and a revoked token."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/auth/role.go",
+    "05_Software/nilo_assistant/internal/httpapi/server.go",
+    "05_Software/nilo_gui/src/api/permissions.ts",
+    "05_Software/nilo_gui/src/components/shell/pages.ts",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/auth/role_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/activity_test.go",
+    "05_Software/nilo_assistant/cmd/nilo/network_vpn_test.go",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = ""
+
+created = 2026-09-03
+updated = 2026-09-04

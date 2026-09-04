@@ -1,0 +1,119 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+# One requirement = one independently verifiable behavior.
+# Lives at .agentic/requirements/<category>/<id>.toml
+# Required fields: schema, id, title, status, requirement, verification.
+
+schema = 1
+
+# REQ-<CAT>-<8 hex>. CAT is FUNC, UX, NFR, SEC, DATA, PLAT, REL or TEST,
+# and must match the category folder this file sits in.
+id = "REQ-UX-584f9bad"
+
+title = "Present interfaces, WireGuard and statistics on the Network page"
+
+# draft while being written, active once it is built and tested,
+# retired when the behavior is deliberately removed.
+status = "active"
+
+# Self-contained prose: a reader with no other context must be able to
+# understand and check it. No ticket numbers, no run IDs, no references
+# to other requirements.
+#
+# Recommended shape - EARS. Pick the one pattern that fits; a stated
+# trigger or condition is what the test has to arrange, so surfacing it
+# here is what makes the behavior testable:
+#
+#   ubiquitous  The <system> shall <response>.
+#   event       When <trigger>, the <system> shall <response>.
+#   state       While <state>, the <system> shall <response>.
+#   unwanted    If <condition>, then the <system> shall <response>.
+#   optional    Where <feature is included>, the <system> shall <response>.
+#
+# Two "shall" clauses means two behaviors: split it into two requirements.
+# Do not contort prose to fit a pattern - a constraint that reads better
+# plainly is better plainly.
+requirement = """
+The Network page shall present compact interface and WireGuard profile lists plus traffic statistics: interface name, connection status, IPv4/IPv6 addresses, gateways, link capacity and receive/transmit rates; profile name/interface, activation, configured addresses, endpoint and startup selection. Profile DNS, allowed routes, handshake and tooling diagnostics shall be available in collapsed details, and import shall open only on request. The shell runtime indicator shall suffice without repeated section notices. Missing values shall remain unreported, while stale data, failed operations, acknowledgement and rollback controls remain explicit. Controls shall respect the actor permissions and strings shall be available in English, German and Romanian.
+"""
+
+# The observation that settles whether the behavior holds — not a
+# restatement of the requirement.
+#
+# Some behaviors no test can settle: a look-and-see judgement, an install
+# on clean hardware, a printed page. Start this field with "Manual:" or
+# "Inspection:" and name the method, and `check` records the requirement
+# as verified by hand instead of counting it among the tests still owed.
+# The prefix alone is not enough — it has to say what someone does.
+verification = "Component tests verify visible address/gateway/profile data, collapsed import and diagnostics, source-copy absence, permissions, stale/error states, change confirmation and rollback. Integrated browser tests exercise these controls against the real simulation service, including narrow layouts."
+
+# Repo-relative, forward slashes. The source files this behavior lives in.
+affected_paths = [
+    "05_Software/nilo_gui/src/i18n/messages.test.ts",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
+    "05_Software/nilo_gui/src/api/contract.ts",
+    "05_Software/nilo_gui/src/api/client.ts",
+    "05_Software/nilo_gui/src/api/mock.ts",
+    "05_Software/nilo_gui/src/components/shell/AppShell.tsx",
+    "05_Software/nilo_gui/src/i18n/en.ts",
+    "05_Software/nilo_gui/src/i18n/de.ts",
+    "05_Software/nilo_gui/src/i18n/ro.ts",
+    "05_Software/nilo_gui/e2e/network.spec.ts",
+    "05_Software/nilo_gui/src/components/network/WireGuardPanel.tsx",
+    "05_Software/nilo_gui/src/components/network/NetworkConfirmation.tsx",
+    "05_Software/nilo_gui/src/components/shell/TopRow.tsx",
+    "05_Software/nilo_gui/src/api/wireguard.ts",
+    "05_Software/nilo_gui/src/api/network.test.ts",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
+    "05_Software/nilo_gui/src/components/network/WireGuardPanel.test.tsx",
+    "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
+    "05_Software/nilo_gui/src/App.test.tsx",
+    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx",
+    "05_Software/nilo_gui/src/api/wireguard.test.ts",
+    "05_Software/nilo_gui/src/components/network/TrafficChart.tsx",
+    "05_Software/nilo_gui/src/styles/shell.css",
+    "05_Software/nilo_gui/src/test/setup.ts",
+    "05_Software/nilo_gui/e2e/shell.spec.ts",
+]
+
+# "tests/path/test_file.py::test_name" entries. Kept current during build;
+# these select the impacted regression set.
+linked_tests = [
+    "05_Software/nilo_gui/src/i18n/messages.test.ts",
+    "05_Software/nilo_gui/src/api/network.test.ts::returns every reported field of every interface",
+    "05_Software/nilo_gui/src/api/network.test.ts::returns the bounded series with its freshness",
+    "05_Software/nilo_gui/src/api/network.test.ts::carries a stale series through as stale rather than dropping it",
+    "05_Software/nilo_gui/src/api/network.test.ts::accepts an empty series, which is what a gap in measurement looks like",
+    "05_Software/nilo_gui/src/api/network.test.ts::refuses a response that is not the contract this interface understands",
+    "05_Software/nilo_gui/src/api/network.test.ts::refuses a period it cannot draw and a point it cannot place",
+    "05_Software/nilo_gui/src/api/network.test.ts::declares the four fixed network permissions the backend enforces",
+    "05_Software/nilo_gui/src/api/network.test.ts::addresses the backend through origin-relative paths only",
+    "05_Software/nilo_gui/src/api/network.test.ts::encodes the interface and period into the statistics query",
+    "05_Software/nilo_gui/src/api/network.test.ts::reads network status over an origin-relative path with the bearer header",
+    "05_Software/nilo_gui/src/api/network.test.ts::asks for statistics by interface and period",
+    "05_Software/nilo_gui/src/api/network.test.ts::classifies a refused network read the same way every other resource is",
+    "05_Software/nilo_gui/src/api/network.test.ts::reports a body outside the contract as malformed rather than as data",
+    "05_Software/nilo_gui/src/api/network.test.ts::answers the network routes with a body the production parser accepts",
+    "05_Software/nilo_gui/src/api/network.test.ts::scales the returned window to the requested period",
+    "05_Software/nilo_gui/e2e/network.spec.ts",
+    "05_Software/nilo_gui/src/components/network/WireGuardPanel.test.tsx",
+    "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
+    "05_Software/nilo_gui/src/api/network.test.ts",
+    "05_Software/nilo_gui/src/api/wireguard.test.ts",
+]
+
+# --- optional below this line ---
+
+# "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-02
+updated = 2026-09-03

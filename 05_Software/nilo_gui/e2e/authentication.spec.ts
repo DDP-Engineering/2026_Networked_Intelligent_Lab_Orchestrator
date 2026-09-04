@@ -274,16 +274,20 @@ async function signOut(): Promise<void> {
   await page.getByRole('menuitem', { name: 'Sign out' }).click();
 }
 
-/** The identity and the boundary statement every screen must carry. */
+/** One persistent runtime indicator; sign-in also explains the development boundary. */
 async function expectSimulationIdentity(): Promise<void> {
   await expect(page.getByRole('status', { name: /runtime profile/i })).toContainText(
     'SIM',
   );
-  await expect(
-    page.getByText(
-      /simulated results never represent evidence from physical equipment/i,
-    ),
-  ).toBeVisible();
+  if (await page.locator('.shell').count()) {
+    await expect(page.locator('.shell-boundary')).toHaveCount(0);
+  } else {
+    await expect(
+      page.getByText(
+        /simulated results never represent evidence from physical equipment/i,
+      ),
+    ).toBeVisible();
+  }
 }
 
 function requireTopology(): DevelopmentTopology {

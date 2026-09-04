@@ -1,0 +1,89 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+# One requirement = one independently verifiable behavior.
+# Lives at .agentic/requirements/<category>/<id>.toml
+# Required fields: schema, id, title, status, requirement, verification.
+
+schema = 1
+
+# REQ-<CAT>-<8 hex>. CAT is FUNC, UX, NFR, SEC, DATA, PLAT, REL or TEST,
+# and must match the category folder this file sits in.
+id = "REQ-SEC-ef45d243"
+
+title = "Reject WireGuard profiles that carry executable hooks"
+
+# draft while being written, active once it is built and tested,
+# retired when the behavior is deliberately removed.
+status = "active"
+
+# Self-contained prose: a reader with no other context must be able to
+# understand and check it. No ticket numbers, no run IDs, no references
+# to other requirements.
+#
+# Recommended shape - EARS. Pick the one pattern that fits; a stated
+# trigger or condition is what the test has to arrange, so surfacing it
+# here is what makes the behavior testable:
+#
+#   ubiquitous  The <system> shall <response>.
+#   event       When <trigger>, the <system> shall <response>.
+#   state       While <state>, the <system> shall <response>.
+#   unwanted    If <condition>, then the <system> shall <response>.
+#   optional    Where <feature is included>, the <system> shall <response>.
+#
+# Two "shall" clauses means two behaviors: split it into two requirements.
+# Do not contort prose to fit a pattern - a constraint that reads better
+# plainly is better plainly.
+requirement = """
+If an imported WireGuard configuration contains a PreUp, PostUp, PreDown, PostDown or any other directive that would execute a command, then the Network service shall reject the import without creating a connection, naming the offending directive.
+"""
+
+# The observation that settles whether the behavior holds — not a
+# restatement of the requirement.
+#
+# Some behaviors no test can settle: a look-and-see judgement, an install
+# on clean hardware, a printed page. Start this field with "Manual:" or
+# "Inspection:" and name the method, and `check` records the requirement
+# as verified by hand instead of counting it among the tests still owed.
+# The prefix alone is not enough — it has to say what someone does.
+verification = "An automated test imports configurations carrying each executable directive in turn and asserts every import is rejected with the directive named in the error, that no NetworkManager connection was created, and that no external process was started during the attempt."
+
+# Repo-relative, forward slashes. The source files this behavior lives in.
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/profile.go",
+    "05_Software/nilo_assistant/internal/network/simulation.go",
+    "05_Software/nilo_assistant/internal/network/wireguard.go",
+    "05_Software/nilo_assistant/internal/network/profile_test.go",
+]
+
+# "tests/path/test_file.py::test_name" entries. Kept current during build;
+# these select the impacted regression set.
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfileRejectsEveryExecutableDirective",
+    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfileRejectsUnsupportedDirectivesByName",
+    "05_Software/nilo_assistant/internal/network/profile_test.go::TestTheNetworkPackageCannotStartAProcess",
+    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfilePreservesEverySupportedSetting",
+    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfileKeepsASplitTunnelSplit",
+    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfileSeparatesKeyMaterialFromTheProfile",
+    "05_Software/nilo_assistant/internal/network/profile_test.go::TestSecretsRedactThemselvesWhenPrintedOrSerialised",
+    "05_Software/nilo_assistant/internal/network/profile_test.go::TestAnImportedProfileIsInactiveAndDoesNotAutoConnect",
+    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfileRefusesIncompleteOrUnusableInput",
+    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfileRequiresAUsableName",
+    "05_Software/nilo_assistant/internal/network/profile_test.go::TestProfileValidationRejectsInvalidNetworkSettingsAndAcceptsDisabledKeepalive",
+    "05_Software/nilo_assistant/internal/network/profile_test.go::TestProfileKeepsPresharedKeysAlignedWithPeers",
+    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfileIgnoresCommentsAndBlankLines",
+]
+
+# --- optional below this line ---
+
+# "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "A wg-quick profile is a shell-hook carrier as well as a tunnel description; importing one as a script would hand execution to whoever supplied the file."
+
+created = 2026-09-02
+updated = 2026-09-03

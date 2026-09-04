@@ -43,6 +43,12 @@ export const IDENTITIES_PATH = '/api/v1/users';
 /** Path of the API token administration collection. */
 export const TOKENS_PATH = '/api/v1/tokens';
 
+/** Path of the authenticated network status resource. */
+export const NETWORK_STATUS_PATH = '/api/v1/network/status';
+
+/** Path of the authenticated traffic history resource. */
+export const NETWORK_STATISTICS_PATH = '/api/v1/network/statistics';
+
 /** Name of the readable cookie carrying the session's CSRF token. */
 export const CSRF_COOKIE_NAME = 'nilo_csrf';
 
@@ -69,10 +75,32 @@ export const BENCH_CORE_PERMISSIONS = [
   'users.manage',
   'tokens.read.all',
   'tokens.manage.all',
+  'network.read',
+  'network.manage',
+  'vpn.manage',
+  'vpn.install',
+  'activity.read',
+  'activity.export',
+  'diagnostics.manage',
 ] as const;
 
 /** One of the permissions above. */
 export type BenchCorePermission = (typeof BENCH_CORE_PERMISSIONS)[number];
+
+/** Permission required to read network status and traffic history. Every role holds it. */
+export const PERMISSION_ACTIVITY_READ: BenchCorePermission = 'activity.read';
+export const PERMISSION_ACTIVITY_EXPORT: BenchCorePermission = 'activity.export';
+export const PERMISSION_DIAGNOSTICS_MANAGE: BenchCorePermission = 'diagnostics.manage';
+export const PERMISSION_NETWORK_READ: BenchCorePermission = 'network.read';
+
+/** Permission required to enable and disable interfaces. Administrators only. */
+export const PERMISSION_NETWORK_MANAGE: BenchCorePermission = 'network.manage';
+
+/** Permission required to manage WireGuard profiles and the tunnel. Administrators only. */
+export const PERMISSION_VPN_MANAGE: BenchCorePermission = 'vpn.manage';
+
+/** Permission required to install the WireGuard tooling. Administrators only. */
+export const PERMISSION_VPN_INSTALL: BenchCorePermission = 'vpn.install';
 
 /** Permission required to read the identity listing. */
 export const PERMISSION_IDENTITIES_READ: BenchCorePermission = 'users.read';
@@ -784,4 +812,501 @@ function readStringArray(
     };
   }
   return { ok: true, value: value as string[] };
+}
+
+function readNumber(
+  candidate: Record<string, unknown>,
+  field: string,
+  where: string,
+): ParseResult<number> {
+  const value = candidate[field];
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return {
+      ok: false,
+      violation: `the ${where} is missing ${field}, or it is not a number`,
+    };
+  }
+  return { ok: true, value };
+}
+
+/**
+ * Read an RFC 3339 instant. A timestamp the browser cannot place is a parse
+ * failure rather than an Invalid Date quietly reaching a chart axis.
+ */
+function readInstant(
+  candidate: Record<string, unknown>,
+  field: string,
+  where: string,
+): ParseResult<Date> {
+  const value = readString(candidate, field, where);
+  if (!value.ok) {
+    return value;
+  }
+  const instant = new Date(value.value);
+  if (Number.isNaN(instant.getTime())) {
+    return {
+      ok: false,
+      violation: `the ${where} carries ${field} as an unreadable time`,
+    };
+  }
+  return { ok: true, value: instant };
+}
+
+/** The three windows the appliance offers, and the only ones it can draw. */
+export const STATISTICS_PERIODS = ['15m', '1h', '24h'] as const;
+export type StatisticsPeriod = (typeof STATISTICS_PERIODS)[number];
+
+/** One network device as the appliance reports it. */
+export interface NetworkInterface {
+  id: string;
+  name: string;
+  kind: string;
+  state: string;
+  ipv4: string[];
+  ipv6: string[];
+  /** Empty or absent when the provider reports no gateway for this family. */
+  gateway4?: string;
+  gateway6?: string;
+  linkCapacityMbps: number;
+  rxBytesPerSecond: number;
+  txBytesPerSecond: number;
+  /**
+   * Whether NILO will accept a change for this device. When false,
+   * notControllableReason says why, so a missing control can be explained
+   * rather than silently absent.
+   */
+  controllable: boolean;
+  notControllableReason: string;
+  /** The adapter's permanent hardware identity, which saved configuration binds to. */
+  adapterId: string;
+  /** The wireless network the adapter is on, empty for a wired adapter. */
+  ssid: string;
+  /** The saved configuration for this adapter, absent when none is saved. */
+  settings: InterfaceSettingsState | null;
+}
+
+/** A saved adapter configuration beside what the adapter actually carries. */
+export interface InterfaceSettingsState {
+  saved: boolean;
+  applied: boolean;
+  revision: string;
+  method: string;
+  managementProtected: boolean;
+  neverDefault: boolean;
+  ssid: string;
+}
+
+/**
+ * One complete network reading.
+ *
+ * measuredBy names what observed it — the simulated environment or the backend
+ * host — so a simulated figure is never read as a bench observation.
+ */
+export interface NetworkStatus {
+  measuredBy: string;
+  interfaces: NetworkInterface[];
+}
+
+/** One measured minute of traffic. */
+export interface NetworkStatisticsPoint {
+  minuteStart: Date;
+  rxBytes: number;
+  txBytes: number;
+  rxErrors: number;
+  txErrors: number;
+  rxDropped: number;
+  txDropped: number;
+  /** How many five-second intervals composed this minute. */
+  samples: number;
+  stale: boolean;
+}
+
+/**
+ * One bounded traffic series.
+ *
+ * An empty points list is a legitimate answer: it says nothing was measured in
+ * the window, which is what a gap looks like. It is never drawn as zero traffic.
+ */
+export interface NetworkStatistics {
+  interfaceId: string;
+  period: StatisticsPeriod;
+  from: Date;
+  to: Date;
+  measuredBy: string;
+  stale: boolean;
+  points: NetworkStatisticsPoint[];
+}
+
+/** Every state one managed network change can be in. */
+export const NETWORK_OPERATION_STATES = [
+  'previewed',
+  'applying',
+  'awaiting_confirmation',
+  'confirmed',
+  'failed',
+  'rolling_back',
+  'rolled_back',
+  'rollback_failed',
+] as const;
+export type NetworkOperationState = (typeof NETWORK_OPERATION_STATES)[number];
+
+/**
+ * One managed network change, as the appliance reports it.
+ *
+ * `revision` is the digest of the exact proposal that was previewed. An
+ * acknowledgement carries it back, which is what stops a confirmation applying
+ * to something other than what was shown.
+ */
+export interface NetworkOperation {
+  id: string;
+  action: string;
+  target: string;
+  state: NetworkOperationState;
+  revision: string;
+  createdAt: Date;
+  /** Present only while a connectivity change is inside its window. */
+  confirmDeadline: Date | null;
+  failure: string;
+  progress?: string;
+}
+
+/** Build the statistics query for one interface over one window. */
+export function networkStatisticsPath(
+  interfaceId: string,
+  period: StatisticsPeriod,
+): string {
+  const query = new URLSearchParams({ interface: interfaceId, period });
+  // URLSearchParams encodes a space as "+", which is correct for a form body
+  // but not what a reader of a query string expects; %20 is unambiguous in both.
+  return `${NETWORK_STATISTICS_PATH}?${query.toString().replace(/\+/g, '%20')}`;
+}
+
+function readNetworkInterface(
+  entry: unknown,
+  index: number,
+): ParseResult<NetworkInterface> {
+  const where = `network status interface ${index + 1}`;
+  const candidate = readObject(entry, where);
+  if (!candidate.ok) {
+    return candidate;
+  }
+  const value = candidate.value;
+
+  const id = readString(value, 'id', where);
+  if (!id.ok) return id;
+  const name = readString(value, 'name', where);
+  if (!name.ok) return name;
+  const kind = readString(value, 'kind', where);
+  if (!kind.ok) return kind;
+  const state = readString(value, 'state', where);
+  if (!state.ok) return state;
+  const ipv4 = readStringArray(value, 'ipv4', where);
+  if (!ipv4.ok) return ipv4;
+  const ipv6 = readStringArray(value, 'ipv6', where);
+  if (!ipv6.ok) return ipv6;
+  const gateway4 = readString({ gateway4: '', ...value }, 'gateway4', where);
+  if (!gateway4.ok) return gateway4;
+  const gateway6 = readString({ gateway6: '', ...value }, 'gateway6', where);
+  if (!gateway6.ok) return gateway6;
+  const linkCapacityMbps = readNumber(value, 'link_capacity_mbps', where);
+  if (!linkCapacityMbps.ok) return linkCapacityMbps;
+  const rxBytesPerSecond = readNumber(value, 'rx_bytes_per_second', where);
+  if (!rxBytesPerSecond.ok) return rxBytesPerSecond;
+  const txBytesPerSecond = readNumber(value, 'tx_bytes_per_second', where);
+  if (!txBytesPerSecond.ok) return txBytesPerSecond;
+  const controllable = readBoolean(value, 'controllable', where);
+  if (!controllable.ok) return controllable;
+  const notControllableReason = readString(value, 'not_controllable_reason', where);
+  if (!notControllableReason.ok) return notControllableReason;
+  const adapterId = typeof value.adapter_id === 'string' ? value.adapter_id : '';
+  const ssid = typeof value.ssid === 'string' ? value.ssid : '';
+  let settings: InterfaceSettingsState | null = null;
+  if (value.settings !== undefined && value.settings !== null) {
+    const state = readObject(value.settings, `${where} settings`);
+    if (!state.ok) return state;
+    settings = {
+      saved: state.value.saved === true,
+      applied: state.value.applied === true,
+      revision: typeof state.value.revision === 'string' ? state.value.revision : '',
+      method: typeof state.value.method === 'string' ? state.value.method : '',
+      managementProtected: state.value.management_protected === true,
+      neverDefault: state.value.never_default === true,
+      ssid: typeof state.value.ssid === 'string' ? state.value.ssid : '',
+    };
+  }
+
+  return {
+    ok: true,
+    value: {
+      id: id.value,
+      name: name.value,
+      kind: kind.value,
+      state: state.value,
+      ipv4: ipv4.value,
+      ipv6: ipv6.value,
+      gateway4: gateway4.value,
+      gateway6: gateway6.value,
+      linkCapacityMbps: linkCapacityMbps.value,
+      rxBytesPerSecond: rxBytesPerSecond.value,
+      txBytesPerSecond: txBytesPerSecond.value,
+      controllable: controllable.value,
+      notControllableReason: notControllableReason.value,
+      adapterId,
+      ssid,
+      settings,
+    },
+  };
+}
+
+/** Parse one network status response. */
+export function parseNetworkStatusBody(body: unknown): ParseResult<NetworkStatus> {
+  const envelope = readObject(body, 'network status response');
+  if (!envelope.ok) {
+    return envelope;
+  }
+  const candidate = envelope.value;
+
+  const apiVersion = readApiVersion(candidate, 'network status response');
+  if (!apiVersion.ok) {
+    return apiVersion;
+  }
+  const measuredBy = readString(candidate, 'measured_by', 'network status response');
+  if (!measuredBy.ok) {
+    return measuredBy;
+  }
+  if (!Array.isArray(candidate.interfaces)) {
+    return {
+      ok: false,
+      violation: 'the network status response is missing interfaces',
+    };
+  }
+
+  const interfaces: NetworkInterface[] = [];
+  for (const [index, entry] of candidate.interfaces.entries()) {
+    const parsed = readNetworkInterface(entry, index);
+    if (!parsed.ok) {
+      return parsed;
+    }
+    interfaces.push(parsed.value);
+  }
+  return { ok: true, value: { measuredBy: measuredBy.value, interfaces } };
+}
+
+function readStatisticsPoint(
+  entry: unknown,
+  index: number,
+): ParseResult<NetworkStatisticsPoint> {
+  const where = `network statistics point ${index + 1}`;
+  const candidate = readObject(entry, where);
+  if (!candidate.ok) {
+    return candidate;
+  }
+  const value = candidate.value;
+
+  const minuteStart = readInstant(value, 'minute_start', where);
+  if (!minuteStart.ok) return minuteStart;
+
+  const counts: Record<string, number> = {};
+  for (const field of [
+    'rx_bytes',
+    'tx_bytes',
+    'rx_errors',
+    'tx_errors',
+    'rx_dropped',
+    'tx_dropped',
+    'samples',
+  ]) {
+    const parsed = readNumber(value, field, where);
+    if (!parsed.ok) return parsed;
+    counts[field] = parsed.value;
+  }
+  const stale = readBoolean(value, 'stale', where);
+  if (!stale.ok) return stale;
+
+  return {
+    ok: true,
+    value: {
+      minuteStart: minuteStart.value,
+      rxBytes: counts.rx_bytes,
+      txBytes: counts.tx_bytes,
+      rxErrors: counts.rx_errors,
+      txErrors: counts.tx_errors,
+      rxDropped: counts.rx_dropped,
+      txDropped: counts.tx_dropped,
+      samples: counts.samples,
+      stale: stale.value,
+    },
+  };
+}
+
+/** The listing of recent managed operations, newest first. */
+export const NETWORK_OPERATIONS_PATH = '/api/v1/network/operations';
+
+/** Parse the listing of recent managed operations. */
+export function parseNetworkOperationsBody(
+  body: unknown,
+): ParseResult<NetworkOperation[]> {
+  const envelope = readObject(body, 'network operations response');
+  if (!envelope.ok) {
+    return envelope;
+  }
+  const apiVersion = readApiVersion(envelope.value, 'network operations response');
+  if (!apiVersion.ok) return apiVersion;
+  if (!Array.isArray(envelope.value.items)) {
+    return { ok: false, violation: 'the network operations response has no items' };
+  }
+  const items: NetworkOperation[] = [];
+  for (const item of envelope.value.items) {
+    const parsed = parseNetworkOperationBody({
+      api_version: apiVersion.value,
+      ...(typeof item === 'object' && item !== null ? item : {}),
+    });
+    if (!parsed.ok) return parsed;
+    items.push(parsed.value);
+  }
+  return { ok: true, value: items };
+}
+
+/** Path that proposes enabling or disabling one interface. */
+export function interfacePreviewPath(interfaceId: string): string {
+  return `/api/v1/network/interfaces/${encodeURIComponent(interfaceId)}/preview`;
+}
+
+/** Path of one managed operation, optionally with the act being taken on it. */
+export function networkOperationPath(id: string, action?: string): string {
+  const base = `/api/v1/network/operations/${encodeURIComponent(id)}`;
+  return action === undefined ? base : `${base}/${action}`;
+}
+
+/** Parse one managed network operation. */
+export function parseNetworkOperationBody(
+  body: unknown,
+): ParseResult<NetworkOperation> {
+  const envelope = readObject(body, 'network operation response');
+  if (!envelope.ok) {
+    return envelope;
+  }
+  const candidate = envelope.value;
+
+  const apiVersion = readApiVersion(candidate, 'network operation response');
+  if (!apiVersion.ok) return apiVersion;
+  const id = readString(candidate, 'id', 'network operation response');
+  if (!id.ok) return id;
+  const action = readString(candidate, 'action', 'network operation response');
+  if (!action.ok) return action;
+  const target = readString(candidate, 'target', 'network operation response');
+  if (!target.ok) return target;
+  const state = readString(candidate, 'state', 'network operation response');
+  if (!state.ok) return state;
+  if (!NETWORK_OPERATION_STATES.includes(state.value as NetworkOperationState)) {
+    return {
+      ok: false,
+      violation: `the network operation response reports the unknown state ${state.value}`,
+    };
+  }
+  const revision = readString(candidate, 'revision', 'network operation response');
+  if (!revision.ok) return revision;
+  const createdAt = readInstant(candidate, 'created_at', 'network operation response');
+  if (!createdAt.ok) return createdAt;
+  if (candidate.progress !== undefined && typeof candidate.progress !== 'string') {
+    return { ok: false, violation: 'network operation progress must be a string' };
+  }
+
+  // Absent for an action that needs no confirmation, which is not an error: it
+  // is how the appliance says this change carries no countdown.
+  let confirmDeadline: Date | null = null;
+  if (candidate.confirm_deadline !== undefined && candidate.confirm_deadline !== null) {
+    const parsed = readInstant(
+      candidate,
+      'confirm_deadline',
+      'network operation response',
+    );
+    if (!parsed.ok) return parsed;
+    confirmDeadline = parsed.value;
+  }
+
+  return {
+    ok: true,
+    value: {
+      id: id.value,
+      action: action.value,
+      target: target.value,
+      state: state.value as NetworkOperationState,
+      revision: revision.value,
+      createdAt: createdAt.value,
+      confirmDeadline,
+      failure: typeof candidate.failure === 'string' ? candidate.failure : '',
+      progress: typeof candidate.progress === 'string' ? candidate.progress : '',
+    },
+  };
+}
+
+/** Parse one bounded traffic series. */
+export function parseNetworkStatisticsBody(
+  body: unknown,
+): ParseResult<NetworkStatistics> {
+  const envelope = readObject(body, 'network statistics response');
+  if (!envelope.ok) {
+    return envelope;
+  }
+  const candidate = envelope.value;
+
+  const apiVersion = readApiVersion(candidate, 'network statistics response');
+  if (!apiVersion.ok) {
+    return apiVersion;
+  }
+  const interfaceId = readString(
+    candidate,
+    'interface_id',
+    'network statistics response',
+  );
+  if (!interfaceId.ok) return interfaceId;
+  const period = readString(candidate, 'period', 'network statistics response');
+  if (!period.ok) return period;
+  if (!STATISTICS_PERIODS.includes(period.value as StatisticsPeriod)) {
+    return {
+      ok: false,
+      violation: `the network statistics response declares the period ${period.value}, which this interface cannot draw`,
+    };
+  }
+  const from = readInstant(candidate, 'from', 'network statistics response');
+  if (!from.ok) return from;
+  const to = readInstant(candidate, 'to', 'network statistics response');
+  if (!to.ok) return to;
+  const measuredBy = readString(
+    candidate,
+    'measured_by',
+    'network statistics response',
+  );
+  if (!measuredBy.ok) return measuredBy;
+  const stale = readBoolean(candidate, 'stale', 'network statistics response');
+  if (!stale.ok) return stale;
+
+  if (!Array.isArray(candidate.points)) {
+    return {
+      ok: false,
+      violation: 'the network statistics response is missing points',
+    };
+  }
+  const points: NetworkStatisticsPoint[] = [];
+  for (const [index, entry] of candidate.points.entries()) {
+    const parsed = readStatisticsPoint(entry, index);
+    if (!parsed.ok) {
+      return parsed;
+    }
+    points.push(parsed.value);
+  }
+
+  return {
+    ok: true,
+    value: {
+      interfaceId: interfaceId.value,
+      period: period.value as StatisticsPeriod,
+      from: from.value,
+      to: to.value,
+      measuredBy: measuredBy.value,
+      stale: stale.value,
+      points,
+    },
+  };
 }

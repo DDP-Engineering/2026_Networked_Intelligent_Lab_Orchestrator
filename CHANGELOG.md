@@ -22,11 +22,85 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 - English, German and Romanian interface languages from one message catalogue,
   selectable in the top row and persisted. Identifiers, permission names,
   protocol names, API values and reported instrument data are left untranslated.
-- Network page and compact network summary, both stating honestly that appliance
-  network reporting is not yet available: Bench Core exposes no interface,
-  address, link-speed or traffic data, so nothing is shown as measured and the
-  reachability of Bench Core over HTTP is labelled as exactly that, never as
-  LAN, Wi-Fi or VPN state.
+- Stateful Network simulation with interface and WireGuard controls, persisted
+  traffic history, separate acknowledgement and two-minute rollback.
+- Network GUI, authenticated CLI and read-only MCP tools over the shared service.
+- Linux interface control through a restricted NetworkManager helper, with durable
+  recovery and an independent two-minute rollback timer.
+- Explicit appliance startup serving the GUI and authenticated API over HTTPS.
+- Live WireGuard readiness checks with kernel and tooling diagnostics, without
+  offering unimplemented profile controls or implying an observed tunnel state.
+- Acknowledged WireGuard tool installation on Debian 13 and Ubuntu 24.04, with
+  progress, signed-repository checks and actionable package-manager errors.
+- Stable appliance identity, created once at first initialization, and a
+  separate identifier for each boot, so events can be attributed and correlated
+  across restarts.
+- Audit events now carry an appliance, boot, category, component, actor kind,
+  outcome, severity and correlated operation. Events stored before this change
+  keep their original meaning and read back with those fields empty.
+- Audit ordering comes from a persisted allocator, so retention deleting every
+  retained record can no longer make the next event reuse a sequence number.
+- Network changes are recorded durably before they are applied and are listed by
+  `GET /api/v1/network/operations`, so an interface reloaded mid-change finds the
+  pending operation and a restarted appliance still honours its window.
+- A network change that cannot be recorded is refused before any side effect,
+  while reads and an in-flight rollback continue to work.
+- WireGuard profiles on the appliance: staged key material crosses the helper
+  socket once, becomes a NetworkManager connection NILO owns (`nilo-wg-*` on
+  `nilo0`), and is activated, switched and put back under a system-wide
+  checkpoint; several profiles are saved, one is active, one may connect at
+  startup, external tunnels are listed and never touched, and a profile can be
+  renamed. `nilo network vpn profiles rename`.
+- Adapter configuration bound to the adapter's permanent hardware identity:
+  static or automatic IPv4 addressing, DNS, management protection and
+  never-default, applied through a NILO-owned profile the operating system's
+  own profile survives; a change that would leave no usable management path is
+  refused. Wi-Fi scan and join for open, WPA2- and WPA3-personal networks, with
+  the password sent once and never returned. `nilo network interface settings`,
+  `nilo network wifi scan|join`.
+- Device networks: save which adapter faces a device or a whole device subnet,
+  what is exposed at its original or a translated address, from which local or
+  VPN sources and for which services; enable, disable, edit and delete through
+  the acknowledged lifecycle; observed state kept apart from intent (waiting,
+  conflict, active); bounded connection checks reporting separate facts; access
+  instructions per machine. `GET|POST /api/v1/network/device-networks...`,
+  `nilo network device-networks ...`.
+- Forwarding on the appliance in one nftables table NILO owns, rendered from a
+  durable inventory written before any rule, with source translation by
+  default, translated exposure matched on the address the client used, the
+  internal address refused, and the forwarding switch given back when the last
+  device network goes. A device-network change is recovered from its inventory
+  snapshot; the helper repairs a vanished table and refuses a foreign one.
+  Proven in the isolated container for local access and, with a disposable hub
+  and two sites sharing one device address, for VPN access.
+- Activity: `GET /api/v1/activity` with filters, server paging, the retained
+  window and logging health; `GET /api/v1/activity/export` as JSONL or CSV with
+  schema version, appliance identity, time range, retained window and redaction
+  policy, bounded and formula-neutralized; retention by age and quota with
+  watermarks that disclose gaps; login, access-denial, export, policy, session
+  and runtime re-plan events. `nilo activity list|export`.
+- Timed diagnostics: `POST|GET /api/v1/diagnostics/sessions`, `.../{id}/stop`,
+  `GET|PUT /api/v1/diagnostics/settings`; a session raises one function scope
+  and optional target for 5, 15 or 60 minutes by monotonic time, is interrupted
+  by a restart, and debug records are rate-limited with drops counted.
+  `nilo diagnostics sessions|start|show|stop|settings`. Permissions
+  `activity.read`, `activity.export` and `diagnostics.manage`, Administrator only.
+- Interface: Device networks table and editor, adapter configuration and Wi-Fi
+  dialog, WireGuard rename, the shared Activity page with diagnostics controls,
+  activity links from the Network page already narrowed, reattachment to a
+  change still in flight after a reload; English, German and Romanian.
+- Independent recovery: `nilo-nethelper recover` and the root-owned
+  `nilo-nethelper-recovery.timer`, installed by `install-nethelper.sh`, put an
+  interrupted change back and reinstall the owned table when neither Bench Core
+  nor the helper is alive. `02_Tools/scripts/build-appliance.sh` builds ARM64
+  and x86-64 binaries.
+- Root-owned key storage in the privileged helper. An imported profile's key
+  material is staged under an opaque single-use handle, promoted only on
+  acknowledgement, expired when an import is abandoned, and never crosses the
+  helper socket.
+- Saved VPN profiles persist as public metadata only, with unique names, a
+  reference to their key material rather than the material itself, and zero or
+  one startup selection enforced by the schema.
 - About page reporting the build identity Bench Core actually returns, and
   instrument entries built from the integrations it actually reports.
 - Browser end-to-end coverage of the shell, `e2e/shell.spec.ts`, which proves the
@@ -107,6 +181,8 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Changed
 
+- Simplified Network tables with IPs, gateways and WireGuard endpoints; moved diagnostics and import behind compact controls and kept one runtime badge.
+
 - The interface workspace now uses the full width and height left by the top row
   and the navigation. The decorative background grid, the connection-status
   panel and the card nesting are gone, and the physical-equipment boundary
@@ -141,6 +217,11 @@ one project-level Semantic Version, declared in the root `VERSION` file.
   `02_Tools/runtime/windows-x86_64/playwright/` by
   `02_Tools/bootstrap/bootstrap-browser.ps1`, so no test run downloads a browser
   and no per-user cache is written.
+
+### Fixed
+
+- NetworkManager pseudo-devices and hot-unplugged adapters without sysfs counters no longer stop the appliance service.
+- A newly configured device-side adapter may use its own assigned subnet, and saving the disabled Device Network no longer requires a nonexistent forwarding checkpoint.
 
 ## [0.1.0] - 2026-09-01
 

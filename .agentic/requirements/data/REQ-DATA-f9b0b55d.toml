@@ -55,6 +55,8 @@ verification = "Repository tests perform each audited action, assert ordered act
 affected_paths = [
     "05_Software/nilo_assistant/internal/audit/",
     "05_Software/nilo_assistant/internal/store/sqlite/audit_repository.go",
+    "05_Software/nilo_assistant/internal/audit/audit.go",
+    "05_Software/nilo_assistant/internal/operation/service_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;

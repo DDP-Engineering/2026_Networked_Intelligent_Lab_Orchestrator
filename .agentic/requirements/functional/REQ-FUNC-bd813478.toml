@@ -1,0 +1,121 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+# One requirement = one independently verifiable behavior.
+# Lives at .agentic/requirements/<category>/<id>.toml
+# Required fields: schema, id, title, status, requirement, verification.
+
+schema = 1
+
+# REQ-<CAT>-<8 hex>. CAT is FUNC, UX, NFR, SEC, DATA, PLAT, REL or TEST,
+# and must match the category folder this file sits in.
+id = "REQ-FUNC-bd813478"
+
+title = "Install WireGuard tooling from signed distribution repositories"
+
+# draft while being written, active once it is built and tested,
+# retired when the behavior is deliberately removed.
+status = "active"
+
+# Self-contained prose: a reader with no other context must be able to
+# understand and check it. No ticket numbers, no run IDs, no references
+# to other requirements.
+#
+# Recommended shape - EARS. Pick the one pattern that fits; a stated
+# trigger or condition is what the test has to arrange, so surfacing it
+# here is what makes the behavior testable:
+#
+#   ubiquitous  The <system> shall <response>.
+#   event       When <trigger>, the <system> shall <response>.
+#   state       While <state>, the <system> shall <response>.
+#   unwanted    If <condition>, then the <system> shall <response>.
+#   optional    Where <feature is included>, the <system> shall <response>.
+#
+# Two "shall" clauses means two behaviors: split it into two requirements.
+# Do not contort prose to fit a pattern - a constraint that reads better
+# plainly is better plainly.
+requirement = """
+When an administrator acknowledges a WireGuard installation on a supported distribution, the Network service shall install only the required WireGuard packages from that distribution's configured signed repositories, reporting progress while the installation runs and a final result verified by re-probing readiness.
+"""
+
+# The observation that settles whether the behavior holds — not a
+# restatement of the requirement.
+#
+# Some behaviors no test can settle: a look-and-see judgement, an install
+# on clean hardware, a printed page. Start this field with "Manual:" or
+# "Inspection:" and name the method, and `check` records the requirement
+# as verified by hand instead of counting it among the tests still owed.
+# The prefix alone is not enough — it has to say what someone does.
+verification = "A system test in a disposable Linux container without WireGuard runs the installation and asserts the package manager was invoked only for the named WireGuard packages against the distribution's signed repositories, that a progress state was observable before completion, and that the final result matches a fresh readiness probe; further cases assert the distribution is not upgraded, the kernel is not replaced, no reboot is triggered, that a second run on an already-installed host succeeds while changing no package, and that a held package lock and an offline repository each produce a named actionable error."
+
+# Repo-relative, forward slashes. The source files this behavior lives in.
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/install.go",
+    "05_Software/nilo_assistant/internal/network/install_test.go",
+    "05_Software/nilo_assistant/internal/network/operation.go",
+    "05_Software/nilo_assistant/internal/nethelper/install.go",
+    "05_Software/nilo_assistant/internal/nethelper/install_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/install_policy.go",
+    "05_Software/nilo_assistant/internal/nethelper/install_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/install_system_linux_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/probe.go",
+    "05_Software/nilo_assistant/internal/nethelper/wireguard.go",
+    "05_Software/nilo_assistant/internal/nethelper/wireguard_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/engine.go",
+    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
+    "05_Software/nilo_assistant/internal/nethelper/client.go",
+    "05_Software/nilo_assistant/internal/nethelper/store.go",
+    "05_Software/nilo_assistant/internal/httpapi/network_operations.go",
+    "05_Software/nilo_assistant/cmd/nilo-nethelper/main.go",
+    "05_Software/nilo_assistant/cmd/nilo-nethelper/serve_linux.go",
+    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go",
+    "05_Software/nilo_gui/src/api/contract.ts",
+    "05_Software/nilo_gui/src/components/network/InstallationProgress.tsx",
+    "05_Software/nilo_gui/src/components/network/InstallationProgress.test.tsx",
+    "05_Software/nilo_gui/src/components/network/WireGuardPanel.tsx",
+    "05_Software/nilo_gui/src/components/network/WireGuardPanel.test.tsx",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
+    "05_Software/nilo_gui/src/i18n/en.ts",
+    "05_Software/nilo_gui/src/i18n/de.ts",
+    "05_Software/nilo_gui/src/i18n/ro.ts",
+    "05_Software/nilo_gui/e2e/network.spec.ts",
+    "02_Tools/scripts/install-nethelper.sh",
+    "02_Tools/tests/network/Dockerfile",
+    "02_Tools/tests/network/check.sh",
+    "02_Tools/tests/network/run.sh",
+    "06_SoftwareDocu/Network_Service_Implementation_Status.md",
+    "06_SoftwareDocu/Live_Network_Development.md",
+    "CHANGELOG.md",
+]
+
+# "tests/path/test_file.py::test_name" entries. Kept current during build;
+# these select the impacted regression set.
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/install_test.go::TestInstallationDoesNotInventFailureWhenHelperIsUnreachable",
+    "05_Software/nilo_assistant/internal/network/install_test.go::TestInstallationRemainsObservableAndSerializesChanges",
+    "05_Software/nilo_assistant/internal/nethelper/install_test.go::TestInstallPolicyRejectsUnrelatedPackageChanges",
+    "05_Software/nilo_assistant/internal/nethelper/install_test.go::TestInstallPolicyRequiresSupportedDistributionAndSignedSources",
+    "05_Software/nilo_assistant/internal/nethelper/install_test.go::TestInstallJobSurvivesRequestAndPersistsTerminalState",
+    "05_Software/nilo_assistant/internal/nethelper/install_test.go::TestInstallRestartReportsInterruptionWithoutReplaying",
+    "05_Software/nilo_assistant/internal/nethelper/install_system_linux_test.go::TestWireGuardInstallSystem",
+    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go::TestApplianceSystemHTTPSAndHelperRecovery",
+    "05_Software/nilo_gui/src/components/network/InstallationProgress.test.tsx",
+    "05_Software/nilo_gui/src/components/network/WireGuardPanel.test.tsx",
+    "05_Software/nilo_gui/e2e/network.spec.ts",
+]
+
+# --- optional below this line ---
+
+# "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
+spec = "specs/REQ-FUNC-a6495c6d.md"
+
+priority = "high"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-02
+updated = 2026-09-03
+
+# Installation is enabled only on Debian 13 and Ubuntu 24.04. The system test is opt-in; run the disposable fixture on each distribution.

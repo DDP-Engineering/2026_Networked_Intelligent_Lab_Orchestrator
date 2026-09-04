@@ -1,0 +1,37 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-FUNC-e8b3407c"
+
+title = "Keep imported WireGuard routing intent separate from NILO-owned routes"
+
+status = "active"
+
+requirement = """
+The appliance shall preserve an imported profile's AllowedIPs, DNS and default-route intent as imported, and shall install device network routes as separately owned resources that are removed without altering the imported configuration.
+"""
+
+verification = "A Linux test imports a split-tunnel and a full-tunnel profile, enables and removes a device network over each, and asserts the imported configuration is byte-identical after."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/store/sqlite/vpn_profile_repository.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/store/sqlite/vpn_profile_repository_test.go::TestTwoProfilesSurviveARestartAndStayInactive",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux_test.go::TestNetworkManagerWireGuardLifecycleSystem",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = ""
+
+created = 2026-09-03
+updated = 2026-09-04

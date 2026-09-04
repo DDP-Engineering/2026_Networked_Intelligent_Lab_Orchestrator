@@ -1,0 +1,36 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-FUNC-6ba25f39"
+
+title = "Export a bounded activity selection as JSONL or CSV"
+
+status = "active"
+
+requirement = """
+The appliance shall stream an authorized, filtered activity export as JSONL or CSV carrying its schema version, appliance identity, time range and retained-window information, shall bound the exported size, and shall neutralize leading spreadsheet formula characters in CSV fields.
+"""
+
+verification = "An API test exports both formats, asserts the header metadata, asserts the size bound is enforced, and asserts a field beginning with an equals sign is neutralized."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/activity/activity.go",
+    "05_Software/nilo_assistant/internal/httpapi/activity.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/activity/activity_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/activity_test.go",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = ""
+
+created = 2026-09-03
+updated = 2026-09-04

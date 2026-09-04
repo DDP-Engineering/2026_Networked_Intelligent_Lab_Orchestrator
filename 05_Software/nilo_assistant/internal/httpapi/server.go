@@ -2,15 +2,20 @@ package httpapi
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net"
 	"net/http"
 	"time"
 
+	"nilo.local/nilo/internal/activity"
+	"nilo.local/nilo/internal/audit"
 	"nilo.local/nilo/internal/auth"
 	"nilo.local/nilo/internal/buildinfo"
+	"nilo.local/nilo/internal/diagnostics"
 	"nilo.local/nilo/internal/identity"
+	"nilo.local/nilo/internal/network"
 	"nilo.local/nilo/internal/simulation"
 )
 
@@ -19,8 +24,10 @@ const (
 	apiVersion        = "nilo.http/1"
 )
 
-// ServeOptions controls one loopback-confined simulation HTTP server.
+// ServeOptions controls a loopback development or explicitly configured TLS server.
 type ServeOptions struct {
+	Certificate     string
+	Key             string
 	Address         string
 	Handler         http.Handler
 	ShutdownTimeout time.Duration
@@ -38,16 +45,25 @@ func Serve(ctx context.Context, options ServeOptions) error {
 	if options.ShutdownTimeout <= 0 {
 		return errors.New("positive shutdown timeout is required")
 	}
-	if err := ValidateSimulationBind(options.Address); err != nil {
+	if err := ValidateListener(options.Address, options.Certificate, options.Key); err != nil {
 		return err
 	}
 
+	var tlsConfig *tls.Config
+	if options.Certificate != "" {
+		certificate, err := tls.LoadX509KeyPair(options.Certificate, options.Key)
+		if err != nil {
+			return fmt.Errorf("load listener certificate: %w", err)
+		}
+		tlsConfig = &tls.Config{Certificates: []tls.Certificate{certificate}, MinVersion: tls.VersionTLS12}
+	}
 	listener, err := net.Listen("tcp", options.Address)
 	if err != nil {
-		return fmt.Errorf("listen on simulation address: %w", err)
+		return fmt.Errorf("listen on configured address: %w", err)
 	}
 	server := &http.Server{
 		Handler:           options.Handler,
+		TLSConfig:         tlsConfig,
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}
@@ -57,7 +73,11 @@ func Serve(ctx context.Context, options ServeOptions) error {
 
 	serveResult := make(chan error, 1)
 	go func() {
-		serveResult <- server.Serve(listener)
+		if tlsConfig != nil {
+			serveResult <- server.ServeTLS(listener, "", "")
+		} else {
+			serveResult <- server.Serve(listener)
+		}
 	}()
 
 	select {
@@ -65,17 +85,17 @@ func Serve(ctx context.Context, options ServeOptions) error {
 		if errors.Is(err, http.ErrServerClosed) {
 			return nil
 		}
-		return fmt.Errorf("serve simulation HTTP API: %w", err)
+		return fmt.Errorf("serve HTTP API: %w", err)
 	case <-ctx.Done():
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), options.ShutdownTimeout)
 		defer cancel()
 		if err := server.Shutdown(shutdownCtx); err != nil {
 			_ = server.Close()
-			return fmt.Errorf("shut down simulation HTTP API: %w", err)
+			return fmt.Errorf("shut down HTTP API: %w", err)
 		}
 		serveErr := <-serveResult
 		if serveErr != nil && !errors.Is(serveErr, http.ErrServerClosed) {
-			return fmt.Errorf("serve simulation HTTP API during shutdown: %w", serveErr)
+			return fmt.Errorf("serve HTTP API during shutdown: %w", serveErr)
 		}
 		return nil
 	}
@@ -83,11 +103,29 @@ func Serve(ctx context.Context, options ServeOptions) error {
 
 // HandlerOptions contains the dependencies for the protected HTTP API.
 type HandlerOptions struct {
-	Identity       *identity.Service
-	Profile        string
-	Build          buildinfo.Info
-	Catalog        simulation.Catalog
+	Identity   *identity.Service
+	Profile    string
+	Build      buildinfo.Info
+	Catalog    simulation.Catalog
+	Network    *network.Service
+	Operations *network.OperationManager
+	// MCP is the read-only Model Context Protocol endpoint, mounted at /mcp
+	// when one is configured. It is optional: a deployment that offers no MCP
+	// access simply has no route there.
+	MCP            http.Handler
 	CookieSecurity CookieSecurity
+	// Activity and Diagnostics serve the shared history and the timed debug
+	// controls. They are optional: a handler without them has no such routes.
+	Activity    *activity.Service
+	Diagnostics *diagnostics.Service
+	// Audit records what the boundary itself decides: an export, a policy
+	// change, a refused request. Optional.
+	Audit AuditJournal
+}
+
+// AuditJournal records what the HTTP boundary decides.
+type AuditJournal interface {
+	Record(ctx context.Context, record audit.Record) error
 }
 
 // NewHandler builds the protected Bench Core HTTP API. Every route below
@@ -97,23 +135,34 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 	if options.Identity == nil {
 		return nil, errors.New("identity service is required")
 	}
-	if options.Profile != simulationProfile {
-		return nil, errors.New("HTTP status API requires the simulation profile")
+	if options.Profile != simulationProfile && options.Profile != "appliance" {
+		return nil, errors.New("HTTP API requires the simulation or appliance profile")
 	}
-	if options.Catalog.Scenario() == "" {
+	if options.Profile == simulationProfile && options.Catalog.Scenario() == "" {
 		return nil, errors.New("simulation catalog is required")
+	}
+	if options.Network == nil {
+		return nil, errors.New("network service is required")
+	}
+	if options.Operations == nil {
+		return nil, errors.New("network operation manager is required")
 	}
 	if _, err := ParseCookieSecurity(string(options.CookieSecurity)); err != nil {
 		return nil, err
 	}
 
+	if options.Profile == "appliance" {
+		options.Catalog = simulation.Catalog{}
+	}
+	guard := accessGuard{audit: options.Audit}
+	authorize := guard.authorize
 	protected := http.NewServeMux()
 	protected.Handle("GET /api/v1/status", authorize(auth.PermissionStatusRead, func(response http.ResponseWriter, _ *http.Request) {
 		writeJSON(response, http.StatusOK, statusResponse{
 			APIVersion: apiVersion,
 			Status:     "healthy",
 			Profile:    options.Profile,
-			Simulation: true,
+			Simulation: options.Profile == simulationProfile,
 			Build:      options.Build,
 		})
 	}))
@@ -131,6 +180,69 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 			Items:      options.Catalog.Devices(),
 		})
 	}))
+	// Network telemetry. Reading it is permitted to every role; the management
+	// routes that will join them here carry network.manage, vpn.manage and
+	// vpn.install instead, so this one table keeps answering "what may an actor
+	// do" for the whole API.
+	protected.Handle("GET /api/v1/network/status", authorize(auth.PermissionNetworkRead, handleNetworkStatus(options.Network)))
+	protected.Handle("GET /api/v1/network/statistics", authorize(auth.PermissionNetworkRead, handleNetworkStatistics(options.Network)))
+	protected.Handle("GET /api/v1/network/wireguard", authorize(auth.PermissionNetworkRead, handleWireGuardStatus(options.Network)))
+	protected.Handle("GET /api/v1/network/wireguard/profiles", authorize(auth.PermissionNetworkRead, handleWireGuardStatus(options.Network)))
+	// The preview routes declare their permission here. Acknowledge, confirm and
+	// rollback declare the read permission, because the action they authorize
+	// against is only known once the operation is resolved; each then checks the
+	// action's own permission before touching anything.
+	protected.Handle("POST /api/v1/network/interfaces/{id}/preview",
+		authorize(auth.PermissionNetworkManage, handlePreviewInterfaceChange(options.Operations)))
+	protected.Handle("POST /api/v1/network/interfaces/{id}/settings/preview",
+		authorize(auth.PermissionNetworkManage, handlePreviewInterfaceSettings(options.Operations)))
+	// A scan drives the radio, so it carries the management permission even
+	// though it changes no saved state.
+	protected.Handle("GET /api/v1/network/interfaces/{id}/wifi",
+		authorize(auth.PermissionNetworkManage, handleWiFiScan(options.Network)))
+	protected.Handle("POST /api/v1/network/interfaces/{id}/wifi/preview",
+		authorize(auth.PermissionNetworkManage, handlePreviewWiFiJoin(options.Operations)))
+	// Device networks: reads for every role, changes and checks under
+	// network.manage. A check probes a configured target from the appliance,
+	// which is more than reading.
+	protected.Handle("GET /api/v1/network/device-networks",
+		authorize(auth.PermissionNetworkRead, handleListDeviceNetworks(options.Network)))
+	protected.Handle("GET /api/v1/network/device-networks/{id}",
+		authorize(auth.PermissionNetworkRead, handleReadDeviceNetwork(options.Network)))
+	protected.Handle("POST /api/v1/network/device-networks/preview",
+		authorize(auth.PermissionNetworkManage, handlePreviewDeviceNetworkChange(options.Operations)))
+	protected.Handle("POST /api/v1/network/device-networks/{id}/checks",
+		authorize(auth.PermissionNetworkManage, handleCheckDeviceNetwork(options.Network)))
+	protected.Handle("GET /api/v1/network/device-networks/{id}/access-instructions",
+		authorize(auth.PermissionNetworkRead, handleAccessInstructions(options.Network)))
+	// The shared history and the timed diagnostics, each behind its own fixed
+	// permission (REQ-SEC-d19a7b30).
+	if options.Activity != nil {
+		protected.Handle("GET /api/v1/activity", authorize(auth.PermissionActivityRead, handleActivityQuery(options.Activity)))
+		protected.Handle("GET /api/v1/activity/export", authorize(auth.PermissionActivityExport, handleActivityExport(options.Activity, options.Audit)))
+		protected.Handle("GET /api/v1/diagnostics/settings", authorize(auth.PermissionDiagnosticsManage, handleReadPolicy(options.Activity)))
+		protected.Handle("PUT /api/v1/diagnostics/settings", authorize(auth.PermissionDiagnosticsManage, handleChangePolicy(options.Activity, options.Audit)))
+	}
+	if options.Diagnostics != nil {
+		protected.Handle("GET /api/v1/diagnostics/sessions", authorize(auth.PermissionDiagnosticsManage, handleListSessions(options.Diagnostics)))
+		protected.Handle("POST /api/v1/diagnostics/sessions", authorize(auth.PermissionDiagnosticsManage, handleStartSession(options.Diagnostics)))
+		protected.Handle("GET /api/v1/diagnostics/sessions/{id}", authorize(auth.PermissionDiagnosticsManage, handleReadSession(options.Diagnostics)))
+		protected.Handle("POST /api/v1/diagnostics/sessions/{id}/stop", authorize(auth.PermissionDiagnosticsManage, handleStopSession(options.Diagnostics)))
+	}
+	protected.Handle("POST /api/v1/network/wireguard/preview",
+		authorize(auth.PermissionVPNManage, handlePreviewWireGuardChange(options.Operations)))
+	protected.Handle("POST /api/v1/network/wireguard/install/preview",
+		authorize(auth.PermissionVPNInstall, handlePreviewWireGuardInstall(options.Operations)))
+	protected.Handle("GET /api/v1/network/operations",
+		authorize(auth.PermissionNetworkRead, handleListOperations(options.Operations)))
+	protected.Handle("GET /api/v1/network/operations/{id}",
+		authorize(auth.PermissionNetworkRead, handleReadOperation(options.Operations)))
+	protected.Handle("POST /api/v1/network/operations/{id}/acknowledge",
+		authorize(auth.PermissionNetworkRead, handleAcknowledgeOperation(options.Operations)))
+	protected.Handle("POST /api/v1/network/operations/{id}/confirm",
+		authorize(auth.PermissionNetworkRead, handleConfirmOperation(options.Operations)))
+	protected.Handle("POST /api/v1/network/operations/{id}/rollback",
+		authorize(auth.PermissionNetworkRead, handleRollbackOperation(options.Operations)))
 	// Identity and token administration. Every route declares its permission
 	// here, beside the read routes above, so one table answers "what may an
 	// actor do" for the whole API rather than each handler answering for itself.
@@ -149,6 +261,12 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 
 	root := http.NewServeMux()
 	root.HandleFunc("POST /api/v1/auth/login", handleLogin(options.Identity, options.CookieSecurity))
+	// The MCP endpoint authenticates its own bearer tokens and never accepts a
+	// browser session, so it is mounted beside the protected tree rather than
+	// inside it: a cookie must not be able to reach it.
+	if options.MCP != nil {
+		root.Handle("/mcp", options.MCP)
+	}
 	root.Handle("/", resolveIdentity(options.Identity, options.CookieSecurity, protected))
 	return root, nil
 }

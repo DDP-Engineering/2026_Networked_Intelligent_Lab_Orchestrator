@@ -31,10 +31,19 @@ const SHARED = new Set([
   'nav.plugins',
   'nav.section.core',
   'top.simulation',
+  // Protocol terms and the standard live-runtime label are shared.
+  'top.appliance',
+  'network.table.gateway',
+  // Details is also the German noun.
+  'network.details',
   'top.appearance.system',
   'network.interface.lan',
   'network.interface.vpn',
   'network.interface.wifi',
+  // A product name. Translating it would name something that does not exist.
+  'network.wireguard.title',
+  // "Tunnel" is the German word for it as well.
+  'network.fact.tunnel',
   'about.build',
   'about.name',
   'about.version',
@@ -43,6 +52,21 @@ const SHARED = new Set([
   'bench.title',
   'bench.simulation',
   'bench.integration',
+  // Product nouns, protocol terms and words the languages share.
+  'activity.actor.system',
+  'activity.category.audit',
+  'activity.category.debug',
+  'activity.col.actor',
+  'activity.details',
+  'activity.filter.actor',
+  'network.dn.access.local',
+  'network.dn.access.wireguard',
+  'network.dn.col.status',
+  'network.dn.field.name',
+  'network.dn.state.conflict',
+  'network.settings.gateway',
+  'network.wifi.strength',
+  'network.wifi.title',
 ]);
 
 describe('the message catalogues', () => {

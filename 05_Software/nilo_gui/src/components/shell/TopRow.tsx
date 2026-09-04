@@ -1,6 +1,7 @@
 import { LANGUAGES, useLanguage, useTranslate } from '../../i18n/languages';
 import { THEMES, useTheme, type Theme } from '../../theme/themes';
-import type { BenchCoreSession } from '../../api/contract';
+import type { BenchCoreSession, NetworkStatus } from '../../api/contract';
+import type { WireGuardStatus } from '../../api/wireguard';
 import { Icon, type IconName } from './Icon';
 import { Menu, MenuItem } from './Menu';
 import { NetworkSummary } from './NetworkSummary';
@@ -24,6 +25,9 @@ export interface TopRowProps {
   active: string | null;
   session: BenchCoreSession | null;
   benchCoreReachable: boolean;
+  simulation?: boolean;
+  networkStatus?: NetworkStatus | null;
+  wireGuardStatus?: WireGuardStatus | null;
   onActivate: (id: string) => void;
   onClose: (id: string) => void;
   onOpen: (id: string) => void;
@@ -45,6 +49,9 @@ export function TopRow({
   active,
   session,
   benchCoreReachable,
+  simulation = true,
+  networkStatus = null,
+  wireGuardStatus = null,
   onActivate,
   onClose,
   onOpen,
@@ -68,17 +75,40 @@ export function TopRow({
 
       <div className="toprow-controls">
         <NetworkSummary
+          interfaceState={
+            networkStatus === null
+              ? 'unknown'
+              : networkStatus.interfaces.some(
+                    (item) =>
+                      (item.kind === 'ethernet' || item.kind === 'wifi') &&
+                      item.state === 'connected',
+                  )
+                ? 'connected'
+                : 'disconnected'
+          }
+          tunnelActive={
+            wireGuardStatus?.reported && !wireGuardStatus.readinessOnly
+              ? wireGuardStatus.profiles.some(
+                  (profile) => profile.niloOwned && profile.active,
+                )
+              : null
+          }
+          handshakeAgeSeconds={handshakeAge(wireGuardStatus)}
           benchCoreReachable={benchCoreReachable}
           onOpenNetwork={() => onOpen('network')}
         />
 
         <span
-          className="sim-badge"
+          className={simulation ? 'sim-badge' : 'runtime-badge'}
           role="status"
-          aria-label={t('top.simulation.label')}
+          aria-label={t(simulation ? 'top.simulation.label' : 'top.appliance.label')}
+          title={t(simulation ? 'top.simulation.label' : 'top.appliance.label')}
         >
-          <span className="state-dot state-warn" aria-hidden="true" />
-          {t('top.simulation')}
+          <span
+            className={`state-dot ${simulation ? 'state-warn' : 'state-ok'}`}
+            aria-hidden="true"
+          />
+          {t(simulation ? 'top.simulation' : 'top.appliance')}
         </span>
 
         <Menu
@@ -170,4 +200,18 @@ export function TopRow({
       </div>
     </div>
   );
+}
+
+function handshakeAge(status: WireGuardStatus | null): number | null {
+  if (!status?.reported || status.readinessOnly) return null;
+  const times =
+    status?.profiles
+      .filter(
+        (profile) =>
+          profile.niloOwned && profile.active && profile.lastHandshake !== null,
+      )
+      .map((profile) => profile.lastHandshake!.getTime()) ?? [];
+  return times.length === 0
+    ? null
+    : Math.max(0, Math.floor((Date.now() - Math.max(...times)) / 1000));
 }

@@ -1,0 +1,237 @@
+package nethelper
+
+import (
+	"context"
+	"errors"
+	"nilo.local/nilo/internal/network"
+)
+
+// SecretPayload is the one type in this protocol that carries key material, and
+// it exists only on a Request.
+//
+// network.Secrets deliberately redacts itself when marshalled, which is right
+// everywhere except on the single hop that is allowed to carry the value: an
+// operator uploads a profile to the unprivileged core over HTTPS, so the core
+// unavoidably holds it for a moment, and the socket is the designated boundary
+// for handing it to the privileged side. This type makes that hop explicit and
+// auditable rather than reachable by accident.
+//
+// It has no String or MarshalJSON of its own on purpose: a redacting encoder
+// here would silently store the word "redacted" as the key.
+type SecretPayload struct {
+	PrivateKey    string   `json:"private_key,omitempty"`
+	PresharedKeys []string `json:"preshared_keys,omitempty"`
+	// Password is a wireless network password. A payload carries either the
+	// tunnel keys or a password.
+	Password string `json:"password,omitempty"`
+}
+
+// Request is deliberately closed: no command, path, environment or raw payload.
+type Request struct {
+	Op       string         `json:"op"`
+	ID       string         `json:"id,omitempty"`
+	Change   network.Change `json:"change,omitempty"`
+	Revision string         `json:"revision,omitempty"`
+
+	// Secret is accepted only by wireguard.secrets.stage. Every other operation
+	// refuses a request that carries one, so key material cannot ride along on
+	// an operation that has no business with it.
+	Secret *SecretPayload `json:"secret,omitempty"`
+	// Handle names staged key material. ProfileID is what it gets bound to.
+	Handle    string `json:"handle,omitempty"`
+	ProfileID string `json:"profile_id,omitempty"`
+	// ConnectionRef names a NetworkManager connection the helper created, for
+	// deleting it or connecting the startup selection.
+	ConnectionRef string `json:"connection_ref,omitempty"`
+	// Plan is the forwarding to install; only forwarding.apply carries one.
+	Plan *network.ForwardingPlan `json:"plan,omitempty"`
+	// DeviceNetworkID names the forwarding to remove.
+	DeviceNetworkID string `json:"device_network_id,omitempty"`
+}
+
+// Response has no field that can hold key material, and must never gain one.
+// A handle is not a secret: it is a random identity with no relationship to the
+// value it stands for.
+type Response struct {
+	Error       string                   `json:"error,omitempty"`
+	Code        string                   `json:"code,omitempty"`
+	Devices     []Device                 `json:"devices,omitempty"`
+	Device      *Device                  `json:"device,omitempty"`
+	Change      *network.Change          `json:"change,omitempty"`
+	Record      *Record                  `json:"record,omitempty"`
+	WireGuard   *network.WireGuardStatus `json:"wireguard,omitempty"`
+	InstallPlan *InstallPlan             `json:"install_plan,omitempty"`
+	Install     *InstallRecord           `json:"install,omitempty"`
+	Handle      string                   `json:"handle,omitempty"`
+	// Tunnels is the WireGuard inventory: public configuration and state only.
+	Tunnels []network.TunnelObservation `json:"tunnels,omitempty"`
+	// ConnectionRef is the NetworkManager connection a profile creation made.
+	ConnectionRef string `json:"connection_ref,omitempty"`
+	// Networks is a wireless scan: names, security and strength only.
+	Networks []network.WiFiNetwork `json:"networks,omitempty"`
+	// Plans is the installed device-network forwarding.
+	Plans []network.ForwardingPlan `json:"plans,omitempty"`
+}
+
+// secretOperations are the only operations that may name staged key material.
+// Profile creation is among them because it consumes the staged handle;
+// deletion names the profile whose key material it removes.
+var secretOperations = map[string]bool{
+	"wireguard.secrets.stage":   true,
+	"wireguard.secrets.promote": true,
+	"wireguard.secrets.discard": true,
+	"wireguard.profile.create":  true,
+	"wireguard.profile.delete":  true,
+}
+
+// connectionOperations are the only operations that may name a connection.
+var connectionOperations = map[string]bool{
+	"wireguard.profile.delete": true,
+	"wireguard.startup":        true,
+}
+
+func dispatch(ctx context.Context, e *Engine, q Request) Response {
+	var r Response
+	var err error
+	if q.Op != "wireguard.install.start" && q.Revision != "" {
+		return Response{Error: "unexpected revision", Code: "invalid_request"}
+	}
+	if q.Op != "change.inspect" && q.Op != "checkpoint.create" && q.Op != "wireguard.profile.create" && q.Op != "wifi.scan" && q.Change != (network.Change{}) {
+		return Response{Error: "unexpected change parameters", Code: "invalid_request"}
+	}
+	if q.Secret != nil && q.Op != "wireguard.secrets.stage" {
+		return Response{Error: "unexpected key material", Code: "invalid_request"}
+	}
+	if (q.Handle != "" || q.ProfileID != "") && !secretOperations[q.Op] {
+		return Response{Error: "unexpected key material reference", Code: "invalid_request"}
+	}
+	if q.ConnectionRef != "" && !connectionOperations[q.Op] {
+		return Response{Error: "unexpected connection reference", Code: "invalid_request"}
+	}
+	if q.Plan != nil && q.Op != "forwarding.apply" {
+		return Response{Error: "unexpected forwarding plan", Code: "invalid_request"}
+	}
+	if q.DeviceNetworkID != "" && q.Op != "forwarding.remove" {
+		return Response{Error: "unexpected device network reference", Code: "invalid_request"}
+	}
+	switch q.Op {
+	case "forwarding.apply":
+		if q.ID != "" || q.Plan == nil {
+			return Response{Error: "forwarding requires the plan and nothing else", Code: "invalid_request"}
+		}
+		err = e.ApplyForwarding(ctx, *q.Plan)
+	case "forwarding.remove":
+		if q.ID != "" || q.DeviceNetworkID == "" {
+			return Response{Error: "removal names the device network and nothing else", Code: "invalid_request"}
+		}
+		err = e.RemoveForwarding(ctx, q.DeviceNetworkID)
+	case "forwarding.inventory":
+		if q.ID != "" {
+			return Response{Error: "unexpected identity", Code: "invalid_request"}
+		}
+		r.Plans, err = e.AppliedForwarding(ctx)
+	case "wireguard.profile.create":
+		if q.ID != "" || q.Handle == "" || q.ProfileID == "" || q.Change.Action != network.ActionProfileImport || q.Change.Profile == nil || q.Change.ProfileText != "" {
+			return Response{Error: "profile creation requires a staged handle, a profile identity and the parsed profile", Code: "invalid_request"}
+		}
+		r.ConnectionRef, err = e.CreateProfile(ctx, q.Handle, q.ProfileID, q.Change)
+	case "wireguard.profile.delete":
+		if q.ID != "" || q.Handle != "" || q.ProfileID == "" || q.ConnectionRef == "" {
+			return Response{Error: "profile deletion requires the profile identity and its connection", Code: "invalid_request"}
+		}
+		err = e.DeleteProfile(ctx, q.ProfileID, q.ConnectionRef)
+	case "wireguard.inventory":
+		if q.ID != "" {
+			return Response{Error: "unexpected identity", Code: "invalid_request"}
+		}
+		r.Tunnels, err = e.Tunnels(ctx)
+	case "wifi.scan":
+		if q.ID != "" || q.Change.Target == "" || q.Change.Action != network.ActionWiFiJoin || q.Change.WiFi != nil || q.Change.Settings != nil {
+			return Response{Error: "a scan names the wireless adapter and nothing else", Code: "invalid_request"}
+		}
+		r.Networks, err = e.WiFiScan(ctx, q.Change.Target)
+	case "wireguard.startup":
+		if q.ID != "" || q.ConnectionRef == "" {
+			return Response{Error: "startup requires the selected connection", Code: "invalid_request"}
+		}
+		err = e.ConnectStartup(ctx, q.ConnectionRef)
+	case "wireguard.secrets.stage":
+		if q.Secret == nil {
+			return Response{Error: "staging requires key material", Code: "invalid_request"}
+		}
+		if q.ID != "" || q.Handle != "" || q.ProfileID != "" {
+			return Response{Error: "unexpected identity", Code: "invalid_request"}
+		}
+		r.Handle, err = e.StageSecrets(*q.Secret)
+	case "wireguard.secrets.promote":
+		if q.ID != "" {
+			return Response{Error: "unexpected identity", Code: "invalid_request"}
+		}
+		err = e.PromoteSecrets(q.Handle, q.ProfileID)
+	case "wireguard.secrets.discard":
+		if q.ID != "" || q.ProfileID != "" {
+			return Response{Error: "unexpected identity", Code: "invalid_request"}
+		}
+		err = e.DiscardSecrets(q.Handle)
+	case "wireguard.install.inspect":
+		if q.ID != "" {
+			return Response{Error: "unexpected identity", Code: "invalid_request"}
+		}
+		var plan InstallPlan
+		plan, err = e.InstallPlan(ctx)
+		r.InstallPlan = &plan
+	case "wireguard.install.start":
+		var record InstallRecord
+		record, err = e.StartInstall(ctx, q.ID, q.Revision)
+		r.Install = &record
+	case "wireguard.install.read":
+		var record InstallRecord
+		record, err = e.InstallStatus(q.ID)
+		r.Install = &record
+	case "wireguard.check":
+		if q.ID != "" {
+			return Response{Error: "unexpected operation identity", Code: "invalid_request"}
+		}
+		var status network.WireGuardStatus
+		status, err = e.WireGuard(ctx)
+		r.WireGuard = &status
+	case "interface.list":
+		r.Devices, err = e.Devices(ctx)
+	case "change.inspect":
+		var d Device
+		var c network.Change
+		d, c, err = e.Inspect(ctx, q.Change)
+		r.Device = &d
+		r.Change = &c
+	case "checkpoint.create":
+		var record Record
+		record, err = e.Prepare(ctx, q.ID, q.Change, network.ConfirmationWindow)
+		r.Record = &record
+	case "change.apply":
+		err = e.Apply(ctx, q.ID)
+	case "checkpoint.rollback":
+		err = e.Restore(ctx, q.ID)
+	case "checkpoint.destroy":
+		err = e.Confirm(ctx, q.ID)
+	case "recovery.reconcile":
+		err = e.Reconcile(ctx)
+	case "recovery.read":
+		if record, ok := e.Recovery(); ok {
+			r.Record = &record
+		}
+	default:
+		err = errors.New("unsupported helper operation")
+	}
+	if err != nil {
+		r = Response{Error: err.Error(), Code: "helper_failure"}
+		for code, candidate := range knownErrors {
+			if errors.Is(err, candidate) {
+				r.Code = code
+				break
+			}
+		}
+	}
+	return r
+}
+
+var knownErrors = map[string]error{"preview_stale": network.ErrPreviewStale, "not_controllable": network.ErrNotControllable, "unsupported": network.ErrUnsupported, "connection_required": network.ErrConnectionRequired, "busy": network.ErrChangeInProgress, "recovery_unavailable": network.ErrRecoveryUnavailable, "operation_not_found": network.ErrOperationNotFound, "not_awaiting_confirmation": network.ErrNotAwaitingConfirm, "external_profile": network.ErrExternalProfile, "profile_active": network.ErrProfileActive, "secrets_not_found": ErrSecretsNotFound, "interface_settings_rejected": network.ErrInterfaceSettingsRejected, "forwarding_foreign": ErrForwardingForeign, "forwarding_unsupported": ErrForwardingUnsupported}

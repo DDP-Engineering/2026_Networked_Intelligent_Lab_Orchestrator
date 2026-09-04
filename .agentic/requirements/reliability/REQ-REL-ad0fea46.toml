@@ -1,0 +1,134 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+# One requirement = one independently verifiable behavior.
+# Lives at .agentic/requirements/<category>/<id>.toml
+# Required fields: schema, id, title, status, requirement, verification.
+
+schema = 1
+
+# REQ-<CAT>-<8 hex>. CAT is FUNC, UX, NFR, SEC, DATA, PLAT, REL or TEST,
+# and must match the category folder this file sits in.
+id = "REQ-REL-ad0fea46"
+
+title = "Restore the previous connectivity when a change is not confirmed"
+
+# draft while being written, active once it is built and tested,
+# retired when the behavior is deliberately removed.
+status = "draft"
+
+# Self-contained prose: a reader with no other context must be able to
+# understand and check it. No ticket numbers, no run IDs, no references
+# to other requirements.
+#
+# Recommended shape - EARS. Pick the one pattern that fits; a stated
+# trigger or condition is what the test has to arrange, so surfacing it
+# here is what makes the behavior testable:
+#
+#   ubiquitous  The <system> shall <response>.
+#   event       When <trigger>, the <system> shall <response>.
+#   state       While <state>, the <system> shall <response>.
+#   unwanted    If <condition>, then the <system> shall <response>.
+#   optional    Where <feature is included>, the <system> shall <response>.
+#
+# Two "shall" clauses means two behaviors: split it into two requirements.
+# Do not contort prose to fit a pattern - a constraint that reads better
+# plainly is better plainly.
+requirement = """
+If an administrator does not explicitly confirm a connectivity-changing network operation within 120 seconds of it being applied, then the Network service shall restore the connection, routing and DNS state captured before the change.
+"""
+
+# The observation that settles whether the behavior holds — not a
+# restatement of the requirement.
+#
+# Some behaviors no test can settle: a look-and-see judgement, an install
+# on clean hardware, a printed page. Start this field with "Manual:" or
+# "Inspection:" and name the method, and `check` records the requirement
+# as verified by hand instead of counting it among the tests still owed.
+# The prefix alone is not enough — it has to say what someone does.
+verification = "A system test applies an interface change and a VPN activation, lets each confirmation window expire without confirming, and asserts the interface's connection, the routing table and the resolver configuration match the state captured before the change; further cases confirm within the window and assert the change is kept, disconnect the browser during the window and assert restoration still occurs, and make restoration itself fail and assert the failure is reported rather than reported as restored."
+
+# Repo-relative, forward slashes. The source files this behavior lives in.
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/runtime.go",
+    "05_Software/nilo_assistant/internal/network/simulation.go",
+    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/nilo_assistant/internal/network/operation_safety_test.go",
+    "05_Software/nilo_assistant/internal/network/runtime_test.go",
+    "05_Software/nilo_assistant/internal/network/simulation_test.go",
+    "05_Software/nilo_assistant/internal/network/operation_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/client.go",
+    "05_Software/nilo_assistant/internal/nethelper/engine.go",
+    "05_Software/nilo_assistant/internal/nethelper/engine_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
+    "05_Software/nilo_assistant/internal/nethelper/socket_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/socket_linux_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/store.go",
+    "05_Software/nilo_assistant/cmd/nilo-nethelper/main.go",
+    "05_Software/nilo_assistant/cmd/nilo-nethelper/serve_linux.go",
+    "05_Software/nilo_assistant/cmd/nilo-nethelper/serve_other.go",
+    "05_Software/nilo_assistant/cmd/nilo/network_runtime.go",
+    "05_Software/nilo_assistant/cmd/nilo/network_runtime_linux.go",
+    "05_Software/nilo_assistant/cmd/nilo/network_runtime_other.go",
+    "05_Software/nilo_assistant/cmd/nilo/network_runtime_test.go",
+    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go",
+    "02_Tools/scripts/install-nethelper.sh",
+    "02_Tools/tests/network/Dockerfile",
+    "02_Tools/tests/network/run.sh",
+    "02_Tools/tests/network/check.sh",
+    "05_Software/nilo_assistant/internal/network/operation.go",
+    "05_Software/nilo_assistant/go.mod",
+    "05_Software/nilo_assistant/go.sum",
+]
+
+# "tests/path/test_file.py::test_name" entries. Kept current during build;
+# these select the impacted regression set.
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/operation_test.go::TestAnUnconfirmedChangeIsRestoredWhenTheWindowExpires",
+    "05_Software/nilo_assistant/internal/network/operation_test.go::TestRestorationThatIsNotObservedIsReportedAsAFailure",
+    "05_Software/nilo_assistant/internal/network/operation_test.go::TestConfirmationKeepsTheChangeAndReleasesTheCheckpoint",
+    "05_Software/nilo_assistant/internal/network/operation_test.go::TestAnAdministratorMayRollBackInsideTheWindow",
+    "05_Software/nilo_assistant/internal/network/operation_test.go::TestAFailedApplicationRestoresAndReportsTheFailure",
+    "05_Software/nilo_assistant/internal/network/operation_safety_test.go::TestConcurrentAcknowledgementsReserveBeforeRecovery",
+    "05_Software/nilo_assistant/internal/network/operation_safety_test.go::TestConfirmationDoesNotClaimSuccessWhenCheckpointReleaseFails",
+    "05_Software/nilo_assistant/internal/network/operation_safety_test.go::TestFailedApplyAndFailedRecoveryRemainProminentAndBlockNewChanges",
+    "05_Software/nilo_assistant/internal/network/runtime_test.go::TestMaintenancePersistsTrafficExpiresChangesAndStops",
+    "05_Software/nilo_assistant/internal/network/simulation_test.go::TestSimulationChangesReportedStateAndRestoresItsCheckpoint",
+    "05_Software/nilo_assistant/internal/network/simulation_test.go::TestSimulationWireGuardLifecycleAndSingleStartupSelection",
+    "05_Software/nilo_assistant/internal/network/simulation_test.go::TestSimulationRejectsMissingAndExternalProfiles",
+    "05_Software/nilo_assistant/internal/nethelper/engine_test.go::TestRecoveryMustBeDurableBeforeMutation",
+    "05_Software/nilo_assistant/internal/nethelper/engine_test.go::TestHelperBindsOneChangeAndRejectsReplay",
+    "05_Software/nilo_assistant/internal/nethelper/engine_test.go::TestExpiryAndStartupVerifyRestoration",
+    "05_Software/nilo_assistant/internal/nethelper/engine_test.go::TestFailedRecoveryBlocksNewChanges",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux_test.go::TestNetworkManagerSystemCheckpointAndRestart",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux_test.go::TestNetworkManagerCheckpointRestoresAutoconnect",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux_test.go::TestNetworkSnapshotIncludesNestedDBusValues",
+    "05_Software/nilo_assistant/internal/nethelper/socket_linux_test.go::TestSocketAuthenticatesPeerAndRejectsUnknownOperations",
+    "05_Software/nilo_assistant/internal/nethelper/socket_linux_test.go::TestFileStoreRoundTripAndRejectsSymlink",
+    "05_Software/nilo_assistant/internal/nethelper/socket_linux_test.go::TestSocketRejectsOversizedFramesAndStopsIdleClients",
+    "05_Software/nilo_assistant/cmd/nilo/network_runtime_test.go::TestRuntimeSelectionNeverConnectsSimulationToHelper",
+    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go::TestApplianceSystemHTTPSAndHelperRecovery",
+    "05_Software/nilo_assistant/internal/nethelper/engine_test.go::TestHelperTreatsShellFragmentsAsIdentifiersAndRejectsUnknownOperations",
+    "05_Software/nilo_assistant/internal/nethelper/engine_test.go::TestHelperRefusesRecoverySnapshotDuringIPActivation",
+]
+
+# --- optional below this line ---
+
+# "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "The administrator who cuts their own access is exactly the person who cannot confirm; the window has to assume nobody is coming back."
+
+created = 2026-09-02
+updated = 2026-09-03
+
+# Planned files not implemented at the 2026-09-03 audit:
+# 05_Software/nilo_assistant/internal/network/rollback.go
+# 05_Software/nilo_assistant/cmd/nilo-nethelper/checkpoint.go
+# 05_Software/tests/system/test_rollback.py

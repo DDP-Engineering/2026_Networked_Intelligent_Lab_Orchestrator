@@ -38,7 +38,7 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-Whatever screen the browser GUI is showing, it shall identify NILO as a development interface with a prominent `SIMULATION` runtime status and a visible statement that simulated results never represent evidence from physical equipment.
+While authenticated, the browser shall identify the selected runtime once in a persistent top-bar status badge: SIM with an accessible simulation label, or LIVE for an appliance. It shall not repeat simulation notices in the shell footer or Network sections. Before authentication the runtime status and development boundary may be explained together; an unknown runtime shall not claim simulation.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -49,7 +49,7 @@ Whatever screen the browser GUI is showing, it shall identify NILO as a developm
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "Component tests render the application unauthenticated, while a request is pending, after each failure outcome, after a successful status response, and on every inventory screen — populated, empty, backend-unavailable, and each unusable-inventory case — and assert in every one of them that the accessible runtime-profile status reads SIMULATION, that the NILO development identity is exposed through accessible document semantics, and that the physical-equipment boundary statement is visible."
+verification = "Automated shell tests assert one simulation badge and no shell footer after authentication, a live badge for an appliance, and honest runtime identification before sign-in and on error screens."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
@@ -60,12 +60,35 @@ affected_paths = [
     "05_Software/nilo_gui/src/index.css",
     "05_Software/nilo_gui/src/App.test.tsx",
     "05_Software/nilo_gui/src/components/pages/BenchPage.tsx",
+    "05_Software/nilo_gui/src/main.tsx",
+    "05_Software/nilo_gui/src/config/environment.ts",
+    "05_Software/nilo_gui/src/components/SignInScreen.tsx",
+    "05_Software/nilo_gui/src/components/shell/AppShell.tsx",
+    "05_Software/nilo_gui/src/components/shell/TopRow.tsx",
+    "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
+    "05_Software/nilo_gui/src/i18n/en.ts",
+    "05_Software/nilo_gui/src/i18n/de.ts",
+    "05_Software/nilo_gui/src/i18n/ro.ts",
+    "05_Software/nilo_assistant/internal/httpapi/server.go",
+    "05_Software/nilo_assistant/internal/httpapi/serving.go",
+    "05_Software/nilo_assistant/internal/httpapi/serving_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/tls_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/appliance_test.go",
+    "05_Software/nilo_gui/e2e/shell.spec.ts",
+    "05_Software/nilo_gui/e2e/bench-core.spec.ts",
+    "05_Software/nilo_gui/e2e/authentication.spec.ts",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
     "05_Software/nilo_gui/src/App.test.tsx",
+    "05_Software/nilo_assistant/internal/httpapi/tls_test.go::TestServeTLSUsesTrustedCertificateForSameOriginGUIAndAPI",
+    "05_Software/nilo_assistant/internal/httpapi/tls_test.go::TestTLSConfigurationFailsBeforeListening",
+    "05_Software/nilo_assistant/internal/httpapi/serving_test.go::TestStaticAssetsSupplySelectedRuntimeBeforeAuthentication",
+    "05_Software/nilo_assistant/internal/httpapi/appliance_test.go::TestApplianceStatusDoesNotAdvertiseSimulatedInstruments",
+    "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
+    "05_Software/nilo_gui/e2e/shell.spec.ts",
 ]
 
 # --- optional below this line ---
@@ -77,4 +100,7 @@ priority = "high"   # low | normal | high
 rationale = "Simulation must be impossible to confuse with real equipment from the first visible GUI increment."
 
 created = 2026-09-01
-updated = 2026-09-02
+updated = 2026-09-03
+
+# Appliance extension: the server supplies only the selected profile in HTML metadata;
+# authenticated status remains authoritative and all API data still requires authorization.

@@ -5,6 +5,8 @@ import {
   DEVICES_PATH,
   IDENTITIES_PATH,
   INTEGRATIONS_PATH,
+  NETWORK_STATISTICS_PATH,
+  NETWORK_STATUS_PATH,
   SESSION_PATH,
   SIGN_IN_PATH,
   SIGN_OUT_PATH,
@@ -68,8 +70,14 @@ const SCENARIO_ALIASES: Readonly<Record<string, MockScenario>> = {
   malformed: 'malformed-status',
 };
 
-/** The password every seeded mock identity signs in with. */
-export const MOCK_DEVELOPMENT_PASSWORD = 'simulation-password';
+/**
+ * The password every seeded mock identity signs in with.
+ *
+ * Deliberately the same pair the real appliance seeds under
+ * `serve --development-administrator`, so a developer learns one username and
+ * one password and it works whichever of the two they started.
+ */
+export const MOCK_DEVELOPMENT_PASSWORD = 'admin_password';
 
 /** The identities the mock store starts with, one per fixed role. */
 export const MOCK_IDENTITIES: readonly { username: string; role: BenchCoreRole }[] = [
@@ -168,10 +176,18 @@ export function parseMockScenario(value: string): MockScenario | null {
 
 /** The permissions each fixed role carries, mirroring the compiled-in matrix. */
 const ROLE_PERMISSIONS: Readonly<Record<BenchCoreRole, BenchCorePermission[]>> = {
-  viewer: ['inventory.read', 'status.read'],
-  operator: ['inventory.read', 'status.read', 'tokens.manage.self', 'tokens.read.self'],
+  viewer: ['inventory.read', 'network.read', 'status.read'],
+  operator: [
+    'inventory.read',
+    'network.read',
+    'status.read',
+    'tokens.manage.self',
+    'tokens.read.self',
+  ],
   administrator: [
     'inventory.read',
+    'network.manage',
+    'network.read',
     'status.read',
     'tokens.manage.all',
     'tokens.manage.self',
@@ -179,6 +195,11 @@ const ROLE_PERMISSIONS: Readonly<Record<BenchCoreRole, BenchCorePermission[]>> =
     'tokens.read.self',
     'users.manage',
     'users.read',
+    'vpn.install',
+    'vpn.manage',
+    'activity.read',
+    'activity.export',
+    'diagnostics.manage',
   ],
 };
 
@@ -202,6 +223,19 @@ interface MockToken {
   revoked_at: string | null;
 }
 
+/** One managed change, in the wire shape the operation routes return. */
+interface MockOperation {
+  api_version: string;
+  id: string;
+  action: string;
+  target: string;
+  state: string;
+  revision: string;
+  created_at: string;
+  confirm_deadline?: string;
+  failure: string;
+}
+
 /** One authenticated mock caller: a signed-in identity or a bearer token. */
 interface MockActor {
   identity: MockIdentity;
@@ -222,7 +256,64 @@ class MockAdministration {
   identities: MockIdentity[];
   tokens: MockToken[];
   session: MockIdentity | null = null;
+  /** Managed changes, by identifier, for the life of the page. */
+  operations = new Map<string, MockOperation>();
+  /** Saved device networks, in the wire shape the routes return. */
+  deviceNetworks = new Map<string, Record<string, unknown>>();
+  /** The shared history, appended by every managed change and session. */
+  activity: Record<string, unknown>[] = [];
+  /** Timed debug sessions. */
+  sessions = new Map<string, Record<string, unknown>>();
+  policy: {
+    retention_days: Record<string, number>;
+    quota_bytes: Record<string, number>;
+  } = {
+    retention_days: { audit: 90, event: 14, debug: 1 },
+    quota_bytes: { audit: 268435456, event: 134217728, debug: 67108864 },
+  };
+  /** The device-network draft a preview proposed, applied on acknowledgement. */
+  pendingDrafts = new Map<
+    string,
+    { action: string; target: string; draft?: Record<string, unknown> }
+  >();
   #sequence = 0;
+  #activitySequence = 0;
+
+  /** Append one history entry with the envelope the appliance would add. */
+  record(
+    category: 'audit' | 'event' | 'debug',
+    component: string,
+    action: string,
+    outcome: string,
+    subjectType: string,
+    subjectId: string,
+    actor: MockActor | null,
+    operationId = '',
+    details: Record<string, unknown> = {},
+  ): void {
+    this.#activitySequence += 1;
+    this.activity.push({
+      id: `mock-event-${this.#activitySequence}`,
+      sequence: this.#activitySequence,
+      created_at: new Date().toISOString(),
+      category,
+      component,
+      action,
+      outcome,
+      severity: outcome === 'failed' || outcome === 'denied' ? 'warning' : 'info',
+      actor_kind: actor === null ? 'system' : actor.kind === 'token' ? 'token' : 'user',
+      actor_id:
+        actor === null ? '00000000-0000-4000-8000-00000000005e' : actor.identity.id,
+      subject_type: subjectType,
+      subject_id: subjectId,
+      target_label: subjectId,
+      operation_id: operationId,
+      appliance_id: 'mock-appliance',
+      boot_id: 'mock-boot',
+      time_source: 'unsynchronized',
+      details,
+    });
+  }
 
   constructor() {
     this.identities = MOCK_IDENTITIES.map((seed, index) => ({
@@ -252,6 +343,140 @@ class MockAdministration {
     return `${prefix}-${this.#sequence + 1}`;
   }
 
+  /**
+   * Propose a change. Nothing is applied: the operation is held in `previewed`
+   * until an acknowledgement carrying its revision arrives.
+   */
+  previewOperation(
+    action: string,
+    target: string,
+    actor: MockActor | null = null,
+  ): MockOperation {
+    const id = this.nextId('operation');
+    this.record(
+      'audit',
+      componentOf(action),
+      action,
+      'requested',
+      'target',
+      target,
+      actor,
+      id,
+      {
+        state: 'previewed',
+      },
+    );
+    const operation: MockOperation = {
+      api_version: BENCH_CORE_API_VERSION,
+      id,
+      action,
+      target,
+      state: 'previewed',
+      // Derived from the proposal so the same change previews to the same
+      // revision, as the appliance's digest does.
+      revision: `revision-${action}-${target}`,
+      created_at: MOCK_EPOCH,
+      failure: '',
+    };
+    this.operations.set(id, operation);
+    return operation;
+  }
+
+  /**
+   * Apply an acknowledged change. Only the actions that can cut the caller's
+   * own path enter a confirmation window; the rest finish immediately.
+   */
+  acknowledgeOperation(id: string): MockOperation {
+    const operation = this.operations.get(id) as MockOperation;
+    const connectivity =
+      operation.action.startsWith('interface.') ||
+      operation.action === 'wifi.join' ||
+      operation.action === 'vpn.activate' ||
+      operation.action === 'vpn.deactivate' ||
+      [
+        'device_network.update',
+        'device_network.enable',
+        'device_network.disable',
+        'device_network.delete',
+      ].includes(operation.action);
+
+    const applied: MockOperation = connectivity
+      ? {
+          ...operation,
+          state: 'awaiting_confirmation',
+          // Two minutes from now, so the countdown in the interface runs
+          // against a real deadline rather than a fixed one.
+          confirm_deadline: new Date(Date.now() + 120_000).toISOString(),
+        }
+      : { ...operation, state: 'confirmed' };
+    this.operations.set(id, applied);
+    return applied;
+  }
+
+  /** Keep or restore a change that is inside its window. */
+  settleOperation(id: string, state: 'confirmed' | 'rolled_back'): MockOperation {
+    const operation = this.operations.get(id) as MockOperation;
+    const settled: MockOperation = { ...operation, state, confirm_deadline: undefined };
+    this.operations.set(id, settled);
+    return settled;
+  }
+
+  /** Apply an acknowledged device-network change to the saved inventory. */
+  applyDeviceNetworkChange(id: string): void {
+    const pending = this.pendingDrafts.get(id);
+    if (pending === undefined) return;
+    this.pendingDrafts.delete(id);
+    const now = new Date().toISOString();
+    if (pending.action === 'create' && pending.draft !== undefined) {
+      const networkId = this.nextId('device-network');
+      this.deviceNetworks.set(
+        networkId,
+        mockDeviceNetworkBody(networkId, pending.draft, false, now),
+      );
+      return;
+    }
+    const existing = this.deviceNetworks.get(pending.target);
+    if (existing === undefined) return;
+    switch (pending.action) {
+      case 'update':
+        if (pending.draft !== undefined) {
+          this.deviceNetworks.set(
+            pending.target,
+            mockDeviceNetworkBody(
+              pending.target,
+              pending.draft,
+              existing.enabled === true,
+              now,
+            ),
+          );
+        }
+        break;
+      case 'enable':
+        this.deviceNetworks.set(pending.target, {
+          ...existing,
+          enabled: true,
+          state: 'active',
+          applied: true,
+          detail: '',
+          observed_at: now,
+        });
+        break;
+      case 'disable':
+        this.deviceNetworks.set(pending.target, {
+          ...existing,
+          enabled: false,
+          state: 'disabled',
+          applied: false,
+          detail: '',
+          observed_at: now,
+        });
+        break;
+      case 'delete':
+        this.deviceNetworks.delete(pending.target);
+        break;
+    }
+  }
+
   find(username: string): MockIdentity | undefined {
     return this.identities.find((identity) => identity.username === username);
   }
@@ -276,7 +501,7 @@ export function createMockTransport(scenario: MockScenario): BenchCoreTransport 
     if (scenario === 'unauthorized') {
       return Promise.resolve(refusal(401, 'unauthorized'));
     }
-    return Promise.resolve(answer(store, scenario, pathOf(url), request));
+    return Promise.resolve(answer(store, scenario, pathOf(url), queryOf(url), request));
   };
 }
 
@@ -284,6 +509,9 @@ function answer(
   store: MockAdministration,
   scenario: MockScenario,
   path: string,
+  // Carried separately from the path because one route reads the window it was
+  // asked for out of it, and routing itself is always on the bare path.
+  query: string,
   request: TransportRequest,
 ): TransportResponse {
   if (path === SIGN_IN_PATH && request.method === 'POST') {
@@ -331,7 +559,836 @@ function answer(
       jsonResponse(200, devicesFor(scenario)),
     );
   }
+  if (path === NETWORK_STATUS_PATH) {
+    return gated(actor, 'network.read', () =>
+      jsonResponse(200, MOCK_NETWORK_STATUS_BODY),
+    );
+  }
+  if (path === NETWORK_STATISTICS_PATH) {
+    return gated(actor, 'network.read', () =>
+      jsonResponse(200, mockStatisticsFor(query)),
+    );
+  }
+  if (path.startsWith('/api/v1/network/')) {
+    return manageNetwork(store, actor, path, query, request);
+  }
+  if (path.startsWith('/api/v1/activity') || path.startsWith('/api/v1/diagnostics')) {
+    return observe(store, actor, path, query, request);
+  }
   return administer(store, actor, path, request);
+}
+
+/**
+ * The managed-change routes, mirroring the Go operation lifecycle: a preview
+ * that changes nothing, an acknowledgement bound to the revision it was shown,
+ * and a confirmation that is a separate act from acknowledging.
+ */
+function manageNetwork(
+  store: MockAdministration,
+  actor: MockActor,
+  path: string,
+  query: string,
+  request: TransportRequest,
+): TransportResponse {
+  const body = decodeBody(request);
+  void query;
+
+  if (path === '/api/v1/network/operations' && request.method === 'GET') {
+    return gated(actor, 'network.read', () =>
+      jsonResponse(200, {
+        api_version: BENCH_CORE_API_VERSION,
+        items: [...store.operations.values()].reverse(),
+      }),
+    );
+  }
+  const settingsPreview = path.match(
+    /^\/api\/v1\/network\/interfaces\/([^/]+)\/settings\/preview$/,
+  );
+  if (settingsPreview && request.method === 'POST') {
+    const method = String(body.method ?? '');
+    if (method !== 'static' && method !== 'automatic') {
+      return refusal(
+        400,
+        'interface_settings_rejected',
+        'method must be static or automatic',
+      );
+    }
+    if (
+      method === 'static' &&
+      !/^\d+\.\d+\.\d+\.\d+\/\d+$/.test(String(body.address ?? ''))
+    ) {
+      return refusal(
+        400,
+        'interface_settings_rejected',
+        'a static address needs a prefix length',
+      );
+    }
+    return gated(actor, 'network.manage', () =>
+      jsonResponse(
+        200,
+        store.previewOperation(
+          'interface.settings',
+          decodeURIComponent(settingsPreview[1]),
+        ),
+      ),
+    );
+  }
+  const wifi = path.match(
+    /^\/api\/v1\/network\/interfaces\/([^/]+)\/wifi(\/preview)?$/,
+  );
+  if (wifi && wifi[2] === undefined && request.method === 'GET') {
+    return gated(actor, 'network.read', () =>
+      jsonResponse(200, {
+        api_version: BENCH_CORE_API_VERSION,
+        interface_id: decodeURIComponent(wifi[1]),
+        supported: decodeURIComponent(wifi[1]) === 'sim-wlan0',
+        observed_at: new Date().toISOString(),
+        networks: MOCK_WIFI_NETWORKS,
+      }),
+    );
+  }
+  if (wifi && wifi[2] !== undefined && request.method === 'POST') {
+    if (String(body.ssid ?? '') === '') {
+      return refusal(
+        400,
+        'interface_settings_rejected',
+        'a join needs the network name',
+      );
+    }
+    return gated(actor, 'network.manage', () =>
+      jsonResponse(
+        200,
+        store.previewOperation('wifi.join', decodeURIComponent(wifi[1])),
+      ),
+    );
+  }
+
+  if (path === '/api/v1/network/device-networks' && request.method === 'GET') {
+    return gated(actor, 'network.read', () =>
+      jsonResponse(200, {
+        api_version: BENCH_CORE_API_VERSION,
+        items: [...store.deviceNetworks.values()],
+      }),
+    );
+  }
+  if (path === '/api/v1/network/device-networks/preview' && request.method === 'POST') {
+    const action = String(body.action ?? '');
+    const target = String(body.target ?? '');
+    const draft =
+      typeof body.device_network === 'object' && body.device_network !== null
+        ? (body.device_network as Record<string, unknown>)
+        : undefined;
+    if (!['create', 'update', 'enable', 'disable', 'delete'].includes(action)) {
+      return refusal(400, 'network_action_unsupported');
+    }
+    if ((action === 'create' || action === 'update') && draft === undefined) {
+      return refusal(
+        400,
+        'device_network_rejected',
+        'a create or update needs the device network',
+      );
+    }
+    if (
+      draft !== undefined &&
+      String(draft.scope ?? 'host') === 'host' &&
+      String(draft.target ?? '') === ''
+    ) {
+      return refusal(
+        400,
+        'device_network_rejected',
+        'a host scope needs its target address',
+      );
+    }
+    if (draft !== undefined && String(draft.name ?? '') === '') {
+      return refusal(400, 'device_network_rejected', 'a device network needs a name');
+    }
+    if (action !== 'create' && !store.deviceNetworks.has(target)) {
+      return refusal(404, 'device_network_not_found');
+    }
+    return gated(actor, 'network.manage', () => {
+      const operation = store.previewOperation(
+        `device_network.${action}`,
+        action === 'create' ? 'new' : target,
+      );
+      store.pendingDrafts.set(operation.id, { action, target, draft });
+      return jsonResponse(200, operation);
+    });
+  }
+  const deviceNetwork = path.match(
+    /^\/api\/v1\/network\/device-networks\/([^/]+)(?:\/(checks|access-instructions))?$/,
+  );
+  if (deviceNetwork) {
+    const id = decodeURIComponent(deviceNetwork[1]);
+    const held = store.deviceNetworks.get(id);
+    if (held === undefined) {
+      return refusal(404, 'device_network_not_found');
+    }
+    if (deviceNetwork[2] === undefined) {
+      return gated(actor, 'network.read', () =>
+        jsonResponse(200, { api_version: BENCH_CORE_API_VERSION, ...held }),
+      );
+    }
+    if (deviceNetwork[2] === 'checks') {
+      return gated(actor, 'network.manage', () =>
+        jsonResponse(200, {
+          api_version: BENCH_CORE_API_VERSION,
+          device_network_id: id,
+          observed_at: new Date().toISOString(),
+          facts: [
+            { name: 'saved', result: 'passed', detail: 'the device network is saved' },
+            {
+              name: 'forwarding',
+              result: held.applied === true ? 'passed' : 'failed',
+              detail:
+                held.applied === true
+                  ? 'the forwarding for this network is installed'
+                  : 'the forwarding for this network is not installed',
+            },
+            {
+              name: 'target',
+              result: held.applied === true ? 'passed' : 'unknown',
+              detail:
+                held.applied === true
+                  ? 'the simulated device accepted a connection'
+                  : 'the probe did not complete; this says nothing about whether the device is online',
+            },
+          ],
+        }),
+      );
+    }
+    return gated(actor, 'network.read', () =>
+      jsonResponse(200, {
+        api_version: BENCH_CORE_API_VERSION,
+        device_network_id: id,
+        target_address: String(held.exposed ?? held.target ?? ''),
+        steps: [
+          {
+            machine: 'client',
+            text: `Add a route to ${String(held.device_subnet ?? '')} via ${String(held.appliance_address ?? '').split('/')[0]}.`,
+          },
+          {
+            machine: 'client',
+            text: `Connect to ${String(held.exposed ?? held.target ?? '')}.`,
+          },
+        ],
+        unmet_prerequisites:
+          held.enabled === true ? [] : ['the device network is disabled'],
+      }),
+    );
+  }
+
+  const interfacePreview = path.match(
+    /^\/api\/v1\/network\/interfaces\/([^/]+)\/preview$/,
+  );
+  if (interfacePreview && request.method === 'POST') {
+    const action = String(body.action ?? '');
+    if (action !== 'enable' && action !== 'disable') {
+      return refusal(400, 'network_action_unsupported');
+    }
+    return gated(actor, 'network.manage', () =>
+      jsonResponse(
+        200,
+        store.previewOperation(
+          `interface.${action}`,
+          decodeURIComponent(interfacePreview[1]),
+        ),
+      ),
+    );
+  }
+  if (path === '/api/v1/network/wireguard/preview' && request.method === 'POST') {
+    const action = String(body.action ?? '');
+    const target = String(body.target ?? '');
+    if (action === '' || target === '') {
+      return refusal(400, 'network_action_unsupported');
+    }
+    return gated(actor, 'vpn.manage', () =>
+      jsonResponse(200, store.previewOperation(`vpn.${action}`, target)),
+    );
+  }
+  if (
+    path === '/api/v1/network/wireguard/install/preview' &&
+    request.method === 'POST'
+  ) {
+    return gated(actor, 'vpn.install', () =>
+      jsonResponse(200, store.previewOperation('wireguard.install', 'wireguard')),
+    );
+  }
+
+  const operation = path.match(/^\/api\/v1\/network\/operations\/([^/]+)(?:\/(\w+))?$/);
+  if (operation) {
+    const id = decodeURIComponent(operation[1]);
+    const act = operation[2];
+    const held = store.operations.get(id);
+    if (held === undefined) {
+      return refusal(404, 'network_operation_not_found');
+    }
+    if (act === undefined && request.method === 'GET') {
+      return gated(actor, 'network.read', () => jsonResponse(200, held));
+    }
+    // Acting on an operation needs the permission its action requires, which is
+    // only known once the operation is resolved — the same rule the Go route
+    // table applies rather than a looser one.
+    const permission: BenchCorePermission =
+      held.action.startsWith('interface.') ||
+      held.action.startsWith('device_network.') ||
+      held.action === 'wifi.join'
+        ? 'network.manage'
+        : held.action === 'wireguard.install'
+          ? 'vpn.install'
+          : 'vpn.manage';
+    return gated(actor, permission, () => {
+      switch (act) {
+        case 'acknowledge': {
+          if (String(body.revision ?? '') !== held.revision) {
+            return refusal(409, 'network_preview_stale');
+          }
+          if (held.state !== 'previewed') {
+            return refusal(409, 'network_already_acknowledged');
+          }
+          const applied = store.acknowledgeOperation(id);
+          store.applyDeviceNetworkChange(id);
+          store.record(
+            'audit',
+            componentOf(held.action),
+            held.action,
+            'applied',
+            'target',
+            held.target,
+            actor,
+            id,
+            {
+              state: applied.state,
+            },
+          );
+          return jsonResponse(202, applied);
+        }
+        case 'confirm': {
+          const settled = store.settleOperation(id, 'confirmed');
+          store.record(
+            'audit',
+            componentOf(held.action),
+            held.action,
+            'confirmed',
+            'target',
+            held.target,
+            actor,
+            id,
+            {
+              state: settled.state,
+            },
+          );
+          return jsonResponse(200, settled);
+        }
+        case 'rollback': {
+          const settled = store.settleOperation(id, 'rolled_back');
+          store.record(
+            'audit',
+            componentOf(held.action),
+            held.action,
+            'recovered',
+            'target',
+            held.target,
+            actor,
+            id,
+            {
+              state: settled.state,
+            },
+          );
+          return jsonResponse(200, settled);
+        }
+        default:
+          return refusal(404, 'network_operation_not_found');
+      }
+    });
+  }
+  return refusal(404, 'not_found');
+}
+
+/** Which product function an action belongs to, as the appliance labels it. */
+function componentOf(action: string): string {
+  if (action.startsWith('device_network.')) return 'network.device_networks';
+  if (action.startsWith('vpn.') || action.startsWith('wireguard.'))
+    return 'network.wireguard';
+  if (action === 'wifi.join') return 'network.wifi';
+  return 'network.interfaces';
+}
+
+const MOCK_WIFI_NETWORKS = [
+  { ssid: 'lab-hotspot', security: 'wpa2-personal', strength: 78, supported: true },
+  { ssid: 'open-cafe', security: 'open', strength: 41, supported: true },
+  { ssid: 'site-gateway', security: 'wpa3-personal', strength: 63, supported: true },
+  { ssid: 'corp-enterprise', security: 'unsupported', strength: 55, supported: false },
+];
+
+const MOCK_SCOPES = [
+  'network',
+  'network.interfaces',
+  'network.wifi',
+  'network.wireguard',
+  'network.device_networks',
+  'network.recovery',
+  'identity',
+  'system',
+];
+
+/** The wire shape of one saved device network built from a submitted draft. */
+function mockDeviceNetworkBody(
+  id: string,
+  draft: Record<string, unknown>,
+  enabled: boolean,
+  now: string,
+): Record<string, unknown> {
+  const applianceAddress = String(draft.appliance_address ?? '192.168.0.1/24');
+  const [address, prefix] = applianceAddress.split('/');
+  const octets = address.split('.');
+  const deviceSubnet = `${octets.slice(0, 3).join('.')}.0/${prefix ?? '24'}`;
+  const scope = String(draft.scope ?? 'host');
+  const addressing = String(draft.addressing ?? 'original');
+  const target = String(draft.target ?? '');
+  const services =
+    typeof draft.services === 'object' && draft.services !== null
+      ? (draft.services as Record<string, unknown>)
+      : {};
+  const exposed =
+    addressing === 'translated'
+      ? String(draft.exposed ?? '')
+      : scope === 'host'
+        ? target
+        : deviceSubnet;
+  return {
+    id,
+    name: String(draft.name ?? ''),
+    location: String(draft.location ?? ''),
+    device_interface: String(draft.device_interface ?? ''),
+    appliance_address: applianceAddress,
+    device_subnet: deviceSubnet,
+    scope,
+    target,
+    addressing,
+    exposed,
+    access: String(draft.access ?? 'local'),
+    local_interface: String(draft.local_interface ?? ''),
+    local_sources: Array.isArray(draft.local_sources) ? draft.local_sources : [],
+    vpn_profile_id: String(draft.vpn_profile_id ?? ''),
+    vpn_sources: Array.isArray(draft.vpn_sources) ? draft.vpn_sources : [],
+    services: {
+      protocols:
+        Array.isArray(services.protocols) && services.protocols.length > 0
+          ? services.protocols
+          : ['tcp', 'udp', 'icmp'],
+      tcp_ports: Array.isArray(services.tcp_ports) ? services.tcp_ports : [],
+      udp_ports: Array.isArray(services.udp_ports) ? services.udp_ports : [],
+      preserve_source: services.preserve_source === true,
+    },
+    enabled,
+    revision: `revision-${id}-${String(draft.name ?? '')}`,
+    state: enabled ? 'active' : 'disabled',
+    detail: '',
+    applied: enabled,
+    observed_at: now,
+  };
+}
+
+/**
+ * The shared history and the timed diagnostics, mirroring the Go routes: a
+ * filtered page with a sequence cursor, an export in both formats, sessions
+ * with fixed scopes and durations, and the policy.
+ */
+function observe(
+  store: MockAdministration,
+  actor: MockActor,
+  path: string,
+  query: string,
+  request: TransportRequest,
+): TransportResponse {
+  const body = decodeBody(request);
+  const parameters = new URLSearchParams(query);
+  const filtered = () => {
+    const after = Number(parameters.get('cursor') ?? '0');
+    return store.activity.filter((event) => {
+      const matches = (key: string, field: string) => {
+        const wanted = parameters.get(key);
+        return wanted === null || wanted === '' || String(event[field]) === wanted;
+      };
+      return (
+        Number(event.sequence) > after &&
+        matches('category', 'category') &&
+        matches('component', 'component') &&
+        matches('target', 'subject_id') &&
+        matches('actor', 'actor_id') &&
+        matches('severity', 'severity') &&
+        matches('outcome', 'outcome') &&
+        matches('operation', 'operation_id') &&
+        matches('action', 'action')
+      );
+    });
+  };
+  if (path === '/api/v1/activity' && request.method === 'GET') {
+    return gated(actor, 'activity.read', () => {
+      const limit = Math.min(
+        Math.max(Number(parameters.get('limit') ?? '100'), 1),
+        500,
+      );
+      const events = filtered();
+      const items = events.slice(0, limit);
+      const last = items[items.length - 1];
+      return jsonResponse(200, {
+        api_version: BENCH_CORE_API_VERSION,
+        schema_version: 'nilo.activity/1',
+        items,
+        next_cursor:
+          events.length > limit && last !== undefined ? String(last.sequence) : '',
+        retained_window: {
+          audit: {
+            count: store.activity.filter((event) => event.category === 'audit').length,
+            truncated: false,
+          },
+          event: {
+            count: store.activity.filter((event) => event.category === 'event').length,
+            truncated: false,
+          },
+          debug: {
+            count: store.activity.filter((event) => event.category === 'debug').length,
+            truncated: false,
+          },
+        },
+        logging_health: { audit_writable: true, failures: 0, dropped_debug: 0 },
+      });
+    });
+  }
+  if (path === '/api/v1/activity/export' && request.method === 'GET') {
+    return gated(actor, 'activity.export', () => {
+      const format = parameters.get('format') ?? 'jsonl';
+      const events = filtered();
+      const header = {
+        schema_version: 'nilo.activity/1',
+        appliance_id: 'mock-appliance',
+        exported_at: new Date().toISOString(),
+        redaction: 'envelope and safe details only',
+      };
+      const text =
+        format === 'csv'
+          ? `# schema_version=nilo.activity/1\n# appliance_id=mock-appliance\nsequence,action,outcome\n${events
+              .map(
+                (event) =>
+                  `${String(event.sequence)},${String(event.action)},${String(event.outcome)}`,
+              )
+              .join('\n')}\n# rows=${events.length} truncated=false\n`
+          : [
+              header,
+              ...events,
+              { trailer: true, rows: events.length, truncated: false },
+            ]
+              .map((line) => JSON.stringify(line))
+              .join('\n') + '\n';
+      store.record(
+        'audit',
+        'system',
+        'activity.exported',
+        'applied',
+        'activity',
+        'export',
+        actor,
+        '',
+        {
+          format,
+          rows: events.length,
+        },
+      );
+      return { status: 200, ok: true, text: () => Promise.resolve(text) };
+    });
+  }
+  if (path === '/api/v1/diagnostics/sessions' && request.method === 'GET') {
+    return gated(actor, 'diagnostics.manage', () =>
+      jsonResponse(200, {
+        api_version: BENCH_CORE_API_VERSION,
+        items: [...store.sessions.values()]
+          .reverse()
+          .map((session) => sessionView(store, session)),
+        scopes: MOCK_SCOPES,
+        durations: [5, 15, 60],
+      }),
+    );
+  }
+  if (path === '/api/v1/diagnostics/sessions' && request.method === 'POST') {
+    const scope = String(body.scope ?? '');
+    const minutes = Number(body.minutes ?? 0);
+    if (!MOCK_SCOPES.includes(scope)) {
+      return refusal(
+        400,
+        'diagnostic_session_rejected',
+        `unknown function scope ${scope}`,
+      );
+    }
+    if (![5, 15, 60].includes(minutes)) {
+      return refusal(
+        400,
+        'diagnostic_session_rejected',
+        'duration must be 5, 15 or 60 minutes',
+      );
+    }
+    return gated(actor, 'diagnostics.manage', () => {
+      const target = String(body.target ?? '');
+      for (const [id, session] of store.sessions) {
+        if (
+          session.state === 'active' &&
+          session.scope === scope &&
+          session.target === target
+        ) {
+          store.sessions.set(id, {
+            ...session,
+            state: 'replaced',
+            ended_at: new Date().toISOString(),
+            end_reason: 'replaced',
+          });
+        }
+      }
+      const id = store.nextId('session');
+      const now = new Date();
+      const session = {
+        id,
+        scope,
+        target,
+        actor_id: actor.identity.id,
+        minutes,
+        started_at: now.toISOString(),
+        expires_at: new Date(now.getTime() + minutes * 60_000).toISOString(),
+        state: 'active',
+        ended_at: null,
+        end_reason: '',
+      };
+      store.sessions.set(id, session);
+      store.record(
+        'audit',
+        'system',
+        'diagnostics.session.started',
+        'applied',
+        'diagnostic_session',
+        id,
+        actor,
+        '',
+        {
+          scope,
+          target,
+          minutes,
+        },
+      );
+      return jsonResponse(201, sessionView(store, session));
+    });
+  }
+  const session = path.match(
+    /^\/api\/v1\/diagnostics\/sessions\/([^/]+)(?:\/(stop))?$/,
+  );
+  if (session) {
+    const id = decodeURIComponent(session[1]);
+    const held = store.sessions.get(id);
+    if (held === undefined) {
+      return refusal(404, 'diagnostic_session_not_found');
+    }
+    if (session[2] === undefined) {
+      return gated(actor, 'diagnostics.manage', () =>
+        jsonResponse(200, sessionView(store, held)),
+      );
+    }
+    return gated(actor, 'diagnostics.manage', () => {
+      if (held.state !== 'active') {
+        return refusal(
+          409,
+          'diagnostic_session_not_active',
+          'the session is not active',
+        );
+      }
+      const stopped = {
+        ...held,
+        state: 'stopped',
+        ended_at: new Date().toISOString(),
+        end_reason: 'stopped by the operator',
+      };
+      store.sessions.set(id, stopped);
+      store.record(
+        'audit',
+        'system',
+        'diagnostics.session.stopped',
+        'applied',
+        'diagnostic_session',
+        id,
+        actor,
+      );
+      return jsonResponse(200, sessionView(store, stopped));
+    });
+  }
+  if (path === '/api/v1/diagnostics/settings' && request.method === 'GET') {
+    return gated(actor, 'diagnostics.manage', () =>
+      jsonResponse(200, { api_version: BENCH_CORE_API_VERSION, ...store.policy }),
+    );
+  }
+  if (path === '/api/v1/diagnostics/settings' && request.method === 'PUT') {
+    return gated(actor, 'diagnostics.manage', () => {
+      const days =
+        typeof body.retention_days === 'object' && body.retention_days !== null
+          ? (body.retention_days as Record<string, number>)
+          : {};
+      const bytes =
+        typeof body.quota_bytes === 'object' && body.quota_bytes !== null
+          ? (body.quota_bytes as Record<string, number>)
+          : {};
+      for (const category of ['audit', 'event', 'debug']) {
+        const retention = days[category];
+        const quota = bytes[category];
+        if (typeof retention !== 'number' || retention < 1 || retention > 3650) {
+          return refusal(
+            400,
+            'activity_policy_rejected',
+            `${category} retention must be between 1 and 3650 days`,
+          );
+        }
+        if (typeof quota !== 'number' || quota < 1048576 || quota > 17179869184) {
+          return refusal(
+            400,
+            'activity_policy_rejected',
+            `${category} quota must be between 1 MiB and 16 GiB`,
+          );
+        }
+      }
+      const before = store.policy;
+      store.policy = { retention_days: { ...days }, quota_bytes: { ...bytes } };
+      store.record(
+        'audit',
+        'system',
+        'diagnostics.policy.changed',
+        'applied',
+        'activity',
+        'policy',
+        actor,
+        '',
+        {
+          before,
+          after: store.policy,
+        },
+      );
+      return jsonResponse(200, {
+        api_version: BENCH_CORE_API_VERSION,
+        ...store.policy,
+      });
+    });
+  }
+  return refusal(404, 'not_found');
+}
+
+/** One session with the level its scope and target have now. */
+function sessionView(
+  store: MockAdministration,
+  session: Record<string, unknown>,
+): Record<string, unknown> {
+  const raised = [...store.sessions.values()].some(
+    (candidate) =>
+      candidate.state === 'active' &&
+      (candidate.scope === session.scope ||
+        String(session.scope).startsWith(`${String(candidate.scope)}.`)) &&
+      (candidate.target === '' || candidate.target === session.target),
+  );
+  return { ...session, effective: raised ? 'debug' : 'normal' };
+}
+
+/**
+ * The network reading the mock serves. It reproduces the Go simulated catalog
+ * exactly, the way the inventory scenarios already do, so the interface behaves
+ * identically against the mock and against a real simulation backend.
+ */
+const MOCK_NETWORK_STATUS_BODY = {
+  api_version: BENCH_CORE_API_VERSION,
+  measured_by: 'simulation',
+  interfaces: [
+    {
+      id: 'sim-enp1s0',
+      name: 'enp1s0',
+      adapter_id: '02:00:00:00:00:01',
+      kind: 'ethernet',
+      state: 'connected',
+      ipv4: ['192.168.10.24/24'],
+      ipv6: ['fd00:10::24/64'],
+      link_capacity_mbps: 1000,
+      rx_bytes_per_second: 12480,
+      tx_bytes_per_second: 3120,
+      controllable: true,
+      not_controllable_reason: '',
+    },
+    {
+      id: 'sim-wlan0',
+      name: 'wlan0',
+      adapter_id: '02:00:00:00:00:02',
+      kind: 'wifi',
+      state: 'disconnected',
+      ipv4: [],
+      ipv6: [],
+      link_capacity_mbps: 0,
+      rx_bytes_per_second: 0,
+      tx_bytes_per_second: 0,
+      controllable: true,
+      not_controllable_reason: '',
+    },
+    {
+      id: 'sim-lo',
+      name: 'lo',
+      kind: 'loopback',
+      state: 'connected',
+      ipv4: ['127.0.0.1/8'],
+      ipv6: ['::1/128'],
+      link_capacity_mbps: 0,
+      rx_bytes_per_second: 0,
+      tx_bytes_per_second: 0,
+      controllable: false,
+      not_controllable_reason: 'the loopback device is not an appliance connection',
+    },
+  ],
+};
+
+/**
+ * Build a deterministic series for the requested window.
+ *
+ * Every fourth minute is deliberately missing. A gap is what an unmeasured
+ * minute looks like, and a mock that returned an unbroken series would let the
+ * interface be built without ever facing one.
+ */
+function mockStatisticsFor(rawQuery: string): unknown {
+  const query = new URLSearchParams(rawQuery);
+  const interfaceId = query.get('interface') ?? '';
+  const period = query.get('period') ?? '15m';
+  const minutes = period === '24h' ? 24 * 60 : period === '1h' ? 60 : 15;
+
+  // A fixed end instant keeps every mock run identical.
+  const to = new Date('2026-09-03T10:00:00.000Z');
+  const from = new Date(to.getTime() - minutes * 60_000);
+
+  const points = [];
+  for (let index = 0; index < minutes; index += 1) {
+    if (index % 4 === 3) {
+      continue;
+    }
+    const minuteStart = new Date(from.getTime() + index * 60_000);
+    points.push({
+      minute_start: minuteStart.toISOString(),
+      rx_bytes: 600_000 + index * 1_500,
+      tx_bytes: 150_000 + index * 400,
+      rx_errors: 0,
+      tx_errors: 0,
+      rx_dropped: index % 30 === 0 ? 1 : 0,
+      tx_dropped: 0,
+      samples: 11,
+      stale: false,
+    });
+  }
+
+  return {
+    api_version: BENCH_CORE_API_VERSION,
+    interface_id: interfaceId,
+    period,
+    from: from.toISOString(),
+    to: to.toISOString(),
+    measured_by: 'simulation',
+    stale: false,
+    points,
+  };
 }
 
 function administer(
@@ -667,6 +1724,12 @@ function decodeBody(request: TransportRequest): Record<string, unknown> {
 function pathOf(url: string): string {
   const withoutOrigin = url.replace(/^[a-z]+:\/\/[^/]+/i, '');
   return withoutOrigin.split('?')[0];
+}
+
+/** The query string of a request URL, without its leading question mark. */
+function queryOf(url: string): string {
+  const separator = url.indexOf('?');
+  return separator === -1 ? '' : url.slice(separator + 1);
 }
 
 function integrationsFor(scenario: MockScenario): unknown {

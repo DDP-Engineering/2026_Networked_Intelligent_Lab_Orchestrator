@@ -1,0 +1,41 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-FUNC-46b1d8e3"
+
+title = "Refuse a device network whose addressing conflicts with an existing subnet"
+
+status = "active"
+
+requirement = """
+If a proposed device network's device-side subnet overlaps a connected management, uplink or tunnel subnet on the same appliance, or its exposed address or prefix collides with a connected route or another saved device network, then the appliance shall refuse the proposal and name the conflicting subnet.
+"""
+
+verification = "A table-driven validation test and an API test cover overlap with management, uplink, tunnel and sibling device networks, and assert the named conflicting subnet in the refusal."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/devicenetwork.go",
+    "05_Software/nilo_assistant/internal/network/devicenetwork_test.go",
+    "05_Software/nilo_assistant/internal/network/device_network_manager.go",
+    "05_Software/nilo_assistant/internal/httpapi/device_networks.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/devicenetwork_test.go::TestDeviceNetworkAddressingIsChecked",
+    "05_Software/nilo_assistant/internal/network/devicenetwork_test.go::TestConflictingDeviceNetworksAreRefused",
+    "05_Software/nilo_assistant/internal/network/devicenetwork_test.go::TestAnEditOfTheSameDeviceNetworkDoesNotConflictWithItself",
+    "05_Software/nilo_assistant/internal/network/device_network_manager_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/device_networks_test.go",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = ""
+
+created = 2026-09-03
+updated = 2026-09-04

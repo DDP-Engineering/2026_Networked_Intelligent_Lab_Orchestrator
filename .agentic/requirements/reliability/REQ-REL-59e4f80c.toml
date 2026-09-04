@@ -1,0 +1,36 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-REL-59e4f80c"
+
+title = "Refuse a new attributable mutation when audit storage cannot record it"
+
+status = "active"
+
+requirement = """
+If the audit store cannot accept an event, then the appliance shall refuse to begin a new attributable configuration mutation before any side effect, shall report the degraded audit state, and shall continue to serve reads, established forwarding and recovery.
+"""
+
+verification = "A fault-injection test fails the audit write and asserts the mutation is refused with no side effect, the degraded state is reported, and an in-flight rollback still completes."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/operation.go",
+    "05_Software/nilo_assistant/internal/network/operation_durability_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/operation_durability_test.go::TestAChangeIsRefusedWhenItCannotBeRecorded",
+    "05_Software/nilo_assistant/internal/network/operation_durability_test.go::TestRollbackIsStillPossibleWhenAuditIsUnavailable",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = ""
+
+created = 2026-09-03
+updated = 2026-09-03

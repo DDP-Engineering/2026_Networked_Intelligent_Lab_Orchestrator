@@ -24,6 +24,9 @@ import type { MockScenario } from '../api/mock';
 /** Whether the GUI calls a real backend or its built-in mock. */
 export type ApiMode = 'live' | 'mock';
 
+/** Server-supplied presentation hint; it grants no API permissions. */
+export type RuntimeProfile = 'simulation' | 'appliance' | 'unknown';
+
 /** The loopback endpoint a WSL2-hosted development backend binds to. */
 export const DEFAULT_API_BASE_URL = 'http://127.0.0.1:8090';
 

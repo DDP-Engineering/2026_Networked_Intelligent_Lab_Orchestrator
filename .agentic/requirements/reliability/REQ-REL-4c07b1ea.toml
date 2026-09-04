@@ -1,0 +1,50 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-REL-4c07b1ea"
+
+title = "Refuse a change that would leave no usable management path"
+
+status = "active"
+
+requirement = """
+If a requested change would repurpose or disable the interface, route or tunnel carrying the appliance's only usable authenticated management path, then the appliance shall refuse it and name the path it would have removed.
+"""
+
+verification = "A service test builds a single-path and a two-path topology, asserts the refusal names the path in the first, and asserts the change is allowed in the second; a browser test asserts the refusal is shown."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/management.go",
+    "05_Software/nilo_assistant/internal/network/wifi.go",
+    "05_Software/nilo_assistant/internal/network/simulation_settings.go",
+    "05_Software/nilo_assistant/internal/network/simulation.go",
+    "05_Software/nilo_assistant/internal/network/appliance.go",
+    "05_Software/nilo_assistant/internal/network/appliance_settings.go",
+    "05_Software/nilo_assistant/internal/network/profile_manager.go",
+    "05_Software/nilo_assistant/internal/httpapi/network_operations.go",
+    "05_Software/nilo_assistant/internal/httpapi/identity_test.go",
+    "05_Software/nilo_assistant/internal/network/management_test.go",
+    "05_Software/nilo_assistant/internal/network/simulation_settings_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/network_settings_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/management_test.go::TestASinglePathRefusesTheChangeAndNamesIt",
+    "05_Software/nilo_assistant/internal/network/management_test.go::TestASecondUsablePathAllowsTheChange",
+    "05_Software/nilo_assistant/internal/network/management_test.go::TestTheTunnelIsAManagementPathWhenTheClientArrivesThroughIt",
+    "05_Software/nilo_assistant/internal/network/management_test.go::TestAnUnknownClientOnlyProtectsWhatTheOperatorProtected",
+    "05_Software/nilo_assistant/internal/network/simulation_settings_test.go::TestSimulationRefusesRemovingTheProtectedManagementPath",
+    "05_Software/nilo_assistant/internal/httpapi/network_settings_test.go::TestManagementPathRefusalIsReportedWithItsCode",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = "An unplugged spare adapter is not a management path, so counting interfaces is not enough."
+
+created = 2026-09-03
+updated = 2026-09-04

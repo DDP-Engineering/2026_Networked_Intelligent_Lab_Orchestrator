@@ -1,0 +1,50 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-FUNC-3a71c204"
+
+title = "Bind a saved interface configuration to a stable adapter identity"
+
+status = "active"
+
+requirement = """
+The appliance shall record a saved interface configuration against the adapter's permanent hardware identity rather than its kernel name alone, and shall report the configuration as saved-but-not-applied while no adapter with that identity is present.
+"""
+
+verification = "A repository and provider test saves a configuration for an adapter, renames the kernel device and reports the configuration still bound; removing the adapter reports the configuration present and unapplied instead of applied or deleted."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/interface_settings.go",
+    "05_Software/nilo_assistant/internal/network/model.go",
+    "05_Software/nilo_assistant/internal/network/service.go",
+    "05_Software/nilo_assistant/internal/network/wifi.go",
+    "05_Software/nilo_assistant/internal/network/simulation_settings.go",
+    "05_Software/nilo_assistant/internal/network/appliance_settings.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/interface_settings_repository.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/008_interface_settings.sql",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux.go",
+    "05_Software/nilo_assistant/internal/network/interface_settings_test.go",
+    "05_Software/nilo_assistant/internal/network/simulation_settings_test.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/interface_settings_repository_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_settings_linux_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/interface_settings_test.go::TestSavedSettingsFollowTheAdapterNotTheKernelName",
+    "05_Software/nilo_assistant/internal/network/simulation_settings_test.go::TestSimulationAppliesAndPersistsInterfaceSettings",
+    "05_Software/nilo_assistant/internal/store/sqlite/interface_settings_repository_test.go::TestInterfaceSettingsRoundTripAndRevision",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_settings_linux_test.go::TestNetworkManagerSettingsSystem",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = "A configuration matched to eth0 alone silently follows a different physical adapter after a replug."
+
+created = 2026-09-03
+updated = 2026-09-04

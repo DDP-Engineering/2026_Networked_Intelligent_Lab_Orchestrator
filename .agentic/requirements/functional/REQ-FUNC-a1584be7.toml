@@ -1,0 +1,46 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-FUNC-a1584be7"
+
+title = "Switch the managed WireGuard profile as one previewed operation"
+
+status = "active"
+
+requirement = """
+When an administrator selects a different managed WireGuard profile while one is active, the appliance shall preview the switch with its affected device networks, routes and DNS, and on an unconfirmed or failed switch shall restore the previously active tunnel state.
+"""
+
+verification = "A Linux switch test confirms the preview lists the dependencies and that an unconfirmed switch leaves the original tunnel, routes and DNS observed as before."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/profile_manager.go",
+    "05_Software/nilo_assistant/internal/network/appliance.go",
+    "05_Software/nilo_assistant/internal/nethelper/tunnel_engine.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/engine.go",
+    "05_Software/nilo_assistant/internal/network/profile_manager_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/tunnel_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux_test.go",
+    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestActivationResolvesTheConnectionAndPreviewsTheSwitch",
+    "05_Software/nilo_assistant/internal/nethelper/tunnel_test.go::TestTunnelActivationIsCheckpointedAgainstTheWholeSystem",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux_test.go::TestNetworkManagerWireGuardLifecycleSystem",
+    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go::TestApplianceSystemHTTPSAndHelperRecovery",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = ""
+
+created = 2026-09-03
+updated = 2026-09-04

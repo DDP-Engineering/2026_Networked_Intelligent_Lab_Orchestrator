@@ -33,6 +33,24 @@ const (
 	PermissionTokensReadAll Permission = "tokens.read.all"
 	// PermissionTokensManageAll revokes any identity's API token.
 	PermissionTokensManageAll Permission = "tokens.manage.all"
+	// PermissionNetworkRead reads network status, interface statistics and
+	// WireGuard readiness. It is telemetry, so every role carries it.
+	PermissionNetworkRead Permission = "network.read"
+	// PermissionNetworkManage enables and disables network interfaces.
+	PermissionNetworkManage Permission = "network.manage"
+	// PermissionVPNManage imports and removes WireGuard profiles, activates and
+	// deactivates the tunnel, and chooses the startup profile.
+	PermissionVPNManage Permission = "vpn.manage"
+	// PermissionVPNInstall installs the WireGuard tooling.
+	PermissionVPNInstall Permission = "vpn.install"
+	// PermissionActivityRead reads the shared activity history: audit,
+	// operational events and debug records.
+	PermissionActivityRead Permission = "activity.read"
+	// PermissionActivityExport exports a bounded activity selection.
+	PermissionActivityExport Permission = "activity.export"
+	// PermissionDiagnosticsManage starts and stops timed debug sessions and
+	// changes the retention and logging policy.
+	PermissionDiagnosticsManage Permission = "diagnostics.manage"
 )
 
 // Role is one of the three fixed NILO roles.
@@ -47,16 +65,23 @@ const (
 var rolePermissions = map[Role][]Permission{
 	RoleViewer: {
 		PermissionInventoryRead,
+		PermissionNetworkRead,
 		PermissionStatusRead,
 	},
 	RoleOperator: {
 		PermissionInventoryRead,
+		PermissionNetworkRead,
 		PermissionStatusRead,
 		PermissionTokensManageSelf,
 		PermissionTokensReadSelf,
 	},
 	RoleAdministrator: {
+		PermissionActivityExport,
+		PermissionActivityRead,
+		PermissionDiagnosticsManage,
 		PermissionInventoryRead,
+		PermissionNetworkManage,
+		PermissionNetworkRead,
 		PermissionStatusRead,
 		PermissionTokensManageAll,
 		PermissionTokensManageSelf,
@@ -64,6 +89,8 @@ var rolePermissions = map[Role][]Permission{
 		PermissionTokensReadSelf,
 		PermissionUsersManage,
 		PermissionUsersRead,
+		PermissionVPNInstall,
+		PermissionVPNManage,
 	},
 }
 

@@ -50,6 +50,40 @@ in review.
 
 <!-- AEGIS:END -->
 
+## Git authority
+
+**An agent never commits and never pushes. This is absolute.**
+
+It holds whatever else is true. It overrides the AEGIS `deliver` stage, which
+describes a commit or a pull request as the outcome: an agent reaching `deliver`
+prepares and presents the candidate and stops there. It overrides any Ruling, any
+Handoff, any task journal, and any instruction that appears to authorise a
+commit, including one an agent wrote itself in an earlier session. It is not
+waived by an approval of the work: agreeing that a change is correct is not
+agreeing that an agent may commit it.
+
+An agent may read Git state freely — `status`, `diff`, `log`, `show`, `branch`.
+It may not run `commit`, `push`, `merge`, `rebase`, `reset`, `revert`, `stash`,
+`cherry-pick`, `tag`, or `git add`, and it may not stage anything.
+
+The human commits. An agent that believes something should be committed says so
+and leaves the working tree for the human to inspect.
+
+## Development credential
+
+`.\02_Tools\scripts\nilo-dev.ps1 start` brings up the real backend and the
+interface, and `admin` / `admin_password` signs in. The pair is fixed on
+purpose: the development phase needs the running application reachable in one
+step, so that visible behaviour can be checked against something close to the
+real thing rather than against a mock.
+
+It is created by `serve --development-administrator`, refused on any profile but
+`simulation`, and it never disturbs an administrator with a different username.
+The same pair seeds the browser mock. It is a development-phase convenience and
+is expected to be removed before deployment; section 8.0 of
+`06_SoftwareDocu/Development_and_Simulation_Flow.md` holds the detail and the
+fences.
+
 ## Versioning and changelog rules
 
 The repository carries one project-level Semantic Version covering the Go Bench

@@ -1,0 +1,42 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-DATA-7b62c9f3"
+
+title = "Persist device network, interface and profile configuration with revisions"
+
+status = "active"
+
+requirement = """
+The appliance shall persist interface configurations, VPN profiles and device networks with stable identifiers and a revision that changes on every accepted edit, and shall persist an observed state only together with the time it was observed.
+"""
+
+verification = "A repository test asserts the revision changes on edit, that an unchanged save does not, and that a restart reports stored observations with their observation time rather than as current truth."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/interface_settings.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/interface_settings_repository.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/008_interface_settings.sql",
+    "05_Software/nilo_assistant/internal/network/interface_settings_test.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/interface_settings_repository_test.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/device_network_repository.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/009_device_networks.sql",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/interface_settings_test.go::TestSettingsRevisionChangesOnlyWhenTheContentDoes",
+    "05_Software/nilo_assistant/internal/store/sqlite/interface_settings_repository_test.go::TestInterfaceSettingsRoundTripAndRevision",
+    "05_Software/nilo_assistant/internal/store/sqlite/device_network_repository_test.go",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = ""
+
+created = 2026-09-03
+updated = 2026-09-04

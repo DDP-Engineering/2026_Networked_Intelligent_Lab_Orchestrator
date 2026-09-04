@@ -1,0 +1,47 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-FUNC-72e0dc95"
+
+title = "Rename a saved WireGuard profile without changing its identity"
+
+status = "active"
+
+requirement = """
+The appliance shall rename a saved WireGuard profile while keeping its stable identifier, its stored configuration and every reference to it from a device network unchanged.
+"""
+
+verification = "A repository and API test renames a referenced profile and asserts the device network reference, the profile identifier and the stored configuration are unchanged."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/profiles.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/vpn_profile_repository.go",
+    "05_Software/nilo_assistant/internal/network/profile_manager.go",
+    "05_Software/nilo_assistant/internal/network/simulation.go",
+    "05_Software/nilo_assistant/internal/network/operation.go",
+    "05_Software/nilo_assistant/internal/network/wireguard.go",
+    "05_Software/nilo_assistant/internal/httpapi/network_operations.go",
+    "05_Software/nilo_assistant/cmd/nilo/network_vpn.go",
+    "05_Software/nilo_assistant/internal/network/profile_manager_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/network_wireguard_test.go",
+    "05_Software/nilo_assistant/cmd/nilo/network_vpn_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/store/sqlite/vpn_profile_repository_test.go::TestRenamingKeepsTheIdentityAndTheSecretReference",
+    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestRenameKeepsTheIdentityTheKeyAndTheConnection",
+    "05_Software/nilo_assistant/internal/httpapi/network_wireguard_test.go::TestWireGuardRenameKeepsTheIdentityAndRefusesATakenName",
+    "05_Software/nilo_assistant/cmd/nilo/network_vpn_test.go::TestNetworkVPNCommandsUsePreviewAndSeparateAcknowledgement",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "normal"
+rationale = ""
+
+created = 2026-09-03
+updated = 2026-09-04

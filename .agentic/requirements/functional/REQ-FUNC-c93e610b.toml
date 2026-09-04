@@ -1,0 +1,36 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-FUNC-c93e610b"
+
+title = "Produce machine-specific access instructions that carry no secret"
+
+status = "active"
+
+requirement = """
+The appliance shall produce copyable access instructions that name, per machine, the route a client, router or VPN hub needs and the exact address to enter in engineering software, shall list unmet prerequisites, and shall contain no private or preshared key.
+"""
+
+verification = "An API test asserts the instruction set names its target machine for each step, lists an unmet prerequisite when the selected profile is inactive, and contains no key material."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/device_network_manager.go",
+    "05_Software/nilo_assistant/internal/httpapi/device_networks.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/device_network_manager_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/device_networks_test.go",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "normal"
+rationale = ""
+
+created = 2026-09-03
+updated = 2026-09-04

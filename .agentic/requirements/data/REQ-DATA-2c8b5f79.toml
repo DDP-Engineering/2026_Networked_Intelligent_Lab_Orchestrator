@@ -1,0 +1,37 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-DATA-2c8b5f79"
+
+title = "Allocate audit sequence numbers monotonically across retention deletes"
+
+status = "active"
+
+requirement = """
+The appliance shall allocate audit sequence numbers from a persisted allocator that never reuses a number, including after retention has deleted every retained row and after a backwards wall-clock adjustment.
+"""
+
+verification = "A repository test appends events, deletes all rows, appends again and asserts the new sequence continues past the deleted maximum; a fake clock moved backwards does not reorder events."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/store/sqlite/audit_repository.go",
+    "05_Software/nilo_assistant/internal/audit/audit.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/006_appliance_audit_operations.sql",
+    "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository_test.go::TestAuditSequenceNeverRepeatsAfterRetentionEmptiesTheTable",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = "MAX(sequence)+1 restarts at one once retention empties the table."
+
+created = 2026-09-03
+updated = 2026-09-03

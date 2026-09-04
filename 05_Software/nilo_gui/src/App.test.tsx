@@ -113,9 +113,41 @@ const noSession = () =>
 function stubClient(overrides: Partial<BenchCoreClient> = {}): BenchCoreClient {
   return {
     baseUrl: '',
+    listNetworkOperations: () => Promise.resolve([]),
+    previewInterfaceSettings: () =>
+      Promise.reject(new Error('not part of this fixture')),
+    scanWiFi: () => Promise.reject(new Error('not part of this fixture')),
+    previewWiFiJoin: () => Promise.reject(new Error('not part of this fixture')),
+    listDeviceNetworks: () => Promise.resolve([]),
+    previewDeviceNetworkChange: () =>
+      Promise.reject(new Error('not part of this fixture')),
+    checkDeviceNetwork: () => Promise.reject(new Error('not part of this fixture')),
+    getAccessInstructions: () => Promise.reject(new Error('not part of this fixture')),
+    listActivity: () => Promise.reject(new Error('not part of this fixture')),
+    exportActivity: () => Promise.reject(new Error('not part of this fixture')),
+    listDiagnosticSessions: () => Promise.reject(new Error('not part of this fixture')),
+    startDiagnosticSession: () => Promise.reject(new Error('not part of this fixture')),
+    stopDiagnosticSession: () => Promise.reject(new Error('not part of this fixture')),
+    getDiagnosticSettings: () => Promise.reject(new Error('not part of this fixture')),
+    setDiagnosticSettings: () => Promise.reject(new Error('not part of this fixture')),
     getStatus: () => Promise.resolve(healthyStatus),
     getIntegrations: () => Promise.resolve(readyIntegrations),
     getDevices: () => Promise.resolve(readyDevices),
+    getWireGuardStatus: () => Promise.reject(new Error('no network')),
+    previewWireGuardChange: () => Promise.reject(new Error('no network')),
+    getNetworkOperation: () => Promise.reject(new Error('no network')),
+    getNetworkStatus: () =>
+      Promise.reject(new BenchCoreError('unavailable', 'no network')),
+    getNetworkStatistics: () =>
+      Promise.reject(new BenchCoreError('unavailable', 'no network')),
+    previewInterfaceChange: () =>
+      Promise.reject(new BenchCoreError('unavailable', 'no network')),
+    acknowledgeNetworkOperation: () =>
+      Promise.reject(new BenchCoreError('unavailable', 'no network')),
+    confirmNetworkOperation: () =>
+      Promise.reject(new BenchCoreError('unavailable', 'no network')),
+    rollbackNetworkOperation: () =>
+      Promise.reject(new BenchCoreError('unavailable', 'no network')),
     signIn: () => noSession(),
     currentSession: (credential: Credential) =>
       credential.kind === 'bearer' ? Promise.resolve(tokenSession) : noSession(),
@@ -232,7 +264,11 @@ function expectSimulationIdentity(): void {
   expect(screen.getByRole('status', { name: /runtime profile/i })).toHaveTextContent(
     'SIM',
   );
-  expect(screen.getByText(BOUNDARY)).toBeVisible();
+  if (document.querySelector('.shell')) {
+    expect(screen.queryByText(BOUNDARY)).toBeNull();
+  } else {
+    expect(screen.getByText(BOUNDARY)).toBeVisible();
+  }
 }
 
 afterEach(() => {
@@ -531,7 +567,8 @@ describe('connection states', () => {
     fireEvent.click(await screen.findByRole('button', { name: /try again/i }));
 
     expect(await benchPage()).toBeVisible();
-    expect(attempts).toBe(2);
+    // Initial failure, explicit retry, then the shell's reachability refresh.
+    expect(attempts).toBe(3);
     expect(getDevices).toHaveBeenLastCalledWith({
       kind: 'bearer',
       token: 'issued-development-token',

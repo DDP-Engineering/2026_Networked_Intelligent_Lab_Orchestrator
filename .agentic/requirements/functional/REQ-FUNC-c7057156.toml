@@ -1,0 +1,109 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+# One requirement = one independently verifiable behavior.
+# Lives at .agentic/requirements/<category>/<id>.toml
+# Required fields: schema, id, title, status, requirement, verification.
+
+schema = 1
+
+# REQ-<CAT>-<8 hex>. CAT is FUNC, UX, NFR, SEC, DATA, PLAT, REL or TEST,
+# and must match the category folder this file sits in.
+id = "REQ-FUNC-c7057156"
+
+title = "Report WireGuard readiness before any tunnel is offered"
+
+# draft while being written, active once it is built and tested,
+# retired when the behavior is deliberately removed.
+status = "active"
+
+# Self-contained prose: a reader with no other context must be able to
+# understand and check it. No ticket numbers, no run IDs, no references
+# to other requirements.
+#
+# Recommended shape - EARS. Pick the one pattern that fits; a stated
+# trigger or condition is what the test has to arrange, so surfacing it
+# here is what makes the behavior testable:
+#
+#   ubiquitous  The <system> shall <response>.
+#   event       When <trigger>, the <system> shall <response>.
+#   state       While <state>, the <system> shall <response>.
+#   unwanted    If <condition>, then the <system> shall <response>.
+#   optional    Where <feature is included>, the <system> shall <response>.
+#
+# Two "shall" clauses means two behaviors: split it into two requirements.
+# Do not contort prose to fit a pattern - a constraint that reads better
+# plainly is better plainly.
+requirement = """
+When an actor holding the network read permission requests WireGuard readiness, the Network service shall report whether NetworkManager is available, whether the running kernel supports WireGuard, which WireGuard tools are installed, and the version of each installed tool.
+"""
+
+# The observation that settles whether the behavior holds — not a
+# restatement of the requirement.
+#
+# Some behaviors no test can settle: a look-and-see judgement, an install
+# on clean hardware, a printed page. Start this field with "Manual:" or
+# "Inspection:" and name the method, and `check` records the requirement
+# as verified by hand instead of counting it among the tests still owed.
+# The prefix alone is not enough — it has to say what someone does.
+verification = "An automated test requests readiness against probes with fixed results and asserts all four facts appear with those results; further cases assert that a missing tool is reported as missing with no version rather than omitted from the response, and that an unsupported kernel is reported as unsupported rather than as a tool failure."
+
+# Repo-relative, forward slashes. The source files this behavior lives in.
+affected_paths = [
+    "05_Software/nilo_assistant/internal/nethelper/probe.go",
+    "05_Software/nilo_assistant/internal/network/wireguard.go",
+    "05_Software/nilo_assistant/internal/httpapi/network.go",
+    "05_Software/nilo_assistant/internal/network/simulation.go",
+    "05_Software/nilo_assistant/internal/network/profile.go",
+    "05_Software/nilo_assistant/internal/httpapi/network_wireguard_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/wireguard.go",
+    "05_Software/nilo_assistant/internal/nethelper/wireguard_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/wireguard_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/wireguard_linux_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
+    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go",
+    "02_Tools/tests/network/Dockerfile",
+    "05_Software/nilo_gui/src/api/wireguard.ts",
+    "05_Software/nilo_gui/src/api/wireguard.test.ts",
+    "05_Software/nilo_gui/src/components/network/WireGuardPanel.tsx",
+    "05_Software/nilo_gui/src/components/network/WireGuardPanel.test.tsx",
+    "05_Software/nilo_gui/src/components/shell/TopRow.tsx",
+    "05_Software/nilo_gui/src/i18n/en.ts",
+    "05_Software/nilo_gui/src/i18n/de.ts",
+    "05_Software/nilo_gui/src/i18n/ro.ts",
+    "05_Software/nilo_gui/e2e/network.spec.ts",
+]
+
+# "tests/path/test_file.py::test_name" entries. Kept current during build;
+# these select the impacted regression set.
+linked_tests = [    "05_Software/nilo_assistant/internal/httpapi/network_wireguard_test.go::TestWireGuardReadAndAcknowledgedImportLifecycle",
+    "05_Software/nilo_assistant/internal/httpapi/network_wireguard_test.go::TestNetworkRequestRejectsTrailingJSONAndUnknownFields",
+    "05_Software/nilo_assistant/internal/nethelper/wireguard_test.go::TestWireGuardReadinessKeepsProbeFactsSeparate",
+    "05_Software/nilo_assistant/internal/nethelper/wireguard_test.go::TestWireGuardHelperReadIsAllowlistedAndDoesNotMutate",
+    "05_Software/nilo_assistant/internal/nethelper/wireguard_linux_test.go::TestKernelReadinessUsesRunningKernelEvidence",
+    "05_Software/nilo_assistant/internal/nethelper/wireguard_linux_test.go::TestWireGuardVersionRejectsUnexpectedOutput",
+    "05_Software/nilo_assistant/internal/nethelper/wireguard_linux_test.go::TestWireGuardVersionOutputIsBounded",
+    "05_Software/nilo_assistant/internal/nethelper/wireguard_linux_test.go::TestWireGuardReadinessThroughAuthenticatedSocket",
+    "05_Software/nilo_assistant/internal/nethelper/wireguard_linux_test.go::TestWireGuardSystemReadinessDoesNotChangeNetwork",
+    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go::TestApplianceSystemHTTPSAndHelperRecovery",
+    "05_Software/nilo_gui/src/api/wireguard.test.ts",
+    "05_Software/nilo_gui/src/components/network/WireGuardPanel.test.tsx",
+    "05_Software/nilo_gui/e2e/network.spec.ts",
+]
+
+# --- optional below this line ---
+
+# "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-02
+updated = 2026-09-03
+
+# Planned files not implemented at the 2026-09-03 audit:
+# 05_Software/nilo_assistant/internal/network/wireguard_test.go

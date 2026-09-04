@@ -62,6 +62,7 @@ const administrator: BenchCoreSession = {
     'users.manage',
     'tokens.read.all',
     'tokens.manage.all',
+    'activity.read',
   ],
   credential: 'session',
   csrfToken: 'csrf-token-fixture',
@@ -77,9 +78,39 @@ const viewer: BenchCoreSession = {
 function client(session: BenchCoreSession = administrator): BenchCoreClient {
   return {
     baseUrl: '',
+    listNetworkOperations: () => Promise.resolve([]),
+    previewInterfaceSettings: () =>
+      Promise.reject(new Error('not part of this fixture')),
+    scanWiFi: () => Promise.reject(new Error('not part of this fixture')),
+    previewWiFiJoin: () => Promise.reject(new Error('not part of this fixture')),
+    listDeviceNetworks: () => Promise.resolve([]),
+    previewDeviceNetworkChange: () =>
+      Promise.reject(new Error('not part of this fixture')),
+    checkDeviceNetwork: () => Promise.reject(new Error('not part of this fixture')),
+    getAccessInstructions: () => Promise.reject(new Error('not part of this fixture')),
+    listActivity: () => Promise.reject(new Error('not part of this fixture')),
+    exportActivity: () => Promise.reject(new Error('not part of this fixture')),
+    listDiagnosticSessions: () => Promise.reject(new Error('not part of this fixture')),
+    startDiagnosticSession: () => Promise.reject(new Error('not part of this fixture')),
+    stopDiagnosticSession: () => Promise.reject(new Error('not part of this fixture')),
+    getDiagnosticSettings: () => Promise.reject(new Error('not part of this fixture')),
+    setDiagnosticSettings: () => Promise.reject(new Error('not part of this fixture')),
     getStatus: () => Promise.resolve(status),
     getIntegrations: () => Promise.resolve(integrations),
     getDevices: () => Promise.resolve(devices),
+    getWireGuardStatus: () => Promise.reject(new Error('no network')),
+    previewWireGuardChange: () => Promise.reject(new Error('no network')),
+    getNetworkOperation: () => Promise.reject(new Error('no network')),
+    getNetworkStatus: () => Promise.reject(new BenchCoreError('unavailable', 'no')),
+    getNetworkStatistics: () => Promise.reject(new BenchCoreError('unavailable', 'no')),
+    previewInterfaceChange: () =>
+      Promise.reject(new BenchCoreError('unavailable', 'no')),
+    acknowledgeNetworkOperation: () =>
+      Promise.reject(new BenchCoreError('unavailable', 'no')),
+    confirmNetworkOperation: () =>
+      Promise.reject(new BenchCoreError('unavailable', 'no')),
+    rollbackNetworkOperation: () =>
+      Promise.reject(new BenchCoreError('unavailable', 'no')),
     signIn: () => Promise.reject(new BenchCoreError('unauthorized', 'no')),
     currentSession: () => Promise.resolve(session),
     signOut: () => Promise.resolve(),
@@ -119,6 +150,57 @@ afterEach(() => {
 });
 
 describe('the one compact top row', () => {
+  it('uses the appliance runtime on the sign-in screen before authentication', async () => {
+    const api = client();
+    api.currentSession = () =>
+      Promise.reject(new BenchCoreError('unauthorized', 'sign in'));
+    const { container } = renderInShell(
+      <App
+        client={api}
+        apiMode="live"
+        endpoint="https://127.0.0.1:8443"
+        runtimeProfile="appliance"
+      />,
+    );
+    await screen.findByRole('button', { name: 'Sign in' });
+    expect(container.querySelector('.sim-badge')).toBeNull();
+    expect(container.querySelector('.card-boundary')).toHaveTextContent(
+      'Live appliance networking',
+    );
+  });
+  it('labels an appliance without simulation claims', async () => {
+    const api = client();
+    api.getStatus = () =>
+      Promise.resolve({ ...status, profile: 'appliance', simulation: false });
+    api.getIntegrations = () =>
+      Promise.resolve({ ...integrations, scenario: '', items: [] });
+    api.getDevices = () => Promise.resolve({ ...devices, scenario: '', items: [] });
+    document.cookie = 'nilo_csrf=csrf-token-fixture';
+    const { container } = renderInShell(
+      <App client={api} apiMode="live" endpoint="https://127.0.0.1:8443" />,
+    );
+    await benchPage();
+    expect(container.querySelector('.sim-badge')).toBeNull();
+    expect(container.querySelector('.shell-boundary')).toBeNull();
+    expect(
+      screen.getByRole('status', { name: 'Live appliance networking' }),
+    ).toBeVisible();
+  });
+  it('updates browser reachability when the next status request fails', async () => {
+    const api = client();
+    api.getStatus = vi
+      .fn()
+      .mockResolvedValueOnce(status)
+      .mockRejectedValue(new BenchCoreError('unavailable', 'offline'));
+    document.cookie = 'nilo_csrf=csrf-token-fixture';
+    renderInShell(<App client={api} apiMode="live" endpoint="http://127.0.0.1:8090" />);
+    await benchPage();
+    openFromNav('Network');
+    expect(
+      await screen.findByText(/Bench Core did not answer this interface/i),
+    ).toBeVisible();
+  });
+
   it('carries the wordmark, the tabs and every control on one row', async () => {
     const { container } = renderShell();
     await benchPage();
@@ -284,6 +366,7 @@ describe('the navigation', () => {
 
     expect(names).toEqual([
       'Network',
+      'Activity',
       'Plugins',
       'Authentication',
       'Settings',
@@ -442,21 +525,36 @@ describe('languages', () => {
 describe('the network presentation', () => {
   const ILLUSTRATIVE = ['192.168.10.42', '10.8.0.12', '1 Gbps', '2.4 Mbps', '0.3 Mbps'];
 
-  it('says appliance network reporting is unavailable, in the summary', async () => {
+  it('keeps the four network facts separate in the summary', async () => {
     renderShell();
     await benchPage();
 
     // The top-row control, not the navigation entry of the same name.
     const row = document.querySelector('.toprow') as HTMLElement;
     fireEvent.click(within(row).getByRole('button', { name: 'Network' }));
+    const menu = screen.getByRole('menu');
 
-    expect(screen.getByText(/not yet available/i)).toBeVisible();
+    for (const label of [
+      'Interface connection',
+      'Tunnel',
+      'Last handshake',
+      'Bench Core reachability',
+    ]) {
+      expect(within(menu).getByText(label)).toBeVisible();
+    }
+    // The top row reads none of the appliance's own networking, so three of the
+    // four say so rather than being guessed from the one fact it does have.
+    expect(within(menu).getAllByText('Not reported')).toHaveLength(3);
+
     for (const value of ILLUSTRATIVE) {
       expect(screen.queryByText(value)).toBeNull();
     }
   });
 
-  it('says the same on the Network page, and reports only HTTP reachability', async () => {
+  it('says the network state is unreadable, and still reports HTTP reachability', async () => {
+    // This fixture's client refuses the network reads, which is what a backend
+    // that cannot answer looks like. The page has to say so rather than present
+    // an appliance with no interfaces.
     const { container } = renderShell();
     await benchPage();
 
@@ -464,13 +562,17 @@ describe('the network presentation', () => {
 
     expect(screen.getByRole('heading', { name: 'Network', level: 2 })).toBeVisible();
     expect(
-      screen.getByText(/appliance network reporting is not yet available/i),
+      await screen.findByText(/appliance network state could not be read/i),
     ).toBeVisible();
-    // The structure is there; every cell says it was not reported.
-    expect(screen.getAllByText('Not reported').length).toBe(15);
-    expect(screen.getByText(/answered this interface over HTTP/i)).toBeVisible();
+
+    // Reachability remains in the top-row menu instead of repeated on the page.
+    fireEvent.click(
+      within(container.querySelector('.toprow') as HTMLElement).getByRole('button', {
+        name: 'Network',
+      }),
+    );
     expect(
-      screen.getByText(/not the appliance LAN, Wi-Fi or VPN state/i),
+      within(screen.getByRole('menu')).getByText(/answered this interface over HTTP/i),
     ).toBeVisible();
 
     for (const value of ILLUSTRATIVE) {

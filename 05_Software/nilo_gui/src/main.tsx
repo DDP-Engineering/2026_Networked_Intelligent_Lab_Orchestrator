@@ -22,6 +22,15 @@ if (root === null) {
 const environment = import.meta.env as unknown as EnvironmentRecord;
 const resolved = readGuiEnvironment(environment);
 const client = createConfiguredClient(environment);
+const runtimeHint = document.querySelector<HTMLMetaElement>(
+  'meta[name="nilo-runtime-profile"]',
+)?.content;
+const runtimeProfile =
+  runtimeHint === 'appliance' || runtimeHint === 'simulation'
+    ? runtimeHint
+    : resolved.apiMode === 'mock' || import.meta.env.DEV
+      ? 'simulation'
+      : 'unknown';
 
 createRoot(root).render(
   <StrictMode>
@@ -30,7 +39,12 @@ createRoot(root).render(
         <App
           client={client}
           apiMode={resolved.apiMode}
-          endpoint={resolved.apiBaseUrl}
+          endpoint={
+            import.meta.env.PROD && resolved.apiMode === 'live'
+              ? window.location.origin
+              : resolved.apiBaseUrl
+          }
+          runtimeProfile={runtimeProfile}
         />
       </LanguageProvider>
     </ThemeProvider>

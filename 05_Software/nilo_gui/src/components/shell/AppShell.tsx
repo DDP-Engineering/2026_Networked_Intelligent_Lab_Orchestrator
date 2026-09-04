@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo, useEffect, useState } from 'react';
 
 import type { BenchCoreClient, Credential } from '../../api/client';
 import type {
@@ -6,14 +6,27 @@ import type {
   BenchCoreStatus,
   DeviceInventory,
   IntegrationInventory,
+  StatisticsPeriod,
+  NetworkStatus,
 } from '../../api/contract';
+import {
+  PERMISSION_ACTIVITY_EXPORT,
+  PERMISSION_DIAGNOSTICS_MANAGE,
+  PERMISSION_NETWORK_MANAGE,
+  PERMISSION_VPN_MANAGE,
+  PERMISSION_VPN_INSTALL,
+} from '../../api/contract';
+import type { ActivityFilter } from '../../api/activity';
+import type { DeviceNetworkChange } from '../../api/devicenetworks';
+import type { InterfaceSettingsDraft, WiFiJoinDraft } from '../../api/settings';
+import type { WireGuardStatus, WireGuardChange } from '../../api/wireguard';
 import type { Resource } from '../../api/resource';
 import { useTranslate } from '../../i18n/languages';
 import { AuthenticationPage } from '../AuthenticationPage';
 import { BenchPage } from '../pages/BenchPage';
+import { ActivityPage } from '../pages/ActivityPage';
 import { NetworkPage } from '../pages/NetworkPage';
 import { AboutPage, IntegrationPage, NotAvailablePage } from '../pages/SimplePages';
-import { Icon } from './Icon';
 import { SideNav } from './SideNav';
 import { TopRow } from './TopRow';
 import { buildPages, findPage, integrationPageId, type PageDescriptor } from './pages';
@@ -59,6 +72,29 @@ export function AppShell({
   onSessionEnded,
 }: AppShellProps) {
   const t = useTranslate();
+  const [networkStatus, setNetworkStatus] = useState<NetworkStatus | null>(null);
+  const [wireGuard, setWireGuard] = useState<WireGuardStatus | null>(null);
+  const [benchCoreReachable, setBenchCoreReachable] = useState(true);
+  useEffect(() => {
+    let abandoned = false;
+    const refresh = async () => {
+      const [network, vpn, core] = await Promise.allSettled([
+        client.getNetworkStatus(credential),
+        client.getWireGuardStatus(credential),
+        client.getStatus(credential),
+      ]);
+      if (abandoned) return;
+      setNetworkStatus(network.status === 'fulfilled' ? network.value : null);
+      setWireGuard(vpn.status === 'fulfilled' ? vpn.value : null);
+      setBenchCoreReachable(core.status === 'fulfilled');
+    };
+    void refresh();
+    const timer = setInterval(() => void refresh(), 5000);
+    return () => {
+      abandoned = true;
+      clearInterval(timer);
+    };
+  }, [client, credential]);
 
   // Memoised because a fresh empty array on every render would rebuild the
   // navigation, and with it the tab list, on every render too. An unreadable
@@ -75,6 +111,122 @@ export function AppShell({
   const pageIds = useMemo(() => pages.map((page) => page.id), [pages]);
 
   usePruneClosedPages(workspace, pageIds);
+
+  // Bound here rather than passing the client and credential down, so the
+  // Network page depends on two reads instead of on the whole client surface —
+  // and cannot reach a mutating method it has no business calling.
+  const readNetworkStatus = useCallback(
+    () => client.getNetworkStatus(credential),
+    [client, credential],
+  );
+  const readNetworkStatistics = useCallback(
+    (interfaceId: string, period: StatisticsPeriod) =>
+      client.getNetworkStatistics(credential, interfaceId, period),
+    [client, credential],
+  );
+  const previewInterfaceChange = useCallback(
+    (interfaceId: string, action: 'enable' | 'disable') =>
+      client.previewInterfaceChange(credential, interfaceId, action),
+    [client, credential],
+  );
+  const acknowledgeOperation = useCallback(
+    (id: string, revision: string) =>
+      client.acknowledgeNetworkOperation(credential, id, revision),
+    [client, credential],
+  );
+  const confirmOperation = useCallback(
+    (id: string) => client.confirmNetworkOperation(credential, id),
+    [client, credential],
+  );
+  const rollbackOperation = useCallback(
+    (id: string) => client.rollbackNetworkOperation(credential, id),
+    [client, credential],
+  );
+  const canManageInterfaces = session.permissions.includes(PERMISSION_NETWORK_MANAGE);
+  const previewWireGuardChange = useCallback(
+    (change: WireGuardChange) => client.previewWireGuardChange(credential, change),
+    [client, credential],
+  );
+  const readOperation = useCallback(
+    (id: string) => client.getNetworkOperation(credential, id),
+    [client, credential],
+  );
+  const listOperations = useCallback(
+    () => client.listNetworkOperations(credential),
+    [client, credential],
+  );
+  const readDeviceNetworks = useCallback(
+    () => client.listDeviceNetworks(credential),
+    [client, credential],
+  );
+  const previewDeviceNetworkChange = useCallback(
+    (change: DeviceNetworkChange) =>
+      client.previewDeviceNetworkChange(credential, change),
+    [client, credential],
+  );
+  const checkDeviceNetwork = useCallback(
+    (id: string, tcpPort: number) => client.checkDeviceNetwork(credential, id, tcpPort),
+    [client, credential],
+  );
+  const readAccessInstructions = useCallback(
+    (id: string) => client.getAccessInstructions(credential, id),
+    [client, credential],
+  );
+  const previewInterfaceSettings = useCallback(
+    (interfaceId: string, settings: InterfaceSettingsDraft) =>
+      client.previewInterfaceSettings(credential, interfaceId, settings),
+    [client, credential],
+  );
+  const scanWiFi = useCallback(
+    (interfaceId: string) => client.scanWiFi(credential, interfaceId),
+    [client, credential],
+  );
+  const previewWiFiJoin = useCallback(
+    (interfaceId: string, join: WiFiJoinDraft) =>
+      client.previewWiFiJoin(credential, interfaceId, join),
+    [client, credential],
+  );
+  // The Activity page opens narrowed to what the operator was looking at; the
+  // filter is kept here so the tab it opens into can read it.
+  const [activityFilter, setActivityFilter] = useState<ActivityFilter>({});
+  const openActivity = useCallback(
+    (filter: ActivityFilter) => {
+      setActivityFilter(filter);
+      workspace.open_('activity');
+    },
+    [workspace],
+  );
+  const readActivity = useCallback(
+    (filter: ActivityFilter) => client.listActivity(credential, filter),
+    [client, credential],
+  );
+  const exportActivity = useCallback(
+    (filter: ActivityFilter, format: 'jsonl' | 'csv') =>
+      client.exportActivity(credential, filter, format),
+    [client, credential],
+  );
+  const readSessions = useCallback(
+    () => client.listDiagnosticSessions(credential),
+    [client, credential],
+  );
+  const startSession = useCallback(
+    (scope: string, target: string, minutes: number) =>
+      client.startDiagnosticSession(credential, scope, target, minutes),
+    [client, credential],
+  );
+  const stopSession = useCallback(
+    (id: string) => client.stopDiagnosticSession(credential, id),
+    [client, credential],
+  );
+  const readSettings = useCallback(
+    () => client.getDiagnosticSettings(credential),
+    [client, credential],
+  );
+  const saveSettings = useCallback(
+    (settings: Parameters<typeof client.setDiagnosticSettings>[1]) =>
+      client.setDiagnosticSettings(credential, settings),
+    [client, credential],
+  );
 
   /** A fixed page's name is translated; an integration's is what it reported. */
   const nameOf = (page: PageDescriptor): string =>
@@ -95,12 +247,13 @@ export function AppShell({
       </div>
 
       <TopRow
+        simulation={status.simulation}
+        networkStatus={networkStatus}
+        wireGuardStatus={wireGuard}
         tabs={openTabs}
         active={workspace.active}
         session={session}
-        // Reaching this shell at all means Bench Core answered the status
-        // request; it is stated as that one HTTP fact and nothing more.
-        benchCoreReachable
+        benchCoreReachable={benchCoreReachable}
         onActivate={workspace.activate}
         onClose={workspace.close}
         onOpen={workspace.open_}
@@ -136,11 +289,6 @@ export function AppShell({
           renderPage(active)
         )}
       </main>
-
-      <p className="shell-boundary">
-        <Icon name="about" size={13} />
-        {t('boundary.statement')}
-      </p>
     </div>
   );
 
@@ -156,7 +304,51 @@ export function AppShell({
       );
     }
     if (page.id === 'network') {
-      return <NetworkPage benchCoreReachable />;
+      return (
+        <NetworkPage
+          readNetworkStatus={readNetworkStatus}
+          readNetworkStatistics={readNetworkStatistics}
+          previewInterfaceChange={previewInterfaceChange}
+          acknowledgeOperation={acknowledgeOperation}
+          confirmOperation={confirmOperation}
+          rollbackOperation={rollbackOperation}
+          canManageInterfaces={canManageInterfaces}
+          wireGuardStatus={wireGuard}
+          canManageVPN={session.permissions.includes(PERMISSION_VPN_MANAGE)}
+          canInstallVPN={session.permissions.includes(PERMISSION_VPN_INSTALL)}
+          previewWireGuardChange={previewWireGuardChange}
+          readOperation={readOperation}
+          benchCoreReachable={benchCoreReachable}
+          listOperations={listOperations}
+          readDeviceNetworks={readDeviceNetworks}
+          previewDeviceNetworkChange={previewDeviceNetworkChange}
+          checkDeviceNetwork={checkDeviceNetwork}
+          readAccessInstructions={readAccessInstructions}
+          previewInterfaceSettings={previewInterfaceSettings}
+          scanWiFi={scanWiFi}
+          previewWiFiJoin={previewWiFiJoin}
+          onOpenActivity={openActivity}
+        />
+      );
+    }
+    if (page.id === 'activity') {
+      return (
+        <ActivityPage
+          key={JSON.stringify(activityFilter)}
+          initialFilter={activityFilter}
+          readActivity={readActivity}
+          exportActivity={exportActivity}
+          canExport={session.permissions.includes(PERMISSION_ACTIVITY_EXPORT)}
+          canManageDiagnostics={session.permissions.includes(
+            PERMISSION_DIAGNOSTICS_MANAGE,
+          )}
+          readSessions={readSessions}
+          startSession={startSession}
+          stopSession={stopSession}
+          readSettings={readSettings}
+          saveSettings={saveSettings}
+        />
+      );
     }
     if (page.id === 'about') {
       return <AboutPage status={status} />;

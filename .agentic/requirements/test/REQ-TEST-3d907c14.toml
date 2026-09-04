@@ -1,0 +1,39 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-TEST-3d907c14"
+
+title = "Prove device network access in an isolated routed topology"
+
+status = "active"
+
+requirement = """
+Device network forwarding, translation and denial behavior shall be proven in an isolated multi-node Linux topology with its own namespaces or containers, and shall never use the developer host's own interfaces, routes, firewall or system bus.
+"""
+
+verification = "The network test harness creates and removes its own topology; a test asserts the host's interface and route inventory is unchanged before and after a full run."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/nethelper/forwarding.go",
+    "05_Software/nilo_assistant/internal/nethelper/nftables_render.go",
+    "05_Software/nilo_assistant/internal/nethelper/nftables_linux.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/nethelper/forwarding_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/nftables_render_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/nftables_linux_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/nftables_vpn_linux_test.go",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = ""
+
+created = 2026-09-03
+updated = 2026-09-04

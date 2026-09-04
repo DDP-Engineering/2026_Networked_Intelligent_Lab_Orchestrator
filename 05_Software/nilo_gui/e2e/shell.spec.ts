@@ -83,6 +83,7 @@ test('anchors Network in the lower cluster, not among the instruments', async ()
 
   await expect(lower.getByRole('button')).toHaveText([
     'Network',
+    'Activity',
     'Plugins',
     'Authentication',
     'Settings',
@@ -113,14 +114,25 @@ test('opens and closes pages as tabs', async () => {
   await expect(tabs.getByRole('tab')).toHaveCount(2);
 });
 
-test('reports appliance network state as unavailable rather than inventing it', async () => {
+test('reports the appliance network state the backend actually served', async () => {
   await expect(
     page.getByRole('heading', { name: 'Network', exact: true }),
   ).toBeVisible();
+
+  // Bench Core now serves the simulated catalog on /api/v1/network/status, so
+  // the page reports what it was given rather than saying nothing is available.
+  await expect(page.getByRole('heading', { name: 'Interfaces' })).toBeVisible();
+  // The row, specifically: the chart's interface chooser lists the same names,
+  // so a plain text match would resolve to two elements.
+  await expect(page.getByRole('rowheader', { name: /enp1s0/ })).toBeVisible();
+  await expect(page.getByText('192.168.10.24/24')).toBeVisible();
+
+  await expect(page.getByRole('status', { name: /runtime profile/i })).toHaveCount(1);
   await expect(
-    page.getByText('Appliance network reporting is not yet available'),
-  ).toBeVisible();
-  await expect(page.getByText('answered this interface over HTTP')).toBeVisible();
+    page.getByText('Measured in the simulated environment, not on a bench.'),
+  ).toHaveCount(0);
+  await expect(page.getByRole('columnheader', { name: 'Gateway' })).toBeVisible();
+  await expect(page.getByText('192.168.10.1', { exact: true })).toBeVisible();
 
   // None of the illustrative values from the design references is present.
   const body = (await page.locator('body').innerText()).replace(/\s+/g, ' ');
@@ -169,7 +181,7 @@ test('narrows the navigation on a small viewport without clipping it', async () 
 
   // The labels give way, but every entry is still there, still named for a
   // screen reader, and still clickable.
-  await expect(page.locator('.nav-lower').getByRole('button')).toHaveCount(5);
+  await expect(page.locator('.nav-lower').getByRole('button')).toHaveCount(6);
   await expect(
     page.locator('.nav-lower').getByRole('button', { name: 'Network' }),
   ).toBeVisible();
@@ -188,13 +200,12 @@ test('narrows the navigation on a small viewport without clipping it', async () 
   await page.setViewportSize({ width: 1280, height: 720 });
 });
 
-test('keeps the simulation marking and the boundary statement on every screen', async () => {
+test('keeps one runtime indicator on every screen', async () => {
   for (const entry of ['Bench', 'Authentication', 'About']) {
     await page.locator('.sidenav').getByRole('button', { name: entry }).click();
     await expect(page.getByRole('status', { name: /runtime profile/i })).toBeVisible();
-    await expect(page.locator('.shell-boundary')).toContainText(
-      'never represent evidence from physical equipment',
-    );
+    await expect(page.locator('.shell-boundary')).toHaveCount(0);
+    await expect(page.locator('.sim-badge')).toHaveCount(1);
   }
 });
 

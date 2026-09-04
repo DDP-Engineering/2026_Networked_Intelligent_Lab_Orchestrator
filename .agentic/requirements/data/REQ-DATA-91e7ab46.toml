@@ -1,0 +1,50 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-DATA-91e7ab46"
+
+title = "Record every audit event with its appliance, category, outcome and correlation"
+
+status = "active"
+
+requirement = """
+The appliance shall record each audit event with its appliance identifier, boot identifier, category, component, stable action code, target type and identity, actor kind and identity, outcome, severity, correlated operation identity where known, and safe structured details, while existing stored events remain readable unchanged.
+"""
+
+verification = "A repository test writes and reads back every field, and reads a row written in the older shape without rewriting its meaning."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/audit/audit.go",
+    "05_Software/nilo_assistant/internal/audit/writer.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/audit_repository.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/006_appliance_audit_operations.sql",
+    "05_Software/nilo_assistant/internal/network/operation.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository_test.go",
+    "05_Software/nilo_assistant/internal/network/operation_durability_test.go",
+    "05_Software/nilo_assistant/internal/app/durable_network_test.go",
+    "05_Software/nilo_assistant/internal/network/tunnel.go",
+    "05_Software/nilo_assistant/internal/network/profile_manager_test.go",
+    "05_Software/nilo_assistant/internal/identity/service.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository_test.go::TestAuditEnvelopeRoundTripsAndLeavesOlderRowsReadable",
+    "05_Software/nilo_assistant/internal/network/operation_durability_test.go::TestAnAcceptedChangeIsRecordedBeforeAnySideEffect",
+    "05_Software/nilo_assistant/internal/network/operation_durability_test.go::TestEachStageOfOneChangeIsRecordedSeparately",
+    "05_Software/nilo_assistant/internal/network/operation_durability_test.go::TestAnExpiryIsRecordedAsTheApplianceActing",
+    "05_Software/nilo_assistant/internal/app/durable_network_test.go::TestAnInterfaceToggleKeepsAttributableHistoryAcrossARestart",
+    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestStartupConnectsTheSelectedProfileOnceAndRecordsItAsTheSystem",
+    "05_Software/nilo_assistant/internal/httpapi/activity_test.go",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = ""
+
+created = 2026-09-03
+updated = 2026-09-04

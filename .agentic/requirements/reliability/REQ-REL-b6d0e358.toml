@@ -1,0 +1,42 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-REL-b6d0e358"
+
+title = "Hold device network exposure closed until its prerequisites are satisfied"
+
+status = "active"
+
+requirement = """
+While a device network's configured interface, address or selected tunnel is not present and applied, the appliance shall keep its forwarding exposure closed and report it as waiting, and shall open the exposure only once every configured prerequisite is observed.
+"""
+
+verification = "A startup test boots with the adapter absent and with the selected tunnel down, asserts the waiting state and that no forwarding grant exists, then supplies each prerequisite and asserts the exposure opens."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/forwarding_plan.go",
+    "05_Software/nilo_assistant/internal/network/forwarding_plan_test.go",
+    "05_Software/nilo_assistant/internal/network/device_network_manager.go",
+    "05_Software/nilo_assistant/internal/httpapi/device_networks.go",
+    "05_Software/nilo_assistant/internal/nethelper/forwarding.go",
+    "05_Software/nilo_assistant/internal/network/appliance.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/forwarding_plan_test.go::TestAVPNOnlyPlanWaitsWhenTheTunnelIsNotThere",
+    "05_Software/nilo_assistant/internal/network/device_network_manager_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/device_networks_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/forwarding_test.go",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = ""
+
+created = 2026-09-03
+updated = 2026-09-04

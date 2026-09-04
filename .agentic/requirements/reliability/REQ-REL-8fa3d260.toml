@@ -1,0 +1,43 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-REL-8fa3d260"
+
+title = "Restore every NILO-owned network resource when a change is not confirmed"
+
+status = "draft"
+
+requirement = """
+When a connectivity change is not confirmed within its window, or fails while applying, the appliance shall restore the complete set of NILO-owned resources it changed, including routes, policy rules, firewall grants and forwarding settings as well as NetworkManager connections, and shall report restoration only from an observation.
+"""
+
+verification = "An isolated Linux test injects a failure at each apply boundary and asserts every owned resource is back and that an unobserved restoration is reported as a rollback failure."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/nethelper/forwarding.go",
+    "05_Software/nilo_assistant/internal/nethelper/nftables_render.go",
+    "05_Software/nilo_assistant/internal/nethelper/nftables_linux.go",
+    "05_Software/nilo_assistant/cmd/nilo-nethelper/recover_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/recovery.go",
+    "02_Tools/scripts/install-nethelper.sh",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/nethelper/forwarding_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/nftables_render_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/nftables_linux_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/recovery_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/recover_system_linux_test.go",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = ""
+
+created = 2026-09-03
+updated = 2026-09-04

@@ -1,0 +1,59 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-FUNC-0f6ac82d"
+
+title = "Store several named WireGuard profiles and keep at most one active"
+
+status = "active"
+
+requirement = """
+The appliance shall store several imported WireGuard profiles as separate named records that survive a restart, shall import each one inactive with startup selection off, and shall keep at most one NILO-managed tunnel active at any time.
+"""
+
+verification = "A repository and Linux lifecycle test imports two profiles, restarts the service, reads both back inactive, activates one and asserts activating the second deactivates the first."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/profiles.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/vpn_profile_repository.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/vpn_profile_repository_test.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/007_vpn_profiles.sql",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations.go",
+    "05_Software/nilo_assistant/internal/network/profile_manager.go",
+    "05_Software/nilo_assistant/internal/network/appliance.go",
+    "05_Software/nilo_assistant/internal/network/tunnel.go",
+    "05_Software/nilo_assistant/internal/nethelper/tunnel_engine.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/client.go",
+    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
+    "05_Software/nilo_assistant/cmd/nilo/network_runtime_linux.go",
+    "05_Software/nilo_assistant/internal/app/profile_persistence_test.go",
+    "05_Software/nilo_assistant/internal/network/profile_manager_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/tunnel_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux_test.go",
+    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/store/sqlite/vpn_profile_repository_test.go::TestTwoProfilesSurviveARestartAndStayInactive",
+    "05_Software/nilo_assistant/internal/store/sqlite/vpn_profile_repository_test.go::TestOnlyOneProfileIsSelectedForStartup",
+    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestImportBindsTheStagedKeyThroughTheHelperAndSavesAnInactiveProfile",
+    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestActivationResolvesTheConnectionAndPreviewsTheSwitch",
+    "05_Software/nilo_assistant/internal/nethelper/tunnel_test.go::TestTunnelActivationIsCheckpointedAgainstTheWholeSystem",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux_test.go::TestNetworkManagerWireGuardLifecycleSystem",
+    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go::TestApplianceSystemHTTPSAndHelperRecovery",
+    "05_Software/nilo_assistant/internal/app/profile_persistence_test.go::TestImportedProfilesSurviveARestartInactive",
+    "05_Software/nilo_assistant/internal/app/profile_persistence_test.go::TestSelectingAStartupProfileSurvivesARestart",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = ""
+
+created = 2026-09-03
+updated = 2026-09-04

@@ -1,0 +1,39 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-FUNC-35da79f1"
+
+title = "Run a timed debug session for one function and optional target"
+
+status = "active"
+
+requirement = """
+When an authorized administrator starts a debug session, the appliance shall raise diagnostic detail for the named function scope and optional target for the requested five, fifteen or sixty minutes, and shall return that scope to normal when the session is stopped, when it expires, or when the appliance restarts.
+"""
+
+verification = "A service and API test starts a session, asserts the raised scope, advances a monotonic clock past expiry, and asserts normal detail is restored; a restart test asserts a session does not survive it and is recorded as interrupted."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/diagnostics/diagnostics.go",
+    "05_Software/nilo_assistant/internal/httpapi/activity.go",
+    "05_Software/nilo_assistant/cmd/nilo/diagnostics.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/diagnostic_repository.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/010_activity.sql",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/diagnostics/diagnostics_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/activity_test.go",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = ""
+
+created = 2026-09-03
+updated = 2026-09-04

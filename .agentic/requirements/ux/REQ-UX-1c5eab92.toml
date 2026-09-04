@@ -1,0 +1,36 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-UX-1c5eab92"
+
+title = "Reach filtered Activity from the page whose history is being read"
+
+status = "draft"
+
+requirement = """
+The interface shall offer one shared Activity page with audit, event and debug filters, and a functional page shall link to it with its own function and target filters already selected.
+"""
+
+verification = "A component and browser test follows the link from the Network page and asserts the Activity filters arrive already narrowed to that function and target."
+
+affected_paths = [
+    "05_Software/nilo_gui/src/components/pages/ActivityPage.tsx",
+    "05_Software/nilo_gui/src/components/shell/AppShell.tsx",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx",
+    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "normal"
+rationale = ""
+
+created = 2026-09-03
+updated = 2026-09-04

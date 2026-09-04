@@ -1,8 +1,14 @@
 import {
+  PERMISSION_ACTIVITY_READ,
   PERMISSION_IDENTITIES_READ,
   PERMISSION_TOKENS_READ,
   type BenchCoreSession,
 } from './contract';
+
+/** Report whether this identity may open the shared Activity page. */
+export function mayReadActivity(session: BenchCoreSession | null): boolean {
+  return session !== null && session.permissions.includes(PERMISSION_ACTIVITY_READ);
+}
 
 /**
  * Report whether this identity has any reason to open the Authentication page.

@@ -27,14 +27,45 @@ var activeConfigurationMigration string
 //go:embed migrations/004_identity_access_control.sql
 var identityAccessControlMigration string
 
+//go:embed migrations/005_network_traffic.sql
+var networkTrafficMigration string
+
+//go:embed migrations/006_appliance_audit_operations.sql
+var applianceAuditOperationsMigration string
+
+//go:embed migrations/007_vpn_profiles.sql
+var vpnProfilesMigration string
+
+//go:embed migrations/008_interface_settings.sql
+var interfaceSettingsMigration string
+
+//go:embed migrations/010_activity.sql
+var activityMigration string
+
+//go:embed migrations/009_device_networks.sql
+var deviceNetworksMigration string
+
 var migrations = []migration{
 	{version: "001_initial", sql: initialMigration},
 	{version: "002_policy_snapshots", sql: policySnapshotsMigration},
 	{version: "003_active_configuration", sql: activeConfigurationMigration},
 	{version: "004_identity_access_control", sql: identityAccessControlMigration},
+	{version: "005_network_traffic", sql: networkTrafficMigration},
+	{version: "006_appliance_audit_operations", sql: applianceAuditOperationsMigration},
+	{version: "007_vpn_profiles", sql: vpnProfilesMigration},
+	{version: "008_interface_settings", sql: interfaceSettingsMigration},
+	{version: "009_device_networks", sql: deviceNetworksMigration},
+	{version: "010_activity", sql: activityMigration},
 }
 
-func applyMigrations(ctx context.Context, database *sql.DB) (err error) {
+func applyMigrations(ctx context.Context, database *sql.DB) error {
+	return applyMigrationSet(ctx, database, migrations)
+}
+
+// applyMigrationSet exists so a test can build a database at an earlier schema
+// and prove that opening it upgrades in place without disturbing what it holds.
+// Production always passes the whole set.
+func applyMigrationSet(ctx context.Context, database *sql.DB, set []migration) (err error) {
 	connection, err := database.Conn(ctx)
 	if err != nil {
 		return fmt.Errorf("reserve SQLite migration connection: %w", err)
@@ -66,7 +97,7 @@ func applyMigrations(ctx context.Context, database *sql.DB) (err error) {
 		return fmt.Errorf("create schema migration ledger: %w", err)
 	}
 
-	for _, migration := range migrations {
+	for _, migration := range set {
 		digest := migrationDigest(migration.sql)
 		var recordedDigest string
 		err := connection.QueryRowContext(

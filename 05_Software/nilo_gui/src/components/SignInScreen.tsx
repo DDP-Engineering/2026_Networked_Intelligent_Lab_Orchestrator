@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 
 import { useTranslate } from '../i18n/languages';
 import type { MessageKey } from '../i18n/en';
-import type { ApiMode } from '../config/environment';
+import type { ApiMode, RuntimeProfile } from '../config/environment';
 
 /** How a sign-in attempt that did not succeed is described to the human. */
 export interface SignInRefusal {
@@ -20,6 +20,7 @@ export interface SignInScreenProps {
   /** The Bench Core base URL this screen will authenticate against. */
   endpoint: string;
   apiMode: ApiMode;
+  runtimeProfile?: RuntimeProfile;
   /** Explains why the previous session ended, when one did. */
   notice: MessageKey | null;
   /** Whether a sign-in attempt is outstanding. */
@@ -45,6 +46,7 @@ export interface SignInScreenProps {
 export function SignInScreen({
   endpoint,
   apiMode,
+  runtimeProfile = 'simulation',
   notice,
   working,
   refusal,
@@ -89,14 +91,16 @@ export function SignInScreen({
       <section className="card" aria-labelledby="sign-in-title">
         <div className="card-head">
           <p className="eyebrow">{t('signIn.eyebrow')}</p>
-          <span
-            className="sim-badge"
-            role="status"
-            aria-label={t('top.simulation.label')}
-          >
-            <span className="state-dot state-warn" aria-hidden="true" />
-            {t('top.simulation')}
-          </span>
+          {runtimeProfile === 'simulation' && (
+            <span
+              className="sim-badge"
+              role="status"
+              aria-label={t('top.simulation.label')}
+            >
+              <span className="state-dot state-warn" aria-hidden="true" />
+              {t('top.simulation')}
+            </span>
+          )}
         </div>
 
         <h1 id="sign-in-title">{t('signIn.title')}</h1>
@@ -194,7 +198,15 @@ export function SignInScreen({
           <dd className="cell-mono">{endpoint}</dd>
         </dl>
 
-        <p className="card-boundary">{t('boundary.statement')}</p>
+        <p className="card-boundary">
+          {t(
+            runtimeProfile === 'simulation'
+              ? 'boundary.statement'
+              : runtimeProfile === 'appliance'
+                ? 'boundary.appliance'
+                : 'boundary.unknown',
+          )}
+        </p>
         <p className="mode-note">
           {apiMode === 'mock' ? t('mode.mock') : t('mode.live')}
         </p>

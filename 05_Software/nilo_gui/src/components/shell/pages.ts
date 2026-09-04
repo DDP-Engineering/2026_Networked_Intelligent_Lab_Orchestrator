@@ -1,4 +1,4 @@
-import { mayAdminister } from '../../api/permissions';
+import { mayAdminister, mayReadActivity } from '../../api/permissions';
 import type { BenchCoreIntegration, BenchCoreSession } from '../../api/contract';
 import type { MessageKey } from '../../i18n/en';
 import type { IconName } from './Icon';
@@ -36,6 +36,13 @@ const CORE_PAGES: PageDescriptor[] = [
     cluster: 'core',
     icon: 'network',
     titleKey: 'nav.network',
+    available: true,
+  },
+  {
+    id: 'activity',
+    cluster: 'core',
+    icon: 'about',
+    titleKey: 'nav.activity',
     available: true,
   },
   {
@@ -105,9 +112,11 @@ export function buildPages(
     available: true,
   }));
 
-  const core = CORE_PAGES.filter(
-    (page) => page.id !== 'authentication' || mayAdminister(session),
-  );
+  const core = CORE_PAGES.filter((page) => {
+    if (page.id === 'authentication') return mayAdminister(session);
+    if (page.id === 'activity') return mayReadActivity(session);
+    return true;
+  });
 
   return [BENCH_PAGE, ...instruments, ...core];
 }

@@ -14,12 +14,17 @@ func TestRolePermissionsMatchTheFixedMatrix(t *testing.T) {
 	}{
 		{
 			role: RoleViewer,
-			want: []Permission{PermissionInventoryRead, PermissionStatusRead},
+			want: []Permission{
+				PermissionInventoryRead,
+				PermissionNetworkRead,
+				PermissionStatusRead,
+			},
 		},
 		{
 			role: RoleOperator,
 			want: []Permission{
 				PermissionInventoryRead,
+				PermissionNetworkRead,
 				PermissionStatusRead,
 				PermissionTokensManageSelf,
 				PermissionTokensReadSelf,
@@ -28,7 +33,12 @@ func TestRolePermissionsMatchTheFixedMatrix(t *testing.T) {
 		{
 			role: RoleAdministrator,
 			want: []Permission{
+				PermissionActivityExport,
+				PermissionActivityRead,
+				PermissionDiagnosticsManage,
 				PermissionInventoryRead,
+				PermissionNetworkManage,
+				PermissionNetworkRead,
 				PermissionStatusRead,
 				PermissionTokensManageAll,
 				PermissionTokensManageSelf,
@@ -36,6 +46,8 @@ func TestRolePermissionsMatchTheFixedMatrix(t *testing.T) {
 				PermissionTokensReadSelf,
 				PermissionUsersManage,
 				PermissionUsersRead,
+				PermissionVPNInstall,
+				PermissionVPNManage,
 			},
 		},
 	} {
@@ -61,8 +73,8 @@ func TestNoRoleHoldsAPermissionOutsideTheDefinedSet(t *testing.T) {
 	for _, permission := range AllPermissions() {
 		defined[permission] = true
 	}
-	if len(defined) != 8 {
-		t.Fatalf("AllPermissions() has %d entries, want the 8 defined permissions", len(defined))
+	if len(defined) != 15 {
+		t.Fatalf("AllPermissions() has %d entries, want the 15 defined permissions", len(defined))
 	}
 	for _, role := range []Role{RoleViewer, RoleOperator, RoleAdministrator} {
 		for _, permission := range role.Permissions() {
@@ -76,6 +88,31 @@ func TestNoRoleHoldsAPermissionOutsideTheDefinedSet(t *testing.T) {
 	}
 	if RoleOperator.Has(PermissionUsersManage) || RoleOperator.Has(PermissionTokensManageAll) {
 		t.Fatal("Operator holds an administrator permission")
+	}
+}
+
+// The Network service reads are telemetry every role may see; managing an
+// interface, a VPN profile or the WireGuard packages changes the appliance's
+// connectivity, so those three stay with the Administrator.
+func TestNetworkPermissionsAreReadableByEveryRoleAndManagedByAdministratorsOnly(t *testing.T) {
+	t.Parallel()
+
+	for _, role := range []Role{RoleViewer, RoleOperator, RoleAdministrator} {
+		if !role.Has(PermissionNetworkRead) {
+			t.Fatalf("%s cannot read network telemetry", role)
+		}
+	}
+	for _, permission := range []Permission{
+		PermissionNetworkManage,
+		PermissionVPNManage,
+		PermissionVPNInstall,
+	} {
+		if !RoleAdministrator.Has(permission) {
+			t.Fatalf("Administrator does not hold %s", permission)
+		}
+		if RoleViewer.Has(permission) || RoleOperator.Has(permission) {
+			t.Fatalf("%s is held by a role below Administrator", permission)
+		}
 	}
 }
 
@@ -137,5 +174,25 @@ func TestEffectivePermissionsIntersectScopesWithTheOwnerRole(t *testing.T) {
 				t.Fatalf("EffectivePermissions(%s, %v) = %v, want %v", test.role, test.scopes, got, test.want)
 			}
 		})
+	}
+}
+
+// The activity history and the diagnostics controls reveal account and
+// security events and change what the appliance records, so all three of
+// their permissions stay with the Administrator (REQ-SEC-d19a7b30).
+func TestActivityAndDiagnosticsPermissionsBelongToAdministratorsOnly(t *testing.T) {
+	t.Parallel()
+
+	for _, permission := range []Permission{
+		PermissionActivityRead,
+		PermissionActivityExport,
+		PermissionDiagnosticsManage,
+	} {
+		if !RoleAdministrator.Has(permission) {
+			t.Fatalf("Administrator does not hold %s", permission)
+		}
+		if RoleViewer.Has(permission) || RoleOperator.Has(permission) {
+			t.Fatalf("%s is held by a role below Administrator", permission)
+		}
 	}
 }

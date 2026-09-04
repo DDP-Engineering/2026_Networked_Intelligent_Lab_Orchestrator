@@ -1,20 +1,72 @@
 import {
+  WIREGUARD_PATH,
+  parseWireGuardStatus,
+  type WireGuardStatus,
+  type WireGuardChange,
+} from './wireguard';
+import {
+  ACTIVITY_EXPORT_PATH,
+  ACTIVITY_PATH,
+  DIAGNOSTICS_SESSIONS_PATH,
+  DIAGNOSTICS_SETTINGS_PATH,
+  activityQuery,
+  diagnosticSessionPath,
+  parseActivityPageBody,
+  parseDiagnosticSessionBody,
+  parseDiagnosticSessionsBody,
+  parseDiagnosticSettingsBody,
+  type ActivityFilter,
+  type ActivityPage,
+  type DiagnosticSession,
+  type DiagnosticSessions,
+  type DiagnosticSettings,
+} from './activity';
+import {
+  DEVICE_NETWORKS_PATH,
+  deviceNetworkPath,
+  parseAccessInstructionsBody,
+  parseDeviceNetworkCheckBody,
+  parseDeviceNetworksBody,
+  type AccessInstructions,
+  type DeviceNetwork,
+  type DeviceNetworkChange,
+  type DeviceNetworkCheck,
+} from './devicenetworks';
+import {
+  interfaceSettingsPreviewPath,
+  parseWiFiScanBody,
+  wifiJoinPreviewPath,
+  wifiScanPath,
+  type InterfaceSettingsDraft,
+  type WiFiJoinDraft,
+  type WiFiScan,
+} from './settings';
+import {
   CSRF_HEADER_NAME,
   DEVICES_PATH,
   IDENTITIES_PATH,
   INTEGRATIONS_PATH,
+  NETWORK_OPERATIONS_PATH,
+  NETWORK_STATUS_PATH,
   SESSION_PATH,
   SIGN_IN_PATH,
   SIGN_OUT_PATH,
   STATUS_PATH,
   TOKENS_PATH,
   identityPath,
+  interfacePreviewPath,
+  networkOperationPath,
+  networkStatisticsPath,
   normalizeBaseUrl,
   parseDevicesBody,
   parseIdentitiesBody,
   parseIdentityBody,
   parseIntegrationsBody,
   parseIssuedTokenBody,
+  parseNetworkOperationBody,
+  parseNetworkOperationsBody,
+  parseNetworkStatisticsBody,
+  parseNetworkStatusBody,
   parseSessionBody,
   parseStatusBody,
   parseTokensBody,
@@ -28,7 +80,11 @@ import {
   type IdentityInventory,
   type IntegrationInventory,
   type IssuedToken,
+  type NetworkOperation,
+  type NetworkStatistics,
+  type NetworkStatus,
   type ParseResult,
+  type StatisticsPeriod,
   type TokenInventory,
 } from './contract';
 
@@ -134,6 +190,87 @@ export interface BenchCoreClient {
   getIntegrations(credential: Credential): Promise<IntegrationInventory>;
   getDevices(credential: Credential): Promise<DeviceInventory>;
 
+  getNetworkStatus(credential: Credential): Promise<NetworkStatus>;
+  getWireGuardStatus(credential: Credential): Promise<WireGuardStatus>;
+  previewWireGuardChange(
+    credential: Credential,
+    change: WireGuardChange,
+  ): Promise<NetworkOperation>;
+  getNetworkOperation(credential: Credential, id: string): Promise<NetworkOperation>;
+  getNetworkStatistics(
+    credential: Credential,
+    interfaceId: string,
+    period: StatisticsPeriod,
+  ): Promise<NetworkStatistics>;
+  previewInterfaceChange(
+    credential: Credential,
+    interfaceId: string,
+    action: 'enable' | 'disable',
+  ): Promise<NetworkOperation>;
+  acknowledgeNetworkOperation(
+    credential: Credential,
+    id: string,
+    revision: string,
+  ): Promise<NetworkOperation>;
+  confirmNetworkOperation(
+    credential: Credential,
+    id: string,
+  ): Promise<NetworkOperation>;
+  rollbackNetworkOperation(
+    credential: Credential,
+    id: string,
+  ): Promise<NetworkOperation>;
+  /** Recent managed operations, newest first, for reattaching after a reload. */
+  listNetworkOperations(credential: Credential): Promise<NetworkOperation[]>;
+
+  previewInterfaceSettings(
+    credential: Credential,
+    interfaceId: string,
+    settings: InterfaceSettingsDraft,
+  ): Promise<NetworkOperation>;
+  scanWiFi(credential: Credential, interfaceId: string): Promise<WiFiScan>;
+  previewWiFiJoin(
+    credential: Credential,
+    interfaceId: string,
+    join: WiFiJoinDraft,
+  ): Promise<NetworkOperation>;
+
+  listDeviceNetworks(credential: Credential): Promise<DeviceNetwork[]>;
+  previewDeviceNetworkChange(
+    credential: Credential,
+    change: DeviceNetworkChange,
+  ): Promise<NetworkOperation>;
+  checkDeviceNetwork(
+    credential: Credential,
+    id: string,
+    tcpPort: number,
+  ): Promise<DeviceNetworkCheck>;
+  getAccessInstructions(
+    credential: Credential,
+    id: string,
+  ): Promise<AccessInstructions>;
+
+  listActivity(credential: Credential, filter: ActivityFilter): Promise<ActivityPage>;
+  /** The export as text, exactly as the appliance wrote it. */
+  exportActivity(
+    credential: Credential,
+    filter: ActivityFilter,
+    format: 'jsonl' | 'csv',
+  ): Promise<string>;
+  listDiagnosticSessions(credential: Credential): Promise<DiagnosticSessions>;
+  startDiagnosticSession(
+    credential: Credential,
+    scope: string,
+    target: string,
+    minutes: number,
+  ): Promise<DiagnosticSession>;
+  stopDiagnosticSession(credential: Credential, id: string): Promise<DiagnosticSession>;
+  getDiagnosticSettings(credential: Credential): Promise<DiagnosticSettings>;
+  setDiagnosticSettings(
+    credential: Credential,
+    settings: DiagnosticSettings,
+  ): Promise<DiagnosticSettings>;
+
   signIn(username: string, password: string): Promise<BenchCoreSession>;
   currentSession(credential: Credential): Promise<BenchCoreSession>;
   signOut(credential: Credential): Promise<void>;
@@ -191,6 +328,31 @@ export function createBenchCoreClient(
    * only ever an Authorization header value; it never reaches the URL, and
    * neither does a password, which travels in the body of one POST.
    */
+  /**
+   * One GET whose body is handed back as the text the appliance wrote, for an
+   * export that is meant to be kept rather than decoded.
+   */
+  async function exchangeText(path: string, credential: Credential): Promise<string> {
+    const headers: Record<string, string> = {};
+    if (credential.kind === 'bearer') {
+      headers.Authorization = `Bearer ${credential.token}`;
+    }
+    let response: TransportResponse;
+    try {
+      response = await transport(resourceUrl(baseUrl, path), {
+        method: 'GET',
+        headers,
+        credentials: 'same-origin',
+      });
+    } catch (error) {
+      throw new BenchCoreError('unavailable', describe(error));
+    }
+    if (!response.ok) {
+      throw await refusalOf(response);
+    }
+    return response.text();
+  }
+
   async function exchange<T>(request: Exchange<T>): Promise<T> {
     const url = resourceUrl(baseUrl, request.path);
     const method = request.method ?? 'GET';
@@ -252,6 +414,178 @@ export function createBenchCoreClient(
       exchange({ path: INTEGRATIONS_PATH, credential, parse: parseIntegrationsBody }),
     getDevices: (credential) =>
       exchange({ path: DEVICES_PATH, credential, parse: parseDevicesBody }),
+
+    getNetworkStatus: (credential) =>
+      exchange({
+        path: NETWORK_STATUS_PATH,
+        credential,
+        parse: parseNetworkStatusBody,
+      }),
+    getWireGuardStatus: (credential) =>
+      exchange({ path: WIREGUARD_PATH, credential, parse: parseWireGuardStatus }),
+    previewWireGuardChange: (credential, change) =>
+      exchange({
+        path:
+          WIREGUARD_PATH +
+          (change.action === 'install' ? '/install/preview' : '/preview'),
+        credential,
+        method: 'POST',
+        body: change.action === 'install' ? {} : change,
+        parse: parseNetworkOperationBody,
+      }),
+    getNetworkOperation: (credential, id) =>
+      exchange({
+        path: networkOperationPath(id),
+        credential,
+        parse: parseNetworkOperationBody,
+      }),
+    getNetworkStatistics: (credential, interfaceId, period) =>
+      exchange({
+        path: networkStatisticsPath(interfaceId, period),
+        credential,
+        parse: parseNetworkStatisticsBody,
+      }),
+    previewInterfaceChange: (credential, interfaceId, action) =>
+      exchange({
+        path: interfacePreviewPath(interfaceId),
+        credential,
+        method: 'POST',
+        body: { action },
+        parse: parseNetworkOperationBody,
+      }),
+    acknowledgeNetworkOperation: (credential, id, revision) =>
+      exchange({
+        path: networkOperationPath(id, 'acknowledge'),
+        credential,
+        method: 'POST',
+        // The revision goes back exactly as it was shown, which is what binds
+        // this agreement to that preview and nothing else.
+        body: { revision },
+        parse: parseNetworkOperationBody,
+      }),
+    confirmNetworkOperation: (credential, id) =>
+      exchange({
+        path: networkOperationPath(id, 'confirm'),
+        credential,
+        method: 'POST',
+        body: {},
+        parse: parseNetworkOperationBody,
+      }),
+    rollbackNetworkOperation: (credential, id) =>
+      exchange({
+        path: networkOperationPath(id, 'rollback'),
+        credential,
+        method: 'POST',
+        body: {},
+        parse: parseNetworkOperationBody,
+      }),
+    listNetworkOperations: (credential) =>
+      exchange({
+        path: NETWORK_OPERATIONS_PATH,
+        credential,
+        parse: parseNetworkOperationsBody,
+      }),
+
+    previewInterfaceSettings: (credential, interfaceId, settings) =>
+      exchange({
+        path: interfaceSettingsPreviewPath(interfaceId),
+        credential,
+        method: 'POST',
+        body: settings,
+        parse: parseNetworkOperationBody,
+      }),
+    scanWiFi: (credential, interfaceId) =>
+      exchange({
+        path: wifiScanPath(interfaceId),
+        credential,
+        parse: parseWiFiScanBody,
+      }),
+    previewWiFiJoin: (credential, interfaceId, join) =>
+      exchange({
+        path: wifiJoinPreviewPath(interfaceId),
+        credential,
+        method: 'POST',
+        // The password travels in this one body and nowhere else.
+        body: join,
+        parse: parseNetworkOperationBody,
+      }),
+
+    listDeviceNetworks: (credential) =>
+      exchange({
+        path: DEVICE_NETWORKS_PATH,
+        credential,
+        parse: parseDeviceNetworksBody,
+      }),
+    previewDeviceNetworkChange: (credential, change) =>
+      exchange({
+        path: `${DEVICE_NETWORKS_PATH}/preview`,
+        credential,
+        method: 'POST',
+        body: change,
+        parse: parseNetworkOperationBody,
+      }),
+    checkDeviceNetwork: (credential, id, tcpPort) =>
+      exchange({
+        path: deviceNetworkPath(id, 'checks'),
+        credential,
+        method: 'POST',
+        body: { tcp_port: tcpPort },
+        parse: parseDeviceNetworkCheckBody,
+      }),
+    getAccessInstructions: (credential, id) =>
+      exchange({
+        path: deviceNetworkPath(id, 'access-instructions'),
+        credential,
+        parse: parseAccessInstructionsBody,
+      }),
+
+    listActivity: (credential, filter) =>
+      exchange({
+        path: ACTIVITY_PATH + activityQuery(filter),
+        credential,
+        parse: parseActivityPageBody,
+      }),
+    exportActivity: (credential, filter, format) =>
+      exchangeText(ACTIVITY_EXPORT_PATH + activityQuery(filter, format), credential),
+    listDiagnosticSessions: (credential) =>
+      exchange({
+        path: DIAGNOSTICS_SESSIONS_PATH,
+        credential,
+        parse: parseDiagnosticSessionsBody,
+      }),
+    startDiagnosticSession: (credential, scope, target, minutes) =>
+      exchange({
+        path: DIAGNOSTICS_SESSIONS_PATH,
+        credential,
+        method: 'POST',
+        body: { scope, target, minutes },
+        parse: parseDiagnosticSessionBody,
+      }),
+    stopDiagnosticSession: (credential, id) =>
+      exchange({
+        path: diagnosticSessionPath(id, 'stop'),
+        credential,
+        method: 'POST',
+        body: {},
+        parse: parseDiagnosticSessionBody,
+      }),
+    getDiagnosticSettings: (credential) =>
+      exchange({
+        path: DIAGNOSTICS_SETTINGS_PATH,
+        credential,
+        parse: parseDiagnosticSettingsBody,
+      }),
+    setDiagnosticSettings: (credential, settings) =>
+      exchange({
+        path: DIAGNOSTICS_SETTINGS_PATH,
+        credential,
+        method: 'PUT',
+        body: {
+          retention_days: settings.retentionDays,
+          quota_bytes: settings.quotaBytes,
+        },
+        parse: parseDiagnosticSettingsBody,
+      }),
 
     signIn: (username, password) =>
       exchange({

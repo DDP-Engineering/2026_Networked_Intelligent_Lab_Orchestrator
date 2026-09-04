@@ -1,0 +1,58 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+
+id = "REQ-FUNC-7c40aa18"
+
+title = "Join an open or personal Wi-Fi network with a protected password"
+
+status = "draft"
+
+requirement = """
+Where the adapter and NetworkManager support it, the appliance shall scan for Wi-Fi networks and join an open, WPA2-personal or WPA3-personal network using a password written only to protected secret storage, and shall never return a stored password.
+"""
+
+verification = "A helper and API test joins a fixture network, asserts the password reaches secret storage only, and asserts every read of the connection omits it rather than redacting it."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/interface_settings.go",
+    "05_Software/nilo_assistant/internal/network/wifi.go",
+    "05_Software/nilo_assistant/internal/network/simulation_settings.go",
+    "05_Software/nilo_assistant/internal/network/appliance_settings.go",
+    "05_Software/nilo_assistant/internal/network/profile.go",
+    "05_Software/nilo_assistant/internal/nethelper/settings_engine.go",
+    "05_Software/nilo_assistant/internal/nethelper/keystore.go",
+    "05_Software/nilo_assistant/internal/nethelper/keystore_engine.go",
+    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
+    "05_Software/nilo_assistant/internal/nethelper/client.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_settings_linux.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/interface_settings_repository.go",
+    "05_Software/nilo_assistant/internal/httpapi/network_operations.go",
+    "05_Software/nilo_assistant/internal/httpapi/network.go",
+    "05_Software/nilo_assistant/internal/httpapi/server.go",
+    "05_Software/nilo_assistant/cmd/nilo/network_settings.go",
+    "05_Software/nilo_assistant/internal/network/simulation_settings_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/network_settings_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/settings_engine_test.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/interface_settings_repository_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_settings_linux_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/simulation_settings_test.go::TestSimulationScansAndJoinsWiFi",
+    "05_Software/nilo_assistant/internal/httpapi/network_settings_test.go::TestWiFiRoutesNeverReturnThePassword",
+    "05_Software/nilo_assistant/internal/nethelper/settings_engine_test.go::TestWiFiJoinConsumesTheStagedPasswordExactlyOnce",
+    "05_Software/nilo_assistant/internal/store/sqlite/interface_settings_repository_test.go::TestInterfaceSettingsNeverStoreAPassword",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_settings_linux_test.go::TestAccessPointClassification",
+]
+
+spec = "specs/REQ-FUNC-2f8d63b5.md"
+priority = "high"
+rationale = ""
+
+created = 2026-09-03
+updated = 2026-09-04

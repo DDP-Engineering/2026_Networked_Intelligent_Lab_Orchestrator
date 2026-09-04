@@ -1,0 +1,329 @@
+import { resolve } from 'node:path';
+import { expect, test, type Page } from '@playwright/test';
+import { DevelopmentTopology, withRedactedSecret } from './topology';
+
+test.describe.configure({ mode: 'serial' });
+let topology: DevelopmentTopology | null = null;
+let page: Page;
+const password = 'network-test-administrator';
+
+test.beforeAll(async ({ browser }) => {
+  test.setTimeout(900_000);
+  try {
+    topology = await DevelopmentTopology.start({
+      repositoryRoot: resolve(process.cwd(), '..', '..'),
+      guiRoot: process.cwd(),
+    });
+    await topology.bootstrapAdministrator('network-admin', password);
+    page = await browser.newPage();
+  } catch (error) {
+    await topology?.dispose();
+    topology = null;
+    throw error;
+  }
+});
+test.afterAll(async () => {
+  try {
+    await page?.close();
+  } finally {
+    await topology?.dispose();
+  }
+});
+
+test('shows readiness-only telemetry without inferring tunnel state', async () => {
+  // This fixture verifies presentation of the helper's new contract; live
+  // helper-to-HTTPS observations are covered in the separate Linux system test.
+  await page.route('**/api/v1/network/wireguard', async (route) => {
+    await route.fulfill({
+      json: {
+        api_version: 'nilo.http/1',
+        reported: true,
+        readiness_only: true,
+        measured_by: 'readiness-fixture',
+        networkmanager_available: true,
+        networkmanager_version: '1.52.1',
+        kernel_supported: true,
+        helper_available: true,
+        can_install: false,
+        tools: [{ name: 'wg', installed: true, version: '1.0.20210914' }],
+        profiles: [],
+        detail: '',
+      },
+    });
+  });
+  await page.goto(topology!.frontendUrl);
+  await page.getByLabel('Username').fill('network-admin');
+  await withRedactedSecret(password, () =>
+    page.getByLabel('Password', { exact: true }).fill(password),
+  );
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await page
+    .getByRole('navigation')
+    .getByRole('button', { name: 'Network', exact: true })
+    .click();
+  const panel = page.locator('section[aria-labelledby="network-wireguard"]');
+  await expect(panel.locator('details')).not.toHaveAttribute('open');
+  await panel.getByText('Diagnostics', { exact: true }).click();
+  await expect(panel.getByText('1.0.20210914', { exact: true })).toBeVisible();
+  await panel.getByText('Diagnostics', { exact: true }).click();
+  await expect(panel).toContainText('WireGuard profiles have not been reported.');
+  await expect(panel.getByRole('button')).toHaveCount(0);
+  await page.locator('.network-trigger').click();
+  await expect(
+    page.locator('.network-summary').getByText('Not reported', { exact: true }),
+  ).toHaveCount(2);
+  await page.keyboard.press('Escape');
+  if (process.env.NILO_NETWORK_REVIEW === '1')
+    await page.screenshot({
+      path: resolve('test-results', 'network-readiness-review.png'),
+      fullPage: true,
+    });
+  await page.unroute('**/api/v1/network/wireguard');
+  // The subsequent existing cases own a fresh sign-in.
+  await page.context().clearCookies();
+});
+
+async function applyPreview() {
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Apply', exact: true }).click();
+}
+
+test('shows acknowledged installation progress and its verified result', async () => {
+  // Presentation fixture: actual package installation is separately exercised
+  // through the privileged helper in the disposable Linux system test.
+  let acknowledged = false;
+  let complete = false;
+  const operation = {
+    api_version: 'nilo.http/1',
+    id: 'install-fixture',
+    action: 'wireguard.install',
+    target: 'wireguard',
+    revision: 'installation-revision',
+    actor_id: 'fixture',
+    created_at: new Date().toISOString(),
+  };
+  await page.route('**/api/v1/network/wireguard', async (route) =>
+    route.fulfill({
+      json: {
+        api_version: 'nilo.http/1',
+        reported: true,
+        readiness_only: true,
+        measured_by: 'installation-fixture',
+        networkmanager_available: true,
+        networkmanager_version: '1.52.1',
+        kernel_supported: true,
+        helper_available: true,
+        can_install: !complete,
+        tools: [
+          { name: 'wg', installed: complete, version: complete ? '1.0.20210914' : '' },
+        ],
+        profiles: [],
+        detail: '',
+      },
+    }),
+  );
+  await page.route('**/api/v1/network/wireguard/install/preview', async (route) =>
+    route.fulfill({ json: { ...operation, state: 'previewed' } }),
+  );
+  await page.route(
+    '**/api/v1/network/operations/install-fixture/acknowledge',
+    async (route) => {
+      expect(route.request().postDataJSON()).toEqual({ revision: operation.revision });
+      acknowledged = true;
+      await route.fulfill({
+        status: 202,
+        json: { ...operation, state: 'applying', progress: 'downloading' },
+      });
+    },
+  );
+  await page.route('**/api/v1/network/operations/install-fixture', async (route) =>
+    route.fulfill({
+      json: {
+        ...operation,
+        state: complete ? 'confirmed' : 'applying',
+        progress: complete ? 'complete' : 'downloading',
+      },
+    }),
+  );
+  await page.goto(topology!.frontendUrl);
+  await page.getByLabel('Username').fill('network-admin');
+  await withRedactedSecret(password, () =>
+    page.getByLabel('Password', { exact: true }).fill(password),
+  );
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await page
+    .getByRole('navigation')
+    .getByRole('button', { name: 'Network', exact: true })
+    .click();
+  await page
+    .getByRole('button', { name: 'Install WireGuard tools', exact: true })
+    .click();
+  await expect(page.getByRole('dialog')).toContainText('wireguard.install');
+  expect(acknowledged).toBe(false);
+  await applyPreview();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Installing WireGuard tools.' }),
+  ).toContainText('Downloading wireguard-tools.');
+  await expect(
+    page.getByRole('button', { name: 'Install WireGuard tools', exact: true }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole('button', { name: 'Disable enp1s0', exact: true }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole('button', { name: 'Keep change', exact: true }),
+  ).toHaveCount(0);
+  if (process.env.NILO_NETWORK_REVIEW === '1')
+    await page.screenshot({
+      path: resolve('test-results', 'network-installation-review.png'),
+      fullPage: true,
+    });
+  complete = true;
+  await expect(
+    page.getByText('WireGuard tools are installed and verified.', { exact: true }),
+  ).toBeVisible();
+  await page.getByText('Diagnostics', { exact: true }).click();
+  await expect(page.getByText('1.0.20210914', { exact: true })).toBeVisible();
+  await page.unrouteAll();
+  await page.context().clearCookies();
+});
+
+test('reports simulated changes, restores them and permits another change', async () => {
+  await page.goto(topology!.frontendUrl);
+  await page.getByLabel('Username').fill('network-admin');
+  await withRedactedSecret(password, () =>
+    page.getByLabel('Password', { exact: true }).fill(password),
+  );
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await page
+    .getByRole('navigation')
+    .getByRole('button', { name: 'Network', exact: true })
+    .click();
+  await page.getByRole('button', { name: 'Disable enp1s0', exact: true }).click();
+  await applyPreview();
+  await expect(
+    page
+      .getByRole('row')
+      .filter({ has: page.getByRole('rowheader', { name: /enp1s0/ }) }),
+  ).toContainText(/disconnected/i);
+  await page.getByRole('button', { name: 'Keep change', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByText('The change was kept.', { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Enable enp1s0', exact: true }),
+  ).toBeEnabled();
+  await page.getByRole('button', { name: 'Enable enp1s0', exact: true }).click();
+  await applyPreview();
+  await page
+    .getByRole('button', { name: 'Restore previous state', exact: true })
+    .click();
+  await expect(
+    page.getByText('The previous state was restored.', { exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Enable enp1s0', exact: true }).click();
+  await applyPreview();
+  await page.getByRole('button', { name: 'Keep change', exact: true }).click();
+});
+
+test('imports, selects startup and toggles a simulated WireGuard tunnel', async () => {
+  const conf =
+    '[Interface]\nPrivateKey = AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\nAddress = 10.20.0.2/32, fd00:20::2/128\nDNS = 10.20.0.1\n[Peer]\nPublicKey = ERERERERERERERERERERERERERERERERERERERERERE=\nAllowedIPs = 10.20.0.0/24, fd00:20::/64\nEndpoint = vpn.example.test:51820\nPersistentKeepalive = 0\n';
+  await page.getByRole('button', { name: 'Import profile', exact: true }).click();
+  await page.getByLabel('Profile name', { exact: true }).fill('test-office');
+  await page
+    .getByLabel('WireGuard configuration (.conf)', { exact: true })
+    .setInputFiles({
+      name: 'test.conf',
+      mimeType: 'text/plain',
+      buffer: Buffer.from(conf),
+    });
+  await page.getByRole('button', { name: 'Preview import', exact: true }).click();
+  await applyPreview();
+  await expect(
+    page.getByRole('button', { name: 'Enable test-office', exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText('10.20.0.2/32', { exact: true })).toBeVisible();
+  await expect(page.getByText('vpn.example.test:51820', { exact: true })).toBeVisible();
+  await page.getByText('Details', { exact: true }).click();
+  await expect(page.getByText('10.20.0.1', { exact: true })).toBeVisible();
+  await expect(
+    page.getByText('10.20.0.0/24, fd00:20::/64', { exact: true }),
+  ).toBeVisible();
+  await page.getByText('Details', { exact: true }).click();
+  await page.getByRole('button', { name: 'Import profile', exact: true }).click();
+  await expect(page.getByLabel('Profile name', { exact: true })).toHaveCount(0);
+  await page
+    .getByRole('checkbox', { name: 'Connect at startup: test-office', exact: true })
+    .click();
+  await expect(page.getByRole('dialog')).toContainText('Connect at startup: Enabled');
+  await applyPreview();
+  await expect(
+    page.getByRole('checkbox', {
+      name: 'Connect at startup: test-office',
+      exact: true,
+    }),
+  ).toBeChecked();
+  await page.getByRole('button', { name: 'Enable test-office', exact: true }).click();
+  await applyPreview();
+  await page.getByRole('button', { name: 'Keep change', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Disable test-office', exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Disable test-office', exact: true }).click();
+  await applyPreview();
+  await page.getByRole('button', { name: 'Keep change', exact: true }).click();
+  await expect(
+    page.getByRole('checkbox', {
+      name: 'Connect at startup: test-office',
+      exact: true,
+    }),
+  ).toBeChecked();
+  await expect(
+    page.getByRole('button', { name: 'Remove test-office', exact: true }),
+  ).toBeVisible();
+});
+
+test('unconfirmed changes restore automatically and real sampling produces history', async () => {
+  test.setTimeout(180_000);
+  await page.getByRole('button', { name: 'Disable enp1s0', exact: true }).click();
+  await applyPreview();
+  await expect(page.getByRole('timer')).toBeVisible();
+  // No accelerated server clock and no request to the rollback route: this
+  // verifies the actual 120-second deadline and the production runtime loop.
+  await expect(
+    page.getByText('The previous state was restored.', { exact: true }),
+  ).toBeVisible({ timeout: 140_000 });
+  await expect(
+    page.getByRole('button', { name: 'Disable enp1s0', exact: true }),
+  ).toBeEnabled();
+  const history = await page.request.get(
+    new URL(
+      '/api/v1/network/statistics?interface=sim-enp1s0&period=15m',
+      topology!.frontendUrl,
+    ).href,
+  );
+  expect(history.status()).toBe(200);
+  const body = (await history.json()) as { points: unknown[]; measured_by: string };
+  expect(body.measured_by).toBe('simulation');
+  expect(body.points.length).toBeGreaterThan(0);
+  expect(
+    await page
+      .locator('html')
+      .evaluate((element) => element.scrollWidth <= element.clientWidth),
+  ).toBe(true);
+  if (process.env.NILO_NETWORK_REVIEW === '1')
+    await page.screenshot({
+      path: resolve('test-results', 'network-review.png'),
+      fullPage: true,
+    });
+  if (process.env.NILO_NETWORK_REVIEW === '1') {
+    await page
+      .getByRole('heading', { name: 'Statistics', exact: true })
+      .scrollIntoViewIfNeeded();
+    await page.screenshot({
+      path: resolve('test-results', 'network-history-review.png'),
+      fullPage: true,
+    });
+  }
+});
