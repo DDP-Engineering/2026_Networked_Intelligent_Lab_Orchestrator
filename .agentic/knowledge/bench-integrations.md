@@ -16,6 +16,9 @@ inventory, command admission, scheduling and retained instrument evidence.
 The first typed adapter wraps the installed sigrok CLI for ATK digital captures
 and saved UART analysis. It excludes PWM, arbitrary command/config/path access,
 continuous capture, a marketplace and signal/decoder correctness qualification.
+The Sigrok package also contains an unwired SW-01 feasibility worker that proves
+structured native metadata, mixed Demo packets and decoder callbacks; it does
+not add or replace any public Bench operation.
 
 ## Public interface
 
@@ -44,6 +47,9 @@ The eight MCP tools and CLI equivalents are listed in
   scopes per call, never a cached actor or human approval authority.
 - Verified curated package copies and core-owned paths bound execution and
   artifacts. PWM and unknown parameters are refused in core and runner.
+- The feasibility worker accepts only fixed Demo/UART-fixture commands, emits
+  bounded `nilo.sigrok.worker/1` JSONL, and remains a child process outside
+  Bench Core; its retained fixtures are not electrical qualification.
 
 ## Change map
 
@@ -64,6 +70,9 @@ The eight MCP tools and CLI equivalents are listed in
 - REQ-REL-49026029, REQ-REL-a49eb835, REQ-REL-94d1b464: durable
   correlated jobs, bounded scheduling, expiry, cancellation and recovery.
 - REQ-SEC-6b1dd726, REQ-SEC-b22b7951: no PWM and shared authorization.
+- REQ-FUNC-1f656691, REQ-FUNC-93362dc2, REQ-FUNC-cf21e27d,
+  REQ-REL-c2695283, REQ-TEST-11dc600f: structured Sigrok feasibility,
+  native-fault containment and evidence without public adoption.
 - REQ-DATA-721ec2ea: confined, digest-verified artifacts with provenance.
 - REQ-UX-30e2e009: common GUI, CLI and MCP outcomes.
 - REQ-PLAT-d1427e1e: one package contract for bundled and later installation.
@@ -84,6 +93,9 @@ flowchart TD
     adapter --> supervisor[ProcessSupervisor]
     supervisor --> sdk([Python SDK SigrokIntegration])
     sdk --> cli([installed sigrok-cli])
+    sdk -. feasibility only .-> structured[structured_worker.py]
+    structured -. fixed commands .-> native[nilo_sigrok_worker]
+    native -. callbacks .-> libraries([libsigrok and libsigrokdecode])
     adapter --> artifacts[(artifact.Store)]
 ```
 
@@ -106,10 +118,15 @@ curated typed adapter and resource claims; transport handlers remain shared.
 - `05_Software/nilo_assistant/cmd/nilo/bench.go`, `bench_test.go`: API client commands.
 - `05_Software/nilo_assistant/internal/auth/role.go`, `role_test.go`: permissions.
 - `05_Software/integrations/sigrok/`: manifest/schemas, runner, Python implementation,
-  locked dependency graph and package/adapter tests.
+  locked dependency graph and package/adapter tests; `structured_worker.py`,
+  `worker/nilo_sigrok_worker.c`, `evidence/`, and `tests/test_worker.py` hold the
+  feasibility-only structured worker boundary and proof.
 - `05_Software/nilo_gui/src/api/bench.ts`, `bench.test.ts`, `client.ts`: client contract.
 - `05_Software/nilo_gui/src/components/pages/PluginsPage.tsx`, `PluginsPage.test.tsx`:
   managed workspace; shell routing, i18n and layout follow gui-foundation.md.
 - `02_Tools/scripts/build-sigrok-bundle.py`, `build-appliance.sh`: bundle preparation.
 - `02_Tools/scripts/check-sigrok-integration.py`: isolated appliance HTTP/CLI/MCP smoke.
+- `02_Tools/scripts/build-sigrok-worker.py`: target-native feasibility build helper.
 - `06_SoftwareDocu/Sigrok_Integration.md`: operator, extension and deployment contract.
+- `06_SoftwareDocu/Sigrok_Structured_Worker_Feasibility.md`: SW-01 evidence,
+  coverage, dependency and boundary decision.

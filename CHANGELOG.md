@@ -5,6 +5,10 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ## [Unreleased]
 
+### Added
+
+- Structured Sigrok worker feasibility slice with direct mixed-signal datafeed and decoder callbacks, bounded crash isolation, and machine-readable coverage evidence.
+
 ## [0.2.0] - 2026-09-05
 
 ### Added

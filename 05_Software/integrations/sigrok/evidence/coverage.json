@@ -1,0 +1,146 @@
+{
+  "schema": "nilo.sigrok.coverage/1",
+  "recorded_at": "2026-09-05",
+  "qualification": "integration_only_not_electrical",
+  "source": {
+    "pulseview_tree": "F:/2026_PulseView",
+    "commit": "bcf7e93414dbca640abf8e4b47802b57c5794b84",
+    "api_headers": "libsigrok/libsigrokdecode 0.6.0 ABI 4"
+  },
+  "target": {
+    "host_role": "authorized_development_appliance",
+    "architecture": "aarch64",
+    "sigrok_cli": "0.8.0",
+    "libsigrok": "0.6.0",
+    "libsigrok_abi": "4:0:0",
+    "libsigrokdecode": "0.6.0",
+    "embedded_python": "3.10.12",
+    "installed_driver_count": 220,
+    "installed_decoder_count": 138
+  },
+  "worker_boundary": {
+    "decision": "native_child_process",
+    "language": "C11",
+    "protocol": "nilo.sigrok.worker/1 JSONL over stdout",
+    "parent": "existing isolated Python integration runner",
+    "reason": "Direct callbacks preserve native types and packet events while a separately supervised process contains ABI, driver, decoder, and embedded-Python failures outside Bench Core."
+  },
+  "features": [
+    {
+      "id": "driver_device_metadata",
+      "status": "demonstrated",
+      "evidence_level": "deployed_demo",
+      "evidence": "demo-capture.jsonl driver/device/channel/channel_group records"
+    },
+    {
+      "id": "typed_settings",
+      "status": "demonstrated",
+      "evidence_level": "deployed_demo",
+      "evidence": "demo-capture.jsonl setting access flags, datatypes, native GVariant types and values"
+    },
+    {
+      "id": "digital_datafeed",
+      "status": "demonstrated",
+      "evidence_level": "deployed_demo",
+      "evidence": "64 ordered logic samples in direct SR_DF_LOGIC callbacks"
+    },
+    {
+      "id": "analog_datafeed",
+      "status": "demonstrated",
+      "evidence_level": "deployed_demo",
+      "evidence": "320 converted analog values across A0-A4 direct SR_DF_ANALOG callbacks"
+    },
+    {
+      "id": "trigger_event",
+      "status": "api_available_not_observed",
+      "evidence_level": "source_and_deployed_demo",
+      "evidence": "SR_DF_TRIGGER exists in ABI; bounded Demo summary records trigger=false"
+    },
+    {
+      "id": "frame_events",
+      "status": "api_available_not_observed",
+      "evidence_level": "source_and_deployed_demo",
+      "evidence": "SR_DF_FRAME_BEGIN/END exist in ABI; bounded Demo summary records both false"
+    },
+    {
+      "id": "decoder_catalog_and_typed_options",
+      "status": "demonstrated",
+      "evidence_level": "deployed_runtime",
+      "evidence": "uart-fixture.jsonl native decoder channel/option descriptors"
+    },
+    {
+      "id": "structured_annotations",
+      "status": "demonstrated",
+      "evidence_level": "deterministic_fixture_on_deployed_runtime",
+      "evidence": "UART 0x55 annotation callbacks at native sample intervals"
+    },
+    {
+      "id": "structured_binary_decoder_data",
+      "status": "demonstrated",
+      "evidence_level": "deterministic_fixture_on_deployed_runtime",
+      "evidence": "UART RX and combined binary callbacks preserve byte 0x55"
+    },
+    {
+      "id": "worker_fault_isolation",
+      "status": "demonstrated",
+      "evidence_level": "deterministic_process_fixtures",
+      "evidence": "pytest covers malformed, nonzero, signal, timeout and output-budget children"
+    },
+    {
+      "id": "pwm_and_output_exclusion",
+      "status": "demonstrated",
+      "evidence_level": "source_and_contract_tests",
+      "evidence": "fixed worker grammar, no output API calls, recursive record rejection"
+    }
+  ],
+  "device_classes": {
+    "waveform_relevant": [
+      "logic_analyzer",
+      "oscilloscope",
+      "demo_mixed_signal"
+    ],
+    "non_waveform_excluded": [
+      "power_supply",
+      "electronic_load",
+      "signal_generator",
+      "multiplexer",
+      "delay_generator",
+      "scale"
+    ],
+    "classification_deferred": [
+      "multimeter",
+      "sound_level_meter",
+      "thermometer",
+      "humidity_meter",
+      "energy_meter",
+      "power_meter",
+      "frequency_counter",
+      "demodulator",
+      "lcr_meter"
+    ]
+  },
+  "experimental_build_options": [
+    {
+      "id": "pulseview_ENABLE_FLOW",
+      "default": false,
+      "deployed_status": "not_established",
+      "decision": "excluded_from_worker_scope"
+    }
+  ],
+  "packaging_dependencies": [
+    "C11 compiler at package build time",
+    "libdl-compatible loader",
+    "matching libsigrok.so.4 and libsigrokdecode.so.4",
+    "their transitive native libraries",
+    "libsigrokdecode decoder data directory",
+    "libsigrokdecode-matched Python 3.10 standard library and extensions",
+    "driver firmware and device permissions for later physical-device work"
+  ],
+  "limitations": [
+    "The feasibility protocol is not a public SW-02 capability contract.",
+    "Only Demo acquisition and a deterministic UART fixture were executed.",
+    "No physical analyzer, trigger timing, voltage, protocol, or electrical correctness was qualified.",
+    "Trigger and frame callback support was source-observed but not emitted by this Demo configuration.",
+    "Installed driver count does not imply NILO waveform support for every driver or device class."
+  ]
+}

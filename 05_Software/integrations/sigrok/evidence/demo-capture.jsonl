@@ -1,0 +1,37 @@
+{"schema":"nilo.sigrok.worker/1","kind":"runtime","libsigrok":"0.6.0","libsigrok_abi":"4:0:0","libsigrokdecode":"0.6.0"}
+{"schema":"nilo.sigrok.worker/1","kind":"driver","id":"demo","name":"Demo driver and pattern generator","api_version":1}
+{"schema":"nilo.sigrok.worker/1","kind":"device","vendor":"","model":"Demo device","version":"","serial":"","connection":""}
+{"schema":"nilo.sigrok.worker/1","kind":"channel","index":0,"name":"D0","type":"logic","enabled":true}
+{"schema":"nilo.sigrok.worker/1","kind":"channel","index":1,"name":"D1","type":"logic","enabled":true}
+{"schema":"nilo.sigrok.worker/1","kind":"channel","index":2,"name":"D2","type":"logic","enabled":true}
+{"schema":"nilo.sigrok.worker/1","kind":"channel","index":3,"name":"D3","type":"logic","enabled":true}
+{"schema":"nilo.sigrok.worker/1","kind":"channel","index":4,"name":"D4","type":"logic","enabled":true}
+{"schema":"nilo.sigrok.worker/1","kind":"channel","index":5,"name":"D5","type":"logic","enabled":true}
+{"schema":"nilo.sigrok.worker/1","kind":"channel","index":6,"name":"D6","type":"logic","enabled":true}
+{"schema":"nilo.sigrok.worker/1","kind":"channel","index":7,"name":"D7","type":"logic","enabled":true}
+{"schema":"nilo.sigrok.worker/1","kind":"channel","index":8,"name":"A0","type":"analog","enabled":true}
+{"schema":"nilo.sigrok.worker/1","kind":"channel","index":9,"name":"A1","type":"analog","enabled":true}
+{"schema":"nilo.sigrok.worker/1","kind":"channel","index":10,"name":"A2","type":"analog","enabled":true}
+{"schema":"nilo.sigrok.worker/1","kind":"channel","index":11,"name":"A3","type":"analog","enabled":true}
+{"schema":"nilo.sigrok.worker/1","kind":"channel","index":12,"name":"A4","type":"analog","enabled":true}
+{"schema":"nilo.sigrok.worker/1","kind":"channel_group","name":"Logic","channels":[0,1,2,3,4,5,6,7]}
+{"schema":"nilo.sigrok.worker/1","kind":"channel_group","name":"Analog","channels":[8,9,10,11,12]}
+{"schema":"nilo.sigrok.worker/1","kind":"channel_group","name":"A0","channels":[8]}
+{"schema":"nilo.sigrok.worker/1","kind":"channel_group","name":"A1","channels":[9]}
+{"schema":"nilo.sigrok.worker/1","kind":"channel_group","name":"A2","channels":[10]}
+{"schema":"nilo.sigrok.worker/1","kind":"channel_group","name":"A3","channels":[11]}
+{"schema":"nilo.sigrok.worker/1","kind":"channel_group","name":"A4","channels":[12]}
+{"schema":"nilo.sigrok.worker/1","kind":"setting","key":50003,"id":"continuous","name":"Continuous sampling","scope":"device","datatype":10002,"get":false,"set":false,"list":false,"current":null,"values":null}
+{"schema":"nilo.sigrok.worker/1","kind":"setting","key":50001,"id":"limit_samples","name":"Sample limit","scope":"device","datatype":10000,"get":true,"set":true,"list":false,"current":{"type":"native","native_type":"t","value":"0"},"values":null}
+{"schema":"nilo.sigrok.worker/1","kind":"setting","key":50002,"id":"limit_frames","name":"Frame limit","scope":"device","datatype":10000,"get":true,"set":true,"list":false,"current":{"type":"native","native_type":"t","value":"0"},"values":null}
+{"schema":"nilo.sigrok.worker/1","kind":"setting","key":30000,"id":"samplerate","name":"Sample rate","scope":"device","datatype":10000,"get":true,"set":true,"list":true,"current":{"type":"native","native_type":"t","value":"200000"},"values":{"type":"native","native_type":"a{sv}","value":"{'samplerate-steps': <[uint64 1, 1000000000, 1]>}"}}
+{"schema":"nilo.sigrok.worker/1","kind":"setting","key":30005,"id":"averaging","name":"Averaging","scope":"device","datatype":10002,"get":true,"set":true,"list":false,"current":{"type":"native","native_type":"b","value":"false"},"values":null}
+{"schema":"nilo.sigrok.worker/1","kind":"event","event":"header"}
+{"schema":"nilo.sigrok.worker/1","kind":"packet","packet":"logic","unit_size":1,"byte_count":"64","sample_count":"64","data_hex":"d9b6b6b6cdffffffbe8080beffffffffc1bebeb6c5ffffff80f6f6e699ffffffc1bebebec1ffffff80f7ebddbeffffffffffffffffffffffa0a0ffffffffffff","preview_truncated":false}
+{"schema":"nilo.sigrok.worker/1","kind":"packet","packet":"analog","sample_count":"64","channels":[8],"measurement_quantity":10000,"unit":"volt","measurement_flags":2,"values":[-10,-10,-10,-10,-10,10,10,10,10,10,-10,-10,-10,-10,-10,10,10,10,10,10,-10,-10,-10,-10,-10,10,10,10,10,10,-10,-10],"preview_truncated":true}
+{"schema":"nilo.sigrok.worker/1","kind":"packet","packet":"analog","sample_count":"64","channels":[9],"measurement_quantity":10000,"unit":"volt","measurement_flags":2,"values":[0,3.09016991,5.87785244,8.09016991,9.5105648,10,9.5105648,8.09016991,5.87785244,3.09016991,-3.2162453e-15,-3.09016991,-5.87785244,-8.09016991,-9.5105648,-10,-9.5105648,-8.09016991,-5.87785244,-3.09016991,6.4324906e-15,3.09016991,5.87785244,8.09016991,9.5105648,10,9.5105648,8.09016991,5.87785244,3.09016991,3.67394019e-15,-3.09016991],"preview_truncated":true}
+{"schema":"nilo.sigrok.worker/1","kind":"packet","packet":"analog","sample_count":"64","channels":[10],"measurement_quantity":10000,"unit":"volt","measurement_flags":2,"values":[0,2,4,6,8,10,8,6,4,2,-2.04752533e-15,-2,-4,-6,-8,-10,-8,-6,-4,-2,4.09505066e-15,2,4,6,8,10,8,6,4,2,2.33890318e-15,-2],"preview_truncated":true}
+{"schema":"nilo.sigrok.worker/1","kind":"packet","packet":"analog","sample_count":"64","channels":[11],"measurement_quantity":10000,"unit":"volt","measurement_flags":2,"values":[0,1,2,3,4,5,6,7,8,9,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7,8,9,10,-9],"preview_truncated":true}
+{"schema":"nilo.sigrok.worker/1","kind":"packet","packet":"analog","sample_count":"64","channels":[12],"measurement_quantity":10000,"unit":"volt","measurement_flags":2,"values":[-2.34000015,7.71999931,5.53999996,8.29999924,5.85999966,-3.30000019,-2.28000021,-0.159999847,2.97999954,-1.57999992,-2.76000023,-9.46000004,3.79999924,-8.81999969,5.25999928,8.52000046,0.800000191,-1.4800005,-6.56000042,4.71999931,-5.78000021,-2.64000034,1.34000015,-1.42000008,5.63999939,0.599999428,7.23999977,-7.53999996,-8.65999985,-7.30000019,8.57999992,6.03999901],"preview_truncated":true}
+{"schema":"nilo.sigrok.worker/1","kind":"event","event":"end"}
+{"schema":"nilo.sigrok.worker/1","kind":"summary","records":8,"logic":true,"analog":true,"trigger":false,"frame_begin":false,"frame_end":false,"logic_samples":"64","analog_samples":"320","truncated":false}

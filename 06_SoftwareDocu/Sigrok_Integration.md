@@ -10,6 +10,11 @@ waveform workspace is documented in
 [Planning](../00_Planning/Sigrok_Waveform_Workspace/README.md); its proposed
 capabilities must not be assumed available in the current build.
 
+SW-01 has also produced a [structured worker feasibility result](Sigrok_Structured_Worker_Feasibility.md).
+It selects a native child-process boundary from direct Demo and decoder callback
+evidence. The helper is not yet a public package operation, so the usable
+interfaces below remain the sigrok-cli-backed finite ATK slice.
+
 The first adapter exposes ATK-DL16 digital discovery, finite capture and saved
 UART decoding. PWM is omitted from discovery and rejected at both the core and
 runner boundaries. There is no arbitrary driver, executable, shell, path or
