@@ -5,6 +5,11 @@ performs acquisition and decoding; NILO owns identity, approval, the command
 queue, resource ownership, transaction history and capture artifacts. PulseView
 can open downloaded `.sr` files. It is not embedded in the browser.
 
+This guide describes the current usable integration. The planned replacement
+waveform workspace is documented in
+[Planning](../00_Planning/Sigrok_Waveform_Workspace/README.md); its proposed
+capabilities must not be assumed available in the current build.
+
 The first adapter exposes ATK-DL16 digital discovery, finite capture and saved
 UART decoding. PWM is omitted from discovery and rejected at both the core and
 runner boundaries. There is no arbitrary driver, executable, shell, path or
@@ -106,8 +111,8 @@ The destination must be new. The builder exports the locked dependency graph
 and verifies wheel hashes for the target architecture/Python minor. It copies
 the SDK and adapter into the bundle. The target needs that Python minor on its
 PATH and an installed, usable sigrok CLI with the ATK driver. Host software is
-not installed by a plugin API request. The currently tested Pi is Debian 13,
-ARM64, with Python 3.13 and the user's installed sigrok build.
+not installed by a plugin API request. Match the target architecture, installed
+Python minor and sigrok build before preparing the bundle.
 
 For an edition shipped with NILO, use `NILO_BUNDLE_SIGROK=1` and optionally
 `NILO_TARGET_PYTHON=3.13` with `02_Tools/scripts/build-appliance.sh`; each target

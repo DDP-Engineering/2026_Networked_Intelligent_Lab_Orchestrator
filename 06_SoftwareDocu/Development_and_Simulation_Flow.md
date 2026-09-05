@@ -536,10 +536,10 @@ reports browser reachability separately. Overview summarizes the next decision;
 Network adapters, Device access and VPN profiles own configuration; Diagnostics
 owns WireGuard readiness and traffic history. The history chart identifies RX
 and TX, labels its byte and time scales, preserves unmeasured gaps and exposes
-the exact selected minute by pointer, touch or keyboard. Live NetworkManager
-management, root key storage and crash/reboot recovery are unfinished; the browser-only mock
-does not implement the full new lifecycle. See
-[Network implementation status](Network_Service_Implementation_Status.md).
+the exact selected minute by pointer, touch or keyboard. The appliance profile
+uses the root helper for live NetworkManager management, key storage and recovery;
+the browser-only mock does not implement the full lifecycle. See
+[Network operations](Network_Operations.md) for setup and acceptance boundaries.
 
 **Plugins** opens the managed instrument workspace for installed integration
 packages and bench jobs. **About** reports the build identity Bench Core returns.
@@ -886,19 +886,7 @@ is a convenience for early signal only. No repository gate contacts it, it may
 be powered off or off the network at any time, and an observation made on it is
 not the hardware-in-the-loop level in the table above.
 
-## 10. Current repository state
-
-The repository currently provides the Go foundation, SQLite stores, policy and
-session services, runner supervision, Python SDK, fake integration,
-contract/acceptance tests, a long-running authenticated simulation status API,
-deterministic integration and device inventory, identity and access control with
-its HTTP administration routes, a repository-local Windows Node.js and browser
-toolchain, a browser GUI in which a human signs in with a password and
-administers identities and API tokens — including their permanent deletion —
-beside the backend status and the simulated inventory, and integrated browser
-tests that drive that GUI against a real WSL2 backend. The `/mcp` endpoint now provides authenticated read-only
-Network status, statistics and WireGuard status tools; it shares the HTTP
-identity service. Appliance TLS startup remains unfinished.
+## 10. Foundation verification entry point
 
 The existing Windows foundation gate is:
 
@@ -908,10 +896,6 @@ The existing Windows foundation gate is:
 
 `nilo serve-foundation-check` remains a short-lived composition check. `nilo
 serve --profile simulation` is the long-running development server.
-
-The environment bootstrap, backend flow, the authenticated GUI status and
-inventory flow, the one-command development start, and the integrated browser
-test are all executable now.
 
 On a Windows host the repository gate runs that browser test after the GUI
 component tests and the production build, so the browser-to-WSL2 simulation path
@@ -945,13 +929,13 @@ and cannot be rebuilt from it. See
 No result from simulation may be represented as evidence that a physical
 operation occurred.
 
-## Live Network development checkpoint
+## Live Network development
 
 `serve --profile appliance` is now available on explicitly prepared Linux test
 machines, with a root NetworkManager helper and an unprivileged HTTPS Bench Core.
 It is separate from the default Windows/WSL2 simulation topology and does not
 change the simulation launcher or its fixed development administrator.
-[Live Network development](Live_Network_Development.md) gives the isolated Docker
+[Network operations](Network_Operations.md) gives the isolated Docker
 test command, deployment prerequisites, startup commands and remaining limits.
 The system test never joins the host network namespace or system D-Bus.
 

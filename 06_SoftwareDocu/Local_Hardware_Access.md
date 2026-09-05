@@ -103,15 +103,6 @@ level in section 9 of the development flow still requires a controlled device
 and real equipment. Recording an observation from this device in a task journal
 is fine; presenting one as a passed gate is not.
 
-### 2.4 Observed on 2026-09-02
-
-Recorded from the development host at `192.168.1.13` on the `192.168.1.0/24`
-bench subnet. These addresses are an observation with a date on it, not
-configuration, and they are expected to be wrong:
-
-- `192.168.1.104`, wired;
-- `192.168.1.103`, wireless.
-
 ### 2.5 RustDesk remote desktop
 
 Installed on 2026-09-02 to reach the desktop, which SSH does not give. It is a
