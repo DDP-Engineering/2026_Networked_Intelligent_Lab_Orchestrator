@@ -2,6 +2,10 @@
 
 Planning baseline: 2026-09-05. Research and brainstorming only, prepared without AEGIS at the user's request. Tasks below are proposed work, not implemented or verified product capabilities.
 
+This integration is the NILO `0.2.0` development line. Keep the project at
+`0.2.0` while the work packages land; assigning a later version is a separate
+release decision after the integration is complete.
+
 ## Direction agreed with the user
 
 Build a browser waveform workspace similar in appearance and functionality to PulseView, backed by the sigrok integration. The GUI, CLI and MCP use the same appliance services. PulseView remains a reference application and an interoperability target; embedding or remotely streaming its desktop window is not the chosen architecture.

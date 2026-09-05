@@ -5,6 +5,8 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-05
+
 ### Added
 
 - Managed sigrok plugins with install, enable, disable, restart and uninstall across GUI, CLI and MCP.
