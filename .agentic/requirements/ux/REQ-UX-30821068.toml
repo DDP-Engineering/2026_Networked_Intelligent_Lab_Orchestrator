@@ -39,9 +39,9 @@ status = "active"
 # plainly is better plainly.
 requirement = """
 The browser interface's left navigation shall present the working and instrument
-entries in its upper area and a bottom-anchored core group ordered Network, Plugins,
-Authentication, Settings and About, showing an entry only where the signed-in identity
-holds the permission its page needs.
+entries in its upper area and a bottom-anchored core group ordered, from the top,
+Plugins, Network, Authentication, Activity and About, showing an entry only where
+the signed-in identity holds the permission its page needs.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -52,16 +52,21 @@ holds the permission its page needs.
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "A component test renders the navigation as an administrator and asserts the lower group contains exactly those five entries in that order, that Network is in the lower group and not among the instrument entries, and that the instrument entries name the integrations the backend actually reported; a second case renders as a viewer and asserts the Authentication entry is absent while the rest remain."
+verification = "A component test signs in as an administrator, renders the shell, and asserts the lower navigation group contains exactly Plugins, Network, Authentication, Activity and About in that top-to-bottom order, that Network is in the lower group and not among the instrument entries, and that the instrument entries name the integrations the backend actually reported; a browser test asserts the same order in the running interface; a boundary case renders as a viewer holding neither the users, tokens nor activity permission and asserts the Authentication and Activity entries are absent while the remaining entries keep that relative order."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
     "05_Software/nilo_gui/src/components/shell/SideNav.tsx",
     "05_Software/nilo_gui/src/components/shell/pages.ts",
+    "05_Software/nilo_gui/src/components/shell/AppShell.tsx",
     "05_Software/nilo_gui/src/api/permissions.ts",
     "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
     "05_Software/nilo_gui/src/components/pages/SimplePages.tsx",
+    "05_Software/nilo_gui/src/i18n/en.ts",
+    "05_Software/nilo_gui/src/i18n/de.ts",
+    "05_Software/nilo_gui/src/i18n/ro.ts",
     "05_Software/nilo_gui/README.md",
+    "05_Software/nilo_gui/e2e/shell.spec.ts",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
@@ -71,6 +76,7 @@ linked_tests = [
     "05_Software/nilo_gui/src/components/shell/shell.test.tsx::lists the integrations the backend actually reported",
     "05_Software/nilo_gui/src/components/shell/shell.test.tsx::hides the Authentication entry from an identity without the permission",
     "05_Software/nilo_gui/src/components/shell/shell.test.tsx::opens an integration page showing what the backend reported",
+    "05_Software/nilo_gui/e2e/shell.spec.ts::anchors Network in the lower cluster, not among the instruments",
 ]
 
 # --- optional below this line ---
@@ -82,4 +88,4 @@ priority = "high"   # low | normal | high
 rationale = "Network is a built-in appliance capability, and filing it among integrations would teach an operator to look for it in the wrong place."
 
 created = 2026-09-02
-updated = 2026-09-02
+updated = 2026-09-05

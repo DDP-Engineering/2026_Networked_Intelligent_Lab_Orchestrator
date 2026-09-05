@@ -85,16 +85,12 @@ test('anchors Network in the lower cluster, not among the instruments', async ()
     lower.locator(
       '> .nav-list > li > .nav-entry, > .nav-list > li > .nav-group-row > .nav-entry',
     ),
-  ).toHaveText([
-    'Network',
-    'Activity',
-    'Plugins',
-    'Authentication',
-    'Settings',
-    'About',
-  ]);
+  ).toHaveText(['Plugins', 'Network', 'Authentication', 'Activity', 'About']);
   await expect(
     page.locator('.nav-upper').getByRole('button', { name: 'Network', exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.locator('.nav-lower').getByRole('button', { name: 'Settings', exact: true }),
   ).toHaveCount(0);
 });
 
@@ -207,7 +203,7 @@ test('narrows the navigation to a labeled rail on a small viewport without clipp
     page.locator(
       '.nav-lower > .nav-list > li > .nav-entry, .nav-lower > .nav-list > li > .nav-group-row > .nav-entry',
     ),
-  ).toHaveCount(6);
+  ).toHaveCount(5);
   await expect(
     page.locator('.nav-lower').getByRole('button', { name: 'Network', exact: true }),
   ).toBeVisible();

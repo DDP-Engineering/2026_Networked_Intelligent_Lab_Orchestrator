@@ -31,7 +31,6 @@ export const ro: Catalogue = {
   'nav.authentication.tokens': 'Tokenuri API',
   'nav.authentication.expand': 'Extinde Autentificare',
   'nav.authentication.collapse': 'Restrânge Autentificare',
-  'nav.settings': 'Setări',
   'nav.about': 'Despre',
   'nav.collapse': 'Restrânge navigarea',
   'nav.expand': 'Extinde navigarea',
@@ -272,8 +271,6 @@ export const ro: Catalogue = {
   'page.notAvailable.title': '{name} nu este încă disponibil',
   'page.plugins.body':
     'Descoperirea, instalarea, semnarea, izolarea și politica de încredere pentru plugin-uri nu sunt implementate. Această intrare indică unde va exista acea administrare; astăzi nu se încarcă niciun cod terț.',
-  'page.settings.body':
-    'Preferințele de aplicație, de aparat și de utilizator nu sunt implementate. Aspectul și limba se aleg din rândul de sus și sunt singurele preferințe pe care această interfață le păstrează.',
 
   'about.title': 'Despre',
   'about.build': 'Build',

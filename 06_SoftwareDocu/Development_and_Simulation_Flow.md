@@ -500,8 +500,8 @@ token or newly created API token secret is written to any of those either.
 open page tabs, and the network, `SIM`, appearance, language and account
 controls; there is no second tab strip and no page title above the workspace.
 The left navigation lists the working entries and the integrations Bench Core
-actually reports, with a bottom-anchored cluster of **Network, Activity,
-Plugins, Authentication, Settings** and **About**. Network is a collapsible
+actually reports, with a bottom-anchored cluster of **Plugins, Network,
+Authentication, Activity** and **About**. Network is a collapsible
 built-in group with **Overview, Network adapters, Device access, VPN profiles**
 and **Diagnostics**. Choosing the group root opens Overview; choosing any entry
 opens it as a tab; tabs activate on click, move with the arrow, Home and End
@@ -541,9 +541,8 @@ management, root key storage and crash/reboot recovery are unfinished; the brows
 does not implement the full new lifecycle. See
 [Network implementation status](Network_Service_Implementation_Status.md).
 
-**Plugins and Settings** name subsystems that are not built and say so; the
-navigation marks them. **About** is real, and reports the build identity Bench
-Core returns.
+**Plugins** names a subsystem that is not built and says so; the navigation
+marks it. **About** is real, and reports the build identity Bench Core returns.
 
 **The Bench page** calls `GET /api/v1/status`, `GET /api/v1/integrations`, and
 `GET /api/v1/devices` together with the credential in use, and displays:

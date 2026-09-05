@@ -397,9 +397,6 @@ export function AppShell({
     if (page.id === 'plugins') {
       return <NotAvailablePage nameKey="nav.plugins" bodyKey="page.plugins.body" />;
     }
-    if (page.id === 'settings') {
-      return <NotAvailablePage nameKey="nav.settings" bodyKey="page.settings.body" />;
-    }
     if (page.authenticationView !== undefined) {
       return (
         <AuthenticationPage

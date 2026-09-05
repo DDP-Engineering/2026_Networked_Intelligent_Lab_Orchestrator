@@ -30,7 +30,6 @@ export const en = {
   'nav.authentication.tokens': 'API tokens',
   'nav.authentication.expand': 'Expand Authentication',
   'nav.authentication.collapse': 'Collapse Authentication',
-  'nav.settings': 'Settings',
   'nav.about': 'About',
   'nav.collapse': 'Collapse navigation',
   'nav.expand': 'Expand navigation',
@@ -279,8 +278,6 @@ export const en = {
   'page.notAvailable.title': '{name} is not available yet',
   'page.plugins.body':
     'Plugin discovery, installation, signing, isolation and trust policy are not implemented. This entry names where that management will live; nothing loads third-party code today.',
-  'page.settings.body':
-    'Application, appliance and user preferences are not implemented. Theme and language are chosen from the top row and are the only preferences this interface keeps.',
 
   // About
   'about.title': 'About',
