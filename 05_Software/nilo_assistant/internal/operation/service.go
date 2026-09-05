@@ -114,6 +114,9 @@ type Dependencies struct {
 
 type Service interface {
 	Submit(context.Context, SubmitCommand) (domain.Session, error)
+	Prepare(context.Context, SubmitCommand) (domain.Session, error)
+	Run(context.Context, domain.SessionID) (domain.Session, error)
+	ApproveQueued(context.Context, domain.SessionID, domain.Actor) (domain.Session, error)
 	Approve(context.Context, domain.SessionID, domain.Actor) (domain.Session, error)
 	Deny(context.Context, domain.SessionID, domain.Actor, string) error
 	Cancel(context.Context, domain.SessionID, domain.Actor) error
@@ -143,6 +146,16 @@ func NewService(dependencies Dependencies) (Service, error) {
 }
 
 func (service *service) Submit(ctx context.Context, command SubmitCommand) (domain.Session, error) {
+	created, err := service.Prepare(ctx, command)
+	if err != nil || created.State != domain.Queued {
+		return created, err
+	}
+	return service.Run(ctx, created.ID)
+}
+
+// Prepare persists the immutable request and policy decision without starting
+// hardware. A server-owned scheduler may acknowledge and execute it later.
+func (service *service) Prepare(ctx context.Context, command SubmitCommand) (domain.Session, error) {
 	validation, err := service.dependencies.Validator.Validate(ctx, command)
 	if err != nil {
 		return domain.Session{}, err
@@ -193,13 +206,46 @@ func (service *service) Submit(ctx context.Context, command SubmitCommand) (doma
 	if err != nil {
 		return domain.Session{}, err
 	}
-	if created.State == domain.PendingApproval {
-		return created, nil
-	}
-	return service.execute(ctx, request, created, validation)
+	return created, nil
 }
 
 func (service *service) Approve(ctx context.Context, sessionID domain.SessionID, actor domain.Actor) (domain.Session, error) {
+	queued, err := service.ApproveQueued(ctx, sessionID, actor)
+	if err != nil {
+		return queued, err
+	}
+	return service.Run(ctx, queued.ID)
+}
+
+// Run revalidates one previously admitted transaction before claiming hardware.
+func (service *service) Run(ctx context.Context, sessionID domain.SessionID) (domain.Session, error) {
+	current, err := service.dependencies.SessionRepository.Get(ctx, sessionID)
+	if err != nil {
+		return current, err
+	}
+	if current.State != domain.Queued {
+		return current, ErrExecutionNotActive
+	}
+	request, err := service.dependencies.Requests.Get(ctx, current.RequestID)
+	if err != nil {
+		return current, err
+	}
+	validation, err := service.dependencies.Validator.Revalidate(ctx, request)
+	if err != nil {
+		return current, err
+	}
+	validation, err = validateExecution(validation)
+	if err != nil {
+		return current, err
+	}
+	if validation.ManifestPolicy == policy.Denied {
+		return current, ErrPolicyDenied
+	}
+	return service.execute(ctx, request, current, validation)
+}
+
+// ApproveQueued binds approval to the immutable request without bypassing the queue.
+func (service *service) ApproveQueued(ctx context.Context, sessionID domain.SessionID, actor domain.Actor) (domain.Session, error) {
 	current, request, err := service.pendingRequest(ctx, sessionID)
 	if err != nil {
 		return domain.Session{}, err
@@ -257,7 +303,7 @@ func (service *service) Approve(ctx context.Context, sessionID domain.SessionID,
 	if err != nil {
 		return current, err
 	}
-	return service.execute(ctx, request, queued, validation)
+	return queued, nil
 }
 
 func (service *service) Deny(ctx context.Context, sessionID domain.SessionID, actor domain.Actor, reason string) error {
@@ -341,6 +387,11 @@ func (service *service) execute(parent context.Context, request domain.Operation
 	executionContext, cancel := context.WithDeadline(parent, request.Deadline())
 	active := activeExecution{requestID: request.ID(), packageID: validation.PackageID, cancel: cancel}
 	service.activeMu.Lock()
+	if _, exists := service.active[queued.ID]; exists {
+		service.activeMu.Unlock()
+		cancel()
+		return queued, ErrExecutionNotActive
+	}
 	service.active[queued.ID] = active
 	service.activeMu.Unlock()
 	defer func() {
@@ -498,6 +549,10 @@ func (collector *eventCollector) Emit(_ context.Context, event protocol.Envelope
 	copyValue := event
 	copyValue.Payload = append(json.RawMessage(nil), event.Payload...)
 	collector.mu.Lock()
+	if len(collector.events) >= 256 {
+		collector.mu.Unlock()
+		return errors.New("operation event limit exceeded")
+	}
 	collector.events = append(collector.events, copyValue)
 	collector.mu.Unlock()
 	return nil

@@ -955,3 +955,7 @@ change the simulation launcher or its fixed development administrator.
 [Live Network development](Live_Network_Development.md) gives the isolated Docker
 test command, deployment prerequisites, startup commands and remaining limits.
 The system test never joins the host network namespace or system D-Bus.
+
+## Managed instrument integration development
+
+The Plugins workspace needs the real backend with a curated bundle. Build the sigrok bundle for WSL2 amd64 and its Python minor, then pass the Linux catalog path through `serve --integration-bundles` under the simulation profile. Keep state and runner execution on the Linux filesystem. The browser mock does not implement instrument jobs. See [Sigrok integration](Sigrok_Integration.md) for commands and the separate appliance smoke.

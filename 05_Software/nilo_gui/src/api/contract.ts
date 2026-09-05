@@ -67,6 +67,10 @@ export type BenchCoreRole = (typeof BENCH_CORE_ROLES)[number];
  * checkbox has to exist before any token does.
  */
 export const BENCH_CORE_PERMISSIONS = [
+  'bench.read',
+  'bench.execute',
+  'bench.approve',
+  'plugins.manage',
   'status.read',
   'inventory.read',
   'tokens.read.self',

@@ -48,6 +48,7 @@ func (clock *apiClock) Advance(delta time.Duration) {
 }
 
 type apiFixture struct {
+	options       HandlerOptions
 	handler       http.Handler
 	service       *identity.Service
 	clock         *apiClock
@@ -127,15 +128,17 @@ func newAPIFixture(
 	if err != nil {
 		t.Fatalf("network.NewOperationManager: %v", err)
 	}
-	handler, err := NewHandler(HandlerOptions{
+	handlerOptions := HandlerOptions{
 		Identity: service, Profile: "simulation", Catalog: catalog,
 		Network: networkService, Operations: operations, CookieSecurity: cookies,
 		Activity: activityService, Audit: auditWriter,
-	})
+	}
+	handler, err := NewHandler(handlerOptions)
 	if err != nil {
 		t.Fatalf("NewHandler: %v", err)
 	}
 	return apiFixture{
+		options: handlerOptions,
 		handler: handler, service: service, clock: clock,
 		administrator: administrator, database: database,
 	}

@@ -1,0 +1,16 @@
+# Copyright (c) 2026 DDP Engineering
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+id = "REQ-SEC-6b1dd726"
+title = "Exclude PWM from sigrok access"
+status = "active"
+requirement = "NILO shall exclude PWM channels and settings from sigrok discovery and all GUI, CLI and MCP operations, rejecting attempts to supply them."
+verification = "Attempt PWM channels, unknown settings and injected driver arguments; all interfaces reject them and digital discovery never reports PWM."
+affected_paths = ["05_Software/nilo_assistant/internal/bench/", "05_Software/nilo_assistant/internal/httpapi/"]
+linked_tests = ["05_Software/nilo_assistant/internal/bench/jobs_test.go", "05_Software/nilo_assistant/internal/httpapi/bench_test.go", "05_Software/integrations/sigrok/tests/test_plugin.py", "05_Software/nilo_gui/src/components/pages/PluginsPage.test.tsx"]
+spec = "specs/REQ-FUNC-26332084.md"
+priority = "normal"
+rationale = ""
+created = 2026-09-05
+updated = 2026-09-05

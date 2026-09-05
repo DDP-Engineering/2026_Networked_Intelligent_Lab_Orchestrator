@@ -15,6 +15,7 @@ func TestRolePermissionsMatchTheFixedMatrix(t *testing.T) {
 		{
 			role: RoleViewer,
 			want: []Permission{
+				PermissionBenchRead,
 				PermissionInventoryRead,
 				PermissionNetworkRead,
 				PermissionStatusRead,
@@ -23,6 +24,7 @@ func TestRolePermissionsMatchTheFixedMatrix(t *testing.T) {
 		{
 			role: RoleOperator,
 			want: []Permission{
+				PermissionBenchRead, PermissionBenchExecute,
 				PermissionInventoryRead,
 				PermissionNetworkRead,
 				PermissionStatusRead,
@@ -33,6 +35,7 @@ func TestRolePermissionsMatchTheFixedMatrix(t *testing.T) {
 		{
 			role: RoleAdministrator,
 			want: []Permission{
+				PermissionBenchRead, PermissionBenchExecute, PermissionBenchApprove, PermissionPluginsManage,
 				PermissionActivityExport,
 				PermissionActivityRead,
 				PermissionActivityRetentionManage,
@@ -73,8 +76,8 @@ func TestNoRoleHoldsAPermissionOutsideTheDefinedSet(t *testing.T) {
 	for _, permission := range AllPermissions() {
 		defined[permission] = true
 	}
-	if len(defined) != 15 {
-		t.Fatalf("AllPermissions() has %d entries, want the 15 defined permissions", len(defined))
+	if len(defined) != 19 {
+		t.Fatalf("AllPermissions() has %d entries, want the 19 defined permissions", len(defined))
 	}
 	for _, role := range []Role{RoleViewer, RoleOperator, RoleAdministrator} {
 		for _, permission := range role.Permissions() {

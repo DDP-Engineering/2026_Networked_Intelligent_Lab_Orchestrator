@@ -1,4 +1,16 @@
 import {
+  parsePlugins,
+  parsePlugin,
+  parseInstrumentDevices,
+  parseInstrumentJobs,
+  parseInstrumentJob,
+  type InstrumentPlugin,
+  type InstrumentDevice,
+  type InstrumentJob,
+  type InstrumentSubmission,
+  type PluginAction,
+} from './bench';
+import {
   WIREGUARD_PATH,
   parseWireGuardStatus,
   type WireGuardStatus,
@@ -89,6 +101,7 @@ export interface TransportResponse {
   readonly status: number;
   readonly ok: boolean;
   text(): Promise<string>;
+  blob?(): Promise<Blob>;
 }
 
 /** The subset of a fetch request this client sends. */
@@ -181,6 +194,26 @@ export interface NewToken {
 /** The authenticated Bench Core operations the GUI can perform. */
 export interface BenchCoreClient {
   readonly baseUrl: string;
+  listPlugins(credential: Credential): Promise<InstrumentPlugin[]>;
+  pluginAction(
+    credential: Credential,
+    id: string,
+    action: PluginAction,
+    mode?: string,
+  ): Promise<InstrumentPlugin>;
+  discoverInstruments(credential: Credential, id: string): Promise<InstrumentDevice[]>;
+  listInstrumentJobs(credential: Credential): Promise<InstrumentJob[]>;
+  getInstrumentJob(credential: Credential, id: string): Promise<InstrumentJob>;
+  submitInstrumentJob(
+    credential: Credential,
+    input: InstrumentSubmission,
+  ): Promise<InstrumentJob>;
+  instrumentJobAction(
+    credential: Credential,
+    id: string,
+    action: 'approve' | 'cancel',
+  ): Promise<InstrumentJob>;
+  downloadInstrumentArtifact(credential: Credential, id: string): Promise<Blob>;
 
   getStatus(credential: Credential): Promise<BenchCoreStatus>;
   getIntegrations(credential: Credential): Promise<IntegrationInventory>;
@@ -411,6 +444,61 @@ export function createBenchCoreClient(
 
   return {
     baseUrl,
+    listPlugins: (credential) =>
+      exchange({ path: '/api/v1/plugins', credential, parse: parsePlugins }),
+    pluginAction: (credential, id, action, mode) =>
+      exchange({
+        path: `/api/v1/plugins/${encodeURIComponent(id)}/${action}`,
+        credential,
+        method: 'POST',
+        body: mode ? { mode } : {},
+        parse: parsePlugin,
+      }),
+    discoverInstruments: (credential, id) =>
+      exchange({
+        path: `/api/v1/plugins/${encodeURIComponent(id)}/discover`,
+        credential,
+        method: 'POST',
+        body: {},
+        parse: parseInstrumentDevices,
+      }),
+    getInstrumentJob: (credential, id) =>
+      exchange({
+        path: `/api/v1/bench/jobs/${encodeURIComponent(id)}`,
+        credential,
+        parse: parseInstrumentJob,
+      }),
+    listInstrumentJobs: (credential) =>
+      exchange({ path: '/api/v1/bench/jobs', credential, parse: parseInstrumentJobs }),
+    submitInstrumentJob: (credential, input) =>
+      exchange({
+        path: '/api/v1/bench/jobs',
+        credential,
+        method: 'POST',
+        body: input,
+        parse: parseInstrumentJob,
+      }),
+    instrumentJobAction: (credential, id, action) =>
+      exchange({
+        path: `/api/v1/bench/jobs/${encodeURIComponent(id)}/${action}`,
+        credential,
+        method: 'POST',
+        body: {},
+        parse: parseInstrumentJob,
+      }),
+    downloadInstrumentArtifact: async (credential, id) => {
+      const headers: Record<string, string> = {};
+      if (credential.kind === 'bearer')
+        headers.Authorization = `Bearer ${credential.token}`;
+      const response = await transport(
+        resourceUrl(baseUrl, `/api/v1/bench/jobs/${encodeURIComponent(id)}/artifact`),
+        { method: 'GET', headers, credentials: 'same-origin' },
+      );
+      if (!response.ok) throw await refusalOf(response);
+      if (!response.blob)
+        throw new BenchCoreError('unavailable', 'Binary download is unavailable');
+      return response.blob();
+    },
 
     getStatus: (credential) =>
       exchange({ path: STATUS_PATH, credential, parse: parseStatusBody }),

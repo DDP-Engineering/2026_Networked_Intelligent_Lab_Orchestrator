@@ -30,7 +30,7 @@ func (readerStub) Statistics(
 	return network.Statistics{MeasuredBy: network.SourceSimulation}, nil
 }
 
-func TestTheEndpointOffersExactlyThreeReadTools(t *testing.T) {
+func TestTheNetworkSurfaceOffersExactlyThreeReadTools(t *testing.T) {
 	t.Parallel()
 
 	if len(ToolNames) != 3 {
@@ -57,7 +57,7 @@ func TestTheEndpointOffersExactlyThreeReadTools(t *testing.T) {
 // The read-only guarantee is structural: this package is given an interface
 // with two read methods, so there is no mutating method here to call. A test
 // over the source keeps that true as the file changes.
-func TestTheEndpointHoldsNoMutatingCapability(t *testing.T) {
+func TestTheNetworkReaderHoldsNoMutatingCapability(t *testing.T) {
 	t.Parallel()
 
 	fileSet := token.NewFileSet()

@@ -1,0 +1,83 @@
+{
+  "package": {
+    "id": "sigrok",
+    "version": "0.1.0",
+    "publisher": "DDP Engineering",
+    "integrity": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "protocol": "nilo.integration/1",
+  "platforms": [
+    {
+      "os": "linux",
+      "architecture": "arm64"
+    },
+    {
+      "os": "linux",
+      "architecture": "amd64"
+    }
+  ],
+  "runner": {
+    "executable": "runner",
+    "arguments": [
+      "--stdio"
+    ]
+  },
+  "app_configuration_schema": "schemas/discover.input.schema.json",
+  "operations": [
+    {
+      "id": "discover_devices",
+      "policy": "auto_eligible",
+      "input_schema": "schemas/discover.input.schema.json",
+      "result_schema": "schemas/result.schema.json",
+      "timeout": "35s",
+      "cancellable": true,
+      "state_changing": false,
+      "resources": []
+    },
+    {
+      "id": "capture",
+      "policy": "auto_eligible",
+      "input_schema": "schemas/capture.input.schema.json",
+      "result_schema": "schemas/result.schema.json",
+      "timeout": "35s",
+      "cancellable": true,
+      "state_changing": true,
+      "resources": [
+        "sigrok/device/atk"
+      ]
+    },
+    {
+      "id": "decode_uart",
+      "policy": "auto_eligible",
+      "input_schema": "schemas/decode.input.schema.json",
+      "result_schema": "schemas/result.schema.json",
+      "timeout": "35s",
+      "cancellable": true,
+      "state_changing": false,
+      "resources": []
+    }
+  ],
+  "cancellation": {
+    "supported": true,
+    "safe_shutdown": "capture"
+  },
+  "events": [
+    {
+      "id": "progress",
+      "schema": "schemas/event.schema.json"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "capture",
+      "schema": "schemas/event.schema.json"
+    }
+  ],
+  "health_checks": [
+    {
+      "id": "runner",
+      "timeout": "5s"
+    }
+  ],
+  "contract_fixtures": []
+}

@@ -28,6 +28,7 @@ import {
 } from '../../api/permissions';
 import { useTranslate } from '../../i18n/languages';
 import { AuthenticationPage } from '../AuthenticationPage';
+import { PluginsPage } from '../pages/PluginsPage';
 import { BenchPage } from '../pages/BenchPage';
 import { ActivityPage } from '../pages/ActivityPage';
 import { NetworkPage } from '../pages/NetworkPage';
@@ -394,8 +395,15 @@ export function AppShell({
     if (page.id === 'about') {
       return <AboutPage status={status} />;
     }
-    if (page.id === 'plugins') {
-      return <NotAvailablePage nameKey="nav.plugins" bodyKey="page.plugins.body" />;
+    if (page.id === 'plugins' || page.id === integrationPageId('sigrok')) {
+      return (
+        <PluginsPage
+          client={client}
+          credential={credential}
+          session={session}
+          onSessionEnded={onSessionEnded}
+        />
+      );
     }
     if (page.id === 'settings') {
       return <NotAvailablePage nameKey="nav.settings" bodyKey="page.settings.body" />;

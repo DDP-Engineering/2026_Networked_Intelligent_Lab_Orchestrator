@@ -106,7 +106,7 @@ const CORE_PAGES: PageDescriptor[] = [
     cluster: 'core',
     icon: 'plugins',
     titleKey: 'nav.plugins',
-    available: false,
+    available: true,
   },
   {
     id: 'authentication',

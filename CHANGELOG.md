@@ -7,6 +7,9 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Added
 
+- Managed sigrok plugins with install, enable, disable, restart and uninstall across GUI, CLI and MCP.
+- Digital ATK capture and saved UART jobs with bounded queues, transaction IDs, delayed replies, deadlines and retained artifacts.
+
 - `nilo network operation list`, the listing of recent and pending managed
   changes the browser uses to reattach after a reload.
 - Remote mode for `nilo admin user` and `nilo admin token` over `--server` and

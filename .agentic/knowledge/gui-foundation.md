@@ -1,6 +1,14 @@
 # Browser GUI foundation
 
-## Purpose
+## Routing
+
+Select this page for the React shell, pages, API client, accessibility and
+localization. Start at `src/components/shell/AppShell.tsx`; focused tests sit
+beside each page. Instrument lifecycle and transaction views start at
+`src/components/pages/PluginsPage.tsx` and `PluginsPage.test.tsx`. Core scheduling,
+permissions and runner behavior belong to [Managed bench integrations](bench-integrations.md).
+
+## Purpose and boundaries
 
 The browser GUI foundation provides NILO's native Windows development
 interface while keeping the deployed appliance boundary static. It gives
@@ -65,9 +73,17 @@ Built assets served by Bench Core receive a `nilo-runtime-profile` HTML meta tag
 The startup entry point uses it to label sign-in/loading/failure screens; mock
 and Vite development retain simulation defaults, while an unlabelled production
 page reports unknown runtime. Authenticated status remains authoritative for the
-workspace. Appliance pages show live networking and empty instrument inventory,
+workspace. Appliance pages show live networking and installed instrument inventory,
 and the production sign-in endpoint label uses the serving origin. The metadata
 contains no network inventory and grants no permissions.
+
+## Invariants
+
+- All live requests use the same-origin authenticated client and its CSRF rules.
+- Simulation labels stay explicit; browser state never proves physical accuracy.
+- Instrument submission retries preserve a command key until a response arrives;
+  history reattaches by transaction ID and polling never submits work.
+- The server authorizes every action even when UI controls are hidden or disabled.
 
 ## Key behaviors
 
@@ -229,6 +245,8 @@ flowchart LR
     shell --> toprow
     shell --> sidenav
     shell --> pages
+    pages --> instruments["PluginsPage: lifecycle, acquisition, transaction detail"]
+    instruments --> client
     pages --> admin
     admin --> users
     admin --> apitokens
@@ -524,3 +542,22 @@ readiness renders as a compact grid of left-label/right-value facts, and the
 Statistics title shares one responsive header with the interface and period
 controls. This keeps the initial Diagnostics chart in the workspace without
 vertical scrolling at 1024x600 and larger; 800x480 may scroll vertically.
+
+## Managed instrument workspace (TASK-f1f2d836)
+
+`REQ-UX-30e2e009` adds Plugins and the sigrok integration tab through the same
+`PluginsPage`. The page serializes refreshes, polls summaries and selected detail,
+retains uncertain submission keys, renders digital channels and a bounded preview,
+and exposes session-only approval, cancellation, capture download and saved UART
+submission. Management and execution controls follow the current session scopes.
+English, German and Romanian share the instrument key set.
+
+- `src/api/bench.ts`, `bench.test.ts` — job/plugin wire parsing and API boundary.
+- `src/api/client.ts` — lifecycle, discovery, submit/list/detail/actions/download.
+- `src/components/pages/PluginsPage.tsx`, `PluginsPage.test.tsx` — workspace and
+  retry/permission/reconnect regressions.
+- `src/components/shell/pages.ts`, `AppShell.tsx` — installed workspace routing.
+- `src/i18n/{en,de,ro}.ts`, `src/index.css` — translated controls and responsive layout.
+
+The browser mock retains its pre-existing scope; exercise instruments against a
+real simulation-profile runner. Source paths above are relative to `05_Software/nilo_gui/`.

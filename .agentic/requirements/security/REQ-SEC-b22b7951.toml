@@ -1,0 +1,16 @@
+# Copyright (c) 2026 DDP Engineering
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+id = "REQ-SEC-b22b7951"
+title = "Authorize integration operations consistently"
+status = "active"
+requirement = "NILO shall enforce distinct read, execution, approval and package-management permissions for GUI, CLI and MCP requests using authenticated identity and request-bound policy."
+verification = "Exercise viewer/operator/admin and scoped token requests through HTTP and MCP; observe correct permissions and rejection of token self-approval."
+affected_paths = ["05_Software/nilo_assistant/internal/auth/", "05_Software/nilo_assistant/internal/httpapi/", "05_Software/nilo_assistant/internal/mcp/"]
+linked_tests = ["05_Software/nilo_assistant/internal/auth/role_test.go", "05_Software/nilo_assistant/internal/httpapi/bench_test.go", "05_Software/nilo_assistant/internal/mcp/bench_test.go"]
+spec = "specs/REQ-FUNC-26332084.md"
+priority = "normal"
+rationale = ""
+created = 2026-09-05
+updated = 2026-09-05

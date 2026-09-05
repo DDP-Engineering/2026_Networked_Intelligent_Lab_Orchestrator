@@ -1,0 +1,974 @@
+{
+  "reports": [
+    {
+      "anchor_created_at": "2026-09-04T22:53:14.971655Z",
+      "anchor_head": "e78080ec4e59ac42fd3171ea10c3b2b9653df1f9",
+      "anchor_id": "3c3ce80c70357ddb",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "3fdc80188782bebc5bf9b39046c6d340e38e2b96d1f07b4402ee7b81836e1cb0"
+          },
+          "area": "other",
+          "before": null,
+          "path": "05_Software/integrations/sigrok/manifest.json",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "14ca01f38be90540730b2ac793c35bbc0d24638c796387e205d1867ff1f569a6"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "b71d7e048469f8ce20fb676cceb9fe74e1ea4de6a66246ca8651e3d84304faef"
+          },
+          "path": "05_Software/integrations/sigrok/pyproject.toml",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d6535ee4008bf0dc45f1e74e3b0ddd5b336a65d4b4b524c04da6a112786b8eb4"
+          },
+          "area": "other",
+          "before": null,
+          "path": "05_Software/integrations/sigrok/runner",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "67f87238ef6b2d4bebacd0990b1e894b771012ff19abf97b4f01c632a88d850e"
+          },
+          "area": "other",
+          "before": null,
+          "path": "05_Software/integrations/sigrok/schemas/capture.input.schema.json",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "39cd9d9af1af08f404e7dae10100d6a7c44b516e0a2926d186b40353b3f1d7c6"
+          },
+          "area": "other",
+          "before": null,
+          "path": "05_Software/integrations/sigrok/schemas/decode.input.schema.json",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "8491177ce18b8c2860389a81e3022162f5ba7d98024abf04251bf0eb8d16bd57"
+          },
+          "area": "other",
+          "before": null,
+          "path": "05_Software/integrations/sigrok/schemas/discover.input.schema.json",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "59dd9138acc693310fce4722159a02240f995b2be524301ba57548a1aa7b10fa"
+          },
+          "area": "other",
+          "before": null,
+          "path": "05_Software/integrations/sigrok/schemas/event.schema.json",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "59dd9138acc693310fce4722159a02240f995b2be524301ba57548a1aa7b10fa"
+          },
+          "area": "other",
+          "before": null,
+          "path": "05_Software/integrations/sigrok/schemas/result.schema.json",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "aaf73ab9734fbbcfd43879b1829291fa464b52ccab275ba567e8643d380d8b11"
+          },
+          "area": "other",
+          "before": null,
+          "path": "05_Software/integrations/sigrok/src/nilo_sigrok/__init__.py",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "941012a10362b17a1ed3883967af3dda5880238594c26773087f70a4fd320ff4"
+          },
+          "area": "other",
+          "before": null,
+          "path": "05_Software/integrations/sigrok/src/nilo_sigrok/__main__.py",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "e2f2743a03fdb67dfa8b8f82505ca8ff59416d51fe5f4303b05691d863aaa163"
+          },
+          "area": "other",
+          "before": null,
+          "path": "05_Software/integrations/sigrok/src/nilo_sigrok/plugin.py",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "08e6eaee039ad03aff8363a1343b7eb8d113b5e10156889eaaea294fa7bad683"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "85ed66239b97357bec6a99e686aba08f6eae0f9efe7f522a1ebc98133ea7165b"
+          },
+          "path": "05_Software/integrations/sigrok/tests/test_package.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "bb9c305badc5d38401311489824f7718aec4c42b17fb392ca947a883e52458ca"
+          },
+          "area": "other",
+          "before": null,
+          "path": "05_Software/integrations/sigrok/tests/test_plugin.py",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "e7c1d70b8e62460deaa4be4ad5aa404501f33e17f0d31523ca4e4a428569126e"
+          },
+          "area": "other",
+          "before": null,
+          "path": "05_Software/integrations/sigrok/uv.lock",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "14363f6b74488fcb8f8ecc3b1bdb715e9f0f958bbf903d6d6b254786461f421b"
+          },
+          "area": "tests",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/operation/queue_test.go",
+          "status": "added"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 12,
+            "modified": 2,
+            "removed": 0,
+            "unchanged": 95
+          },
+          "source": {
+            "added": 0,
+            "modified": 0,
+            "removed": 0,
+            "unchanged": 255
+          },
+          "tests": {
+            "added": 1,
+            "modified": 0,
+            "removed": 0,
+            "unchanged": 148
+          }
+        },
+        "status": {
+          "added": 13,
+          "modified": 2,
+          "removed": 0,
+          "unchanged": 498
+        }
+      },
+      "current_head": "e78080ec4e59ac42fd3171ea10c3b2b9653df1f9",
+      "evolution_stage": "build",
+      "evolved_at": "2026-09-04T22:58:26.643361Z"
+    },
+    {
+      "anchor_created_at": "2026-09-04T22:58:26.956539Z",
+      "anchor_head": "e78080ec4e59ac42fd3171ea10c3b2b9653df1f9",
+      "anchor_id": "3544565377564830",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ded73d55f3b91bbb7e86e6be9eb873a991d7af3bd2f60b271087fd06ccb4e7b3"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "4bb5b83031986144c17916e2cbae6fdd8e48ffe342bc553355b7bbbc07370fb2"
+          },
+          "path": "02_Tools/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "487ddbcd5f2c14fd46b3ccc79635f2e7467196dd5abc96bba8bcb0326f61db7b"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "d49994f7d823dcb3ba18833b89052a8fe19f2ae8975e0307f2d258cbf861d906"
+          },
+          "path": "02_Tools/scripts/build-appliance.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "a8f25710596d2a3e1afba256d43219d8628098954ebf43be431855509347f05d"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/scripts/build-sigrok-bundle.py",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "22cd85b41f09a8acb3da43f908cd3825c0663f4856ea7197d88de4aec0d98035"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/scripts/check-sigrok-integration.py",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "3321bfdabbd43febf2387ff48894866c51a2f290c3142a0844de6c810cf89efa"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "3fdc80188782bebc5bf9b39046c6d340e38e2b96d1f07b4402ee7b81836e1cb0"
+          },
+          "path": "05_Software/integrations/sigrok/manifest.json",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "5d014820164d5afcc6f5b98761081ab25167a40d1c843cf416f58a7d6a6c126a"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "d6535ee4008bf0dc45f1e74e3b0ddd5b336a65d4b4b524c04da6a112786b8eb4"
+          },
+          "path": "05_Software/integrations/sigrok/runner",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "821b31633dab00bd9425c5126242c4b5309711589d1c66a10af6cc6d83d399c2"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "aaf73ab9734fbbcfd43879b1829291fa464b52ccab275ba567e8643d380d8b11"
+          },
+          "path": "05_Software/integrations/sigrok/src/nilo_sigrok/__init__.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "45d090817c4e610926c41e822f4e792419d56f0765aa0c4904aefad992ec18fc"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "941012a10362b17a1ed3883967af3dda5880238594c26773087f70a4fd320ff4"
+          },
+          "path": "05_Software/integrations/sigrok/src/nilo_sigrok/__main__.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b451be7d263ad18f0bcd813ea99a5b1e58701b934560061a37b23f0aa0aac6ff"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "e2f2743a03fdb67dfa8b8f82505ca8ff59416d51fe5f4303b05691d863aaa163"
+          },
+          "path": "05_Software/integrations/sigrok/src/nilo_sigrok/plugin.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "4f9088f3210c97449a4095b93f013e977b66d06bb842ac5fde9dfbc7964728d0"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "08e6eaee039ad03aff8363a1343b7eb8d113b5e10156889eaaea294fa7bad683"
+          },
+          "path": "05_Software/integrations/sigrok/tests/test_package.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "f2c80c0c5ccb97355a389e70b1c214ebaff813bb91fd388f72526f856edd4c3a"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "bb9c305badc5d38401311489824f7718aec4c42b17fb392ca947a883e52458ca"
+          },
+          "path": "05_Software/integrations/sigrok/tests/test_plugin.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "9fd48046603377c746b93c5b876b2f6ceb92632c4ac9a99ebc8327f2e5e20c05"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/cmd/nilo/bench.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "7d2699fdd128bda0a80017996733c4769662a6ab8df918b4e5bdd9ba6afa5252"
+          },
+          "area": "tests",
+          "before": null,
+          "path": "05_Software/nilo_assistant/cmd/nilo/bench_test.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "904dd5ac465b3a40f5552c616f520ef244ea311a3671d0efe3b2bdfe0a49c1ac"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "7d3dc0ad054ee28a9af98892b2b67000b4479dc1f747c0a6b75b1e4f90d50dc5"
+          },
+          "path": "05_Software/nilo_assistant/cmd/nilo/main.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "deeb82d73918057b65398c2ca5925884c841f2be5667948f0d302b999eb3fe91"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/app/bench.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "0361a584d90764bbcb785e02b61e1ee63053459eb6af08811a997c97e67af9f9"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "23a611c558003d5aa93938aa02daf729cd511b0c0c506288aa4eded569d1c594"
+          },
+          "path": "05_Software/nilo_assistant/internal/auth/role.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "9a954f4abbfd21d4c346ceb1fc211bba652cd0415ea8a4f051cf138c20bc3fa2"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "b3b585ef8278c77e96384649cfc59d7423954517a796afae4f713882229ea01a"
+          },
+          "path": "05_Software/nilo_assistant/internal/auth/role_test.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "281311ab24de80fe024b7a63e13a01533da53d229b6c8e72f2a389bdce17f460"
+          },
+          "area": "tests",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/bench/bundle_test.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d685e33c464718e5e7c87b4352da71552beec83e01c9d3def00125f5c938da34"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/bench/execution.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d95a32e2c7da5a8b1379d65549297677fb5308ed04b585c070eed7320ef55d52"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/bench/jobs.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "fe3e1956293ba93f85329b2a43ff63e8588555082896d7437f3957af6b06ffa9"
+          },
+          "area": "tests",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/bench/jobs_test.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "706aae692daa10c9eda9f9124f508c55826f7760fd7dc3ba42194e6d23c23c29"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/bench/manager.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "398424a03bb8fd38012f77b8ee1997d158d8ebfbd9c4dca279017611531aa89b"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/bench/model.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "df871e0b8d4ed90d5176c5a481d7a423f3daf48801dfc2b629bcc6659c4bd6d0"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/bench/packages.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "90867c9512872af7ba7aac0c1c23393024103386bd1f6a6b8d7fdef4f587edf6"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/bench/parameters.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "e8444f5805de3927fb23bbcd4634a33f9cc5f17745be64925c191f2e59326563"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/bench/scheduler.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "8dbf07de51e3e950d0e632dca18297f1957021391a0d4734e9de0d0b4ec8f5a8"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/httpapi/bench.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d0841bd3badcd06237098dd27d36daf049723d2d5d4e93bdf1fe944ebf479291"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "24314c3be3b618d2e409eec4151e628323f2b10e590c3eb2a618a2bdb4cfc395"
+          },
+          "path": "05_Software/nilo_assistant/internal/httpapi/bench_test.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "9705cc25307f45a5867010c418bc57d22a678e523ef7cd08756a74372670660d"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "b34878218a5e5a0738e91716ccb45a522ff876252554015e21c1d41f0c25453f"
+          },
+          "path": "05_Software/nilo_assistant/internal/httpapi/identity_test.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "3f327336fae5d19e8af3a9049bbe4b24e89c20291ef491d753d05e37a8cde28e"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "36550b4ad0300fad35cc824f16e630da47ff905c401c83a319ef338ebc7d9e9f"
+          },
+          "path": "05_Software/nilo_assistant/internal/httpapi/server.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "e7fe8a8f1804358cebd5be7e6f4ec10a6f90ae77a7f9e5a4711ea45e165ac2ad"
+          },
+          "area": "tests",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/integration/protocol/describe_test.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "cedf9bd08775053cb7092dc82bda15c5866eb92a9708cd4074fbe2ff481a019d"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "7085d4cb61902e0e24c4cfa15c763bf7831600da5a7541b16c90cfa9f2276d85"
+          },
+          "path": "05_Software/nilo_assistant/internal/integration/protocol/message.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "527d342c7b11cad8e5470cd0de7eda357bde801d0d337984c08a7b42846d762c"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/mcp/bench.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "021812bb60ecdd00d2a557d66a748da4486978bb52040150968ed8149b6a6436"
+          },
+          "area": "tests",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/mcp/bench_test.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "9a670277a227788d81cb5657bd47caf85482e2b4ab14b1d64d0200a532a3b751"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "e2134ed5a1a5da67fa72237715077785593a8dc73b07e199c1548aa016463f0a"
+          },
+          "path": "05_Software/nilo_assistant/internal/mcp/server.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "83c600576c421bf1ed9e7c7a52ab65a703045b775fbbf58296d7121e7e8ac8a1"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "748dbc34b7ed915df71e75a146d32a50a81164da4b601f6acf808e55f0058a12"
+          },
+          "path": "05_Software/nilo_assistant/internal/mcp/server_test.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "c8668c2260da9096a93af582f00d57c373376c7a005f54a39b755d95d0bdead0"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "14363f6b74488fcb8f8ecc3b1bdb715e9f0f958bbf903d6d6b254786461f421b"
+          },
+          "path": "05_Software/nilo_assistant/internal/operation/queue_test.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "6c2dff34cc849159af9ee31da8576b6c76c479f18e8e233d5b13a1a8d907836b"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "dc236be524bde98fb6ec4df0595bdb6a47f7df884ef28edecf86d6bf8284eb59"
+          },
+          "path": "05_Software/nilo_assistant/internal/operation/service.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "9d248ae14b1e2ed4d6d315f553c07e1edc34504635ebd2dda763c7a93ca6f1c9"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "1837af6e9f868212c29255992edf942f639ea0f6b4c2ab1b667d6bd0f87e59df"
+          },
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/audit_repository.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "f290d5d924900f4245fbd8318a84166dc3e48d9295175419f545b3fd9b418d6a"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "4ae33d808d5d9206e3cf17da953564d13d74227384c011418aaa69fb8c2eab73"
+          },
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/db_test.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "84b1fdfaf03bb69f797bb9e1e834ac6f86511c95c930b4c00a815b5f6f920cbf"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "d43b6fb9ce62bd0b6e1bff30351e9b83a42d6cd81f954b7a262a2af66b3d7d49"
+          },
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/migrations.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "3a75572eb984a57344c22a64ea385d0a393de18f5183778ca6d9964ab60f8fce"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/migrations/011_bench.sql",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "dbd71b67b4b0abcec120868b69e8856c66a41ed5d42a65c13f704b0c6a1c5c01"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "e16e7a59ee2fdbb5daf5c8e67c8c65492e02cd3f94dceb2a38ee3cefce20d3f3"
+          },
+          "path": "05_Software/nilo_gui/src/App.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "6b616849b95b1e4224dd1d7972a2dfe8b08331d65f644c0bc00f74f2dacd4a06"
+          },
+          "area": "tests",
+          "before": null,
+          "path": "05_Software/nilo_gui/src/api/bench.test.ts",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "536df49b24729130392085d7a2fa77e65bee0fbe4b5cb511315e8c5c222ca0e8"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_gui/src/api/bench.ts",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "f6ab90e38069a92d52e1d0c62410f91935c8ce5a40e30311312de343e3ab19c7"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "a2deb6063f33be889bc0364030dd2d1fd3e5eaa33e8bdddc56e6502779763c07"
+          },
+          "path": "05_Software/nilo_gui/src/api/client.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b0a87b334eb36f85f92df021cf65f10592589e3f51e8e16e744a7c3d9b96993a"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "fb782a32bf11aa39b740a338306013c90a5ee9e5023a258035075bf13eec2b4e"
+          },
+          "path": "05_Software/nilo_gui/src/api/contract.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "bce3a8379ea500eaca2af0e676731939efcf134135930d3c7e3553c6e88674ee"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "ddea0f9a7b8c5acda1a1832aa84521942b4e19381f985636f228fc967e3d13d9"
+          },
+          "path": "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "354aab3d5554cd9642cf7209dc2f8baab47dd44e4eadfee5df1e02a29ed4f859"
+          },
+          "area": "tests",
+          "before": null,
+          "path": "05_Software/nilo_gui/src/components/pages/PluginsPage.test.tsx",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "8711d87af2f3955dd8dbcd06d9b332c7c06677f68efeb20009f5f242e371e364"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_gui/src/components/pages/PluginsPage.tsx",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "92cc44c108940d1ae31a6b29d34d9dabcd9a8d049c45279a833a390879449669"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "7995a5e75e691cb6ed11402e4af4d634544104338405c48638e9d54604d36a05"
+          },
+          "path": "05_Software/nilo_gui/src/components/shell/AppShell.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b404021dcd2d4a51c0ff9a413f60658c469cbdb2db9cf98183a127005ef2d2e8"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "1a4d475e3bdfa02bb7c787b0cf23671384a657e95f651d6c5c732038d2fa0166"
+          },
+          "path": "05_Software/nilo_gui/src/components/shell/pages.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "0a1877e6d0ec865601584af14c5022c6e8a3f1400b1cb8c51bf7e7d2c81fa5b3"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "16b37ec12352846fb0b6c6496d72928b1d43465fe117d3a0861bfbafe9160c5a"
+          },
+          "path": "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "bf7583bb49fc53537c343396b3f66a7de3e218f9d918910878c17b8b2f0000f8"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "2c30d630945caa28a58ceaed55caf7eb3915b270b4870c939a6563feefd78abd"
+          },
+          "path": "05_Software/nilo_gui/src/i18n/de.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ed1e866d0d44d972847ed9d688aa08995b9d5451fbd0d6f0b6d0c073dbaf2b96"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "234a7dc1f7abdc3dee2189b492bc5ee67517b5cc8ff298b91df7ae0a9a621382"
+          },
+          "path": "05_Software/nilo_gui/src/i18n/en.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "83f14bf86d66d54a85977d87d6c1ff36e969144c0ff43de88f75b8b96f6d202d"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "12ed313930c0edbb23352941b9b9ab5f7f7b93bbd65d9bd0a342807fb81287cf"
+          },
+          "path": "05_Software/nilo_gui/src/i18n/ro.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "674f23e529e2474f24eb37da58a068ee1e6b14b0577f9e0867125df678ef1375"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "428486b50254a2ac986644179f24138b5bd41cdc7c7cb3e73ab99161b448f9ea"
+          },
+          "path": "05_Software/nilo_gui/src/index.css",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "8e8968805ecb3ca71cce125299f12451716b19b539ebd5348e92a972a7742f7c"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "9a9833638eea4125b8cc38935495ba996ebac95da5b12b46fa54a9b524531f09"
+          },
+          "path": "06_SoftwareDocu/Development_and_Simulation_Flow.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "fddecd76f50a8a751470cf3527a96ce8799f41a729595bb4bdcfc1354547eed0"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "2048ffd4513a69e06c9edceedefdc3b96733acb29f4167fad15449c4b1fcfe56"
+          },
+          "path": "06_SoftwareDocu/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "202302004ce496223bbf49c8b874c928cfc06ce60b5be7c17b051244dab1a4c6"
+          },
+          "area": "other",
+          "before": null,
+          "path": "06_SoftwareDocu/Sigrok_Integration.md",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "2a9b59ba573e81b61a3961ff209d63e91e5e1ba6f1d01dff537e54684eebf005"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "32053c2d4ccce455d7b0887c4fe2f88c184d023d8e50e94e56f1af28596a0be6"
+          },
+          "path": "07_Delivery/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "024f52ba5dd0c507e31cb7f83a50e74e77d57d180ac300c7306beaac5b81cffc"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "66bb2e1efd4363b786b79388e39d23c0e9e2992f604f2585ead7d2da540fd84b"
+          },
+          "path": "CHANGELOG.md",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 3,
+            "modified": 13,
+            "removed": 0,
+            "unchanged": 96
+          },
+          "source": {
+            "added": 14,
+            "modified": 16,
+            "removed": 0,
+            "unchanged": 239
+          },
+          "tests": {
+            "added": 7,
+            "modified": 9,
+            "removed": 0,
+            "unchanged": 140
+          }
+        },
+        "status": {
+          "added": 24,
+          "modified": 38,
+          "removed": 0,
+          "unchanged": 475
+        }
+      },
+      "current_head": "e78080ec4e59ac42fd3171ea10c3b2b9653df1f9",
+      "evolution_stage": "validate",
+      "evolved_at": "2026-09-05T00:08:48.129181Z"
+    }
+  ],
+  "schema": 1,
+  "task": "TASK-f1f2d836"
+}

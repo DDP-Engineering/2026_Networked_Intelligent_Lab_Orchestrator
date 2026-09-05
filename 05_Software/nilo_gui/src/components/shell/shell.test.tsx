@@ -83,6 +83,24 @@ const viewer: BenchCoreSession = {
 function client(session: BenchCoreSession = administrator): BenchCoreClient {
   return {
     baseUrl: '',
+    listPlugins: async () => [],
+    listInstrumentJobs: async () => [],
+    getInstrumentJob: async () => {
+      throw new Error('unavailable');
+    },
+    pluginAction: async () => {
+      throw new Error('unavailable');
+    },
+    discoverInstruments: async () => [],
+    submitInstrumentJob: async () => {
+      throw new Error('unavailable');
+    },
+    instrumentJobAction: async () => {
+      throw new Error('unavailable');
+    },
+    downloadInstrumentArtifact: async () => {
+      throw new Error('unavailable');
+    },
     listNetworkOperations: () => Promise.resolve([]),
     previewInterfaceSettings: () =>
       Promise.reject(new Error('not part of this fixture')),
@@ -753,17 +771,14 @@ describe('the network presentation', () => {
 });
 
 describe('pages that are not built yet', () => {
-  it.each(['Plugins', 'Settings'])(
-    'says plainly that %s is not available',
-    async (name) => {
-      renderShell();
-      await benchPage();
+  it.each(['Settings'])('says plainly that %s is not available', async (name) => {
+    renderShell();
+    await benchPage();
 
-      openFromNav(name);
+    openFromNav(name);
 
-      expect(screen.getByText(`${name} is not available yet`)).toBeVisible();
-    },
-  );
+    expect(screen.getByText(`${name} is not available yet`)).toBeVisible();
+  });
 
   it('shows the build the backend actually reported on About', async () => {
     renderShell();

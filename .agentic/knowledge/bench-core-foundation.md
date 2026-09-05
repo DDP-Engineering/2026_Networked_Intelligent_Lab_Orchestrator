@@ -17,16 +17,19 @@ packages belong to *Integration platform*.
 
 ## Purpose and boundaries
 
-The Go Bench Core owns validated configuration, immutable operation state, identity and access control, policy and approvals, durable sessions and evidence, application startup reconciliation, and the authenticated HTTP boundary. It exposes read-only Network MCP tools; live interface networking and WireGuard readiness use a separate privileged NetworkManager helper; hardware-family integrations and live WireGuard management remain unimplemented.
+The Go Bench Core owns validated configuration, immutable operation state, identity and access control, policy and approvals, durable sessions and evidence, application startup reconciliation, and the authenticated HTTP boundary. It exposes read-only Network MCP tools; live interface networking and WireGuard readiness use a separate privileged NetworkManager helper; managed sigrok instrument operations use the bench integration service.
 
 Two authorization decisions live here and stay separate. `identity.Service` decides whether an actor may *request* an action, from its fixed role and the scopes of the API token in use. `policy.Resolver` decides whether an operation may *run* without a human approval, from the integration app's declared operation policy. Neither the Administrator role nor a fully scoped token touches the second decision.
+
+Managed plugin lifecycle, asynchronous instrument jobs and the `plugin`/`bench`
+CLI groups route to [Managed bench integrations](bench-integrations.md).
 
 ## Public interface
 
 `nilo network` calls the authenticated `/api/v1/network` interface for status,
 statistics, interfaces, WireGuard, device networks, the operation listing and
 separate operation acknowledgement, confirmation and rollback. `/mcp` offers
-exactly the three read tools over the same service. WireGuard reads expose safe
+three network read tools over the same service, plus eight bench tools when the integration manager is configured. WireGuard reads expose safe
 metadata only.
 
 `nilo admin user|token` run in exactly one of two modes: local (`--data-dir`,
@@ -41,7 +44,7 @@ before anything is opened or contacted. The root usage names every group.
 
 ## Invariants
 
-- Every protected route declares its permission in `server.go`; the command
+- Every protected route declares its permission in `server.go` or `bench.go`; the command
   line is an API client and adds no authorization or identity rule of its own.
 - A token's permissions are its owner's current role intersected with its
   scopes, resolved from stored state on every request.
@@ -379,3 +382,13 @@ Verification: the disposable container (`02_Tools/tests/network/check.sh`) runs
 the NetworkManager, WireGuard, settings, local forwarding (three namespaces and a
 Modbus responder), VPN topology (hub, remote client, two sites) and independent
 recovery system tests; the Windows suite covers everything portable.
+
+### Managed instrument composition
+
+`app.StartBench` composes the durable manager for `serve` only. Migration 011 adds
+plugin state and jobs linked to existing sessions. `operation.Service.Prepare`,
+`Run` and `ApproveQueued` preserve the synchronous Submit/Approve wrappers while
+separating durable admission from execution. `AppendInTransaction` lets queued
+settlement and its audit envelope share one SQLite transaction. Focused proof:
+`internal/operation/queue_test.go`, `internal/bench/jobs_test.go`, and the shared
+HTTP/MCP/CLI bench tests listed in bench-integrations.md.

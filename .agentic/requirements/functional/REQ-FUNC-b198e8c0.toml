@@ -1,0 +1,16 @@
+# Copyright (c) 2026 DDP Engineering
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+id = "REQ-FUNC-b198e8c0"
+title = "Uninstall optional integrations"
+status = "active"
+requirement = "When an administrator uninstalls an idle integration, NILO shall remove its installed package and preserve recorded jobs and artifacts."
+verification = "Uninstall an idle package and observe absent installed files, retained jobs/artifacts and refusal while busy."
+affected_paths = ["05_Software/nilo_assistant/internal/bench/"]
+linked_tests = ["05_Software/nilo_assistant/internal/bench/jobs_test.go"]
+spec = "specs/REQ-FUNC-26332084.md"
+priority = "normal"
+rationale = ""
+created = 2026-09-05
+updated = 2026-09-05

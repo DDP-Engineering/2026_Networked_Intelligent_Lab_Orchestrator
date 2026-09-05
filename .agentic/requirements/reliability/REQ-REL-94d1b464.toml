@@ -1,0 +1,11 @@
+schema = 1
+id = "REQ-REL-94d1b464"
+title = "Bound concurrent commands and correlate delayed replies"
+status = "active"
+requirement = "When concurrent instrument actions are submitted, NILO shall schedule a bounded queue of transaction-identified commands and retain correlated progress and replies until an explicit terminal outcome, stopping expired execution at its deadline and completing bounded cleanup before releasing resources."
+verification = "Queue two conflicting actions and an independent action; observe serialized device ownership, independent progress, unique transaction IDs, retrievable delayed replies, bounded queue refusal and expiry while queued; stale replies never complete another transaction."
+affected_paths = ["05_Software/nilo_assistant/internal/bench/", "05_Software/nilo_assistant/internal/integration/protocol/", "05_Software/nilo_assistant/internal/operation/"]
+linked_tests = ["05_Software/nilo_assistant/internal/bench/jobs_test.go", "05_Software/nilo_assistant/internal/operation/queue_test.go", "05_Software/nilo_assistant/internal/integration/protocol/describe_test.go"]
+spec = "specs/REQ-FUNC-26332084.md"
+created = 2026-09-05
+updated = 2026-09-05

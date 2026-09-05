@@ -12,6 +12,7 @@ import (
 	"nilo.local/nilo/internal/activity"
 	"nilo.local/nilo/internal/audit"
 	"nilo.local/nilo/internal/auth"
+	"nilo.local/nilo/internal/bench"
 	"nilo.local/nilo/internal/buildinfo"
 	"nilo.local/nilo/internal/identity"
 	"nilo.local/nilo/internal/network"
@@ -102,6 +103,7 @@ func Serve(ctx context.Context, options ServeOptions) error {
 
 // HandlerOptions contains the dependencies for the protected HTTP API.
 type HandlerOptions struct {
+	Bench      *bench.Manager
 	Identity   *identity.Service
 	Profile    string
 	Build      buildinfo.Info
@@ -155,6 +157,7 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 	guard := accessGuard{audit: options.Audit}
 	authorize := guard.authorize
 	protected := http.NewServeMux()
+	registerBench(protected, options.Bench, guard)
 	protected.Handle("GET /api/v1/status", authorize(auth.PermissionStatusRead, func(response http.ResponseWriter, _ *http.Request) {
 		writeJSON(response, http.StatusOK, statusResponse{
 			APIVersion: apiVersion,
@@ -164,18 +167,48 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 			Build:      options.Build,
 		})
 	}))
-	protected.Handle("GET /api/v1/integrations", authorize(auth.PermissionInventoryRead, func(response http.ResponseWriter, _ *http.Request) {
+	protected.Handle("GET /api/v1/integrations", authorize(auth.PermissionInventoryRead, func(response http.ResponseWriter, request *http.Request) {
+		items := options.Catalog.Integrations()
+		actor, _ := actorFrom(request.Context())
+		if options.Bench != nil && actor.Has(auth.PermissionBenchRead) {
+			plugins, err := options.Bench.ListPlugins(request.Context(), actor)
+			if err != nil {
+				benchError(response, err)
+				return
+			}
+			for _, p := range plugins {
+				if p.Installed {
+					items = append(items, simulation.Integration{ID: p.ID, DisplayName: p.DisplayName, Status: p.Status, Simulation: p.Simulation, Operations: p.Operations})
+				}
+			}
+		}
 		writeJSON(response, http.StatusOK, integrationListResponse{
 			APIVersion: apiVersion,
 			Scenario:   options.Catalog.Scenario(),
-			Items:      options.Catalog.Integrations(),
+			Items:      items,
 		})
 	}))
-	protected.Handle("GET /api/v1/devices", authorize(auth.PermissionInventoryRead, func(response http.ResponseWriter, _ *http.Request) {
+	protected.Handle("GET /api/v1/devices", authorize(auth.PermissionInventoryRead, func(response http.ResponseWriter, request *http.Request) {
+		items := options.Catalog.Devices()
+		actor, _ := actorFrom(request.Context())
+		if options.Bench != nil && actor.Has(auth.PermissionBenchRead) {
+			plugins, err := options.Bench.ListPlugins(request.Context(), actor)
+			if err != nil {
+				benchError(response, err)
+				return
+			}
+			for _, p := range plugins {
+				if p.Installed {
+					for _, d := range p.Devices {
+						items = append(items, simulation.Device{ID: d.ID, IntegrationID: p.ID, DisplayName: d.DisplayName, Kind: "logic-analyzer", Status: p.Status, Simulation: p.Simulation, Capabilities: d.Channels})
+					}
+				}
+			}
+		}
 		writeJSON(response, http.StatusOK, deviceListResponse{
 			APIVersion: apiVersion,
 			Scenario:   options.Catalog.Scenario(),
-			Items:      options.Catalog.Devices(),
+			Items:      items,
 		})
 	}))
 	// Network telemetry. Reading it is permitted to every role; the management

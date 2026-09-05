@@ -1,0 +1,61 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "conn",
+    "channels",
+    "samplerate",
+    "samples",
+    "staging_directory"
+  ],
+  "properties": {
+    "conn": {
+      "type": "string",
+      "pattern": "^[0-9]+(\\.[0-9]+)+$"
+    },
+    "channels": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "D0",
+          "D1",
+          "D2",
+          "D3",
+          "D4",
+          "D5",
+          "D6",
+          "D7",
+          "D8",
+          "D9",
+          "D10",
+          "D11",
+          "D12",
+          "D13",
+          "D14",
+          "D15"
+        ]
+      }
+    },
+    "samplerate": {
+      "enum": [
+        1000000,
+        2000000,
+        4000000,
+        5000000,
+        10000000
+      ]
+    },
+    "samples": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000000
+    },
+    "staging_directory": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

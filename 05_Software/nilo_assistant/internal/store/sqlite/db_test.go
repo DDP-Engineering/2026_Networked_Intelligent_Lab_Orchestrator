@@ -42,7 +42,7 @@ func TestOpenConfiguresDurableDatabaseAndMigratesAllFoundationTables(t *testing.
 
 	wantTables := []string{
 		"activity_policy", "app_policies", "appliance_identity", "approval_records", "artifacts",
-		"audit_events", "audit_sequence",
+		"audit_events", "audit_sequence", "bench_jobs", "bench_plugins",
 		"config_versions", "device_networks", "device_policies", "mcp_tokens", "network_interface_settings", "network_operations",
 		"network_traffic_minute",
 		"operation_policy_overrides",

@@ -1,0 +1,16 @@
+# Copyright (c) 2026 DDP Engineering
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+id = "REQ-FUNC-d21b7686"
+title = "Discover digital ATK analyzers"
+status = "active"
+requirement = "When an authorized user requests discovery from an enabled sigrok integration, NILO shall report detected ATK-DL16 devices with physical connection identities and supported digital capture limits."
+verification = "Replay discovery output containing D0-D15 and PWM0/PWM1; observe digital-only device inventory with connection and limits."
+affected_paths = ["05_Software/nilo_assistant/internal/bench/", "05_Software/integrations/sigrok/", "05_Software/nilo_gui/src/components/pages/PluginsPage.tsx"]
+linked_tests = ["05_Software/integrations/sigrok/tests/test_plugin.py"]
+spec = "specs/REQ-FUNC-26332084.md"
+priority = "normal"
+rationale = ""
+created = 2026-09-05
+updated = 2026-09-05
