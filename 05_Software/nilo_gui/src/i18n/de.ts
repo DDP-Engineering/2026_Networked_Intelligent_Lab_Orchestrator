@@ -69,7 +69,6 @@ export const de: Catalogue = {
   'nav.authentication.tokens': 'API-Token',
   'nav.authentication.expand': 'Authentifizierung erweitern',
   'nav.authentication.collapse': 'Authentifizierung reduzieren',
-  'nav.settings': 'Einstellungen',
   'nav.about': 'Über',
   'nav.collapse': 'Navigation einklappen',
   'nav.expand': 'Navigation ausklappen',
@@ -313,12 +312,6 @@ export const de: Catalogue = {
   'network.notReported': 'Nicht gemeldet',
   'network.followUp':
     'Netzwerktelemetrie des Geräts, VPN-Bereitstellung und Netzwerkkonfiguration sind als spätere Arbeit vorgemerkt; nichts davon ist hier umgesetzt.',
-
-  'page.notAvailable.title': '{name} ist noch nicht verfügbar',
-  'page.plugins.body':
-    'Plugin-Erkennung, -Installation, -Signierung, -Isolierung und Vertrauensrichtlinien sind nicht umgesetzt. Dieser Eintrag benennt, wo diese Verwaltung liegen wird; heute wird kein Fremdcode geladen.',
-  'page.settings.body':
-    'Anwendungs-, Geräte- und Benutzereinstellungen sind nicht umgesetzt. Darstellung und Sprache werden in der oberen Zeile gewählt und sind die einzigen Einstellungen, die diese Oberfläche speichert.',
 
   'about.title': 'Über',
   'about.build': 'Build',

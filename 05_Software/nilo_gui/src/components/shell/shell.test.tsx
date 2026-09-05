@@ -164,6 +164,15 @@ function openFromNav(name: RegExp | string): void {
   fireEvent.click(nav().getByRole('button', { name }));
 }
 
+/** The labels of the bottom-anchored core cluster, top to bottom. */
+function coreEntries(container: HTMLElement): (string | undefined)[] {
+  return Array.from(
+    container.querySelectorAll(
+      '.nav-lower > .nav-list > li > .nav-entry, .nav-lower > .nav-list > li > .nav-group-row > .nav-entry',
+    ),
+  ).map((entry) => entry.textContent?.trim());
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
   restoreMatchMedia();
@@ -521,23 +530,17 @@ describe('the navigation', () => {
     const { container } = renderShell();
     await benchPage();
 
-    const names = Array.from(
-      container.querySelectorAll(
-        '.nav-lower > .nav-list > li > .nav-entry, .nav-lower > .nav-list > li > .nav-group-row > .nav-entry',
-      ),
-    ).map((entry) => entry.textContent?.trim());
-
-    expect(names).toEqual([
-      'Network',
-      'Activity',
+    expect(coreEntries(container)).toEqual([
       'Plugins',
+      'Network',
       'Authentication',
-      'Settings',
+      'Activity',
       'About',
     ]);
 
     const upper = within(container.querySelector('.nav-upper') as HTMLElement);
     expect(upper.queryByRole('button', { name: 'Network' })).toBeNull();
+    expect(nav().queryByRole('button', { name: 'Settings' })).toBeNull();
   });
 
   it('lists the integrations the backend actually reported', async () => {
@@ -555,11 +558,13 @@ describe('the navigation', () => {
   });
 
   it('hides the Authentication entry from an identity without the permission', async () => {
-    renderShell(viewer);
+    const { container } = renderShell(viewer);
     await benchPage();
 
     expect(nav().queryByRole('button', { name: 'Authentication' })).toBeNull();
     expect(nav().getByRole('button', { name: 'Network' })).toBeVisible();
+    // The entries a viewer does keep stay in the order an administrator sees.
+    expect(coreEntries(container)).toEqual(['Plugins', 'Network', 'About']);
   });
 
   it('shows only the Authentication destination that the session may read', async () => {
@@ -770,16 +775,7 @@ describe('the network presentation', () => {
   });
 });
 
-describe('pages that are not built yet', () => {
-  it.each(['Settings'])('says plainly that %s is not available', async (name) => {
-    renderShell();
-    await benchPage();
-
-    openFromNav(name);
-
-    expect(screen.getByText(`${name} is not available yet`)).toBeVisible();
-  });
-
+describe('core pages', () => {
   it('shows the build the backend actually reported on About', async () => {
     renderShell();
     await benchPage();

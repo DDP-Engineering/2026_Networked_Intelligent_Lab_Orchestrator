@@ -90,7 +90,7 @@ one project-level Semantic Version, declared in the root `VERSION` file.
   `00_Planning/GUI_Design/`: one compact 46-pixel top row carrying the NILO
   wordmark, the open page tabs and the network, simulation, appearance,
   language and account controls, with a labelled left navigation whose
-  bottom-anchored cluster is Network, Plugins, Authentication, Settings and
+  bottom-anchored cluster is Plugins, Network, Authentication, Activity and
   About. There is no second tab strip and no page title above the workspace.
 - Open pages as tabs, with predictable activation, closing, arrow, Home and End
   keyboard operation, and a fallback to the nearest remaining neighbour when the

@@ -32,7 +32,7 @@ import { PluginsPage } from '../pages/PluginsPage';
 import { BenchPage } from '../pages/BenchPage';
 import { ActivityPage } from '../pages/ActivityPage';
 import { NetworkPage } from '../pages/NetworkPage';
-import { AboutPage, IntegrationPage, NotAvailablePage } from '../pages/SimplePages';
+import { AboutPage, IntegrationPage } from '../pages/SimplePages';
 import { Icon } from './Icon';
 import { NavDrawer } from './NavDrawer';
 import { SideNav } from './SideNav';
@@ -404,9 +404,6 @@ export function AppShell({
           onSessionEnded={onSessionEnded}
         />
       );
-    }
-    if (page.id === 'settings') {
-      return <NotAvailablePage nameKey="nav.settings" bodyKey="page.settings.body" />;
     }
     if (page.authenticationView !== undefined) {
       return (

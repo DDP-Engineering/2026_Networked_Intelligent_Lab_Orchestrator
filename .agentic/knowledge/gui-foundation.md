@@ -198,7 +198,7 @@ contains no network inventory and grants no permissions.
 - `REQ-UX-f300b346` - activates, closes and keyboard-navigates the open page
   tabs, falling back to the nearest remaining neighbour.
 - `REQ-UX-30821068` - splits the navigation into the working entries and the
-  bottom-anchored Network, Plugins, Authentication, Settings, About cluster.
+  bottom-anchored Plugins, Network, Authentication, Activity, About cluster.
 - `REQ-UX-b718864e` - expands Network into five focused, separately tabbed
   destinations and keeps the group usable in the rail and drawer.
 - `REQ-UX-b555166c` - shows only the assigned Network concern on each destination
@@ -440,8 +440,8 @@ The authenticated shell uses one SIM/LIVE badge, without a footer disclaimer. Ne
 - `pages/ActivityPage.tsx`: filters as a responsive grid, server paging by
   cursor, retained window and logging health, JSONL/CSV export, and the
   diagnostics section (sessions with fixed scopes and durations, the retention
-  policy). `shell/pages.ts` adds the `activity` core page after Network, shown
-  to an identity holding `activity.read`; `AppShell` keeps the filter a Network
+  policy). `shell/pages.ts` places the `activity` core page below
+  Authentication, shown to an identity holding `activity.read`; `AppShell` keeps the filter a Network
   page link chose and remounts the page with it.
 - `pages/NetworkPage.tsx` reads `GET /api/v1/network/operations` on mount and
   picks up a change still applying or awaiting confirmation; a refused preview
@@ -561,3 +561,14 @@ English, German and Romanian share the instrument key set.
 
 The browser mock retains its pre-existing scope; exercise instruments against a
 real simulation-profile runner. Source paths above are relative to `05_Software/nilo_gui/`.
+
+## Core navigation order without Settings (2026-09-05, TASK-17d71acd)
+
+`CORE_PAGES` in `shell/pages.ts` is the top-to-bottom order the lower cluster
+renders, because `SideNav` maps the array as it stands: Plugins, Network with
+its four `network:*` children, Authentication with API tokens, Activity, About.
+The `settings` descriptor, its `AppShell` placeholder branch and the obsolete
+placeholder catalogue entries are gone, so no Settings destination exists to
+open; `Icon`'s `settings` glyph stays, used by Network adapters. The Plugins
+entry remains available through the managed instrument workspace added by
+TASK-f1f2d836.

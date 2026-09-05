@@ -1,44 +1,10 @@
 import { useTranslate } from '../../i18n/languages';
-import type { MessageKey } from '../../i18n/en';
 import type {
   BenchCoreIntegration,
   BenchCoreStatus,
   DeviceInventory,
 } from '../../api/contract';
 import type { Resource } from '../../api/resource';
-
-export interface NotAvailablePageProps {
-  /** The catalogue key for this page's name. */
-  nameKey: MessageKey;
-  /** The catalogue key for the sentence explaining what is missing. */
-  bodyKey: MessageKey;
-}
-
-/**
- * A page whose navigation entry is agreed but whose feature is not built.
- *
- * It says so plainly and names what the feature will be, rather than showing an
- * empty frame that looks like a loading failure. Nothing here suggests the
- * capability exists.
- */
-export function NotAvailablePage({ nameKey, bodyKey }: NotAvailablePageProps) {
-  const t = useTranslate();
-  const name = t(nameKey);
-
-  return (
-    <div className="page">
-      <header className="page-head">
-        <h2>{name}</h2>
-      </header>
-      <div className="page-body">
-        <section className="notice notice-unknown">
-          <h3>{t('page.notAvailable.title', { name })}</h3>
-          <p>{t(bodyKey)}</p>
-        </section>
-      </div>
-    </div>
-  );
-}
 
 export interface AboutPageProps {
   /** The reported backend status, or null when it could not be read. */
