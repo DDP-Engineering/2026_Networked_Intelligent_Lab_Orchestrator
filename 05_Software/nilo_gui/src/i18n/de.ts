@@ -89,7 +89,31 @@ export const de: Catalogue = {
   'top.language': 'Sprache',
   'top.account': 'Konto',
   'top.signOut': 'Abmelden',
+  'top.restart': 'NILO neu starten',
+  'top.powerOff': 'NILO ausschalten',
   'top.signedInAs': 'Angemeldet als {username}',
+  'power.restart.title': 'NILO neu starten?',
+  'power.restart.body':
+    'Dadurch wird das gesamte NILO-Gerät neu gestartet und jede aktive Verbindung unterbrochen.',
+  'power.restart.confirm': 'NILO neu starten',
+  'power.restart.accepted':
+    'Die Neustartanfrage wurde angenommen. NILO ist während des Neustarts möglicherweise nicht erreichbar.',
+  'power.restart.failed':
+    'NILO hat die Neustartanfrage nicht bestätigt. Gehen Sie nicht davon aus, dass es neu gestartet wurde.',
+  'power.restart.refused':
+    'Die Neustartanfrage wurde abgelehnt. NILO wurde nicht neu gestartet.',
+  'power.powerOff.title': 'NILO ausschalten?',
+  'power.powerOff.body':
+    'Dadurch wird das gesamte NILO-Gerät ausgeschaltet. Zum erneuten Einschalten kann physischer Zugriff erforderlich sein.',
+  'power.powerOff.confirm': 'NILO ausschalten',
+  'power.powerOff.accepted':
+    'Die Ausschaltanfrage wurde angenommen. NILO wird nicht mehr erreichbar sein.',
+  'power.powerOff.failed':
+    'NILO hat die Ausschaltanfrage nicht bestätigt. Gehen Sie nicht davon aus, dass es ausgeschaltet wurde.',
+  'power.powerOff.refused':
+    'Die Ausschaltanfrage wurde abgelehnt. NILO wurde nicht ausgeschaltet.',
+  'power.tryAgain': 'Erneut versuchen',
+  'power.close': 'Schließen',
 
   'boundary.unknown':
     'Melden Sie sich an, um die von Bench Core gemeldeten Laufzeit- und Geräteinformationen zu sehen.',

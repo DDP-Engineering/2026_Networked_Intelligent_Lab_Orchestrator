@@ -22,7 +22,9 @@ export type IconName =
   | 'dark'
   | 'system'
   | 'menu'
-  | 'account';
+  | 'account'
+  | 'restart'
+  | 'power';
 
 const PATHS: Record<IconName, string> = {
   // A bench surface with a trace across it.
@@ -53,6 +55,8 @@ const PATHS: Record<IconName, string> = {
   menu: 'M4 7h16M4 12h16M4 17h16',
   // A person: the account menu.
   account: 'M12 12a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 0114 0',
+  restart: 'M20 11a8 8 0 11-2.3-5.6M20 4v7h-7',
+  power: 'M12 3v9M7.1 6.7a8 8 0 109.8 0',
 };
 
 export interface IconProps {

@@ -14,7 +14,7 @@ schema = 1
 # and must match the category folder this file sits in.
 id = "REQ-SEC-144b5e56"
 
-title = "Confine privileged network changes to an allowlisting helper"
+title = "Confine privileged appliance changes to an allowlisting helper"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
@@ -38,7 +38,7 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-The privileged network helper shall accept requests only over a restricted Unix socket whose caller identity it verifies, and only as typed operations drawn from a compiled-in allowlist, so that no request can name an arbitrary command, path or script.
+The privileged appliance helper shall accept requests only over a restricted Unix socket whose caller identity it verifies, and only as typed operations drawn from a compiled-in allowlist, so that no request can name an arbitrary command, path or script.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -49,7 +49,7 @@ The privileged network helper shall accept requests only over a restricted Unix 
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "An automated test connects to the helper socket as an unauthorized user and asserts the connection is refused; a second sends a well-formed request naming an operation outside the allowlist and asserts it is refused without execution; a third sends an allowlisted operation carrying a shell fragment as a parameter value and asserts the fragment is stored and compared as data and never executed."
+verification = "Automated tests connect as an unauthorized user and assert refusal, send an operation outside the allowlist and assert no execution, pass shell fragments only as data, and verify that the two power operations accept no command, target, delay, environment or extra field."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
@@ -59,6 +59,8 @@ affected_paths = [
     "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux.go",
     "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux_test.go",
     "05_Software/nilo_assistant/internal/nethelper/protocol.go",
+    "05_Software/nilo_assistant/internal/nethelper/power_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/power_linux_test.go",
     "05_Software/nilo_assistant/internal/nethelper/socket_linux.go",
     "05_Software/nilo_assistant/internal/nethelper/socket_linux_test.go",
     "05_Software/nilo_assistant/internal/nethelper/store.go",
@@ -105,6 +107,8 @@ linked_tests = [
     "05_Software/nilo_assistant/internal/nethelper/wireguard_test.go::TestWireGuardHelperReadIsAllowlistedAndDoesNotMutate",
     "05_Software/nilo_assistant/internal/nethelper/wireguard_linux_test.go::TestWireGuardVersionOutputIsBounded",
     "05_Software/nilo_assistant/internal/nethelper/wireguard_linux_test.go::TestWireGuardReadinessThroughAuthenticatedSocket",
+    "05_Software/nilo_assistant/internal/nethelper/power_test.go::TestPowerOperationsAreExactEmptyAllowlistedEnvelopes",
+    "05_Software/nilo_assistant/internal/nethelper/power_linux_test.go::TestPowerClientUsesAuthenticatedHelperSocket",
 ]
 
 # --- optional below this line ---
@@ -116,7 +120,7 @@ priority = "high"   # low | normal | high
 rationale = "The helper is the one component running as root; anything it will accept is the whole attack surface of privilege in this service."
 
 created = 2026-09-02
-updated = 2026-09-03
+updated = 2026-09-08
 
 # Planned files not implemented at the 2026-09-03 audit:
 # 05_Software/nilo_assistant/cmd/nilo-nethelper/main.go

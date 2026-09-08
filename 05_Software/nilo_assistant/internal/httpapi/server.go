@@ -16,6 +16,7 @@ import (
 	"nilo.local/nilo/internal/buildinfo"
 	"nilo.local/nilo/internal/identity"
 	"nilo.local/nilo/internal/network"
+	"nilo.local/nilo/internal/power"
 	"nilo.local/nilo/internal/simulation"
 )
 
@@ -110,6 +111,7 @@ type HandlerOptions struct {
 	Catalog    simulation.Catalog
 	Network    *network.Service
 	Operations *network.OperationManager
+	Power      power.Controller
 	// MCP is the read-only Model Context Protocol endpoint, mounted at /mcp
 	// when one is configured. It is optional: a deployment that offers no MCP
 	// access simply has no route there.
@@ -281,6 +283,7 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 	protected.Handle("POST /api/v1/tokens", authorize(auth.PermissionTokensManageAll, handleCreateToken(options.Identity)))
 	protected.Handle("POST /api/v1/tokens/{id}/revoke", authorize(auth.PermissionTokensManageAll, handleRevokeToken(options.Identity)))
 	protected.Handle("DELETE /api/v1/tokens/{id}", authorize(auth.PermissionTokensManageAll, handleDeleteToken(options.Identity)))
+	protected.Handle("POST /api/v1/system/power", authorize(auth.PermissionSystemPowerManage, handlePower(options.Power, options.Audit)))
 	// Reading one's own session is identity, not authorization, so it carries
 	// no permission; logout is gated by the CSRF check in the middleware.
 	protected.HandleFunc("GET /api/v1/auth/session", handleCurrentSession)

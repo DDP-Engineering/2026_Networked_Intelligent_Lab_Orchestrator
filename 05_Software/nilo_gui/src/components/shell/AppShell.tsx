@@ -13,9 +13,11 @@ import {
   PERMISSION_ACTIVITY_EXPORT,
   PERMISSION_ACTIVITY_RETENTION_MANAGE,
   PERMISSION_NETWORK_MANAGE,
+  PERMISSION_SYSTEM_POWER_MANAGE,
   PERMISSION_VPN_MANAGE,
   PERMISSION_VPN_INSTALL,
 } from '../../api/contract';
+import type { PowerAction } from '../../api/contract';
 import type { ActivityFilter } from '../../api/activity';
 import type { DeviceNetworkChange } from '../../api/devicenetworks';
 import type { InterfaceSettingsDraft, WiFiJoinDraft } from '../../api/settings';
@@ -28,6 +30,7 @@ import {
 } from '../../api/permissions';
 import { useTranslate } from '../../i18n/languages';
 import { AuthenticationPage } from '../AuthenticationPage';
+import { PowerConfirmation } from '../PowerConfirmation';
 import { PluginsPage } from '../pages/PluginsPage';
 import { BenchPage } from '../pages/BenchPage';
 import { ActivityPage } from '../pages/ActivityPage';
@@ -83,6 +86,7 @@ export function AppShell({
   const t = useTranslate();
   const viewport = useViewportClass();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [powerAction, setPowerAction] = useState<PowerAction | null>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
   // Focus returns to the Menu control whenever the drawer closes, whichever
   // way it closed and whether or not the pointer that opened it left focus
@@ -290,6 +294,7 @@ export function AppShell({
         onClose={workspace.close}
         onOpen={workspace.open_}
         onSignOut={onSignOut}
+        onPowerAction={setPowerAction}
         nameOf={nameOf}
       />
 
@@ -333,6 +338,18 @@ export function AppShell({
           renderPage(active)
         )}
       </main>
+      {powerAction !== null &&
+        !status.simulation &&
+        session.credential === 'session' &&
+        session.permissions.includes(PERMISSION_SYSTEM_POWER_MANAGE) && (
+          <PowerConfirmation
+            action={powerAction}
+            onConfirm={() =>
+              client.requestPower(credential, powerAction).then(() => undefined)
+            }
+            onDismiss={() => setPowerAction(null)}
+          />
+        )}
     </div>
   );
 

@@ -113,6 +113,7 @@ const noSession = () =>
 function stubClient(overrides: Partial<BenchCoreClient> = {}): BenchCoreClient {
   return {
     baseUrl: '',
+    requestPower: () => Promise.reject(new Error('not part of this fixture')),
     listPlugins: async () => [],
     listInstrumentJobs: async () => [],
     getInstrumentJob: async () => {

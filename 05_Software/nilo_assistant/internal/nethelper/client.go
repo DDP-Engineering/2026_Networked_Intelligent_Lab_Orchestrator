@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"nilo.local/nilo/internal/network"
+	"nilo.local/nilo/internal/power"
 )
 
 // Client is the unprivileged service's typed helper adapter. A simulation never
@@ -30,12 +31,27 @@ type rateSample struct {
 func NewClient(socket string, source network.Source) *Client {
 	return &Client{socket: socket, source: source, previous: map[string]rateSample{}}
 }
+
+// Restart asks the authenticated privileged helper for an orderly reboot.
+func (c *Client) Restart(ctx context.Context) error {
+	_, err := c.call(ctx, Request{Op: "system.restart"})
+	return err
+}
+
+// PowerOff asks the authenticated privileged helper for an orderly shutdown.
+func (c *Client) PowerOff(ctx context.Context) error {
+	_, err := c.call(ctx, Request{Op: "system.power_off"})
+	return err
+}
+
+var _ power.Controller = (*Client)(nil)
+
 func (c *Client) call(ctx context.Context, q Request) (Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, 35*time.Second)
 	defer cancel()
 	conn, err := (&net.Dialer{}).DialContext(ctx, "unix", c.socket)
 	if err != nil {
-		return Response{}, fmt.Errorf("network helper unavailable: %w", err)
+		return Response{}, fmt.Errorf("privileged helper unavailable: %w", err)
 	}
 	defer conn.Close()
 	if deadline, ok := ctx.Deadline(); ok {

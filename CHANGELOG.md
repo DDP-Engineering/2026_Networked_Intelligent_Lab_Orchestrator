@@ -7,6 +7,8 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Added
 
+- Confirmed whole-appliance Restart and Power off controls for Operator and
+  Administrator browser sessions, dispatched through the privileged helper.
 - Structured Sigrok worker feasibility slice with direct mixed-signal datafeed and decoder callbacks, bounded crash isolation, and machine-readable coverage evidence.
 
 ## [0.2.0] - 2026-09-05
@@ -15,7 +17,6 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 - Managed sigrok plugins with install, enable, disable, restart and uninstall across GUI, CLI and MCP.
 - Digital ATK capture and saved UART jobs with bounded queues, transaction IDs, delayed replies, deadlines and retained artifacts.
-
 - `nilo network operation list`, the listing of recent and pending managed
   changes the browser uses to reattach after a reload.
 - Remote mode for `nilo admin user` and `nilo admin token` over `--server` and

@@ -7,6 +7,7 @@ import {
   INTEGRATIONS_PATH,
   NETWORK_STATISTICS_PATH,
   NETWORK_STATUS_PATH,
+  POWER_PATH,
   SESSION_PATH,
   SIGN_IN_PATH,
   SIGN_OUT_PATH,
@@ -181,6 +182,7 @@ const ROLE_PERMISSIONS: Readonly<Record<BenchCoreRole, BenchCorePermission[]>> =
     'inventory.read',
     'network.read',
     'status.read',
+    'system.power.manage',
     'tokens.manage.self',
     'tokens.read.self',
   ],
@@ -200,6 +202,7 @@ const ROLE_PERMISSIONS: Readonly<Record<BenchCoreRole, BenchCorePermission[]>> =
     'activity.read',
     'activity.export',
     'activity.retention.manage',
+    'system.power.manage',
   ],
 };
 
@@ -536,6 +539,12 @@ function answer(
   if (path === SIGN_OUT_PATH) {
     store.session = null;
     return emptyResponse(204);
+  }
+  if (path === POWER_PATH) {
+    if (actor.kind !== 'session') return refusal(403, 'forbidden');
+    return gated(actor, 'system.power.manage', () =>
+      refusal(503, 'power_control_unavailable'),
+    );
   }
   if (path === STATUS_PATH) {
     return gated(actor, 'status.read', () =>

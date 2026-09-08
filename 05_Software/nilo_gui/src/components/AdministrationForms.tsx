@@ -1,7 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 
 import {
-  BENCH_CORE_PERMISSIONS,
+  BENCH_CORE_TOKEN_SCOPES,
   BENCH_CORE_ROLES,
   type BenchCoreIdentity,
   type BenchCoreRole,
@@ -483,7 +483,7 @@ export function CreateTokenForm({
           {ownerRole === undefined ? '' : ` (${ownerRole})`}
         </p>
         <div className="scope-grid">
-          {BENCH_CORE_PERMISSIONS.map((permission) => (
+          {BENCH_CORE_TOKEN_SCOPES.map((permission) => (
             <label className="scope" key={permission}>
               <input
                 type="checkbox"

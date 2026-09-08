@@ -543,6 +543,21 @@ Statistics title shares one responsive header with the interface and period
 controls. This keeps the initial Diagnostics chart in the workspace without
 vertical scrolling at 1024x600 and larger; 800x480 may scroll vertically.
 
+## Account-menu appliance power controls (2026-09-08, TASK-a3a3d7b2)
+
+On a live appliance, `TopRow` adds Restart NILO and Power off NILO beside Sign
+out only when the current browser session carries `system.power.manage`.
+Simulation, Viewer and bearer-token states render neither action. Power remains
+outside `BENCH_CORE_TOKEN_SCOPES`, although it is part of the complete permission
+union used to parse session responses.
+
+`PowerConfirmation` owns the action-specific warning and a single in-flight
+submission. It distinguishes accepted responses, typed server refusals and an
+unconfirmed transport loss; it never interprets the intended disappearance of
+the appliance as success. `AppShell` owns the selected action and binds the
+dialog to `BenchCoreClient.requestPower`, while sign-out keeps its existing
+session behavior.
+
 ## Managed instrument workspace (TASK-f1f2d836)
 
 `REQ-UX-30e2e009` adds Plugins and the sigrok integration tab through the same

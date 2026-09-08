@@ -34,6 +34,9 @@ export const SIGN_IN_PATH = '/api/v1/auth/login';
 /** Path that invalidates the current browser session server-side. */
 export const SIGN_OUT_PATH = '/api/v1/auth/logout';
 
+/** Path that requests an orderly whole-appliance power transition. */
+export const POWER_PATH = '/api/v1/system/power';
+
 /** Path that reports who the presented credential belongs to. */
 export const SESSION_PATH = '/api/v1/auth/session';
 
@@ -66,7 +69,7 @@ export type BenchCoreRole = (typeof BENCH_CORE_ROLES)[number];
  * offers them. This list is compiled in rather than fetched because a scope
  * checkbox has to exist before any token does.
  */
-export const BENCH_CORE_PERMISSIONS = [
+export const BENCH_CORE_TOKEN_SCOPES = [
   'bench.read',
   'bench.execute',
   'bench.approve',
@@ -88,8 +91,26 @@ export const BENCH_CORE_PERMISSIONS = [
   'activity.retention.manage',
 ] as const;
 
+/** Every fixed permission, including session-only appliance power control. */
+export const BENCH_CORE_PERMISSIONS = [
+  ...BENCH_CORE_TOKEN_SCOPES,
+  'system.power.manage',
+] as const;
+
 /** One of the permissions above. */
 export type BenchCorePermission = (typeof BENCH_CORE_PERMISSIONS)[number];
+
+/** Permission required for whole-appliance restart and power-off. */
+export const PERMISSION_SYSTEM_POWER_MANAGE: BenchCorePermission =
+  'system.power.manage';
+
+export type PowerAction = 'restart' | 'power_off';
+
+export interface PowerResult {
+  apiVersion: string;
+  action: PowerAction;
+  status: 'accepted';
+}
 
 /** Permission required to read network status and traffic history. Every role holds it. */
 export const PERMISSION_ACTIVITY_READ: BenchCorePermission = 'activity.read';
@@ -373,6 +394,28 @@ export function parseStatusBody(body: unknown): ParseResult<BenchCoreStatus> {
         integrationProtocol: protocol.value,
       },
     },
+  };
+}
+
+/** Validate an accepted power request without interpreting transport loss as success. */
+export function parsePowerResultBody(body: unknown): ParseResult<PowerResult> {
+  const envelope = readObject(body, 'power response');
+  if (!envelope.ok) return envelope;
+  const apiVersion = readApiVersion(envelope.value, 'power response');
+  if (!apiVersion.ok) return apiVersion;
+  const action = readString(envelope.value, 'action', 'power response');
+  if (!action.ok) return action;
+  if (action.value !== 'restart' && action.value !== 'power_off') {
+    return { ok: false, violation: 'the power response has an unsupported action' };
+  }
+  const status = readString(envelope.value, 'status', 'power response');
+  if (!status.ok) return status;
+  if (status.value !== 'accepted') {
+    return { ok: false, violation: 'the power response was not accepted' };
+  }
+  return {
+    ok: true,
+    value: { apiVersion: apiVersion.value, action: action.value, status: 'accepted' },
   };
 }
 

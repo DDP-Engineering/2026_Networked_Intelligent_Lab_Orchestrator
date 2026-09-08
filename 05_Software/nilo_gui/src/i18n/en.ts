@@ -90,7 +90,30 @@ export const en = {
   'top.language': 'Language',
   'top.account': 'Account',
   'top.signOut': 'Sign out',
+  'top.restart': 'Restart NILO',
+  'top.powerOff': 'Power off NILO',
   'top.signedInAs': 'Signed in as {username}',
+  'power.restart.title': 'Restart NILO?',
+  'power.restart.body':
+    'This will restart the whole NILO appliance and interrupt every active connection.',
+  'power.restart.confirm': 'Restart NILO',
+  'power.restart.accepted':
+    'The restart request was accepted. NILO may be unavailable while it restarts.',
+  'power.restart.failed':
+    'NILO did not confirm the restart request. Do not assume that it restarted.',
+  'power.restart.refused': 'The restart request was refused. NILO was not restarted.',
+  'power.powerOff.title': 'Power off NILO?',
+  'power.powerOff.body':
+    'This will power off the whole NILO appliance. Physical access may be required to power it on again.',
+  'power.powerOff.confirm': 'Power off NILO',
+  'power.powerOff.accepted':
+    'The power-off request was accepted. NILO will become unavailable.',
+  'power.powerOff.failed':
+    'NILO did not confirm the power-off request. Do not assume that it powered off.',
+  'power.powerOff.refused':
+    'The power-off request was refused. NILO was not powered off.',
+  'power.tryAgain': 'Try again',
+  'power.close': 'Close',
 
   // The boundary statement, which every screen carries
   'boundary.unknown':

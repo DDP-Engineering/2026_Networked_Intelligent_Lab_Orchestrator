@@ -144,6 +144,19 @@ func newAPIFixture(
 	}
 }
 
+func (f apiFixture) withHandlerOptions(t *testing.T, refine func(*HandlerOptions)) apiFixture {
+	t.Helper()
+	options := f.options
+	refine(&options)
+	handler, err := NewHandler(options)
+	if err != nil {
+		t.Fatalf("NewHandler with refined options: %v", err)
+	}
+	f.handler = handler
+	f.options = options
+	return f
+}
+
 func (f apiFixture) createUser(t *testing.T, username string, role auth.Role, password string) auth.User {
 	t.Helper()
 	user, err := f.service.CreateUser(context.Background(), f.administrator, username, role, []byte(password))

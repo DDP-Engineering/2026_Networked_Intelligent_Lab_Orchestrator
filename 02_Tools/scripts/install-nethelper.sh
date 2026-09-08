@@ -20,8 +20,8 @@ install -o root -g root -m 0755 "$binary" /usr/local/libexec/nilo-nethelper
 install -d -o root -g root -m 0700 /var/lib/nilo-nethelper
 cat > /etc/systemd/system/nilo-nethelper.service <<EOF
 [Unit]
-Description=NILO restricted NetworkManager helper
-After=NetworkManager.service
+Description=NILO restricted privileged appliance helper
+After=dbus.service NetworkManager.service
 Requires=NetworkManager.service
 
 [Service]

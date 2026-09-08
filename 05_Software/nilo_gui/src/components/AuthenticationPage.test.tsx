@@ -55,6 +55,7 @@ function stubClient(overrides: Partial<BenchCoreClient> = {}): BenchCoreClient {
   const unexpected = () => Promise.reject(new Error('not part of this fixture'));
   return {
     baseUrl: '',
+    requestPower: () => Promise.reject(new Error('not part of this fixture')),
     listPlugins: async () => [],
     listInstrumentJobs: async () => [],
     getInstrumentJob: async () => {
@@ -792,6 +793,17 @@ describe('permanent deletion', () => {
 });
 
 describe('API token creation', () => {
+  it('does not offer session-only appliance power as an API token scope', async () => {
+    renderPage(stubClient(), vi.fn(), 'tokens');
+    await screen.findByRole('region', { name: 'API Tokens' });
+
+    fireEvent.click(screen.getByRole('button', { name: /new token/i }));
+
+    expect(
+      within(dialog()).queryByRole('checkbox', { name: 'system.power.manage' }),
+    ).toBeNull();
+  });
+
   it('states that a token cannot exceed its owner’s current role', async () => {
     renderPage(stubClient(), vi.fn(), 'tokens');
     await screen.findByRole('region', { name: 'API Tokens' });

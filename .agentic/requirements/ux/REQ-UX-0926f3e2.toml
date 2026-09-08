@@ -1,0 +1,93 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+# One requirement = one independently verifiable behavior.
+# Lives at .agentic/requirements/<category>/<id>.toml
+# Required fields: schema, id, title, status, requirement, verification.
+
+schema = 1
+
+# REQ-<CAT>-<8 hex>. CAT is FUNC, UX, NFR, SEC, DATA, PLAT, REL or TEST,
+# and must match the category folder this file sits in.
+id = "REQ-UX-0926f3e2"
+
+title = "Confirm power actions in the account menu"
+
+# draft while being written, active once it is built and tested,
+# retired when the behavior is deliberately removed.
+status = "active"
+
+# Self-contained prose: a reader with no other context must be able to
+# understand and check it. No ticket numbers, no run IDs, no references
+# to other requirements.
+#
+# Recommended shape - EARS. Pick the one pattern that fits; a stated
+# trigger or condition is what the test has to arrange, so surfacing it
+# here is what makes the behavior testable:
+#
+#   ubiquitous  The <system> shall <response>.
+#   event       When <trigger>, the <system> shall <response>.
+#   state       While <state>, the <system> shall <response>.
+#   unwanted    If <condition>, then the <system> shall <response>.
+#   optional    Where <feature is included>, the <system> shall <response>.
+#
+# Two independently verifiable responses need two requirements. Split when
+# either clause can vary, fail, change, or be checked independently; keep an
+# inseparable atomic outcome together. Final prose normally has one "shall".
+# Do not contort prose to fit a pattern - a constraint that reads better
+# plainly is better plainly.
+requirement = """
+When a human selects Restart or Power off, the browser interface shall require action-specific
+confirmation, send nothing on cancellation, submit at most once on confirmation, and distinguish
+working, accepted, refused and unconfirmed-disconnect outcomes.
+"""
+
+# The observation that settles whether the behavior holds - not a
+# restatement of the requirement. Work out setup, input or trigger, action,
+# observable oracle, and a relevant boundary or failure case before reducing
+# them to concise prose here. Do not introduce conditions absent from the
+# requirement or its linked spec.
+#
+# Some behaviors no test can settle: a look-and-see judgement, an install
+# on clean hardware, a printed page. Start this field with "Manual:" or
+# "Inspection:" and name the method, and `check` records the requirement
+# as verified by hand instead of counting it among the tests still owed.
+# The prefix alone is not enough — it has to say what someone does.
+verification = "Component tests open each action, inspect the warning and destructive emphasis, cancel and assert no request, then confirm under success, refusal and connection-loss responses and assert one request plus the corresponding visible state; the browser simulation test confirms the controls are absent."
+
+# Repo-relative, forward slashes. The source files this behavior lives in.
+affected_paths = [
+    "05_Software/nilo_gui/src/components/shell/AppShell.tsx",
+    "05_Software/nilo_gui/src/components/shell/TopRow.tsx",
+    "05_Software/nilo_gui/src/components/PowerConfirmation.tsx",
+    "05_Software/nilo_gui/src/api/client.ts",
+    "05_Software/nilo_gui/src/api/contract.ts",
+    "05_Software/nilo_gui/src/components/PowerConfirmation.test.tsx",
+    "05_Software/nilo_gui/src/api/client.test.ts",
+    "05_Software/nilo_gui/src/App.test.tsx",
+    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx",
+]
+
+# "tests/path/test_file.py::test_name" entries. Kept current during build;
+# these select the impacted regression set.
+linked_tests = [
+    "05_Software/nilo_gui/src/api/client.test.ts::submits an exact power action with the session CSRF token",
+    "05_Software/nilo_gui/src/components/PowerConfirmation.test.tsx::sends nothing when cancelled",
+    "05_Software/nilo_gui/src/components/PowerConfirmation.test.tsx::requires one explicit confirmation and reports acceptance",
+    "05_Software/nilo_gui/src/components/PowerConfirmation.test.tsx::does not infer success from a lost connection or retry automatically",
+    "05_Software/nilo_gui/src/components/PowerConfirmation.test.tsx::distinguishes a server refusal from an unconfirmed connection loss",
+]
+
+# --- optional below this line ---
+
+# "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "Power actions are disruptive and the response can race with the connection they intentionally remove."
+
+created = 2026-09-08
+updated = 2026-09-08

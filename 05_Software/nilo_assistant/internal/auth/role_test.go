@@ -27,6 +27,7 @@ func TestRolePermissionsMatchTheFixedMatrix(t *testing.T) {
 				PermissionBenchRead, PermissionBenchExecute,
 				PermissionInventoryRead,
 				PermissionNetworkRead,
+				PermissionSystemPowerManage,
 				PermissionStatusRead,
 				PermissionTokensManageSelf,
 				PermissionTokensReadSelf,
@@ -43,6 +44,7 @@ func TestRolePermissionsMatchTheFixedMatrix(t *testing.T) {
 				PermissionNetworkManage,
 				PermissionNetworkRead,
 				PermissionStatusRead,
+				PermissionSystemPowerManage,
 				PermissionTokensManageAll,
 				PermissionTokensManageSelf,
 				PermissionTokensReadAll,
@@ -76,8 +78,8 @@ func TestNoRoleHoldsAPermissionOutsideTheDefinedSet(t *testing.T) {
 	for _, permission := range AllPermissions() {
 		defined[permission] = true
 	}
-	if len(defined) != 19 {
-		t.Fatalf("AllPermissions() has %d entries, want the 19 defined permissions", len(defined))
+	if len(defined) != 20 {
+		t.Fatalf("AllPermissions() has %d entries, want the 20 defined permissions", len(defined))
 	}
 	for _, role := range []Role{RoleViewer, RoleOperator, RoleAdministrator} {
 		for _, permission := range role.Permissions() {
@@ -91,6 +93,19 @@ func TestNoRoleHoldsAPermissionOutsideTheDefinedSet(t *testing.T) {
 	}
 	if RoleOperator.Has(PermissionUsersManage) || RoleOperator.Has(PermissionTokensManageAll) {
 		t.Fatal("Operator holds an administrator permission")
+	}
+}
+
+func TestPowerPermissionBelongsToOperatorsAndAdministrators(t *testing.T) {
+	t.Parallel()
+
+	if RoleViewer.Has(PermissionSystemPowerManage) {
+		t.Fatal("Viewer holds the appliance power permission")
+	}
+	for _, role := range []Role{RoleOperator, RoleAdministrator} {
+		if !role.Has(PermissionSystemPowerManage) {
+			t.Fatalf("%s does not hold the appliance power permission", role)
+		}
 	}
 }
 
