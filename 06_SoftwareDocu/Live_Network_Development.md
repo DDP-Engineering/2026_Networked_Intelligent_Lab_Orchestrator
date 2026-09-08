@@ -6,7 +6,7 @@ unprivileged user; a separately installed root helper owns changes and recovery.
 The simulation launcher still uses the isolated simulated provider.
 
 This is a development checkpoint. Live WireGuard profile management,
-power-cycle recovery acceptance and Raspberry Pi hardware acceptance remain.
+power-cycle recovery acceptance and controlled Raspberry Pi hardware acceptance remain.
 The appliance's instrument inventory is empty; it contains no simulated bench.
 
 WireGuard readiness is now read through the helper: NetworkManager availability
@@ -178,6 +178,32 @@ host simply to run the test suite.
    Open `https://192.168.10.24:8443` and sign in with the administrator created
    above. The GUI, authenticated API and MCP share that origin. Appliance
    startup requires TLS and built GUI assets; public/wildcard binds are refused.
+
+## Appliance power controls
+
+On the live appliance profile, Operator and Administrator browser sessions can
+choose **Restart NILO** or **Power off NILO** from the account menu. Each action
+has a separate confirmation. Viewer sessions do not see the actions, and bearer
+tokens are refused even when their stored scope set contains
+`system.power.manage`. Sign out remains available to every browser session.
+
+The browser sends exactly `POST /api/v1/system/power` with either
+`{"action":"restart"}` or `{"action":"power_off"}` and the session CSRF
+header. Bench Core persists `system.power.requested` before dispatch and returns
+202 only when the privileged helper accepts the request. A connection loss is
+reported as unconfirmed, not converted into success.
+
+The peer-authenticated helper accepts only the empty `system.restart` and
+`system.power_off` envelopes. As root, it calls systemd-logind on the system bus
+with `Manager.Reboot(false)` or `Manager.PowerOff(false)`; no request data becomes
+a command, argument, executable path or environment value. The simulation and
+browser mock have only an unavailable controller.
+
+Restart and power-off checks on the local bench Pi follow
+[Local Hardware Access](Local_Hardware_Access.md#27-power-control-checks). The
+restart can be observed remotely. The person at the bench owns the power-off and
+power-restoration sequence because a powered-off board has no remote recovery
+path. These observations are useful development evidence, not repository gates.
 
 ## Recovery and current limits
 

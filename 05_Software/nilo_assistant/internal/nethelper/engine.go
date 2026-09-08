@@ -1,5 +1,5 @@
-// Package nethelper owns the privileged NetworkManager boundary and recovery.
-// It accepts typed device changes, never commands, scripts or client paths.
+// Package nethelper owns NILO's privileged appliance boundary and recovery.
+// It accepts fixed typed operations, never commands, scripts or client paths.
 package nethelper
 
 import (
@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"nilo.local/nilo/internal/network"
+	"nilo.local/nilo/internal/power"
 )
 
 // Device contains only public runtime state and saved connection identifiers.
@@ -76,6 +77,38 @@ type Engine struct {
 	// store keeps one; inventory caches what it holds.
 	forwarding ForwardingStore
 	inventory  *ForwardingInventory
+	power      power.Controller
+}
+
+// ConfigurePower installs the fixed whole-appliance power implementation.
+func (e *Engine) ConfigurePower(controller power.Controller) error {
+	if controller == nil {
+		return errors.New("power controller is required")
+	}
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.power = controller
+	return nil
+}
+
+func (e *Engine) Restart(ctx context.Context) error {
+	e.mu.Lock()
+	controller := e.power
+	e.mu.Unlock()
+	if controller == nil {
+		return power.ErrUnavailable
+	}
+	return controller.Restart(ctx)
+}
+
+func (e *Engine) PowerOff(ctx context.Context) error {
+	e.mu.Lock()
+	controller := e.power
+	e.mu.Unlock()
+	if controller == nil {
+		return power.ErrUnavailable
+	}
+	return controller.PowerOff(ctx)
 }
 
 func NewEngine(d Driver, s Store, now func() time.Time) (*Engine, error) {

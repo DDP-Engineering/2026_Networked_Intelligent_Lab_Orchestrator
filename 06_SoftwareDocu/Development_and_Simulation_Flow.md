@@ -949,9 +949,15 @@ operation occurred.
 ## Live Network development checkpoint
 
 `serve --profile appliance` is now available on explicitly prepared Linux test
-machines, with a root NetworkManager helper and an unprivileged HTTPS Bench Core.
+machines, with a root privileged appliance helper and an unprivileged HTTPS Bench Core.
 It is separate from the default Windows/WSL2 simulation topology and does not
 change the simulation launcher or its fixed development administrator.
 [Live Network development](Live_Network_Development.md) gives the isolated Docker
 test command, deployment prerequisites, startup commands and remaining limits.
 The system test never joins the host network namespace or system D-Bus.
+
+The simulation profile has no appliance power controller. Its interface hides
+Restart and Power off, and a direct request to the power endpoint returns
+`power_control_unavailable`; it never restarts or powers off Windows, WSL2 or a
+development container. Whole-appliance power behavior is checked through unit
+fakes and, separately, on the local Raspberry Pi as an early hardware signal.

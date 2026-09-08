@@ -42,6 +42,7 @@ import {
   INTEGRATIONS_PATH,
   NETWORK_OPERATIONS_PATH,
   NETWORK_STATUS_PATH,
+  POWER_PATH,
   SESSION_PATH,
   SIGN_IN_PATH,
   SIGN_OUT_PATH,
@@ -62,6 +63,7 @@ import {
   parseNetworkOperationsBody,
   parseNetworkStatisticsBody,
   parseNetworkStatusBody,
+  parsePowerResultBody,
   parseSessionBody,
   parseStatusBody,
   parseTokensBody,
@@ -80,6 +82,8 @@ import {
   type NetworkStatistics,
   type NetworkStatus,
   type ParseResult,
+  type PowerAction,
+  type PowerResult,
   type StatisticsPeriod,
   type TokenInventory,
 } from './contract';
@@ -262,6 +266,8 @@ export interface BenchCoreClient {
   signIn(username: string, password: string): Promise<BenchCoreSession>;
   currentSession(credential: Credential): Promise<BenchCoreSession>;
   signOut(credential: Credential): Promise<void>;
+
+  requestPower(credential: Credential, action: PowerAction): Promise<PowerResult>;
 
   listIdentities(credential: Credential): Promise<IdentityInventory>;
   createIdentity(
@@ -581,6 +587,14 @@ export function createBenchCoreClient(
       exchange({ path: SESSION_PATH, credential, parse: parseSessionBody }),
     signOut: (credential) =>
       exchange<void>({ path: SIGN_OUT_PATH, credential, method: 'POST' }),
+    requestPower: (credential, action) =>
+      exchange({
+        path: POWER_PATH,
+        credential,
+        method: 'POST',
+        body: { action },
+        parse: parsePowerResultBody,
+      }),
 
     listIdentities: (credential) =>
       exchange({ path: IDENTITIES_PATH, credential, parse: parseIdentitiesBody }),

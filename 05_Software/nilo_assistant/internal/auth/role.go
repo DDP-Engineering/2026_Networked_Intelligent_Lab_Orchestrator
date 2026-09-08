@@ -49,6 +49,9 @@ const (
 	PermissionActivityExport Permission = "activity.export"
 	// PermissionActivityRetentionManage changes the Activity retention policy.
 	PermissionActivityRetentionManage Permission = "activity.retention.manage"
+	// PermissionSystemPowerManage restarts or powers off the appliance from an
+	// interactive browser session. The HTTP boundary does not accept tokens for it.
+	PermissionSystemPowerManage Permission = "system.power.manage"
 )
 
 // Role is one of the three fixed NILO roles.
@@ -69,6 +72,7 @@ var rolePermissions = map[Role][]Permission{
 	RoleOperator: {
 		PermissionInventoryRead,
 		PermissionNetworkRead,
+		PermissionSystemPowerManage,
 		PermissionStatusRead,
 		PermissionTokensManageSelf,
 		PermissionTokensReadSelf,
@@ -81,6 +85,7 @@ var rolePermissions = map[Role][]Permission{
 		PermissionNetworkManage,
 		PermissionNetworkRead,
 		PermissionStatusRead,
+		PermissionSystemPowerManage,
 		PermissionTokensManageAll,
 		PermissionTokensManageSelf,
 		PermissionTokensReadAll,

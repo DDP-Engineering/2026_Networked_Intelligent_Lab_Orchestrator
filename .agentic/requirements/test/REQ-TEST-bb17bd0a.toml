@@ -1,0 +1,94 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+# One requirement = one independently verifiable behavior.
+# Lives at .agentic/requirements/<category>/<id>.toml
+# Required fields: schema, id, title, status, requirement, verification.
+
+schema = 1
+
+# REQ-<CAT>-<8 hex>. CAT is FUNC, UX, NFR, SEC, DATA, PLAT, REL or TEST,
+# and must match the category folder this file sits in.
+id = "REQ-TEST-bb17bd0a"
+
+title = "Verify appliance power control across environments"
+
+# draft while being written, active once it is built and tested,
+# retired when the behavior is deliberately removed.
+status = "active"
+
+# Self-contained prose: a reader with no other context must be able to
+# understand and check it. No ticket numbers, no run IDs, no references
+# to other requirements.
+#
+# Recommended shape - EARS. Pick the one pattern that fits; a stated
+# trigger or condition is what the test has to arrange, so surfacing it
+# here is what makes the behavior testable:
+#
+#   ubiquitous  The <system> shall <response>.
+#   event       When <trigger>, the <system> shall <response>.
+#   state       While <state>, the <system> shall <response>.
+#   unwanted    If <condition>, then the <system> shall <response>.
+#   optional    Where <feature is included>, the <system> shall <response>.
+#
+# Two independently verifiable responses need two requirements. Split when
+# either clause can vary, fail, change, or be checked independently; keep an
+# inseparable atomic outcome together. Final prose normally has one "shall".
+# Do not contort prose to fit a pattern - a constraint that reads better
+# plainly is better plainly.
+requirement = """
+The verification set for appliance power control shall combine deterministic GUI, HTTP, permission,
+audit and helper-protocol tests with an ARM64 Raspberry Pi restart observation and a separately
+human-operated power-off/power-on observation.
+"""
+
+# The observation that settles whether the behavior holds - not a
+# restatement of the requirement. Work out setup, input or trigger, action,
+# observable oracle, and a relevant boundary or failure case before reducing
+# them to concise prose here. Do not introduce conditions absent from the
+# requirement or its linked spec.
+#
+# Some behaviors no test can settle: a look-and-see judgement, an install
+# on clean hardware, a printed page. Start this field with "Manual:" or
+# "Inspection:" and name the method, and `check` records the requirement
+# as verified by hand instead of counting it among the tests still owed.
+# The prefix alone is not enough — it has to say what someone does.
+verification = "Automated tests prove both actions through fakes and every refusal boundary; on the bench Pi, restart is observed as reachability going down and returning with a changed boot ID and healthy NILO services, while the user performs power off, restores power, and records orderly halt plus successful service recovery as manual evidence rather than a repository gate."
+
+# Repo-relative, forward slashes. The source files this behavior lives in.
+affected_paths = [
+    "05_Software/nilo_assistant/internal/httpapi/power_test.go",
+    "05_Software/nilo_assistant/internal/auth/role_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/power_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/power_linux_test.go",
+    "05_Software/nilo_gui/src/components/PowerConfirmation.test.tsx",
+    "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
+    "05_Software/nilo_gui/src/api/mock.test.ts",
+    "05_Software/nilo_gui/e2e/bench-core.spec.ts",
+    "06_SoftwareDocu/Development_and_Simulation_Flow.md",
+    "06_SoftwareDocu/Local_Hardware_Access.md",
+]
+
+# "tests/path/test_file.py::test_name" entries. Kept current during build;
+# these select the impacted regression set.
+linked_tests = [
+    "05_Software/nilo_assistant/internal/auth/role_test.go::TestPowerPermissionBelongsToOperatorsAndAdministrators",
+    "05_Software/nilo_assistant/internal/httpapi/power_test.go::TestOperatorAndAdministratorSessionsDispatchExactPowerActionsAfterAudit",
+    "05_Software/nilo_assistant/internal/nethelper/power_linux_test.go::TestLoginManagerMapsPowerActionsToExactDBusMethods",
+    "05_Software/nilo_gui/src/components/PowerConfirmation.test.tsx::requires one explicit confirmation and reports acceptance",
+    "05_Software/nilo_gui/e2e/bench-core.spec.ts::signs in with a development token and shows the simulated bench",
+]
+
+# --- optional below this line ---
+
+# "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "Deterministic tests can prove contracts and safety boundaries, but only real boot and halt observations can establish the target Linux behavior."
+
+created = 2026-09-08
+updated = 2026-09-08

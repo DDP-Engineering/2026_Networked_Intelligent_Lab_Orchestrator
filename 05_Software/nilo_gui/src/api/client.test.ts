@@ -510,6 +510,23 @@ describe('credentials on the wire', () => {
     csrf_token: 'csrf-value',
   };
 
+  it('submits an exact power action with the session CSRF token', async () => {
+    const transport = recording(202, {
+      api_version: 'nilo.http/1',
+      action: 'restart',
+      status: 'accepted',
+    });
+    const client = createBenchCoreClient({ baseUrl: '', transport });
+
+    await client.requestPower(sessionCredential('csrf-value'), 'restart');
+
+    const [url, request] = transport.mock.calls[0];
+    expect(url).toBe('/api/v1/system/power');
+    expect(request.method).toBe('POST');
+    expect(request.headers['X-NILO-CSRF']).toBe('csrf-value');
+    expect(request.body).toBe('{"action":"restart"}');
+  });
+
   it('sends a password in one request body and never in the URL', async () => {
     const transport = recording(200, sessionBody);
     const client = createBenchCoreClient({ baseUrl: '', transport });

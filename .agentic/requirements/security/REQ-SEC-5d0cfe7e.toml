@@ -39,8 +39,9 @@ status = "active"
 # plainly is better plainly.
 requirement = """
 Bench Core shall grant an actor exactly the permissions its fixed role carries, where Viewer may
-read backend status and inventory, Operator additionally may read and manage its own API tokens, and
-Administrator additionally may read and manage user identities and every API token.
+read status, inventory and network telemetry, Operator additionally may manage its own API tokens
+and request appliance power actions, and Administrator additionally may administer identities,
+tokens, network, VPN, Activity and appliance power.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -65,6 +66,7 @@ linked_tests = [
     "05_Software/nilo_assistant/internal/auth/role_test.go::TestRolePermissionsMatchTheFixedMatrix",
     "05_Software/nilo_assistant/internal/auth/role_test.go::TestNoRoleHoldsAPermissionOutsideTheDefinedSet",
     "05_Software/nilo_assistant/internal/auth/role_test.go::TestParseRoleAndPermissionRejectUnknownValues",
+    "05_Software/nilo_assistant/internal/auth/role_test.go::TestPowerPermissionBelongsToOperatorsAndAdministrators",
 ]
 
 # --- optional below this line ---
@@ -76,4 +78,4 @@ priority = "high"   # low | normal | high
 rationale = "A fixed matrix keeps authorization auditable and removes the need for a custom-role editor or a general-purpose policy language."
 
 created = 2026-09-02
-updated = 2026-09-02
+updated = 2026-09-08

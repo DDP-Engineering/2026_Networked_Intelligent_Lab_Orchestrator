@@ -59,6 +59,14 @@ func serve(ctx context.Context, o options) error {
 	if err != nil {
 		return err
 	}
+	powerController, err := nethelper.NewLoginManager()
+	if err != nil {
+		return err
+	}
+	defer powerController.Close()
+	if err = engine.ConfigurePower(powerController); err != nil {
+		return err
+	}
 	// Key storage is a subdirectory of the helper's own private state, created
 	// here rather than by the keystore itself: deciding where privileged storage
 	// lives belongs to startup, not to the code that writes into it.

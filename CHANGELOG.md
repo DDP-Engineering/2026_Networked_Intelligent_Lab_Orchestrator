@@ -7,6 +7,8 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Added
 
+- Confirmed whole-appliance Restart and Power off controls for Operator and
+  Administrator browser sessions, dispatched through the privileged helper.
 - `nilo network operation list`, the listing of recent and pending managed
   changes the browser uses to reattach after a reload.
 - Remote mode for `nilo admin user` and `nilo admin token` over `--server` and

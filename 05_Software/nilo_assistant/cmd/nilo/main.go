@@ -17,7 +17,9 @@ import (
 	"nilo.local/nilo/internal/buildinfo"
 	"nilo.local/nilo/internal/httpapi"
 	"nilo.local/nilo/internal/mcp"
+	"nilo.local/nilo/internal/nethelper"
 	"nilo.local/nilo/internal/network"
+	"nilo.local/nilo/internal/power"
 	"nilo.local/nilo/internal/simulation"
 )
 
@@ -177,6 +179,10 @@ func runServe(ctx context.Context, arguments []string) int {
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
+	}
+	var powerController power.Controller = power.Unavailable{}
+	if *profile == "appliance" {
+		powerController = nethelper.NewClient(*helperSocket, "")
 	}
 
 	application, err := app.New(ctx, app.Options{
@@ -342,7 +348,7 @@ func runServe(ctx context.Context, arguments []string) int {
 		Identity: application.IdentityService(), Profile: *profile, Build: buildinfo.Current(),
 		Catalog: catalog, Network: networkService, Operations: operations,
 		MCP: mcpHandler, CookieSecurity: cookieSecurity,
-		Activity: activityService, Audit: application.AuditWriter(),
+		Activity: activityService, Audit: application.AuditWriter(), Power: powerController,
 	})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)

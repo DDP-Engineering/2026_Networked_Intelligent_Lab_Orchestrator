@@ -379,3 +379,20 @@ Verification: the disposable container (`02_Tools/tests/network/check.sh`) runs
 the NetworkManager, WireGuard, settings, local forwarding (three namespaces and a
 Modbus responder), VPN topology (hub, remote client, two sites) and independent
 recovery system tests; the Windows suite covers everything portable.
+
+## Whole-appliance power control (2026-09-08, TASK-a3a3d7b2)
+
+`POST /api/v1/system/power` accepts only `restart` or `power_off`. The route is
+guarded by `system.power.manage`, held by Operator and Administrator, then
+requires a browser-session credential in addition to CSRF; Viewer and bearer
+credentials never reach the controller. A `system.power.requested` audit record
+must persist before dispatch or the request fails closed.
+
+`internal/power.Controller` is the consuming interface. Simulation composes its
+inert `Unavailable` implementation. Appliance composition uses the existing
+peer-authenticated helper client, whose closed protocol adds only empty
+`system.restart` and `system.power_off` envelopes. The root helper maps those to
+systemd-logind `Manager.Reboot(false)` and `Manager.PowerOff(false)` over system
+D-Bus. No shell, executable name or caller-supplied argument crosses the
+boundary. The local Pi restart and human-operated power cycle are early hardware
+observations rather than gates.

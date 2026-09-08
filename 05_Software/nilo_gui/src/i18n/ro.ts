@@ -52,7 +52,30 @@ export const ro: Catalogue = {
   'top.language': 'Limbă',
   'top.account': 'Cont',
   'top.signOut': 'Deconectare',
+  'top.restart': 'Repornește NILO',
+  'top.powerOff': 'Oprește NILO',
   'top.signedInAs': 'Autentificat ca {username}',
+  'power.restart.title': 'Reporniți NILO?',
+  'power.restart.body':
+    'Aceasta va reporni întregul dispozitiv NILO și va întrerupe toate conexiunile active.',
+  'power.restart.confirm': 'Repornește NILO',
+  'power.restart.accepted':
+    'Cererea de repornire a fost acceptată. NILO poate fi indisponibil în timpul repornirii.',
+  'power.restart.failed':
+    'NILO nu a confirmat cererea de repornire. Nu presupuneți că a fost repornit.',
+  'power.restart.refused':
+    'Cererea de repornire a fost refuzată. NILO nu a fost repornit.',
+  'power.powerOff.title': 'Opriți NILO?',
+  'power.powerOff.body':
+    'Aceasta va opri întregul dispozitiv NILO. Poate fi necesar accesul fizic pentru a-l porni din nou.',
+  'power.powerOff.confirm': 'Oprește NILO',
+  'power.powerOff.accepted':
+    'Cererea de oprire a fost acceptată. NILO va deveni indisponibil.',
+  'power.powerOff.failed':
+    'NILO nu a confirmat cererea de oprire. Nu presupuneți că dispozitivul s-a oprit.',
+  'power.powerOff.refused': 'Cererea de oprire a fost refuzată. NILO nu a fost oprit.',
+  'power.tryAgain': 'Încearcă din nou',
+  'power.close': 'Închide',
 
   'boundary.unknown':
     'Autentificați-vă pentru informațiile despre mediu și dispozitive raportate de Bench Core.',

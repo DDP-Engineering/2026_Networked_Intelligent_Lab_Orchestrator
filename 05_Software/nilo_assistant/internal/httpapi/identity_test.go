@@ -48,11 +48,12 @@ func (clock *apiClock) Advance(delta time.Duration) {
 }
 
 type apiFixture struct {
-	handler       http.Handler
-	service       *identity.Service
-	clock         *apiClock
-	administrator auth.User
-	database      *sqlite.DB
+	handler        http.Handler
+	handlerOptions HandlerOptions
+	service        *identity.Service
+	clock          *apiClock
+	administrator  auth.User
+	database       *sqlite.DB
 }
 
 // newAPIFixture builds the production handler over a real database so that
@@ -127,18 +128,32 @@ func newAPIFixture(
 	if err != nil {
 		t.Fatalf("network.NewOperationManager: %v", err)
 	}
-	handler, err := NewHandler(HandlerOptions{
+	handlerOptions := HandlerOptions{
 		Identity: service, Profile: "simulation", Catalog: catalog,
 		Network: networkService, Operations: operations, CookieSecurity: cookies,
 		Activity: activityService, Audit: auditWriter,
-	})
+	}
+	handler, err := NewHandler(handlerOptions)
 	if err != nil {
 		t.Fatalf("NewHandler: %v", err)
 	}
 	return apiFixture{
-		handler: handler, service: service, clock: clock,
+		handler: handler, handlerOptions: handlerOptions, service: service, clock: clock,
 		administrator: administrator, database: database,
 	}
+}
+
+func (f apiFixture) withHandlerOptions(t *testing.T, refine func(*HandlerOptions)) apiFixture {
+	t.Helper()
+	options := f.handlerOptions
+	refine(&options)
+	handler, err := NewHandler(options)
+	if err != nil {
+		t.Fatalf("NewHandler with refined options: %v", err)
+	}
+	f.handler = handler
+	f.handlerOptions = options
+	return f
 }
 
 func (f apiFixture) createUser(t *testing.T, username string, role auth.Role, password string) auth.User {

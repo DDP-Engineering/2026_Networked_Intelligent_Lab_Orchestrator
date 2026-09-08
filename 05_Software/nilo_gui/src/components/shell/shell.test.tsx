@@ -68,6 +68,7 @@ const administrator: BenchCoreSession = {
     'tokens.read.all',
     'tokens.manage.all',
     'activity.read',
+    'system.power.manage',
   ],
   credential: 'session',
   csrfToken: 'csrf-token-fixture',
@@ -83,6 +84,7 @@ const viewer: BenchCoreSession = {
 function client(session: BenchCoreSession = administrator): BenchCoreClient {
   return {
     baseUrl: '',
+    requestPower: () => Promise.reject(new Error('not part of this fixture')),
     listNetworkOperations: () => Promise.resolve([]),
     previewInterfaceSettings: () =>
       Promise.reject(new Error('not part of this fixture')),
@@ -155,6 +157,57 @@ afterEach(() => {
 });
 
 describe('the one compact top row', () => {
+  it('offers appliance power actions only to permitted browser sessions', async () => {
+    const api = client(administrator);
+    api.getStatus = () =>
+      Promise.resolve({ ...status, profile: 'appliance', simulation: false });
+    api.requestPower = vi.fn(() =>
+      Promise.resolve({
+        apiVersion: 'nilo.http/1',
+        action: 'restart' as const,
+        status: 'accepted' as const,
+      }),
+    );
+    document.cookie = 'nilo_csrf=csrf-token-fixture';
+    renderInShell(
+      <App client={api} apiMode="live" endpoint="https://127.0.0.1:8443" />,
+    );
+    await benchPage();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Account' }));
+    expect(screen.getByRole('menuitem', { name: 'Restart NILO' })).toBeVisible();
+    expect(screen.getByRole('menuitem', { name: 'Power off NILO' })).toBeVisible();
+
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Restart NILO' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Restart NILO' }));
+    await waitFor(() => expect(api.requestPower).toHaveBeenCalledTimes(1));
+    expect(api.requestPower).toHaveBeenCalledWith(
+      { kind: 'session', csrfToken: 'csrf-token-fixture' },
+      'restart',
+    );
+  });
+
+  it('does not offer power actions in simulation, even with permission', async () => {
+    renderShell(administrator);
+    await benchPage();
+    fireEvent.click(screen.getByRole('button', { name: 'Account' }));
+    expect(screen.queryByRole('menuitem', { name: /Restart NILO/i })).toBeNull();
+    expect(screen.queryByRole('menuitem', { name: /Power off NILO/i })).toBeNull();
+  });
+
+  it('does not offer appliance power actions to a viewer', async () => {
+    const api = client(viewer);
+    api.getStatus = () =>
+      Promise.resolve({ ...status, profile: 'appliance', simulation: false });
+    document.cookie = 'nilo_csrf=csrf-token-fixture';
+    renderInShell(
+      <App client={api} apiMode="live" endpoint="https://127.0.0.1:8443" />,
+    );
+    await benchPage();
+    fireEvent.click(screen.getByRole('button', { name: 'Account' }));
+    expect(screen.queryByRole('menuitem', { name: /Restart NILO/i })).toBeNull();
+    expect(screen.queryByRole('menuitem', { name: /Power off NILO/i })).toBeNull();
+  });
   it('uses the appliance runtime on the sign-in screen before authentication', async () => {
     const api = client();
     api.currentSession = () =>

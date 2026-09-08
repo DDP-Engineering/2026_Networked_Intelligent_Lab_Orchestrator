@@ -230,6 +230,43 @@ sudo wg-quick up wg0
 sudo systemctl stop wg-deadman.timer
 ```
 
+### 2.7 Power-control checks
+
+Use the board only after deploying the candidate ARM64 binaries, installing the
+candidate privileged helper, and starting Bench Core in the appliance profile.
+Keep the local console or physical power control available. The repository test
+suite must remain independent of this sequence.
+
+For a restart check, record the current boot identity before selecting **Restart
+NILO** as an Operator or Administrator:
+
+```bash
+cat /proc/sys/kernel/random/boot_id
+systemctl is-active nilo-nethelper.service
+```
+
+Confirm the action once in the browser. Observe the host become unreachable,
+wait for `ddp-remote.local` to return, then reconnect and read the boot identity
+again. A different non-empty value proves a new boot; also confirm the helper is
+active and the appliance interface can be reached and signed into. Record the
+old and new boot identities, down/up observation and service health in the task
+journal. Do not treat a dropped HTTP response alone as proof of restart.
+
+The power-off/power-on check belongs to the person at the bench. Before the
+action, record the boot identity and ensure there is a known way to restore
+power. Select **Power off NILO**, confirm once, and observe that the board fully
+halts. Restore power physically, wait for the host to return, and verify a new
+boot identity, `nilo-nethelper.service`, and the appliance interface. The tail of
+the previous boot journal can provide supporting evidence of an orderly halt:
+
+```bash
+journalctl -b -1 --no-pager | tail -n 50
+```
+
+This personal board is still not a reproducible acceptance environment. Record
+the observation as early bench evidence, including any missing service or
+manual recovery, and never turn it into a required automated gate.
+
 ## 3. Credential handling
 
 The password above is committed deliberately, so the constraints that make that

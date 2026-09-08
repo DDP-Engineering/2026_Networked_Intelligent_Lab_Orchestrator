@@ -61,9 +61,17 @@ and no policy language: the matrix below is compiled into Bench Core.
 | `users.manage` | Create identities, change roles, disable, enable, reset passwords | no | no | yes |
 | `tokens.read.all` | List every identity's API tokens | no | no | yes |
 | `tokens.manage.all` | Revoke any identity's API token | no | no | yes |
+| `network.read` | Read network status and traffic | yes | yes | yes |
+| `network.manage` | Change adapters, settings and device networks | no | no | yes |
+| `vpn.manage` | Manage WireGuard profiles and activation | no | no | yes |
+| `vpn.install` | Install WireGuard tooling | no | no | yes |
+| `activity.read` | Read the shared activity history | no | no | yes |
+| `activity.export` | Export activity history | no | no | yes |
+| `activity.retention.manage` | Change activity retention | no | no | yes |
+| `system.power.manage` | Restart or power off the appliance from an interactive browser session | no | yes | yes |
 
 The set is deliberately limited to functionality that exists today.
-Hardware operations, PLC flashing, MCP transport and artifact retrieval
+Other hardware operations, PLC flashing, MCP transport and artifact retrieval
 get their permissions when they get their endpoints; inventing them now
 would produce a matrix that no test can exercise.
 
@@ -90,6 +98,12 @@ An empty scope list means "not narrowed" and resolves to the owner's full
 role permissions. This is what keeps API tokens created before this work
 usable: their stored scope list is empty, so they follow their owner's
 role and gain nothing.
+
+`system.power.manage` is deliberately session-only at its HTTP boundary. It is
+part of the Operator and Administrator role so the browser can present the
+control from effective permissions, but an API token is refused even if its
+computed permission list contains it. This prevents existing broad tokens from
+silently becoming remote reboot credentials.
 
 The intersection is recomputed from the *current* stored role on every
 request. A role change therefore takes effect on the next request for
@@ -237,6 +251,7 @@ own the operations recorded in that data directory.
 | `GET /api/v1/status` | session or bearer | `status.read` |
 | `GET /api/v1/integrations` | session or bearer | `inventory.read` |
 | `GET /api/v1/devices` | session or bearer | `inventory.read` |
+| `POST /api/v1/system/power` | session only | `system.power.manage`, CSRF required |
 | `GET /api/v1/users` | session or bearer | `users.read` |
 | `POST /api/v1/users` | session or bearer | `users.manage` |
 | `PUT /api/v1/users/{username}/role` | session or bearer | `users.manage` |

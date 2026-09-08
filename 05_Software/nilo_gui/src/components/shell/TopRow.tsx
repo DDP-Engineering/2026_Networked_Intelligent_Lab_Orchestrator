@@ -1,6 +1,11 @@
 import { LANGUAGES, useLanguage, useTranslate } from '../../i18n/languages';
 import { THEMES, useTheme, type Theme } from '../../theme/themes';
-import type { BenchCoreSession, NetworkStatus } from '../../api/contract';
+import {
+  PERMISSION_SYSTEM_POWER_MANAGE,
+  type BenchCoreSession,
+  type NetworkStatus,
+  type PowerAction,
+} from '../../api/contract';
 import type { WireGuardStatus } from '../../api/wireguard';
 import { Icon, type IconName } from './Icon';
 import { Menu, MenuItem } from './Menu';
@@ -33,6 +38,7 @@ export interface TopRowProps {
   onClose: (id: string) => void;
   onOpen: (id: string) => void;
   onSignOut: () => void;
+  onPowerAction: (action: PowerAction) => void;
   nameOf: (page: PageDescriptor) => string;
   /**
    * Which shell the viewport calls for. On a constrained one the appearance
@@ -63,6 +69,7 @@ export function TopRow({
   onClose,
   onOpen,
   onSignOut,
+  onPowerAction,
   nameOf,
   viewport = 'wide',
 }: TopRowProps) {
@@ -71,6 +78,10 @@ export function TopRow({
   const { theme, resolved, setTheme } = useTheme();
   const { language, setLanguage } = useLanguage();
   const short = LANGUAGES.find((entry) => entry.code === language)?.short ?? 'EN';
+  const mayControlPower =
+    !simulation &&
+    session?.credential === 'session' &&
+    session.permissions.includes(PERMISSION_SYSTEM_POWER_MANAGE);
 
   return (
     <div className="toprow">
@@ -230,6 +241,39 @@ export function TopRow({
                   </>
                 )}
                 <hr className="menu-rule" />
+                {mayControlPower && (
+                  <>
+                    <button
+                      type="button"
+                      className="menu-item"
+                      role="menuitem"
+                      onClick={() => {
+                        close();
+                        onPowerAction('restart');
+                      }}
+                    >
+                      <span className="menu-item-icon">
+                        <Icon name="restart" size={16} />
+                      </span>
+                      <span className="menu-item-label">{t('top.restart')}</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="menu-item menu-item-danger"
+                      role="menuitem"
+                      onClick={() => {
+                        close();
+                        onPowerAction('power_off');
+                      }}
+                    >
+                      <span className="menu-item-icon">
+                        <Icon name="power" size={16} />
+                      </span>
+                      <span className="menu-item-label">{t('top.powerOff')}</span>
+                    </button>
+                    <hr className="menu-rule" />
+                  </>
+                )}
                 <button
                   type="button"
                   className="menu-item"

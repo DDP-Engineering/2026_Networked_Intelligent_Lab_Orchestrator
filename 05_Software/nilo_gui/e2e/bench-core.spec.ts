@@ -73,6 +73,11 @@ test('signs in with a development token and shows the simulated bench', async ()
   await expect(statusValue('Service status')).toHaveText('healthy');
   await expect(statusValue('Simulation')).toHaveText('Yes');
 
+  await page.getByRole('button', { name: 'Account' }).click();
+  await expect(page.getByRole('menuitem', { name: 'Restart NILO' })).toHaveCount(0);
+  await expect(page.getByRole('menuitem', { name: 'Power off NILO' })).toHaveCount(0);
+  await page.keyboard.press('Escape');
+
   const integrations = page.getByRole('region', { name: 'Integrations' });
   await expect(integrations).toContainText(INTEGRATION_ID);
   await expect(integrations).toContainText('SIMULATION - Fake Python Integration');

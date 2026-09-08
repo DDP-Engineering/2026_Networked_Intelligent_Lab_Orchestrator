@@ -61,6 +61,22 @@ async function failureOf(
 }
 
 describe('Bench Core mock transport', () => {
+  it('keeps simulation power control inert even for an administrator session', async () => {
+    const client = mockClient('healthy');
+    const session = await client.signIn('admin', MOCK_DEVELOPMENT_PASSWORD);
+
+    const error = await client
+      .requestPower(sessionCredential(session.csrfToken ?? ''), 'restart')
+      .then(
+        () => null,
+        (failure: unknown) => failure,
+      );
+
+    expect(error).toBeInstanceOf(BenchCoreError);
+    expect((error as BenchCoreError).failure).toBe('unavailable');
+    expect((error as BenchCoreError).code).toBe('power_control_unavailable');
+  });
+
   it('answers the healthy scenario with a simulation status the real client accepts', async () => {
     const status = await mockClient('healthy').getStatus(
       bearerCredential('any-development-token'),

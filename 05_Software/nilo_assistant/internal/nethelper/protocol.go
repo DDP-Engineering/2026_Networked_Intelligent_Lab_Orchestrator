@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"nilo.local/nilo/internal/network"
+	"nilo.local/nilo/internal/power"
 )
 
 // SecretPayload is the one type in this protocol that carries key material, and
@@ -115,6 +116,16 @@ func dispatch(ctx context.Context, e *Engine, q Request) Response {
 		return Response{Error: "unexpected device network reference", Code: "invalid_request"}
 	}
 	switch q.Op {
+	case "system.restart":
+		if !emptyPowerRequest(q) {
+			return Response{Error: "power operation requires an empty envelope", Code: "invalid_request"}
+		}
+		err = e.Restart(ctx)
+	case "system.power_off":
+		if !emptyPowerRequest(q) {
+			return Response{Error: "power operation requires an empty envelope", Code: "invalid_request"}
+		}
+		err = e.PowerOff(ctx)
 	case "forwarding.apply":
 		if q.ID != "" || q.Plan == nil {
 			return Response{Error: "forwarding requires the plan and nothing else", Code: "invalid_request"}
@@ -220,7 +231,7 @@ func dispatch(ctx context.Context, e *Engine, q Request) Response {
 			r.Record = &record
 		}
 	default:
-		err = errors.New("unsupported helper operation")
+		return Response{Error: "unsupported helper operation", Code: "invalid_request"}
 	}
 	if err != nil {
 		r = Response{Error: err.Error(), Code: "helper_failure"}
@@ -234,4 +245,9 @@ func dispatch(ctx context.Context, e *Engine, q Request) Response {
 	return r
 }
 
-var knownErrors = map[string]error{"preview_stale": network.ErrPreviewStale, "not_controllable": network.ErrNotControllable, "unsupported": network.ErrUnsupported, "connection_required": network.ErrConnectionRequired, "busy": network.ErrChangeInProgress, "recovery_unavailable": network.ErrRecoveryUnavailable, "operation_not_found": network.ErrOperationNotFound, "not_awaiting_confirmation": network.ErrNotAwaitingConfirm, "external_profile": network.ErrExternalProfile, "profile_active": network.ErrProfileActive, "secrets_not_found": ErrSecretsNotFound, "interface_settings_rejected": network.ErrInterfaceSettingsRejected, "forwarding_foreign": ErrForwardingForeign, "forwarding_unsupported": ErrForwardingUnsupported}
+func emptyPowerRequest(q Request) bool {
+	return q.ID == "" && q.Change == (network.Change{}) && q.Revision == "" && q.Secret == nil &&
+		q.Handle == "" && q.ProfileID == "" && q.ConnectionRef == "" && q.Plan == nil && q.DeviceNetworkID == ""
+}
+
+var knownErrors = map[string]error{"preview_stale": network.ErrPreviewStale, "not_controllable": network.ErrNotControllable, "unsupported": network.ErrUnsupported, "connection_required": network.ErrConnectionRequired, "busy": network.ErrChangeInProgress, "recovery_unavailable": network.ErrRecoveryUnavailable, "operation_not_found": network.ErrOperationNotFound, "not_awaiting_confirmation": network.ErrNotAwaitingConfirm, "external_profile": network.ErrExternalProfile, "profile_active": network.ErrProfileActive, "secrets_not_found": ErrSecretsNotFound, "interface_settings_rejected": network.ErrInterfaceSettingsRejected, "forwarding_foreign": ErrForwardingForeign, "forwarding_unsupported": ErrForwardingUnsupported, "power_unavailable": power.ErrUnavailable}
