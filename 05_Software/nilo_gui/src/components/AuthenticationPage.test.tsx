@@ -56,6 +56,24 @@ function stubClient(overrides: Partial<BenchCoreClient> = {}): BenchCoreClient {
   return {
     baseUrl: '',
     requestPower: () => Promise.reject(new Error('not part of this fixture')),
+    listPlugins: async () => [],
+    listInstrumentJobs: async () => [],
+    getInstrumentJob: async () => {
+      throw new Error('unavailable');
+    },
+    pluginAction: async () => {
+      throw new Error('unavailable');
+    },
+    discoverInstruments: async () => [],
+    submitInstrumentJob: async () => {
+      throw new Error('unavailable');
+    },
+    instrumentJobAction: async () => {
+      throw new Error('unavailable');
+    },
+    downloadInstrumentArtifact: async () => {
+      throw new Error('unavailable');
+    },
     listNetworkOperations: () => Promise.resolve([]),
     previewInterfaceSettings: () =>
       Promise.reject(new Error('not part of this fixture')),

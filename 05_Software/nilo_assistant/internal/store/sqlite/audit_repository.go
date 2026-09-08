@@ -23,6 +23,18 @@ func NewAuditRepository(database *DB) *AuditRepository {
 	return &AuditRepository{database: database}
 }
 
+// AppendInTransaction joins a caller's state transition and its audit evidence
+// in the same SQLite transaction. The caller owns commit and rollback.
+func (repository *AuditRepository) AppendInTransaction(ctx context.Context, transaction *sql.Tx, event audit.Event) error {
+	if transaction == nil {
+		return errors.New("audit transaction is required")
+	}
+	if err := event.Validate(); err != nil {
+		return err
+	}
+	return appendEvent(ctx, transaction, event)
+}
+
 func (repository *AuditRepository) Append(ctx context.Context, event audit.Event) error {
 	if err := repository.validateDatabase(); err != nil {
 		return err

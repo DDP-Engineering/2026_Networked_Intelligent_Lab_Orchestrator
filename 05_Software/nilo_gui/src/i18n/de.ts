@@ -9,6 +9,44 @@ import type { Catalogue } from './en';
  * are deliberately left as they are.
  */
 export const de: Catalogue = {
+  'instrument.refresh': 'Aktualisieren',
+  'instrument.error': 'Die Anfrage konnte nicht abgeschlossen werden.',
+  'instrument.noPackages': 'Auf diesem Gerät sind keine kuratierten Pakete verfügbar.',
+  'instrument.simulation': 'Simulationsbetrieb',
+  'instrument.install': 'Installieren',
+  'instrument.policy': 'Freigaberichtlinie',
+  'instrument.ask': 'Jeden Vorgang freigeben',
+  'instrument.auto': 'Validierte Vorgänge zulassen',
+  'instrument.enable': 'Aktivieren',
+  'instrument.disable': 'Deaktivieren',
+  'instrument.restart': 'Neu starten',
+  'instrument.uninstall': 'Deinstallieren',
+  'instrument.discover': 'Analysatoren suchen',
+  'instrument.capture': 'Digitale Erfassung',
+  'instrument.noDevices': 'Suchen Sie einen Analysator, um eine Erfassung zu starten.',
+  'instrument.device': 'Analysator',
+  'instrument.rate': 'Abtastrate',
+  'instrument.samples': 'Abtastwerte',
+  'instrument.timeout': 'Gesamtzeitlimit (Sekunden)',
+  'instrument.channels': 'Digitale Kanäle',
+  'instrument.submit': 'Erfassung einreihen',
+  'instrument.transactions': 'Transaktionen',
+  'instrument.queueHelp':
+    'Befehle laufen nach einer Trennung auf dem Gerät weiter. Das Zeitlimit umfasst Warteschlange und Freigabe.',
+  'instrument.noJobs': 'Noch keine Transaktionen.',
+  'instrument.transaction': 'Transaktions-ID',
+  'instrument.operation': 'Vorgang',
+  'instrument.state': 'Status',
+  'instrument.deadline': 'Frist',
+  'instrument.approve': 'Freigeben',
+  'instrument.cancel': 'Abbrechen',
+  'instrument.download': 'Erfassung herunterladen',
+  'instrument.result': 'Ergebnis und Antworten',
+  'instrument.decode': 'UART dekodieren',
+  'instrument.channel': 'Empfangskanal',
+  'instrument.baudrate': 'Baudrate',
+  'instrument.preview': 'Erste Abtastwerte · digitale Vorschau',
+
   'app.name': 'NILO',
   'app.title': 'NILO Entwicklungsoberfläche',
   'nav.label': 'Hauptnavigation',
@@ -31,7 +69,6 @@ export const de: Catalogue = {
   'nav.authentication.tokens': 'API-Token',
   'nav.authentication.expand': 'Authentifizierung erweitern',
   'nav.authentication.collapse': 'Authentifizierung reduzieren',
-  'nav.settings': 'Einstellungen',
   'nav.about': 'Über',
   'nav.collapse': 'Navigation einklappen',
   'nav.expand': 'Navigation ausklappen',
@@ -299,12 +336,6 @@ export const de: Catalogue = {
   'network.notReported': 'Nicht gemeldet',
   'network.followUp':
     'Netzwerktelemetrie des Geräts, VPN-Bereitstellung und Netzwerkkonfiguration sind als spätere Arbeit vorgemerkt; nichts davon ist hier umgesetzt.',
-
-  'page.notAvailable.title': '{name} ist noch nicht verfügbar',
-  'page.plugins.body':
-    'Plugin-Erkennung, -Installation, -Signierung, -Isolierung und Vertrauensrichtlinien sind nicht umgesetzt. Dieser Eintrag benennt, wo diese Verwaltung liegen wird; heute wird kein Fremdcode geladen.',
-  'page.settings.body':
-    'Anwendungs-, Geräte- und Benutzereinstellungen sind nicht umgesetzt. Darstellung und Sprache werden in der oberen Zeile gewählt und sind die einzigen Einstellungen, die diese Oberfläche speichert.',
 
   'about.title': 'Über',
   'about.build': 'Build',

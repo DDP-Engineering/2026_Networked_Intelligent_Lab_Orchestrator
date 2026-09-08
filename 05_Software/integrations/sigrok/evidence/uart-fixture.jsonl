@@ -1,0 +1,31 @@
+{"schema":"nilo.sigrok.worker/1","kind":"runtime","libsigrok":"0.6.0","libsigrok_abi":"4:0:0","libsigrokdecode":"0.6.0"}
+{"schema":"nilo.sigrok.worker/1","kind":"decoder","section":"identity","id":"uart","name":"UART","long_name":"Universal Asynchronous Receiver/Transmitter"}
+{"schema":"nilo.sigrok.worker/1","kind":"decoder","section":"channel","decoder":"uart","required":false,"id":"rx","name":"RX"}
+{"schema":"nilo.sigrok.worker/1","kind":"decoder","section":"channel","decoder":"uart","required":false,"id":"tx","name":"TX"}
+{"schema":"nilo.sigrok.worker/1","kind":"decoder","section":"option","decoder":"uart","id":"baudrate","description":"Baud rate","default":{"type":"native","native_type":"x","value":"115200"}}
+{"schema":"nilo.sigrok.worker/1","kind":"decoder","section":"option","decoder":"uart","id":"data_bits","description":"Data bits","default":{"type":"native","native_type":"x","value":"8"}}
+{"schema":"nilo.sigrok.worker/1","kind":"decoder","section":"option","decoder":"uart","id":"parity","description":"Parity","default":{"type":"native","native_type":"s","value":"'none'"}}
+{"schema":"nilo.sigrok.worker/1","kind":"decoder","section":"option","decoder":"uart","id":"stop_bits","description":"Stop bits","default":{"type":"native","native_type":"d","value":"1.0"}}
+{"schema":"nilo.sigrok.worker/1","kind":"decoder","section":"option","decoder":"uart","id":"bit_order","description":"Bit order","default":{"type":"native","native_type":"s","value":"'lsb-first'"}}
+{"schema":"nilo.sigrok.worker/1","kind":"decoder","section":"option","decoder":"uart","id":"format","description":"Data format","default":{"type":"native","native_type":"s","value":"'hex'"}}
+{"schema":"nilo.sigrok.worker/1","kind":"decoder","section":"option","decoder":"uart","id":"invert_rx","description":"Invert RX","default":{"type":"native","native_type":"s","value":"'no'"}}
+{"schema":"nilo.sigrok.worker/1","kind":"decoder","section":"option","decoder":"uart","id":"invert_tx","description":"Invert TX","default":{"type":"native","native_type":"s","value":"'no'"}}
+{"schema":"nilo.sigrok.worker/1","kind":"decoder","section":"option","decoder":"uart","id":"sample_point","description":"Sample point (%)","default":{"type":"native","native_type":"x","value":"50"}}
+{"schema":"nilo.sigrok.worker/1","kind":"decoder","section":"option","decoder":"uart","id":"rx_packet_delim","description":"RX packet delimiter (decimal)","default":{"type":"native","native_type":"x","value":"-1"}}
+{"schema":"nilo.sigrok.worker/1","kind":"decoder","section":"option","decoder":"uart","id":"tx_packet_delim","description":"TX packet delimiter (decimal)","default":{"type":"native","native_type":"x","value":"-1"}}
+{"schema":"nilo.sigrok.worker/1","kind":"decoder","section":"option","decoder":"uart","id":"rx_packet_len","description":"RX packet length","default":{"type":"native","native_type":"x","value":"-1"}}
+{"schema":"nilo.sigrok.worker/1","kind":"decoder","section":"option","decoder":"uart","id":"tx_packet_len","description":"TX packet length","default":{"type":"native","native_type":"x","value":"-1"}}
+{"schema":"nilo.sigrok.worker/1","kind":"annotation","decoder":"uart","instance":"uart-1","start_sample":"20","end_sample":"30","class":2,"texts":["Start bit","Start","S"]}
+{"schema":"nilo.sigrok.worker/1","kind":"annotation","decoder":"uart","instance":"uart-1","start_sample":"30","end_sample":"40","class":12,"texts":["1"]}
+{"schema":"nilo.sigrok.worker/1","kind":"annotation","decoder":"uart","instance":"uart-1","start_sample":"40","end_sample":"50","class":12,"texts":["0"]}
+{"schema":"nilo.sigrok.worker/1","kind":"annotation","decoder":"uart","instance":"uart-1","start_sample":"50","end_sample":"60","class":12,"texts":["1"]}
+{"schema":"nilo.sigrok.worker/1","kind":"annotation","decoder":"uart","instance":"uart-1","start_sample":"60","end_sample":"70","class":12,"texts":["0"]}
+{"schema":"nilo.sigrok.worker/1","kind":"annotation","decoder":"uart","instance":"uart-1","start_sample":"70","end_sample":"80","class":12,"texts":["1"]}
+{"schema":"nilo.sigrok.worker/1","kind":"annotation","decoder":"uart","instance":"uart-1","start_sample":"80","end_sample":"90","class":12,"texts":["0"]}
+{"schema":"nilo.sigrok.worker/1","kind":"annotation","decoder":"uart","instance":"uart-1","start_sample":"90","end_sample":"100","class":12,"texts":["1"]}
+{"schema":"nilo.sigrok.worker/1","kind":"annotation","decoder":"uart","instance":"uart-1","start_sample":"100","end_sample":"110","class":12,"texts":["0"]}
+{"schema":"nilo.sigrok.worker/1","kind":"annotation","decoder":"uart","instance":"uart-1","start_sample":"30","end_sample":"110","class":0,"texts":["55"]}
+{"schema":"nilo.sigrok.worker/1","kind":"binary","decoder":"uart","instance":"uart-1","start_sample":"30","end_sample":"110","class":0,"byte_count":"1","data_hex":"55","preview_truncated":false}
+{"schema":"nilo.sigrok.worker/1","kind":"binary","decoder":"uart","instance":"uart-1","start_sample":"30","end_sample":"110","class":2,"byte_count":"1","data_hex":"55","preview_truncated":false}
+{"schema":"nilo.sigrok.worker/1","kind":"annotation","decoder":"uart","instance":"uart-1","start_sample":"110","end_sample":"120","class":8,"texts":["Stop bit","Stop","T"]}
+{"schema":"nilo.sigrok.worker/1","kind":"summary","records":13,"annotations":11,"binary_records":2,"logic":true,"analog":false,"trigger":false,"frame_begin":false,"frame_end":false,"truncated":false}

@@ -11,3 +11,7 @@ documentation that accompanies the application.
   HTTP authentication routes, audit coverage, upgrade behavior, and what this
   release does not yet provide.
 
+
+## Optional integration bundles
+
+Set `NILO_BUNDLE_SIGROK=1` when building an edition to include the sigrok catalog alongside its binaries. The same catalog can be deployed later; installation and enablement remain explicit. See [Sigrok integration](../06_SoftwareDocu/Sigrok_Integration.md).

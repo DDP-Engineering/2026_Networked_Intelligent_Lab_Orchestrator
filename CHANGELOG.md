@@ -9,6 +9,14 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 - Confirmed whole-appliance Restart and Power off controls for Operator and
   Administrator browser sessions, dispatched through the privileged helper.
+- Structured Sigrok worker feasibility slice with direct mixed-signal datafeed and decoder callbacks, bounded crash isolation, and machine-readable coverage evidence.
+
+## [0.2.0] - 2026-09-05
+
+### Added
+
+- Managed sigrok plugins with install, enable, disable, restart and uninstall across GUI, CLI and MCP.
+- Digital ATK capture and saved UART jobs with bounded queues, transaction IDs, delayed replies, deadlines and retained artifacts.
 - `nilo network operation list`, the listing of recent and pending managed
   changes the browser uses to reattach after a reload.
 - Remote mode for `nilo admin user` and `nilo admin token` over `--server` and
@@ -89,7 +97,7 @@ one project-level Semantic Version, declared in the root `VERSION` file.
   `00_Planning/GUI_Design/`: one compact 46-pixel top row carrying the NILO
   wordmark, the open page tabs and the network, simulation, appearance,
   language and account controls, with a labelled left navigation whose
-  bottom-anchored cluster is Network, Plugins, Authentication, Settings and
+  bottom-anchored cluster is Plugins, Network, Authentication, Activity and
   About. There is no second tab strip and no page title above the workspace.
 - Open pages as tabs, with predictable activation, closing, arrow, Home and End
   keyboard operation, and a fallback to the nearest remaining neighbour when the

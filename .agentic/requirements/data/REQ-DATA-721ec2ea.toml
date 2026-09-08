@@ -1,0 +1,16 @@
+# Copyright (c) 2026 DDP Engineering
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+id = "REQ-DATA-721ec2ea"
+title = "Preserve confined capture evidence"
+status = "active"
+requirement = "When a capture completes, NILO shall retain a size-bounded digest-verified session artifact with device, configuration, runtime and job provenance accessible only through authorized reads."
+verification = "Register a captured artifact and retrieve it by ID; verify size/digest and provenance; reject traversal, wrong owner and oversize evidence."
+affected_paths = ["05_Software/nilo_assistant/internal/artifact/", "05_Software/nilo_assistant/internal/bench/"]
+linked_tests = ["05_Software/nilo_assistant/internal/bench/jobs_test.go", "05_Software/nilo_assistant/internal/artifact/store_test.go", "05_Software/integrations/sigrok/tests/test_plugin.py"]
+spec = "specs/REQ-FUNC-26332084.md"
+priority = "normal"
+rationale = ""
+created = 2026-09-05
+updated = 2026-09-05

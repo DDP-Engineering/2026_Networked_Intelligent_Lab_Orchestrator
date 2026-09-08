@@ -1,0 +1,39 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "input_path",
+    "channel",
+    "baudrate"
+  ],
+  "properties": {
+    "input_path": {
+      "type": "string"
+    },
+    "channel": {
+      "enum": [
+        "D0",
+        "D1",
+        "D2",
+        "D3",
+        "D4",
+        "D5",
+        "D6",
+        "D7",
+        "D8",
+        "D9",
+        "D10",
+        "D11",
+        "D12",
+        "D13",
+        "D14",
+        "D15"
+      ]
+    },
+    "baudrate": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4000000
+    }
+  }
+}

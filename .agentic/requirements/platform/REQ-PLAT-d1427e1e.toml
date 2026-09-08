@@ -1,0 +1,16 @@
+# Copyright (c) 2026 DDP Engineering
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+id = "REQ-PLAT-d1427e1e"
+title = "Deploy integrations with NILO or later"
+status = "active"
+requirement = "NILO shall support the same curated integration package when shipped in a NILO bundle or installed later, preserving disabled and uninstalled choices across server restarts."
+verification = "Deploy a curated package bundle, install from it, disable/uninstall and restart; observe the same package contract and retained administrator choices."
+affected_paths = ["05_Software/nilo_assistant/internal/app/bench.go", "05_Software/nilo_assistant/internal/bench/", "05_Software/integrations/sigrok/"]
+linked_tests = ["05_Software/nilo_assistant/internal/bench/jobs_test.go", "05_Software/nilo_assistant/internal/bench/bundle_test.go", "05_Software/integrations/sigrok/tests/test_package.py"]
+spec = "specs/REQ-FUNC-26332084.md"
+priority = "normal"
+rationale = ""
+created = 2026-09-05
+updated = 2026-09-05

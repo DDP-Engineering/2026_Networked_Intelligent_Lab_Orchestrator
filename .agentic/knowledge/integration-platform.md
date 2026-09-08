@@ -1,12 +1,29 @@
 # Integration platform
 
-## Purpose
+## Routing
 
-The integration platform loads bounded runtime packages and supervises their external processes through the language-neutral `nilo.integration/1` lifecycle. It isolates plugin faults from Bench Core; it does not grant integrations arbitrary shell or filesystem authority.
+Select this page for runtime manifests, the NDJSON protocol, Python SDK and
+process supervision. Start at `internal/integration/protocol/message.go` and
+`describe_test.go` for Go/Python description interoperability. Managed package
+lifecycle and queued instrument actions belong to [Managed bench integrations](bench-integrations.md).
+
+## Purpose and boundaries
+
+The integration platform loads bounded runtime packages and supervises their external processes through the language-neutral `nilo.integration/1` lifecycle. It isolates plugin faults from Bench Core; it does not grant integrations arbitrary shell or filesystem authority. The Sigrok SW-01 feasibility slice demonstrates one additional subordinate native process boundary without changing that public lifecycle.
 
 ## Public interface
 
 Go callers use `manifest.Load`, protocol codecs and registries, and `supervisor.ProcessSupervisor` methods `Describe`, `Execute`, `Cancel`, and `Shutdown`. Python integration authors implement the asynchronous SDK lifecycle interface and launch its NDJSON server. Every enabled package is expected to pass the common contract harness.
+
+## Invariants
+
+- Protocol stdout carries only bounded, correlated NDJSON with one terminal reply.
+- Runner paths stay within a verified package; OS process cleanup is bounded.
+- `response.describe` accepts the SDK's declared integration/operation metadata
+  while rejecting unknown fields; it does not change the v1 wire format.
+- A native library adapter stays subordinate to its Python integration runner,
+  uses a separate bounded protocol, and cannot widen the package's public
+  operation grammar by itself.
 
 ## Key behaviors
 
@@ -16,6 +33,8 @@ Go callers use `manifest.Load`, protocol codecs and registries, and `supervisor.
 - `REQ-NFR-6b5de8e9` and `REQ-NFR-c4c70f53` - bound all untrusted inputs and confine commands and paths.
 - `REQ-NFR-1ad0cee7` and `REQ-REL-31cc1e94` - contain crashes and perform bounded cancel, safe shutdown, then termination.
 - `REQ-TEST-2bbda8a9` - proves packages with the common contract suite.
+- `REQ-REL-c2695283` - contains experimental native Sigrok work in a separately
+  supervised child with bounded `nilo.sigrok.worker/1` records.
 
 ## Architecture
 
@@ -27,7 +46,7 @@ flowchart LR
     codec["Go protocol codec"]
     process(["external runner process"])
     sdk["Python SDK server"]
-    plugin["Integration implementation"]
+    plugin["Integration implementation: fake_python or sigrok"]
     schemas[("JSON schemas")]
     stderr[("64 KiB diagnostic ring")]
     manifest --> loader
@@ -37,6 +56,8 @@ flowchart LR
     supervisor --> codec
     process --> sdk
     sdk --> plugin
+    plugin -. Sigrok feasibility .-> worker["StructuredWorker child adapter"]
+    worker -. fixed commands .-> native(["native Sigrok worker"])
     sdk --> schemas
     process --> stderr
     stderr --> supervisor
@@ -53,3 +74,9 @@ Protocol stdout is reserved for NDJSON; diagnostics use bounded stderr. OS-speci
 - `05_Software/integration_sdk/python/` - pinned Python SDK package, models, lifecycle API, server, tests, lockfile, and author documentation.
 - `05_Software/integrations/fake_python/` - deterministic manifest, schemas, Python implementation, entry point, tests, and lockfile.
 - `05_Software/tests/contract/` - package-level black-box contract fixtures, documentation, and tests.
+
+- `05_Software/nilo_assistant/internal/integration/protocol/describe_test.go` — SDK metadata interoperability regression.
+- `05_Software/integrations/sigrok/` — curated digital adapter; lifecycle ownership is documented in bench-integrations.md.
+- `05_Software/integrations/sigrok/src/nilo_sigrok/structured_worker.py` —
+  feasibility-only child containment and protocol validation beneath the public
+  integration runner.

@@ -31,10 +31,11 @@ import {
 import { useTranslate } from '../../i18n/languages';
 import { AuthenticationPage } from '../AuthenticationPage';
 import { PowerConfirmation } from '../PowerConfirmation';
+import { PluginsPage } from '../pages/PluginsPage';
 import { BenchPage } from '../pages/BenchPage';
 import { ActivityPage } from '../pages/ActivityPage';
 import { NetworkPage } from '../pages/NetworkPage';
-import { AboutPage, IntegrationPage, NotAvailablePage } from '../pages/SimplePages';
+import { AboutPage, IntegrationPage } from '../pages/SimplePages';
 import { Icon } from './Icon';
 import { NavDrawer } from './NavDrawer';
 import { SideNav } from './SideNav';
@@ -411,11 +412,15 @@ export function AppShell({
     if (page.id === 'about') {
       return <AboutPage status={status} />;
     }
-    if (page.id === 'plugins') {
-      return <NotAvailablePage nameKey="nav.plugins" bodyKey="page.plugins.body" />;
-    }
-    if (page.id === 'settings') {
-      return <NotAvailablePage nameKey="nav.settings" bodyKey="page.settings.body" />;
+    if (page.id === 'plugins' || page.id === integrationPageId('sigrok')) {
+      return (
+        <PluginsPage
+          client={client}
+          credential={credential}
+          session={session}
+          onSessionEnded={onSessionEnded}
+        />
+      );
     }
     if (page.authenticationView !== undefined) {
       return (

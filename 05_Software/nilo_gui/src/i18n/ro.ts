@@ -9,6 +9,45 @@ import type { Catalogue } from './en';
  * RX, TX — are deliberately left as they are.
  */
 export const ro: Catalogue = {
+  'instrument.refresh': 'Reîmprospătează',
+  'instrument.error': 'Cererea nu a putut fi finalizată.',
+  'instrument.noPackages':
+    'Pe acest dispozitiv nu sunt disponibile pachete verificate.',
+  'instrument.simulation': 'Simulare',
+  'instrument.install': 'Instalează',
+  'instrument.policy': 'Politica de aprobare',
+  'instrument.ask': 'Solicită aprobarea fiecărei operații',
+  'instrument.auto': 'Permite operațiile validate',
+  'instrument.enable': 'Activează',
+  'instrument.disable': 'Dezactivează',
+  'instrument.restart': 'Repornește',
+  'instrument.uninstall': 'Dezinstalează',
+  'instrument.discover': 'Caută analizoare',
+  'instrument.capture': 'Captură digitală',
+  'instrument.noDevices': 'Caută un analizor pentru a începe captura.',
+  'instrument.device': 'Analizor',
+  'instrument.rate': 'Rata de eșantionare',
+  'instrument.samples': 'Eșantioane',
+  'instrument.timeout': 'Limită totală de timp (secunde)',
+  'instrument.channels': 'Canale digitale',
+  'instrument.submit': 'Pune captura în coadă',
+  'instrument.transactions': 'Tranzacții',
+  'instrument.queueHelp':
+    'Comenzile continuă pe dispozitiv după deconectare. Limita de timp include așteptarea în coadă și aprobarea.',
+  'instrument.noJobs': 'Nu există încă tranzacții.',
+  'instrument.transaction': 'ID tranzacție',
+  'instrument.operation': 'Operație',
+  'instrument.state': 'Stare',
+  'instrument.deadline': 'Termen limită',
+  'instrument.approve': 'Aprobă',
+  'instrument.cancel': 'Anulează',
+  'instrument.download': 'Descarcă captura',
+  'instrument.result': 'Rezultat și răspunsuri',
+  'instrument.decode': 'Decodifică UART',
+  'instrument.channel': 'Canal de recepție',
+  'instrument.baudrate': 'Rata baud',
+  'instrument.preview': 'Primele eșantioane · previzualizare digitală',
+
   'app.name': 'NILO',
   'app.title': 'Interfața de dezvoltare NILO',
   'nav.label': 'Navigare principală',
@@ -31,7 +70,6 @@ export const ro: Catalogue = {
   'nav.authentication.tokens': 'Tokenuri API',
   'nav.authentication.expand': 'Extinde Autentificare',
   'nav.authentication.collapse': 'Restrânge Autentificare',
-  'nav.settings': 'Setări',
   'nav.about': 'Despre',
   'nav.collapse': 'Restrânge navigarea',
   'nav.expand': 'Extinde navigarea',
@@ -291,12 +329,6 @@ export const ro: Catalogue = {
   'network.notReported': 'Neraportat',
   'network.followUp':
     'Telemetria de rețea a aparatului, furnizarea VPN și configurarea rețelei sunt urmărite ca activități ulterioare; niciuna nu este implementată aici.',
-
-  'page.notAvailable.title': '{name} nu este încă disponibil',
-  'page.plugins.body':
-    'Descoperirea, instalarea, semnarea, izolarea și politica de încredere pentru plugin-uri nu sunt implementate. Această intrare indică unde va exista acea administrare; astăzi nu se încarcă niciun cod terț.',
-  'page.settings.body':
-    'Preferințele de aplicație, de aparat și de utilizator nu sunt implementate. Aspectul și limba se aleg din rândul de sus și sunt singurele preferințe pe care această interfață le păstrează.',
 
   'about.title': 'Despre',
   'about.build': 'Build',

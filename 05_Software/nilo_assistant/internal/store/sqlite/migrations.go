@@ -45,6 +45,9 @@ var activityMigration string
 //go:embed migrations/009_device_networks.sql
 var deviceNetworksMigration string
 
+//go:embed migrations/011_bench.sql
+var benchMigration string
+
 var migrations = []migration{
 	{version: "001_initial", sql: initialMigration},
 	{version: "002_policy_snapshots", sql: policySnapshotsMigration},
@@ -56,6 +59,7 @@ var migrations = []migration{
 	{version: "008_interface_settings", sql: interfaceSettingsMigration},
 	{version: "009_device_networks", sql: deviceNetworksMigration},
 	{version: "010_activity", sql: activityMigration},
+	{version: "011_bench", sql: benchMigration},
 }
 
 func applyMigrations(ctx context.Context, database *sql.DB) error {

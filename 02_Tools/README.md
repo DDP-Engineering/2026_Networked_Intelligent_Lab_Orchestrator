@@ -247,3 +247,7 @@ source.
 Scripts must document their supported platform, inputs, outputs, and whether
 they make external changes. Deployment scripts remain explicit actions; they
 must not run as part of ordinary setup or test commands.
+
+## Sigrok bundle tooling
+
+`build-sigrok-bundle.py` prepares a curated target bundle; `check-sigrok-integration.py` exercises an isolated appliance instance. See [deployment and verification](../06_SoftwareDocu/Sigrok_Integration.md).

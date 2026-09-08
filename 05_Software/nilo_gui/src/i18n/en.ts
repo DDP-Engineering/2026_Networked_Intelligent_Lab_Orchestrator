@@ -7,6 +7,44 @@
  * language choice into a failure nobody associates with the language menu.
  */
 export const en = {
+  'instrument.refresh': 'Refresh',
+  'instrument.error': 'The request could not be completed.',
+  'instrument.noPackages': 'No curated packages are available on this appliance.',
+  'instrument.simulation': 'Simulation',
+  'instrument.install': 'Install',
+  'instrument.policy': 'Approval policy',
+  'instrument.ask': 'Ask before each operation',
+  'instrument.auto': 'Allow validated operations',
+  'instrument.enable': 'Enable',
+  'instrument.disable': 'Disable',
+  'instrument.restart': 'Restart',
+  'instrument.uninstall': 'Uninstall',
+  'instrument.discover': 'Discover analyzers',
+  'instrument.capture': 'Digital capture',
+  'instrument.noDevices': 'Discover an analyzer to start a capture.',
+  'instrument.device': 'Analyzer',
+  'instrument.rate': 'Sample rate',
+  'instrument.samples': 'Samples',
+  'instrument.timeout': 'Overall timeout (seconds)',
+  'instrument.channels': 'Digital channels',
+  'instrument.submit': 'Queue capture',
+  'instrument.transactions': 'Transactions',
+  'instrument.queueHelp':
+    'Commands continue on the appliance after disconnect. Deadlines include time waiting in the queue or for approval.',
+  'instrument.noJobs': 'No transactions yet.',
+  'instrument.transaction': 'Transaction ID',
+  'instrument.operation': 'Operation',
+  'instrument.state': 'State',
+  'instrument.deadline': 'Deadline',
+  'instrument.approve': 'Approve',
+  'instrument.cancel': 'Cancel',
+  'instrument.download': 'Download capture',
+  'instrument.result': 'Result and replies',
+  'instrument.decode': 'Decode UART',
+  'instrument.channel': 'Receive channel',
+  'instrument.baudrate': 'Baud rate',
+  'instrument.preview': 'First samples · digital preview',
+
   // Shell and navigation
   'app.name': 'NILO',
   'app.title': 'NILO Development Interface',
@@ -30,7 +68,6 @@ export const en = {
   'nav.authentication.tokens': 'API tokens',
   'nav.authentication.expand': 'Expand Authentication',
   'nav.authentication.collapse': 'Collapse Authentication',
-  'nav.settings': 'Settings',
   'nav.about': 'About',
   'nav.collapse': 'Collapse navigation',
   'nav.expand': 'Expand navigation',
@@ -297,13 +334,6 @@ export const en = {
   'network.measuredBy.host': 'Measured on the appliance host {host}.',
   'network.followUp':
     'Appliance network telemetry, VPN provisioning and network configuration are tracked as later work; none of it is implemented here.',
-
-  // Pages that are not built yet
-  'page.notAvailable.title': '{name} is not available yet',
-  'page.plugins.body':
-    'Plugin discovery, installation, signing, isolation and trust policy are not implemented. This entry names where that management will live; nothing loads third-party code today.',
-  'page.settings.body':
-    'Application, appliance and user preferences are not implemented. Theme and language are chosen from the top row and are the only preferences this interface keeps.',
 
   // About
   'about.title': 'About',

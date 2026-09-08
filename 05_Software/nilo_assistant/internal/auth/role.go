@@ -17,6 +17,10 @@ import (
 type Permission string
 
 const (
+	PermissionBenchRead     Permission = "bench.read"
+	PermissionBenchExecute  Permission = "bench.execute"
+	PermissionBenchApprove  Permission = "bench.approve"
+	PermissionPluginsManage Permission = "plugins.manage"
 	// PermissionStatusRead reads the backend status resource.
 	PermissionStatusRead Permission = "status.read"
 	// PermissionInventoryRead reads the integration and device inventories.
@@ -65,11 +69,14 @@ const (
 
 var rolePermissions = map[Role][]Permission{
 	RoleViewer: {
+		PermissionBenchRead,
 		PermissionInventoryRead,
 		PermissionNetworkRead,
 		PermissionStatusRead,
 	},
 	RoleOperator: {
+		PermissionBenchRead,
+		PermissionBenchExecute,
 		PermissionInventoryRead,
 		PermissionNetworkRead,
 		PermissionSystemPowerManage,
@@ -78,6 +85,10 @@ var rolePermissions = map[Role][]Permission{
 		PermissionTokensReadSelf,
 	},
 	RoleAdministrator: {
+		PermissionBenchRead,
+		PermissionBenchExecute,
+		PermissionBenchApprove,
+		PermissionPluginsManage,
 		PermissionActivityExport,
 		PermissionActivityRead,
 		PermissionActivityRetentionManage,

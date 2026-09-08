@@ -48,12 +48,12 @@ func (clock *apiClock) Advance(delta time.Duration) {
 }
 
 type apiFixture struct {
-	handler        http.Handler
-	handlerOptions HandlerOptions
-	service        *identity.Service
-	clock          *apiClock
-	administrator  auth.User
-	database       *sqlite.DB
+	options       HandlerOptions
+	handler       http.Handler
+	service       *identity.Service
+	clock         *apiClock
+	administrator auth.User
+	database      *sqlite.DB
 }
 
 // newAPIFixture builds the production handler over a real database so that
@@ -138,21 +138,22 @@ func newAPIFixture(
 		t.Fatalf("NewHandler: %v", err)
 	}
 	return apiFixture{
-		handler: handler, handlerOptions: handlerOptions, service: service, clock: clock,
+		options: handlerOptions,
+		handler: handler, service: service, clock: clock,
 		administrator: administrator, database: database,
 	}
 }
 
 func (f apiFixture) withHandlerOptions(t *testing.T, refine func(*HandlerOptions)) apiFixture {
 	t.Helper()
-	options := f.handlerOptions
+	options := f.options
 	refine(&options)
 	handler, err := NewHandler(options)
 	if err != nil {
 		t.Fatalf("NewHandler with refined options: %v", err)
 	}
 	f.handler = handler
-	f.handlerOptions = options
+	f.options = options
 	return f
 }
 

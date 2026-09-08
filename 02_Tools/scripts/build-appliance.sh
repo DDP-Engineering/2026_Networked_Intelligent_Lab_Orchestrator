@@ -10,6 +10,10 @@ for arch in arm64 amd64; do
  mkdir -p "$out/linux-$arch"
  GOOS=linux GOARCH=$arch CGO_ENABLED=0 ../../02_Tools/env/with-go.sh go build -trimpath -mod=readonly -o "$out/linux-$arch/nilo" ./cmd/nilo
  GOOS=linux GOARCH=$arch CGO_ENABLED=0 ../../02_Tools/env/with-go.sh go build -trimpath -mod=readonly -o "$out/linux-$arch/nilo-nethelper" ./cmd/nilo-nethelper
+ # Opt-in edition payload. The same bundle can be delivered separately later.
+ if [ "${NILO_BUNDLE_SIGROK:-0}" = "1" ]; then
+  ../../02_Tools/env/with-tools.sh python ../../02_Tools/scripts/build-sigrok-bundle.py --out "$out/linux-$arch/integration-bundles/sigrok" --architecture "$arch" --python-version "${NILO_TARGET_PYTHON:-3.13}"
+ fi
 done
 echo "built:"
 find "$out" -type f -name 'nilo*' -exec ls -l {} \;

@@ -19,7 +19,11 @@ not two theme-locked products or screenshots of implemented functionality.
   Navigation is clear, labelled, and on the left; avoid decorative backgrounds
   and large connection-status panels.
 - The upper navigation area contains the working/instrument entries. The lower
-  core-management cluster is **Network, Plugins, Authentication, Settings, About**.
+  core-management cluster is **Plugins, Network, Authentication, Activity, About**.
+  This supersedes the order agreed on 2026-09-02, Network, Plugins,
+  Authentication, Settings, About: Activity joined the cluster on 2026-09-04,
+  and on 2026-09-05 the order was changed and the unimplemented Settings entry
+  removed (TASK-17d71acd, REQ-UX-30821068).
   Network is a built-in NILO capability, not an integration. Plugins here means
   plugin management, not an individual instrument.
 - Provide a compact network indicator/summary and a dedicated Network page.

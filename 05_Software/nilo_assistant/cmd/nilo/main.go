@@ -100,6 +100,9 @@ func run(ctx context.Context, arguments []string) int {
 	if len(arguments) > 0 && arguments[0] == "network" {
 		return runNetworkCommand(ctx, arguments[1:], networkIO{stdout: os.Stdout, stderr: os.Stderr, stdin: os.Stdin, interactive: networkTerminal()})
 	}
+	if len(arguments) > 0 && (arguments[0] == "plugin" || arguments[0] == "bench") {
+		return runBenchCommand(ctx, arguments[0], arguments[1:], networkIO{stdout: os.Stdout, stderr: os.Stderr, stdin: os.Stdin})
+	}
 	if len(arguments) > 0 && arguments[0] == "activity" {
 		return runActivityCommand(ctx, arguments[1:], networkIO{stdout: os.Stdout, stderr: os.Stderr, stdin: os.Stdin, interactive: networkTerminal()})
 	}
@@ -118,6 +121,8 @@ func runServe(ctx context.Context, arguments []string) int {
 	scenarioValue := flags.String("scenario", string(simulation.ScenarioHealthy), "deterministic simulation scenario")
 	dataDir := flags.String("data-dir", "", "absolute runtime data directory")
 	bindAddress := flags.String("bind", "", "explicit listener address")
+	bundleDir := flags.String("integration-bundles", "/opt/nilo/integration-bundles", "curated integration bundle directory")
+	backend := flags.String("sigrok-cli", "/usr/bin/sigrok-cli", "trusted sigrok CLI executable")
 	helperSocket := flags.String("nethelper-socket", "/run/nilo/nethelper.sock", "installed Linux helper socket")
 	guiDir := flags.String("gui-dir", "", "built GUI directory served on the API origin")
 	tlsCert := flags.String("tls-cert", "", "listener PEM certificate")
@@ -337,8 +342,14 @@ func runServe(ctx context.Context, arguments []string) int {
 		})
 	}()
 	defer func() { stopMaintenance(); <-maintenanceDone }()
+	benchService, err := application.StartBench(*bundleDir, *backend, *profile == "simulation")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 1
+	}
+	defer benchService.Close()
 	mcpHandler, err := mcp.NewHandler(mcp.HandlerOptions{
-		Identity: application.IdentityService(), Network: networkService,
+		Identity: application.IdentityService(), Network: networkService, Bench: benchService,
 	})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -346,7 +357,7 @@ func runServe(ctx context.Context, arguments []string) int {
 	}
 	handler, err := httpapi.NewHandler(httpapi.HandlerOptions{
 		Identity: application.IdentityService(), Profile: *profile, Build: buildinfo.Current(),
-		Catalog: catalog, Network: networkService, Operations: operations,
+		Catalog: catalog, Network: networkService, Operations: operations, Bench: benchService,
 		MCP: mcpHandler, CookieSecurity: cookieSecurity,
 		Activity: activityService, Audit: application.AuditWriter(), Power: powerController,
 	})
@@ -394,10 +405,12 @@ const rootUsage = `usage: nilo <command> [options]
   nilo admin ...                               identities and API tokens: locally with --data-dir,
                                                or remotely with --server URL --token-file PATH
   nilo network ...                             appliance network state and previewed changes
+  nilo plugin ...                              manage installed integrations and discover devices
+  nilo bench ...                               queue instrument jobs and retrieve replies/artifacts
   nilo activity ...                            audit and event history: list and export
 
 Run a command group without arguments for its own usage. The remote groups
-(admin, network, activity) take --server URL and --token-file PATH;
+(admin, network, activity, plugin, bench) take --server URL and --token-file PATH;
 the token is read from that file and never from an argument.`
 
 func writeUsage() {

@@ -1,6 +1,14 @@
 # Browser GUI foundation
 
-## Purpose
+## Routing
+
+Select this page for the React shell, pages, API client, accessibility and
+localization. Start at `src/components/shell/AppShell.tsx`; focused tests sit
+beside each page. Instrument lifecycle and transaction views start at
+`src/components/pages/PluginsPage.tsx` and `PluginsPage.test.tsx`. Core scheduling,
+permissions and runner behavior belong to [Managed bench integrations](bench-integrations.md).
+
+## Purpose and boundaries
 
 The browser GUI foundation provides NILO's native Windows development
 interface while keeping the deployed appliance boundary static. It gives
@@ -65,9 +73,17 @@ Built assets served by Bench Core receive a `nilo-runtime-profile` HTML meta tag
 The startup entry point uses it to label sign-in/loading/failure screens; mock
 and Vite development retain simulation defaults, while an unlabelled production
 page reports unknown runtime. Authenticated status remains authoritative for the
-workspace. Appliance pages show live networking and empty instrument inventory,
+workspace. Appliance pages show live networking and installed instrument inventory,
 and the production sign-in endpoint label uses the serving origin. The metadata
 contains no network inventory and grants no permissions.
+
+## Invariants
+
+- All live requests use the same-origin authenticated client and its CSRF rules.
+- Simulation labels stay explicit; browser state never proves physical accuracy.
+- Instrument submission retries preserve a command key until a response arrives;
+  history reattaches by transaction ID and polling never submits work.
+- The server authorizes every action even when UI controls are hidden or disabled.
 
 ## Key behaviors
 
@@ -182,7 +198,7 @@ contains no network inventory and grants no permissions.
 - `REQ-UX-f300b346` - activates, closes and keyboard-navigates the open page
   tabs, falling back to the nearest remaining neighbour.
 - `REQ-UX-30821068` - splits the navigation into the working entries and the
-  bottom-anchored Network, Plugins, Authentication, Settings, About cluster.
+  bottom-anchored Plugins, Network, Authentication, Activity, About cluster.
 - `REQ-UX-b718864e` - expands Network into five focused, separately tabbed
   destinations and keeps the group usable in the rail and drawer.
 - `REQ-UX-b555166c` - shows only the assigned Network concern on each destination
@@ -229,6 +245,8 @@ flowchart LR
     shell --> toprow
     shell --> sidenav
     shell --> pages
+    pages --> instruments["PluginsPage: lifecycle, acquisition, transaction detail"]
+    instruments --> client
     pages --> admin
     admin --> users
     admin --> apitokens
@@ -422,8 +440,8 @@ The authenticated shell uses one SIM/LIVE badge, without a footer disclaimer. Ne
 - `pages/ActivityPage.tsx`: filters as a responsive grid, server paging by
   cursor, retained window and logging health, JSONL/CSV export, and the
   diagnostics section (sessions with fixed scopes and durations, the retention
-  policy). `shell/pages.ts` adds the `activity` core page after Network, shown
-  to an identity holding `activity.read`; `AppShell` keeps the filter a Network
+  policy). `shell/pages.ts` places the `activity` core page below
+  Authentication, shown to an identity holding `activity.read`; `AppShell` keeps the filter a Network
   page link chose and remounts the page with it.
 - `pages/NetworkPage.tsx` reads `GET /api/v1/network/operations` on mount and
   picks up a change still applying or awaiting confirmation; a refused preview
@@ -539,3 +557,33 @@ unconfirmed transport loss; it never interprets the intended disappearance of
 the appliance as success. `AppShell` owns the selected action and binds the
 dialog to `BenchCoreClient.requestPower`, while sign-out keeps its existing
 session behavior.
+
+## Managed instrument workspace (TASK-f1f2d836)
+
+`REQ-UX-30e2e009` adds Plugins and the sigrok integration tab through the same
+`PluginsPage`. The page serializes refreshes, polls summaries and selected detail,
+retains uncertain submission keys, renders digital channels and a bounded preview,
+and exposes session-only approval, cancellation, capture download and saved UART
+submission. Management and execution controls follow the current session scopes.
+English, German and Romanian share the instrument key set.
+
+- `src/api/bench.ts`, `bench.test.ts` — job/plugin wire parsing and API boundary.
+- `src/api/client.ts` — lifecycle, discovery, submit/list/detail/actions/download.
+- `src/components/pages/PluginsPage.tsx`, `PluginsPage.test.tsx` — workspace and
+  retry/permission/reconnect regressions.
+- `src/components/shell/pages.ts`, `AppShell.tsx` — installed workspace routing.
+- `src/i18n/{en,de,ro}.ts`, `src/index.css` — translated controls and responsive layout.
+
+The browser mock retains its pre-existing scope; exercise instruments against a
+real simulation-profile runner. Source paths above are relative to `05_Software/nilo_gui/`.
+
+## Core navigation order without Settings (2026-09-05, TASK-17d71acd)
+
+`CORE_PAGES` in `shell/pages.ts` is the top-to-bottom order the lower cluster
+renders, because `SideNav` maps the array as it stands: Plugins, Network with
+its four `network:*` children, Authentication with API tokens, Activity, About.
+The `settings` descriptor, its `AppShell` placeholder branch and the obsolete
+placeholder catalogue entries are gone, so no Settings destination exists to
+open; `Icon`'s `settings` glyph stays, used by Network adapters. The Plugins
+entry remains available through the managed instrument workspace added by
+TASK-f1f2d836.

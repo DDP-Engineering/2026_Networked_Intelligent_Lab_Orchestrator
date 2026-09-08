@@ -1,0 +1,154 @@
+{
+  "reports": [
+    {
+      "anchor_created_at": "2026-09-05T07:57:24.531467Z",
+      "anchor_head": "3c8ba4e2a4f986228c04035721cde68e28e91a73",
+      "anchor_id": "ba9ac1871c949034",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "443641006c874f01bac9f97f5e527784fe4152436f23f7b0ec75f24bd5dc24d0"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/scripts/build-sigrok-worker.py",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "321a06dcc7502fc69bbcaaf7ce0a84f5be99ca1657ecbd1f346386751724f6aa"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/integrations/sigrok/evidence/coverage.json",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "4f5f55ee5c9a98a6f774f2b3d0a1a6b1201562658b0e84094a98afd9063477f2"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/integrations/sigrok/evidence/demo-capture.jsonl",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "806bb7ce0b527e0a4a092d312f2bb0ac7f36a08735392469b7c4b22885c5a143"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/integrations/sigrok/evidence/uart-fixture.jsonl",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "7b324e59ac16939f19197f4afe61f2f9720cec87f81cfa68119ff3ba312a5d16"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/integrations/sigrok/src/nilo_sigrok/structured_worker.py",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "fc961ea805354da9cfe99f1b8ca6bf98ad73dd13e4a0ee7c5f89d944fca5097e"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "fdc50c4141559091d12c7213226569686a1510ed46094e339738f860ebf27a8f"
+          },
+          "path": "05_Software/integrations/sigrok/tests/test_worker.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "780e9d120cfbe2fa668480a7f077d6c28b771d7eeee908a60fafd8bda0bde86c"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/integrations/sigrok/worker/nilo_sigrok_worker.c",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ce3bd11190dda32eeed92df6918ae0a5a51e38e9bc79e36fd93ed75443e0b4b4"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "ca45de29f0881a97c711ff8bedf01be3ef022f9f40b38f7946444c53987b06b8"
+          },
+          "path": "06_SoftwareDocu/Sigrok_Integration.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d78a8aa94e585a700374f17759a965683deec997decee40a0c179c9409ec2edb"
+          },
+          "area": "other",
+          "before": null,
+          "path": "06_SoftwareDocu/Sigrok_Structured_Worker_Feasibility.md",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "12cd62edb713b734f5ee08a828129479d1ba6907825e968c8ec7fcf425de8cea"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "285d753725e20d39e1dcb3a5026083f8ccb4917e47acd9ef061bb2e11acf296a"
+          },
+          "path": "CHANGELOG.md",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 2,
+            "modified": 2,
+            "removed": 0,
+            "unchanged": 94
+          },
+          "source": {
+            "added": 5,
+            "modified": 0,
+            "removed": 0,
+            "unchanged": 281
+          },
+          "tests": {
+            "added": 0,
+            "modified": 1,
+            "removed": 0,
+            "unchanged": 158
+          }
+        },
+        "status": {
+          "added": 7,
+          "modified": 3,
+          "removed": 0,
+          "unchanged": 533
+        }
+      },
+      "current_head": "3c8ba4e2a4f986228c04035721cde68e28e91a73",
+      "evolution_stage": "validate",
+      "evolved_at": "2026-09-05T08:33:57.262612Z"
+    }
+  ],
+  "schema": 1,
+  "task": "TASK-4023a58d"
+}

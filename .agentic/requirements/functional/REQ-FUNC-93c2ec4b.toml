@@ -1,0 +1,16 @@
+# Copyright (c) 2026 DDP Engineering
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+id = "REQ-FUNC-93c2ec4b"
+title = "Capture finite digital signals"
+status = "active"
+requirement = "When an authorized capture request is approved by the configured policy, NILO shall acquire a bounded set of digital samples from the selected analyzer under an exclusive device lease."
+verification = "Submit finite capture through policy and observe one leased execution and a saved session artifact; invalid rate/count/channel are rejected and same-device jobs serialize."
+affected_paths = ["05_Software/nilo_assistant/internal/bench/"]
+linked_tests = ["05_Software/nilo_assistant/internal/bench/jobs_test.go", "05_Software/integrations/sigrok/tests/test_plugin.py"]
+spec = "specs/REQ-FUNC-26332084.md"
+priority = "normal"
+rationale = ""
+created = 2026-09-05
+updated = 2026-09-05

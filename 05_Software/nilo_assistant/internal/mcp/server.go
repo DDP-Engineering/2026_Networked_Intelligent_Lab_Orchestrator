@@ -1,9 +1,4 @@
-// Package mcp serves NILO's read-only Model Context Protocol endpoint.
-//
-// It exposes three reads and nothing else. That property is enforced here, in
-// what the handlers can reach, rather than by the read-only annotation the
-// protocol offers: an annotation is a label a client may ignore, and the
-// guarantee has to hold in the implementation.
+// Package mcp exposes authenticated network reads and managed bench operations.
 package mcp
 
 import (
@@ -13,14 +8,16 @@ import (
 	"net/http"
 	"strings"
 
+	sdkauth "github.com/modelcontextprotocol/go-sdk/auth"
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 	"nilo.local/nilo/internal/auth"
+	"nilo.local/nilo/internal/bench"
 	"nilo.local/nilo/internal/identity"
 	"nilo.local/nilo/internal/network"
 )
 
-// ToolNames is the complete set of tools this endpoint offers, in the order it
-// registers them. A test asserts discovery returns exactly this.
+// ToolNames names the built-in read-only network tools. Bench tools are added
+// when the managed integration service is configured.
 var ToolNames = []string{
 	"network_get_status",
 	"network_get_statistics",
@@ -40,6 +37,7 @@ type reader interface {
 
 // HandlerOptions carries what the endpoint needs.
 type HandlerOptions struct {
+	Bench    *bench.Manager
 	Identity *identity.Service
 	Network  reader
 	// AllowedOrigins are the Origin header values this endpoint accepts. A
@@ -57,7 +55,7 @@ type statisticsInput struct {
 
 type wireguardInput struct{}
 
-// NewHandler builds the authenticated read-only MCP endpoint.
+// NewHandler builds the authenticated MCP endpoint with per-tool permissions.
 func NewHandler(options HandlerOptions) (http.Handler, error) {
 	if options.Identity == nil {
 		return nil, errors.New("MCP endpoint requires the identity service")
@@ -72,7 +70,10 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 		Name:        ToolNames[0],
 		Annotations: &sdk.ToolAnnotations{ReadOnlyHint: true},
 		Description: "Read the appliance's network interfaces and their current state.",
-	}, func(ctx context.Context, _ *sdk.CallToolRequest, _ statusInput) (*sdk.CallToolResult, network.Status, error) {
+	}, func(ctx context.Context, request *sdk.CallToolRequest, _ statusInput) (*sdk.CallToolResult, network.Status, error) {
+		if actor, err := toolActor(ctx, request, options); err != nil || !actor.Has(auth.PermissionNetworkRead) {
+			return nil, network.Status{}, bench.ErrForbidden
+		}
 		status, err := options.Network.Status(ctx)
 		if err != nil {
 			return nil, network.Status{}, fmt.Errorf("read network status: %w", err)
@@ -84,7 +85,10 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 		Name:        ToolNames[1],
 		Annotations: &sdk.ToolAnnotations{ReadOnlyHint: true},
 		Description: "Read one interface's traffic over a 15m, 1h or 24h window.",
-	}, func(ctx context.Context, _ *sdk.CallToolRequest, input statisticsInput) (*sdk.CallToolResult, network.Statistics, error) {
+	}, func(ctx context.Context, request *sdk.CallToolRequest, input statisticsInput) (*sdk.CallToolResult, network.Statistics, error) {
+		if actor, err := toolActor(ctx, request, options); err != nil || !actor.Has(auth.PermissionNetworkRead) {
+			return nil, network.Statistics{}, bench.ErrForbidden
+		}
 		period, err := network.ParsePeriod(input.Period)
 		if err != nil {
 			return nil, network.Statistics{}, err
@@ -100,19 +104,33 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 		Name:        ToolNames[2],
 		Annotations: &sdk.ToolAnnotations{ReadOnlyHint: true},
 		Description: "Read WireGuard readiness on the appliance.",
-	}, func(ctx context.Context, _ *sdk.CallToolRequest, _ wireguardInput) (*sdk.CallToolResult, network.WireGuardStatus, error) {
+	}, func(ctx context.Context, request *sdk.CallToolRequest, _ wireguardInput) (*sdk.CallToolResult, network.WireGuardStatus, error) {
+		if actor, err := toolActor(ctx, request, options); err != nil || !actor.Has(auth.PermissionNetworkRead) {
+			return nil, network.WireGuardStatus{}, bench.ErrForbidden
+		}
 		status, err := options.Network.WireGuard(ctx)
 		return nil, status, err
 	})
 
+	if options.Bench != nil {
+		registerBenchTools(server, options)
+	}
 	streamable := sdk.NewStreamableHTTPHandler(
 		func(*http.Request) *sdk.Server { return server }, nil)
 	return authorize(options, streamable), nil
 }
 
 // authorize gates every MCP request on a valid, unrevoked bearer token holding
-// the network read permission, and on an acceptable Origin.
+// a relevant read permission, and on an acceptable Origin. Tool calls resolve
+// current identity again, and the transport binds sessions to the token ID.
 func authorize(options HandlerOptions, next http.Handler) http.Handler {
+	next = sdkauth.RequireBearerToken(func(ctx context.Context, token string, _ *http.Request) (*sdkauth.TokenInfo, error) {
+		actor, err := options.Identity.AuthenticateToken(ctx, token)
+		if err != nil {
+			return nil, sdkauth.ErrInvalidToken
+		}
+		return &sdkauth.TokenInfo{UserID: actor.TokenID}, nil
+	}, &sdkauth.RequireBearerTokenOptions{AllowMissingExpiration: true})(next)
 	allowed := make(map[string]bool, len(options.AllowedOrigins))
 	for _, origin := range options.AllowedOrigins {
 		allowed[strings.ToLower(strings.TrimSpace(origin))] = true
@@ -140,7 +158,7 @@ func authorize(options HandlerOptions, next http.Handler) http.Handler {
 			refuse(response, http.StatusUnauthorized, "unauthorized")
 			return
 		}
-		if !actor.Has(auth.PermissionNetworkRead) {
+		if !actor.Has(auth.PermissionNetworkRead) && (options.Bench == nil || !actor.Has(auth.PermissionBenchRead)) {
 			refuse(response, http.StatusForbidden, "forbidden")
 			return
 		}

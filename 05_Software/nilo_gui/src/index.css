@@ -42,3 +42,75 @@ select {
 #root {
   height: 100dvh;
 }
+
+.instrument-workspace {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+.instrument-packages {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: 1rem;
+}
+.instrument-card {
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  min-width: 0;
+}
+.instrument-actions,
+.instrument-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: end;
+}
+.instrument-fields {
+  border: 0;
+  padding: 0;
+  margin: 0.75rem 0;
+}
+.instrument-fields > label {
+  display: grid;
+  gap: 0.35rem;
+  flex: 1 1 10rem;
+}
+.instrument-fields input[type='number'],
+.instrument-fields select {
+  width: 100%;
+}
+.instrument-channels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  width: 100%;
+}
+.instrument-channels label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.instrument-id {
+  overflow-wrap: anywhere;
+}
+.instrument-json {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 24rem;
+  overflow: auto;
+}
+.instrument-preview {
+  margin: 1rem 0;
+  color: var(--accent);
+}
+.instrument-preview > div {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+.instrument-preview svg {
+  height: 2rem;
+  width: 100%;
+}

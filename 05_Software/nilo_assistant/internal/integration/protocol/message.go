@@ -66,6 +66,9 @@ func validatePayload(message Envelope) error {
 			return decodePayload(message.Payload, func(value ControlPayload) error { return value.Validate(PayloadType(message.Method), false) })
 		}
 	case Response:
+		if message.Method == Describe {
+			return decodePayload(message.Payload, func(value DescribeResult) error { return value.Validate() })
+		}
 		if message.Method == Hello {
 			return decodePayload(message.Payload, func(value HelloResponse) error { return value.Validate() })
 		}

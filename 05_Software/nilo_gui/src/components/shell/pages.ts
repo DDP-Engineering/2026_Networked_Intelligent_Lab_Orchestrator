@@ -44,8 +44,15 @@ export interface PageDescriptor {
   available: boolean;
 }
 
-/** Fixed entries of the bottom cluster, including Network's child pages. */
+/** Fixed entries of the bottom cluster, top to bottom, with nested children. */
 const CORE_PAGES: PageDescriptor[] = [
+  {
+    id: 'plugins',
+    cluster: 'core',
+    icon: 'plugins',
+    titleKey: 'nav.plugins',
+    available: true,
+  },
   {
     id: 'network',
     cluster: 'core',
@@ -95,20 +102,6 @@ const CORE_PAGES: PageDescriptor[] = [
     available: true,
   },
   {
-    id: 'activity',
-    cluster: 'core',
-    icon: 'about',
-    titleKey: 'nav.activity',
-    available: true,
-  },
-  {
-    id: 'plugins',
-    cluster: 'core',
-    icon: 'plugins',
-    titleKey: 'nav.plugins',
-    available: false,
-  },
-  {
     id: 'authentication',
     cluster: 'core',
     icon: 'authentication',
@@ -131,11 +124,11 @@ const CORE_PAGES: PageDescriptor[] = [
     available: true,
   },
   {
-    id: 'settings',
+    id: 'activity',
     cluster: 'core',
-    icon: 'settings',
-    titleKey: 'nav.settings',
-    available: false,
+    icon: 'about',
+    titleKey: 'nav.activity',
+    available: true,
   },
   {
     id: 'about',

@@ -500,8 +500,8 @@ token or newly created API token secret is written to any of those either.
 open page tabs, and the network, `SIM`, appearance, language and account
 controls; there is no second tab strip and no page title above the workspace.
 The left navigation lists the working entries and the integrations Bench Core
-actually reports, with a bottom-anchored cluster of **Network, Activity,
-Plugins, Authentication, Settings** and **About**. Network is a collapsible
+actually reports, with a bottom-anchored cluster of **Plugins, Network,
+Authentication, Activity** and **About**. Network is a collapsible
 built-in group with **Overview, Network adapters, Device access, VPN profiles**
 and **Diagnostics**. Choosing the group root opens Overview; choosing any entry
 opens it as a tab; tabs activate on click, move with the arrow, Home and End
@@ -536,14 +536,13 @@ reports browser reachability separately. Overview summarizes the next decision;
 Network adapters, Device access and VPN profiles own configuration; Diagnostics
 owns WireGuard readiness and traffic history. The history chart identifies RX
 and TX, labels its byte and time scales, preserves unmeasured gaps and exposes
-the exact selected minute by pointer, touch or keyboard. Live NetworkManager
-management, root key storage and crash/reboot recovery are unfinished; the browser-only mock
-does not implement the full new lifecycle. See
-[Network implementation status](Network_Service_Implementation_Status.md).
+the exact selected minute by pointer, touch or keyboard. The appliance profile
+uses the root helper for live NetworkManager management, key storage and recovery;
+the browser-only mock does not implement the full lifecycle. See
+[Network operations](Network_Operations.md) for setup and acceptance boundaries.
 
-**Plugins and Settings** name subsystems that are not built and say so; the
-navigation marks them. **About** is real, and reports the build identity Bench
-Core returns.
+**Plugins** opens the managed instrument workspace for installed integration
+packages and bench jobs. **About** reports the build identity Bench Core returns.
 
 **The Bench page** calls `GET /api/v1/status`, `GET /api/v1/integrations`, and
 `GET /api/v1/devices` together with the credential in use, and displays:
@@ -887,19 +886,7 @@ is a convenience for early signal only. No repository gate contacts it, it may
 be powered off or off the network at any time, and an observation made on it is
 not the hardware-in-the-loop level in the table above.
 
-## 10. Current repository state
-
-The repository currently provides the Go foundation, SQLite stores, policy and
-session services, runner supervision, Python SDK, fake integration,
-contract/acceptance tests, a long-running authenticated simulation status API,
-deterministic integration and device inventory, identity and access control with
-its HTTP administration routes, a repository-local Windows Node.js and browser
-toolchain, a browser GUI in which a human signs in with a password and
-administers identities and API tokens — including their permanent deletion —
-beside the backend status and the simulated inventory, and integrated browser
-tests that drive that GUI against a real WSL2 backend. The `/mcp` endpoint now provides authenticated read-only
-Network status, statistics and WireGuard status tools; it shares the HTTP
-identity service. Appliance TLS startup remains unfinished.
+## 10. Foundation verification entry point
 
 The existing Windows foundation gate is:
 
@@ -909,10 +896,6 @@ The existing Windows foundation gate is:
 
 `nilo serve-foundation-check` remains a short-lived composition check. `nilo
 serve --profile simulation` is the long-running development server.
-
-The environment bootstrap, backend flow, the authenticated GUI status and
-inventory flow, the one-command development start, and the integrated browser
-test are all executable now.
 
 On a Windows host the repository gate runs that browser test after the GUI
 component tests and the production build, so the browser-to-WSL2 simulation path
@@ -946,13 +929,13 @@ and cannot be rebuilt from it. See
 No result from simulation may be represented as evidence that a physical
 operation occurred.
 
-## Live Network development checkpoint
+## Live Network development
 
 `serve --profile appliance` is now available on explicitly prepared Linux test
 machines, with a root privileged appliance helper and an unprivileged HTTPS Bench Core.
 It is separate from the default Windows/WSL2 simulation topology and does not
 change the simulation launcher or its fixed development administrator.
-[Live Network development](Live_Network_Development.md) gives the isolated Docker
+[Network operations](Network_Operations.md) gives the isolated Docker
 test command, deployment prerequisites, startup commands and remaining limits.
 The system test never joins the host network namespace or system D-Bus.
 
@@ -961,3 +944,7 @@ Restart and Power off, and a direct request to the power endpoint returns
 `power_control_unavailable`; it never restarts or powers off Windows, WSL2 or a
 development container. Whole-appliance power behavior is checked through unit
 fakes and, separately, on the local Raspberry Pi as an early hardware signal.
+
+## Managed instrument integration development
+
+The Plugins workspace needs the real backend with a curated bundle. Build the sigrok bundle for WSL2 amd64 and its Python minor, then pass the Linux catalog path through `serve --integration-bundles` under the simulation profile. Keep state and runner execution on the Linux filesystem. The browser mock does not implement instrument jobs. See [Sigrok integration](Sigrok_Integration.md) for commands and the separate appliance smoke.

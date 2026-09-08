@@ -1,0 +1,16 @@
+# Copyright (c) 2026 DDP Engineering
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+id = "REQ-FUNC-8a6445ff"
+title = "Disable integrations without losing evidence"
+status = "active"
+requirement = "When an administrator disables an integration, NILO shall block new operations and retain its package, configuration and recorded evidence while active work is safely resolved."
+verification = "Disable with a running job and attempt new capture; new work is rejected and existing evidence remains readable."
+affected_paths = ["05_Software/nilo_assistant/internal/bench/"]
+linked_tests = ["05_Software/nilo_assistant/internal/bench/jobs_test.go"]
+spec = "specs/REQ-FUNC-26332084.md"
+priority = "normal"
+rationale = ""
+created = 2026-09-05
+updated = 2026-09-05
