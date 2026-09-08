@@ -16,6 +16,9 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Changed
 
+- Updated the installed AEGIS workflow to 0.12.0 for focused verification and
+  leaner records, preserving project configuration and engineering history.
+
 - Build-environment reconstruction now acquires and digest-verifies the pinned
   base and BuildKit frontend images in an explicit networked phase, so a clean
   host with no cached images can rebuild offline.
