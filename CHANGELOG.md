@@ -9,7 +9,36 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 - Confirmed whole-appliance Restart and Power off controls for Operator and
   Administrator browser sessions, dispatched through the privileged helper.
+- Reproducible Linux amd64 OCI development/build environment with a complete
+  locked offline input closure, shared Windows/WSL2 and native Ubuntu 24.04
+  orchestration, multipart LFS escrow, and acceptance evidence tooling.
 - Structured Sigrok worker feasibility slice with direct mixed-signal datafeed and decoder callbacks, bounded crash isolation, and machine-readable coverage evidence.
+
+### Changed
+
+- Build-environment reconstruction now acquires and digest-verifies the pinned
+  base and BuildKit frontend images in an explicit networked phase, so a clean
+  host with no cached images can rebuild offline.
+- Container build and test mount the checkout read-only and work from an
+  isolated copy, so a run can no longer replace host `node_modules`, create
+  Linux virtual environments in the checkout, or overwrite Windows GUI
+  dependencies. Declared artifacts are published to `/outputs`.
+- Archive restore streams one verified pass instead of writing two full-size
+  temporaries, checks free space before importing - including the Windows
+  volume backing a WSL virtual disk - and accepts an explicit temporary
+  directory.
+- Explicit host engine installation calculates and displays the exact package
+  transaction first and refuses downgrades and architecture replacements unless
+  they are explicitly authorized.
+- Acceptance evidence records seven ordered maturity states, so implemented,
+  round-trip verified, published and fully accepted can no longer be conflated.
+
+### Fixed
+
+- Documentation now states the exact supported host boundary, the Git LFS
+  prerequisite, and that checksums prove integrity rather than publisher
+  authenticity; image scanning and real Podman verification are recorded as
+  not yet performed.
 
 ## [0.2.0] - 2026-09-05
 

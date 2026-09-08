@@ -34,23 +34,12 @@ func main() {
 		return
 	}
 	write(protocol.Response, "hello-response", hello.MessageID, protocol.Hello, map[string]any{"type": "hello", "integration": "test"})
-	if mode == "malformed" {
-		fmt.Fprint(os.Stdout, "not-json\n")
-		return
-	}
-	if mode == "overflow" {
-		fmt.Fprint(os.Stdout, strings.Repeat("x", protocol.MaxLineBytes)+"\n")
-		return
-	}
 	if mode == "stderr" {
 		fmt.Fprint(os.Stderr, strings.Repeat("x", 70<<10)+"END")
 		return
 	}
 	if mode == "stderr-control" {
 		fmt.Fprint(os.Stderr, "\x1b[31msecret\r\x00\x7f\u0085END")
-		return
-	}
-	if mode == "exit" {
 		return
 	}
 	if mode == "stall-stdin" {
@@ -80,6 +69,17 @@ func main() {
 		return
 	}
 	if execute.Method != protocol.Execute {
+		return
+	}
+	if mode == "malformed" {
+		fmt.Fprint(os.Stdout, "not-json\n")
+		return
+	}
+	if mode == "overflow" {
+		fmt.Fprint(os.Stdout, strings.Repeat("x", protocol.MaxLineBytes)+"\n")
+		return
+	}
+	if mode == "exit" {
 		return
 	}
 	if mode == "mismatched-event" {

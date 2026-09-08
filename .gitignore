@@ -1,6 +1,11 @@
 # Downloaded repository-local runtime tools are reproducible from 02_Tools.
 /02_Tools/runtime/
 /02_Tools/cache/
+/02_Tools/archives/**/.staging/
+/02_Tools/archives/**/*.join
+/02_Tools/archives/**/*.tmp
+/02_Tools/tests/build-environment/evidence.local.json
+/02_Tools/tests/build-environment/readback-*/
 
 # Generated Python environments and bytecode are never source artifacts.
 **/.venv/

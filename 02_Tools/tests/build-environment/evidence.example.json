@@ -1,0 +1,75 @@
+{
+  "schema": 1,
+  "generated_at": "2026-09-05T00:00:00Z",
+  "maturity": {
+    "implemented": true,
+    "locally_integrity_checked": true,
+    "round_trip_verified": false,
+    "clean_host_verified": false,
+    "published": false,
+    "independently_backed_up": false,
+    "fully_accepted": false
+  },
+  "gates": {
+    "BE-01": {
+      "status": "passed",
+      "command": "python -m unittest 05_Software.scripts.tests.test_build_environment.BuildEnvironmentTests.test_policy_lfs_and_documented_commands_match_the_plan",
+      "evidence": "working-tree contract test",
+      "detail": "narrow LFS escrow policy and ignored extracted runtimes"
+    },
+    "BE-02": {
+      "status": "passed",
+      "command": "python 02_Tools/scripts/build_environment.py validate-reconstruction --lock 02_Tools/containers/build/build-environment.lock.json && python 02_Tools/scripts/build_environment.py verify-materialized-inputs --lock 02_Tools/containers/build/build-environment.lock.json --input-dir 02_Tools/cache/containers/upstream",
+      "evidence": ".agentic/tasks/TASK-998d1b00.md build reconstruction verification",
+      "detail": "650 records and 995486423 materialized bytes verified; reconstruction manifest SHA-256 784a1d020ef72bd4c567a3f85287e2b72e456f2f7bc28db7c470d0e82579da3f"
+    },
+    "BE-03": {
+      "status": "pending",
+      "command": "Windows: .\\02_Tools\\bootstrap\\bootstrap-build-environment.ps1 -Distribution Ubuntu-24.04; native Linux: ./02_Tools/bootstrap/bootstrap-build-environment.sh",
+      "evidence": "current WSL2 package/install observation plus pending clean-host matrix runs",
+      "detail": "both Windows/WSL2 and native Ubuntu 24.04 x86-64 require clean supported-host evidence before the matrix gate passes"
+    },
+    "BE-04": {
+      "status": "pending",
+      "command": "./02_Tools/scripts/build-build-environment.sh --engine docker",
+      "evidence": "pending canonical scripted build log, provenance labels, and inventory",
+      "detail": "nilo/build-environment:closure-test completed a network-none closure proof, but it is not the canonical lock reference and has no provenance labels"
+    },
+    "BE-05": {
+      "status": "pending",
+      "command": "./02_Tools/env/with-build-environment.ps1 test",
+      "evidence": "pending imported-image offline suite log",
+      "detail": "requires accepted image digest"
+    },
+    "BE-06": {
+      "status": "pending",
+      "command": "./02_Tools/tests/build-environment/verify-arm64-abi.sh --host HOST --bundle PATH",
+      "evidence": "pending authorized appliance record",
+      "detail": "physical ARM64 appliance evidence is external"
+    },
+    "BE-07": {
+      "status": "pending",
+      "command": "./02_Tools/tests/build-environment/verify-archive-failures.sh && ./02_Tools/tests/build-environment/verify-archive-round-trip.sh --engine docker --manifest 02_Tools/archives/build-environment/current.json --archive-path 02_Tools/archives/build-environment",
+      "evidence": "synthetic source tests pass; real archive/import digest pending",
+      "detail": "real archive not generated"
+    },
+    "BE-08": {
+      "status": "pending",
+      "command": "./02_Tools/scripts/mirror-build-environment-lfs.ps1 -ManifestPath PATH -GiteaCapacityBytes N -BackupCapacityBytes N",
+      "evidence": "pending measured archive and Gitea/backup headroom",
+      "detail": "requires human storage observations"
+    },
+    "BE-09": {
+      "status": "pending",
+      "command": "./02_Tools/tests/build-environment/verify-lfs-replicas.ps1 -ManifestPath PATH -GiteaReadbackPath PATH -BackupReadbackPath PATH",
+      "evidence": "pending independent clean readback",
+      "detail": "requires authoritative remote and backup access"
+    },
+    "BE-10": {
+      "status": "passed",
+      "command": "python -m unittest 05_Software.scripts.tests.test_build_environment.BuildEnvironmentTests.test_policy_lfs_and_documented_commands_match_the_plan",
+      "evidence": "working-tree documentation contract test",
+      "detail": "setup, offline use, archive recovery and maintenance responsibilities are documented; observed external outcomes remain pending in BE-03, BE-04, BE-05, BE-06, BE-07, BE-08 and BE-09"
+    }
+  }
+}

@@ -5,7 +5,7 @@
 This document defines the default NILO development and simulation environment
 used before deployment to a Raspberry Pi.
 
-The approved development topology is:
+The interactive development topology is:
 
 - the browser GUI and its development tooling run natively on Windows;
 - Bench Core, its HTTP and MCP services, SQLite, and integration runners run
@@ -14,6 +14,14 @@ The approved development topology is:
   represented by deterministic simulated integrations;
 - a Windows browser connects to the WSL2 backend through a loopback development
   endpoint.
+
+The reproducible build and mandatory repository-test boundary is separately one
+Linux amd64 OCI image running through Docker Engine or Podman either inside
+Ubuntu 24.04 WSL2 on Windows x86-64 or directly on native Ubuntu 24.04 x86-64.
+Docker Desktop is not required. The image contains the pinned
+language tools, GCC/binutils native and ARM64 cross toolchains, offline
+dependency caches, and headless Chromium. Native Windows GUI/browser execution
+remains the fast optional headed loop; acceptance uses the container gate.
 
 This arrangement is a development environment, not an additional product
 deployment target. NILO appliances remain Linux systems, with Raspberry Pi 4
@@ -232,6 +240,28 @@ mode may seed test identities, but it must not introduce an unauthenticated
 production route or bypass authorization checks.
 
 ## 8. Daily development flow
+
+Before relying on a checkout for build or acceptance, prepare the locked OCI
+environment from already-acquired local Git/LFS content:
+
+```powershell
+.\02_Tools\bootstrap\bootstrap-build-environment.ps1 -Distribution Ubuntu-24.04
+.\02_Tools\env\with-build-environment.ps1 test
+```
+
+On native Ubuntu 24.04 x86-64, the equivalent direct path is:
+
+```sh
+./02_Tools/bootstrap/bootstrap-build-environment.sh
+./02_Tools/env/with-build-environment.sh test
+```
+
+Setup never contacts a repository forge. Missing archive content requires a
+manual LFS acquisition or the explicit `-RebuildFromPinnedInputs` networked
+path. Engine installation is also explicit and consumes only the separate
+checksum-verified Ubuntu host-bootstrap archive. Details, recovery, export,
+publication preflight, and BE-01 through BE-10 evidence are in
+`../02_Tools/README.md` and `../02_Tools/tests/build-environment/README.md`.
 
 ### 8.0 Starting the whole thing, and signing in
 
@@ -916,6 +946,8 @@ delivered. The platform distinction is:
   tests, plus portable compile checks;
 - **WSL2 Linux x86_64:** supported local simulation backend for development and
   automated integration testing;
+- **Native Ubuntu 24.04 x86_64:** supported direct OCI development/build host
+  using the same image and offline acceptance boundary;
 - **Linux x86_64 VM:** system and network test environment;
 - **Raspberry Pi 4 Linux ARM64:** first MVP appliance and final hardware
   acceptance environment.

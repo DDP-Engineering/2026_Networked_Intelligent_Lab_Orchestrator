@@ -1,0 +1,3185 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "nilo-build-environment-image",
+  "documentNamespace": "https://nilo.invalid/sbom/build-environment/88ec9769aaba4398d64407cf326c84d5c49be8e0f72359ed7382d182f3aef2dc",
+  "creationInfo": {
+    "created": "2026-09-05T18:46:10+00:00",
+    "creators": [
+      "Tool: collect-build-environment-metadata.sh"
+    ]
+  },
+  "packages": [
+    {
+      "name": "apt",
+      "SPDXID": "SPDXRef-Package-1",
+      "versionInfo": "2.8.3",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "at-spi2-common",
+      "SPDXID": "SPDXRef-Package-2",
+      "versionInfo": "2.52.0-1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "base-files",
+      "SPDXID": "SPDXRef-Package-3",
+      "versionInfo": "13ubuntu10.4",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "base-passwd",
+      "SPDXID": "SPDXRef-Package-4",
+      "versionInfo": "3.6.3build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "bash",
+      "SPDXID": "SPDXRef-Package-5",
+      "versionInfo": "5.2.21-2ubuntu4",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "binutils",
+      "SPDXID": "SPDXRef-Package-6",
+      "versionInfo": "2.42-4ubuntu2.10",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "binutils-aarch64-linux-gnu",
+      "SPDXID": "SPDXRef-Package-7",
+      "versionInfo": "2.42-4ubuntu2.10",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "binutils-common:amd64",
+      "SPDXID": "SPDXRef-Package-8",
+      "versionInfo": "2.42-4ubuntu2.10",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "binutils-x86-64-linux-gnu",
+      "SPDXID": "SPDXRef-Package-9",
+      "versionInfo": "2.42-4ubuntu2.10",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "bsdutils",
+      "SPDXID": "SPDXRef-Package-10",
+      "versionInfo": "1:2.39.3-9ubuntu6.6",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "ca-certificates",
+      "SPDXID": "SPDXRef-Package-11",
+      "versionInfo": "20260601~24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "coreutils",
+      "SPDXID": "SPDXRef-Package-12",
+      "versionInfo": "9.4-3ubuntu6.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "cpp",
+      "SPDXID": "SPDXRef-Package-13",
+      "versionInfo": "4:13.2.0-7ubuntu1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "cpp-13",
+      "SPDXID": "SPDXRef-Package-14",
+      "versionInfo": "13.3.0-6ubuntu2~24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "cpp-13-aarch64-linux-gnu",
+      "SPDXID": "SPDXRef-Package-15",
+      "versionInfo": "13.3.0-6ubuntu2~24.04.1cross1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "cpp-13-x86-64-linux-gnu",
+      "SPDXID": "SPDXRef-Package-16",
+      "versionInfo": "13.3.0-6ubuntu2~24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "cpp-aarch64-linux-gnu",
+      "SPDXID": "SPDXRef-Package-17",
+      "versionInfo": "4:13.2.0-7ubuntu1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "cpp-x86-64-linux-gnu",
+      "SPDXID": "SPDXRef-Package-18",
+      "versionInfo": "4:13.2.0-7ubuntu1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "curl",
+      "SPDXID": "SPDXRef-Package-19",
+      "versionInfo": "8.5.0-2ubuntu10.13",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "dash",
+      "SPDXID": "SPDXRef-Package-20",
+      "versionInfo": "0.5.12-6ubuntu5",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "debconf",
+      "SPDXID": "SPDXRef-Package-21",
+      "versionInfo": "1.5.86ubuntu1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "debianutils",
+      "SPDXID": "SPDXRef-Package-22",
+      "versionInfo": "5.17build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "diffutils",
+      "SPDXID": "SPDXRef-Package-23",
+      "versionInfo": "1:3.10-1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "dpkg",
+      "SPDXID": "SPDXRef-Package-24",
+      "versionInfo": "1.22.6ubuntu6.6",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "e2fsprogs",
+      "SPDXID": "SPDXRef-Package-25",
+      "versionInfo": "1.47.0-2.4~exp1ubuntu4.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "file",
+      "SPDXID": "SPDXRef-Package-26",
+      "versionInfo": "1:5.45-3build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "findutils",
+      "SPDXID": "SPDXRef-Package-27",
+      "versionInfo": "4.9.0-5build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "fontconfig",
+      "SPDXID": "SPDXRef-Package-28",
+      "versionInfo": "2.15.0-1.1ubuntu2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "fontconfig-config",
+      "SPDXID": "SPDXRef-Package-29",
+      "versionInfo": "2.15.0-1.1ubuntu2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "fonts-liberation",
+      "SPDXID": "SPDXRef-Package-30",
+      "versionInfo": "1:2.1.5-3",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "g++",
+      "SPDXID": "SPDXRef-Package-31",
+      "versionInfo": "4:13.2.0-7ubuntu1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "g++-13",
+      "SPDXID": "SPDXRef-Package-32",
+      "versionInfo": "13.3.0-6ubuntu2~24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "g++-13-aarch64-linux-gnu",
+      "SPDXID": "SPDXRef-Package-33",
+      "versionInfo": "13.3.0-6ubuntu2~24.04.1cross1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "g++-13-x86-64-linux-gnu",
+      "SPDXID": "SPDXRef-Package-34",
+      "versionInfo": "13.3.0-6ubuntu2~24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "g++-aarch64-linux-gnu",
+      "SPDXID": "SPDXRef-Package-35",
+      "versionInfo": "4:13.2.0-7ubuntu1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "g++-x86-64-linux-gnu",
+      "SPDXID": "SPDXRef-Package-36",
+      "versionInfo": "4:13.2.0-7ubuntu1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "gcc",
+      "SPDXID": "SPDXRef-Package-37",
+      "versionInfo": "4:13.2.0-7ubuntu1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "gcc-13",
+      "SPDXID": "SPDXRef-Package-38",
+      "versionInfo": "13.3.0-6ubuntu2~24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "gcc-13-aarch64-linux-gnu",
+      "SPDXID": "SPDXRef-Package-39",
+      "versionInfo": "13.3.0-6ubuntu2~24.04.1cross1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "gcc-13-aarch64-linux-gnu-base:amd64",
+      "SPDXID": "SPDXRef-Package-40",
+      "versionInfo": "13.3.0-6ubuntu2~24.04.1cross1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "gcc-13-base:amd64",
+      "SPDXID": "SPDXRef-Package-41",
+      "versionInfo": "13.3.0-6ubuntu2~24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "gcc-13-cross-base",
+      "SPDXID": "SPDXRef-Package-42",
+      "versionInfo": "13.3.0-6ubuntu2~24.04.1cross1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "gcc-13-x86-64-linux-gnu",
+      "SPDXID": "SPDXRef-Package-43",
+      "versionInfo": "13.3.0-6ubuntu2~24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "gcc-14-base:amd64",
+      "SPDXID": "SPDXRef-Package-44",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "gcc-14-cross-base",
+      "SPDXID": "SPDXRef-Package-45",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1cross1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "gcc-aarch64-linux-gnu",
+      "SPDXID": "SPDXRef-Package-46",
+      "versionInfo": "4:13.2.0-7ubuntu1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "gcc-x86-64-linux-gnu",
+      "SPDXID": "SPDXRef-Package-47",
+      "versionInfo": "4:13.2.0-7ubuntu1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "git",
+      "SPDXID": "SPDXRef-Package-48",
+      "versionInfo": "1:2.43.0-1ubuntu7.3",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "git-lfs",
+      "SPDXID": "SPDXRef-Package-49",
+      "versionInfo": "3.4.1-1ubuntu0.4",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "git-man",
+      "SPDXID": "SPDXRef-Package-50",
+      "versionInfo": "1:2.43.0-1ubuntu7.3",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "gpgv",
+      "SPDXID": "SPDXRef-Package-51",
+      "versionInfo": "2.4.4-2ubuntu17.4",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "grep",
+      "SPDXID": "SPDXRef-Package-52",
+      "versionInfo": "3.11-4build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "gzip",
+      "SPDXID": "SPDXRef-Package-53",
+      "versionInfo": "1.12-1ubuntu3.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "hostname",
+      "SPDXID": "SPDXRef-Package-54",
+      "versionInfo": "3.23+nmu2ubuntu2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "init-system-helpers",
+      "SPDXID": "SPDXRef-Package-55",
+      "versionInfo": "1.66ubuntu1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "jq",
+      "SPDXID": "SPDXRef-Package-56",
+      "versionInfo": "1.7.1-3ubuntu0.24.04.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libacl1:amd64",
+      "SPDXID": "SPDXRef-Package-57",
+      "versionInfo": "2.3.2-1build1.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libapt-pkg6.0t64:amd64",
+      "SPDXID": "SPDXRef-Package-58",
+      "versionInfo": "2.8.3",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libasan8:amd64",
+      "SPDXID": "SPDXRef-Package-59",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libasan8-arm64-cross",
+      "SPDXID": "SPDXRef-Package-60",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1cross1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libasound2-data",
+      "SPDXID": "SPDXRef-Package-61",
+      "versionInfo": "1.2.11-1ubuntu0.3",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libasound2t64:amd64",
+      "SPDXID": "SPDXRef-Package-62",
+      "versionInfo": "1.2.11-1ubuntu0.3",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libassuan0:amd64",
+      "SPDXID": "SPDXRef-Package-63",
+      "versionInfo": "2.5.6-1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libatk-bridge2.0-0t64:amd64",
+      "SPDXID": "SPDXRef-Package-64",
+      "versionInfo": "2.52.0-1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libatk1.0-0t64:amd64",
+      "SPDXID": "SPDXRef-Package-65",
+      "versionInfo": "2.52.0-1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libatomic1:amd64",
+      "SPDXID": "SPDXRef-Package-66",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libatomic1-arm64-cross",
+      "SPDXID": "SPDXRef-Package-67",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1cross1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libatspi2.0-0t64:amd64",
+      "SPDXID": "SPDXRef-Package-68",
+      "versionInfo": "2.52.0-1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libattr1:amd64",
+      "SPDXID": "SPDXRef-Package-69",
+      "versionInfo": "1:2.5.2-1build1.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libaudit-common",
+      "SPDXID": "SPDXRef-Package-70",
+      "versionInfo": "1:3.1.2-2.1build1.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libaudit1:amd64",
+      "SPDXID": "SPDXRef-Package-71",
+      "versionInfo": "1:3.1.2-2.1build1.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libavahi-client3:amd64",
+      "SPDXID": "SPDXRef-Package-72",
+      "versionInfo": "0.8-13ubuntu6.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libavahi-common-data:amd64",
+      "SPDXID": "SPDXRef-Package-73",
+      "versionInfo": "0.8-13ubuntu6.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libavahi-common3:amd64",
+      "SPDXID": "SPDXRef-Package-74",
+      "versionInfo": "0.8-13ubuntu6.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libbinutils:amd64",
+      "SPDXID": "SPDXRef-Package-75",
+      "versionInfo": "2.42-4ubuntu2.10",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libblkid-dev:amd64",
+      "SPDXID": "SPDXRef-Package-76",
+      "versionInfo": "2.39.3-9ubuntu6.6",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libblkid1:amd64",
+      "SPDXID": "SPDXRef-Package-77",
+      "versionInfo": "2.39.3-9ubuntu6.6",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libbluetooth-dev:amd64",
+      "SPDXID": "SPDXRef-Package-78",
+      "versionInfo": "5.72-0ubuntu5.5",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libbluetooth3:amd64",
+      "SPDXID": "SPDXRef-Package-79",
+      "versionInfo": "5.72-0ubuntu5.5",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libbrotli1:amd64",
+      "SPDXID": "SPDXRef-Package-80",
+      "versionInfo": "1.1.0-2build2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libbsd0:amd64",
+      "SPDXID": "SPDXRef-Package-81",
+      "versionInfo": "0.12.1-1build1.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libbz2-1.0:amd64",
+      "SPDXID": "SPDXRef-Package-82",
+      "versionInfo": "1.0.8-5.1build0.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libc-bin",
+      "SPDXID": "SPDXRef-Package-83",
+      "versionInfo": "2.39-0ubuntu8.8",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libc-dev-bin",
+      "SPDXID": "SPDXRef-Package-84",
+      "versionInfo": "2.39-0ubuntu8.8",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libc6:amd64",
+      "SPDXID": "SPDXRef-Package-85",
+      "versionInfo": "2.39-0ubuntu8.8",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libc6-arm64-cross",
+      "SPDXID": "SPDXRef-Package-86",
+      "versionInfo": "2.39-0ubuntu8cross1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libc6-dev:amd64",
+      "SPDXID": "SPDXRef-Package-87",
+      "versionInfo": "2.39-0ubuntu8.8",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libc6-dev-arm64-cross",
+      "SPDXID": "SPDXRef-Package-88",
+      "versionInfo": "2.39-0ubuntu8cross1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libcairo2:amd64",
+      "SPDXID": "SPDXRef-Package-89",
+      "versionInfo": "1.18.0-3build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libcap-ng0:amd64",
+      "SPDXID": "SPDXRef-Package-90",
+      "versionInfo": "0.8.4-2build2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libcap2:amd64",
+      "SPDXID": "SPDXRef-Package-91",
+      "versionInfo": "1:2.66-5ubuntu2.4",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libcc1-0:amd64",
+      "SPDXID": "SPDXRef-Package-92",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libcom-err2:amd64",
+      "SPDXID": "SPDXRef-Package-93",
+      "versionInfo": "1.47.0-2.4~exp1ubuntu4.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libcrypt-dev:amd64",
+      "SPDXID": "SPDXRef-Package-94",
+      "versionInfo": "1:4.4.36-4build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libcrypt1:amd64",
+      "SPDXID": "SPDXRef-Package-95",
+      "versionInfo": "1:4.4.36-4build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libctf-nobfd0:amd64",
+      "SPDXID": "SPDXRef-Package-96",
+      "versionInfo": "2.42-4ubuntu2.10",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libctf0:amd64",
+      "SPDXID": "SPDXRef-Package-97",
+      "versionInfo": "2.42-4ubuntu2.10",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libcups2t64:amd64",
+      "SPDXID": "SPDXRef-Package-98",
+      "versionInfo": "2.4.7-1.2ubuntu7.14",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libcurl3t64-gnutls:amd64",
+      "SPDXID": "SPDXRef-Package-99",
+      "versionInfo": "8.5.0-2ubuntu10.13",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libcurl4t64:amd64",
+      "SPDXID": "SPDXRef-Package-100",
+      "versionInfo": "8.5.0-2ubuntu10.13",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libdatrie1:amd64",
+      "SPDXID": "SPDXRef-Package-101",
+      "versionInfo": "0.2.13-3build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libdb5.3t64:amd64",
+      "SPDXID": "SPDXRef-Package-102",
+      "versionInfo": "5.3.28+dfsg2-7",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libdbus-1-3:amd64",
+      "SPDXID": "SPDXRef-Package-103",
+      "versionInfo": "1.14.10-4ubuntu4.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libdebconfclient0:amd64",
+      "SPDXID": "SPDXRef-Package-104",
+      "versionInfo": "0.271ubuntu3",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libdrm-amdgpu1:amd64",
+      "SPDXID": "SPDXRef-Package-105",
+      "versionInfo": "2.4.125-1ubuntu0.1~24.04.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libdrm-common",
+      "SPDXID": "SPDXRef-Package-106",
+      "versionInfo": "2.4.125-1ubuntu0.1~24.04.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libdrm-intel1:amd64",
+      "SPDXID": "SPDXRef-Package-107",
+      "versionInfo": "2.4.125-1ubuntu0.1~24.04.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libdrm2:amd64",
+      "SPDXID": "SPDXRef-Package-108",
+      "versionInfo": "2.4.125-1ubuntu0.1~24.04.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libedit2:amd64",
+      "SPDXID": "SPDXRef-Package-109",
+      "versionInfo": "3.1-20230828-1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libelf1t64:amd64",
+      "SPDXID": "SPDXRef-Package-110",
+      "versionInfo": "0.190-1.1ubuntu0.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "liberror-perl",
+      "SPDXID": "SPDXRef-Package-111",
+      "versionInfo": "0.17029-2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libexpat1:amd64",
+      "SPDXID": "SPDXRef-Package-112",
+      "versionInfo": "2.6.1-2ubuntu0.4",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libext2fs2t64:amd64",
+      "SPDXID": "SPDXRef-Package-113",
+      "versionInfo": "1.47.0-2.4~exp1ubuntu4.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libffi-dev:amd64",
+      "SPDXID": "SPDXRef-Package-114",
+      "versionInfo": "3.4.6-1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libffi8:amd64",
+      "SPDXID": "SPDXRef-Package-115",
+      "versionInfo": "3.4.6-1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libfontconfig1:amd64",
+      "SPDXID": "SPDXRef-Package-116",
+      "versionInfo": "2.15.0-1.1ubuntu2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libfreetype6:amd64",
+      "SPDXID": "SPDXRef-Package-117",
+      "versionInfo": "2.13.2+dfsg-1ubuntu0.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libfribidi0:amd64",
+      "SPDXID": "SPDXRef-Package-118",
+      "versionInfo": "1.0.13-3build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libftdi1-2:amd64",
+      "SPDXID": "SPDXRef-Package-119",
+      "versionInfo": "1.5-6build5",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libftdi1-dev",
+      "SPDXID": "SPDXRef-Package-120",
+      "versionInfo": "1.5-6build5",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libgbm1:amd64",
+      "SPDXID": "SPDXRef-Package-121",
+      "versionInfo": "25.2.8-0ubuntu0.24.04.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libgcc-13-dev:amd64",
+      "SPDXID": "SPDXRef-Package-122",
+      "versionInfo": "13.3.0-6ubuntu2~24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libgcc-13-dev-arm64-cross",
+      "SPDXID": "SPDXRef-Package-123",
+      "versionInfo": "13.3.0-6ubuntu2~24.04.1cross1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libgcc-s1:amd64",
+      "SPDXID": "SPDXRef-Package-124",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libgcc-s1-arm64-cross",
+      "SPDXID": "SPDXRef-Package-125",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1cross1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libgcrypt20:amd64",
+      "SPDXID": "SPDXRef-Package-126",
+      "versionInfo": "1.10.3-2ubuntu0.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libgdbm-compat4t64:amd64",
+      "SPDXID": "SPDXRef-Package-127",
+      "versionInfo": "1.23-5.1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libgdbm6t64:amd64",
+      "SPDXID": "SPDXRef-Package-128",
+      "versionInfo": "1.23-5.1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libgirepository-2.0-0:amd64",
+      "SPDXID": "SPDXRef-Package-129",
+      "versionInfo": "2.80.0-6ubuntu3.8",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libglib2.0-0t64:amd64",
+      "SPDXID": "SPDXRef-Package-130",
+      "versionInfo": "2.80.0-6ubuntu3.8",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libglib2.0-bin",
+      "SPDXID": "SPDXRef-Package-131",
+      "versionInfo": "2.80.0-6ubuntu3.8",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libglib2.0-data",
+      "SPDXID": "SPDXRef-Package-132",
+      "versionInfo": "2.80.0-6ubuntu3.8",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libglib2.0-dev:amd64",
+      "SPDXID": "SPDXRef-Package-133",
+      "versionInfo": "2.80.0-6ubuntu3.8",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libglib2.0-dev-bin",
+      "SPDXID": "SPDXRef-Package-134",
+      "versionInfo": "2.80.0-6ubuntu3.8",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libgmp10:amd64",
+      "SPDXID": "SPDXRef-Package-135",
+      "versionInfo": "2:6.3.0+dfsg-2ubuntu6.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libgnutls30t64:amd64",
+      "SPDXID": "SPDXRef-Package-136",
+      "versionInfo": "3.8.3-1.1ubuntu3.6",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libgomp1:amd64",
+      "SPDXID": "SPDXRef-Package-137",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libgomp1-arm64-cross",
+      "SPDXID": "SPDXRef-Package-138",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1cross1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libgpg-error0:amd64",
+      "SPDXID": "SPDXRef-Package-139",
+      "versionInfo": "1.47-3build2.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libgprofng0:amd64",
+      "SPDXID": "SPDXRef-Package-140",
+      "versionInfo": "2.42-4ubuntu2.10",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libgraphite2-3:amd64",
+      "SPDXID": "SPDXRef-Package-141",
+      "versionInfo": "1.3.14-2ubuntu0.24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libgssapi-krb5-2:amd64",
+      "SPDXID": "SPDXRef-Package-142",
+      "versionInfo": "1.20.1-6ubuntu2.8",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libharfbuzz0b:amd64",
+      "SPDXID": "SPDXRef-Package-143",
+      "versionInfo": "8.3.0-2build2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libhidapi-dev:amd64",
+      "SPDXID": "SPDXRef-Package-144",
+      "versionInfo": "0.14.0-1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libhidapi-hidraw0:amd64",
+      "SPDXID": "SPDXRef-Package-145",
+      "versionInfo": "0.14.0-1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libhidapi-libusb0:amd64",
+      "SPDXID": "SPDXRef-Package-146",
+      "versionInfo": "0.14.0-1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libhogweed6t64:amd64",
+      "SPDXID": "SPDXRef-Package-147",
+      "versionInfo": "3.9.1-2.2build1.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libhwasan0:amd64",
+      "SPDXID": "SPDXRef-Package-148",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libhwasan0-arm64-cross",
+      "SPDXID": "SPDXRef-Package-149",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1cross1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libicu74:amd64",
+      "SPDXID": "SPDXRef-Package-150",
+      "versionInfo": "74.2-1ubuntu3.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libidn2-0:amd64",
+      "SPDXID": "SPDXRef-Package-151",
+      "versionInfo": "2.3.7-2build1.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libieee1284-3t64:amd64",
+      "SPDXID": "SPDXRef-Package-152",
+      "versionInfo": "0.2.11-14.1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libisl23:amd64",
+      "SPDXID": "SPDXRef-Package-153",
+      "versionInfo": "0.26-3build1.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libitm1:amd64",
+      "SPDXID": "SPDXRef-Package-154",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libitm1-arm64-cross",
+      "SPDXID": "SPDXRef-Package-155",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1cross1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libjansson4:amd64",
+      "SPDXID": "SPDXRef-Package-156",
+      "versionInfo": "2.14-2build2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libjq1:amd64",
+      "SPDXID": "SPDXRef-Package-157",
+      "versionInfo": "1.7.1-3ubuntu0.24.04.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libk5crypto3:amd64",
+      "SPDXID": "SPDXRef-Package-158",
+      "versionInfo": "1.20.1-6ubuntu2.8",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libkeyutils1:amd64",
+      "SPDXID": "SPDXRef-Package-159",
+      "versionInfo": "1.6.3-3build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libkrb5-3:amd64",
+      "SPDXID": "SPDXRef-Package-160",
+      "versionInfo": "1.20.1-6ubuntu2.8",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libkrb5support0:amd64",
+      "SPDXID": "SPDXRef-Package-161",
+      "versionInfo": "1.20.1-6ubuntu2.8",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libldap2:amd64",
+      "SPDXID": "SPDXRef-Package-162",
+      "versionInfo": "2.6.10+dfsg-0ubuntu0.24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libllvm20:amd64",
+      "SPDXID": "SPDXRef-Package-163",
+      "versionInfo": "1:20.1.2-0ubuntu1~24.04.3",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "liblsan0:amd64",
+      "SPDXID": "SPDXRef-Package-164",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "liblsan0-arm64-cross",
+      "SPDXID": "SPDXRef-Package-165",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1cross1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "liblz4-1:amd64",
+      "SPDXID": "SPDXRef-Package-166",
+      "versionInfo": "1.9.4-1build1.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "liblzma5:amd64",
+      "SPDXID": "SPDXRef-Package-167",
+      "versionInfo": "5.6.1+really5.4.5-1ubuntu0.3",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libmagic-mgc",
+      "SPDXID": "SPDXRef-Package-168",
+      "versionInfo": "1:5.45-3build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libmagic1t64:amd64",
+      "SPDXID": "SPDXRef-Package-169",
+      "versionInfo": "1:5.45-3build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libmd0:amd64",
+      "SPDXID": "SPDXRef-Package-170",
+      "versionInfo": "1.1.0-2build1.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libmount-dev:amd64",
+      "SPDXID": "SPDXRef-Package-171",
+      "versionInfo": "2.39.3-9ubuntu6.6",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libmount1:amd64",
+      "SPDXID": "SPDXRef-Package-172",
+      "versionInfo": "2.39.3-9ubuntu6.6",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libmpc3:amd64",
+      "SPDXID": "SPDXRef-Package-173",
+      "versionInfo": "1.3.1-1build1.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libmpfr6:amd64",
+      "SPDXID": "SPDXRef-Package-174",
+      "versionInfo": "4.2.1-1build1.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libncursesw6:amd64",
+      "SPDXID": "SPDXRef-Package-175",
+      "versionInfo": "6.4+20240113-1ubuntu2.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libnettle8t64:amd64",
+      "SPDXID": "SPDXRef-Package-176",
+      "versionInfo": "3.9.1-2.2build1.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libnghttp2-14:amd64",
+      "SPDXID": "SPDXRef-Package-177",
+      "versionInfo": "1.59.0-1ubuntu0.4",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libnpth0t64:amd64",
+      "SPDXID": "SPDXRef-Package-178",
+      "versionInfo": "1.6-3.1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libnspr4:amd64",
+      "SPDXID": "SPDXRef-Package-179",
+      "versionInfo": "2:4.35-1.1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libnss3:amd64",
+      "SPDXID": "SPDXRef-Package-180",
+      "versionInfo": "2:3.98-1ubuntu0.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libonig5:amd64",
+      "SPDXID": "SPDXRef-Package-181",
+      "versionInfo": "6.9.9-1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libp11-kit0:amd64",
+      "SPDXID": "SPDXRef-Package-182",
+      "versionInfo": "0.25.3-4ubuntu2.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libpam-modules:amd64",
+      "SPDXID": "SPDXRef-Package-183",
+      "versionInfo": "1.5.3-5ubuntu5.6",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libpam-modules-bin",
+      "SPDXID": "SPDXRef-Package-184",
+      "versionInfo": "1.5.3-5ubuntu5.6",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libpam-runtime",
+      "SPDXID": "SPDXRef-Package-185",
+      "versionInfo": "1.5.3-5ubuntu5.6",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libpam0g:amd64",
+      "SPDXID": "SPDXRef-Package-186",
+      "versionInfo": "1.5.3-5ubuntu5.6",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libpango-1.0-0:amd64",
+      "SPDXID": "SPDXRef-Package-187",
+      "versionInfo": "1.52.1+ds-1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libpciaccess0:amd64",
+      "SPDXID": "SPDXRef-Package-188",
+      "versionInfo": "0.17-3ubuntu0.24.04.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libpcre2-16-0:amd64",
+      "SPDXID": "SPDXRef-Package-189",
+      "versionInfo": "10.42-4ubuntu2.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libpcre2-32-0:amd64",
+      "SPDXID": "SPDXRef-Package-190",
+      "versionInfo": "10.42-4ubuntu2.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libpcre2-8-0:amd64",
+      "SPDXID": "SPDXRef-Package-191",
+      "versionInfo": "10.42-4ubuntu2.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libpcre2-dev:amd64",
+      "SPDXID": "SPDXRef-Package-192",
+      "versionInfo": "10.42-4ubuntu2.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libpcre2-posix3:amd64",
+      "SPDXID": "SPDXRef-Package-193",
+      "versionInfo": "10.42-4ubuntu2.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libperl5.38t64:amd64",
+      "SPDXID": "SPDXRef-Package-194",
+      "versionInfo": "5.38.2-3.2ubuntu0.4",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libpixman-1-0:amd64",
+      "SPDXID": "SPDXRef-Package-195",
+      "versionInfo": "0.42.2-1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libpkgconf3:amd64",
+      "SPDXID": "SPDXRef-Package-196",
+      "versionInfo": "1.8.1-2build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libpng16-16t64:amd64",
+      "SPDXID": "SPDXRef-Package-197",
+      "versionInfo": "1.6.43-5ubuntu0.6",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libproc2-0:amd64",
+      "SPDXID": "SPDXRef-Package-198",
+      "versionInfo": "2:4.0.4-4ubuntu3.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libpsl5t64:amd64",
+      "SPDXID": "SPDXRef-Package-199",
+      "versionInfo": "0.21.2-1.1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libpython3-stdlib:amd64",
+      "SPDXID": "SPDXRef-Package-200",
+      "versionInfo": "3.12.3-0ubuntu2.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libpython3.12-minimal:amd64",
+      "SPDXID": "SPDXRef-Package-201",
+      "versionInfo": "3.12.3-1ubuntu0.16",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libpython3.12-stdlib:amd64",
+      "SPDXID": "SPDXRef-Package-202",
+      "versionInfo": "3.12.3-1ubuntu0.16",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libquadmath0:amd64",
+      "SPDXID": "SPDXRef-Package-203",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libreadline8t64:amd64",
+      "SPDXID": "SPDXRef-Package-204",
+      "versionInfo": "8.2-4build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "librtmp1:amd64",
+      "SPDXID": "SPDXRef-Package-205",
+      "versionInfo": "2.4+20151223.gitfa8646d.1-2build7",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libsasl2-2:amd64",
+      "SPDXID": "SPDXRef-Package-206",
+      "versionInfo": "2.1.28+dfsg1-5ubuntu3.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libsasl2-modules-db:amd64",
+      "SPDXID": "SPDXRef-Package-207",
+      "versionInfo": "2.1.28+dfsg1-5ubuntu3.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libseccomp2:amd64",
+      "SPDXID": "SPDXRef-Package-208",
+      "versionInfo": "2.5.5-1ubuntu3.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libselinux1:amd64",
+      "SPDXID": "SPDXRef-Package-209",
+      "versionInfo": "3.5-2ubuntu2.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libselinux1-dev:amd64",
+      "SPDXID": "SPDXRef-Package-210",
+      "versionInfo": "3.5-2ubuntu2.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libsemanage-common",
+      "SPDXID": "SPDXRef-Package-211",
+      "versionInfo": "3.5-1build5",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libsemanage2:amd64",
+      "SPDXID": "SPDXRef-Package-212",
+      "versionInfo": "3.5-1build5",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libsensors-config",
+      "SPDXID": "SPDXRef-Package-213",
+      "versionInfo": "1:3.6.0-9build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libsensors5:amd64",
+      "SPDXID": "SPDXRef-Package-214",
+      "versionInfo": "1:3.6.0-9build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libsepol-dev:amd64",
+      "SPDXID": "SPDXRef-Package-215",
+      "versionInfo": "3.5-2build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libsepol2:amd64",
+      "SPDXID": "SPDXRef-Package-216",
+      "versionInfo": "3.5-2build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libserialport-dev:amd64",
+      "SPDXID": "SPDXRef-Package-217",
+      "versionInfo": "0.1.1-4",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libserialport0:amd64",
+      "SPDXID": "SPDXRef-Package-218",
+      "versionInfo": "0.1.1-4",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libsframe1:amd64",
+      "SPDXID": "SPDXRef-Package-219",
+      "versionInfo": "2.42-4ubuntu2.10",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libsigrok-dev:amd64",
+      "SPDXID": "SPDXRef-Package-220",
+      "versionInfo": "0.5.2-5.1build2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libsigrok4t64:amd64",
+      "SPDXID": "SPDXRef-Package-221",
+      "versionInfo": "0.5.2-5.1build2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libsmartcols1:amd64",
+      "SPDXID": "SPDXRef-Package-222",
+      "versionInfo": "2.39.3-9ubuntu6.6",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libsqlite3-0:amd64",
+      "SPDXID": "SPDXRef-Package-223",
+      "versionInfo": "3.45.1-1ubuntu2.7",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libss2:amd64",
+      "SPDXID": "SPDXRef-Package-224",
+      "versionInfo": "1.47.0-2.4~exp1ubuntu4.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libssh-4:amd64",
+      "SPDXID": "SPDXRef-Package-225",
+      "versionInfo": "0.10.6-2ubuntu0.5",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libssl3t64:amd64",
+      "SPDXID": "SPDXRef-Package-226",
+      "versionInfo": "3.0.13-0ubuntu3.15",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libstdc++-13-dev:amd64",
+      "SPDXID": "SPDXRef-Package-227",
+      "versionInfo": "13.3.0-6ubuntu2~24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libstdc++-13-dev-arm64-cross",
+      "SPDXID": "SPDXRef-Package-228",
+      "versionInfo": "13.3.0-6ubuntu2~24.04.1cross1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libstdc++6:amd64",
+      "SPDXID": "SPDXRef-Package-229",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libstdc++6-arm64-cross",
+      "SPDXID": "SPDXRef-Package-230",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1cross1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libsystemd0:amd64",
+      "SPDXID": "SPDXRef-Package-231",
+      "versionInfo": "255.4-1ubuntu8.17",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libtasn1-6:amd64",
+      "SPDXID": "SPDXRef-Package-232",
+      "versionInfo": "4.19.0-3ubuntu0.24.04.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libthai-data",
+      "SPDXID": "SPDXRef-Package-233",
+      "versionInfo": "0.1.29-2build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libthai0:amd64",
+      "SPDXID": "SPDXRef-Package-234",
+      "versionInfo": "0.1.29-2build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libtinfo6:amd64",
+      "SPDXID": "SPDXRef-Package-235",
+      "versionInfo": "6.4+20240113-1ubuntu2.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libtsan2:amd64",
+      "SPDXID": "SPDXRef-Package-236",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libtsan2-arm64-cross",
+      "SPDXID": "SPDXRef-Package-237",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1cross1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libubsan1:amd64",
+      "SPDXID": "SPDXRef-Package-238",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libubsan1-arm64-cross",
+      "SPDXID": "SPDXRef-Package-239",
+      "versionInfo": "14.2.0-4ubuntu2~24.04.1cross1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libudev1:amd64",
+      "SPDXID": "SPDXRef-Package-240",
+      "versionInfo": "255.4-1ubuntu8.17",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libunistring5:amd64",
+      "SPDXID": "SPDXRef-Package-241",
+      "versionInfo": "1.1-2build1.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libusb-1.0-0:amd64",
+      "SPDXID": "SPDXRef-Package-242",
+      "versionInfo": "2:1.0.27-1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libusb-1.0-0-dev:amd64",
+      "SPDXID": "SPDXRef-Package-243",
+      "versionInfo": "2:1.0.27-1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libuuid1:amd64",
+      "SPDXID": "SPDXRef-Package-244",
+      "versionInfo": "2.39.3-9ubuntu6.6",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libx11-6:amd64",
+      "SPDXID": "SPDXRef-Package-245",
+      "versionInfo": "2:1.8.7-1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libx11-data",
+      "SPDXID": "SPDXRef-Package-246",
+      "versionInfo": "2:1.8.7-1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libx11-xcb1:amd64",
+      "SPDXID": "SPDXRef-Package-247",
+      "versionInfo": "2:1.8.7-1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libxau6:amd64",
+      "SPDXID": "SPDXRef-Package-248",
+      "versionInfo": "1:1.0.9-1build6",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libxcb-dri3-0:amd64",
+      "SPDXID": "SPDXRef-Package-249",
+      "versionInfo": "1.15-1ubuntu2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libxcb-present0:amd64",
+      "SPDXID": "SPDXRef-Package-250",
+      "versionInfo": "1.15-1ubuntu2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libxcb-randr0:amd64",
+      "SPDXID": "SPDXRef-Package-251",
+      "versionInfo": "1.15-1ubuntu2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libxcb-render0:amd64",
+      "SPDXID": "SPDXRef-Package-252",
+      "versionInfo": "1.15-1ubuntu2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libxcb-shm0:amd64",
+      "SPDXID": "SPDXRef-Package-253",
+      "versionInfo": "1.15-1ubuntu2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libxcb-sync1:amd64",
+      "SPDXID": "SPDXRef-Package-254",
+      "versionInfo": "1.15-1ubuntu2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libxcb-xfixes0:amd64",
+      "SPDXID": "SPDXRef-Package-255",
+      "versionInfo": "1.15-1ubuntu2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libxcb1:amd64",
+      "SPDXID": "SPDXRef-Package-256",
+      "versionInfo": "1.15-1ubuntu2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libxcomposite1:amd64",
+      "SPDXID": "SPDXRef-Package-257",
+      "versionInfo": "1:0.4.5-1build3",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libxdamage1:amd64",
+      "SPDXID": "SPDXRef-Package-258",
+      "versionInfo": "1:1.1.6-1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libxdmcp6:amd64",
+      "SPDXID": "SPDXRef-Package-259",
+      "versionInfo": "1:1.1.3-0ubuntu6",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libxext6:amd64",
+      "SPDXID": "SPDXRef-Package-260",
+      "versionInfo": "2:1.3.4-1build2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libxfixes3:amd64",
+      "SPDXID": "SPDXRef-Package-261",
+      "versionInfo": "1:6.0.0-2build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libxi6:amd64",
+      "SPDXID": "SPDXRef-Package-262",
+      "versionInfo": "2:1.8.1-1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libxkbcommon0:amd64",
+      "SPDXID": "SPDXRef-Package-263",
+      "versionInfo": "1.6.0-1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libxml2:amd64",
+      "SPDXID": "SPDXRef-Package-264",
+      "versionInfo": "2.9.14+dfsg-1.3ubuntu3.8",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libxrandr2:amd64",
+      "SPDXID": "SPDXRef-Package-265",
+      "versionInfo": "2:1.5.2-2build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libxrender1:amd64",
+      "SPDXID": "SPDXRef-Package-266",
+      "versionInfo": "1:0.9.10-1.1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libxshmfence1:amd64",
+      "SPDXID": "SPDXRef-Package-267",
+      "versionInfo": "1.3-1build5",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libxxhash0:amd64",
+      "SPDXID": "SPDXRef-Package-268",
+      "versionInfo": "0.8.2-2build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libzip-dev:amd64",
+      "SPDXID": "SPDXRef-Package-269",
+      "versionInfo": "1.7.3-1.1ubuntu2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libzip4t64:amd64",
+      "SPDXID": "SPDXRef-Package-270",
+      "versionInfo": "1.7.3-1.1ubuntu2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "libzstd1:amd64",
+      "SPDXID": "SPDXRef-Package-271",
+      "versionInfo": "1.5.5+dfsg2-2build1.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "linux-libc-dev:amd64",
+      "SPDXID": "SPDXRef-Package-272",
+      "versionInfo": "6.8.0-139.139",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "linux-libc-dev-arm64-cross",
+      "SPDXID": "SPDXRef-Package-273",
+      "versionInfo": "6.8.0-25.25cross1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "login",
+      "SPDXID": "SPDXRef-Package-274",
+      "versionInfo": "1:4.13+dfsg1-4ubuntu3.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "logsave",
+      "SPDXID": "SPDXRef-Package-275",
+      "versionInfo": "1.47.0-2.4~exp1ubuntu4.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "make",
+      "SPDXID": "SPDXRef-Package-276",
+      "versionInfo": "4.3-4.1build2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "mawk",
+      "SPDXID": "SPDXRef-Package-277",
+      "versionInfo": "1.3.4.20240123-1build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "media-types",
+      "SPDXID": "SPDXRef-Package-278",
+      "versionInfo": "10.1.0",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "mesa-libgallium:amd64",
+      "SPDXID": "SPDXRef-Package-279",
+      "versionInfo": "25.2.8-0ubuntu0.24.04.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "mount",
+      "SPDXID": "SPDXRef-Package-280",
+      "versionInfo": "2.39.3-9ubuntu6.6",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "ncurses-base",
+      "SPDXID": "SPDXRef-Package-281",
+      "versionInfo": "6.4+20240113-1ubuntu2.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "ncurses-bin",
+      "SPDXID": "SPDXRef-Package-282",
+      "versionInfo": "6.4+20240113-1ubuntu2.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "netbase",
+      "SPDXID": "SPDXRef-Package-283",
+      "versionInfo": "6.4",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "openssl",
+      "SPDXID": "SPDXRef-Package-284",
+      "versionInfo": "3.0.13-0ubuntu3.15",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "passwd",
+      "SPDXID": "SPDXRef-Package-285",
+      "versionInfo": "1:4.13+dfsg1-4ubuntu3.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "perl",
+      "SPDXID": "SPDXRef-Package-286",
+      "versionInfo": "5.38.2-3.2ubuntu0.4",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "perl-base",
+      "SPDXID": "SPDXRef-Package-287",
+      "versionInfo": "5.38.2-3.2ubuntu0.4",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "perl-modules-5.38",
+      "SPDXID": "SPDXRef-Package-288",
+      "versionInfo": "5.38.2-3.2ubuntu0.4",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "pkg-config:amd64",
+      "SPDXID": "SPDXRef-Package-289",
+      "versionInfo": "1.8.1-2build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "pkgconf:amd64",
+      "SPDXID": "SPDXRef-Package-290",
+      "versionInfo": "1.8.1-2build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "pkgconf-bin",
+      "SPDXID": "SPDXRef-Package-291",
+      "versionInfo": "1.8.1-2build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "procps",
+      "SPDXID": "SPDXRef-Package-292",
+      "versionInfo": "2:4.0.4-4ubuntu3.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "python3",
+      "SPDXID": "SPDXRef-Package-293",
+      "versionInfo": "3.12.3-0ubuntu2.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "python3-minimal",
+      "SPDXID": "SPDXRef-Package-294",
+      "versionInfo": "3.12.3-0ubuntu2.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "python3-packaging",
+      "SPDXID": "SPDXRef-Package-295",
+      "versionInfo": "24.0-1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "python3-pip-whl",
+      "SPDXID": "SPDXRef-Package-296",
+      "versionInfo": "24.0+dfsg-1ubuntu1.3",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "python3-setuptools-whl",
+      "SPDXID": "SPDXRef-Package-297",
+      "versionInfo": "68.1.2-2ubuntu1.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "python3-venv",
+      "SPDXID": "SPDXRef-Package-298",
+      "versionInfo": "3.12.3-0ubuntu2.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "python3.12",
+      "SPDXID": "SPDXRef-Package-299",
+      "versionInfo": "3.12.3-1ubuntu0.16",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "python3.12-minimal",
+      "SPDXID": "SPDXRef-Package-300",
+      "versionInfo": "3.12.3-1ubuntu0.16",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "python3.12-venv",
+      "SPDXID": "SPDXRef-Package-301",
+      "versionInfo": "3.12.3-1ubuntu0.16",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "readline-common",
+      "SPDXID": "SPDXRef-Package-302",
+      "versionInfo": "8.2-4build1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "rpcsvc-proto",
+      "SPDXID": "SPDXRef-Package-303",
+      "versionInfo": "1.4.2-0ubuntu7",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "sed",
+      "SPDXID": "SPDXRef-Package-304",
+      "versionInfo": "4.9-2ubuntu0.24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "sensible-utils",
+      "SPDXID": "SPDXRef-Package-305",
+      "versionInfo": "0.0.22",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "sysvinit-utils",
+      "SPDXID": "SPDXRef-Package-306",
+      "versionInfo": "3.08-6ubuntu3",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "tar",
+      "SPDXID": "SPDXRef-Package-307",
+      "versionInfo": "1.35+dfsg-3ubuntu0.4",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "tzdata",
+      "SPDXID": "SPDXRef-Package-308",
+      "versionInfo": "2026c-0ubuntu0.24.04.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "ubuntu-keyring",
+      "SPDXID": "SPDXRef-Package-309",
+      "versionInfo": "2023.11.28.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "unminimize",
+      "SPDXID": "SPDXRef-Package-310",
+      "versionInfo": "0.2.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "unzip",
+      "SPDXID": "SPDXRef-Package-311",
+      "versionInfo": "6.0-28ubuntu4.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "util-linux",
+      "SPDXID": "SPDXRef-Package-312",
+      "versionInfo": "2.39.3-9ubuntu6.6",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "uuid-dev:amd64",
+      "SPDXID": "SPDXRef-Package-313",
+      "versionInfo": "2.39.3-9ubuntu6.6",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "xkb-data",
+      "SPDXID": "SPDXRef-Package-314",
+      "versionInfo": "2.41-2ubuntu1.1",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=all; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "xz-utils",
+      "SPDXID": "SPDXRef-Package-315",
+      "versionInfo": "5.6.1+really5.4.5-1ubuntu0.3",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "zlib1g:amd64",
+      "SPDXID": "SPDXRef-Package-316",
+      "versionInfo": "1:1.3.dfsg-3.1ubuntu2.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    },
+    {
+      "name": "zlib1g-dev:amd64",
+      "SPDXID": "SPDXRef-Package-317",
+      "versionInfo": "1:1.3.dfsg-3.1ubuntu2.2",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "comment": "architecture=amd64; licence text is in licenses.tar.gz"
+    }
+  ]
+}

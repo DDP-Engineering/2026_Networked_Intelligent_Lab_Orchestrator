@@ -48,7 +48,8 @@ export interface ProcessHandle {
 
 /** Everything one run created and is therefore allowed to destroy. */
 export interface OwnedResources {
-  readonly distribution: string;
+  /** WSL distribution on Windows, or null for direct Linux-container execution. */
+  readonly distribution: string | null;
   /** This run's own temporary directory inside the distribution, or none yet. */
   readonly dataDirectory: string | null;
   readonly children: readonly ProcessHandle[];
@@ -301,14 +302,17 @@ export async function releaseOwned(
   if (owned.dataDirectory !== null) {
     let released: CommandResult | null = null;
     try {
-      released = await run('wsl.exe', [
-        '-d',
-        owned.distribution,
-        '--',
-        'sh',
-        '-c',
-        buildReleaseScript(owned.dataDirectory),
-      ]);
+      released =
+        owned.distribution === null
+          ? await run('sh', ['-c', buildReleaseScript(owned.dataDirectory)])
+          : await run('wsl.exe', [
+              '-d',
+              owned.distribution,
+              '--',
+              'sh',
+              '-c',
+              buildReleaseScript(owned.dataDirectory),
+            ]);
     } catch (failure) {
       failures.push(`could not run the release script: ${describeError(failure)}`);
     }
@@ -344,7 +348,7 @@ export interface TopologyOptions {
  * never written, printed, or put into another process's environment.
  */
 export class DevelopmentTopology {
-  readonly #distribution: string;
+  readonly #distribution: string | null;
   readonly #dataDirectory: string;
   readonly #backendPort: number;
   readonly #frontendPort: number;
@@ -356,7 +360,7 @@ export class DevelopmentTopology {
   #released: boolean;
 
   private constructor(state: {
-    distribution: string;
+    distribution: string | null;
     dataDirectory: string;
     backendPort: number;
     frontendPort: number;
@@ -384,35 +388,39 @@ export class DevelopmentTopology {
     const readyTimeoutMs = options.readyTimeoutMs ?? 90_000;
     const buildTimeoutMs = options.buildTimeoutMs ?? 600_000;
 
-    const distribution = selectDistribution(
-      await listDistributions(),
-      process.env.NILO_E2E_DISTRIBUTION ?? options.distribution,
-    );
     requireBrowserRuntime(process.env.PLAYWRIGHT_BROWSERS_PATH, (path) =>
       existsSync(path),
     );
-
-    // Forward slashes and shell quoting, both deliberate: a Windows path handed
-    // to wsl.exe as a bare argument loses its backslashes on the way across, so
-    // `F:\checkout` arrives as `F:checkout`. wslpath accepts either separator.
-    const checkout = requireCheckoutInDistribution(
-      await runInDistribution(
-        distribution,
-        `wslpath -a ${shellQuote(options.repositoryRoot.replace(/\\/g, '/'))}`,
-      ),
-    );
+    const directLinux = process.platform !== 'win32';
+    const distribution = directLinux
+      ? null
+      : selectDistribution(
+          await listDistributions(),
+          process.env.NILO_E2E_DISTRIBUTION ?? options.distribution,
+        );
+    // Forward slashes and shell quoting are required only at the Windows/WSL
+    // boundary. Inside the mandatory Linux build container, the checkout is
+    // already mounted at a native path and no WSL executable is present.
+    const checkout = directLinux
+      ? options.repositoryRoot
+      : requireCheckoutInDistribution(
+          await runInDistribution(
+            distribution as string,
+            `wslpath -a ${shellQuote(options.repositoryRoot.replace(/\\/g, '/'))}`,
+          ),
+        );
     const home = expectSuccess(
-      await runInDistribution(distribution, 'printf %s "$HOME"'),
-      'read the distribution home directory',
+      await runAtLinuxBoundary(distribution, 'printf %s "$HOME"'),
+      'read the Linux home directory',
     ).stdout;
     const stateRoot = requireLinuxStateRoot(home);
 
     const dataDirectory = expectSuccess(
-      await runInDistribution(
+      await runAtLinuxBoundary(
         distribution,
         `mkdir -p ${shellQuote(stateRoot)} && mktemp -d ${shellQuote(`${stateRoot}/run-XXXXXXXX`)}`,
       ),
-      'create a temporary runtime directory inside the distribution',
+      'create a temporary runtime directory on the Linux filesystem',
     ).stdout.trim();
 
     const owned: { children: ProcessHandle[]; dataDirectory: string | null } = {
@@ -424,19 +432,15 @@ export class DevelopmentTopology {
       const [backendPort, frontendPort] = await reserveLoopbackPorts(2);
 
       expectSuccess(
-        await runInDistribution(
+        await runAtLinuxBoundary(
           distribution,
-          `cd ${shellQuote(`${checkout}/05_Software/nilo_assistant`)} && ../../02_Tools/env/with-tools.sh go build -o ${shellQuote(`${dataDirectory}/bin/nilo`)} ./cmd/nilo`,
+          `cd ${shellQuote(`${checkout}/05_Software/nilo_assistant`)} && ${directLinux ? 'go' : '../../02_Tools/env/with-tools.sh go'} build -o ${shellQuote(`${dataDirectory}/bin/nilo`)} ./cmd/nilo`,
           buildTimeoutMs,
         ),
-        'build Bench Core inside the distribution',
+        'build Bench Core on the Linux test boundary',
       );
 
-      const issued = await runCommand('wsl.exe', [
-        '-d',
-        distribution,
-        '--',
-        `${dataDirectory}/bin/nilo`,
+      const issued = await runLinuxBinary(distribution, `${dataDirectory}/bin/nilo`, [
         'development',
         'issue-token',
         '--data-dir',
@@ -521,13 +525,10 @@ export class DevelopmentTopology {
    */
   async bootstrapAdministrator(username: string, password: string): Promise<void> {
     const created = await withRedactedSecret(password, () =>
-      runCommand(
-        'wsl.exe',
+      runLinuxBinary(
+        this.#distribution,
+        `${this.#dataDirectory}/bin/nilo`,
         [
-          '-d',
-          this.#distribution,
-          '--',
-          `${this.#dataDirectory}/bin/nilo`,
           'admin',
           'bootstrap',
           '--data-dir',
@@ -556,14 +557,10 @@ export class DevelopmentTopology {
       await this.#backend.exited.catch(() => undefined);
       this.#backend = null;
     }
-    const stopped = await runCommand('wsl.exe', [
-      '-d',
+    const stopped = await runAtLinuxBoundary(
       this.#distribution,
-      '--',
-      'sh',
-      '-c',
       buildStopScript(this.#dataDirectory),
-    ]);
+    );
     if (stopped.code !== 0) {
       throw new CleanupError(
         `the stop script exited with ${stopped.code}${describeStderr(stopped.stderr)}`,
@@ -632,7 +629,7 @@ function waitForFrontend(port: number, timeoutMs: number): Promise<void> {
 }
 
 function startBackendProcess(options: {
-  distribution: string;
+  distribution: string | null;
   dataDirectory: string;
   scenario: BenchScenario;
   port: number;
@@ -646,13 +643,14 @@ function startBackendProcess(options: {
     `exec ${binary} serve --profile simulation --scenario ${options.scenario} --data-dir ${directory} --bind 127.0.0.1:${options.port}`,
   ].join('\n');
 
-  return adopt(
-    'backend',
-    spawn('wsl.exe', ['-d', options.distribution, '--', 'sh', '-c', script], {
-      stdio: 'ignore',
-      windowsHide: true,
-    }),
-  );
+  const child =
+    options.distribution === null
+      ? spawn('sh', ['-c', script], { stdio: 'ignore' })
+      : spawn('wsl.exe', ['-d', options.distribution, '--', 'sh', '-c', script], {
+          stdio: 'ignore',
+          windowsHide: true,
+        });
+  return adopt('backend', child);
 }
 
 function startFrontendProcess(options: {
@@ -725,6 +723,29 @@ function runInDistribution(
   return runCommand('wsl.exe', ['-d', distribution, '--', 'sh', '-c', script], {
     timeoutMs,
   });
+}
+
+/** Run a shell script either directly in Linux or through the Windows WSL boundary. */
+function runAtLinuxBoundary(
+  distribution: string | null,
+  script: string,
+  timeoutMs?: number,
+): Promise<CommandResult> {
+  return distribution === null
+    ? runCommand('sh', ['-c', script], { timeoutMs })
+    : runInDistribution(distribution, script, timeoutMs);
+}
+
+/** Run one generated Linux binary without exposing secrets in its argument list. */
+function runLinuxBinary(
+  distribution: string | null,
+  file: string,
+  args: readonly string[],
+  options: { input?: string } = {},
+): Promise<CommandResult> {
+  return distribution === null
+    ? runCommand(file, args, options)
+    : runCommand('wsl.exe', ['-d', distribution, '--', file, ...args], options);
 }
 
 function expectSuccess(result: CommandResult, what: string): CommandResult {

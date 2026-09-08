@@ -1,0 +1,75 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+# One requirement = one independently verifiable behavior.
+# Lives at .agentic/requirements/<category>/<id>.toml
+# Required fields: schema, id, title, status, requirement, verification.
+
+schema = 1
+
+# REQ-<CAT>-<8 hex>. CAT is FUNC, UX, NFR, SEC, DATA, PLAT, REL or TEST,
+# and must match the category folder this file sits in.
+id = "REQ-PLAT-6023db98"
+
+title = "Support native Ubuntu build hosts"
+
+# draft while being written, active once it is built and tested,
+# retired when the behavior is deliberately removed.
+status = "active"
+
+# Self-contained prose: a reader with no other context must be able to
+# understand and check it. No ticket numbers, no run IDs, no references
+# to other requirements.
+#
+# Recommended shape - EARS. Pick the one pattern that fits; a stated
+# trigger or condition is what the test has to arrange, so surfacing it
+# here is what makes the behavior testable:
+#
+#   ubiquitous  The <system> shall <response>.
+#   event       When <trigger>, the <system> shall <response>.
+#   state       While <state>, the <system> shall <response>.
+#   unwanted    If <condition>, then the <system> shall <response>.
+#   optional    Where <feature is included>, the <system> shall <response>.
+#
+# Two independently verifiable responses need two requirements. Split when
+# either clause can vary, fail, change, or be checked independently; keep an
+# inseparable atomic outcome together. Final prose normally has one "shall".
+# Do not contort prose to fit a pattern - a constraint that reads better
+# plainly is better plainly.
+requirement = """
+When a developer invokes the POSIX build-environment bootstrap on a native host, the bootstrap shall accept only Ubuntu 24.04 x86-64 with systemd and a directly installed Docker Engine or Podman, require explicit authorization plus checksum-verified local packages for any host installation, and then consume the same Linux amd64 image setup used by the Windows/WSL2 path without requiring PowerShell or WSL.
+"""
+
+# The observation that settles whether the behavior holds - not a
+# restatement of the requirement. Work out setup, input or trigger, action,
+# observable oracle, and a relevant boundary or failure case before reducing
+# them to concise prose here. Do not introduce conditions absent from the
+# requirement or its linked spec.
+#
+# Some behaviors no test can settle: a look-and-see judgement, an install
+# on clean hardware, a printed page. Start this field with "Manual:" or
+# "Inspection:" and name the method, and `check` records the requirement
+# as verified by hand instead of counting it among the tests still owed.
+# The prefix alone is not enough — it has to say what someone does.
+verification = "Executable tests inject OS-release, architecture, systemd, engine, and image-setup boundaries; they assert supported native Ubuntu forwards the selected shared image/archive options, unsupported OS/architecture/systemd fail before engine access, ordinary setup never installs packages, and explicit installation requires a verified local host-bootstrap archive."
+
+# Repo-relative, forward slashes. The source files this behavior lives in.
+affected_paths = [".gitattributes", "02_Tools/bootstrap/bootstrap-build-environment.sh", "02_Tools/bootstrap/bootstrap-container-engine.sh", "02_Tools/bootstrap/setup-build-environment-image.sh", "02_Tools/scripts/collect-build-environment-metadata.sh", "02_Tools/scripts/export-build-environment.sh", "02_Tools/archives/wsl-host-bootstrap/", "05_Software/nilo_gui/e2e/topology.ts", "05_Software/nilo_gui/playwright.config.ts", "05_Software/scripts/tests/test_build_environment.py", "00_Planning/Development_Build_Environment_Plan.md", "02_Tools/README.md", "06_SoftwareDocu/Development_and_Simulation_Flow.md"]
+
+# "tests/path/test_file.py::test_name" entries. Kept current during build;
+# these select the impacted regression set.
+linked_tests = ["05_Software/nilo_gui/e2e/topology.test.ts", "05_Software/nilo_gui/e2e/prerequisites.test.ts", "05_Software/scripts/tests/test_build_environment.py"]
+
+# --- optional below this line ---
+
+# "specs/REQ-FUNC-00000000.md" when the requirement alone is not buildable.
+spec = "specs/REQ-PLAT-6023db98.md"
+
+priority = "normal"   # low | normal | high
+rationale = "Windows and native Linux developers need one supported, non-duplicated container boundary while host mutation remains opt-in."        # why this behavior exists, if not obvious
+
+created = 2026-09-05
+updated = 2026-09-06

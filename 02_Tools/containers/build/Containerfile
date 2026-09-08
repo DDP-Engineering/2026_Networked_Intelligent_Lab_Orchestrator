@@ -1,0 +1,84 @@
+# syntax=docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
+ARG BASE_IMAGE=ubuntu@sha256:1e0a86e57d247923571b75e0aaf48a1449cf8c543d51fb3e07a4a7d7bfa79316
+FROM ${BASE_IMAGE}
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+ARG SOURCE_DATE_EPOCH=1788566400
+ARG PLAYWRIGHT_BROWSER_CATALOG_SHA256=f306eed529599b1eaf2f8a85db9de2b23e1a3fe36c2b66434b7c9434fb627a99
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    TZ=UTC \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH} \
+    PATH=/opt/nilo/go/bin:/opt/nilo/uv:/opt/nilo/python-bin:/opt/nilo/node/bin:${PATH} \
+    UV_CACHE_DIR=/opt/nilo/cache/uv \
+    UV_PYTHON_INSTALL_DIR=/opt/nilo/python \
+    UV_PYTHON_BIN_DIR=/opt/nilo/python-bin \
+    UV_PYTHON_PREFERENCE=only-managed \
+    PLAYWRIGHT_BROWSERS_PATH=/opt/nilo/playwright \
+    HOME=/work/home \
+    NILO_OUTPUT_DIR=/outputs \
+    npm_config_cache=/opt/nilo/cache/npm \
+    GOMODCACHE=/opt/nilo/cache/go/mod \
+    GOCACHE=/opt/nilo/cache/go/build
+
+COPY --from=nilo_inputs / /opt/nilo/inputs/
+RUN dpkg -i /opt/nilo/inputs/apt/libexpat1_*.deb \
+             /opt/nilo/inputs/apt/libpython3.12-minimal_*.deb \
+             /opt/nilo/inputs/apt/python3.12-minimal_*.deb \
+ && dpkg -i /opt/nilo/inputs/apt/python3-minimal_*.deb \
+ && dpkg --unpack /opt/nilo/inputs/apt/*.deb \
+ && dpkg --configure -a \
+ && apt-get check \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /opt/nilo/go /opt/nilo/uv /opt/nilo/node /opt/nilo/python/cpython-3.12.10-linux-x86_64-gnu \
+      /opt/nilo/python-bin /opt/nilo/playwright /opt/nilo/cache/npm /opt/nilo/cache/go/mod /opt/nilo/environment \
+ && tar -xzf /opt/nilo/inputs/go/go.tar.gz -C /opt/nilo/go --strip-components=1 \
+ && tar -xzf /opt/nilo/inputs/uv/uv.tar.gz -C /opt/nilo/uv --strip-components=1 \
+ && tar -xJf /opt/nilo/inputs/node/node.tar.xz -C /opt/nilo/node --strip-components=1 \
+ && tar -xzf /opt/nilo/inputs/python/python.tar.gz -C /opt/nilo/python/cpython-3.12.10-linux-x86_64-gnu --strip-components=1 \
+ && ln -s /opt/nilo/python/cpython-3.12.10-linux-x86_64-gnu/bin/python3 /opt/nilo/python-bin/python \
+ && ln -s /opt/nilo/python/cpython-3.12.10-linux-x86_64-gnu/bin/python3 /opt/nilo/python-bin/python3 \
+ && unzip -q /opt/nilo/inputs/browser/chromium-1234.zip -d /opt/nilo/playwright/chromium-1234 \
+ && unzip -q /opt/nilo/inputs/browser/chromium_headless_shell-1234.zip -d /opt/nilo/playwright/chromium_headless_shell-1234 \
+ && unzip -q /opt/nilo/inputs/browser/ffmpeg-1011.zip -d /opt/nilo/playwright/ffmpeg-1011
+
+WORKDIR /build-context
+COPY 02_Tools/toolchain.versions /opt/nilo/environment/toolchain.versions
+COPY 02_Tools/containers/build/build-environment.lock.json /opt/nilo/environment/lock.json
+COPY 02_Tools/containers/build/reconstruction-inputs.json /opt/nilo/environment/reconstruction-inputs.json
+COPY 02_Tools/containers/build/inventory.json /opt/nilo/environment/inventory.json
+COPY 02_Tools/containers/build/sbom.spdx.json /opt/nilo/environment/sbom.spdx.json
+COPY 02_Tools/containers/build/provenance.json /opt/nilo/environment/provenance.json
+COPY 02_Tools/containers/build/licenses/ /opt/nilo/environment/licenses/
+COPY 05_Software/nilo_gui/package.json 05_Software/nilo_gui/package-lock.json ./nilo_gui/
+RUN cd /build-context/nilo_gui \
+ && find /opt/nilo/inputs/npm -type f -name '*.tgz' -print0 | sort -z | xargs -0 -n 1 npm cache add \
+ && npm ci --offline --ignore-scripts \
+ && echo "${PLAYWRIGHT_BROWSER_CATALOG_SHA256}  node_modules/playwright-core/browsers.json" | sha256sum -c - \
+ && npm cache verify
+
+COPY 05_Software/ ./05_Software/
+RUN set -eu; \
+    find ./05_Software -name go.mod -print0 | while IFS= read -r -d '' module; do (cd "$(dirname "$module")" && GOPROXY=file:///opt/nilo/inputs/go-proxy GOSUMDB=off go mod download); done; \
+    find ./05_Software -name uv.lock -print0 | while IFS= read -r -d '' lock; do (cd "$(dirname "$lock")" && uv venv --python /opt/nilo/python-bin/python3 .venv && uv pip install --offline --no-index --python .venv/bin/python /opt/nilo/inputs/python-packages/*.whl); done; \
+    cd /build-context/nilo_gui && npm ci --offline --ignore-scripts
+
+RUN cp -a /opt/nilo/cache /opt/nilo/cache-seed \
+ && mkdir -p /workspace /work/home /work/runtime-cache /outputs /opt/nilo/outputs \
+ && chmod -R a+rX /opt/nilo /build-context \
+ && chmod 1777 /work \
+ && chmod -R a+rwX /work/home /work/runtime-cache /outputs /opt/nilo/outputs /opt/nilo/cache
+
+ENV UV_CACHE_DIR=/work/runtime-cache/uv \
+    UV_PROJECT_ENVIRONMENT=.venv-linux-x86_64 \
+    npm_config_cache=/work/runtime-cache/npm \
+    GOMODCACHE=/work/runtime-cache/go/mod \
+    GOCACHE=/work/runtime-cache/go/build
+
+WORKDIR /workspace
+USER 65532:65532
+ENTRYPOINT ["/usr/bin/env"]
+CMD ["bash"]

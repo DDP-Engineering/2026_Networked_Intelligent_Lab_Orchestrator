@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "generation": "noble-20260905-01",
+  "status": "source-definition-only",
+  "definition": "02_Tools/containers/build/Containerfile",
+  "lock": "02_Tools/containers/build/build-environment.lock.json",
+  "source": {
+    "base_commit": "pending-final-candidate",
+    "tree_sha256": "pending-generation",
+    "status": "pending-generation"
+  },
+  "image_digest": null,
+  "built_at": null,
+  "builder": null,
+  "note": "The build script replaces pending fields in generated provenance after a real verified build."
+}

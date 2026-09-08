@@ -1,0 +1,80 @@
+{
+  "schema": 1,
+  "generation": "noble-20260905-01",
+  "archive": {
+    "filename": "nilo-build-env-noble-20260905-01.oci.tar.gz",
+    "media_type": "application/vnd.oci.image.archive.v1+tar",
+    "compression": "gzip",
+    "size": 2856973703,
+    "sha256": "3556066f412f328dd40c8eb5828e52b0089b60ac5875ae7e7bd57f9ebb4aa686"
+  },
+  "image": {
+    "digest": "sha256:88ec9769aaba4398d64407cf326c84d5c49be8e0f72359ed7382d182f3aef2dc",
+    "reference": "nilo/build-environment:noble-20260905-01",
+    "platform": "linux/amd64"
+  },
+  "parts": [
+    {
+      "ordinal": 0,
+      "filename": "nilo-build-env-noble-20260905-01.oci.tar.gz.part000",
+      "size": 1073741824,
+      "sha256": "3fae1ec75b970acc5fb534de1ca5362b3638df335ad8a635c278fa9137309340",
+      "lfs_oid": "sha256:3fae1ec75b970acc5fb534de1ca5362b3638df335ad8a635c278fa9137309340"
+    },
+    {
+      "ordinal": 1,
+      "filename": "nilo-build-env-noble-20260905-01.oci.tar.gz.part001",
+      "size": 1073741824,
+      "sha256": "1f840f56e15cdd5383ebe99ec981105bf53c612e64ce7be4952db941a022165b",
+      "lfs_oid": "sha256:1f840f56e15cdd5383ebe99ec981105bf53c612e64ce7be4952db941a022165b"
+    },
+    {
+      "ordinal": 2,
+      "filename": "nilo-build-env-noble-20260905-01.oci.tar.gz.part002",
+      "size": 709490055,
+      "sha256": "a72fc00a73cbf598464624847084cdb92acec3cf16a0dc04f6058542b8ef53ac",
+      "lfs_oid": "sha256:a72fc00a73cbf598464624847084cdb92acec3cf16a0dc04f6058542b8ef53ac"
+    }
+  ],
+  "source": {
+    "base_commit": "8d326898aec25de98052c59b5b2d67981f014d26",
+    "tree_sha256": "b8fe50b2422933e85913b953e231e3a066e14f3f5340312a370fcd660df1d0b4",
+    "status": "dirty",
+    "lock_manifest": "02_Tools/containers/build/build-environment.lock.json",
+    "lock_sha256": "ef6939c49d3a538c8c3145532a86b4ab1654fdfbf13e7a5ca8d6996bcfed10db"
+  },
+  "creation": {
+    "command": "export-build-environment.sh",
+    "builder": "local Ubuntu 24.04 linux/amd64 OCI engine (native or WSL2)",
+    "created_at": "2026-09-05T18:51:52+00:00",
+    "supported_host": "Ubuntu 24.04 linux/amd64 (native or WSL2)"
+  },
+  "artifacts": {
+    "sbom": "metadata/noble-20260905-01/sbom.spdx.json",
+    "licenses": "metadata/noble-20260905-01/licenses.tar.gz",
+    "provenance": "metadata/noble-20260905-01/provenance.json"
+  },
+  "verification": {
+    "status": "pending-round-trip",
+    "verified_at": null,
+    "commands": [],
+    "evidence": null
+  },
+  "publication": {
+    "gitea": {
+      "status": "pending",
+      "readback": "pending",
+      "capacity_bytes": null
+    },
+    "backup": {
+      "status": "pending",
+      "verified_at": null,
+      "capacity_bytes": null
+    },
+    "github": {
+      "status": "absent",
+      "readback": "not-required",
+      "allowance_bytes": null
+    }
+  }
+}

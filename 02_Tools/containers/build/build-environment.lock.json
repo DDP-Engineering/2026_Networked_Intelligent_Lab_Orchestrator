@@ -1,0 +1,435 @@
+{
+  "schema": 1,
+  "generation": "noble-20260905-01",
+  "toolchain_manifest": "02_Tools/toolchain.versions",
+  "image": {
+    "reference": "nilo/build-environment:noble-20260905-01"
+  },
+  "oci": {
+    "image_spec_version": "1.1.0",
+    "layout_version": "1.0.0",
+    "build_frontend": "docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e",
+    "archive_media_type": "application/vnd.oci.image.archive.v1+tar",
+    "compression": "gzip"
+  },
+  "base_image": {
+    "reference": "ubuntu@sha256:1e0a86e57d247923571b75e0aaf48a1449cf8c543d51fb3e07a4a7d7bfa79316",
+    "index_digest": "sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517",
+    "platform": "linux/amd64",
+    "source": "https://hub.docker.com/_/ubuntu",
+    "license": "Ubuntu image and package licences"
+  },
+  "ubuntu_snapshot": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z",
+  "reconstruction": {
+    "status": "complete",
+    "manifest": "02_Tools/containers/build/reconstruction-inputs.json",
+    "manifest_sha256": "784a1d020ef72bd4c567a3f85287e2b72e456f2f7bc28db7c470d0e82579da3f",
+    "input_count": 650,
+    "note": "Every non-base payload is independently hashed and consumed through the verified nilo_inputs build context."
+  },
+  "apt_roots": [
+    {
+      "name": "ca-certificates",
+      "version": "20260601~24.04.1",
+      "sha256": "6bac2a01979e210d9eac1d4d56747ec709ea60654744d66705dc3c36e7629e50",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/c/ca-certificates/ca-certificates_20260601~24.04.1_all.deb",
+      "license": "MPL-2.0 and public-domain certificates"
+    },
+    {
+      "name": "curl",
+      "version": "8.5.0-2ubuntu10.13",
+      "sha256": "f34f04c60d8852e5e9c3684051b1247172ce8b10f520f59797c0d2bf8a08da61",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/c/curl/curl_8.5.0-2ubuntu10.13_amd64.deb",
+      "license": "curl"
+    },
+    {
+      "name": "git",
+      "version": "1:2.43.0-1ubuntu7.3",
+      "sha256": "099bb129f543adc4c14203334b0fa0a909f8bf038c4d56bc9cc7c774ebf78f87",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/g/git/git_2.43.0-1ubuntu7.3_amd64.deb",
+      "license": "GPL-2.0-only"
+    },
+    {
+      "name": "git-lfs",
+      "version": "3.4.1-1ubuntu0.4",
+      "sha256": "b51b8f513f01e83d75b16326e187a6451185ce4f9c10976a94dbfcea5face5a9",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/universe/g/git-lfs/git-lfs_3.4.1-1ubuntu0.4_amd64.deb",
+      "license": "MIT"
+    },
+    {
+      "name": "gcc",
+      "version": "4:13.2.0-7ubuntu1",
+      "sha256": "0e0bb8b25153ed1c44ab92bc219eed469fcb5820c5c0bc6454b2fd366a33d3ee",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/g/gcc-defaults/gcc_13.2.0-7ubuntu1_amd64.deb",
+      "license": "GPL-3.0-or-later"
+    },
+    {
+      "name": "g++",
+      "version": "4:13.2.0-7ubuntu1",
+      "sha256": "800a84b369c64b18d65f0fb5c1533de0446c880ee4f1cadad64e3363327f63f0",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/g/gcc-defaults/g++_13.2.0-7ubuntu1_amd64.deb",
+      "license": "GPL-3.0-or-later"
+    },
+    {
+      "name": "binutils",
+      "version": "2.42-4ubuntu2.10",
+      "sha256": "b3b5a84181a38fd191820b2cdcc1a3eeb1cd6333ad472f2092f96e81047e9c74",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/b/binutils/binutils_2.42-4ubuntu2.10_amd64.deb",
+      "license": "GPL-3.0-or-later"
+    },
+    {
+      "name": "make",
+      "version": "4.3-4.1build2",
+      "sha256": "1fe6a815b56c7b6e9ce4086a363f09444bbd0a0d30e230c453d0b78e44b57a99",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/m/make-dfsg/make_4.3-4.1build2_amd64.deb",
+      "license": "GPL-3.0-or-later"
+    },
+    {
+      "name": "pkg-config",
+      "version": "1.8.1-2build1",
+      "sha256": "16bda455d9216da31ad55d72df5a7380cb9d5ac32a2393941cab262a4e5b526f",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/p/pkgconf/pkg-config_1.8.1-2build1_amd64.deb",
+      "license": "ISC"
+    },
+    {
+      "name": "gcc-aarch64-linux-gnu",
+      "version": "4:13.2.0-7ubuntu1",
+      "sha256": "4e6c8886c95e5dc4a96e092e5431bbd3c1a2a265cd388a65599fe8d15fbe712a",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/g/gcc-defaults/gcc-aarch64-linux-gnu_13.2.0-7ubuntu1_amd64.deb",
+      "license": "GPL-3.0-or-later"
+    },
+    {
+      "name": "g++-aarch64-linux-gnu",
+      "version": "4:13.2.0-7ubuntu1",
+      "sha256": "c90c0c5f16aae31fbb62c1bd194cc68949ac6044959ea9556305cdab40bd27e3",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/g/gcc-defaults/g++-aarch64-linux-gnu_13.2.0-7ubuntu1_amd64.deb",
+      "license": "GPL-3.0-or-later"
+    },
+    {
+      "name": "binutils-aarch64-linux-gnu",
+      "version": "2.42-4ubuntu2.10",
+      "sha256": "6bb25a05c50681e240b453f6572d8066f2358dee984d0ff1dbcd08852642adf2",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/b/binutils/binutils-aarch64-linux-gnu_2.42-4ubuntu2.10_amd64.deb",
+      "license": "GPL-3.0-or-later"
+    },
+    {
+      "name": "libc6-dev-arm64-cross",
+      "version": "2.39-0ubuntu8cross1",
+      "sha256": "04c6956de42669a53e620ad04a32475ea0bd4325808c227bf5ba52498f0d3f90",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/c/cross-toolchain-base/libc6-dev-arm64-cross_2.39-0ubuntu8cross1_all.deb",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "name": "libsigrok-dev",
+      "version": "0.5.2-5.1build2",
+      "sha256": "75093d8428a63c9c03fc924da9657b07324cb19158ee8145f533c7cd9e286d75",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/universe/libs/libsigrok/libsigrok-dev_0.5.2-5.1build2_amd64.deb",
+      "license": "GPL-3.0-or-later"
+    },
+    {
+      "name": "python3",
+      "version": "3.12.3-0ubuntu2.1",
+      "sha256": "e691b9cc40841c41bbdc50bd794c876cb1b1801306ea27b06e9a1458180df1e9",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/p/python3-defaults/python3_3.12.3-0ubuntu2.1_amd64.deb",
+      "license": "PSF-2.0"
+    },
+    {
+      "name": "python3-venv",
+      "version": "3.12.3-0ubuntu2.1",
+      "sha256": "16d50387b7656796b79e2c059d06774dfe9fe3f42808d8d50b332ceb780f508a",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/universe/p/python3-defaults/python3-venv_3.12.3-0ubuntu2.1_amd64.deb",
+      "license": "PSF-2.0"
+    },
+    {
+      "name": "xz-utils",
+      "version": "5.6.1+really5.4.5-1ubuntu0.3",
+      "sha256": "778edae086bc8f34d80f36f301bc8fb3eff2d906c146dfb533ea6840b6d64e00",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/x/xz-utils/xz-utils_5.6.1+really5.4.5-1ubuntu0.3_amd64.deb",
+      "license": "0BSD"
+    },
+    {
+      "name": "unzip",
+      "version": "6.0-28ubuntu4.1",
+      "sha256": "a505b9d491386167bd8e14e3383315a4a7d6539e4406745901ccf009a7988271",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/u/unzip/unzip_6.0-28ubuntu4.1_amd64.deb",
+      "license": "Info-ZIP"
+    },
+    {
+      "name": "jq",
+      "version": "1.7.1-3ubuntu0.24.04.2",
+      "sha256": "f59183392f84fe67b407b494d8ba6185e9b0e4a106ffcb369490bd20a83fd40e",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/j/jq/jq_1.7.1-3ubuntu0.24.04.2_amd64.deb",
+      "license": "MIT"
+    },
+    {
+      "name": "file",
+      "version": "1:5.45-3build1",
+      "sha256": "17dae1d6e803d0304e318f451c8abf62cbd5bb2a0068300cdeea77c62075b895",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/f/file/file_5.45-3build1_amd64.deb",
+      "license": "BSD-2-Clause"
+    },
+    {
+      "name": "libglib2.0-0t64",
+      "version": "2.80.0-6ubuntu3.8",
+      "sha256": "ca4eda0e01c76ba2e5e501e77decce53d98a641234b517eb98fc5d74980f913f",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/g/glib2.0/libglib2.0-0t64_2.80.0-6ubuntu3.8_amd64.deb",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "name": "libnss3",
+      "version": "2:3.98-1ubuntu0.2",
+      "sha256": "4254f11d782dfb970e78113519a59d440112ed43c4b56f709da0aef81da8651a",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/n/nss/libnss3_3.98-1ubuntu0.2_amd64.deb",
+      "license": "MPL-2.0"
+    },
+    {
+      "name": "libnspr4",
+      "version": "2:4.35-1.1build1",
+      "sha256": "e579e72d091f6c7a13f5a756c31065b15aae5b81840d61b069355aa2283c07b4",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/n/nspr/libnspr4_4.35-1.1build1_amd64.deb",
+      "license": "MPL-2.0"
+    },
+    {
+      "name": "libatk1.0-0t64",
+      "version": "2.52.0-1build1",
+      "sha256": "42c5d4b00954f17c2c3c4b866844f691eb8b6d57bf08b59203e65f12dc84a4f9",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/a/at-spi2-core/libatk1.0-0t64_2.52.0-1build1_amd64.deb",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "name": "libatk-bridge2.0-0t64",
+      "version": "2.52.0-1build1",
+      "sha256": "22b7d47e3c0f7953a78d3cfd309d1b20771085de9220fbe610c0989b9e808c9b",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/a/at-spi2-core/libatk-bridge2.0-0t64_2.52.0-1build1_amd64.deb",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "name": "libcups2t64",
+      "version": "2.4.7-1.2ubuntu7.14",
+      "sha256": "b815a3d936718614e403035bb4a545e1323305ea624709bff2e9d94c214f9cc4",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/c/cups/libcups2t64_2.4.7-1.2ubuntu7.14_amd64.deb",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "libdrm2",
+      "version": "2.4.125-1ubuntu0.1~24.04.2",
+      "sha256": "4d3e858dd57be617c49d87c5ddcdb35df744a4f0a559981256ae2ba174718584",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/libd/libdrm/libdrm2_2.4.125-1ubuntu0.1~24.04.2_amd64.deb",
+      "license": "MIT"
+    },
+    {
+      "name": "libdbus-1-3",
+      "version": "1.14.10-4ubuntu4.1",
+      "sha256": "5d630480f04b4b442300ce847a3fa705ea4d14d80ba6de91f99b51a4e4953b08",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/d/dbus/libdbus-1-3_1.14.10-4ubuntu4.1_amd64.deb",
+      "license": "AFL-2.1 or GPL-2.0-or-later"
+    },
+    {
+      "name": "libxcb1",
+      "version": "1.15-1ubuntu2",
+      "sha256": "e1c6611d11ad7398326f1bf028afc34c3b14c51d917a3426b966ed4b9687fa58",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/libx/libxcb/libxcb1_1.15-1ubuntu2_amd64.deb",
+      "license": "MIT"
+    },
+    {
+      "name": "libxkbcommon0",
+      "version": "1.6.0-1build1",
+      "sha256": "2b9caeb423efb540296a1cb20b872cc630c23908407ecb5c1c787a617622d664",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/libx/libxkbcommon/libxkbcommon0_1.6.0-1build1_amd64.deb",
+      "license": "MIT"
+    },
+    {
+      "name": "libx11-6",
+      "version": "2:1.8.7-1build1",
+      "sha256": "397f84347476a3c5786b39f3ff6f0f82866eb3d8be6d2ad3efeadf019efe5b80",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/libx/libx11/libx11-6_1.8.7-1build1_amd64.deb",
+      "license": "MIT"
+    },
+    {
+      "name": "libxcomposite1",
+      "version": "1:0.4.5-1build3",
+      "sha256": "a12d5d9ae70b798cbbf284080eae32b87367561fc9c24492f641b8860ac0f308",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/libx/libxcomposite/libxcomposite1_0.4.5-1build3_amd64.deb",
+      "license": "MIT"
+    },
+    {
+      "name": "libxdamage1",
+      "version": "1:1.1.6-1build1",
+      "sha256": "6891faf325e996ebd28ef53ebb9c043dc96f67327500490affc3e89d366d35ed",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/libx/libxdamage/libxdamage1_1.1.6-1build1_amd64.deb",
+      "license": "MIT"
+    },
+    {
+      "name": "libxext6",
+      "version": "2:1.3.4-1build2",
+      "sha256": "45783969a9ece9d7b7b733b8c60981584c53c6bc5ee3b42d295d2f80d1285679",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/libx/libxext/libxext6_1.3.4-1build2_amd64.deb",
+      "license": "MIT"
+    },
+    {
+      "name": "libxfixes3",
+      "version": "1:6.0.0-2build1",
+      "sha256": "0ee1015cccd063249e01c0cd0bf45f513c8ac9a1e5e485070c12e69192455e4a",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/libx/libxfixes/libxfixes3_6.0.0-2build1_amd64.deb",
+      "license": "MIT"
+    },
+    {
+      "name": "libxrandr2",
+      "version": "2:1.5.2-2build1",
+      "sha256": "f2955a5e594f5724b58ad241d9231ea191cb36574a0d5e5ca6b661cd41d6256d",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/libx/libxrandr/libxrandr2_1.5.2-2build1_amd64.deb",
+      "license": "MIT"
+    },
+    {
+      "name": "libgbm1",
+      "version": "25.2.8-0ubuntu0.24.04.2",
+      "sha256": "1c0b8daf0130d68de428334ce6d1e11bd11f7369bf9099bbc65ac88117336dc3",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/m/mesa/libgbm1_25.2.8-0ubuntu0.24.04.2_amd64.deb",
+      "license": "MIT"
+    },
+    {
+      "name": "libpango-1.0-0",
+      "version": "1.52.1+ds-1build1",
+      "sha256": "09dfa5c881ab273ec6bc1830adcefdc407fcd619316e68fb26ca3a23d0fc9f54",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/p/pango1.0/libpango-1.0-0_1.52.1+ds-1build1_amd64.deb",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "name": "libcairo2",
+      "version": "1.18.0-3build1",
+      "sha256": "96950b306889ff6e4248bb937b0a3b56e72dacf643fe732214ce375f0f6bbb36",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/c/cairo/libcairo2_1.18.0-3build1_amd64.deb",
+      "license": "LGPL-2.1-or-later or MPL-1.1"
+    },
+    {
+      "name": "libasound2t64",
+      "version": "1.2.11-1ubuntu0.3",
+      "sha256": "5d17bfb5683eb99f1be951fe48e1be5bf3c52391913b6b74a8aecf9b4f5e779f",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/a/alsa-lib/libasound2t64_1.2.11-1ubuntu0.3_amd64.deb",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "name": "fonts-liberation",
+      "version": "1:2.1.5-3",
+      "sha256": "065c2ab1abc9108b17d401016dc594b79750904390f095845c93bb06e1153acc",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/f/fonts-liberation/fonts-liberation_2.1.5-3_all.deb",
+      "license": "OFL-1.1"
+    },
+    {
+      "name": "libfontconfig1",
+      "version": "2.15.0-1.1ubuntu2",
+      "sha256": "a2bc05cfef021fdb84285036f98eda5ebec3c4b7a378f5aa2bdba5c4d3d8d586",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/f/fontconfig/libfontconfig1_2.15.0-1.1ubuntu2_amd64.deb",
+      "license": "MIT"
+    }
+  ],
+  "downloads": [
+    {
+      "name": "go",
+      "version": "1.27.0",
+      "sha256": "675c26c449cbb18fc24b74650de1eabbae6e16f64326fd85a283fb3b58280685",
+      "source": "https://go.dev/dl/go1.27.0.linux-amd64.tar.gz",
+      "license": "BSD-3-Clause"
+    },
+    {
+      "name": "uv",
+      "version": "0.11.25",
+      "sha256": "1db18b5e76fa645a7f3865773139bdec8e2d46adbdbb35e7410b34fa8015ccd2",
+      "source": "https://github.com/astral-sh/uv/releases/download/0.11.25/uv-x86_64-unknown-linux-gnu.tar.gz",
+      "license": "Apache-2.0 or MIT"
+    },
+    {
+      "name": "node",
+      "version": "24.20.0",
+      "sha256": "2f2c0da162318f0de47665410c7c8c2ed3d36c8f3105de4bbc61176c70a7cbf2",
+      "source": "https://nodejs.org/dist/v24.20.0/node-v24.20.0-linux-x64.tar.xz",
+      "license": "MIT and bundled notices"
+    },
+    {
+      "name": "playwright-lock",
+      "version": "1.62.1",
+      "sha256": "5f35c00f92d6d06a76075f3ac3446e124fc85008b57a6c7a2ce3ff421f88510a",
+      "source": "05_Software/nilo_gui/package-lock.json",
+      "license": "Apache-2.0 and dependency notices"
+    },
+    {
+      "name": "playwright-browser-catalog",
+      "version": "chromium-1234-151.0.7922.34",
+      "sha256": "f306eed529599b1eaf2f8a85db9de2b23e1a3fe36c2b66434b7c9434fb627a99",
+      "source": "node_modules/playwright-core/browsers.json derived from the locked npm package",
+      "license": "Chromium BSD-3-Clause and bundled notices"
+    }
+  ],
+  "tools": [
+    {
+      "name": "go",
+      "version": "1.27.0",
+      "command": "go version"
+    },
+    {
+      "name": "python",
+      "version": "3.12.10",
+      "command": "python --version"
+    },
+    {
+      "name": "uv",
+      "version": "0.11.25",
+      "command": "uv --version"
+    },
+    {
+      "name": "node",
+      "version": "24.20.0",
+      "command": "node --version"
+    },
+    {
+      "name": "npm",
+      "version": "11.19.0",
+      "command": "npm --version"
+    },
+    {
+      "name": "gcc",
+      "version": "13.3.0",
+      "command": "gcc -dumpfullversion"
+    },
+    {
+      "name": "binutils",
+      "version": "2.42",
+      "command": "ld --version"
+    },
+    {
+      "name": "aarch64-gcc",
+      "version": "13.3.0",
+      "command": "aarch64-linux-gnu-gcc -dumpfullversion"
+    },
+    {
+      "name": "aarch64-binutils",
+      "version": "2.42",
+      "command": "aarch64-linux-gnu-ld --version"
+    },
+    {
+      "name": "chromium",
+      "version": "playwright-lock",
+      "command": "chromium --version"
+    }
+  ],
+  "oci_images": [
+    {
+      "role": "base",
+      "reference": "ubuntu@sha256:1e0a86e57d247923571b75e0aaf48a1449cf8c543d51fb3e07a4a7d7bfa79316",
+      "digest": "sha256:1e0a86e57d247923571b75e0aaf48a1449cf8c543d51fb3e07a4a7d7bfa79316",
+      "platform": "linux/amd64",
+      "source": "docker://ubuntu@sha256:1e0a86e57d247923571b75e0aaf48a1449cf8c543d51fb3e07a4a7d7bfa79316",
+      "license": "Ubuntu image and package licences",
+      "consumer": "FROM ${BASE_IMAGE} with --pull=false during the offline image build"
+    },
+    {
+      "role": "build-frontend",
+      "reference": "docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e",
+      "digest": "sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e",
+      "platform": "linux/amd64",
+      "source": "docker://docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e",
+      "license": "Apache-2.0 (moby/buildkit dockerfile frontend)",
+      "consumer": "# syntax= directive resolved by BuildKit during the offline image build"
+    }
+  ]
+}
