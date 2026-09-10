@@ -59,23 +59,21 @@ The configured client's `baseUrl` is always the empty same-origin base, so it
 requests origin-relative paths — the three entries of `BENCH_CORE_PATHS`, the
 `/api/v1/auth/*` session routes, and the `/api/v1/users` and `/api/v1/tokens`
 administration routes.
-`VITE_NILO_API_BASE_URL`
-is the endpoint the development server forwards `/api` to and the label the
-sign-in screen shows, never a URL the browser fetches. This is what keeps the page
-and the backend one origin: an `Authorization` header is not CORS-safelisted, so
-a direct cross-origin call would be preflighted, and Bench Core answers no
-`OPTIONS` request and sends no CORS headers. An appliance serves the built
-assets from Bench Core itself, where the same paths are already same-origin.
+`VITE_NILO_API_BASE_URL` is the endpoint the development server forwards `/api`
+to, never a URL the browser fetches directly. This keeps the page and backend
+one origin: an `Authorization` header is not CORS-safelisted, so a direct
+cross-origin call would be preflighted, and Bench Core answers no `OPTIONS`
+request and sends no CORS headers. An appliance serves the built assets from
+Bench Core itself, where the same paths are already same-origin.
 
 ## Runtime presentation
 
 Built assets served by Bench Core receive a `nilo-runtime-profile` HTML meta tag.
-The startup entry point uses it to label sign-in/loading/failure screens; mock
-and Vite development retain simulation defaults, while an unlabelled production
-page reports unknown runtime. Authenticated status remains authoritative for the
-workspace. Appliance pages show live networking and installed instrument inventory,
-and the production sign-in endpoint label uses the serving origin. The metadata
-contains no network inventory and grants no permissions.
+Authenticated status remains authoritative for the workspace runtime badge and
+reported inventory. The metadata contains no network inventory and grants no
+permissions. Before authentication, the product identity uses the project
+version from the checked-in GUI package mirror and does not request protected
+runtime status.
 
 ## Invariants
 
@@ -91,9 +89,7 @@ contains no network inventory and grants no permissions.
   versions, integrity metadata, and a static Vite production build.
 - `REQ-TEST-031b1658` - includes frontend formatting, linting, tests, and build
   in the Windows repository gates.
-- `REQ-UX-188a4860` - keeps one persistent runtime badge after authentication;
-  sign-in explains the development boundary;
-  appliance and unknown runtimes receive truthful labels instead.
+- `REQ-UX-188a4860` - keeps one persistent runtime badge after authentication.
 - `REQ-FUNC-8a5491d8` - requests the versioned status resource with the entered
   bearer token and returns the reported profile, status, simulation flag, and
   build identity as typed values.
@@ -101,10 +97,16 @@ contains no network inventory and grants no permissions.
   a response outside the supported contract into three distinct causes.
 - `REQ-SEC-ed66f6ed` - holds the bearer token in volatile application memory
   only, never in `localStorage`, `sessionStorage`, or a cookie.
-- `REQ-UX-40473e43` - presents the sign-in screen's development bearer-token
-  form and contacts nothing until a non-empty token is submitted.
-- `REQ-UX-66636ac9` - renders in-progress, rejected-token, unreachable,
-  unsupported-response, and connected as five separately identifiable screens.
+- `REQ-UX-40473e43` - presents the NILO product identity, labelled human
+  credentials, sign-in action, and actionable authentication feedback.
+- `REQ-UX-8a1ddb96` - displays the canonical project version before sign-in
+  from the checked-in GUI package mirror.
+- `REQ-UX-10182ba0` - keeps the password masked initially and offers an
+  accessible, value-preserving reveal and hide control.
+- `REQ-UX-fdb7c574` - keeps the complete sign-in surface readable and operable
+  from an 800x480 field display through a 1920x1080 desktop viewport.
+- `REQ-UX-66636ac9` - distinguishes in-progress, ended-session, unreachable,
+  unsupported-response, and connected authenticated resource states.
 - `REQ-UX-0018c647` - keeps the primary screen inside one viewport, with the
   workspace as the only scroll region.
 - `REQ-PLAT-f852c5b2` - resolves the API mode and Bench Core endpoint from the
@@ -153,8 +155,8 @@ contains no network inventory and grants no permissions.
   current-session resource, because the session secret is in a cookie the page
   cannot read.
 - `REQ-FUNC-5ffce0e4` - ends the session server-side on sign-out.
-- `REQ-FUNC-5d80ae6c` - keeps the development bearer-token connection available
-  without requiring it for a human sign-in.
+- `REQ-FUNC-5d80ae6c` - offers one username-and-password credential submission
+  path before sign-in.
 - `REQ-UX-c7a277c5`, `REQ-UX-93e1b747` - make Authentication an expandable,
   permission-aware System group whose Users and API tokens destinations own
   distinct workspace tabs and resource reads.
@@ -221,7 +223,7 @@ contains no network inventory and grants no permissions.
 ```mermaid
 flowchart LR
     app["App: credential, identity and connection state"]
-    signin["SignInScreen: password sign-in and development token"]
+    signin["SignInScreen: product version, password sign-in and visibility"]
     shell["AppShell: one grid, four cells"]
     toprow["TopRow: tabs, network, SIM, appearance, language, account"]
     sidenav["SideNav: working entries plus keyed Network and Authentication groups"]
@@ -340,6 +342,8 @@ visible.
   its five causes.
 - `05_Software/nilo_gui/src/api/csrf.ts` - reads the readable `nilo_csrf`
   cookie, the only part of the session credential the page can see.
+- `05_Software/nilo_gui/src/version.ts` - exposes the checked-in GUI package
+  version for the pre-authentication product identity.
 - `05_Software/nilo_gui/src/api/permissions.ts` - whether a session has any
   reason to open the Authentication page.
 - `05_Software/nilo_gui/src/api/mock.ts` - path-routed, contract-built answers

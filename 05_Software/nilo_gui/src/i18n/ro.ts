@@ -49,7 +49,6 @@ export const ro: Catalogue = {
   'instrument.preview': 'Primele eșantioane · previzualizare digitală',
 
   'app.name': 'NILO',
-  'app.title': 'Interfața de dezvoltare NILO',
   'nav.label': 'Navigare principală',
   'nav.section.working': 'Spațiu de lucru',
   'nav.section.instruments': 'Instrumente',
@@ -115,17 +114,10 @@ export const ro: Catalogue = {
   'power.tryAgain': 'Încearcă din nou',
   'power.close': 'Închide',
 
-  'boundary.unknown':
-    'Autentificați-vă pentru informațiile despre mediu și dispozitive raportate de Bench Core.',
-  'boundary.appliance':
-    'Rețeaua reală a dispozitivului. Integrările instrumentelor nu sunt conectate.',
-  'boundary.statement':
-    'Doar profil de simulare — rezultatele simulate nu reprezintă niciodată dovezi de la echipamente fizice.',
-
   'signIn.title': 'Autentificare în NILO',
-  'signIn.eyebrow': 'Interfață de dezvoltare',
-  'signIn.intro':
-    'Autentificați-vă cu numele de utilizator și parola unei identități de pe acest aparat. Primul administrator este creat o singură dată la consolă; nu există înregistrare proprie.',
+  'signIn.version': 'Versiunea {version}',
+  'signIn.password.show': 'Afișați parola',
+  'signIn.password.hide': 'Ascundeți parola',
   'signIn.username': 'Nume utilizator',
   'signIn.password': 'Parolă',
   'signIn.submit': 'Autentificare',
@@ -136,13 +128,6 @@ export const ro: Catalogue = {
     'Prea multe încercări eșuate pentru acest nume de utilizator. Așteptați expirarea intervalului de blocare și încercați din nou.',
   'signIn.ended': 'Sesiunea dumneavoastră s-a încheiat. Autentificați-vă din nou.',
   'signIn.signedOut': 'Sunteți deconectat.',
-  'signIn.token.title': 'Sau conectați-vă cu un token de dezvoltare',
-  'signIn.token.intro':
-    'Generați unul în WSL2 cu comanda pentru token de dezvoltare. Este păstrat în memorie doar pentru această pagină și citește bench-ul la nivel de Viewer; administrarea identităților necesită un administrator autentificat.',
-  'signIn.token.label': 'Token bearer de dezvoltare',
-  'signIn.token.submit': 'Conectare',
-  'signIn.token.incomplete': 'Introduceți tokenul emis de backendul de dezvoltare.',
-  'signIn.endpoint': 'Punct final',
 
   'restoring.title': 'Se restaurează sesiunea…',
   'restoring.body': 'Se întreabă Bench Core dacă acest browser este deja autentificat.',
@@ -152,7 +137,6 @@ export const ro: Catalogue = {
   'bench.connecting.body':
     'Se așteaptă răspunsurile autentificate pentru stare, integrări și dispozitive.',
   'bench.refresh': 'Reîmprospătare',
-  'bench.useDifferentToken': 'Folosiți alt token',
   'bench.signInAgain': 'Autentificare din nou',
   'bench.profile': 'Profil',
   'bench.status': 'Starea serviciului',
@@ -514,9 +498,6 @@ export const ro: Catalogue = {
   'help.auth.verify':
     'Reîmprospătați înregistrarea, testați limita de acces așteptată și verificați intrările identității în Activitate.',
 
-  'mode.mock':
-    'Răspunsurile provin din mock-ul de contract al acestei interfețe; niciun proces backend nu este contactat.',
-  'mode.live': 'Cererile merg către punctul final de dezvoltare Bench Core configurat.',
   // Device networks, adapter configuration, Activity and Diagnostics
   'nav.activity': 'Activitate',
   'network.activity.open': 'Vezi activitatea',

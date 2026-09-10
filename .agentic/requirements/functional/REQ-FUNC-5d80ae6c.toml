@@ -14,7 +14,7 @@ schema = 1
 # and must match the category folder this file sits in.
 id = "REQ-FUNC-5d80ae6c"
 
-title = "Keep the development bearer-token connection available"
+title = "Offer one human credential submission before sign-in"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
@@ -34,37 +34,41 @@ status = "active"
 #   unwanted    If <condition>, then the <system> shall <response>.
 #   optional    Where <feature is included>, the <system> shall <response>.
 #
-# Two "shall" clauses means two behaviors: split it into two requirements.
+# Two independently verifiable responses need two requirements. Split when
+# either clause can vary, fail, change, or be checked independently; keep an
+# inseparable atomic outcome together. Final prose normally has one "shall".
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-The browser interface shall keep a separate development connection that authenticates
-with a pasted bearer token, without requiring a bearer token for a human sign-in.
+While nobody is signed in, the browser interface shall offer exactly one credential submission path using a username and password for a server-managed human session.
 """
 
-# The observation that settles whether the behavior holds — not a
-# restatement of the requirement.
+# The observation that settles whether the behavior holds - not a
+# restatement of the requirement. Work out setup, input or trigger, action,
+# observable oracle, and a relevant boundary or failure case before reducing
+# them to concise prose here. Do not introduce conditions absent from the
+# requirement or its linked spec.
 #
 # Some behaviors no test can settle: a look-and-see judgement, an install
 # on clean hardware, a printed page. Start this field with "Manual:" or
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
-# The prefix alone is not enough — it has to say what someone does.
-verification = "A component test asserts the sign-in screen offers both a username-and-password form and a distinct development bearer-token field, submits a bearer token through that field, and asserts the resulting resource requests carry it as an Authorization header while no sign-in request was made."
+# The prefix alone is not enough - it has to say what someone does.
+verification = "A component test renders the signed-out interface, observes one form and one submit action for username-and-password authentication, submits it, and confirms the sign-in client method receives the entered credentials."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
     "05_Software/nilo_gui/src/App.tsx",
     "05_Software/nilo_gui/src/components/SignInScreen.tsx",
-    "05_Software/nilo_gui/src/api/client.ts",
+    "05_Software/nilo_gui/src/App.test.tsx",
+    "05_Software/nilo_gui/e2e/bench-core.spec.ts",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/App.test.tsx::sends the entered token as the bearer credential for every resource",
-    "05_Software/nilo_gui/src/App.test.tsx::shows the identity a development token carries",
-    "05_Software/nilo_gui/src/App.test.tsx::offers masked password and token fields and the endpoint it will contact",
+    "05_Software/nilo_gui/src/App.test.tsx::presents the final product login and canonical version as the only credential path",
+    "05_Software/nilo_gui/src/App.test.tsx::signs in with a username and password and shows who is signed in",
 ]
 
 # --- optional below this line ---
@@ -73,7 +77,7 @@ linked_tests = [
 spec = ""
 
 priority = "normal"   # low | normal | high
-rationale = "The development token remains the fastest way to reach the backend from a browser with no identity bootstrapped, and the browser test path depends on it."
+rationale = "The delivered signed-out interface is a focused entry point for people and establishes a server-managed browser session."
 
 created = 2026-09-02
-updated = 2026-09-02
+updated = 2026-09-10

@@ -38,7 +38,7 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-While authenticated, the browser shall identify the selected runtime once in a persistent top-bar status badge: SIM with an accessible simulation label, or LIVE for an appliance. It shall not repeat simulation notices in the shell footer or Network sections. Before authentication the runtime status and development boundary may be explained together; an unknown runtime shall not claim simulation.
+While authenticated, the browser shall identify the selected runtime once in a persistent top-bar status badge: SIM with an accessible simulation label, or LIVE for an appliance, without repeating runtime notices in the shell footer or Network sections.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -49,7 +49,7 @@ While authenticated, the browser shall identify the selected runtime once in a p
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "Automated shell tests assert one simulation badge and no shell footer after authentication, a live badge for an appliance, and honest runtime identification before sign-in and on error screens."
+verification = "Automated shell tests assert one simulation badge and no shell footer after authentication and a live badge for an appliance."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
@@ -97,10 +97,10 @@ linked_tests = [
 spec = ""
 
 priority = "high"   # low | normal | high
-rationale = "Simulation must be impossible to confuse with real equipment from the first visible GUI increment."
+rationale = "The authenticated workspace must identify whether reported bench information belongs to simulation or a live appliance."
 
 created = 2026-09-01
-updated = 2026-09-03
+updated = 2026-09-10
 
 # Appliance extension: the server supplies only the selected profile in HTML metadata;
 # authenticated status remains authoritative and all API data still requires authorization.

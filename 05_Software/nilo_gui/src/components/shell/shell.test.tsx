@@ -235,7 +235,7 @@ describe('the one compact top row', () => {
     expect(screen.queryByRole('menuitem', { name: /Restart NILO/i })).toBeNull();
     expect(screen.queryByRole('menuitem', { name: /Power off NILO/i })).toBeNull();
   });
-  it('uses the appliance runtime on the sign-in screen before authentication', async () => {
+  it('uses the same product sign-in surface before appliance authentication', async () => {
     const api = client();
     api.currentSession = () =>
       Promise.reject(new BenchCoreError('unauthorized', 'sign in'));
@@ -249,9 +249,8 @@ describe('the one compact top row', () => {
     );
     await screen.findByRole('button', { name: 'Sign in' });
     expect(container.querySelector('.sim-badge')).toBeNull();
-    expect(container.querySelector('.card-boundary')).toHaveTextContent(
-      'Live appliance networking',
-    );
+    expect(container.querySelector('.card-boundary')).toBeNull();
+    expect(screen.getByText('Version 0.2.0')).toBeVisible();
   });
   it('labels an appliance without simulation claims', async () => {
     const api = client();

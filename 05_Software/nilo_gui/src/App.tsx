@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 
 import {
   BenchCoreError,
-  bearerCredential,
   sessionCredential,
   type BenchCoreClient,
   type BenchCoreFailure,
@@ -22,6 +21,7 @@ import { AppShell } from './components/shell/AppShell';
 import { useWorkspace } from './components/shell/useWorkspace';
 import { SignInScreen, type SignInRefusal } from './components/SignInScreen';
 import type { ApiMode, RuntimeProfile } from './config/environment';
+import { NILO_VERSION } from './version';
 
 export interface AppProps {
   /** The Bench Core client this session talks to. */
@@ -113,12 +113,10 @@ async function settle<T>(request: Promise<T>): Promise<Resource<T>> {
  *
  * It owns the whole conversation with Bench Core: which credential is in use and
  * who that credential belongs to. A password never outlives the request that
- * carries it, a development bearer token lives in this component's state and
- * nowhere else, and the browser session lives in the server's own `HttpOnly`
- * cookie. Every screen keeps the SIMULATION marking and the physical-equipment
- * boundary statement visible.
+ * carries it, and the browser session lives in the server's own `HttpOnly`
+ * cookie.
  */
-function App({ client, apiMode, endpoint, runtimeProfile = 'simulation' }: AppProps) {
+function App({ client }: AppProps) {
   const t = useTranslate();
   const [shell, setShell] = useState<Shell>({ phase: 'restoring' });
   // Owned here rather than in the shell so a refresh, which passes through the
@@ -223,15 +221,10 @@ function App({ client, apiMode, endpoint, runtimeProfile = 'simulation' }: AppPr
           session,
         );
       } catch (error) {
-        setShell(signedOut(null, { form: 'password', message: signInRefusal(error) }));
+        setShell(signedOut(null, { message: signInRefusal(error) }));
       }
     },
     [client, loadBench],
-  );
-
-  const connectWithToken = useCallback(
-    (token: string) => void connect(bearerCredential(token)),
-    [connect],
   );
 
   const signOut = useCallback(async () => {
@@ -248,11 +241,15 @@ function App({ client, apiMode, endpoint, runtimeProfile = 'simulation' }: AppPr
   }, [client, shell, workspace]);
 
   const retry = useCallback(() => {
+    if (shell.phase === 'refused' && shell.session !== null) {
+      void loadBench(shell.credential, shell.session);
+      return;
+    }
     const credential = credentialOf(shell);
     if (credential !== null) {
       void connect(credential);
     }
-  }, [connect, shell]);
+  }, [connect, loadBench, shell]);
 
   if (shell.phase === 'active') {
     return (
@@ -274,37 +271,24 @@ function App({ client, apiMode, endpoint, runtimeProfile = 'simulation' }: AppPr
   if (shell.phase === 'signed-out') {
     return (
       <SignInScreen
-        endpoint={endpoint}
-        apiMode={apiMode}
-        runtimeProfile={runtimeProfile}
         notice={shell.notice}
         working={shell.working}
         refusal={shell.refusal}
         onSignIn={(username, password) => void signIn(username, password)}
-        onConnectWithToken={connectWithToken}
       />
     );
   }
 
-  // Restoring, connecting and refused all share the centred card: there is no
-  // workspace to frame yet, and the marking has to stay visible either way.
+  // Restoring, connecting and refused all share the centred product card:
+  // there is no workspace to frame yet.
   return (
     <div className="centred">
       <section className="card" aria-labelledby="connection-title">
-        <div className="card-head">
-          <p className="eyebrow">{t('app.name')}</p>
-          {runtimeProfile === 'simulation' && (
-            <span className="card-sim">
-              <span
-                className="sim-badge"
-                role="status"
-                aria-label={t('top.simulation.label')}
-              >
-                <span className="state-dot state-warn" aria-hidden="true" />
-                {t('top.simulation')}
-              </span>
-            </span>
-          )}
+        <div className="sign-in-brand">
+          <p className="sign-in-wordmark">{t('app.name')}</p>
+          <p className="sign-in-version">
+            {t('signIn.version', { version: NILO_VERSION })}
+          </p>
         </div>
 
         {shell.phase === 'refused' ? (
@@ -325,9 +309,7 @@ function App({ client, apiMode, endpoint, runtimeProfile = 'simulation' }: AppPr
                 className="button"
                 onClick={() => setShell(signedOut())}
               >
-                {shell.credential.kind === 'bearer'
-                  ? t('bench.useDifferentToken')
-                  : t('bench.signInAgain')}
+                {t('bench.signInAgain')}
               </button>
             </div>
           </>
@@ -345,16 +327,6 @@ function App({ client, apiMode, endpoint, runtimeProfile = 'simulation' }: AppPr
             </p>
           </>
         )}
-
-        <p className="card-boundary">
-          {t(
-            runtimeProfile === 'simulation'
-              ? 'boundary.statement'
-              : runtimeProfile === 'appliance'
-                ? 'boundary.appliance'
-                : 'boundary.unknown',
-          )}
-        </p>
       </section>
     </div>
   );

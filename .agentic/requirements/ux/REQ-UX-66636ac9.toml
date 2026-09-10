@@ -14,7 +14,7 @@ schema = 1
 # and must match the category folder this file sits in.
 id = "REQ-UX-66636ac9"
 
-title = "Render distinct GUI connection states"
+title = "Render distinct authenticated resource states"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
@@ -38,7 +38,7 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-The browser GUI shall render a separately identifiable screen for each of these five outcomes of a status request - the request is in progress, the token was rejected, the backend was unreachable, the response did not match the supported contract, and the backend reported its status - each naming what happened and, except while the request is in progress, offering the action that recovers from it.
+When the browser GUI loads authenticated bench resources, it shall distinguish an in-progress request, an ended session, an unreachable backend, an unsupported response and a successful response, with an action that recovers from each settled non-success state.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -49,7 +49,7 @@ The browser GUI shall render a separately identifiable screen for each of these 
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "Component tests drive the GUI through a stub client that leaves a request pending, rejects the token, reports an unreachable backend, reports a contract mismatch, and returns a healthy status, and assert that each produces its own distinct visible message, that the four settled outcomes each expose a retry or re-entry control, and that the authenticated screen shows the reported profile, status, and build version."
+verification = "Component tests drive the GUI through a stub client that leaves a resource request pending, ends the session, reports an unreachable backend, reports a contract mismatch and returns a healthy status, then assert each produces its own visible state, each settled non-success outcome exposes the appropriate retry or sign-in action, and the successful workspace shows the reported profile, status and build version."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
@@ -64,7 +64,11 @@ affected_paths = [
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/App.test.tsx",
+    "05_Software/nilo_gui/src/App.test.tsx::shows a distinct in-progress state while the requests are pending",
+    "05_Software/nilo_gui/src/App.test.tsx::returns to the sign-in screen when the session has ended",
+    "05_Software/nilo_gui/src/App.test.tsx::shows a distinct unreachable-backend state",
+    "05_Software/nilo_gui/src/App.test.tsx::shows a distinct unsupported-status state",
+    "05_Software/nilo_gui/src/App.test.tsx::shows the reported status once Bench Core answers",
 ]
 
 # --- optional below this line ---
@@ -76,4 +80,4 @@ priority = "high"   # low | normal | high
 rationale = "Silent or identical-looking failures during bench work waste diagnosis time and invite the wrong fix."
 
 created = 2026-09-01
-updated = 2026-09-02
+updated = 2026-09-10

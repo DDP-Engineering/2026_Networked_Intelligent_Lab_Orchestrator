@@ -16,6 +16,8 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Changed
 
+- The signed-out interface now presents NILO's version and human sign-in in a
+  responsive layout, with an accessible password visibility control.
 - Updated the installed AEGIS workflow to 0.12.0 for focused verification and
   leaner records, preserving project configuration and engineering history.
 

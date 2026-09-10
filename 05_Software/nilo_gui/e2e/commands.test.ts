@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest';
 /**
  * The integrated browser test is only used if it is one obvious command, and
  * it is only debuggable if there is a way to watch the browser. It must also
- * leave nothing behind: a trace or a video would record the value typed into
- * the token field, which is a credential.
+ * leave nothing behind: a trace or a video would record values typed into
+ * credential fields.
  */
 
 const guiRoot = process.cwd();
@@ -76,21 +76,19 @@ describe('what a browser run is allowed to leave behind', () => {
     expect(viteConfig).toContain('*.test.ts');
   });
 
-  it('never lets the browser spec hold the token at all', () => {
+  it('never lets the bench-core spec type its password unredacted', () => {
     // A failing browser action repeats its argument in the error it throws once
-    // the locator has resolved, and the token field always resolves. The spec
-    // therefore never touches the value: it hands the field to the harness,
-    // which types it in behind a redaction wrapper.
+    // the locator has resolved, so the fixture password must be typed behind
+    // the same redaction wrapper used by the administration suite.
     const spec = readFileSync(resolve(guiRoot, 'e2e', 'bench-core.spec.ts'), 'utf8');
 
-    expect(spec).toContain('enterTokenInto');
-    expect(spec).not.toMatch(/\.token\b/);
-    expect(spec).not.toMatch(/\.fill\(/);
+    expect(spec).toContain('withRedactedSecret');
+    expect(spec).not.toMatch(/\.fill\(\s*[A-Za-z_]*PASSWORD/);
   });
 
   it('never lets the administration spec type a password unredacted', () => {
-    // Same hazard as the token field: a failing fill repeats its argument. The
-    // administration spec types real passwords, so every one of them goes
+    // A failing fill repeats its argument. The administration spec types real
+    // passwords, so every one of them goes
     // through the harness's redaction wrapper rather than straight into fill.
     const spec = readFileSync(
       resolve(guiRoot, 'e2e', 'authentication.spec.ts'),
