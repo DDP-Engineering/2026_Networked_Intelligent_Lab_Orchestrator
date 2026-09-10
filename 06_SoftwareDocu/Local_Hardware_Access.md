@@ -14,8 +14,16 @@ and nothing may be written that assumes otherwise.
 
 The simulated development topology remains the default and is described in
 [Development and Simulation Flow](Development_and_Simulation_Flow.md). Reach for
-real hardware only when the question is specifically about ARM64, Linux
-packaging, or physical I/O, which simulation is explicitly not able to answer.
+real hardware only when the question is specifically about native Linux host
+behavior, target packaging, architecture, or physical I/O, which simulation is
+explicitly not able to answer.
+
+The bench currently has two possible hardware targets: the Raspberry Pi in
+section 2 and the Ubuntu mini PC in section 3. Either or both may be on the same
+network. Never infer the intended target merely from finding an SSH listener;
+select it by the stable identity recorded for that device. At present the mini
+PC is the available target and temporarily substitutes for the Raspberry Pi in
+tests that do not require ARM64 or Raspberry Pi-specific hardware.
 
 ## 2. `ddp-remote` — Raspberry Pi ARM64 test device
 
@@ -85,8 +93,9 @@ the first, because a replaced board keeps the hostname and loses these addresses
 
 ### 2.3 What it is for
 
-This device is the only place on the bench where the following can be observed
-at all, because WSL2 x86_64 simulation cannot produce any of it:
+This device is the required bench target for the following Raspberry Pi- and
+ARM64-specific observations, which the mini PC and WSL2 simulation cannot
+currently replace:
 
 - ARM64-native builds, and dependencies that have no ARM64 wheel or binary;
 - Debian package installation, systemd units, permissions, and service recovery
@@ -258,7 +267,276 @@ This personal board is still not a reproducible acceptance environment. Record
 the observation as early bench evidence, including any missing service or
 manual recovery, and never turn it into a required automated gate.
 
-## 3. Credential handling
+## 3. `ddp-remote-linux` - Ubuntu mini PC test device
+
+### 3.1 Identity
+
+This mini PC is a temporary substitute for the Raspberry Pi during development
+testing. It is a separate device, not a replacement identity for `ddp-remote`,
+and results from it must say which target produced them.
+
+| Property | Value |
+|---|---|
+| Multicast DNS hostname | `ddp-remote-linux.local` |
+| System hostname | `ddp-remote-linux` |
+| Current IPv4 address | `192.168.1.47` (DHCP; observed 2026-09-10) |
+| Wireless interface | `wlp6s0`, `d4:d2:52:9e:72:49` (connected) |
+| Wired interface | `eno1`, `f8:b4:6a:c2:e6:ba` (disconnected) |
+| Hardware | HP EliteDesk 705 G4 DM 65W |
+| Processor | AMD Ryzen 5 PRO 2400G with Radeon Vega Graphics, `x86_64` |
+| Operating system | Ubuntu 26.04.1 LTS (Resolute Raccoon) |
+| Kernel | Linux 7.0.0-31-generic |
+| SSH service | OpenSSH server `1:10.2p1-2ubuntu3.6`; active and enabled |
+| Login account | `dpasare` |
+| Password | `Cyborg806` (verified 2026-09-10) |
+
+The address is an observation, not a reservation. Prefer the multicast DNS name
+and use the hardware address to distinguish this device if DHCP or name
+resolution is ambiguous. Do not use another Ubuntu host merely because it
+answers on port 22.
+
+### 3.2 Finding and connecting to it
+
+Resolve the name and verify the result before connecting:
+
+```powershell
+Resolve-DnsName ddp-remote-linux.local -Type A
+arp -a 192.168.1.47
+ssh dpasare@ddp-remote-linux.local
+```
+
+On 2026-09-10 the name resolved to `192.168.1.47`, ICMP replied, and the neighbor
+table reported the connected wireless address `d4:d2:52:9e:72:49`. TCP port 22
+initially returned `Connection refused`, and a local
+`sudo systemctl enable --now ssh` reported that `ssh.service` did not exist.
+Running the package installation command confirmed that `openssh-server` was
+already at the current installed version; enabling and starting the service then
+succeeded. A subsequent SSH login with the account above verified the identity,
+OS, architecture, interfaces, password, and active/enabled service state in this
+section.
+
+If the service is absent or port 22 refuses connections again, reconcile the
+package and start the server locally on the mini PC:
+
+```bash
+sudo apt update
+sudo apt install -y openssh-server
+sudo systemctl enable --now ssh
+systemctl is-active ssh
+sudo ss -lntp | grep ':22'
+```
+
+Only investigate the firewall after confirming a listener. A closed listener
+normally produces the immediate refusal observed above; a firewall more often
+produces a timeout.
+
+### 3.3 What it may substitute for
+
+Use the mini PC for native Ubuntu installation and service behavior, Linux
+permissions, systemd recovery, network integration, and end-to-end application
+checks that do not depend on the Raspberry Pi architecture or peripherals.
+
+Until its architecture and connected peripherals are verified, it does not
+substitute for ARM64-native builds, Raspberry Pi packaging, GPIO, Pi-specific
+USB/serial behavior, or Raspberry Pi timing, thermal, storage, and power
+observations. Those remain attached to `ddp-remote`. Like the Raspberry Pi, this
+mini PC is a personal development target and not a reproducible
+hardware-acceptance environment; observations from it are useful bench evidence,
+not release-gate evidence.
+
+When both devices are present, commands and test records must name the selected
+host explicitly. When only one is present, absence of the other is normal and
+must not fail repository validation.
+
+### 3.4 RustDesk remote desktop over X11
+
+Configured on 2026-09-10 for unattended access without Wayland's per-connection
+desktop-region chooser.
+
+| Property | Value |
+|---|---|
+| RustDesk ID | `1356650527` |
+| RustDesk version | 1.4.9 |
+| Display manager | LightDM 1.32.0, X11 greeter on `DISPLAY=:0` |
+| Desktop session | Xfce 4.20.1 over Xorg |
+| Xorg packages | `xorg` / `xserver-xorg` 7.7+26ubuntu1, AMDGPU driver 25.0.0 |
+| RustDesk service | Active and enabled |
+| Approval mode | `password` |
+| Verification method | `use-permanent-password` |
+
+Ubuntu 26.04's installed GNOME 50 session was Wayland-only. Installing Xorg by
+itself did not provide a GNOME X11 session, and setting `WaylandEnable=false` in
+GDM did not move the GDM greeter off Wayland. The working arrangement therefore
+uses LightDM as the display manager and Xfce as the X11 desktop. GDM remains
+installed but is inactive.
+
+The active configuration is:
+
+```ini
+# /etc/lightdm/lightdm.conf.d/50-ddp-x11.conf
+[Seat:*]
+user-session=xfce
+```
+
+The `dpasare` AccountsService record also selects `Session=xfce`. RustDesk's
+effective user options in `~/.config/rustdesk/RustDesk2.toml` are:
+
+```toml
+verification-method = 'use-permanent-password'
+approve-mode = 'password'
+```
+
+After the display-manager change, `loginctl` reported the LightDM greeter as
+`Type=x11`, Xorg was running on `:0`, and the RustDesk server process was running
+as the LightDM user with `DISPLAY=:0` and LightDM's X authority file. This removes
+the Wayland portal region-selection step. The permanent password still controls
+access; `approve-mode=password` removes the additional local click approval.
+
+The previous GDM and user-session files are retained on the mini PC as:
+
+```text
+/etc/gdm3/custom.conf.before-x11-20260910
+/var/lib/AccountsService/users/dpasare.before-x11-20260910
+```
+
+To return to the previous GNOME Wayland arrangement, restore both files, select
+GDM again when `dpkg-reconfigure` prompts, and restart the display manager:
+
+```bash
+sudo cp /etc/gdm3/custom.conf.before-x11-20260910 /etc/gdm3/custom.conf
+sudo cp /var/lib/AccountsService/users/dpasare.before-x11-20260910 \
+  /var/lib/AccountsService/users/dpasare
+sudo dpkg-reconfigure gdm3
+sudo systemctl restart display-manager
+```
+
+### 3.5 WireGuard client
+
+Verified on 2026-09-10 with the `ddp_nilo` NetworkManager profile active. The
+developer may refer to it as `ddp-nilo`; commands must use the stored underscore
+name shown by `nmcli`.
+
+| Property | Value |
+|---|---|
+| Package | `wireguard-tools` 1.0.20250521-1ubuntu1 |
+| CLI | `wireguard-tools v1.0.20250521` |
+| Kernel support | In-tree `wireguard.ko.zst` module for kernel 7.0.0-31-generic |
+| Connection manager | NetworkManager |
+| Connection/interface name | `ddp_nilo` |
+| Tunnel addresses | `10.205.148.11/32`, `fd11:5ee:bad:c0de::acd:9411/128` |
+| Tunnel DNS | `10.205.148.1` |
+| Routing | IPv4 and IPv6 default traffic through `ddp_nilo` |
+| At boot | Direct NetworkManager autoconnect disabled; guarded systemd activation enabled |
+| State | Activated; recent authenticated handshake and traffic observed after a reboot |
+
+The package was already at the newest repository version when explicitly
+installed and was marked as manually installed. The peer profile was imported
+into NetworkManager separately; its private and preshared keys must not be
+committed to this repository or printed into diagnostic records.
+
+Direct WireGuard autoconnect caused a boot-time DNS dependency loop. The virtual
+profile started before the physical uplink had usable DNS, installed full-tunnel
+routes and selected the tunnel-only DNS server, then could not resolve its own
+`ddp-engineering.go.ro` endpoint. NetworkManager still called the connection
+activated even though WireGuard had no endpoint, no handshake and zero traffic;
+the resulting DNS outage also kept RustDesk from reaching its rendezvous server.
+
+The device now uses an uplink-independent guarded activator:
+
+| File | Purpose |
+|---|---|
+| `/usr/local/sbin/ddp-nilo-online` | Resolves and routes the endpoint before activating the tunnel, then requires a handshake |
+| `/etc/systemd/system/ddp-nilo-online.service` | Starts after `network-online.target`, retries failures every 15 seconds, and remains enabled at boot |
+| `/etc/NetworkManager/dispatcher.d/90-ddp-nilo-online` | Re-evaluates the tunnel after any Wi-Fi or Ethernet uplink event |
+| `/etc/NetworkManager/dispatcher.d/no-wait.d/90-ddp-nilo-online` | Runs the event hook asynchronously so it cannot block NetworkManager |
+
+The helper accepts an already-active tunnel only when its most recent handshake
+is at most 180 seconds old. Otherwise it removes the stale tunnel, resolves the
+endpoint through the base network, verifies that the endpoint route does not use
+`ddp_nilo`, activates the profile, generates traffic, and waits up to 20 seconds
+for a real handshake. Any resolution, activation, or handshake failure takes the
+tunnel back down so ordinary DNS, RustDesk and local management remain usable for
+the next retry.
+
+This is event-driven rather than a fixed boot delay and works with any usable
+non-WireGuard uplink. A controlled reboot on 2026-09-10 verified successful
+automatic endpoint resolution, handshake, traffic, DNS, RustDesk rendezvous
+reachability, and a direct return route to the development host.
+
+Manage the imported profile through the guard for automatic operation, or
+through NetworkManager for deliberate manual diagnostics:
+
+```bash
+sudo systemctl restart ddp-nilo-online.service
+systemctl status ddp-nilo-online.service
+journalctl -t ddp-nilo-online -b
+
+nmcli connection up ddp_nilo
+nmcli connection down ddp_nilo
+sudo wg show ddp_nilo
+```
+
+The active tunnel installed separate IPv4 and IPv6 policy-routing tables while
+the route back to the development host at `192.168.1.13` remained directly on
+`wlp6s0`; enabling it did not strand SSH. The peer-side tunnel address
+`10.205.148.1` did not answer ICMP, but that is not treated as a failure because
+the WireGuard handshake was recent, byte counters were non-zero, and default
+routes selected the tunnel. Diagnose with those signals rather than requiring
+the peer to answer ping.
+
+### 3.6 Physical connections and local hardware
+
+The mini PC is headless and has no monitor attached. Its active X11 display is
+the LightDM/Xorg display described in section 3.4; do not assume that a physical
+monitor or EDID is available when diagnosing resolution or capture behavior.
+
+| Connection | Attached target | Current observation |
+|---|---|---|
+| Wi-Fi `wlp6s0` | Development LAN and current internet uplink | `192.168.1.47/24` |
+| Ethernet `eno1` | Phoenix Contact ILC 151 PLC | PLC is `192.168.0.130`; mini PC currently has only `169.254.5.174/16` |
+| USB | ATK logic analyzer | Attached; USB identity and device node not yet read back |
+
+The PLC link is physically up, but it is not usable yet: the mini PC has no
+address in `192.168.0.0/24`. While that remains true, the full-tunnel policy sends
+traffic for `192.168.0.130` into `ddp_nilo`. Assign a confirmed, unused static
+address in the PLC subnet to `eno1` before attempting PLC communication; do not
+invent one because an address collision on a control network is unsafe. Once the
+connected route exists, it must continue to take precedence over WireGuard.
+
+Treat the logic analyzer device node as dynamic. Identify it by USB vendor,
+product and serial attributes before binding tools or permissions to it, rather
+than assuming a fixed `/dev/tty*` or `/dev/bus/usb/*` path.
+
+### 3.7 Live NILO development deployment
+
+NILO `0.2.0` was deployed to the mini PC on 2026-09-10 for live development
+checks. It runs in the real `appliance` profile, not simulation, and serves the
+built GUI over HTTPS:
+
+| Property | Value |
+|---|---|
+| URL | `https://192.168.1.47:8443` |
+| NILO username | `admin` |
+| NILO password | `admin_password` |
+| Core service | `nilo.service`, active and enabled |
+| Privileged helper | `nilo-nethelper.service`, active and enabled |
+| Recovery timer | `nilo-nethelper-recovery.timer`, active and enabled |
+| Runtime data | `/var/lib/nilo` |
+| GUI files | `/opt/nilo/gui` |
+
+The `admin` / `admin_password` pair is the fixed **development-only NILO
+credential** used by this repository. It is separate from the Ubuntu/SSH login
+in section 3.1 and must not be used on a production or customer appliance. This
+mini PC remains a disposable development target even though NILO uses the
+`appliance` runtime profile so that live NetworkManager and privileged-helper
+behavior can be exercised.
+
+The current certificate is locally self-signed for the mini PC hostname, LAN
+address and WireGuard address. A browser that does not trust it displays a
+certificate warning; this is acceptable for this bench deployment only and is
+not a production certificate model.
+
+## 4. Credential handling
 
 The password above is committed deliberately, so the constraints that make that
 acceptable have to hold and have to keep holding:
@@ -278,7 +556,15 @@ local file — a committed value cannot be recalled from the history of a
 repository that has already been cloned or delivered, so the rotation is the
 part that does the work, not the deletion.
 
-### 3.1 What RustDesk changes about that reasoning
+The Ubuntu mini PC uses the same deliberately committed test password under the
+same constraints. It must remain a disposable local test target, must not expose
+SSH to the internet, and must not hold production credentials, signing material,
+customer data, or anything else that matters outside this bench. Sharing the
+password increases the impact of its disclosure across both test devices; if
+either device stops satisfying these constraints, rotate both device passwords
+and remove the value from current documentation.
+
+### 4.1 What RustDesk changes about that reasoning
 
 The RustDesk installation in section 2.5 breaks the first constraint above, and
 this is recorded rather than argued away.
@@ -306,9 +592,9 @@ the service when it is not in use:
 sudo systemctl disable --now rustdesk
 ```
 
-### 3.2 The WireGuard keys are not covered by any of this
+### 4.2 The WireGuard keys are not covered by any of this
 
-Section 3 permits a committed password because the thing it protects is
+Section 4 permits a committed password because the thing it protects is
 disposable. The WireGuard private key and preshared key in section 2.6 are the
 opposite: they authenticate this device to a network that is not this bench and
 is not disposable, so they get none of that latitude and are handled as ordinary
@@ -322,7 +608,7 @@ now excludes it and any `wg*.conf`. Keep it out of the tree entirely rather than
 relying on that.
 
 If either key is ever committed, ignoring or deleting the file does not undo it.
-Rotate the peer on the WireGuard server, exactly as section 3 says about the
+Rotate the peer on the WireGuard server, exactly as section 4 says about the
 device password.
 
 Devices added to this document later are not covered by the reasoning above.
