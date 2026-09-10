@@ -21,6 +21,42 @@ drives. Commands run through `with-tools` or the Go-only compatibility wrapper.
 and SHA-256 checksums; the browser test package and its engine are pinned by the
 GUI lockfile rather than by that manifest, because npm resolves them.
 
+The OCI migration adds a stricter Linux acceptance boundary without removing
+the interactive host-local workflow. `bootstrap-build-environment.ps1`
+validates Ubuntu 24.04 WSL2 on Windows x86-64, while
+`bootstrap-build-environment.sh` validates native Ubuntu 24.04 x86-64. Both
+use one shared Docker/Podman verifier and image-setup helper, consume only local
+multipart archive content unless the developer explicitly selects the same
+pinned network rebuild, and share the complete consumed dependency closure.
+Ordinary container
+commands run with networking disabled, no engine socket, dropped capabilities,
+the caller UID/GID, a generation-scoped cache volume seeded from a read-only
+cache embedded in the image, and explicit source and output mounts. The
+checked-in `current.json` remains a pending-generation
+record until the real image, archive, replica readback, and external acceptance
+evidence have actually been produced.
+
+Reconstruction has two distinct phases. The networked materialization phase
+acquires and digest-verifies the reviewed base and BuildKit frontend images and
+the locked input closure; only then does the offline phase build with
+`--pull=false --network=none`. A clean host with no cached images therefore
+rebuilds successfully, and a mutable tag is never accepted.
+
+The checkout is mounted read-only and copied into an isolated container source
+root, so the container tests the developer's current source, including
+uncommitted changes, without creating or replacing `node_modules`, platform
+virtual environments, or build output in the host checkout. Git metadata is
+mounted read-only outside that copy with optional locks disabled.
+`verify-host-isolation.sh` proves this from the host side after every full
+verification.
+
+Archive restore performs one streamed, digest-verified pass into a single
+staging file and refuses to start when the chosen temporary filesystem, the
+engine store, or - under WSL - the Windows volume backing the ext4 virtual disk
+cannot hold it. Explicit host engine installation calculates and prints the
+exact package transaction first and refuses downgrades and architecture
+replacements without an explicit override.
+
 ## Key behaviors
 
 - `REQ-PLAT-978855a5` - checksum-verifies pinned repository-local tools and avoids persistent PATH or system installations.
@@ -63,6 +99,19 @@ GUI lockfile rather than by that manifest, because npm resolves them.
   one and no per-user cache is written.
 - `REQ-TEST-7ff6a75d` - runs the integrated browser test from the Windows
   repository gate, after the interface component tests and the production build.
+- `REQ-PLAT-80e40361` - defines the digest-pinned Ubuntu OCI environment and
+  its exact tool, package, browser, licence, SBOM, and provenance inventory.
+- `REQ-PLAT-dd007527` - verifies or explicitly installs one WSL-native OCI
+  engine from locally verified host-bootstrap packages.
+- `REQ-FUNC-a29c7664` and `REQ-REL-37fe088c` - restore, export, stream-split,
+  hash, and import the exact local OCI archive.
+- `REQ-SEC-0cf66a6f` and `REQ-SEC-2efc54bc` - keep normal execution isolated
+  and setup free of forge acquisition, credentials, and persistent host state.
+- `REQ-PLAT-32c44b0c` - requires complete Gitea and backup evidence and treats
+  GitHub archive replication as either complete or absent.
+- `REQ-TEST-74c72bbe` and `REQ-TEST-5c90b63f` - expose native, cross, browser,
+  appliance, and all ten acceptance outcomes without inferring missing proof.
+- `REQ-UX-dc08eeab` - names defective LFS content and all three recovery paths.
 
 ## Architecture
 
@@ -149,6 +198,18 @@ only durable state, and they live on the WSL Linux filesystem.
 - `02_Tools/env/with-tools.sh` - Linux child-process environment for Go, uv,
   and managed Python.
 - `02_Tools/env/with-go.ps1` and `02_Tools/env/with-go.sh` - Go-only compatibility wrappers.
+- `02_Tools/containers/build/` - locked OCI definition, expected inventory,
+  source metadata, licence seed, SBOM seed, and provenance seed.
+- `02_Tools/bootstrap/bootstrap-build-environment.ps1` and
+  `bootstrap-build-environment.sh` - Windows/WSL2 and native-Ubuntu host gates
+  over shared engine verification and local restore or explicit rebuild logic.
+- `02_Tools/env/with-build-environment.ps1` and its Linux helper - digest-
+  checked, network-disabled build, test, shell, and command entry points.
+- `02_Tools/scripts/build_environment.py` and adjacent shell scripts - lock and
+  manifest validation, streaming multipart archive operations, build/export/
+  restore verification, metadata collection, and replica preflight.
+- `02_Tools/tests/build-environment/` - executable acceptance procedures and
+  the evidence schema whose pending values are never promoted implicitly.
 - `02_Tools/scripts/doctor.ps1` - Windows Go, uv, Python, Node.js, and npm
   executable and exact-version verification.
 - `02_Tools/scripts/doctor.sh` - Linux Go, uv, and Python executable and

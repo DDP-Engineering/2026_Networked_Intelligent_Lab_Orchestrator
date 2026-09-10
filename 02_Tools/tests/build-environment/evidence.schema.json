@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NILO build-environment acceptance evidence",
+  "type": "object",
+  "required": [
+    "schema",
+    "generated_at",
+    "maturity",
+    "gates"
+  ],
+  "properties": {
+    "schema": {
+      "const": 1
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "gates": {
+      "type": "object",
+      "required": [
+        "BE-01",
+        "BE-02",
+        "BE-03",
+        "BE-04",
+        "BE-05",
+        "BE-06",
+        "BE-07",
+        "BE-08",
+        "BE-09",
+        "BE-10"
+      ],
+      "additionalProperties": false,
+      "patternProperties": {
+        "^BE-(0[1-9]|10)$": {
+          "type": "object",
+          "required": [
+            "status",
+            "command",
+            "evidence",
+            "detail"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "passed",
+                "failed",
+                "pending"
+              ]
+            },
+            "command": {
+              "type": "string"
+            },
+            "evidence": {
+              "type": "string"
+            },
+            "detail": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "maturity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "implemented",
+        "locally_integrity_checked",
+        "round_trip_verified",
+        "clean_host_verified",
+        "published",
+        "independently_backed_up",
+        "fully_accepted"
+      ],
+      "properties": {
+        "implemented": {
+          "type": "boolean"
+        },
+        "locally_integrity_checked": {
+          "type": "boolean"
+        },
+        "round_trip_verified": {
+          "type": "boolean"
+        },
+        "clean_host_verified": {
+          "type": "boolean"
+        },
+        "published": {
+          "type": "boolean"
+        },
+        "independently_backed_up": {
+          "type": "boolean"
+        },
+        "fully_accepted": {
+          "type": "boolean"
+        }
+      },
+      "description": "Strictly ordered acceptance maturity. A later state may only be claimed when every earlier state is claimed, and fully_accepted requires every BE gate to have passed."
+    }
+  }
+}

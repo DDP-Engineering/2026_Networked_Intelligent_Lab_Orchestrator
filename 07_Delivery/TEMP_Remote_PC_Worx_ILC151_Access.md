@@ -29,9 +29,12 @@ Raspberry Pi.
 | Phone WireGuard peer | `MP_PHONE` | Present on the DCP server; not needed for PC Worx |
 | Phone WireGuard address | `10.205.148.9/32` | Separate from the phone hotspot function |
 | Raspberry Pi hostname | `ddp-remote` / `ddp-remote.local` | `.local` works only where mDNS is available |
-| Raspberry Pi NILO WireGuard profile | `WORK_Ubuntu` | Selected for startup in NILO |
+| Raspberry Pi Wi-Fi SSID | **`DDP`** | Required hotspot/network for this case |
+| Raspberry Pi Wi-Fi authentication | Obtain out of band | Never record Wi-Fi credentials here |
+| Current Raspberry Pi hotspot address | `10.44.118.42/24` | DHCP address; not a stable remote identifier |
+| Raspberry Pi WireGuard configuration | **`ddp_nilo.conf`** | Authoritative tunnel for this case |
 | Raspberry Pi WireGuard interface | `nilo0` | NILO-managed tunnel |
-| Raspberry Pi WireGuard address | `10.205.148.11/32` | Stable VPN identity for this Pi |
+| Raspberry Pi WireGuard address | **`10.205.148.11/32`** | Stable VPN identity from `ddp_nilo.conf` |
 | Raspberry Pi PLC-side interface | `eth0` | Direct Ethernet connection to the PLC |
 | Raspberry Pi PLC-side address | `192.168.0.1/24` | No default gateway on this interface |
 | Physical PLC address | `192.168.0.130` | Used only on the Pi-to-PLC Ethernet segment |
@@ -43,9 +46,9 @@ Raspberry Pi.
 
 The Wi-Fi SSID for this case is `DDP`. Its password and all private-key material
 are intentionally absent from this note and must remain in the approved secret
-store. The hotspot network must not use
-`192.168.0.0/24`, because that would overlap the directly connected PLC
-network.
+store. The hotspot network must not use `192.168.0.0/24`, because that would
+overlap the directly connected PLC network. The current `DDP` network uses
+`10.44.118.0/24` and does not overlap the PLC or home-LAN networks.
 
 ## Address to enter in PC Worx
 
@@ -71,18 +74,20 @@ does not need a route or default gateway back to the WireGuard network.
 
 ## Confirmed live state
 
-The following was observed directly on 2026-09-08:
+The following was observed directly before the Wi-Fi/profile change on
+2026-09-08:
 
 - the Pi could ping the physical PLC at `192.168.0.130`;
 - the PLC accepted TCP connections from the Pi on ports `21`, `80`, `1962`,
   and `41100`;
-- the Pi's `nilo0` tunnel had a recent WireGuard handshake with the DCP server;
+- the Pi's previous WireGuard tunnel at `10.205.148.8` had a recent handshake
+  with the DCP server;
 - the NILO device network was enabled and its nftables DNAT, SNAT, and
   forwarding rules were active;
 - the NILO rule exposed only `10.71.1.130` and rejected direct forwarded access
   to `192.168.0.130`;
-- the DCP server's Pi peer already owned the Pi VPN address and
-  `10.71.1.130/32` in its `AllowedIPs`;
+- the DCP server's previous Pi peer had
+  `10.205.148.8/32` and `10.71.1.130/32` in its `AllowedIPs`;
 - the DCP server route for `10.71.1.130` selected `wg0`;
 - TCP port `1962` on `10.71.1.130` was reachable from the DCP server through
   the Pi to the PLC;
@@ -93,23 +98,58 @@ The following was observed directly on 2026-09-08:
 The DCP server currently has IPv4 forwarding enabled and UFW reports its routed
 default as `allow`.
 
+### State after changing Wi-Fi and selecting `ddp_nilo.conf`
+
+The following was checked directly on 2026-09-08 after the Wi-Fi change:
+
+- `ddp_nilo.conf` uses the Raspberry Pi VPN address `10.205.148.11/32`;
+- the DCP server saw the `10.205.148.11` peer with a public endpoint and a
+  fresh WireGuard handshake at 18:50:30 EEST, confirming that the new Wi-Fi
+  connection provided Internet access and the VPN tunnel came up;
+- the Pi connected to the requested `DDP` Wi-Fi profile and received
+  `10.44.118.42/24`;
+- SSH on `10.205.148.11:22` succeeded, and an interactive SSH login to the Pi
+  through the DCP server was successful;
+- NILO was reconfigured to listen on `10.205.148.11:8443`, and its TLS
+  certificate was regenerated with `10.205.148.11` as a subject alternative
+  name;
+- after a full Raspberry Pi reboot, NILO returned HTTPS status 200 through the
+  VPN at `https://10.205.148.11:8443`;
+- the `DDP` profile automatically reconnected after reboot with autoconnect
+  priority `100`; automatic reconnection to the old `DCP` Wi-Fi profile was
+  disabled;
+- the Pi's `eth0` interface remained `192.168.0.1/24`, the PLC at
+  `192.168.0.130` answered ping, and PLC TCP ports `1962` and `41100` were
+  reachable directly from the Pi;
+- the DCP server peer for `10.205.148.11` currently owns only its VPN IPv4 and
+  IPv6 addresses. The PLC alias `10.71.1.130/32` is still assigned to the old
+  `10.205.148.8` peer.
+
+Therefore the authoritative Pi tunnel is now `ddp_nilo.conf` at
+`10.205.148.11`, but the PC Worx route is **not ready yet**. Before programming,
+the DCP server must transfer `10.71.1.130/32` from the retired `.8` peer to the
+`ddp_nilo` `.11` peer. NILO management access itself is now working through
+`https://10.205.148.11:8443`.
+
 ## Required connection sequence
 
 1. Connect the Pi's `eth0` port directly to the ILC 151 GSM/GPRS.
 2. Start the predefined mobile hotspot.
 3. Confirm that the hotspot subnet does not overlap `192.168.0.0/24`.
 4. Confirm that the Pi joins the hotspot and that NILO activates
-   `WORK_Ubuntu`.
+   `ddp_nilo.conf`.
 5. Confirm a recent handshake for the Pi peer `10.205.148.11` on the DCP server.
-6. On the laptop, activate the WireGuard profile `MP_PC`.
-7. Confirm that the laptop receives `10.205.148.10/32`.
-8. Test TCP port `1962` on `10.71.1.130` from the laptop.
-9. Start the PC Worx virtual machine using VirtualBox NAT networking.
-10. Test TCP port `1962` from inside the virtual machine.
-11. In PC Worx, select direct IP communication and enter `10.71.1.130`.
-12. Perform a non-destructive connection/read check before downloading a
+6. Confirm that the DCP server assigns `10.71.1.130/32` to the
+   `10.205.148.11` peer, not to the retired `10.205.148.8` peer.
+7. On the laptop, activate the WireGuard profile `MP_PC`.
+8. Confirm that the laptop receives `10.205.148.10/32`.
+9. Test TCP port `1962` on `10.71.1.130` from the laptop.
+10. Start the PC Worx virtual machine using VirtualBox NAT networking.
+11. Test TCP port `1962` from inside the virtual machine.
+12. In PC Worx, select direct IP communication and enter `10.71.1.130`.
+13. Perform a non-destructive connection/read check before downloading a
     program.
-13. Download the new program only with an authorized person present at the
+14. Download the new program only with an authorized person present at the
     cabinet and the machine/process in a safe state.
 
 ## Laptop checks
@@ -185,20 +225,34 @@ ip route get 10.71.1.130
 timeout 3 bash -c '</dev/tcp/10.71.1.130/1962'
 ```
 
-The Pi peer must continue to own this route:
+The active `ddp_nilo` peer must own this route before PC Worx is used:
 
 ```text
 10.205.148.11/32
 10.71.1.130/32
 ```
 
-Do not assign `10.71.1.130/32` to a second WireGuard peer.
+At the time of the post-Wi-Fi-change test, `10.71.1.130/32` was still assigned
+to the retired `10.205.148.8` peer. Move it to `10.205.148.11`; do not assign
+the same alias to both peers simultaneously.
 
 ## NILO management access
 
-The intended NILO configuration enables management on `wlan0` and `nilo0` at
-port `8443` and leaves the PLC-facing `eth0` disabled. It is one NILO backend,
-one state directory and one HTTPS listener protected by an explicit interface
+The currently deployed NILO listens on the stable WireGuard address:
+
+```text
+https://10.205.148.11:8443
+```
+
+The TLS certificate contains `10.205.148.11` as an IP subject alternative name.
+The configuration was verified after a full Raspberry Pi reboot: the `DDP`
+Wi-Fi profile, `ddp_nilo` tunnel, SSH service, and NILO HTTPS listener all
+returned automatically, and the NILO URL returned HTTP status 200 from the DCP
+server.
+
+The dual-path candidate enables management on `wlan0` and `nilo0` at port
+`8443` and leaves the PLC-facing `eth0` disabled. It uses one NILO backend, one
+state directory and one HTTPS listener protected by an explicit interface
 allowlist and helper firewall. Do not start a second server against the same
 database and do not replace the allowlist with unrestricted `0.0.0.0` access.
 

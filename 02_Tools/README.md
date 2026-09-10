@@ -4,6 +4,244 @@
 verification, deployment, and diagnostic tooling beside the project without
 requiring a global installation or mixing tools into product source.
 
+## Reproducible OCI build environment
+
+The required build and repository-test boundary is one Linux amd64 OCI image.
+Windows x86-64 runs it inside a selected Ubuntu 24.04 WSL2 distribution;
+native Ubuntu 24.04 x86-64 runs it directly. Docker Engine is the primary
+runtime; Podman consumes the same definition and archive. Docker Desktop is
+neither required nor assumed. Native Windows browser execution
+remains an optional headed visual-development loop; the acceptance browser gate
+runs headlessly in the Linux container.
+
+The tracked `containers/build/Containerfile`, lock, inventory, licence index,
+SBOM source record, and provenance source record define generation
+`noble-20260905-01`. Extracted engine state and caches remain on the WSL Linux
+filesystem and are ignored. Only immutable `archives/**/.partNNN` payloads use
+Git LFS; `current.json` is ordinary Git metadata.
+
+### Supported hosts, prerequisites, and what is not yet proven
+
+The approved developer host is exactly one of:
+
+- Windows x86-64 with an Ubuntu 24.04 x86-64 WSL2 distribution running systemd;
+- native Ubuntu 24.04 x86-64 running systemd.
+
+This is not generic "Linux support". Other distributions, other Ubuntu
+releases, and ARM64 developer hosts are refused by the host gate; ARM64 appears
+only as a cross-compilation and appliance target, never as a development host.
+
+**Git and Git LFS are a human prerequisite, not something this repository can
+bootstrap.** The multipart image archive is stored through Git LFS, and the
+host-bootstrap archive that can install Git LFS inside WSL is itself stored the
+same way, so it cannot bootstrap a machine that has no LFS client. Install Git
+LFS first (Git for Windows includes it), then `git lfs pull` before running
+setup; alternatively obtain the archive parts by another documented route and
+pass them with `-ArchivePath`. Setup never fetches Git or LFS content, changes
+remotes, or authenticates to a forge.
+
+What the checks do and do not prove:
+
+- SHA-256 part, archive, and input digests prove **content integrity against
+  the reviewed manifest in this repository**. They are not proof of publisher
+  authenticity: there is no signed manifest, signed provenance, or external
+  trust root, so an actor able to replace both an archive and its manifest
+  could produce an internally consistent set. Treat the Gitea authority plus
+  the independent backup as the trust anchor.
+- Image, definition and archive vulnerability/licence scanning is
+  **not implemented**. The plan requires it before acceptance; no scanner is
+  wired in, no scan has been run, and no gate reports one. The generated SBOM records
+  package identity with `NOASSERTION` licence fields and ships the collected
+  licence texts alongside it; that is an inventory, not a legal review.
+- **Podman** is implemented against the same definition, archive, and command
+  contract as Docker, and is exercised by the source-level tests. A real Podman
+  import and container run has not been observed, so its verification status is
+  pending, not passed.
+
+### Setup from an already-acquired clone
+
+Obtain the Git checkout and its LFS content yourself, then run:
+
+```powershell
+.\02_Tools\bootstrap\bootstrap-build-environment.ps1 -Distribution Ubuntu-24.04
+```
+
+On native Ubuntu 24.04 x86-64, use the POSIX entry point instead:
+
+```sh
+./02_Tools/bootstrap/bootstrap-build-environment.sh
+```
+
+Setup reads local files only. It never fetches Git/LFS, changes remotes, or
+authenticates to a forge. It inspects pending or local archive content before
+requiring an OCI engine or `skopeo`; those tools are required only after a
+usable current image, restore, or explicit rebuild action is selected. It
+validates every part, the joined archive, imported image digest, and tool
+inventory. If content is missing, corrupt, or still a Git LFS pointer, it names
+the affected file/OID and stops with three paths:
+
+1. fetch the named LFS objects for the current clone yourself;
+2. obtain the same parts from another repository origin and supply their
+   directory with `-ArchivePath`;
+3. explicitly select the networked fallback with
+   `-RebuildFromPinnedInputs`.
+
+The third path validates and materializes the complete 650-record reconstruction
+manifest into the ignored `02_Tools/cache/containers/upstream` directory before
+the engine starts. The manifest covers the apt closure, Go and module proxy,
+managed CPython and Python wheels, uv, Node and npm tarballs, and Playwright
+browser payloads. Every byte is checked for size and SHA-256; missing, extra,
+symlinked, or tampered input fails closed. The engine then receives that directory
+as the `nilo_inputs` named context and builds with `--network=none`.
+
+`-Offline`/`--offline` forbids the third path. Engine installation is also a separate host
+change: generate or obtain the checksum-verified Ubuntu host-bootstrap archive,
+then explicitly use `-InstallEngine -EngineArchivePath <directory>`. Select one
+of `-Engine docker` or `-Engine podman`; on native Ubuntu use `--engine` and
+`--install-engine --engine-archive-path`. Ordinary setup installs neither.
+
+Before installation, the helper classifies every local package and runs a
+no-download, no-removal APT simulation over the complete transaction. Missing
+dependencies, architecture replacements, removals, and downgrades fail before
+host mutation. A reviewed downgrade requires a second explicit switch:
+`-AllowEngineDowngrades` on Windows or `--allow-engine-downgrades` on native
+Ubuntu. Never use that switch without reviewing the printed package list and
+APT simulation.
+
+The Windows entry point reads the selected distribution's registered VHDX
+location and supplies its actual backing volume to the free-space preflight.
+When invoking Linux restore helpers directly inside WSL instead, export
+`NILO_WSL_HOST_VOLUME=/mnt/<drive>` with the drive that really contains that
+distribution; the tooling intentionally refuses to guess C:.
+
+An exported manifest begins at `pending-round-trip` and is promoted to
+`local-round-trip-complete` only after exact import and the complete offline
+suite pass. The live `current.json` records that observed transition for the
+current local generation; external acceptance remains separate and still uses:
+
+```powershell
+.\02_Tools\bootstrap\bootstrap-build-environment.ps1 -Distribution Ubuntu-24.04 -InstallEngine -Engine docker -EngineArchivePath .\02_Tools\archives\wsl-host-bootstrap -RebuildFromPinnedInputs
+```
+
+```sh
+./02_Tools/scripts/build-host-bootstrap.sh
+./02_Tools/scripts/export-build-environment.sh --engine docker --image nilo/build-environment:noble-20260905-01 --generation noble-20260905-01
+```
+
+No checksum, size, digest, hosted capacity, replica, or appliance observation
+is accepted until those commands and their independent verification actually
+run.
+
+Image builds do not require a pre-emptive source commit. The build command
+deterministically hashes every tracked and non-ignored untracked file under
+`.gitattributes`, `.gitignore`, the relevant `02_Tools` source, and
+`05_Software`, including file content, paths, symlink targets, deletions, and
+executable modes where Git honours them. It records the base `HEAD`, the
+content-tree SHA-256, and whether the candidate was clean or dirty; runtime,
+cache, and archive output trees do not affect the digest. Export refuses an
+image when its `io.nilo.source-tree.sha256` label differs from the current
+candidate.
+
+Untracked `.sh` entry points are assigned their intended Git mode `100755`
+when calculating the candidate identity, independent of Windows
+`core.filemode`. Before the eventual human commit, add those task-owned shell
+files with `git add --chmod=+x`; `.gitattributes` also forces LF checkout for
+shell entry points and container build definitions. This makes the later clean
+commit identity match the approved dirty candidate without staging unrelated
+files.
+
+After approval and a human-created commit, confirm that the clean committed
+tree contains exactly the approved candidate before publication:
+
+```sh
+python3 02_Tools/scripts/build_environment.py verify-committed-source \
+  --repository-root . --expected-tree-sha256 <approved-candidate-sha256>
+```
+
+### Normal build and test
+
+```powershell
+.\02_Tools\env\with-build-environment.ps1 test
+.\02_Tools\env\with-build-environment.ps1 build
+.\02_Tools\env\with-build-environment.ps1 shell
+```
+
+Native Ubuntu uses the matching POSIX wrapper:
+
+```sh
+./02_Tools/env/with-build-environment.sh test
+./02_Tools/env/with-build-environment.sh build
+./02_Tools/env/with-build-environment.sh shell
+```
+
+`--image <reference>` verifies a candidate generation that has not yet been
+accepted into the archive manifest; the caller is then responsible for having
+verified that image's digest itself. Every other invocation checks the
+canonical image digest and prints its generation.
+The container has no network, privileges, added capabilities, engine socket, or
+credential mount. It receives the repository **read-only** at `/workspace` and
+copies it into an isolated container source root at `/work/source`, excluding
+`node_modules`, platform virtual environments, build output, and the ignored
+archive/cache/runtime trees. Your uncommitted changes are therefore tested, but
+the container can never create or replace `node_modules`, a
+`.venv-linux-x86_64`, or `dist` in your own checkout. It also receives a
+generation-scoped engine volume at `/work/runtime-cache`, seeded on its first
+offline run from the image's read-only `/opt/nilo/cache-seed`, and the explicit
+ignored output directory `02_Tools/cache/containers/outputs` at `/outputs`,
+where declared artifacts such as the GUI production build are published.
+Outputs remain editable through UID/GID mapping.
+`tests/build-environment/verify-host-isolation.sh` proves this from the host
+side after every full verification: it fingerprints the guarded dependency
+trees, drops a host-owned sentinel in each, runs the container operations that
+previously mutated them, and fails closed on any difference. The mandatory test command restores locked
+Go, Python, npm, and Chromium inputs offline, runs lint/unit/contract/build
+gates, performs amd64 and ARM64 Go/C checks, and runs Playwright headlessly.
+
+### Export, storage, and replicas
+
+`scripts/export-build-environment.sh` uses deterministic gzip metadata, defaults
+to 1 GiB parts, rejects a part size above 2,000,000,000 bytes, and imposes no
+total archive cap. It first proves that the current candidate digest matches
+the image label, then records the base commit, exact candidate-tree digest, and
+clean/dirty status in generated provenance and `current.json`. It generates
+`current.json` with `pending-round-trip`, then
+the explicit `tests/build-environment/verify-archive-round-trip.sh` command
+imports the archive, runs the complete offline verification, preserves its log,
+and promotes that status. The personal Gitea remote is the complete authoritative archive;
+an independent Git+LFS backup is mandatory. GitHub is a source mirror and may
+receive an archive only if the complete generation fits its measured allowance.
+A partial GitHub archive is unusable.
+
+Publication is human-operated. First run the non-mutating preflight:
+
+```powershell
+.\02_Tools\scripts\mirror-build-environment-lfs.ps1 -ManifestPath .\02_Tools\archives\build-environment\current.json -GiteaCapacityBytes <bytes> -BackupCapacityBytes <bytes>
+```
+
+After human publication, acquire each remote into a separate clean cache and
+run `tests/build-environment/verify-lfs-replicas.ps1`. Agents never push Git or
+LFS. Keep the current and previous accepted generations on Gitea; do not remove
+the previous generation before a clean current-generation Gitea restore and
+independent backup verification. Recheck capacity/readback quarterly and after
+storage migration, and perform a full offline restore twice yearly.
+
+### Acceptance and residual external proof
+
+`tests/build-environment/evidence.example.json` lists BE-01 through BE-10 and
+the exact command/evidence expected for each. Copy it to the ignored
+`evidence.local.json`, replace pending entries only with observed results, then
+run:
+
+```powershell
+python .\02_Tools\tests\build-environment\verify-acceptance.py --evidence .\02_Tools\tests\build-environment\evidence.local.json
+```
+
+Two clean independent image builds must have matching OCI digests before the
+image is called bit-reproducible. Gitea/backup capacity and readback, fresh
+clone restores from both configured forges, and the authorized ARM64 Sigrok ABI
+smoke require their real external systems; source tests cannot substitute for
+them. See `tests/build-environment/README.md` for the evidence sequence.
+
 ## Layout
 
 - `bootstrap/` — scripts that acquire and verify required tool archives.
@@ -63,6 +301,11 @@ On Linux x86_64 or ARM64:
 ./02_Tools/bootstrap/bootstrap.sh
 ./02_Tools/scripts/doctor.sh
 ```
+
+These host-local runtimes are available on Linux ARM64 because ARM64 is an
+appliance target that has to be built and diagnosed. That is not a claim that
+Linux ARM64 is a supported developer host: the reproducible OCI build/test
+boundary above accepts only Ubuntu 24.04 x86-64, natively or under WSL2.
 
 Bootstrap downloads only the pinned archives for the current platform, verifies
 their published SHA-256 digests, and asks the pinned uv to install CPython below

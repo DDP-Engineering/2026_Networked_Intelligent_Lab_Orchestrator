@@ -8,6 +8,10 @@ Project goals, architecture decisions, milestones, and implementation plans.
 - [Planning overview](Overview.md), [system build plan](System_Build_Plan.md)
   and [remote bench MVP](Remote_Bench_MVP_PRD.md): broader product direction
   and work beyond the implemented foundations.
+- [Development and build environment plan](Development_Build_Environment_Plan.md):
+  Windows/WSL2 and native Ubuntu OCI build boundary, locked toolchain, Git LFS offline archive,
+  dual-remote preservation and acceptance gates that precede further feature
+  implementation.
 - [TODO](TODO.md): mixed backlog; older status statements need reconciliation
   before selecting new work.
 - [GUI design references](GUI_Design/README.md): retained visual direction.

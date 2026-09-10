@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "image_digest": "sha256:88ec9769aaba4398d64407cf326c84d5c49be8e0f72359ed7382d182f3aef2dc",
+  "source": {
+    "base_commit": "8d326898aec25de98052c59b5b2d67981f014d26",
+    "tree_sha256": "b8fe50b2422933e85913b953e231e3a066e14f3f5340312a370fcd660df1d0b4",
+    "status": "dirty"
+  },
+  "lock_sha256": "ef6939c49d3a538c8c3145532a86b4ab1654fdfbf13e7a5ca8d6996bcfed10db",
+  "built_at": "2026-09-05T18:46:10+00:00",
+  "builder": "local Ubuntu 24.04 linux/amd64 OCI engine (native or WSL2)",
+  "definition": "02_Tools/containers/build/Containerfile"
+}

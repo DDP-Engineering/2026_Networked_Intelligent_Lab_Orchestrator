@@ -97,6 +97,27 @@ option and distribution selection.
 For manual startup, browser tests and simulation scenarios, see the
 [development guide](06_SoftwareDocu/Development_and_Simulation_Flow.md).
 
+## Build environment
+
+There are two development paths, and they serve different purposes.
+
+| Path | Use it for | Entry point |
+|---|---|---|
+| Host-local interactive development | Day-to-day coding: run the app, iterate on the GUI, use a headed browser | `.\02_Tools\bootstrap\bootstrap-development.ps1` then `.\02_Tools\scripts\nilo-dev.ps1 start` |
+| Reproducible OCI build/test boundary | The build and test result that counts: lint, unit, contract, cross-architecture and headless browser gates | `.\02_Tools\bootstrap\bootstrap-build-environment.ps1` then `.\02_Tools\env\with-build-environment.ps1 test` |
+
+Use the host-local path while you are working. Use the container path before
+you rely on a result, because it is the same locked Linux image on every
+supported host and it runs offline.
+
+The container path needs **Git and Git LFS on the machine before you clone**:
+the multipart image archive is stored through Git LFS, and setup deliberately
+never contacts a forge itself. Native Ubuntu 24.04 x86-64 uses the matching
+`.sh` entry points.
+
+Commands, recovery paths, export and publication are in
+[repository tools](02_Tools/README.md).
+
 ## Appliance deployment
 
 Linux ARM64 is the first release target; Linux x86_64 is the additional

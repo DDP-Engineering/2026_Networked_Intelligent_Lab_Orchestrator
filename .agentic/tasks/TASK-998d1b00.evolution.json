@@ -1,0 +1,1889 @@
+{
+  "reports": [
+    {
+      "anchor_created_at": "2026-09-05T10:38:12.946564Z",
+      "anchor_head": "8d326898aec25de98052c59b5b2d67981f014d26",
+      "anchor_id": "cd695069e479c81f",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b1415c547bb1c6efbcd24dc07f6526eae15c49ceaf96d8ca66f00f83b86fd915"
+          },
+          "area": "other",
+          "before": null,
+          "path": ".gitattributes",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "c2a1c47e7ba2607e644b5978bdc9a8693ee46b3e04282203652ffefed54753f5"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "3551d07eaa657f3eee73542072d6e1f33118e19fac84331b3e8f6b36c072eb19"
+          },
+          "path": ".gitignore",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "101c8e811e93ce9a0898a75fabc04c286347d43b656901001ad3aea2350ab391"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "ded73d55f3b91bbb7e86e6be9eb873a991d7af3bd2f60b271087fd06ccb4e7b3"
+          },
+          "path": "02_Tools/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "56fee5e848fe5ac306852da8605084211c07fc61c7a53c6ddbec6e765db91c8e"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/archives/build-environment/README.md",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "06160b9368a45c1d724bd8bbc395b2fac95034f680da482a6571d268ea6dd2fa"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/archives/build-environment/current.json",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ac5390ed723464e3b8e1da346a79b15addd5afc71aa9818a27d1f42214733fd0"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/archives/wsl-host-bootstrap/current.json",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ee369c2dc67bde4443858956944d173c56feb21e480f0616c14193f7c5afc12a"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/archives/wsl-host-bootstrap/host-bootstrap.lock.json",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "714c0946130452902f769c143f85d7f6adc32e0ec69f1b95ea5988252c57a8a0"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/bootstrap/bootstrap-build-environment.ps1",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "2aaf82030445e61cb6188e92a6a241109245592331f948f382d8761e83a02374"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/bootstrap/bootstrap-build-environment.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ed33ba18d8ec1a4d6c111e2d402da0a4b640367d70d69e32d34838d34d1fde5c"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/bootstrap/bootstrap-container-engine-wsl.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "77e316082e7296d5edd82d6d31940b2fc3f7fe9d50a4e803e3bc9f67cf01853b"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/containers/build/Containerfile",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b316c59a1d3c7f1b714425715aba92ac49ac108b0be1c83e5efe8549af463c2d"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/containers/build/Containerfile.dockerignore",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ba1da9fad9a0ae227324804f7a9864f0d106c3ae07b67599ce12cd62ef839b9d"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/containers/build/README.md",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "1d835a9bc0bd50d8069046690c67a9332830dc273681bf871f476d751b2d1925"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/containers/build/build-environment.lock.json",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "054b339ce90d93c333f9b97c1c8a7293ebe6dcdd6d542c62e472284aa5a76c9e"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/containers/build/inventory.json",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "9f56db5df3cd4ca7aac2973449bc6325ebbc7e09466574aa17014f5087e52245"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/containers/build/licenses/README.md",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "8cccb83e220d3b33bb625b296df9bc27ada99075f390239c063b0c7617982b8b"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/containers/build/provenance.json",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d785b15a5299e1fa52a0eb844a5408139ccfcee53109fc6600bd35a91bc64dd8"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/containers/build/sbom.spdx.json",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d9e30f078d7f041a0ce466ebb0e305786e130049141fbe87cc9a1cdf329e6bf5"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/env/with-build-environment.ps1",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "28bce9d9d430f49fc810dd0aa3b0e9d4dfc57bb96ee41f38136005845d59b418"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/env/with-build-environment.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "6da5c8a3886361d84a17ef78419e1279711365be0f7255be93cab3e076b1cab3"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/scripts/build-build-environment.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "0e5b9dff24fa259a9c4cb29072fd55d0037d4a4fd0c968594095c14a07ff35dd"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/scripts/build-wsl-host-bootstrap.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "7323d0a89f18203100b3e982280aebaca6c6d523980d994600f967694fffb900"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/scripts/build_environment.py",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "47b70d2f9f415e153800266985f459af2e25215a92e7fa916b653991a9d4bee5"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/scripts/collect-build-environment-metadata.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "0d403d5fc7c862749f7ec371128002162798422baee08cdcf780eace69b17c09"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/scripts/export-build-environment.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "6a48ee53976daa0891cb8865aee53802f0234e9f9482f511e69642d3b998c834"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/scripts/mirror-build-environment-lfs.ps1",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "040c648d5491f1d29b706a904cabdb0ef206f28dfd39078b4f2c70e8d27d62c2"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/scripts/restore-build-environment.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "98e945df97bb004d103b56c14ff752900eff10175d2450d112e2d356731503d0"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/scripts/verify-build-environment.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "944baf95e354987688e149dc587c4bb828ad7d56a1c48ccdefc92e1702e51172"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/tests/build-environment/README.md",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b3cf25ff936253d73da700238eb26ccd67a46f245e6bab6917f307041b809d9c"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/tests/build-environment/build-all.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "96eb4a63f2acd7154da17ddfbd7e01912902a6c8b0b072707d7374c3dbb75f67"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/tests/build-environment/evidence.example.json",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "0f41b0fdca3abe71562f9a665dceb2d52a61cf34ca76e19691c5601164317978"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/tests/build-environment/evidence.schema.json",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "fc88ce96c6c694ea04d491564a7af676f6ccc427fa509b241ab85d13e0c0faa7"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/tests/build-environment/verify-acceptance.py",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "33bf1f69c7c83376301ceb47d5849ea8017d3229e14a59b34687e8086c8f5b0e"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/tests/build-environment/verify-archive-failures.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "9c872280474be03908721f7a2989195d59753e03e6da0c5e68c8dc072adb1fc2"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/tests/build-environment/verify-arm64-abi.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "49b42f93e68f26903950e6e2b928a28c7488efc7096c2bfe3b81a14ec26b852a"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/tests/build-environment/verify-clean-clone.ps1",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "5001e60341e806ac3826e31432c936e24b421e21d7807be8c736b784a88484ac"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/tests/build-environment/verify-lfs-replicas.ps1",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "73bc151fcb65b89c12ef5d48067caa5050d1949507c1e4abb59bb00c32b28707"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/tests/build-environment/verify-offline.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b9b706e73b243ad602dd468bfea13b0b2b34b568ad45d9a47d079c4f16abc8cb"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/tests/build-environment/verify-rebuild.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "776954a75a7a371573314981a8b36a050c44ad784b0c70f3fff35bf09dd5dc7c"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "853d1c248004f23ba93bd471a6fbd65da71812f8a1778e942b79b75a728553a6"
+          },
+          "path": "02_Tools/toolchain.versions",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "cf775e5167104dee189c43adccaf6d531acaac07561788d09c60eca06485d493"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "41cf3c3ae8ce240e3cff2abaacb44442e04c8a3800a48be43b970cebf42f1b54"
+          },
+          "path": "05_Software/nilo_gui/e2e/topology.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ddf1d5ae5413350e4d755e2d150bc04a7057211a72f787e61ed8cdee3dae3425"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "0dd332d56423002aaaddadbc215e5810b0fd72fec380d73f122d4b44f8572eaf"
+          },
+          "path": "05_Software/nilo_gui/playwright.config.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b3fdf2c372d604e5879e56fde8ee5a7268e998715257e78d4ce25b1b0d20d00c"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "07a6d41eb903874616352a8335b9b37afd4badc1c6b09cdb74429c9aaf9c2775"
+          },
+          "path": "05_Software/scripts/tests/test_build_environment.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "6aca828c1a79b246531c18d2a05d7bdc578956dd51519c9f83c794dd5b12dfc1"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "6a9d6081a2030f9a4122af9f1cffc98d247b8449ff60dee865ed2a62efc472a1"
+          },
+          "path": "05_Software/scripts/tests/test_toolchain_bootstrap.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "232ca2deda60e3ef111fb5385abf6114fafb966f86bec02c2350b234bafa3e76"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "223321ad007575aeb21dbb3e690d9e9070576f6a0c76454cb182008531215117"
+          },
+          "path": "06_SoftwareDocu/Development_and_Simulation_Flow.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "8177483774ac37f757f75b77b4e3d3714cd6d3392e10179255bbfe7350b10ff5"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "9879427e50a10d293e3c7164a7eb8ff4df6e720245a689b700381ffa4f6957fc"
+          },
+          "path": "AGENTS.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "210cd9c38a7521984a7dc6250d3189a958065eeaeea0cada9b23d87b34eb5616"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "12cd62edb713b734f5ee08a828129479d1ba6907825e968c8ec7fcf425de8cea"
+          },
+          "path": "CHANGELOG.md",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 37,
+            "modified": 6,
+            "removed": 0,
+            "unchanged": 93
+          },
+          "source": {
+            "added": 0,
+            "modified": 2,
+            "removed": 0,
+            "unchanged": 284
+          },
+          "tests": {
+            "added": 0,
+            "modified": 2,
+            "removed": 0,
+            "unchanged": 158
+          }
+        },
+        "status": {
+          "added": 37,
+          "modified": 10,
+          "removed": 0,
+          "unchanged": 535
+        }
+      },
+      "current_head": "8d326898aec25de98052c59b5b2d67981f014d26",
+      "evolution_stage": "build",
+      "evolved_at": "2026-09-05T11:42:05.308936Z"
+    },
+    {
+      "anchor_created_at": "2026-09-05T11:48:13.785157Z",
+      "anchor_head": "8d326898aec25de98052c59b5b2d67981f014d26",
+      "anchor_id": "60c04cadb9174d47",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d3d2abcd3a3dbc17a85280e00a0a4249236b42461a49479236ae7f636588bfbb"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "101c8e811e93ce9a0898a75fabc04c286347d43b656901001ad3aea2350ab391"
+          },
+          "path": "02_Tools/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "40afe5e7e9270c49d52676766bbc0a54c34a61bf69ba12dd4db03d82da430677"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "56fee5e848fe5ac306852da8605084211c07fc61c7a53c6ddbec6e765db91c8e"
+          },
+          "path": "02_Tools/archives/build-environment/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "4d01caac7165fdad3e847acee5dc59e0b0fd4fc653b0d42e69341699b61cfbc0"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "06160b9368a45c1d724bd8bbc395b2fac95034f680da482a6571d268ea6dd2fa"
+          },
+          "path": "02_Tools/archives/build-environment/current.json",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "517f44ba98248cb2f161aaace9bc9e1e2c2772f147cbb7099993ac1f230458c6"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "2aaf82030445e61cb6188e92a6a241109245592331f948f382d8761e83a02374"
+          },
+          "path": "02_Tools/bootstrap/bootstrap-build-environment.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "779ae56c874f2312311993cb29864881c9ee7d6e5ba85af273852f9a36bd6caa"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "77e316082e7296d5edd82d6d31940b2fc3f7fe9d50a4e803e3bc9f67cf01853b"
+          },
+          "path": "02_Tools/containers/build/Containerfile",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ef46aa31dd5a69829bef134452c216c094d64c1abb2f1b83de5e96a396991d24"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "ba1da9fad9a0ae227324804f7a9864f0d106c3ae07b67599ce12cd62ef839b9d"
+          },
+          "path": "02_Tools/containers/build/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "036add5b4fe39b4f58574d4b86d87ac2364e3cbffce8858715d7925f7abf87a2"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "1d835a9bc0bd50d8069046690c67a9332830dc273681bf871f476d751b2d1925"
+          },
+          "path": "02_Tools/containers/build/build-environment.lock.json",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "a7cbcf3a6b6959664397d2fb9945ee312675b92c88d569a9c5225c347d0262d6"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "28bce9d9d430f49fc810dd0aa3b0e9d4dfc57bb96ee41f38136005845d59b418"
+          },
+          "path": "02_Tools/env/with-build-environment.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "8227e15ab6c9173ec7984fd8dc9ce5566b3729fa6f7c0fb806f6d19799c43953"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "6da5c8a3886361d84a17ef78419e1279711365be0f7255be93cab3e076b1cab3"
+          },
+          "path": "02_Tools/scripts/build-build-environment.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "1ce6c652836fec1b29f5e23a871e92ea1d181315b6b9bc10e0d34069c8609bc3"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "7323d0a89f18203100b3e982280aebaca6c6d523980d994600f967694fffb900"
+          },
+          "path": "02_Tools/scripts/build_environment.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "7cd68f700254261dcc4625fc0cdceeacd7dd78abf35330bc9ea17ddbfb87b1d6"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "47b70d2f9f415e153800266985f459af2e25215a92e7fa916b653991a9d4bee5"
+          },
+          "path": "02_Tools/scripts/collect-build-environment-metadata.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "222c730b5e187d02fc1404f5dd7e8e67d2adae3ae780ef7ba37e55020861c7a2"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "0d403d5fc7c862749f7ec371128002162798422baee08cdcf780eace69b17c09"
+          },
+          "path": "02_Tools/scripts/export-build-environment.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "fcbf4f46d6924d14f6335544a13a6960574b8b3bb68b4c201ac2b291c296df1f"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "944baf95e354987688e149dc587c4bb828ad7d56a1c48ccdefc92e1702e51172"
+          },
+          "path": "02_Tools/tests/build-environment/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "1b3fbaf23fcc086c4286b5d0432755aaf7c1dad71827f7ffd37935a872083352"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "96eb4a63f2acd7154da17ddfbd7e01912902a6c8b0b072707d7374c3dbb75f67"
+          },
+          "path": "02_Tools/tests/build-environment/evidence.example.json",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "04e75c39babc761de4957b32ae90e9e8c5aad6e4c228c4b37e92551a1366b604"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/tests/build-environment/verify-archive-round-trip.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "a2a202c29ede1ae875b048deef0a133eaaf4cc10a53cba13cfdc97c18af5fdfa"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "8c7e014601391126040e3ab82d8f5ebbe55746c0c80faab379e41f8d9410ad0a"
+          },
+          "path": "05_Software/scripts/tests/test_build_environment.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "0b2f58b853f9d7e15318f7cdf7b38b543165dbdc48f53b3daa32028c5c0830e1"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "210cd9c38a7521984a7dc6250d3189a958065eeaeea0cada9b23d87b34eb5616"
+          },
+          "path": "CHANGELOG.md",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 1,
+            "modified": 15,
+            "removed": 0,
+            "unchanged": 121
+          },
+          "source": {
+            "added": 0,
+            "modified": 0,
+            "removed": 0,
+            "unchanged": 286
+          },
+          "tests": {
+            "added": 0,
+            "modified": 1,
+            "removed": 0,
+            "unchanged": 159
+          }
+        },
+        "status": {
+          "added": 1,
+          "modified": 16,
+          "removed": 0,
+          "unchanged": 566
+        }
+      },
+      "current_head": "8d326898aec25de98052c59b5b2d67981f014d26",
+      "evolution_stage": "build",
+      "evolved_at": "2026-09-05T12:00:59.759946Z"
+    },
+    {
+      "anchor_created_at": "2026-09-05T12:07:04.308434Z",
+      "anchor_head": "8d326898aec25de98052c59b5b2d67981f014d26",
+      "anchor_id": "7979b54c067d996e",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "4a0774e33a45b54052b62e5836822797547489edf51f9eac1d1541cace823159"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "d3d2abcd3a3dbc17a85280e00a0a4249236b42461a49479236ae7f636588bfbb"
+          },
+          "path": "02_Tools/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "813f25f13afd506943cb4fc23a9bce6d065a49ed1c53acb54462439012932716"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "4d01caac7165fdad3e847acee5dc59e0b0fd4fc653b0d42e69341699b61cfbc0"
+          },
+          "path": "02_Tools/archives/build-environment/current.json",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d603f02e91bc9b6ba0467d920c7b08c396af2fe7ad61b6fbbcdc25060d0a00ba"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "8cccb83e220d3b33bb625b296df9bc27ada99075f390239c063b0c7617982b8b"
+          },
+          "path": "02_Tools/containers/build/provenance.json",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "0f9c5796de44d3554d9c8796f87cb9ca2ec132d1596a9ca8e6f3d8d11c7ec815"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "8227e15ab6c9173ec7984fd8dc9ce5566b3729fa6f7c0fb806f6d19799c43953"
+          },
+          "path": "02_Tools/scripts/build-build-environment.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "6e681734961d7c512ac1bb95c6157b7c1ffff1733d0bac2a1201eadfffcde5d8"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "1ce6c652836fec1b29f5e23a871e92ea1d181315b6b9bc10e0d34069c8609bc3"
+          },
+          "path": "02_Tools/scripts/build_environment.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "c89d5ba7d94832c6f97c2818b083bc9d5f7ea2ffe8c8ae99e40243921417bd5c"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "7cd68f700254261dcc4625fc0cdceeacd7dd78abf35330bc9ea17ddbfb87b1d6"
+          },
+          "path": "02_Tools/scripts/collect-build-environment-metadata.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "36e0fd760f068cddd7bb1138dd6a32b15c9a93d72ee3277d0568540fd4f5dd23"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "222c730b5e187d02fc1404f5dd7e8e67d2adae3ae780ef7ba37e55020861c7a2"
+          },
+          "path": "02_Tools/scripts/export-build-environment.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "bcdc3c95c4c5665061a09dd38b8463ab277417d5d71070b1f9a396067dca5388"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "fcbf4f46d6924d14f6335544a13a6960574b8b3bb68b4c201ac2b291c296df1f"
+          },
+          "path": "02_Tools/tests/build-environment/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "e44fdde6929b36e912a7399128c2b5e09640e8ea19de45a30909f87a4adc0470"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "1f2a1275e85a09a62ddbd0a2e3e83e362898c4ea48d02817c1150f45b3c03604"
+          },
+          "path": "05_Software/scripts/tests/test_build_environment.py",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 0,
+            "modified": 8,
+            "removed": 0,
+            "unchanged": 129
+          },
+          "source": {
+            "added": 0,
+            "modified": 0,
+            "removed": 0,
+            "unchanged": 286
+          },
+          "tests": {
+            "added": 0,
+            "modified": 1,
+            "removed": 0,
+            "unchanged": 159
+          }
+        },
+        "status": {
+          "added": 0,
+          "modified": 9,
+          "removed": 0,
+          "unchanged": 574
+        }
+      },
+      "current_head": "8d326898aec25de98052c59b5b2d67981f014d26",
+      "evolution_stage": "build",
+      "evolved_at": "2026-09-05T12:14:29.255026Z"
+    },
+    {
+      "anchor_created_at": "2026-09-05T12:19:33.913699Z",
+      "anchor_head": "8d326898aec25de98052c59b5b2d67981f014d26",
+      "anchor_id": "ef1dd665b8d5d3c3",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d51e353649a179677638f3469cce8e678d80a253665186648a4d63b65cc8d4f4"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "4a0774e33a45b54052b62e5836822797547489edf51f9eac1d1541cace823159"
+          },
+          "path": "02_Tools/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "9f593ad6d92ed168e67dd5005a4708eb319f73ffc7354d4411350a17e34cc511"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "779ae56c874f2312311993cb29864881c9ee7d6e5ba85af273852f9a36bd6caa"
+          },
+          "path": "02_Tools/containers/build/Containerfile",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ef6939c49d3a538c8c3145532a86b4ab1654fdfbf13e7a5ca8d6996bcfed10db"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "036add5b4fe39b4f58574d4b86d87ac2364e3cbffce8858715d7925f7abf87a2"
+          },
+          "path": "02_Tools/containers/build/build-environment.lock.json",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "23e4329d08e66c5056afaa077728de89fa7c6d7a5ed5572235ec9b6a62655c8d"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "054b339ce90d93c333f9b97c1c8a7293ebe6dcdd6d542c62e472284aa5a76c9e"
+          },
+          "path": "02_Tools/containers/build/inventory.json",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "784a1d020ef72bd4c567a3f85287e2b72e456f2f7bc28db7c470d0e82579da3f"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/containers/build/reconstruction-inputs.json",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "8c0f170dc6d539843a70a5c7b77cfc7df1a9a68a0056025919ae46263e987338"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "0f9c5796de44d3554d9c8796f87cb9ca2ec132d1596a9ca8e6f3d8d11c7ec815"
+          },
+          "path": "02_Tools/scripts/build-build-environment.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "9dfa08cf5270d0c9a61b72c5824828828a789c1c91706026cd9abcf6082a38bc"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "6e681734961d7c512ac1bb95c6157b7c1ffff1733d0bac2a1201eadfffcde5d8"
+          },
+          "path": "02_Tools/scripts/build_environment.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "93c756773bceaeae4ef855d472ed9725964a90a38b28b2d6ae2fd3f0ab17c452"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "98e945df97bb004d103b56c14ff752900eff10175d2450d112e2d356731503d0"
+          },
+          "path": "02_Tools/scripts/verify-build-environment.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "86506ceb593dad10cd8e5d25b57c18499ef874cb45b3ee50ff7edd2263cd025b"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "bcdc3c95c4c5665061a09dd38b8463ab277417d5d71070b1f9a396067dca5388"
+          },
+          "path": "02_Tools/tests/build-environment/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "25b03cb385efe32a0e3d2a4505be8f2bedc472907e1f37f3938c32bca7db3e17"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "35a8eda1a70d6ff38bcedd28208d0f39eeed95e236e5c184bfd7655892c82671"
+          },
+          "path": "05_Software/nilo_assistant/go.sum",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ec8134440bddf618bfe394ae361b57aae616dea2561a8372cbfd459184f61984"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "8dc8f70a4d4293ad8d2ab2f23dc9f1d026f597c05aacb183efd2091fc3f47ef2"
+          },
+          "path": "05_Software/scripts/tests/test_build_environment.py",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 1,
+            "modified": 8,
+            "removed": 0,
+            "unchanged": 129
+          },
+          "source": {
+            "added": 0,
+            "modified": 1,
+            "removed": 0,
+            "unchanged": 285
+          },
+          "tests": {
+            "added": 0,
+            "modified": 1,
+            "removed": 0,
+            "unchanged": 159
+          }
+        },
+        "status": {
+          "added": 1,
+          "modified": 10,
+          "removed": 0,
+          "unchanged": 573
+        }
+      },
+      "current_head": "8d326898aec25de98052c59b5b2d67981f014d26",
+      "evolution_stage": "build",
+      "evolved_at": "2026-09-05T13:08:57.140685Z"
+    },
+    {
+      "anchor_created_at": "2026-09-05T13:16:01.311811Z",
+      "anchor_head": "8d326898aec25de98052c59b5b2d67981f014d26",
+      "anchor_id": "0f426ca28b529eed",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "2efd94237b8d8012ac27fa779b68d2a16dbd62b8d1375198cbc8cd15d19661e0"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "d51e353649a179677638f3469cce8e678d80a253665186648a4d63b65cc8d4f4"
+          },
+          "path": "02_Tools/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "abbecd64c0e5240eb45a1a44c37e61b8d6733d62a77579892ca45511000fe946"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "517f44ba98248cb2f161aaace9bc9e1e2c2772f147cbb7099993ac1f230458c6"
+          },
+          "path": "02_Tools/bootstrap/bootstrap-build-environment.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "a271c4c3e564acdad3c9169c95c765f42508c5938587b7761081a7142ded51d6"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "ef46aa31dd5a69829bef134452c216c094d64c1abb2f1b83de5e96a396991d24"
+          },
+          "path": "02_Tools/containers/build/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "2bb7436d6548a33e4982c8a849c8423a8be0d54c8e6fa6508909dd548f8a8108"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "1b3fbaf23fcc086c4286b5d0432755aaf7c1dad71827f7ffd37935a872083352"
+          },
+          "path": "02_Tools/tests/build-environment/evidence.example.json",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 0,
+            "modified": 4,
+            "removed": 0,
+            "unchanged": 134
+          },
+          "source": {
+            "added": 0,
+            "modified": 0,
+            "removed": 0,
+            "unchanged": 286
+          },
+          "tests": {
+            "added": 0,
+            "modified": 0,
+            "removed": 0,
+            "unchanged": 160
+          }
+        },
+        "status": {
+          "added": 0,
+          "modified": 4,
+          "removed": 0,
+          "unchanged": 580
+        }
+      },
+      "current_head": "8d326898aec25de98052c59b5b2d67981f014d26",
+      "evolution_stage": "build",
+      "evolved_at": "2026-09-05T13:24:21.208507Z"
+    },
+    {
+      "anchor_created_at": "2026-09-05T15:16:41.230724Z",
+      "anchor_head": "8d326898aec25de98052c59b5b2d67981f014d26",
+      "anchor_id": "8e5592bb661c8a8c",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "6d0a9b7c1938f7e7ae25d9d65dd23203d87fa67b6b30a4ce32e7c0acdefb68f1"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "c86dc074c1df61453469efd51cf9cb0288935e47f5be00b0841822d770701d8a"
+          },
+          "path": "02_Tools/archives/build-environment/current.json",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "2066bdfc812a54bde95ee0d8b320576efaf9a8f22a0249cd710ea394995dae48"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "83715fa77c16e4942319fc11cc83e52d6d8d4d5f2f1fea7aa738af97e8709702"
+          },
+          "path": "02_Tools/archives/build-environment/metadata/noble-20260905-01/provenance.json",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d8e54034ffc8639708d8f087d54dda403acc338a2e8753751e36c056b42fc2f2"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/archives/build-environment/metadata/noble-20260905-01/round-trip.log",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "af5c99262ad78b403cb78ee201fab05ff2aa1cd98bb983bcc6669c8694bf0065"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "56d7107efbf8267425b033a2943240ba97606aa478922b3808b6135b9d10f014"
+          },
+          "path": "02_Tools/archives/build-environment/metadata/noble-20260905-01/sbom.spdx.json",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "bdaf2bbb2f0eec0128e342d3ed28c4b7a419fde92f7090149b12e86184e7b114"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "b83f016afa70055d7c24370e70700bf1d3a68d33f8e539333a5c75193c5583cc"
+          },
+          "path": "02_Tools/archives/build-environment/nilo-build-env-noble-20260905-01.oci.tar.gz.part000",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "501250490d0aeabf926032e2075a5a1b0df33c9723845d05c4a1ec33e16b222a"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "9200029475a38a8d2057dc715f6ebbb22692df7647be20fbfdbae86150e80214"
+          },
+          "path": "02_Tools/archives/build-environment/nilo-build-env-noble-20260905-01.oci.tar.gz.part001",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "eaf316361e26cac5527bfb755bd9f35844fd1bc56f1f719aa88c09bbb1090f5b"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "60779e92b75dfd289d362588165527ae19b3c2e1046c14ca54985f2fe8a7c8a7"
+          },
+          "path": "02_Tools/archives/build-environment/nilo-build-env-noble-20260905-01.oci.tar.gz.part002",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "83f1732c99e704f287f4fcde44f5031e327ec9068f9efce6202887b904486557"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "2b8113b4053ed22575825d4cb78bc15ff984c21edc9b4d1b1616eb18032c805c"
+          },
+          "path": "02_Tools/bootstrap/setup-build-environment-image.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "4b21978172152fade70b5c4872ac86b1a54a712dbc4576634f1fcdbaea0e68d8"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "9f593ad6d92ed168e67dd5005a4708eb319f73ffc7354d4411350a17e34cc511"
+          },
+          "path": "02_Tools/containers/build/Containerfile",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "34f2ef4f5a90a85ceff1f6e7a685b8b1d060dbd61c4001778b5749ce1e45a343"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "9dfa08cf5270d0c9a61b72c5824828828a789c1c91706026cd9abcf6082a38bc"
+          },
+          "path": "02_Tools/scripts/build_environment.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "2dc6aa264d07ab9d8712d2930557c1a7f8b435fe499de2d2a55ed94802e24865"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "93c756773bceaeae4ef855d472ed9725964a90a38b28b2d6ae2fd3f0ab17c452"
+          },
+          "path": "02_Tools/scripts/verify-build-environment.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "449e8ac9b7b232784933f4b137ad766833805ad031dcb9ed9917eb410febbf22"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "b3cf25ff936253d73da700238eb26ccd67a46f245e6bab6917f307041b809d9c"
+          },
+          "path": "02_Tools/tests/build-environment/build-all.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "0fba552844b83c893e29ba24cebc2582497941fbc494ae6e9fb665a80ecdc03f"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/tests/build-environment/prepare-python-environments.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "9136bc0b3dae28545ae6099550ede444c7f593162dc4be6da34bccbba3de69b5"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "73bc151fcb65b89c12ef5d48067caa5050d1949507c1e4abb59bb00c32b28707"
+          },
+          "path": "02_Tools/tests/build-environment/verify-offline.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "3e5ddd942353992178477582f6b9da3771d16ecd10495bd0098228a5be1a4058"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "8083929637e2dfe7a6bd195d4e9a28a3a6f633bfcf1858d57b5bf18db9583eaf"
+          },
+          "path": "05_Software/nilo_assistant/internal/integration/supervisor/testhelper/main.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "2bc0c593dca7a1bc6133b5d1143f1bdb2cb0a010d1174a67b2d20953ce6891ab"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "cf775e5167104dee189c43adccaf6d531acaac07561788d09c60eca06485d493"
+          },
+          "path": "05_Software/nilo_gui/e2e/topology.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "f3b9d74904a7da8078ddbdf832de15a2c3385b28b3b011a13e80de4699b09b38"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "8566c46a77ba42b45a281a2d574d3d1c8d57a4f7786ff83b9c43ae3963822685"
+          },
+          "path": "05_Software/scripts/tests/test_build_environment.py",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 2,
+            "modified": 12,
+            "removed": 0,
+            "unchanged": 136
+          },
+          "source": {
+            "added": 0,
+            "modified": 2,
+            "removed": 0,
+            "unchanged": 284
+          },
+          "tests": {
+            "added": 0,
+            "modified": 1,
+            "removed": 0,
+            "unchanged": 159
+          }
+        },
+        "status": {
+          "added": 2,
+          "modified": 15,
+          "removed": 0,
+          "unchanged": 579
+        }
+      },
+      "current_head": "8d326898aec25de98052c59b5b2d67981f014d26",
+      "evolution_stage": "validate",
+      "evolved_at": "2026-09-05T18:12:17.422947Z"
+    },
+    {
+      "anchor_created_at": "2026-09-05T18:32:06.206432Z",
+      "anchor_head": "8d326898aec25de98052c59b5b2d67981f014d26",
+      "anchor_id": "29ee9ff36faaea7c",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "8eb7e550715cd74bc3fee0779104fa5ae2fe7211f0a351723d07e4000a591bfa"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "b1415c547bb1c6efbcd24dc07f6526eae15c49ceaf96d8ca66f00f83b86fd915"
+          },
+          "path": ".gitattributes",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ced467d9331f051b9c075736b0a5c4e3f1417fb3362602fce64fa29c8ba7c4ad"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "9d6996efee6cf66a0d89e570aa12800bc8106019be2083dec7291d1f0af2cdf0"
+          },
+          "path": "02_Tools/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "5a3331ab8e803b1a8f04c05ac101b655c2beed4a8df50be1c09f7888f7afcc85"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "34f2ef4f5a90a85ceff1f6e7a685b8b1d060dbd61c4001778b5749ce1e45a343"
+          },
+          "path": "02_Tools/scripts/build_environment.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "088601a5cb2939ed3c0b25e6a32092da15c7323c001333d6b2544e587803b6fa"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "c89d5ba7d94832c6f97c2818b083bc9d5f7ea2ffe8c8ae99e40243921417bd5c"
+          },
+          "path": "02_Tools/scripts/collect-build-environment-metadata.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "389fb1d79f360debaf78da4786cd4dd45d05c7efd0b56d3d4a6d6ee45bba015a"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "36e0fd760f068cddd7bb1138dd6a32b15c9a93d72ee3277d0568540fd4f5dd23"
+          },
+          "path": "02_Tools/scripts/export-build-environment.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "df3273446484897c5679586f4b3e6701bfe8d1f19e7a4deda83246b67b160f80"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "6a48ee53976daa0891cb8865aee53802f0234e9f9482f511e69642d3b998c834"
+          },
+          "path": "02_Tools/scripts/mirror-build-environment-lfs.ps1",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b60e7ff54fd610aba59520d4d44cad1bdb4deaf14ee23c1a086e5010bec71d5a"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "b76a83b04330c36ea538047b37a09ebb7a5f49d7cd9185d9e78eec3d5c717e6c"
+          },
+          "path": "02_Tools/tests/build-environment/evidence.example.json",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 0,
+            "modified": 7,
+            "removed": 0,
+            "unchanged": 143
+          },
+          "source": {
+            "added": 0,
+            "modified": 0,
+            "removed": 0,
+            "unchanged": 286
+          },
+          "tests": {
+            "added": 0,
+            "modified": 0,
+            "removed": 0,
+            "unchanged": 160
+          }
+        },
+        "status": {
+          "added": 0,
+          "modified": 7,
+          "removed": 0,
+          "unchanged": 589
+        }
+      },
+      "current_head": "8d326898aec25de98052c59b5b2d67981f014d26",
+      "evolution_stage": "build",
+      "evolved_at": "2026-09-05T18:41:05.305221Z"
+    },
+    {
+      "anchor_created_at": "2026-09-06T16:51:29.697442Z",
+      "anchor_head": "8d326898aec25de98052c59b5b2d67981f014d26",
+      "anchor_id": "eac759745e047f49",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "191426bbaafde8367950ee531bc517fccb1b3c639b2472fa847e64d190352a2e"
+          },
+          "area": "other",
+          "before": null,
+          "path": ".pi/tasks/session-23028-23028/b088101d2.json",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "f11795ee613964d00667be2fbe1e80cec79fb23c6ea3796ab32ccd147243a657"
+          },
+          "area": "other",
+          "before": null,
+          "path": ".pi/tasks/session-23028-23028/b088101d2.output",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "a390482a3f63d57d5d07ec1bfa65697f4155cae5e2c9f2b52ad415f40c80c30d"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "ced467d9331f051b9c075736b0a5c4e3f1417fb3362602fce64fa29c8ba7c4ad"
+          },
+          "path": "02_Tools/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "fce81bdf166f91010999e0ee745112088bd471b37aef2e994864eb7b92650632"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "a41d197e4d00f8b52380fe6f7666ceca322093918eaaaef77a41f20f481c7587"
+          },
+          "path": "02_Tools/bootstrap/bootstrap-container-engine.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "c3c27974e3d964da4d204720aa4ff45f31b0a72614ee9e9e2cf8c07cc7c861db"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "ef6939c49d3a538c8c3145532a86b4ab1654fdfbf13e7a5ca8d6996bcfed10db"
+          },
+          "path": "02_Tools/containers/build/build-environment.lock.json",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "0e3c631438282eb532f49c9c5b9ff3a1f69d47e527f18f866b3ada62d89cf810"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "a7cbcf3a6b6959664397d2fb9945ee312675b92c88d569a9c5225c347d0262d6"
+          },
+          "path": "02_Tools/env/with-build-environment.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "cfa89e8b2f47e5f5a2516a52c169b74686e41b8b7207341bf445743771754960"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "8c0f170dc6d539843a70a5c7b77cfc7df1a9a68a0056025919ae46263e987338"
+          },
+          "path": "02_Tools/scripts/build-build-environment.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ab9391b02da7b91a9749fbf6cecdb500e29f4f2ddbd75750673dcf926a7fdd8f"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "5a3331ab8e803b1a8f04c05ac101b655c2beed4a8df50be1c09f7888f7afcc85"
+          },
+          "path": "02_Tools/scripts/build_environment.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "fb0b7b1d2cb419f1f631b4d71480f2e6226d0c97996c66974143fb6cdc2e83ee"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "389fb1d79f360debaf78da4786cd4dd45d05c7efd0b56d3d4a6d6ee45bba015a"
+          },
+          "path": "02_Tools/scripts/export-build-environment.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "9a2e94ec342af12728c17f224a43f627b0612cfb3dd1a1bb88a76d3c114a7846"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "040c648d5491f1d29b706a904cabdb0ef206f28dfd39078b4f2c70e8d27d62c2"
+          },
+          "path": "02_Tools/scripts/restore-build-environment.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "52749143c4b5e07c846b2c22dac24656b092076ade2b699eb8d307b4e9ba1ad1"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "2dc6aa264d07ab9d8712d2930557c1a7f8b435fe499de2d2a55ed94802e24865"
+          },
+          "path": "02_Tools/scripts/verify-build-environment.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "73a45c1fdf54838ce9ee943a69126859b4a5959d720843de29308148af6ff9c1"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "fb535359e0f4ba205c96d01c6abb5310d6435785e2538c9da4df0e02b43e6e18"
+          },
+          "path": "02_Tools/tests/build-environment/README.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "acdbd932de3b6c9c0043d6a20cca30e8217fe5b140da2569ff0c1a0c18e6664f"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "449e8ac9b7b232784933f4b137ad766833805ad031dcb9ed9917eb410febbf22"
+          },
+          "path": "02_Tools/tests/build-environment/build-all.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "e6b31962a683c2f58ce4d3a03d527b579292da661f6e6d97ab1454332d878743"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "b60e7ff54fd610aba59520d4d44cad1bdb4deaf14ee23c1a086e5010bec71d5a"
+          },
+          "path": "02_Tools/tests/build-environment/evidence.example.json",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ec7654d7210036e87772dd03a829538d34377e72fa4720d34ecbf46c9d4e01a9"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "0f41b0fdca3abe71562f9a665dceb2d52a61cf34ca76e19691c5601164317978"
+          },
+          "path": "02_Tools/tests/build-environment/evidence.schema.json",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "24efb4566cf58e4f7b0317666257a10b059f586d4a4c50f750d790ebab915f95"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/tests/build-environment/verify-host-isolation.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "99748f814339e7e1d549d812afc844bb3dbdb9750d05bcd6d2fc3b573009ae5e"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "5cd1f1add290d3dd23bb297547ed408367b25436a161e03d8d18e070c265515c"
+          },
+          "path": "05_Software/scripts/tests/test_build_environment.py",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "df0256781054ba0c09e83dea851390f1b8d60a991ddf891b997cd23304403c98"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "7a9a818ae2baa4bacfcc2fc27cd19751d9c4340f216b827b18e3defe97395d6c"
+          },
+          "path": "CHANGELOG.md",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "32a106af421254ff310fb0bc3e5b1d55b0276058e2824afe134108872deac6c0"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "9fec4379a6f24ea8c8c2167f4c6a5f6fd6710d1e9f671adf5484978aecb875a0"
+          },
+          "path": "README.md",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 3,
+            "modified": 15,
+            "removed": 0,
+            "unchanged": 158
+          },
+          "source": {
+            "added": 0,
+            "modified": 0,
+            "removed": 0,
+            "unchanged": 286
+          },
+          "tests": {
+            "added": 0,
+            "modified": 1,
+            "removed": 0,
+            "unchanged": 159
+          }
+        },
+        "status": {
+          "added": 3,
+          "modified": 16,
+          "removed": 0,
+          "unchanged": 603
+        }
+      },
+      "current_head": "8d326898aec25de98052c59b5b2d67981f014d26",
+      "evolution_stage": "build",
+      "evolved_at": "2026-09-06T17:54:05.907684Z"
+    }
+  ],
+  "schema": 1,
+  "task": "TASK-998d1b00"
+}

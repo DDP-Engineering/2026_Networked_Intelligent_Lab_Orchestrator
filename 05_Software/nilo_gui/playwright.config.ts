@@ -2,8 +2,9 @@ import { defineConfig, devices } from '@playwright/test';
 
 /**
  * The integrated browser test: a real browser, the real interface development
- * server on Windows, and a real Bench Core under WSL2 on the simulation
- * profile. The topology is started by the suite itself, in `e2e/topology.ts`,
+ * server and a real Bench Core on the simulation profile. On Windows the core
+ * runs under WSL2; inside the mandatory Linux build container both processes
+ * run directly. The topology is started by the suite itself, in `e2e/topology.ts`,
  * because the suite has to stop the backend mid-run to observe the unreachable
  * screen and has to prove it released only what it started.
  *

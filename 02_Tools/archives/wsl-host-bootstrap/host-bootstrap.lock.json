@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "generation": "noble-20260905-01",
+  "platform": "ubuntu-24.04/amd64",
+  "ubuntu_snapshot": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z",
+  "docker_repository": {
+    "url": "https://download.docker.com/linux/ubuntu",
+    "key_url": "https://download.docker.com/linux/ubuntu/gpg",
+    "key_sha256": "1500c1f56fa9e26b9b8f42452a553675796ade0807cdce11975eb98170b3a570"
+  },
+  "common": ["git-lfs=3.4.1-1ubuntu0.4", "gzip=1.12-1ubuntu3.2", "coreutils=9.4-3ubuntu6.3", "jq=1.7.1-3ubuntu0.24.04.2", "skopeo=1.13.3+ds1-2ubuntu0.24.04.3"],
+  "engines": {
+    "docker": ["docker-ce=5:29.8.0-1~ubuntu.24.04~noble", "docker-ce-cli=5:29.8.0-1~ubuntu.24.04~noble", "containerd.io=2.3.4-2~ubuntu.24.04~noble", "docker-buildx-plugin=0.37.0-1~ubuntu.24.04~noble", "docker-compose-plugin=5.5.1-1~ubuntu.24.04~noble"],
+    "podman": ["podman=4.9.3+ds1-1ubuntu0.2"]
+  },
+  "root_package_pins": [
+    {"name":"git-lfs","version":"3.4.1-1ubuntu0.4","sha256":"b51b8f513f01e83d75b16326e187a6451185ce4f9c10976a94dbfcea5face5a9","source":"https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/universe/g/git-lfs/git-lfs_3.4.1-1ubuntu0.4_amd64.deb","license":"MIT"},
+    {"name":"gzip","version":"1.12-1ubuntu3.2","sha256":"4067522fbffe22672e4cf683bfc32e4a304bc872cf76f10049ab36d1a9eedb91","source":"https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/g/gzip/gzip_1.12-1ubuntu3.2_amd64.deb","license":"GPL-3.0-or-later"},
+    {"name":"coreutils","version":"9.4-3ubuntu6.3","sha256":"e1e9a17892be0cc83b7cea747edf331ffeb6d6c010b4db296e60d888e8e9274c","source":"https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/c/coreutils/coreutils_9.4-3ubuntu6.3_amd64.deb","license":"GPL-3.0-or-later"},
+    {"name":"jq","version":"1.7.1-3ubuntu0.24.04.2","sha256":"f59183392f84fe67b407b494d8ba6185e9b0e4a106ffcb369490bd20a83fd40e","source":"https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/j/jq/jq_1.7.1-3ubuntu0.24.04.2_amd64.deb","license":"MIT"},
+    {"name":"skopeo","version":"1.13.3+ds1-2ubuntu0.24.04.3","sha256":"d908a86538f6d4bc49ea9c7423e5fb279a5c8cfc1f9bc7bd505f8bfe25d29be3","source":"https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/universe/s/skopeo/skopeo_1.13.3+ds1-2ubuntu0.24.04.3_amd64.deb","license":"Apache-2.0"},
+    {"name":"docker-ce","version":"5:29.8.0-1~ubuntu.24.04~noble","sha256":"0cd9936d80aade3f6a12c811b83f0f8e626d98821ae7f51418eec4c320632780","source":"https://download.docker.com/linux/ubuntu/dists/noble/pool/stable/amd64/docker-ce_29.8.0-1~ubuntu.24.04~noble_amd64.deb","license":"Apache-2.0"},
+    {"name":"docker-ce-cli","version":"5:29.8.0-1~ubuntu.24.04~noble","sha256":"2b7468415014fecb1aef1250f5f493293d999593d6862af93e66412e891c7ac7","source":"https://download.docker.com/linux/ubuntu/dists/noble/pool/stable/amd64/docker-ce-cli_29.8.0-1~ubuntu.24.04~noble_amd64.deb","license":"Apache-2.0"},
+    {"name":"containerd.io","version":"2.3.4-2~ubuntu.24.04~noble","sha256":"827e6809232311db8ae05fb8e0af7418148edeadc4c88c5a4360ca583f6e55ec","source":"https://download.docker.com/linux/ubuntu/dists/noble/pool/stable/amd64/containerd.io_2.3.4-2~ubuntu.24.04~noble_amd64.deb","license":"Apache-2.0"},
+    {"name":"docker-buildx-plugin","version":"0.37.0-1~ubuntu.24.04~noble","sha256":"3e8923c8ad5b93650a28358e3f092aef3b812e83dd54c5d470e61399ac11714b","source":"https://download.docker.com/linux/ubuntu/dists/noble/pool/stable/amd64/docker-buildx-plugin_0.37.0-1~ubuntu.24.04~noble_amd64.deb","license":"Apache-2.0"},
+    {"name":"docker-compose-plugin","version":"5.5.1-1~ubuntu.24.04~noble","sha256":"82ff966149ca2c62e1a4e1fdebdf65fda8c3a8bea80b32deda6903b40afc2347","source":"https://download.docker.com/linux/ubuntu/dists/noble/pool/stable/amd64/docker-compose-plugin_5.5.1-1~ubuntu.24.04~noble_amd64.deb","license":"Apache-2.0"},
+    {"name":"podman","version":"4.9.3+ds1-1ubuntu0.2","sha256":"e5c1c37e387ed14c352a744a75fbb79fb2f82573ca7bf36886e3b7333fc9ef1a","source":"https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/universe/libp/libpod/podman_4.9.3+ds1-1ubuntu0.2_amd64.deb","license":"Apache-2.0"}
+  ],
+  "note": "The generator resolves the full dependency closure only against these immutable sources, downloads every deb, records every package version/source/SHA-256/licence, and then creates the separate multipart archive."
+}

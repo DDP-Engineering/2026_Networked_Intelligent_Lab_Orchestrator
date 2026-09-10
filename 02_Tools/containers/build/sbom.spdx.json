@@ -1,0 +1,12 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "nilo-build-environment-noble-20260905-01-source-inventory",
+  "documentNamespace": "https://nilo.invalid/sbom/build-environment/noble-20260905-01/source",
+  "creationInfo": {"created": "2026-09-05T00:00:00Z", "creators": ["Tool: NILO build-environment source definition"]},
+  "packages": [
+    {"name":"ubuntu","SPDXID":"SPDXRef-Ubuntu","versionInfo":"24.04","downloadLocation":"https://hub.docker.com/_/ubuntu","filesAnalyzed":false,"licenseConcluded":"NOASSERTION","licenseDeclared":"NOASSERTION"}
+  ],
+  "comment": "Source-definition SBOM. Replace with the generated image SBOM after the real image build; acceptance remains pending until then."
+}

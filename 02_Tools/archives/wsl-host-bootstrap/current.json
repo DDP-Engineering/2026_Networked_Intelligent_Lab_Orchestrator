@@ -1,0 +1,2297 @@
+{
+  "schema": 1,
+  "generation": "noble-20260905-01",
+  "status": "generated-unpublished",
+  "archive": {
+    "filename": "nilo-wsl-host-bootstrap-noble-20260905-01.tar.gz",
+    "size": 191743998,
+    "sha256": "d2bf7348487e170edcaccc917350cbae90fcc960d0fa63bc74f5228d213da09f"
+  },
+  "parts": [
+    {
+      "ordinal": 0,
+      "filename": "nilo-wsl-host-bootstrap-noble-20260905-01.tar.gz.part000",
+      "size": 191743998,
+      "sha256": "d2bf7348487e170edcaccc917350cbae90fcc960d0fa63bc74f5228d213da09f",
+      "lfs_oid": "sha256:d2bf7348487e170edcaccc917350cbae90fcc960d0fa63bc74f5228d213da09f"
+    }
+  ],
+  "common": [
+    {
+      "package": "adduser",
+      "version": "3.137ubuntu1",
+      "architecture": "all",
+      "filename": "packages/common/adduser_3.137ubuntu1_all.deb",
+      "size": 100872,
+      "sha256": "542aff2395eb912a56833e11a78076342779689d8fede7adcf08d1d6b0d0cd8b",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "containernetworking-plugins",
+      "version": "1.1.1+ds1-3ubuntu0.24.04.3",
+      "architecture": "amd64",
+      "filename": "packages/common/containernetworking-plugins_1.1.1+ds1-3ubuntu0.24.04.3_amd64.deb",
+      "size": 7203442,
+      "sha256": "0ffc31ebfa430615d2e35ad7cea6b3717faa8fdbc02debd773625cad83fcdd65",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "coreutils",
+      "version": "9.4-3ubuntu6.3",
+      "architecture": "amd64",
+      "filename": "packages/common/coreutils_9.4-3ubuntu6.3_amd64.deb",
+      "size": 1413428,
+      "sha256": "e1e9a17892be0cc83b7cea747edf331ffeb6d6c010b4db296e60d888e8e9274c",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "debconf",
+      "version": "1.5.86ubuntu1",
+      "architecture": "all",
+      "filename": "packages/common/debconf_1.5.86ubuntu1_all.deb",
+      "size": 124096,
+      "sha256": "bb390da466a7461bfc87aa3e6b7cd145dae84af3e26bf437f2c0c218ba226294",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "dirmngr",
+      "version": "2.4.4-2ubuntu17.6",
+      "architecture": "amd64",
+      "filename": "packages/common/dirmngr_2.4.4-2ubuntu17.6_amd64.deb",
+      "size": 323226,
+      "sha256": "3c80161cf0918a3b94b78274bf4c63fafe76f15cc8060898527e0757b1df98fd",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "dpkg",
+      "version": "1.22.6ubuntu6.6",
+      "architecture": "amd64",
+      "filename": "packages/common/dpkg_1.22.6ubuntu6.6_amd64.deb",
+      "size": 1282284,
+      "sha256": "ceb6aa4da59fbcb8a3b0549b4280c60b7d849b519859797c8668bdfbe378fb3b",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "gcc-14-base",
+      "version": "14.2.0-4ubuntu2~24.04.1",
+      "architecture": "amd64",
+      "filename": "packages/common/gcc-14-base_14.2.0-4ubuntu2~24.04.1_amd64.deb",
+      "size": 51014,
+      "sha256": "b95c172411a7fdae70307cf33a9f5320ba5e056b556454543dd5b679d5ce1c4f",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "git-lfs",
+      "version": "3.4.1-1ubuntu0.4",
+      "architecture": "amd64",
+      "filename": "packages/common/git-lfs_3.4.1-1ubuntu0.4_amd64.deb",
+      "size": 3908174,
+      "sha256": "b51b8f513f01e83d75b16326e187a6451185ce4f9c10976a94dbfcea5face5a9",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "git-man",
+      "version": "1:2.43.0-1ubuntu7.3",
+      "architecture": "all",
+      "filename": "packages/common/git-man_1%3a2.43.0-1ubuntu7.3_all.deb",
+      "size": 1100178,
+      "sha256": "5701f931ed2cd30644700b0fc1cda7c2214f93a63ef84c0c80e43ce40d2cf1d2",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "git",
+      "version": "1:2.43.0-1ubuntu7.3",
+      "architecture": "amd64",
+      "filename": "packages/common/git_1%3a2.43.0-1ubuntu7.3_amd64.deb",
+      "size": 3679758,
+      "sha256": "099bb129f543adc4c14203334b0fa0a909f8bf038c4d56bc9cc7c774ebf78f87",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "gnupg-utils",
+      "version": "2.4.4-2ubuntu17.6",
+      "architecture": "amd64",
+      "filename": "packages/common/gnupg-utils_2.4.4-2ubuntu17.6_amd64.deb",
+      "size": 109198,
+      "sha256": "d27240259f74be5ec4c07ec505d087a3d6a4a66eedef479eb067d8f364263a12",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "gnupg",
+      "version": "2.4.4-2ubuntu17.6",
+      "architecture": "all",
+      "filename": "packages/common/gnupg_2.4.4-2ubuntu17.6_all.deb",
+      "size": 358890,
+      "sha256": "d278c81e407d51dae2b7df30adc08ecd6a0acde5884fc5ba2d1ef107f0e8ab0b",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "golang-github-containers-common",
+      "version": "0.57.4+ds1-2ubuntu0.2",
+      "architecture": "all",
+      "filename": "packages/common/golang-github-containers-common_0.57.4+ds1-2ubuntu0.2_all.deb",
+      "size": 39936,
+      "sha256": "dae82b120f8a1b429c0a63a2ccd2ff3c91563f97e2188b1fbaf78ba76f7fb89c",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "golang-github-containers-image",
+      "version": "5.29.2-2",
+      "architecture": "all",
+      "filename": "packages/common/golang-github-containers-image_5.29.2-2_all.deb",
+      "size": 33432,
+      "sha256": "2059cd3836a417d2e770b810c507b9d29aa4e32759650138c6c8704c24749772",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "gpg-agent",
+      "version": "2.4.4-2ubuntu17.6",
+      "architecture": "amd64",
+      "filename": "packages/common/gpg-agent_2.4.4-2ubuntu17.6_amd64.deb",
+      "size": 227154,
+      "sha256": "7b6778c1d297a4d4e889005917a0b9996a24d704e2e79d52be65b5d1f6b651ce",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "gpg",
+      "version": "2.4.4-2ubuntu17.6",
+      "architecture": "amd64",
+      "filename": "packages/common/gpg_2.4.4-2ubuntu17.6_amd64.deb",
+      "size": 565004,
+      "sha256": "34a775d73a2fe9b6e9205668e39954fe0c1e5c046b1a30c307c7d1e6e22cd1a7",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "gpgconf",
+      "version": "2.4.4-2ubuntu17.6",
+      "architecture": "amd64",
+      "filename": "packages/common/gpgconf_2.4.4-2ubuntu17.6_amd64.deb",
+      "size": 103894,
+      "sha256": "59d35df3b5d7e6dd8235c39c56f8008d1380275765d1a10343e5b9be185e2b7a",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "gpgsm",
+      "version": "2.4.4-2ubuntu17.6",
+      "architecture": "amd64",
+      "filename": "packages/common/gpgsm_2.4.4-2ubuntu17.6_amd64.deb",
+      "size": 231628,
+      "sha256": "c19746c589c9cb7fa15de8a21790fef0a0b061c3e2758823536d3ac0973ca51a",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "gpgv",
+      "version": "2.4.4-2ubuntu17.6",
+      "architecture": "amd64",
+      "filename": "packages/common/gpgv_2.4.4-2ubuntu17.6_amd64.deb",
+      "size": 158120,
+      "sha256": "c8810069e98cd343c4c5c64b3ef5a0bb1f526419cff3266cd99ed4c87ad99868",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "gzip",
+      "version": "1.12-1ubuntu3.2",
+      "architecture": "amd64",
+      "filename": "packages/common/gzip_1.12-1ubuntu3.2_amd64.deb",
+      "size": 99204,
+      "sha256": "4067522fbffe22672e4cf683bfc32e4a304bc872cf76f10049ab36d1a9eedb91",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "init-system-helpers",
+      "version": "1.66ubuntu1",
+      "architecture": "all",
+      "filename": "packages/common/init-system-helpers_1.66ubuntu1_all.deb",
+      "size": 39402,
+      "sha256": "8eb801f9ce084dab9bf4cbc3ec0ee5ac75516a4cc1f25e3f92298c632e75b700",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "iptables",
+      "version": "1.8.10-3ubuntu2",
+      "architecture": "amd64",
+      "filename": "packages/common/iptables_1.8.10-3ubuntu2_amd64.deb",
+      "size": 381328,
+      "sha256": "d341e8ffc42ca035f5aa0fd9a798c8d2b2edb019225dc11f4dac16edf9c57840",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "jq",
+      "version": "1.7.1-3ubuntu0.24.04.2",
+      "architecture": "amd64",
+      "filename": "packages/common/jq_1.7.1-3ubuntu0.24.04.2_amd64.deb",
+      "size": 65694,
+      "sha256": "f59183392f84fe67b407b494d8ba6185e9b0e4a106ffcb369490bd20a83fd40e",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "keyboxd",
+      "version": "2.4.4-2ubuntu17.6",
+      "architecture": "amd64",
+      "filename": "packages/common/keyboxd_2.4.4-2ubuntu17.6_amd64.deb",
+      "size": 78268,
+      "sha256": "1bb5f40735b55a17abfb587607816724771fb38fd123b083b7d24bc606c2ecda",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libacl1",
+      "version": "2.3.2-1build1.1",
+      "architecture": "amd64",
+      "filename": "packages/common/libacl1_2.3.2-1build1.1_amd64.deb",
+      "size": 16792,
+      "sha256": "f2bfd3f8f00413d5f1f04fc723063803c56ac0f1e0efae3bc41f2d7276972ec3",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libassuan0",
+      "version": "2.5.6-1build1",
+      "architecture": "amd64",
+      "filename": "packages/common/libassuan0_2.5.6-1build1_amd64.deb",
+      "size": 37256,
+      "sha256": "59c6ee6aa6fffb5d181f37373baec18c26791f5d1c907ceeb62163460b11daf2",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libattr1",
+      "version": "1:2.5.2-1ubuntu0.1",
+      "architecture": "amd64",
+      "filename": "packages/common/libattr1_1%3a2.5.2-1ubuntu0.1_amd64.deb",
+      "size": 11748,
+      "sha256": "a99e2e2dfcefbc0e9c99fdc0b284c8b35eaa58744163aaed476de1c93d3c4ef4",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libaudit-common",
+      "version": "1:3.1.2-2.1build1.1",
+      "architecture": "all",
+      "filename": "packages/common/libaudit-common_1%3a3.1.2-2.1build1.1_all.deb",
+      "size": 5824,
+      "sha256": "c8ab5bed96f9781daab7c36fcbe4b12c3f3247a37256c0e341dc827db1e9a010",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libaudit1",
+      "version": "1:3.1.2-2.1build1.1",
+      "architecture": "amd64",
+      "filename": "packages/common/libaudit1_1%3a3.1.2-2.1build1.1_amd64.deb",
+      "size": 46962,
+      "sha256": "408457f91745dd33746d24d063986df96a81166d6a59431583073398cefa1301",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libbrotli1",
+      "version": "1.1.0-2build2",
+      "architecture": "amd64",
+      "filename": "packages/common/libbrotli1_1.1.0-2build2_amd64.deb",
+      "size": 330730,
+      "sha256": "74492419b8fda803774b8c9acef6afc5d2f9ff31782635aae212906adae7b277",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libbz2-1.0",
+      "version": "1.0.8-5.1ubuntu0.1",
+      "architecture": "amd64",
+      "filename": "packages/common/libbz2-1.0_1.0.8-5.1ubuntu0.1_amd64.deb",
+      "size": 34562,
+      "sha256": "36ee08b00b1ee5018b2fce02881b7d2d73c9b4e32990bde3388400d86c48126a",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libc6",
+      "version": "2.39-0ubuntu8.8",
+      "architecture": "amd64",
+      "filename": "packages/common/libc6_2.39-0ubuntu8.8_amd64.deb",
+      "size": 3262434,
+      "sha256": "3b8d5391b6b484a4c81fd000b6064885ad967ec3cb966bc57603f3fb3ebf0ed5",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libcap-ng0",
+      "version": "0.8.4-2build2",
+      "architecture": "amd64",
+      "filename": "packages/common/libcap-ng0_0.8.4-2build2_amd64.deb",
+      "size": 15180,
+      "sha256": "cf1e9437ac7ddf6539dbe87b68858cbdef84d78c6aac243ab3b6e564a52ed930",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libcap2",
+      "version": "1:2.66-5ubuntu2.4",
+      "architecture": "amd64",
+      "filename": "packages/common/libcap2_1%3a2.66-5ubuntu2.4_amd64.deb",
+      "size": 30500,
+      "sha256": "23c627c77c66552a658e62852f244f4946dc543898e0ec5428d5dc6bffde2d6a",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libcom-err2",
+      "version": "1.47.0-2.4~exp1ubuntu4.1",
+      "architecture": "amd64",
+      "filename": "packages/common/libcom-err2_1.47.0-2.4~exp1ubuntu4.1_amd64.deb",
+      "size": 22982,
+      "sha256": "7ab24d3057dabf86db8f771ad6e43f073ed86b6b950d6e8ba22cb9fe6707bbc9",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libcrypt1",
+      "version": "1:4.4.36-4build1",
+      "architecture": "amd64",
+      "filename": "packages/common/libcrypt1_1%3a4.4.36-4build1_amd64.deb",
+      "size": 82302,
+      "sha256": "9474785cd6f398512bf8c305c3901dbb111569dccb6f5832002373c0a8ac5832",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libcurl3t64-gnutls",
+      "version": "8.5.0-2ubuntu10.13",
+      "architecture": "amd64",
+      "filename": "packages/common/libcurl3t64-gnutls_8.5.0-2ubuntu10.13_amd64.deb",
+      "size": 335082,
+      "sha256": "4212974e797d25e7545ffee2c90c104277c31a8d5ab4775fa95779caa41587c0",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libdb5.3t64",
+      "version": "5.3.28+dfsg2-7",
+      "architecture": "amd64",
+      "filename": "packages/common/libdb5.3t64_5.3.28+dfsg2-7_amd64.deb",
+      "size": 734100,
+      "sha256": "a78a25c8fad8fdd0b7bc6b297da5d5685579be1e57732aa47870830e4a13161e",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libdevmapper1.02.1",
+      "version": "2:1.02.185-3ubuntu3.2",
+      "architecture": "amd64",
+      "filename": "packages/common/libdevmapper1.02.1_2%3a1.02.185-3ubuntu3.2_amd64.deb",
+      "size": 139194,
+      "sha256": "0d43a02b9030a50edbc49c9580f88f01eef2b043baad1c6200672c39643c0efe",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "liberror-perl",
+      "version": "0.17029-2",
+      "architecture": "all",
+      "filename": "packages/common/liberror-perl_0.17029-2_all.deb",
+      "size": 25632,
+      "sha256": "1907af6bf33dd8684447c09f216c675d2b8559fadd8ddace29fbf83c6fb2a636",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libexpat1",
+      "version": "2.6.1-2ubuntu0.4",
+      "architecture": "amd64",
+      "filename": "packages/common/libexpat1_2.6.1-2ubuntu0.4_amd64.deb",
+      "size": 88214,
+      "sha256": "126a5612e652bdc2edee19ae8fe4308db72b5b3b0a5581bf885b44a093baf3e5",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libffi8",
+      "version": "3.4.6-1build1",
+      "architecture": "amd64",
+      "filename": "packages/common/libffi8_3.4.6-1build1_amd64.deb",
+      "size": 24718,
+      "sha256": "637e6a7744de08cd331a41f4efd0d24e6ea9064843dea9d1c6ca87bdb5f038a2",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libgcc-s1",
+      "version": "14.2.0-4ubuntu2~24.04.1",
+      "architecture": "amd64",
+      "filename": "packages/common/libgcc-s1_14.2.0-4ubuntu2~24.04.1_amd64.deb",
+      "size": 78392,
+      "sha256": "aa7fadbe33b78bcf99885318040601c550c208929565b179891d9a3cc2aa68cd",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libgcrypt20",
+      "version": "1.10.3-2ubuntu0.2",
+      "architecture": "amd64",
+      "filename": "packages/common/libgcrypt20_1.10.3-2ubuntu0.2_amd64.deb",
+      "size": 536494,
+      "sha256": "957b9eeaa83cf6f2d5d5d76dbb8aa31d3297e6781d8a02fa08dcc897ae650a0b",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libgdbm-compat4t64",
+      "version": "1.23-5.1build1",
+      "architecture": "amd64",
+      "filename": "packages/common/libgdbm-compat4t64_1.23-5.1build1_amd64.deb",
+      "size": 6710,
+      "sha256": "fb8564afd7b7d74d55207070ba50339478e22d29a39ec740dc482f069ac7ee65",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libgdbm6t64",
+      "version": "1.23-5.1build1",
+      "architecture": "amd64",
+      "filename": "packages/common/libgdbm6t64_1.23-5.1build1_amd64.deb",
+      "size": 34440,
+      "sha256": "18d6d74a5c038b458d95ba0c0909e0f086cd50bb9a0fee32697902724fc5645e",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libgmp10",
+      "version": "2:6.3.0+dfsg-2ubuntu6.1",
+      "architecture": "amd64",
+      "filename": "packages/common/libgmp10_2%3a6.3.0+dfsg-2ubuntu6.1_amd64.deb",
+      "size": 253460,
+      "sha256": "285f8a505dfa8e1b33f357a9d8d3477ad35bf18c0b34771a6df4c25923f3ae0d",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libgnutls30t64",
+      "version": "3.8.3-1.1ubuntu3.6",
+      "architecture": "amd64",
+      "filename": "packages/common/libgnutls30t64_3.8.3-1.1ubuntu3.6_amd64.deb",
+      "size": 1002902,
+      "sha256": "b8944756260c5ea6b7fac019745f931f905aa7a4df0763676b1b25c911b692e2",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libgpg-error0",
+      "version": "1.47-3build2.1",
+      "architecture": "amd64",
+      "filename": "packages/common/libgpg-error0_1.47-3build2.1_amd64.deb",
+      "size": 70092,
+      "sha256": "93654ee8180a73a0363f25c51dc673d67cbabcbecd164187b8a2deb54d007aef",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libgpgme11t64",
+      "version": "1.18.0-4.1ubuntu4",
+      "architecture": "amd64",
+      "filename": "packages/common/libgpgme11t64_1.18.0-4.1ubuntu4_amd64.deb",
+      "size": 135618,
+      "sha256": "b3640068e8af3becf16faec886ff139880736ed23a7fc605c1f0cece405a5606",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libgssapi-krb5-2",
+      "version": "1.20.1-6ubuntu2.8",
+      "architecture": "amd64",
+      "filename": "packages/common/libgssapi-krb5-2_1.20.1-6ubuntu2.8_amd64.deb",
+      "size": 142680,
+      "sha256": "6cd99ec16ae12eb465712f950e43eaf03a8d2a6ab24c00178df56470d5343b66",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libhogweed6t64",
+      "version": "3.9.1-2.2build1.1",
+      "architecture": "amd64",
+      "filename": "packages/common/libhogweed6t64_3.9.1-2.2build1.1_amd64.deb",
+      "size": 198548,
+      "sha256": "a9b5f7e9d49ba9060e1c933567046fbc6feab6096799cbf550b7214dc9b0f49b",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libidn2-0",
+      "version": "2.3.7-2build1.1",
+      "architecture": "amd64",
+      "filename": "packages/common/libidn2-0_2.3.7-2build1.1_amd64.deb",
+      "size": 66242,
+      "sha256": "46bfd10df095a23b65f58115de47a547c9a2d14627749bd0423ae78c14be77d3",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libip4tc2",
+      "version": "1.8.10-3ubuntu2",
+      "architecture": "amd64",
+      "filename": "packages/common/libip4tc2_1.8.10-3ubuntu2_amd64.deb",
+      "size": 23342,
+      "sha256": "eb381f8ff0469534df3f1b146c3eb8baa6e36f8cfcdf2e3e039398322930d0a4",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libip6tc2",
+      "version": "1.8.10-3ubuntu2",
+      "architecture": "amd64",
+      "filename": "packages/common/libip6tc2_1.8.10-3ubuntu2_amd64.deb",
+      "size": 23732,
+      "sha256": "b98b88eb6aa14a902ea1aebc3b12ddd140572545ae1fc6428cb0868c31671d05",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libjq1",
+      "version": "1.7.1-3ubuntu0.24.04.2",
+      "architecture": "amd64",
+      "filename": "packages/common/libjq1_1.7.1-3ubuntu0.24.04.2_amd64.deb",
+      "size": 141902,
+      "sha256": "078fbf38b2e7c3f24cc5dc894d1bb03b617894b887a6e13d5943e13818e724f3",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libk5crypto3",
+      "version": "1.20.1-6ubuntu2.8",
+      "architecture": "amd64",
+      "filename": "packages/common/libk5crypto3_1.20.1-6ubuntu2.8_amd64.deb",
+      "size": 81946,
+      "sha256": "48f689737191cfafaf3c158e9b07d6448f9e6217ad7abbaacc4f96dc95403fa2",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libkeyutils1",
+      "version": "1.6.3-3build1",
+      "architecture": "amd64",
+      "filename": "packages/common/libkeyutils1_1.6.3-3build1_amd64.deb",
+      "size": 9490,
+      "sha256": "0679f198b0128179e46cdf956fb2022c23c758664c00bc8efa0382d509683a8a",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libkrb5-3",
+      "version": "1.20.1-6ubuntu2.8",
+      "architecture": "amd64",
+      "filename": "packages/common/libkrb5-3_1.20.1-6ubuntu2.8_amd64.deb",
+      "size": 347620,
+      "sha256": "63ab8110daea359f55d8135d395de198257acb1f948500c561745addddfece4c",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libkrb5support0",
+      "version": "1.20.1-6ubuntu2.8",
+      "architecture": "amd64",
+      "filename": "packages/common/libkrb5support0_1.20.1-6ubuntu2.8_amd64.deb",
+      "size": 34688,
+      "sha256": "cee1efc93d4ce4a97db756269824b5a2b90d2cb993cd76102432db60890819fc",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libksba8",
+      "version": "1.6.6-1build1",
+      "architecture": "amd64",
+      "filename": "packages/common/libksba8_1.6.6-1build1_amd64.deb",
+      "size": 121958,
+      "sha256": "7b0e1f2c2c5ee7b3ed1c1558c6338c6cdd77d27280020abc3e1f3159cf564106",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libldap2",
+      "version": "2.6.10+dfsg-0ubuntu0.24.04.1",
+      "architecture": "amd64",
+      "filename": "packages/common/libldap2_2.6.10+dfsg-0ubuntu0.24.04.1_amd64.deb",
+      "size": 197620,
+      "sha256": "7f3f8e565401256f21d5aa562c9f92dbb63537b73aaea6283e4db5264f1598f4",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "liblz4-1",
+      "version": "1.9.4-1build1.1",
+      "architecture": "amd64",
+      "filename": "packages/common/liblz4-1_1.9.4-1build1.1_amd64.deb",
+      "size": 63062,
+      "sha256": "319331270d5cc52d5ebffe51c941d7b01b432bc402c2924b557209a64d4ecbad",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "liblzma5",
+      "version": "5.6.1+really5.4.5-1ubuntu0.3",
+      "architecture": "amd64",
+      "filename": "packages/common/liblzma5_5.6.1+really5.4.5-1ubuntu0.3_amd64.deb",
+      "size": 127352,
+      "sha256": "d2eabd41ca77d2c2dd9d5d4ef478cccb64ffde6279c47cf4699a857d46785a52",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libmd0",
+      "version": "1.1.0-2build1.1",
+      "architecture": "amd64",
+      "filename": "packages/common/libmd0_1.1.0-2build1.1_amd64.deb",
+      "size": 26976,
+      "sha256": "e5ba01d3c41f256aaf57ec59aa0554857162e3e7f97cdfbff1ed2c0e8d720ee7",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libmnl0",
+      "version": "1.0.5-2build1",
+      "architecture": "amd64",
+      "filename": "packages/common/libmnl0_1.0.5-2build1_amd64.deb",
+      "size": 12272,
+      "sha256": "5170658bf0eaf54a8c7d53061ca6b47a6cf33a83543a75fa521de7046cb7197a",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libncursesw6",
+      "version": "6.4+20240113-1ubuntu2.2",
+      "architecture": "amd64",
+      "filename": "packages/common/libncursesw6_6.4+20240113-1ubuntu2.2_amd64.deb",
+      "size": 147816,
+      "sha256": "579c9488755d1ddd70f66480cafd2f68776f68314d15d9cf4b5449d0de0fc968",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libnetfilter-conntrack3",
+      "version": "1.0.9-6build1",
+      "architecture": "amd64",
+      "filename": "packages/common/libnetfilter-conntrack3_1.0.9-6build1_amd64.deb",
+      "size": 45218,
+      "sha256": "6d32a4c4618eb7d6c0d989591d28637a9acdfa86dfe22e42e9ac9cc25d882a97",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libnettle8t64",
+      "version": "3.9.1-2.2build1.1",
+      "architecture": "amd64",
+      "filename": "packages/common/libnettle8t64_3.9.1-2.2build1.1_amd64.deb",
+      "size": 181636,
+      "sha256": "6d97fbc1972633083f08f51ccab433606c97bbceb897c631c66495117ca3406f",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libnfnetlink0",
+      "version": "1.0.2-2build1",
+      "architecture": "amd64",
+      "filename": "packages/common/libnfnetlink0_1.0.2-2build1_amd64.deb",
+      "size": 14810,
+      "sha256": "f557a287af2ca00df5dbf632c6b77d77479139ffb51c83e3de9766eb609b5d63",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libnftnl11",
+      "version": "1.2.6-2build1",
+      "architecture": "amd64",
+      "filename": "packages/common/libnftnl11_1.2.6-2build1_amd64.deb",
+      "size": 65986,
+      "sha256": "e5bde5c9cbb95082700011f0b7ef2c0a41900b0a9fd7434f6e90448e2a7b4e50",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libnghttp2-14",
+      "version": "1.59.0-1ubuntu0.4",
+      "architecture": "amd64",
+      "filename": "packages/common/libnghttp2-14_1.59.0-1ubuntu0.4_amd64.deb",
+      "size": 74590,
+      "sha256": "73adcbb9df32cd7c9d46b1c7598bbbbcf249be705d62d966694cfc9976a15dfe",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libnpth0t64",
+      "version": "1.6-3.1build1",
+      "architecture": "amd64",
+      "filename": "packages/common/libnpth0t64_1.6-3.1build1_amd64.deb",
+      "size": 8378,
+      "sha256": "b380eca1221a9ac855427652452801c5ca9161dd69e12446d300524eba00944e",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libonig5",
+      "version": "6.9.9-1build1",
+      "architecture": "amd64",
+      "filename": "packages/common/libonig5_6.9.9-1build1_amd64.deb",
+      "size": 172336,
+      "sha256": "605f42287d2bcb6c84f5a02377c7cd777090c5e857259a4030a571989f19dde2",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libp11-kit0",
+      "version": "0.25.3-4ubuntu2.2",
+      "architecture": "amd64",
+      "filename": "packages/common/libp11-kit0_0.25.3-4ubuntu2.2_amd64.deb",
+      "size": 297270,
+      "sha256": "e7c58aeac19d89f5f1492dfaa52b8623bcd56edc40983f5243ad56d94f477bf2",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libpam-modules-bin",
+      "version": "1.5.3-5ubuntu5.7",
+      "architecture": "amd64",
+      "filename": "packages/common/libpam-modules-bin_1.5.3-5ubuntu5.7_amd64.deb",
+      "size": 51866,
+      "sha256": "e6753b038042cd007843cbc79a81e732d82d0d2415bcf78ff2120c50b5e54f82",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libpam-modules",
+      "version": "1.5.3-5ubuntu5.7",
+      "architecture": "amd64",
+      "filename": "packages/common/libpam-modules_1.5.3-5ubuntu5.7_amd64.deb",
+      "size": 286418,
+      "sha256": "c8e86ef52e3a743dc67d90f4c6654f7f529deafa6a523fe9076e809785aeea18",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libpam0g",
+      "version": "1.5.3-5ubuntu5.7",
+      "architecture": "amd64",
+      "filename": "packages/common/libpam0g_1.5.3-5ubuntu5.7_amd64.deb",
+      "size": 68124,
+      "sha256": "1d7f54e77f0455ab5e607cd5e78b576801d8efdc66115e02cf3c6e708d093667",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libpcre2-8-0",
+      "version": "10.42-4ubuntu2.1",
+      "architecture": "amd64",
+      "filename": "packages/common/libpcre2-8-0_10.42-4ubuntu2.1_amd64.deb",
+      "size": 226662,
+      "sha256": "110a797a57673d3ee497a141cf988199258058c57525799c63194d81822529a0",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libperl5.38t64",
+      "version": "5.38.2-3.2ubuntu0.4",
+      "architecture": "amd64",
+      "filename": "packages/common/libperl5.38t64_5.38.2-3.2ubuntu0.4_amd64.deb",
+      "size": 4869836,
+      "sha256": "00eae8a6e18a028f0ddc80fda8cd98678e441fc15e2e72aec359706c5e9d488f",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libpsl5t64",
+      "version": "0.21.2-1.1build1",
+      "architecture": "amd64",
+      "filename": "packages/common/libpsl5t64_0.21.2-1.1build1_amd64.deb",
+      "size": 57072,
+      "sha256": "a6c85d1303ae90b6a3209d73c4f047f82c27cdc963c48adfd95dd7abca64f039",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libreadline8t64",
+      "version": "8.2-4build1",
+      "architecture": "amd64",
+      "filename": "packages/common/libreadline8t64_8.2-4build1_amd64.deb",
+      "size": 152856,
+      "sha256": "563977a16df03b611f5239cc1e9a0426e86479fcc616b5c9e200ea32063119e5",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "librtmp1",
+      "version": "2.4+20151223.gitfa8646d.1-2build7",
+      "architecture": "amd64",
+      "filename": "packages/common/librtmp1_2.4+20151223.gitfa8646d.1-2build7_amd64.deb",
+      "size": 56342,
+      "sha256": "967a39dbc14236d1580ede01d80fd78444668572e716734e1ac66c175052594e",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libsasl2-2",
+      "version": "2.1.28+dfsg1-5ubuntu3.1",
+      "architecture": "amd64",
+      "filename": "packages/common/libsasl2-2_2.1.28+dfsg1-5ubuntu3.1_amd64.deb",
+      "size": 53194,
+      "sha256": "eda097f98dcb3a08b9ce157d6191d140e4885c1cba47b683c94b8ca45e88f458",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libsasl2-modules-db",
+      "version": "2.1.28+dfsg1-5ubuntu3.1",
+      "architecture": "amd64",
+      "filename": "packages/common/libsasl2-modules-db_2.1.28+dfsg1-5ubuntu3.1_amd64.deb",
+      "size": 20354,
+      "sha256": "1f13548b1774cd9c70c50b8c3267204a101334a4d2f979338896ba5a4c6f81b8",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libselinux1",
+      "version": "3.5-2ubuntu2.1",
+      "architecture": "amd64",
+      "filename": "packages/common/libselinux1_3.5-2ubuntu2.1_amd64.deb",
+      "size": 79660,
+      "sha256": "6abaa6c26f46ef17764c4a753e0e84de1cdadde5634fd2987621fdc617988d19",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libsemanage-common",
+      "version": "3.5-1build5",
+      "architecture": "all",
+      "filename": "packages/common/libsemanage-common_3.5-1build5_all.deb",
+      "size": 10144,
+      "sha256": "e10cd93f0b6941566de04b860b723df57ca3fe4a9255a73b2be0d1dc7df2850e",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libsemanage2",
+      "version": "3.5-1build5",
+      "architecture": "amd64",
+      "filename": "packages/common/libsemanage2_3.5-1build5_amd64.deb",
+      "size": 93178,
+      "sha256": "56102dcbd410416d03c5ffb80958f54ac63936f4d9eb3f6a98964e680a82ce37",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libsepol2",
+      "version": "3.5-2build1",
+      "architecture": "amd64",
+      "filename": "packages/common/libsepol2_3.5-2build1_amd64.deb",
+      "size": 302950,
+      "sha256": "47272bab0c2fcc350431f9a8ae63afc49ce6d7e71e63c914639fbda6b1ca9f6a",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libsqlite3-0",
+      "version": "3.45.1-1ubuntu2.7",
+      "architecture": "amd64",
+      "filename": "packages/common/libsqlite3-0_3.45.1-1ubuntu2.7_amd64.deb",
+      "size": 701442,
+      "sha256": "488511119cad001a00f7e00e597112cf743ccfbd3f7a03c82d66237e1bfd82c8",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libssh-4",
+      "version": "0.10.6-2ubuntu0.5",
+      "architecture": "amd64",
+      "filename": "packages/common/libssh-4_0.10.6-2ubuntu0.5_amd64.deb",
+      "size": 191284,
+      "sha256": "2448ce5f99e49721d12f8b227f2472dd08ed7a78184dd819fd03a42693024a16",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libssl3t64",
+      "version": "3.0.13-0ubuntu3.15",
+      "architecture": "amd64",
+      "filename": "packages/common/libssl3t64_3.0.13-0ubuntu3.15_amd64.deb",
+      "size": 1944134,
+      "sha256": "3d0955bc049bbcca0f4c3e78a3a8b994593d96db7d84f4320217224433844534",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libsystemd0",
+      "version": "255.4-1ubuntu8.17",
+      "architecture": "amd64",
+      "filename": "packages/common/libsystemd0_255.4-1ubuntu8.17_amd64.deb",
+      "size": 431784,
+      "sha256": "4776d2ac7e21efe2ae31f3f7955a7ccd97277225eecf36910a26faf4544979ae",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libtasn1-6",
+      "version": "4.19.0-3ubuntu0.24.04.2",
+      "architecture": "amd64",
+      "filename": "packages/common/libtasn1-6_4.19.0-3ubuntu0.24.04.2_amd64.deb",
+      "size": 44468,
+      "sha256": "f82c9ad142f952ea523bda5bfca7bb0802af3a50b8c0f0dd9ec18cdfa104bde7",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libtinfo6",
+      "version": "6.4+20240113-1ubuntu2.2",
+      "architecture": "amd64",
+      "filename": "packages/common/libtinfo6_6.4+20240113-1ubuntu2.2_amd64.deb",
+      "size": 108086,
+      "sha256": "b67a6df2bdab61d273eabebd208bb6a3fb12618a390a067e1ee305a409ff03d9",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libudev1",
+      "version": "255.4-1ubuntu8.17",
+      "architecture": "amd64",
+      "filename": "packages/common/libudev1_255.4-1ubuntu8.17_amd64.deb",
+      "size": 177608,
+      "sha256": "6efea3770f738db2fd43ebdaed3d91ef0cde8aa8387b4803080af473326ebdb0",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libunistring5",
+      "version": "1.1-2build1.1",
+      "architecture": "amd64",
+      "filename": "packages/common/libunistring5_1.1-2build1.1_amd64.deb",
+      "size": 535554,
+      "sha256": "203d7657b5f54633fba1a9c9b784d556ef83c9f6787b3185ba55a88e07b865a3",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libxtables12",
+      "version": "1.8.10-3ubuntu2",
+      "architecture": "amd64",
+      "filename": "packages/common/libxtables12_1.8.10-3ubuntu2_amd64.deb",
+      "size": 35704,
+      "sha256": "c94063499d1b0b336f39607107efb7de95d52a5d4e7e6a9368a5f7308f05b714",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "libzstd1",
+      "version": "1.5.5+dfsg2-2build1.1",
+      "architecture": "amd64",
+      "filename": "packages/common/libzstd1_1.5.5+dfsg2-2build1.1_amd64.deb",
+      "size": 299472,
+      "sha256": "dfcf25061e07aad7efd3f4f880ba5ad4d4d09ebe7fc8cc77ab6b8a161d6d4727",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "netbase",
+      "version": "6.4",
+      "architecture": "all",
+      "filename": "packages/common/netbase_6.4_all.deb",
+      "size": 13112,
+      "sha256": "8cdbc9c3dca01e660759bf9d840f72e45ac72faf5d19ca1faecacaf6a60c1a87",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "passwd",
+      "version": "1:4.13+dfsg1-4ubuntu3.2",
+      "architecture": "amd64",
+      "filename": "packages/common/passwd_1%3a4.13+dfsg1-4ubuntu3.2_amd64.deb",
+      "size": 844580,
+      "sha256": "139b51228c8065eefa3051f649d8480eb986f1cf629448e49d2eaf9813318412",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "perl-base",
+      "version": "5.38.2-3.2ubuntu0.4",
+      "architecture": "amd64",
+      "filename": "packages/common/perl-base_5.38.2-3.2ubuntu0.4_amd64.deb",
+      "size": 1826252,
+      "sha256": "ef444936e7e698abce3391ffb4bfa2697e1c65f08b2332fd0b8ef9c267cc8f94",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "perl-modules-5.38",
+      "version": "5.38.2-3.2ubuntu0.4",
+      "architecture": "all",
+      "filename": "packages/common/perl-modules-5.38_5.38.2-3.2ubuntu0.4_all.deb",
+      "size": 3110104,
+      "sha256": "14e3fb89fdc5e154f0f442f8ed5d2b5e07d98fe4b883b97793df459ff265e866",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "perl",
+      "version": "5.38.2-3.2ubuntu0.4",
+      "architecture": "amd64",
+      "filename": "packages/common/perl_5.38.2-3.2ubuntu0.4_amd64.deb",
+      "size": 231440,
+      "sha256": "01ede0de6496d53bb6e9548a8aa4576c4e5d57df461c06def7633ef659c0c108",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "pinentry-curses",
+      "version": "1.2.1-3ubuntu5",
+      "architecture": "amd64",
+      "filename": "packages/common/pinentry-curses_1.2.1-3ubuntu5_amd64.deb",
+      "size": 35244,
+      "sha256": "d3df9109d1e8e4ca05630f3a6fb7d2231f71d97fc4205d0681e1c421cc77ce41",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "readline-common",
+      "version": "8.2-4build1",
+      "architecture": "all",
+      "filename": "packages/common/readline-common_8.2-4build1_all.deb",
+      "size": 56484,
+      "sha256": "879bfd7f8a9bc4c0f7cdc777cdd8bc6de5f8c4a2ac80c060322a1b22f13504bb",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "skopeo",
+      "version": "1.13.3+ds1-2ubuntu0.24.04.3",
+      "architecture": "amd64",
+      "filename": "packages/common/skopeo_1.13.3+ds1-2ubuntu0.24.04.3_amd64.deb",
+      "size": 6176576,
+      "sha256": "d908a86538f6d4bc49ea9c7423e5fb279a5c8cfc1f9bc7bd505f8bfe25d29be3",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "tar",
+      "version": "1.35+dfsg-3ubuntu0.4",
+      "architecture": "amd64",
+      "filename": "packages/common/tar_1.35+dfsg-3ubuntu0.4_amd64.deb",
+      "size": 256392,
+      "sha256": "fdf41a87936824e50c8ac11b0b22d1395aeb0754feef2dae5575b5d5a93793ec",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    },
+    {
+      "package": "zlib1g",
+      "version": "1:1.3.dfsg-3.1ubuntu2.2",
+      "architecture": "amd64",
+      "filename": "packages/common/zlib1g_1%3a1.3.dfsg-3.1ubuntu2.2_amd64.deb",
+      "size": 62988,
+      "sha256": "84b9cf5752b29c9f92c27cd4c4ba9bbcc70b5ccf9b1b515421a28ae23212e273",
+      "source": "reviewed repositories in host-bootstrap.lock.json",
+      "license": "/usr/share/doc/<package>/copyright after installation"
+    }
+  ],
+  "engines": {
+    "docker": [
+      {
+        "package": "containerd.io",
+        "version": "2.3.4-2~ubuntu.24.04~noble",
+        "architecture": "amd64",
+        "filename": "packages/docker/containerd.io_2.3.4-2~ubuntu.24.04~noble_amd64.deb",
+        "size": 22403192,
+        "sha256": "827e6809232311db8ae05fb8e0af7418148edeadc4c88c5a4360ca583f6e55ec",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "docker-buildx-plugin",
+        "version": "0.37.0-1~ubuntu.24.04~noble",
+        "architecture": "amd64",
+        "filename": "packages/docker/docker-buildx-plugin_0.37.0-1~ubuntu.24.04~noble_amd64.deb",
+        "size": 17265164,
+        "sha256": "3e8923c8ad5b93650a28358e3f092aef3b812e83dd54c5d470e61399ac11714b",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "docker-ce-cli",
+        "version": "5:29.8.0-1~ubuntu.24.04~noble",
+        "architecture": "amd64",
+        "filename": "packages/docker/docker-ce-cli_5%3a29.8.0-1~ubuntu.24.04~noble_amd64.deb",
+        "size": 17554044,
+        "sha256": "2b7468415014fecb1aef1250f5f493293d999593d6862af93e66412e891c7ac7",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "docker-ce",
+        "version": "5:29.8.0-1~ubuntu.24.04~noble",
+        "architecture": "amd64",
+        "filename": "packages/docker/docker-ce_5%3a29.8.0-1~ubuntu.24.04~noble_amd64.deb",
+        "size": 24326496,
+        "sha256": "0cd9936d80aade3f6a12c811b83f0f8e626d98821ae7f51418eec4c320632780",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "docker-compose-plugin",
+        "version": "5.5.1-1~ubuntu.24.04~noble",
+        "architecture": "amd64",
+        "filename": "packages/docker/docker-compose-plugin_5.5.1-1~ubuntu.24.04~noble_amd64.deb",
+        "size": 8012228,
+        "sha256": "82ff966149ca2c62e1a4e1fdebdf65fda8c3a8bea80b32deda6903b40afc2347",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "gcc-14-base",
+        "version": "14.2.0-4ubuntu2~24.04.1",
+        "architecture": "amd64",
+        "filename": "packages/docker/gcc-14-base_14.2.0-4ubuntu2~24.04.1_amd64.deb",
+        "size": 51014,
+        "sha256": "b95c172411a7fdae70307cf33a9f5320ba5e056b556454543dd5b679d5ce1c4f",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "init-system-helpers",
+        "version": "1.66ubuntu1",
+        "architecture": "all",
+        "filename": "packages/docker/init-system-helpers_1.66ubuntu1_all.deb",
+        "size": 39402,
+        "sha256": "8eb801f9ce084dab9bf4cbc3ec0ee5ac75516a4cc1f25e3f92298c632e75b700",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "iptables",
+        "version": "1.8.10-3ubuntu2",
+        "architecture": "amd64",
+        "filename": "packages/docker/iptables_1.8.10-3ubuntu2_amd64.deb",
+        "size": 381328,
+        "sha256": "d341e8ffc42ca035f5aa0fd9a798c8d2b2edb019225dc11f4dac16edf9c57840",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libbsd0",
+        "version": "0.12.1-1build1.1",
+        "architecture": "amd64",
+        "filename": "packages/docker/libbsd0_0.12.1-1build1.1_amd64.deb",
+        "size": 41238,
+        "sha256": "f3857b0863ac5cfd4263e9bf6cfb1d4be88d5321e4070d5bc2b62b0949e6c86f",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libc6",
+        "version": "2.39-0ubuntu8.8",
+        "architecture": "amd64",
+        "filename": "packages/docker/libc6_2.39-0ubuntu8.8_amd64.deb",
+        "size": 3262434,
+        "sha256": "3b8d5391b6b484a4c81fd000b6064885ad967ec3cb966bc57603f3fb3ebf0ed5",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libcap2",
+        "version": "1:2.66-5ubuntu2.4",
+        "architecture": "amd64",
+        "filename": "packages/docker/libcap2_1%3a2.66-5ubuntu2.4_amd64.deb",
+        "size": 30500,
+        "sha256": "23c627c77c66552a658e62852f244f4946dc543898e0ec5428d5dc6bffde2d6a",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libedit2",
+        "version": "3.1-20230828-1build1",
+        "architecture": "amd64",
+        "filename": "packages/docker/libedit2_3.1-20230828-1build1_amd64.deb",
+        "size": 97586,
+        "sha256": "3afbc8ddf835049dd4d88275b9d13680e4c4cdd59e191cbd63424152cc08e00e",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libgcc-s1",
+        "version": "14.2.0-4ubuntu2~24.04.1",
+        "architecture": "amd64",
+        "filename": "packages/docker/libgcc-s1_14.2.0-4ubuntu2~24.04.1_amd64.deb",
+        "size": 78392,
+        "sha256": "aa7fadbe33b78bcf99885318040601c550c208929565b179891d9a3cc2aa68cd",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libgcrypt20",
+        "version": "1.10.3-2ubuntu0.2",
+        "architecture": "amd64",
+        "filename": "packages/docker/libgcrypt20_1.10.3-2ubuntu0.2_amd64.deb",
+        "size": 536494,
+        "sha256": "957b9eeaa83cf6f2d5d5d76dbb8aa31d3297e6781d8a02fa08dcc897ae650a0b",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libgmp10",
+        "version": "2:6.3.0+dfsg-2ubuntu6.1",
+        "architecture": "amd64",
+        "filename": "packages/docker/libgmp10_2%3a6.3.0+dfsg-2ubuntu6.1_amd64.deb",
+        "size": 253460,
+        "sha256": "285f8a505dfa8e1b33f357a9d8d3477ad35bf18c0b34771a6df4c25923f3ae0d",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libgpg-error0",
+        "version": "1.47-3build2.1",
+        "architecture": "amd64",
+        "filename": "packages/docker/libgpg-error0_1.47-3build2.1_amd64.deb",
+        "size": 70092,
+        "sha256": "93654ee8180a73a0363f25c51dc673d67cbabcbecd164187b8a2deb54d007aef",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libip4tc2",
+        "version": "1.8.10-3ubuntu2",
+        "architecture": "amd64",
+        "filename": "packages/docker/libip4tc2_1.8.10-3ubuntu2_amd64.deb",
+        "size": 23342,
+        "sha256": "eb381f8ff0469534df3f1b146c3eb8baa6e36f8cfcdf2e3e039398322930d0a4",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libip6tc2",
+        "version": "1.8.10-3ubuntu2",
+        "architecture": "amd64",
+        "filename": "packages/docker/libip6tc2_1.8.10-3ubuntu2_amd64.deb",
+        "size": 23732,
+        "sha256": "b98b88eb6aa14a902ea1aebc3b12ddd140572545ae1fc6428cb0868c31671d05",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libjansson4",
+        "version": "2.14-2build2",
+        "architecture": "amd64",
+        "filename": "packages/docker/libjansson4_2.14-2build2_amd64.deb",
+        "size": 32830,
+        "sha256": "0cf79113f5d193ce9af2be2ff4b2c3b30dd4e55a0b6c47f7d28f6c849ff3aa60",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "liblz4-1",
+        "version": "1.9.4-1build1.1",
+        "architecture": "amd64",
+        "filename": "packages/docker/liblz4-1_1.9.4-1build1.1_amd64.deb",
+        "size": 63062,
+        "sha256": "319331270d5cc52d5ebffe51c941d7b01b432bc402c2924b557209a64d4ecbad",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "liblzma5",
+        "version": "5.6.1+really5.4.5-1ubuntu0.3",
+        "architecture": "amd64",
+        "filename": "packages/docker/liblzma5_5.6.1+really5.4.5-1ubuntu0.3_amd64.deb",
+        "size": 127352,
+        "sha256": "d2eabd41ca77d2c2dd9d5d4ef478cccb64ffde6279c47cf4699a857d46785a52",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libmd0",
+        "version": "1.1.0-2build1.1",
+        "architecture": "amd64",
+        "filename": "packages/docker/libmd0_1.1.0-2build1.1_amd64.deb",
+        "size": 26976,
+        "sha256": "e5ba01d3c41f256aaf57ec59aa0554857162e3e7f97cdfbff1ed2c0e8d720ee7",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libmnl0",
+        "version": "1.0.5-2build1",
+        "architecture": "amd64",
+        "filename": "packages/docker/libmnl0_1.0.5-2build1_amd64.deb",
+        "size": 12272,
+        "sha256": "5170658bf0eaf54a8c7d53061ca6b47a6cf33a83543a75fa521de7046cb7197a",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libnetfilter-conntrack3",
+        "version": "1.0.9-6build1",
+        "architecture": "amd64",
+        "filename": "packages/docker/libnetfilter-conntrack3_1.0.9-6build1_amd64.deb",
+        "size": 45218,
+        "sha256": "6d32a4c4618eb7d6c0d989591d28637a9acdfa86dfe22e42e9ac9cc25d882a97",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libnfnetlink0",
+        "version": "1.0.2-2build1",
+        "architecture": "amd64",
+        "filename": "packages/docker/libnfnetlink0_1.0.2-2build1_amd64.deb",
+        "size": 14810,
+        "sha256": "f557a287af2ca00df5dbf632c6b77d77479139ffb51c83e3de9766eb609b5d63",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libnftables1",
+        "version": "1.0.9-1ubuntu0.1",
+        "architecture": "amd64",
+        "filename": "packages/docker/libnftables1_1.0.9-1ubuntu0.1_amd64.deb",
+        "size": 358574,
+        "sha256": "fcaee001747a6adaa0cd9337fef437b3aa7a7a6d5246b62fbd4784d3d6a5009e",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libnftnl11",
+        "version": "1.2.6-2build1",
+        "architecture": "amd64",
+        "filename": "packages/docker/libnftnl11_1.2.6-2build1_amd64.deb",
+        "size": 65986,
+        "sha256": "e5bde5c9cbb95082700011f0b7ef2c0a41900b0a9fd7434f6e90448e2a7b4e50",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libseccomp2",
+        "version": "2.5.5-1ubuntu3.1",
+        "architecture": "amd64",
+        "filename": "packages/docker/libseccomp2_2.5.5-1ubuntu3.1_amd64.deb",
+        "size": 50424,
+        "sha256": "33fc96f1e008d27c042a3db9bcd16f7f4d49e866f7a3141b758a799328dbdc3f",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libsystemd0",
+        "version": "255.4-1ubuntu8.17",
+        "architecture": "amd64",
+        "filename": "packages/docker/libsystemd0_255.4-1ubuntu8.17_amd64.deb",
+        "size": 431784,
+        "sha256": "4776d2ac7e21efe2ae31f3f7955a7ccd97277225eecf36910a26faf4544979ae",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libtinfo6",
+        "version": "6.4+20240113-1ubuntu2.2",
+        "architecture": "amd64",
+        "filename": "packages/docker/libtinfo6_6.4+20240113-1ubuntu2.2_amd64.deb",
+        "size": 108086,
+        "sha256": "b67a6df2bdab61d273eabebd208bb6a3fb12618a390a067e1ee305a409ff03d9",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libxtables12",
+        "version": "1.8.10-3ubuntu2",
+        "architecture": "amd64",
+        "filename": "packages/docker/libxtables12_1.8.10-3ubuntu2_amd64.deb",
+        "size": 35704,
+        "sha256": "c94063499d1b0b336f39607107efb7de95d52a5d4e7e6a9368a5f7308f05b714",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libzstd1",
+        "version": "1.5.5+dfsg2-2build1.1",
+        "architecture": "amd64",
+        "filename": "packages/docker/libzstd1_1.5.5+dfsg2-2build1.1_amd64.deb",
+        "size": 299472,
+        "sha256": "dfcf25061e07aad7efd3f4f880ba5ad4d4d09ebe7fc8cc77ab6b8a161d6d4727",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "netbase",
+        "version": "6.4",
+        "architecture": "all",
+        "filename": "packages/docker/netbase_6.4_all.deb",
+        "size": 13112,
+        "sha256": "8cdbc9c3dca01e660759bf9d840f72e45ac72faf5d19ca1faecacaf6a60c1a87",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "nftables",
+        "version": "1.0.9-1ubuntu0.1",
+        "architecture": "amd64",
+        "filename": "packages/docker/nftables_1.0.9-1ubuntu0.1_amd64.deb",
+        "size": 69842,
+        "sha256": "d648859fccde3c17b8b9b89993427564f91f394a39306db1f67bd5ea3ac42c6e",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      }
+    ],
+    "podman": [
+      {
+        "package": "adduser",
+        "version": "3.137ubuntu1",
+        "architecture": "all",
+        "filename": "packages/podman/adduser_3.137ubuntu1_all.deb",
+        "size": 100872,
+        "sha256": "542aff2395eb912a56833e11a78076342779689d8fede7adcf08d1d6b0d0cd8b",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "conmon",
+        "version": "2.1.10+ds1-1build2",
+        "architecture": "amd64",
+        "filename": "packages/podman/conmon_2.1.10+ds1-1build2_amd64.deb",
+        "size": 35178,
+        "sha256": "4bf1eebadfd32246d01e35ccd96d4c73af5103dfa4384a851b7b9b25401802db",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "containernetworking-plugins",
+        "version": "1.1.1+ds1-3ubuntu0.24.04.3",
+        "architecture": "amd64",
+        "filename": "packages/podman/containernetworking-plugins_1.1.1+ds1-3ubuntu0.24.04.3_amd64.deb",
+        "size": 7203442,
+        "sha256": "0ffc31ebfa430615d2e35ad7cea6b3717faa8fdbc02debd773625cad83fcdd65",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "crun",
+        "version": "1.14.1-1",
+        "architecture": "amd64",
+        "filename": "packages/podman/crun_1.14.1-1_amd64.deb",
+        "size": 405538,
+        "sha256": "2263368dabe3d126189dffd9da7cc31159d8766c9a9a2e3ca8231ad3fcc11109",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "debconf",
+        "version": "1.5.86ubuntu1",
+        "architecture": "all",
+        "filename": "packages/podman/debconf_1.5.86ubuntu1_all.deb",
+        "size": 124096,
+        "sha256": "bb390da466a7461bfc87aa3e6b7cd145dae84af3e26bf437f2c0c218ba226294",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "dirmngr",
+        "version": "2.4.4-2ubuntu17.6",
+        "architecture": "amd64",
+        "filename": "packages/podman/dirmngr_2.4.4-2ubuntu17.6_amd64.deb",
+        "size": 323226,
+        "sha256": "3c80161cf0918a3b94b78274bf4c63fafe76f15cc8060898527e0757b1df98fd",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "gcc-14-base",
+        "version": "14.2.0-4ubuntu2~24.04.1",
+        "architecture": "amd64",
+        "filename": "packages/podman/gcc-14-base_14.2.0-4ubuntu2~24.04.1_amd64.deb",
+        "size": 51014,
+        "sha256": "b95c172411a7fdae70307cf33a9f5320ba5e056b556454543dd5b679d5ce1c4f",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "gnupg-utils",
+        "version": "2.4.4-2ubuntu17.6",
+        "architecture": "amd64",
+        "filename": "packages/podman/gnupg-utils_2.4.4-2ubuntu17.6_amd64.deb",
+        "size": 109198,
+        "sha256": "d27240259f74be5ec4c07ec505d087a3d6a4a66eedef479eb067d8f364263a12",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "gnupg",
+        "version": "2.4.4-2ubuntu17.6",
+        "architecture": "all",
+        "filename": "packages/podman/gnupg_2.4.4-2ubuntu17.6_all.deb",
+        "size": 358890,
+        "sha256": "d278c81e407d51dae2b7df30adc08ecd6a0acde5884fc5ba2d1ef107f0e8ab0b",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "golang-github-containers-common",
+        "version": "0.57.4+ds1-2ubuntu0.2",
+        "architecture": "all",
+        "filename": "packages/podman/golang-github-containers-common_0.57.4+ds1-2ubuntu0.2_all.deb",
+        "size": 39936,
+        "sha256": "dae82b120f8a1b429c0a63a2ccd2ff3c91563f97e2188b1fbaf78ba76f7fb89c",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "golang-github-containers-image",
+        "version": "5.29.2-2",
+        "architecture": "all",
+        "filename": "packages/podman/golang-github-containers-image_5.29.2-2_all.deb",
+        "size": 33432,
+        "sha256": "2059cd3836a417d2e770b810c507b9d29aa4e32759650138c6c8704c24749772",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "gpg-agent",
+        "version": "2.4.4-2ubuntu17.6",
+        "architecture": "amd64",
+        "filename": "packages/podman/gpg-agent_2.4.4-2ubuntu17.6_amd64.deb",
+        "size": 227154,
+        "sha256": "7b6778c1d297a4d4e889005917a0b9996a24d704e2e79d52be65b5d1f6b651ce",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "gpg",
+        "version": "2.4.4-2ubuntu17.6",
+        "architecture": "amd64",
+        "filename": "packages/podman/gpg_2.4.4-2ubuntu17.6_amd64.deb",
+        "size": 565004,
+        "sha256": "34a775d73a2fe9b6e9205668e39954fe0c1e5c046b1a30c307c7d1e6e22cd1a7",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "gpgconf",
+        "version": "2.4.4-2ubuntu17.6",
+        "architecture": "amd64",
+        "filename": "packages/podman/gpgconf_2.4.4-2ubuntu17.6_amd64.deb",
+        "size": 103894,
+        "sha256": "59d35df3b5d7e6dd8235c39c56f8008d1380275765d1a10343e5b9be185e2b7a",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "gpgsm",
+        "version": "2.4.4-2ubuntu17.6",
+        "architecture": "amd64",
+        "filename": "packages/podman/gpgsm_2.4.4-2ubuntu17.6_amd64.deb",
+        "size": 231628,
+        "sha256": "c19746c589c9cb7fa15de8a21790fef0a0b061c3e2758823536d3ac0973ca51a",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "gpgv",
+        "version": "2.4.4-2ubuntu17.6",
+        "architecture": "amd64",
+        "filename": "packages/podman/gpgv_2.4.4-2ubuntu17.6_amd64.deb",
+        "size": 158120,
+        "sha256": "c8810069e98cd343c4c5c64b3ef5a0bb1f526419cff3266cd99ed4c87ad99868",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "init-system-helpers",
+        "version": "1.66ubuntu1",
+        "architecture": "all",
+        "filename": "packages/podman/init-system-helpers_1.66ubuntu1_all.deb",
+        "size": 39402,
+        "sha256": "8eb801f9ce084dab9bf4cbc3ec0ee5ac75516a4cc1f25e3f92298c632e75b700",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "iptables",
+        "version": "1.8.10-3ubuntu2",
+        "architecture": "amd64",
+        "filename": "packages/podman/iptables_1.8.10-3ubuntu2_amd64.deb",
+        "size": 381328,
+        "sha256": "d341e8ffc42ca035f5aa0fd9a798c8d2b2edb019225dc11f4dac16edf9c57840",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "keyboxd",
+        "version": "2.4.4-2ubuntu17.6",
+        "architecture": "amd64",
+        "filename": "packages/podman/keyboxd_2.4.4-2ubuntu17.6_amd64.deb",
+        "size": 78268,
+        "sha256": "1bb5f40735b55a17abfb587607816724771fb38fd123b083b7d24bc606c2ecda",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libassuan0",
+        "version": "2.5.6-1build1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libassuan0_2.5.6-1build1_amd64.deb",
+        "size": 37256,
+        "sha256": "59c6ee6aa6fffb5d181f37373baec18c26791f5d1c907ceeb62163460b11daf2",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libaudit-common",
+        "version": "1:3.1.2-2.1build1.1",
+        "architecture": "all",
+        "filename": "packages/podman/libaudit-common_1%3a3.1.2-2.1build1.1_all.deb",
+        "size": 5824,
+        "sha256": "c8ab5bed96f9781daab7c36fcbe4b12c3f3247a37256c0e341dc827db1e9a010",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libaudit1",
+        "version": "1:3.1.2-2.1build1.1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libaudit1_1%3a3.1.2-2.1build1.1_amd64.deb",
+        "size": 46962,
+        "sha256": "408457f91745dd33746d24d063986df96a81166d6a59431583073398cefa1301",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libblkid1",
+        "version": "2.39.3-9ubuntu6.6",
+        "architecture": "amd64",
+        "filename": "packages/podman/libblkid1_2.39.3-9ubuntu6.6_amd64.deb",
+        "size": 124124,
+        "sha256": "3bcf169cd65e2539059b2287924090fc629f9bf90f595fc25465a7efe950ee82",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libbz2-1.0",
+        "version": "1.0.8-5.1ubuntu0.1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libbz2-1.0_1.0.8-5.1ubuntu0.1_amd64.deb",
+        "size": 34562,
+        "sha256": "36ee08b00b1ee5018b2fce02881b7d2d73c9b4e32990bde3388400d86c48126a",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libc6",
+        "version": "2.39-0ubuntu8.8",
+        "architecture": "amd64",
+        "filename": "packages/podman/libc6_2.39-0ubuntu8.8_amd64.deb",
+        "size": 3262434,
+        "sha256": "3b8d5391b6b484a4c81fd000b6064885ad967ec3cb966bc57603f3fb3ebf0ed5",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libcap-ng0",
+        "version": "0.8.4-2build2",
+        "architecture": "amd64",
+        "filename": "packages/podman/libcap-ng0_0.8.4-2build2_amd64.deb",
+        "size": 15180,
+        "sha256": "cf1e9437ac7ddf6539dbe87b68858cbdef84d78c6aac243ab3b6e564a52ed930",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libcap2",
+        "version": "1:2.66-5ubuntu2.4",
+        "architecture": "amd64",
+        "filename": "packages/podman/libcap2_1%3a2.66-5ubuntu2.4_amd64.deb",
+        "size": 30500,
+        "sha256": "23c627c77c66552a658e62852f244f4946dc543898e0ec5428d5dc6bffde2d6a",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libcrypt1",
+        "version": "1:4.4.36-4build1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libcrypt1_1%3a4.4.36-4build1_amd64.deb",
+        "size": 82302,
+        "sha256": "9474785cd6f398512bf8c305c3901dbb111569dccb6f5832002373c0a8ac5832",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libdb5.3t64",
+        "version": "5.3.28+dfsg2-7",
+        "architecture": "amd64",
+        "filename": "packages/podman/libdb5.3t64_5.3.28+dfsg2-7_amd64.deb",
+        "size": 734100,
+        "sha256": "a78a25c8fad8fdd0b7bc6b297da5d5685579be1e57732aa47870830e4a13161e",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libdevmapper1.02.1",
+        "version": "2:1.02.185-3ubuntu3.2",
+        "architecture": "amd64",
+        "filename": "packages/podman/libdevmapper1.02.1_2%3a1.02.185-3ubuntu3.2_amd64.deb",
+        "size": 139194,
+        "sha256": "0d43a02b9030a50edbc49c9580f88f01eef2b043baad1c6200672c39643c0efe",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libffi8",
+        "version": "3.4.6-1build1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libffi8_3.4.6-1build1_amd64.deb",
+        "size": 24718,
+        "sha256": "637e6a7744de08cd331a41f4efd0d24e6ea9064843dea9d1c6ca87bdb5f038a2",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libgcc-s1",
+        "version": "14.2.0-4ubuntu2~24.04.1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libgcc-s1_14.2.0-4ubuntu2~24.04.1_amd64.deb",
+        "size": 78392,
+        "sha256": "aa7fadbe33b78bcf99885318040601c550c208929565b179891d9a3cc2aa68cd",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libgcrypt20",
+        "version": "1.10.3-2ubuntu0.2",
+        "architecture": "amd64",
+        "filename": "packages/podman/libgcrypt20_1.10.3-2ubuntu0.2_amd64.deb",
+        "size": 536494,
+        "sha256": "957b9eeaa83cf6f2d5d5d76dbb8aa31d3297e6781d8a02fa08dcc897ae650a0b",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libglib2.0-0t64",
+        "version": "2.80.0-6ubuntu3.8",
+        "architecture": "amd64",
+        "filename": "packages/podman/libglib2.0-0t64_2.80.0-6ubuntu3.8_amd64.deb",
+        "size": 1545474,
+        "sha256": "ca4eda0e01c76ba2e5e501e77decce53d98a641234b517eb98fc5d74980f913f",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libgmp10",
+        "version": "2:6.3.0+dfsg-2ubuntu6.1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libgmp10_2%3a6.3.0+dfsg-2ubuntu6.1_amd64.deb",
+        "size": 253460,
+        "sha256": "285f8a505dfa8e1b33f357a9d8d3477ad35bf18c0b34771a6df4c25923f3ae0d",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libgnutls30t64",
+        "version": "3.8.3-1.1ubuntu3.6",
+        "architecture": "amd64",
+        "filename": "packages/podman/libgnutls30t64_3.8.3-1.1ubuntu3.6_amd64.deb",
+        "size": 1002902,
+        "sha256": "b8944756260c5ea6b7fac019745f931f905aa7a4df0763676b1b25c911b692e2",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libgpg-error0",
+        "version": "1.47-3build2.1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libgpg-error0_1.47-3build2.1_amd64.deb",
+        "size": 70092,
+        "sha256": "93654ee8180a73a0363f25c51dc673d67cbabcbecd164187b8a2deb54d007aef",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libgpgme11t64",
+        "version": "1.18.0-4.1ubuntu4",
+        "architecture": "amd64",
+        "filename": "packages/podman/libgpgme11t64_1.18.0-4.1ubuntu4_amd64.deb",
+        "size": 135618,
+        "sha256": "b3640068e8af3becf16faec886ff139880736ed23a7fc605c1f0cece405a5606",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libhogweed6t64",
+        "version": "3.9.1-2.2build1.1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libhogweed6t64_3.9.1-2.2build1.1_amd64.deb",
+        "size": 198548,
+        "sha256": "a9b5f7e9d49ba9060e1c933567046fbc6feab6096799cbf550b7214dc9b0f49b",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libidn2-0",
+        "version": "2.3.7-2build1.1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libidn2-0_2.3.7-2build1.1_amd64.deb",
+        "size": 66242,
+        "sha256": "46bfd10df095a23b65f58115de47a547c9a2d14627749bd0423ae78c14be77d3",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libip4tc2",
+        "version": "1.8.10-3ubuntu2",
+        "architecture": "amd64",
+        "filename": "packages/podman/libip4tc2_1.8.10-3ubuntu2_amd64.deb",
+        "size": 23342,
+        "sha256": "eb381f8ff0469534df3f1b146c3eb8baa6e36f8cfcdf2e3e039398322930d0a4",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libip6tc2",
+        "version": "1.8.10-3ubuntu2",
+        "architecture": "amd64",
+        "filename": "packages/podman/libip6tc2_1.8.10-3ubuntu2_amd64.deb",
+        "size": 23732,
+        "sha256": "b98b88eb6aa14a902ea1aebc3b12ddd140572545ae1fc6428cb0868c31671d05",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libksba8",
+        "version": "1.6.6-1build1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libksba8_1.6.6-1build1_amd64.deb",
+        "size": 121958,
+        "sha256": "7b0e1f2c2c5ee7b3ed1c1558c6338c6cdd77d27280020abc3e1f3159cf564106",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libldap2",
+        "version": "2.6.10+dfsg-0ubuntu0.24.04.1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libldap2_2.6.10+dfsg-0ubuntu0.24.04.1_amd64.deb",
+        "size": 197620,
+        "sha256": "7f3f8e565401256f21d5aa562c9f92dbb63537b73aaea6283e4db5264f1598f4",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "liblz4-1",
+        "version": "1.9.4-1build1.1",
+        "architecture": "amd64",
+        "filename": "packages/podman/liblz4-1_1.9.4-1build1.1_amd64.deb",
+        "size": 63062,
+        "sha256": "319331270d5cc52d5ebffe51c941d7b01b432bc402c2924b557209a64d4ecbad",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "liblzma5",
+        "version": "5.6.1+really5.4.5-1ubuntu0.3",
+        "architecture": "amd64",
+        "filename": "packages/podman/liblzma5_5.6.1+really5.4.5-1ubuntu0.3_amd64.deb",
+        "size": 127352,
+        "sha256": "d2eabd41ca77d2c2dd9d5d4ef478cccb64ffde6279c47cf4699a857d46785a52",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libmnl0",
+        "version": "1.0.5-2build1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libmnl0_1.0.5-2build1_amd64.deb",
+        "size": 12272,
+        "sha256": "5170658bf0eaf54a8c7d53061ca6b47a6cf33a83543a75fa521de7046cb7197a",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libmount1",
+        "version": "2.39.3-9ubuntu6.6",
+        "architecture": "amd64",
+        "filename": "packages/podman/libmount1_2.39.3-9ubuntu6.6_amd64.deb",
+        "size": 134082,
+        "sha256": "8f2c25589f187dacfdc5bb6be2af0aee6c2ba7b4d2edd1ca4b26753469f07aae",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libncursesw6",
+        "version": "6.4+20240113-1ubuntu2.2",
+        "architecture": "amd64",
+        "filename": "packages/podman/libncursesw6_6.4+20240113-1ubuntu2.2_amd64.deb",
+        "size": 147816,
+        "sha256": "579c9488755d1ddd70f66480cafd2f68776f68314d15d9cf4b5449d0de0fc968",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libnetfilter-conntrack3",
+        "version": "1.0.9-6build1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libnetfilter-conntrack3_1.0.9-6build1_amd64.deb",
+        "size": 45218,
+        "sha256": "6d32a4c4618eb7d6c0d989591d28637a9acdfa86dfe22e42e9ac9cc25d882a97",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libnettle8t64",
+        "version": "3.9.1-2.2build1.1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libnettle8t64_3.9.1-2.2build1.1_amd64.deb",
+        "size": 181636,
+        "sha256": "6d97fbc1972633083f08f51ccab433606c97bbceb897c631c66495117ca3406f",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libnfnetlink0",
+        "version": "1.0.2-2build1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libnfnetlink0_1.0.2-2build1_amd64.deb",
+        "size": 14810,
+        "sha256": "f557a287af2ca00df5dbf632c6b77d77479139ffb51c83e3de9766eb609b5d63",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libnftnl11",
+        "version": "1.2.6-2build1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libnftnl11_1.2.6-2build1_amd64.deb",
+        "size": 65986,
+        "sha256": "e5bde5c9cbb95082700011f0b7ef2c0a41900b0a9fd7434f6e90448e2a7b4e50",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libnpth0t64",
+        "version": "1.6-3.1build1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libnpth0t64_1.6-3.1build1_amd64.deb",
+        "size": 8378,
+        "sha256": "b380eca1221a9ac855427652452801c5ca9161dd69e12446d300524eba00944e",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libp11-kit0",
+        "version": "0.25.3-4ubuntu2.2",
+        "architecture": "amd64",
+        "filename": "packages/podman/libp11-kit0_0.25.3-4ubuntu2.2_amd64.deb",
+        "size": 297270,
+        "sha256": "e7c58aeac19d89f5f1492dfaa52b8623bcd56edc40983f5243ad56d94f477bf2",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libpam-modules-bin",
+        "version": "1.5.3-5ubuntu5.7",
+        "architecture": "amd64",
+        "filename": "packages/podman/libpam-modules-bin_1.5.3-5ubuntu5.7_amd64.deb",
+        "size": 51866,
+        "sha256": "e6753b038042cd007843cbc79a81e732d82d0d2415bcf78ff2120c50b5e54f82",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libpam-modules",
+        "version": "1.5.3-5ubuntu5.7",
+        "architecture": "amd64",
+        "filename": "packages/podman/libpam-modules_1.5.3-5ubuntu5.7_amd64.deb",
+        "size": 286418,
+        "sha256": "c8e86ef52e3a743dc67d90f4c6654f7f529deafa6a523fe9076e809785aeea18",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libpam0g",
+        "version": "1.5.3-5ubuntu5.7",
+        "architecture": "amd64",
+        "filename": "packages/podman/libpam0g_1.5.3-5ubuntu5.7_amd64.deb",
+        "size": 68124,
+        "sha256": "1d7f54e77f0455ab5e607cd5e78b576801d8efdc66115e02cf3c6e708d093667",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libpcre2-8-0",
+        "version": "10.42-4ubuntu2.1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libpcre2-8-0_10.42-4ubuntu2.1_amd64.deb",
+        "size": 226662,
+        "sha256": "110a797a57673d3ee497a141cf988199258058c57525799c63194d81822529a0",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libreadline8t64",
+        "version": "8.2-4build1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libreadline8t64_8.2-4build1_amd64.deb",
+        "size": 152856,
+        "sha256": "563977a16df03b611f5239cc1e9a0426e86479fcc616b5c9e200ea32063119e5",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libsasl2-2",
+        "version": "2.1.28+dfsg1-5ubuntu3.1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libsasl2-2_2.1.28+dfsg1-5ubuntu3.1_amd64.deb",
+        "size": 53194,
+        "sha256": "eda097f98dcb3a08b9ce157d6191d140e4885c1cba47b683c94b8ca45e88f458",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libsasl2-modules-db",
+        "version": "2.1.28+dfsg1-5ubuntu3.1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libsasl2-modules-db_2.1.28+dfsg1-5ubuntu3.1_amd64.deb",
+        "size": 20354,
+        "sha256": "1f13548b1774cd9c70c50b8c3267204a101334a4d2f979338896ba5a4c6f81b8",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libseccomp2",
+        "version": "2.5.5-1ubuntu3.1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libseccomp2_2.5.5-1ubuntu3.1_amd64.deb",
+        "size": 50424,
+        "sha256": "33fc96f1e008d27c042a3db9bcd16f7f4d49e866f7a3141b758a799328dbdc3f",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libselinux1",
+        "version": "3.5-2ubuntu2.1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libselinux1_3.5-2ubuntu2.1_amd64.deb",
+        "size": 79660,
+        "sha256": "6abaa6c26f46ef17764c4a753e0e84de1cdadde5634fd2987621fdc617988d19",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libsemanage-common",
+        "version": "3.5-1build5",
+        "architecture": "all",
+        "filename": "packages/podman/libsemanage-common_3.5-1build5_all.deb",
+        "size": 10144,
+        "sha256": "e10cd93f0b6941566de04b860b723df57ca3fe4a9255a73b2be0d1dc7df2850e",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libsemanage2",
+        "version": "3.5-1build5",
+        "architecture": "amd64",
+        "filename": "packages/podman/libsemanage2_3.5-1build5_amd64.deb",
+        "size": 93178,
+        "sha256": "56102dcbd410416d03c5ffb80958f54ac63936f4d9eb3f6a98964e680a82ce37",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libsepol2",
+        "version": "3.5-2build1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libsepol2_3.5-2build1_amd64.deb",
+        "size": 302950,
+        "sha256": "47272bab0c2fcc350431f9a8ae63afc49ce6d7e71e63c914639fbda6b1ca9f6a",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libsqlite3-0",
+        "version": "3.45.1-1ubuntu2.7",
+        "architecture": "amd64",
+        "filename": "packages/podman/libsqlite3-0_3.45.1-1ubuntu2.7_amd64.deb",
+        "size": 701442,
+        "sha256": "488511119cad001a00f7e00e597112cf743ccfbd3f7a03c82d66237e1bfd82c8",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libssl3t64",
+        "version": "3.0.13-0ubuntu3.15",
+        "architecture": "amd64",
+        "filename": "packages/podman/libssl3t64_3.0.13-0ubuntu3.15_amd64.deb",
+        "size": 1944134,
+        "sha256": "3d0955bc049bbcca0f4c3e78a3a8b994593d96db7d84f4320217224433844534",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libsubid4",
+        "version": "1:4.13+dfsg1-4ubuntu3.2",
+        "architecture": "amd64",
+        "filename": "packages/podman/libsubid4_1%3a4.13+dfsg1-4ubuntu3.2_amd64.deb",
+        "size": 23442,
+        "sha256": "ba97fd28c53560a8d2a2261e8f75a7ab4112535b12f9fe1d50970c30051da0da",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libsystemd0",
+        "version": "255.4-1ubuntu8.17",
+        "architecture": "amd64",
+        "filename": "packages/podman/libsystemd0_255.4-1ubuntu8.17_amd64.deb",
+        "size": 431784,
+        "sha256": "4776d2ac7e21efe2ae31f3f7955a7ccd97277225eecf36910a26faf4544979ae",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libtasn1-6",
+        "version": "4.19.0-3ubuntu0.24.04.2",
+        "architecture": "amd64",
+        "filename": "packages/podman/libtasn1-6_4.19.0-3ubuntu0.24.04.2_amd64.deb",
+        "size": 44468,
+        "sha256": "f82c9ad142f952ea523bda5bfca7bb0802af3a50b8c0f0dd9ec18cdfa104bde7",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libtinfo6",
+        "version": "6.4+20240113-1ubuntu2.2",
+        "architecture": "amd64",
+        "filename": "packages/podman/libtinfo6_6.4+20240113-1ubuntu2.2_amd64.deb",
+        "size": 108086,
+        "sha256": "b67a6df2bdab61d273eabebd208bb6a3fb12618a390a067e1ee305a409ff03d9",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libudev1",
+        "version": "255.4-1ubuntu8.17",
+        "architecture": "amd64",
+        "filename": "packages/podman/libudev1_255.4-1ubuntu8.17_amd64.deb",
+        "size": 177608,
+        "sha256": "6efea3770f738db2fd43ebdaed3d91ef0cde8aa8387b4803080af473326ebdb0",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libunistring5",
+        "version": "1.1-2build1.1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libunistring5_1.1-2build1.1_amd64.deb",
+        "size": 535554,
+        "sha256": "203d7657b5f54633fba1a9c9b784d556ef83c9f6787b3185ba55a88e07b865a3",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libxtables12",
+        "version": "1.8.10-3ubuntu2",
+        "architecture": "amd64",
+        "filename": "packages/podman/libxtables12_1.8.10-3ubuntu2_amd64.deb",
+        "size": 35704,
+        "sha256": "c94063499d1b0b336f39607107efb7de95d52a5d4e7e6a9368a5f7308f05b714",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libyajl2",
+        "version": "2.1.0-5build1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libyajl2_2.1.0-5build1_amd64.deb",
+        "size": 20202,
+        "sha256": "faa268c632f7d2931509cf7b8b7ddd810aa775adc26ead88ea158e2ede5208f8",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "libzstd1",
+        "version": "1.5.5+dfsg2-2build1.1",
+        "architecture": "amd64",
+        "filename": "packages/podman/libzstd1_1.5.5+dfsg2-2build1.1_amd64.deb",
+        "size": 299472,
+        "sha256": "dfcf25061e07aad7efd3f4f880ba5ad4d4d09ebe7fc8cc77ab6b8a161d6d4727",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "netbase",
+        "version": "6.4",
+        "architecture": "all",
+        "filename": "packages/podman/netbase_6.4_all.deb",
+        "size": 13112,
+        "sha256": "8cdbc9c3dca01e660759bf9d840f72e45ac72faf5d19ca1faecacaf6a60c1a87",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "passwd",
+        "version": "1:4.13+dfsg1-4ubuntu3.2",
+        "architecture": "amd64",
+        "filename": "packages/podman/passwd_1%3a4.13+dfsg1-4ubuntu3.2_amd64.deb",
+        "size": 844580,
+        "sha256": "139b51228c8065eefa3051f649d8480eb986f1cf629448e49d2eaf9813318412",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "pinentry-curses",
+        "version": "1.2.1-3ubuntu5",
+        "architecture": "amd64",
+        "filename": "packages/podman/pinentry-curses_1.2.1-3ubuntu5_amd64.deb",
+        "size": 35244,
+        "sha256": "d3df9109d1e8e4ca05630f3a6fb7d2231f71d97fc4205d0681e1c421cc77ce41",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "podman",
+        "version": "4.9.3+ds1-1ubuntu0.2",
+        "architecture": "amd64",
+        "filename": "packages/podman/podman_4.9.3+ds1-1ubuntu0.2_amd64.deb",
+        "size": 13408626,
+        "sha256": "e5c1c37e387ed14c352a744a75fbb79fb2f82573ca7bf36886e3b7333fc9ef1a",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "readline-common",
+        "version": "8.2-4build1",
+        "architecture": "all",
+        "filename": "packages/podman/readline-common_8.2-4build1_all.deb",
+        "size": 56484,
+        "sha256": "879bfd7f8a9bc4c0f7cdc777cdd8bc6de5f8c4a2ac80c060322a1b22f13504bb",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      },
+      {
+        "package": "zlib1g",
+        "version": "1:1.3.dfsg-3.1ubuntu2.2",
+        "architecture": "amd64",
+        "filename": "packages/podman/zlib1g_1%3a1.3.dfsg-3.1ubuntu2.2_amd64.deb",
+        "size": 62988,
+        "sha256": "84b9cf5752b29c9f92c27cd4c4ba9bbcc70b5ccf9b1b515421a28ae23212e273",
+        "source": "reviewed repositories in host-bootstrap.lock.json",
+        "license": "/usr/share/doc/<package>/copyright after installation"
+      }
+    ]
+  }
+}

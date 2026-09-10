@@ -78,6 +78,9 @@ class ToolchainBootstrapTests(unittest.TestCase):
         self.assertEqual(values["UV_VERSION"], "0.11.25")
         self.assertEqual(values["NODE_VERSION"], "24.20.0")
         self.assertEqual(values["NPM_VERSION"], "11.19.0")
+        self.assertEqual(values["PLAYWRIGHT_VERSION"], "1.62.1")
+        self.assertEqual(values["CHROMIUM_VERSION"], "151.0.7922.34")
+        self.assertEqual(values["CHROMIUM_REVISION"], "1234")
 
         expected_digests = {
             "GO_WINDOWS_AMD64_SHA256": "f0c0a0d33ba94f4d2c5dbc887334ce678b21813504ddb3aafcb06e60a5a667c4",
@@ -87,6 +90,9 @@ class ToolchainBootstrapTests(unittest.TestCase):
             "UV_LINUX_AMD64_SHA256": "1db18b5e76fa645a7f3865773139bdec8e2d46adbdbb35e7410b34fa8015ccd2",
             "UV_LINUX_ARM64_SHA256": "e0e9d73f74e06a7dcd53910d5962146ab48f0af9c92cc8df33a37baa0121014d",
             "NODE_WINDOWS_AMD64_SHA256": "6cac9ffbca8f6a47091e4b5c772e0606049c3871cb67d900c0cedde630e545ba",
+            "NODE_LINUX_AMD64_SHA256": "2f2c0da162318f0de47665410c7c8c2ed3d36c8f3105de4bbc61176c70a7cbf2",
+            "PLAYWRIGHT_LOCK_SHA256": "5f35c00f92d6d06a76075f3ac3446e124fc85008b57a6c7a2ce3ff421f88510a",
+            "PLAYWRIGHT_BROWSER_CATALOG_SHA256": "f306eed529599b1eaf2f8a85db9de2b23e1a3fe36c2b66434b7c9434fb627a99",
         }
         for name, expected in expected_digests.items():
             self.assertEqual(values[name], expected)
@@ -100,6 +106,9 @@ class ToolchainBootstrapTests(unittest.TestCase):
                 "UV_VERSION",
                 "NODE_VERSION",
                 "NPM_VERSION",
+                "PLAYWRIGHT_VERSION",
+                "CHROMIUM_VERSION",
+                "CHROMIUM_REVISION",
                 *expected_digests,
             },
         )

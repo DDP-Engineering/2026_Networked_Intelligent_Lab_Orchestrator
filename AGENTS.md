@@ -134,6 +134,15 @@ belong under `02_Tools/runtime/` and are not committed; bootstrap and
 environment scripts must recreate them from pinned, checksum-verified
 archives without modifying the system-wide environment.
 
+The sole binary-source exception is immutable multipart escrow under
+`02_Tools/archives/`: only files matching the narrow `.gitattributes`
+`*.partNNN` rules may be tracked through Git LFS. Extracted runtimes, joined
+archives, caches, and temporary staging remain ignored. Every escrow generation
+must be complete on the authoritative personal Gitea remote, independently
+backed up and checksum-read back; GitHub may hold either a complete verified
+replica or no archive replica, never a partial usable archive. Agents may build
+and verify local parts when authorized but never push Git or LFS objects.
+
 ## Code style
 
 Use `01_Documentation/Code_Style.md` as the repository code-style and
