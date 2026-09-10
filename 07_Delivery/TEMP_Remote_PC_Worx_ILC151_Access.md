@@ -11,7 +11,9 @@ architecture, requirements, or future capabilities of NILO. It is not a
 general deployment standard. Update or remove it when this temporary setup is
 retired or its addresses and credentials change.
 
-Recorded and checked on 2026-09-08.
+Field identifiers were updated on 2026-09-08. The dual-path NILO change is an
+implementation candidate and has not yet been deployed to or accepted on the
+Raspberry Pi.
 
 ## Address and access identifiers
 
@@ -20,8 +22,7 @@ Recorded and checked on 2026-09-08.
 | DCP server on the home LAN | `192.168.1.15` | WireGuard hub |
 | DCP server WireGuard address | `10.205.148.1` | VPN-side hub address |
 | DCP server SSH command | `ssh dpasare@192.168.1.15` | Home-LAN access |
-| DCP server SSH username | `dpasare` | Temporary case credential |
-| DCP server SSH password | `Cyborg806` | Temporary case credential; do not reuse elsewhere |
+| DCP server SSH username | `dpasare` | Obtain authentication material out of band; it is not recorded here |
 | WireGuard public endpoint | `ddp-engineering.go.ro:51820` | UDP 51820 |
 | Laptop WireGuard peer | `MP_PC` | Peer recorded on the DCP server |
 | Laptop WireGuard address | `10.205.148.10/32` | Verify after activating `MP_PC` |
@@ -30,18 +31,19 @@ Recorded and checked on 2026-09-08.
 | Raspberry Pi hostname | `ddp-remote` / `ddp-remote.local` | `.local` works only where mDNS is available |
 | Raspberry Pi NILO WireGuard profile | `WORK_Ubuntu` | Selected for startup in NILO |
 | Raspberry Pi WireGuard interface | `nilo0` | NILO-managed tunnel |
-| Raspberry Pi WireGuard address | `10.205.148.8/32` | Stable VPN identity for this Pi |
+| Raspberry Pi WireGuard address | `10.205.148.11/32` | Stable VPN identity for this Pi |
 | Raspberry Pi PLC-side interface | `eth0` | Direct Ethernet connection to the PLC |
 | Raspberry Pi PLC-side address | `192.168.0.1/24` | No default gateway on this interface |
 | Physical PLC address | `192.168.0.130` | Used only on the Pi-to-PLC Ethernet segment |
 | Remote translated PLC address | **`10.71.1.130`** | Address to use through WireGuard |
 | PC Worx target address | **`10.71.1.130`** | Enter this address in PC Worx |
-| RustDesk ID for the Pi | `309803716` | Temporary out-of-band desktop access |
-| Current local NILO URL | `https://ddp-remote.local:8443` | Local bench only; depends on name resolution |
-| Current numeric NILO URL | `https://192.168.1.103:8443` | Current bench DHCP address; not valid as a field invariant |
+| Pi out-of-band desktop access | Obtain out of band | Credentials and identifiers are not recorded here |
+| Local NILO URL | `https://ddp-remote.local:8443` | On the same Wi-Fi only; requires mDNS |
+| WireGuard NILO URL | `https://10.205.148.11:8443` | Stable VPN management address |
 
-The hotspot SSID and password have not been recorded in this note. Add them
-only when the field profile is selected. The hotspot network must not use
+The Wi-Fi SSID for this case is `DDP`. Its password and all private-key material
+are intentionally absent from this note and must remain in the approved secret
+store. The hotspot network must not use
 `192.168.0.0/24`, because that would overlap the directly connected PLC
 network.
 
@@ -79,8 +81,8 @@ The following was observed directly on 2026-09-08:
   forwarding rules were active;
 - the NILO rule exposed only `10.71.1.130` and rejected direct forwarded access
   to `192.168.0.130`;
-- the DCP server's Pi peer already had
-  `10.205.148.8/32` and `10.71.1.130/32` in its `AllowedIPs`;
+- the DCP server's Pi peer already owned the Pi VPN address and
+  `10.71.1.130/32` in its `AllowedIPs`;
 - the DCP server route for `10.71.1.130` selected `wg0`;
 - TCP port `1962` on `10.71.1.130` was reachable from the DCP server through
   the Pi to the PLC;
@@ -98,7 +100,7 @@ default as `allow`.
 3. Confirm that the hotspot subnet does not overlap `192.168.0.0/24`.
 4. Confirm that the Pi joins the hotspot and that NILO activates
    `WORK_Ubuntu`.
-5. Confirm a recent handshake for the Pi peer `10.205.148.8` on the DCP server.
+5. Confirm a recent handshake for the Pi peer `10.205.148.11` on the DCP server.
 6. On the laptop, activate the WireGuard profile `MP_PC`.
 7. Confirm that the laptop receives `10.205.148.10/32`.
 8. Test TCP port `1962` on `10.71.1.130` from the laptop.
@@ -117,7 +119,8 @@ After enabling `MP_PC`, run in Windows PowerShell:
 ```powershell
 Get-NetIPConfiguration
 Test-NetConnection 10.205.148.1 -Port 22
-Test-NetConnection 10.205.148.8 -Port 22
+Test-NetConnection 10.205.148.11 -Port 22
+Test-NetConnection 10.205.148.11 -Port 8443
 Test-NetConnection 10.71.1.130 -Port 1962
 Test-NetConnection 10.71.1.130 -Port 41100
 ```
@@ -185,33 +188,34 @@ timeout 3 bash -c '</dev/tcp/10.71.1.130/1962'
 The Pi peer must continue to own this route:
 
 ```text
-10.205.148.8/32
+10.205.148.11/32
 10.71.1.130/32
 ```
 
 Do not assign `10.71.1.130/32` to a second WireGuard peer.
 
-## Current NILO GUI limitation
+## NILO management access
 
-The NILO GUI currently listens only on the Pi's bench Wi-Fi address
-`192.168.1.103:8443`. It is not currently listening on
-`10.205.148.8:8443`, and `192.168.1.103` will normally change when the Pi joins
-a phone hotspot.
+The intended NILO configuration enables management on `wlan0` and `nilo0` at
+port `8443` and leaves the PLC-facing `eth0` disabled. It is one NILO backend,
+one state directory and one HTTPS listener protected by an explicit interface
+allowlist and helper firewall. Do not start a second server against the same
+database and do not replace the allowlist with unrestricted `0.0.0.0` access.
 
-Therefore:
+Use `https://ddp-remote.local:8443` on `DDP`; `.local` discovery does not cross
+the WireGuard boundary. Use `https://10.205.148.11:8443` through WireGuard.
+The Wi-Fi DHCP address may change and must not be copied into persistent service
+configuration or treated as a certificate identity. The production certificate
+must cover both `DNS:ddp-remote.local` and `IP:10.205.148.11`.
 
-- RustDesk remains the current out-of-band way to view the Pi desktop;
-- the PLC forwarding path can work remotely even while the NILO GUI itself is
-  not directly reachable through the VPN;
-- before field use, NILO needs a stable VPN-side management listener and a TLS
-  certificate valid for that address or its VPN DNS name.
-
-This limitation does not change the PC Worx target address; it remains
-`10.71.1.130`.
+Before this candidate is field-ready, deploy only with explicit authorization
+and verify both URLs, refusal through `eth0`, Wi-Fi reconnect, WireGuard return,
+unchanged PLC communication and a full Pi reboot. The PC Worx target address is
+independent of this management path and remains `10.71.1.130`.
 
 ## Temporary credential warning
 
-The SSH and RustDesk credentials used for this bench are temporary and are
-recorded in repository documentation. Treat them as exposed. Rotate them before
-using the Pi or DCP server for anything non-disposable, customer-facing, or
-production-related, and remove this temporary note when the case is closed.
+No Wi-Fi password, SSH password, WireGuard private key or remote-desktop secret
+is recorded in this document. Exchange temporary access material only through
+the approved out-of-band channel, rotate it before production use, and remove
+this temporary note when the case is closed.

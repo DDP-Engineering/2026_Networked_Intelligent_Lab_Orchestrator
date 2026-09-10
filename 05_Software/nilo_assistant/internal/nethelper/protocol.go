@@ -48,6 +48,9 @@ type Request struct {
 	Plan *network.ForwardingPlan `json:"plan,omitempty"`
 	// DeviceNetworkID names the forwarding to remove.
 	DeviceNetworkID string `json:"device_network_id,omitempty"`
+	// ManagementAccess is accepted only by management.access.apply. It carries
+	// validated public interface names and a port, never firewall syntax.
+	ManagementAccess *network.ManagementAccessConfiguration `json:"management_access,omitempty"`
 }
 
 // Response has no field that can hold key material, and must never gain one.
@@ -115,7 +118,15 @@ func dispatch(ctx context.Context, e *Engine, q Request) Response {
 	if q.DeviceNetworkID != "" && q.Op != "forwarding.remove" {
 		return Response{Error: "unexpected device network reference", Code: "invalid_request"}
 	}
+	if q.ManagementAccess != nil && q.Op != "management.access.apply" {
+		return Response{Error: "unexpected management access configuration", Code: "invalid_request"}
+	}
 	switch q.Op {
+	case "management.access.apply":
+		if q.ID != "" || q.ManagementAccess == nil {
+			return Response{Error: "management access requires a configuration and nothing else", Code: "invalid_request"}
+		}
+		err = e.ApplyManagementAccess(ctx, *q.ManagementAccess)
 	case "system.restart":
 		if !emptyPowerRequest(q) {
 			return Response{Error: "power operation requires an empty envelope", Code: "invalid_request"}
@@ -247,7 +258,7 @@ func dispatch(ctx context.Context, e *Engine, q Request) Response {
 
 func emptyPowerRequest(q Request) bool {
 	return q.ID == "" && q.Change == (network.Change{}) && q.Revision == "" && q.Secret == nil &&
-		q.Handle == "" && q.ProfileID == "" && q.ConnectionRef == "" && q.Plan == nil && q.DeviceNetworkID == ""
+		q.Handle == "" && q.ProfileID == "" && q.ConnectionRef == "" && q.Plan == nil && q.DeviceNetworkID == "" && q.ManagementAccess == nil
 }
 
-var knownErrors = map[string]error{"preview_stale": network.ErrPreviewStale, "not_controllable": network.ErrNotControllable, "unsupported": network.ErrUnsupported, "connection_required": network.ErrConnectionRequired, "busy": network.ErrChangeInProgress, "recovery_unavailable": network.ErrRecoveryUnavailable, "operation_not_found": network.ErrOperationNotFound, "not_awaiting_confirmation": network.ErrNotAwaitingConfirm, "external_profile": network.ErrExternalProfile, "profile_active": network.ErrProfileActive, "secrets_not_found": ErrSecretsNotFound, "interface_settings_rejected": network.ErrInterfaceSettingsRejected, "forwarding_foreign": ErrForwardingForeign, "forwarding_unsupported": ErrForwardingUnsupported, "power_unavailable": power.ErrUnavailable}
+var knownErrors = map[string]error{"preview_stale": network.ErrPreviewStale, "not_controllable": network.ErrNotControllable, "unsupported": network.ErrUnsupported, "connection_required": network.ErrConnectionRequired, "busy": network.ErrChangeInProgress, "recovery_unavailable": network.ErrRecoveryUnavailable, "operation_not_found": network.ErrOperationNotFound, "not_awaiting_confirmation": network.ErrNotAwaitingConfirm, "external_profile": network.ErrExternalProfile, "profile_active": network.ErrProfileActive, "secrets_not_found": ErrSecretsNotFound, "interface_settings_rejected": network.ErrInterfaceSettingsRejected, "forwarding_foreign": ErrForwardingForeign, "forwarding_unsupported": ErrForwardingUnsupported, "management_access_foreign": ErrManagementAccessForeign, "management_access_unsupported": ErrManagementAccessUnsupported, "power_unavailable": power.ErrUnavailable}

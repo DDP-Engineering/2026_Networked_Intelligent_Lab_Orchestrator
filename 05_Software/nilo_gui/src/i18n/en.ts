@@ -925,6 +925,33 @@ export const en = {
     'A device-side adapter normally has no default gateway; the uplink keeps the default route.',
   'network.settings.guidance.protect':
     'A change that would leave the last management path unusable is refused before it is applied.',
+  'network.management.title': 'Management access interfaces',
+  'network.management.body':
+    'Choose the interface names that may accept NILO HTTPS. Addresses are observed state and may change.',
+  'network.management.refresh': 'Refresh interfaces',
+  'network.management.enabled': 'Management access',
+  'network.management.toggle': 'Allow management access on {name}',
+  'network.management.current': 'current browser path',
+  'network.management.apply': 'Apply interface allowlist',
+  'network.management.noUsable':
+    'Keep at least one connected interface with an address enabled. An empty or unusable allowlist cannot be applied.',
+  'network.management.currentWarning': 'You are disabling the interface in use',
+  'network.management.currentWarningBody':
+    'This browser reached NILO through {name}. Continue only after verifying another enabled URL; the previous allowlist will be restored unless the new path confirms it.',
+  'network.management.currentApply': 'Disable current interface and apply',
+  'network.management.pendingHelp':
+    'Pending: confirm through an enabled interface before the deadline, or restore the last known-good allowlist now.',
+  'network.management.urls': 'Usable NILO URLs',
+  'network.management.localOnly':
+    '.local discovery works only for devices on the same local network; use the VPN address when connected through WireGuard.',
+  'network.management.dhcp':
+    'Wi-Fi DHCP addresses are current observations, not permanent NILO identifiers.',
+  'network.management.tlsMissing':
+    'The configured certificate is missing these required names or addresses: {names}. Renew it; NILO will not replace a production certificate.',
+  'network.management.state.pending': 'Pending confirmation.',
+  'network.management.state.applied': 'Applied and confirmed.',
+  'network.management.state.failed': 'Apply or recovery failed.',
+  'network.management.state.recovered': 'Last known-good access recovered.',
 } as const;
 
 /** Every key the interface may ask for. */

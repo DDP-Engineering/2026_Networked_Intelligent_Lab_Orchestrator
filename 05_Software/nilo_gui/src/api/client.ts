@@ -48,6 +48,11 @@ import {
   type WiFiScan,
 } from './settings';
 import {
+  MANAGEMENT_ACCESS_PATH,
+  parseManagementAccess,
+  type ManagementAccessStatus,
+} from './management-access';
+import {
   CSRF_HEADER_NAME,
   DEVICES_PATH,
   IDENTITIES_PATH,
@@ -224,6 +229,14 @@ export interface BenchCoreClient {
   getDevices(credential: Credential): Promise<DeviceInventory>;
 
   getNetworkStatus(credential: Credential): Promise<NetworkStatus>;
+  getManagementAccess(credential: Credential): Promise<ManagementAccessStatus>;
+  setManagementAccess(
+    credential: Credential,
+    interfaces: string[],
+    confirmCurrentInterface: boolean,
+  ): Promise<ManagementAccessStatus>;
+  confirmManagementAccess(credential: Credential): Promise<ManagementAccessStatus>;
+  recoverManagementAccess(credential: Credential): Promise<ManagementAccessStatus>;
   getWireGuardStatus(credential: Credential): Promise<WireGuardStatus>;
   previewWireGuardChange(
     credential: Credential,
@@ -518,6 +531,36 @@ export function createBenchCoreClient(
         path: NETWORK_STATUS_PATH,
         credential,
         parse: parseNetworkStatusBody,
+      }),
+    getManagementAccess: (credential) =>
+      exchange({
+        path: MANAGEMENT_ACCESS_PATH,
+        credential,
+        parse: parseManagementAccess,
+      }),
+    setManagementAccess: (credential, interfaces, confirmCurrentInterface) =>
+      exchange({
+        path: MANAGEMENT_ACCESS_PATH,
+        credential,
+        method: 'PUT',
+        body: { interfaces, confirm_current_interface: confirmCurrentInterface },
+        parse: parseManagementAccess,
+      }),
+    confirmManagementAccess: (credential) =>
+      exchange({
+        path: `${MANAGEMENT_ACCESS_PATH}/confirm`,
+        credential,
+        method: 'POST',
+        body: {},
+        parse: parseManagementAccess,
+      }),
+    recoverManagementAccess: (credential) =>
+      exchange({
+        path: `${MANAGEMENT_ACCESS_PATH}/recover`,
+        credential,
+        method: 'POST',
+        body: {},
+        parse: parseManagementAccess,
       }),
     getWireGuardStatus: (credential) =>
       exchange({ path: WIREGUARD_PATH, credential, parse: parseWireGuardStatus }),

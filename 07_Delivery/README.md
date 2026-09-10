@@ -10,6 +10,9 @@ documentation that accompanies the application.
   permission model, first-run setup, browser sessions versus API tokens, the
   HTTP authentication routes, audit coverage, upgrade behavior, and what this
   release does not yet provide.
+- [Dual-path management verification](NILO_Dual_Path_Management_Verification.md) -
+  the implemented security contract, automated acceptance evidence, base-state
+  caveat, and remaining Raspberry Pi hardware checks.
 
 
 ## Optional integration bundles

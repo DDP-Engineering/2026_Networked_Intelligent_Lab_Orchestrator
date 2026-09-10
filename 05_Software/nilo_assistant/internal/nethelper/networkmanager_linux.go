@@ -105,6 +105,7 @@ func (n *NetworkManager) device(ctx context.Context, path dbus.ObjectPath) (Devi
 		d.Interface.Kind = network.KindWiFi
 	case 29:
 		d.Tunnel = true
+		d.Interface.Kind = network.KindWireGuard
 		d.Interface.NotControllableReason = "a WireGuard tunnel device is managed through its profile"
 	case 32:
 		d.Interface.Kind = network.KindLoopback

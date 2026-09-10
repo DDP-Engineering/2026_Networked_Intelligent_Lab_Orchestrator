@@ -145,6 +145,23 @@ export function AppShell({
     () => client.getNetworkStatus(credential),
     [client, credential],
   );
+  const readManagementAccess = useCallback(
+    () => client.getManagementAccess(credential),
+    [client, credential],
+  );
+  const updateManagementAccess = useCallback(
+    (interfaces: string[], confirmCurrentInterface: boolean) =>
+      client.setManagementAccess(credential, interfaces, confirmCurrentInterface),
+    [client, credential],
+  );
+  const confirmManagementAccess = useCallback(
+    () => client.confirmManagementAccess(credential),
+    [client, credential],
+  );
+  const recoverManagementAccess = useCallback(
+    () => client.recoverManagementAccess(credential),
+    [client, credential],
+  );
   const readNetworkStatistics = useCallback(
     (interfaceId: string, period: StatisticsPeriod) =>
       client.getNetworkStatistics(credential, interfaceId, period),
@@ -375,6 +392,16 @@ export function AppShell({
           confirmOperation={confirmOperation}
           rollbackOperation={rollbackOperation}
           canManageInterfaces={canManageInterfaces}
+          readManagementAccess={status.simulation ? undefined : readManagementAccess}
+          updateManagementAccess={
+            status.simulation ? undefined : updateManagementAccess
+          }
+          confirmManagementAccess={
+            status.simulation ? undefined : confirmManagementAccess
+          }
+          recoverManagementAccess={
+            status.simulation ? undefined : recoverManagementAccess
+          }
           wireGuardStatus={wireGuard}
           canManageVPN={session.permissions.includes(PERMISSION_VPN_MANAGE)}
           canInstallVPN={session.permissions.includes(PERMISSION_VPN_INSTALL)}

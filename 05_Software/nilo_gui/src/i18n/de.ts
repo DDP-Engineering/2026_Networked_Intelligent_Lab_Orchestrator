@@ -925,4 +925,32 @@ export const de: Catalogue = {
     'Ein geräteseitiger Adapter hat normalerweise kein Standard-Gateway; der Uplink behält die Standardroute.',
   'network.settings.guidance.protect':
     'Eine Änderung, die den letzten Verwaltungspfad unbrauchbar machen würde, wird vor dem Anwenden abgelehnt.',
+  'network.management.title': 'Schnittstellen für Verwaltungszugriff',
+  'network.management.body':
+    'Wählen Sie die Schnittstellennamen, die NILO-HTTPS annehmen dürfen. Adressen sind beobachteter Zustand und können sich ändern.',
+  'network.management.refresh': 'Schnittstellen aktualisieren',
+  'network.management.enabled': 'Verwaltungszugriff',
+  'network.management.toggle': 'Verwaltungszugriff über {name} erlauben',
+  'network.management.current': 'aktueller Browserpfad',
+  'network.management.apply': 'Schnittstellenliste anwenden',
+  'network.management.noUsable':
+    'Mindestens eine verbundene Schnittstelle mit Adresse muss aktiviert bleiben.',
+  'network.management.currentWarning': 'Die verwendete Schnittstelle wird deaktiviert',
+  'network.management.currentWarningBody':
+    'Dieser Browser erreichte NILO über {name}. Prüfen Sie zuerst eine andere aktivierte URL; ohne Bestätigung wird die vorherige Liste wiederhergestellt.',
+  'network.management.currentApply': 'Aktuelle Schnittstelle deaktivieren und anwenden',
+  'network.management.pendingHelp':
+    'Ausstehend: über eine aktivierte Schnittstelle bestätigen oder die letzte funktionierende Liste wiederherstellen.',
+  'network.management.urls': 'Nutzbare NILO-URLs',
+  'network.management.localOnly':
+    '.local-Erkennung funktioniert nur im selben lokalen Netzwerk; über WireGuard die VPN-Adresse verwenden.',
+  'network.management.dhcp':
+    'WLAN-DHCP-Adressen sind aktuelle Beobachtungen, keine dauerhaften NILO-Kennungen.',
+  'network.management.tlsMissing':
+    'Dem Zertifikat fehlen erforderliche Namen oder Adressen: {names}. Erneuern Sie es; NILO ersetzt kein Produktionszertifikat.',
+  'network.management.state.pending': 'Bestätigung ausstehend.',
+  'network.management.state.applied': 'Angewendet und bestätigt.',
+  'network.management.state.failed': 'Anwendung oder Wiederherstellung fehlgeschlagen.',
+  'network.management.state.recovered':
+    'Letzter funktionierender Zugriff wiederhergestellt.',
 };

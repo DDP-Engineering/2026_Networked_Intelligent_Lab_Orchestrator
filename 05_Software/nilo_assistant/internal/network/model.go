@@ -14,11 +14,12 @@ type Kind string
 const (
 	KindEthernet Kind = "ethernet"
 	KindWiFi     Kind = "wifi"
-	// KindLoopback and KindOther are reported but never controllable: the
-	// loopback device is not the appliance's connection to anything, and an
-	// unrecognized device is one NILO has no safe operation for.
-	KindLoopback Kind = "loopback"
-	KindOther    Kind = "other"
+	// KindLoopback, KindWireGuard and KindOther are not controlled through the
+	// adapter workflow: tunnels have their own profile workflow, loopback is not
+	// an external path, and an unrecognized device has no safe operation.
+	KindLoopback  Kind = "loopback"
+	KindWireGuard Kind = "wireguard"
+	KindOther     Kind = "other"
 )
 
 // State is an interface's current connection state.

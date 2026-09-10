@@ -31,6 +31,8 @@ import { BenchCoreError } from '../../api/client';
 import { DeviceNetworksPanel } from '../network/DeviceNetworksPanel';
 import { InterfaceSettingsDialog } from '../network/InterfaceSettingsDialog';
 import { NetworkOverview } from '../network/NetworkOverview';
+import { ManagementAccessPanel } from '../network/ManagementAccessPanel';
+import type { ManagementAccessStatus } from '../../api/management-access';
 import { uplinkOf } from '../network/addressing';
 import type { NetworkView } from '../network/views';
 import { DetailsToggle, RowActions, type RowAction } from '../RowActions';
@@ -64,6 +66,13 @@ export interface NetworkPageProps {
    * is refused there. This only avoids offering somebody a button they cannot use.
    */
   canManageInterfaces: boolean;
+  readManagementAccess?: () => Promise<ManagementAccessStatus>;
+  updateManagementAccess?: (
+    interfaces: string[],
+    confirmCurrentInterface: boolean,
+  ) => Promise<ManagementAccessStatus>;
+  confirmManagementAccess?: () => Promise<ManagementAccessStatus>;
+  recoverManagementAccess?: () => Promise<ManagementAccessStatus>;
   /** Whether Bench Core answered this interface over HTTP. */
   benchCoreReachable: boolean;
   wireGuardStatus?: WireGuardStatus | null;
@@ -144,6 +153,10 @@ export function NetworkPage({
   confirmOperation,
   rollbackOperation,
   canManageInterfaces,
+  readManagementAccess,
+  updateManagementAccess,
+  confirmManagementAccess,
+  recoverManagementAccess,
   benchCoreReachable,
   wireGuardStatus = null,
   canManageVPN = false,
@@ -531,237 +544,261 @@ export function NetworkPage({
         )}
 
         {view === 'adapters' && (
-          <section aria-labelledby="network-interfaces">
-            <h3 id="network-interfaces">{t('network.interfaces.title')}</h3>
+          <>
+            {canManageInterfaces &&
+              readManagementAccess !== undefined &&
+              updateManagementAccess !== undefined &&
+              confirmManagementAccess !== undefined &&
+              recoverManagementAccess !== undefined && (
+                <ManagementAccessPanel
+                  read={readManagementAccess}
+                  update={updateManagementAccess}
+                  confirm={confirmManagementAccess}
+                  recover={recoverManagementAccess}
+                />
+              )}
+            <section aria-labelledby="network-interfaces">
+              <h3 id="network-interfaces">{t('network.interfaces.title')}</h3>
 
-            {status.state === 'reading' && <p>{t('network.reading')}</p>}
-            {status.state === 'failed' && (
-              <p className="notice notice-unknown">{t('network.unreadable')}</p>
-            )}
-            {status.state === 'read' && (
-              <>
-                {status.value.interfaces.length === 0 ? (
-                  <p>{t('network.noInterfaces')}</p>
-                ) : (
-                  <div className="table-scroll">
-                    <table className="data-table record-table">
-                      <thead>
-                        <tr>
-                          <th scope="col">{t('network.table.interface')}</th>
-                          <th scope="col">{t('network.table.state')}</th>
-                          <th scope="col">{t('network.table.address')}</th>
-                          <th scope="col">{t('network.table.gateway')}</th>
-                          <th scope="col">{t('network.table.actions')}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {status.value.interfaces.map((entry) => {
-                          const detailsId = `network-interface-${entry.id}`;
-                          const expanded = expandedInterface === entry.id;
-                          const uplink = uplinkOf(status.value.interfaces);
-                          const deviceSide = (deviceNetworks ?? []).some(
-                            (network) =>
-                              entry.adapterId !== '' &&
-                              network.deviceInterface === entry.adapterId,
-                          );
-                          const role =
-                            uplink?.id === entry.id
-                              ? t('network.role.uplink')
-                              : deviceSide
-                                ? t('network.role.deviceSide')
-                                : '';
-                          const stateLabel =
-                            entry.state === 'connected'
-                              ? t('network.state.connected')
-                              : entry.state === 'disconnected'
-                                ? t('network.state.disconnected')
-                                : t('network.state.unavailable');
-                          const notReported = (
-                            <span className="cell-unknown">
-                              {t('network.notReported')}
-                            </span>
-                          );
-                          const actions: RowAction[] = [];
-                          if (canManageInterfaces && entry.controllable) {
-                            actions.push({
-                              label: t(
-                                entry.state === 'connected'
-                                  ? 'network.action.disable'
-                                  : 'network.action.enable',
-                              ).replace('{name}', entry.name),
-                              onSelect: () =>
-                                void propose(
-                                  entry.id,
-                                  entry.state === 'connected' ? 'disable' : 'enable',
-                                ),
-                              disabled: busy,
-                              reason: busy ? t('network.busyReason') : undefined,
-                            });
-                            if (
-                              entry.adapterId !== '' &&
-                              previewInterfaceSettings !== undefined
-                            ) {
+              {status.state === 'reading' && <p>{t('network.reading')}</p>}
+              {status.state === 'failed' && (
+                <p className="notice notice-unknown">{t('network.unreadable')}</p>
+              )}
+              {status.state === 'read' && (
+                <>
+                  {status.value.interfaces.length === 0 ? (
+                    <p>{t('network.noInterfaces')}</p>
+                  ) : (
+                    <div className="table-scroll">
+                      <table className="data-table record-table">
+                        <thead>
+                          <tr>
+                            <th scope="col">{t('network.table.interface')}</th>
+                            <th scope="col">{t('network.table.state')}</th>
+                            <th scope="col">{t('network.table.address')}</th>
+                            <th scope="col">{t('network.table.gateway')}</th>
+                            <th scope="col">{t('network.table.actions')}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {status.value.interfaces.map((entry) => {
+                            const detailsId = `network-interface-${entry.id}`;
+                            const expanded = expandedInterface === entry.id;
+                            const uplink = uplinkOf(status.value.interfaces);
+                            const deviceSide = (deviceNetworks ?? []).some(
+                              (network) =>
+                                entry.adapterId !== '' &&
+                                network.deviceInterface === entry.adapterId,
+                            );
+                            const role =
+                              uplink?.id === entry.id
+                                ? t('network.role.uplink')
+                                : deviceSide
+                                  ? t('network.role.deviceSide')
+                                  : '';
+                            const stateLabel =
+                              entry.state === 'connected'
+                                ? t('network.state.connected')
+                                : entry.state === 'disconnected'
+                                  ? t('network.state.disconnected')
+                                  : t('network.state.unavailable');
+                            const notReported = (
+                              <span className="cell-unknown">
+                                {t('network.notReported')}
+                              </span>
+                            );
+                            const actions: RowAction[] = [];
+                            if (canManageInterfaces && entry.controllable) {
                               actions.push({
-                                label: t('network.action.configure', {
-                                  name: entry.name,
-                                }),
-                                onSelect: () => setConfiguring(entry),
+                                label: t(
+                                  entry.state === 'connected'
+                                    ? 'network.action.disable'
+                                    : 'network.action.enable',
+                                ).replace('{name}', entry.name),
+                                onSelect: () =>
+                                  void propose(
+                                    entry.id,
+                                    entry.state === 'connected' ? 'disable' : 'enable',
+                                  ),
                                 disabled: busy,
                                 reason: busy ? t('network.busyReason') : undefined,
                               });
+                              if (
+                                entry.adapterId !== '' &&
+                                previewInterfaceSettings !== undefined
+                              ) {
+                                actions.push({
+                                  label: t('network.action.configure', {
+                                    name: entry.name,
+                                  }),
+                                  onSelect: () => setConfiguring(entry),
+                                  disabled: busy,
+                                  reason: busy ? t('network.busyReason') : undefined,
+                                });
+                              }
                             }
-                          }
-                          return (
-                            <Fragment key={entry.id}>
-                              <tr>
-                                <th scope="row">
-                                  {entry.name}
-                                  <small className="network-secondary">
-                                    {entry.kind}
-                                    {role === '' ? '' : ` · ${role}`}
-                                  </small>
-                                </th>
-                                <td data-label={t('network.table.state')}>
-                                  <span className="network-state">
-                                    <span
-                                      className={`state-dot ${entry.state === 'connected' ? 'state-ok' : 'state-unknown'}`}
-                                      aria-hidden="true"
-                                    />
-                                    {stateLabel}
-                                  </span>
-                                </td>
-                                <td
-                                  className="network-address"
-                                  data-label={t('network.table.address')}
-                                >
-                                  {[...entry.ipv4, ...entry.ipv6].length === 0
-                                    ? notReported
-                                    : [...entry.ipv4, ...entry.ipv6].map((address) => (
-                                        <div key={address}>{address}</div>
-                                      ))}
-                                </td>
-                                <td
-                                  className="network-address"
-                                  data-label={t('network.table.gateway')}
-                                >
-                                  {[entry.gateway4, entry.gateway6].filter(Boolean)
-                                    .length === 0
-                                    ? notReported
-                                    : [entry.gateway4, entry.gateway6]
-                                        .filter(Boolean)
-                                        .map((gateway) => (
-                                          <div key={gateway}>{gateway}</div>
-                                        ))}
-                                </td>
-                                <td className="record-cell-actions">
-                                  <RowActions
-                                    name={entry.name}
-                                    typeLabel={t('actions.kind.interface')}
-                                    status={stateLabel}
-                                    actions={actions}
+                            return (
+                              <Fragment key={entry.id}>
+                                <tr>
+                                  <th scope="row">
+                                    {entry.name}
+                                    <small className="network-secondary">
+                                      {entry.kind}
+                                      {role === '' ? '' : ` · ${role}`}
+                                    </small>
+                                  </th>
+                                  <td data-label={t('network.table.state')}>
+                                    <span className="network-state">
+                                      <span
+                                        className={`state-dot ${entry.state === 'connected' ? 'state-ok' : 'state-unknown'}`}
+                                        aria-hidden="true"
+                                      />
+                                      {stateLabel}
+                                    </span>
+                                  </td>
+                                  <td
+                                    className="network-address"
+                                    data-label={t('network.table.address')}
                                   >
-                                    <DetailsToggle
-                                      name={entry.name}
-                                      expanded={expanded}
-                                      controls={detailsId}
-                                      onToggle={() =>
-                                        setExpandedInterface(expanded ? null : entry.id)
-                                      }
-                                    />
-                                  </RowActions>
-                                </td>
-                              </tr>
-                              {expanded && (
-                                <tr className="record-details">
-                                  <td colSpan={5}>
-                                    <div
-                                      id={detailsId}
-                                      role="region"
-                                      aria-label={`${t('network.details')} ${entry.name}`}
-                                    >
-                                      <dl className="record-facts">
-                                        <div>
-                                          <dt>{t('network.fact.link')}</dt>
-                                          <dd>
-                                            {entry.linkCapacityMbps > 0
-                                              ? `${entry.linkCapacityMbps} Mbit/s`
-                                              : notReported}
-                                          </dd>
-                                        </div>
-                                        <div>
-                                          <dt>{t('network.table.rx')}</dt>
-                                          <dd>{formatRate(entry.rxBytesPerSecond)}</dd>
-                                        </div>
-                                        <div>
-                                          <dt>{t('network.table.tx')}</dt>
-                                          <dd>{formatRate(entry.txBytesPerSecond)}</dd>
-                                        </div>
-                                        <div>
-                                          <dt>{t('network.fact.adapterId')}</dt>
-                                          <dd>{entry.adapterId || notReported}</dd>
-                                        </div>
-                                        {entry.kind === 'wifi' && (
-                                          <div>
-                                            <dt>{t('network.fact.ssid')}</dt>
-                                            <dd>{entry.ssid || notReported}</dd>
-                                          </div>
+                                    {[...entry.ipv4, ...entry.ipv6].length === 0
+                                      ? notReported
+                                      : [...entry.ipv4, ...entry.ipv6].map(
+                                          (address) => (
+                                            <div key={address}>{address}</div>
+                                          ),
                                         )}
-                                        <div>
-                                          <dt>{t('network.fact.saved')}</dt>
-                                          <dd>
-                                            {entry.settings !== null &&
-                                            entry.settings.saved ? (
-                                              <>
-                                                <div>
-                                                  {t('network.settings.saved').replace(
-                                                    '{method}',
-                                                    entry.settings.method,
-                                                  )}
-                                                  {!entry.settings.applied &&
-                                                    ` (${t('network.settings.notApplied')})`}
-                                                </div>
-                                                <div>
-                                                  {t(
-                                                    entry.settings.managementProtected
-                                                      ? 'network.fact.protected'
-                                                      : 'network.fact.notProtected',
-                                                  )}
-                                                </div>
-                                                {entry.settings.neverDefault && (
-                                                  <div>
-                                                    {t('network.fact.neverDefault')}
-                                                  </div>
-                                                )}
-                                              </>
-                                            ) : (
-                                              t('network.fact.notSaved')
-                                            )}
-                                          </dd>
-                                        </div>
-                                        <div>
-                                          <dt>{t('network.fact.control')}</dt>
-                                          <dd>
-                                            {entry.controllable
-                                              ? t('network.fact.controllable')
-                                              : entry.notControllableReason ||
-                                                notReported}
-                                          </dd>
-                                        </div>
-                                      </dl>
-                                    </div>
+                                  </td>
+                                  <td
+                                    className="network-address"
+                                    data-label={t('network.table.gateway')}
+                                  >
+                                    {[entry.gateway4, entry.gateway6].filter(Boolean)
+                                      .length === 0
+                                      ? notReported
+                                      : [entry.gateway4, entry.gateway6]
+                                          .filter(Boolean)
+                                          .map((gateway) => (
+                                            <div key={gateway}>{gateway}</div>
+                                          ))}
+                                  </td>
+                                  <td className="record-cell-actions">
+                                    <RowActions
+                                      name={entry.name}
+                                      typeLabel={t('actions.kind.interface')}
+                                      status={stateLabel}
+                                      actions={actions}
+                                    >
+                                      <DetailsToggle
+                                        name={entry.name}
+                                        expanded={expanded}
+                                        controls={detailsId}
+                                        onToggle={() =>
+                                          setExpandedInterface(
+                                            expanded ? null : entry.id,
+                                          )
+                                        }
+                                      />
+                                    </RowActions>
                                   </td>
                                 </tr>
-                              )}
-                            </Fragment>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </>
-            )}
-          </section>
+                                {expanded && (
+                                  <tr className="record-details">
+                                    <td colSpan={5}>
+                                      <div
+                                        id={detailsId}
+                                        role="region"
+                                        aria-label={`${t('network.details')} ${entry.name}`}
+                                      >
+                                        <dl className="record-facts">
+                                          <div>
+                                            <dt>{t('network.fact.link')}</dt>
+                                            <dd>
+                                              {entry.linkCapacityMbps > 0
+                                                ? `${entry.linkCapacityMbps} Mbit/s`
+                                                : notReported}
+                                            </dd>
+                                          </div>
+                                          <div>
+                                            <dt>{t('network.table.rx')}</dt>
+                                            <dd>
+                                              {formatRate(entry.rxBytesPerSecond)}
+                                            </dd>
+                                          </div>
+                                          <div>
+                                            <dt>{t('network.table.tx')}</dt>
+                                            <dd>
+                                              {formatRate(entry.txBytesPerSecond)}
+                                            </dd>
+                                          </div>
+                                          <div>
+                                            <dt>{t('network.fact.adapterId')}</dt>
+                                            <dd>{entry.adapterId || notReported}</dd>
+                                          </div>
+                                          {entry.kind === 'wifi' && (
+                                            <div>
+                                              <dt>{t('network.fact.ssid')}</dt>
+                                              <dd>{entry.ssid || notReported}</dd>
+                                            </div>
+                                          )}
+                                          <div>
+                                            <dt>{t('network.fact.saved')}</dt>
+                                            <dd>
+                                              {entry.settings !== null &&
+                                              entry.settings.saved ? (
+                                                <>
+                                                  <div>
+                                                    {t(
+                                                      'network.settings.saved',
+                                                    ).replace(
+                                                      '{method}',
+                                                      entry.settings.method,
+                                                    )}
+                                                    {!entry.settings.applied &&
+                                                      ` (${t('network.settings.notApplied')})`}
+                                                  </div>
+                                                  <div>
+                                                    {t(
+                                                      entry.settings.managementProtected
+                                                        ? 'network.fact.protected'
+                                                        : 'network.fact.notProtected',
+                                                    )}
+                                                  </div>
+                                                  {entry.settings.neverDefault && (
+                                                    <div>
+                                                      {t('network.fact.neverDefault')}
+                                                    </div>
+                                                  )}
+                                                </>
+                                              ) : (
+                                                t('network.fact.notSaved')
+                                              )}
+                                            </dd>
+                                          </div>
+                                          <div>
+                                            <dt>{t('network.fact.control')}</dt>
+                                            <dd>
+                                              {entry.controllable
+                                                ? t('network.fact.controllable')
+                                                : entry.notControllableReason ||
+                                                  notReported}
+                                            </dd>
+                                          </div>
+                                        </dl>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                )}
+                              </Fragment>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
+              )}
+            </section>
+          </>
         )}
 
         {view === 'adapters' &&

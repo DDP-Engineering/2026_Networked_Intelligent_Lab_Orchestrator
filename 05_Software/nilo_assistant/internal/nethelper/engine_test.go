@@ -172,7 +172,7 @@ func TestHelperTreatsShellFragmentsAsIdentifiersAndRejectsUnknownOperations(t *t
 	if response.Error == "" || len(d.events) != 0 {
 		t.Fatal("unknown operation was executed")
 	}
-	for _, kind := range []network.Kind{network.KindLoopback, network.KindOther} {
+	for _, kind := range []network.Kind{network.KindLoopback, network.KindWireGuard, network.KindOther} {
 		d.device.Interface.Kind = kind
 		for _, action := range []network.Action{network.ActionInterfaceEnable, network.ActionInterfaceDisable} {
 			_, _, err := e.Inspect(context.Background(), network.Change{Action: action, Target: d.device.Interface.ID})

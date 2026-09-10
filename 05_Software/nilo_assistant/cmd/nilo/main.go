@@ -3,11 +3,15 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"net"
+	"net/netip"
 	"os"
 	"os/signal"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -121,6 +125,12 @@ func runServe(ctx context.Context, arguments []string) int {
 	scenarioValue := flags.String("scenario", string(simulation.ScenarioHealthy), "deterministic simulation scenario")
 	dataDir := flags.String("data-dir", "", "absolute runtime data directory")
 	bindAddress := flags.String("bind", "", "explicit listener address")
+	var managementInterfaces repeatedStringFlag
+	var managementTLSNames repeatedStringFlag
+	flags.Var(&managementInterfaces, "management-interface", "allowed appliance management interface (repeatable)")
+	managementPort := flags.Int("management-port", 0, "persistent interface-managed HTTPS port")
+	managementReconfigure := flags.Bool("management-reconfigure", false, "stage a recoverable change to an existing management allowlist")
+	flags.Var(&managementTLSNames, "management-tls-name", "required certificate DNS or IP SAN (repeatable)")
 	bundleDir := flags.String("integration-bundles", "/opt/nilo/integration-bundles", "curated integration bundle directory")
 	backend := flags.String("sigrok-cli", "/usr/bin/sigrok-cli", "trusted sigrok CLI executable")
 	helperSocket := flags.String("nethelper-socket", "/run/nilo/nethelper.sock", "installed Linux helper socket")
@@ -140,9 +150,55 @@ func runServe(ctx context.Context, arguments []string) int {
 	if err := flags.Parse(arguments); err != nil {
 		return 2
 	}
-	if flags.NArg() != 0 || (*profile != "simulation" && *profile != "appliance") || *dataDir == "" || *bindAddress == "" {
-		fmt.Fprintln(os.Stderr, "serve requires --profile simulation|appliance, --data-dir, and --bind")
+	if flags.NArg() != 0 || (*profile != "simulation" && *profile != "appliance") || *dataDir == "" {
+		fmt.Fprintln(os.Stderr, "serve requires --profile simulation|appliance and --data-dir")
 		return 2
+	}
+	managementMode := len(managementInterfaces) > 0 || *managementPort != 0 || len(managementTLSNames) > 0
+	if *bindAddress != "" && managementMode {
+		fmt.Fprintln(os.Stderr, "--bind cannot be combined with interface-managed listener options")
+		return 2
+	}
+	if *managementReconfigure && len(managementInterfaces) == 0 {
+		fmt.Fprintln(os.Stderr, "--management-reconfigure requires at least one --management-interface")
+		return 2
+	}
+	if len(managementInterfaces) == 0 && len(managementTLSNames) > 0 {
+		fmt.Fprintln(os.Stderr, "--management-tls-name requires --management-interface")
+		return 2
+	}
+	if *profile == "simulation" && managementMode {
+		fmt.Fprintln(os.Stderr, "simulation requires a literal loopback --bind and does not accept management interfaces")
+		return 2
+	}
+	if *bindAddress == "" && !managementMode {
+		fmt.Fprintln(os.Stderr, "serve requires legacy --bind or --management-port with persistent management interfaces")
+		return 2
+	}
+	if len(managementInterfaces) > 0 && *managementPort == 0 {
+		*managementPort = 8443
+	}
+	if managementMode && (*managementPort < 1 || *managementPort > 65535) {
+		fmt.Fprintln(os.Stderr, "management port must be between 1 and 65535")
+		return 2
+	}
+	if len(managementInterfaces) > 0 && len(managementTLSNames) == 0 {
+		fmt.Fprintln(os.Stderr, "initial interface-managed access requires at least one --management-tls-name")
+		return 2
+	}
+	if len(managementInterfaces) > 0 {
+		configuration := network.ManagementAccessConfiguration{
+			Interfaces: append([]string(nil), managementInterfaces...), Port: *managementPort,
+			TLSNames: append([]string(nil), managementTLSNames...),
+		}
+		if err := configuration.Validate(); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 2
+		}
+	}
+	listenerAddress := *bindAddress
+	if managementMode {
+		listenerAddress = "0.0.0.0:" + strconv.Itoa(*managementPort)
 	}
 	cookieSecurity, err := httpapi.ParseCookieSecurity(*cookieMode)
 	if err != nil {
@@ -151,7 +207,7 @@ func runServe(ctx context.Context, arguments []string) int {
 	}
 	var catalog simulation.Catalog
 	if *profile == "simulation" {
-		if err := httpapi.ValidateSimulationBind(*bindAddress); err != nil {
+		if err := httpapi.ValidateSimulationBind(listenerAddress); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			return 1
 		}
@@ -176,9 +232,11 @@ func runServe(ctx context.Context, arguments []string) int {
 		}
 		cookieSecurity = httpapi.CookieHTTPSDeployment
 	}
-	if err := httpapi.ValidateListener(*bindAddress, *tlsCert, *tlsKey); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return 2
+	if !managementMode {
+		if err := httpapi.ValidateListener(listenerAddress, *tlsCert, *tlsKey); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 2
+		}
 	}
 	provider, err := newNetworkProvider(ctx, *profile, *helperSocket)
 	if err != nil {
@@ -191,7 +249,7 @@ func runServe(ctx context.Context, arguments []string) int {
 	}
 
 	application, err := app.New(ctx, app.Options{
-		DataDir: *dataDir, BindAddress: *bindAddress, Now: func() time.Time { return time.Now().UTC() },
+		DataDir: *dataDir, BindAddress: listenerAddress, Now: func() time.Time { return time.Now().UTC() },
 	})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -265,6 +323,55 @@ func runServe(ctx context.Context, arguments []string) int {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
 	}
+	var managementAccess *network.ManagementAccessService
+	if managementMode {
+		repository := application.ManagementAccessRepository()
+		var initial *network.ManagementAccessConfiguration
+		if len(managementInterfaces) > 0 {
+			configured := network.ManagementAccessConfiguration{
+				Interfaces: append([]string(nil), managementInterfaces...), Port: *managementPort,
+				TLSNames: append([]string(nil), managementTLSNames...),
+			}
+			initial = &configured
+		} else {
+			record, present, loadErr := repository.LoadManagementAccess(ctx)
+			if loadErr != nil || !present {
+				if loadErr != nil {
+					fmt.Fprintln(os.Stderr, loadErr)
+				} else {
+					fmt.Fprintln(os.Stderr, "no persistent management access configuration; specify --management-interface at the appliance console")
+				}
+				return 1
+			}
+			if record.Configuration.Port != *managementPort {
+				fmt.Fprintf(os.Stderr, "--management-port %d does not match the persisted port %d\n", *managementPort, record.Configuration.Port)
+				return 2
+			}
+			managementTLSNames = append(managementTLSNames[:0], record.Configuration.TLSNames...)
+		}
+		missing, certificateErr := httpapi.ValidateCertificateNames(*tlsCert, managementTLSNames)
+		if certificateErr != nil {
+			fmt.Fprintln(os.Stderr, certificateErr)
+			return 2
+		}
+		for _, name := range missing {
+			fmt.Fprintf(os.Stderr, "WARNING: listener certificate is missing SAN %q; renew the configured certificate before using that URL\n", name)
+		}
+		managementAccess, err = network.NewManagementAccessService(ctx, network.ManagementAccessOptions{
+			Provider: provider, Store: repository, Firewall: nethelper.NewClient(*helperSocket, ""),
+			Now: func() time.Time { return time.Now().UTC() }, Initial: initial,
+			Reconfigure: *managementReconfigure, TLSMissing: missing,
+		})
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 1
+		}
+		if configured, ok := provider.(interface {
+			UseManagementAccessPolicy(interface{ ConfiguredInterfaces() []string })
+		}); ok {
+			configured.UseManagementAccessPolicy(managementAccess)
+		}
+	}
 	operations, err := network.NewOperationManager(network.OperationManagerOptions{
 		Changer:  provider,
 		Observer: provider,
@@ -317,6 +424,16 @@ func runServe(ctx context.Context, arguments []string) int {
 	if reconciler, ok := provider.(interface{ ReconcileDeviceNetworks(context.Context) error }); ok {
 		reconcileDeviceNetworks = reconciler.ReconcileDeviceNetworks
 	}
+	if managementAccess != nil {
+		deviceReconcile := reconcileDeviceNetworks
+		reconcileDeviceNetworks = func(ctx context.Context) error {
+			var deviceErr error
+			if deviceReconcile != nil {
+				deviceErr = deviceReconcile(ctx)
+			}
+			return errors.Join(deviceErr, managementAccess.Reconcile(ctx))
+		}
+	}
 	housekeeper, err := activity.NewHousekeeper(activity.HousekeeperOptions{
 		Service: activityService, Audit: application.AuditWriter(), Pending: operations.PendingIDs,
 	})
@@ -360,6 +477,7 @@ func runServe(ctx context.Context, arguments []string) int {
 		Catalog: catalog, Network: networkService, Operations: operations, Bench: benchService,
 		MCP: mcpHandler, CookieSecurity: cookieSecurity,
 		Activity: activityService, Audit: application.AuditWriter(), Power: powerController,
+		ManagementAccess: managementAccess,
 	})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -372,17 +490,40 @@ func runServe(ctx context.Context, arguments []string) int {
 			return 1
 		}
 	}
+	var managementGate httpapi.ManagementConnectionGate
+	if managementAccess != nil {
+		managementGate = managementAccess
+	}
 	err = httpapi.Serve(ctx, httpapi.ServeOptions{
 		Certificate: *tlsCert, Key: *tlsKey,
-		Address:         *bindAddress,
+		Address:         listenerAddress,
 		Handler:         handler,
+		ManagementGate:  managementGate,
 		ShutdownTimeout: 5 * time.Second,
 		OnListening: func(address net.Addr) {
+			interfaces := []string{}
+			addresses := []string{}
+			if managementAccess != nil {
+				status, statusErr := managementAccess.Status(ctx, netip.Addr{})
+				if statusErr == nil {
+					for _, item := range status.Interfaces {
+						if item.Enabled {
+							interfaces = append(interfaces, item.Name)
+							if item.Usable {
+								addresses = append(addresses, item.IPv4...)
+								addresses = append(addresses, item.IPv6...)
+							}
+						}
+					}
+				}
+			}
 			_ = json.NewEncoder(os.Stdout).Encode(struct {
-				Status  string `json:"status"`
-				Address string `json:"address"`
-				Profile string `json:"profile"`
-			}{Status: "listening", Address: address.String(), Profile: *profile})
+				Status     string   `json:"status"`
+				Address    string   `json:"address"`
+				Profile    string   `json:"profile"`
+				Interfaces []string `json:"management_interfaces,omitempty"`
+				Addresses  []string `json:"management_addresses,omitempty"`
+			}{Status: "listening", Address: address.String(), Profile: *profile, Interfaces: interfaces, Addresses: addresses})
 		},
 	})
 	if err != nil {
@@ -397,7 +538,11 @@ func runServe(ctx context.Context, arguments []string) int {
 const rootUsage = `usage: nilo <command> [options]
 
   nilo version                                 build information as JSON
-  nilo serve --profile simulation|appliance --data-dir D --bind ADDR
+  nilo serve --profile simulation --data-dir D --bind LOOPBACK
+  nilo serve --profile appliance --data-dir D --bind PRIVATE_ADDR
+  nilo serve --profile appliance --data-dir D --management-port PORT
+             [--management-interface NAME ... --management-tls-name DNS_OR_IP ...]
+             [--management-reconfigure]
              [--scenario healthy|unavailable] [--session-cookies development-localhost|https]
              [--gui-dir DIR --tls-cert PEM --tls-key PEM --nethelper-socket PATH]
   nilo serve-foundation-check --data-dir D     open and reconcile the data directory once
@@ -415,4 +560,16 @@ the token is read from that file and never from an argument.`
 
 func writeUsage() {
 	fmt.Fprintln(os.Stderr, rootUsage)
+}
+
+type repeatedStringFlag []string
+
+func (values *repeatedStringFlag) String() string { return strings.Join(*values, ",") }
+func (values *repeatedStringFlag) Set(value string) error {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return errors.New("option value cannot be empty")
+	}
+	*values = append(*values, value)
+	return nil
 }

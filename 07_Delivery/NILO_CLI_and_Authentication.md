@@ -433,12 +433,18 @@ the password you just set.
 | `POST /api/v1/tokens` | session or bearer | `tokens.manage.all` |
 | `POST /api/v1/tokens/{id}/revoke` | session or bearer | `tokens.manage.all` |
 | `DELETE /api/v1/tokens/{id}` | session or bearer | `tokens.manage.all` |
+| `GET /api/v1/network/management-access` | session or bearer | `network.manage` |
+| `PUT /api/v1/network/management-access` | session or bearer | `network.manage` |
+| `POST /api/v1/network/management-access/confirm` | session or bearer | `network.manage` |
+| `POST /api/v1/network/management-access/recover` | session or bearer | `network.manage` |
 
 Every route that changes something and is authenticated by a session cookie
 must also carry the `X-NILO-CSRF` header. A creation returns what the caller
 cannot otherwise obtain — the new identity, or the new token together with the
-one and only disclosure of its secret. Every other change answers `204 No
-Content`, and the caller re-reads the listing.
+one and only disclosure of its secret. Identity changes otherwise answer `204
+No Content`, and the caller re-reads the listing. Management-access mutations
+return the safe current status so a client can present pending/recovered state;
+they never return network credentials or key material.
 
 A refusal that the caller can act on carries a stable code and a fixed message,
 for example `{"error":"invalid_role","message":"role must be one of
@@ -541,6 +547,62 @@ installation needs a deliberate exception.
 > started with `--session-cookies https`.** NILO does not infer this from the
 > bind address, because that would silently produce an insecure cookie the day
 > the server is placed behind a proxy.
+
+### Appliance management interfaces
+
+Existing appliance installations remain compatible with one literal listener:
+
+```text
+nilo serve --profile appliance --data-dir D --bind IP:PORT --gui-dir GUI --tls-cert CERT --tls-key KEY
+```
+
+To serve the same Bench Core on local Wi-Fi and WireGuard without exposing the
+PLC adapter, initialize a persistent interface allowlist instead:
+
+```text
+nilo serve --profile appliance --data-dir /var/lib/nilo \
+  --management-interface wlan0 --management-interface nilo0 \
+  --management-port 8443 \
+  --management-tls-name ddp-remote.local \
+  --management-tls-name 10.205.148.11 \
+  --gui-dir /opt/nilo/gui --tls-cert CERT --tls-key KEY
+```
+
+The two modes cannot be combined. Interface names, rather than their current
+addresses, are saved in the existing NILO state database. Later service starts
+use `--management-port 8443` with the same data directory to load that state.
+An allowed interface may be temporarily absent and begins serving automatically
+when it returns. Only one `nilo serve` process may use the state directory.
+
+Repeating the saved bootstrap options is harmless only while they still match.
+To change an existing list from the appliance console, add
+`--management-reconfigure`; NILO requires a currently usable path and stages the
+new list as pending while retaining the previous list for recovery. Without
+that explicit flag, differing startup options are refused rather than silently
+overwriting a GUI selection or its recovery path.
+
+The wildcard socket used internally by allowlist mode is not an authorization
+shortcut. NILO rejects a connection by its local destination before TLS/HTTP
+handling and repeats the check for requests on reused connections. The
+privileged network helper independently accepts the management port only on the
+configured interface names and drops it elsewhere. The unprivileged server is
+not granted network-administration capabilities.
+
+The administrator-only **Management access interfaces** control is under
+Network adapters. It reports detected names, types, current addresses and link
+state, marks the interface used by the browser, and shows stable local/VPN URLs.
+Removing the current path requires an explicit second confirmation. A change
+must retain a usable interface, remains pending until confirmed through a newly
+enabled path, and otherwise restores the last-known-good selection. Pending
+state found after a restart is recovered rather than trusted.
+
+For the field configuration, the certificate must contain at least
+`DNS:ddp-remote.local` and `IP:10.205.148.11`. NILO never silently generates or
+replaces a production certificate; it reports an actionable warning naming any
+missing configured identity. Local clients use
+`https://ddp-remote.local:8443`; `.local` discovery is local-network-only.
+Remote WireGuard clients use `https://10.205.148.11:8443`. A changing Wi-Fi
+DHCP address is telemetry, not a persistent identifier.
 
 ### Signing in and out
 

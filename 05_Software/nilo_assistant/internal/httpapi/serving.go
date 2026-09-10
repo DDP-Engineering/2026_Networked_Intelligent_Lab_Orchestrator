@@ -2,6 +2,8 @@ package httpapi
 
 import (
 	"bytes"
+	"crypto/x509"
+	"encoding/pem"
 	"errors"
 	"fmt"
 	"net"
@@ -27,6 +29,56 @@ type PrivateListener struct {
 // ErrPrivateListenerNeedsTLS is returned when a private listener is configured
 // without a certificate and key.
 var ErrPrivateListenerNeedsTLS = errors.New("a private listener requires a certificate and key")
+
+// ValidateManagementListener permits a wildcard listener only when TLS and a
+// non-nil interface gate are both present. This explicit contract replaces the
+// literal-private-address contract used by legacy --bind mode.
+func ValidateManagementListener(address, certificate, key string, gate ManagementConnectionGate) error {
+	host, port, err := net.SplitHostPort(strings.TrimSpace(address))
+	if err != nil || port == "" {
+		return errors.New("management listener must be a wildcard host and explicit port")
+	}
+	ip := net.ParseIP(host)
+	if ip == nil || !ip.IsUnspecified() {
+		return errors.New("interface-managed listener must use a wildcard host")
+	}
+	if gate == nil {
+		return errors.New("wildcard management listener requires an interface gate")
+	}
+	if certificate == "" || key == "" {
+		return ErrPrivateListenerNeedsTLS
+	}
+	for name, path := range map[string]string{"certificate": certificate, "key": key} {
+		if _, err := os.Stat(path); err != nil {
+			return fmt.Errorf("read the %s: %w", name, err)
+		}
+	}
+	return nil
+}
+
+// ValidateCertificateNames reports stable DNS or IP identities absent from the
+// leaf certificate. It never generates or replaces a production certificate.
+func ValidateCertificateNames(path string, required []string) ([]string, error) {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("read listener certificate: %w", err)
+	}
+	block, _ := pem.Decode(raw)
+	if block == nil || block.Type != "CERTIFICATE" {
+		return nil, errors.New("listener certificate is not PEM encoded")
+	}
+	certificate, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("parse listener certificate: %w", err)
+	}
+	missing := make([]string, 0)
+	for _, name := range required {
+		if err := certificate.VerifyHostname(name); err != nil {
+			missing = append(missing, name)
+		}
+	}
+	return missing, nil
+}
 
 // ValidatePrivateListener accepts only a private, non-loopback address with a
 // readable certificate and key.

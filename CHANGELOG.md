@@ -7,6 +7,10 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Added
 
+- Persistent, administrator-managed HTTPS interface allowlists with dynamic
+  Wi-Fi/WireGuard address tracking, last-known-good recovery and stable URLs.
+- Defense-in-depth management-port filtering through the privileged network
+  helper, plus certificate identity validation and GUI configuration states.
 - Confirmed whole-appliance Restart and Power off controls for Operator and
   Administrator browser sessions, dispatched through the privileged helper.
 - Structured Sigrok worker feasibility slice with direct mixed-signal datafeed and decoder callbacks, bounded crash isolation, and machine-readable coverage evidence.

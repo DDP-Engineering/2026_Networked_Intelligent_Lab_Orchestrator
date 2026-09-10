@@ -182,6 +182,11 @@ Simulation must be obvious and fail closed:
 Simulation is not a privileged mode. It must not bypass validation, policy,
 approval, resource locking, artifact integrity, or audit behavior.
 
+The interface-managed appliance listener is intentionally not available in the
+simulation profile. Simulation continues to require a literal loopback
+`--bind`; appliance tests cover the separate wildcard-listener contract only
+with an explicit management-interface gate and TLS.
+
 ## 6. Simulation scenarios
 
 The simulation catalog should grow from the existing fake Python integration.
@@ -781,6 +786,15 @@ that the Network pages report nothing they were not told, that
 a theme and a language survive a real reload together with the session, and that
 a narrow viewport narrows the navigation without clipping or naming nothing.
 
+Management-access component and backend acceptance tests separately cover the
+administrator interface selector, the explicit warning before removing the
+current browser path, stable local/VPN URLs, dynamic DHCP address refresh,
+independent Wi-Fi/WireGuard loss and return, pending confirmation, restart and
+reboot recovery, certificate SAN warnings, legacy `--bind`, and rejection before
+application handlers run. The isolated Linux network test is still the required
+evidence for the real nftables/helper boundary; Raspberry Pi radio, WireGuard
+and reboot behavior remain hardware acceptance.
+
 `e2e/field-display.spec.ts` covers the compact field interface at `1920x1080`,
 `1366x768`, `1024x600` and `800x480` in the light and dark themes: the labelled
 rail and the navigation drawer, the Network overview, the details of an
@@ -938,6 +952,13 @@ change the simulation launcher or its fixed development administrator.
 [Network operations](Network_Operations.md) gives the isolated Docker
 test command, deployment prerequisites, startup commands and remaining limits.
 The system test never joins the host network namespace or system D-Bus.
+
+An appliance can retain its existing literal `--bind` behavior or deliberately
+initialize a persistent allowlist with repeatable `--management-interface`
+options. In allowlist mode a single wildcard socket is safe only as part of the
+complete contract: TLS, destination-interface admission before HTTP, the same
+check on reused connections, and helper-owned nftables accept/drop rules for the
+management port. Bench Core remains one process with one state directory.
 
 The simulation profile has no appliance power controller. Its interface hides
 Restart and Power off, and a direct request to the power endpoint returns

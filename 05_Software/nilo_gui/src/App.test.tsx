@@ -154,6 +154,10 @@ function stubClient(overrides: Partial<BenchCoreClient> = {}): BenchCoreClient {
     getNetworkOperation: () => Promise.reject(new Error('no network')),
     getNetworkStatus: () =>
       Promise.reject(new BenchCoreError('unavailable', 'no network')),
+    getManagementAccess: () => Promise.reject(new Error('no management access')),
+    setManagementAccess: () => Promise.reject(new Error('no management access')),
+    confirmManagementAccess: () => Promise.reject(new Error('no management access')),
+    recoverManagementAccess: () => Promise.reject(new Error('no management access')),
     getNetworkStatistics: () =>
       Promise.reject(new BenchCoreError('unavailable', 'no network')),
     previewInterfaceChange: () =>

@@ -124,6 +124,10 @@ function client(session: BenchCoreSession = administrator): BenchCoreClient {
     previewWireGuardChange: () => Promise.reject(new Error('no network')),
     getNetworkOperation: () => Promise.reject(new Error('no network')),
     getNetworkStatus: () => Promise.reject(new BenchCoreError('unavailable', 'no')),
+    getManagementAccess: () => Promise.reject(new Error('no management access')),
+    setManagementAccess: () => Promise.reject(new Error('no management access')),
+    confirmManagementAccess: () => Promise.reject(new Error('no management access')),
+    recoverManagementAccess: () => Promise.reject(new Error('no management access')),
     getNetworkStatistics: () => Promise.reject(new BenchCoreError('unavailable', 'no')),
     previewInterfaceChange: () =>
       Promise.reject(new BenchCoreError('unavailable', 'no')),

@@ -33,7 +33,7 @@ not move.
 | Operating system | Debian 13 (trixie), 64-bit |
 | SSH service | OpenSSH 10.0p2, `Debian-7+deb13u4` |
 | Login account | `dpasare` |
-| Password | `Cyborg806` |
+| Authentication | Obtain through the approved out-of-band channel |
 
 Both interfaces are usually connected at once, so the device answers on two
 addresses simultaneously and both resolve to the same hostname. Prefer the wired
@@ -112,8 +112,8 @@ depends on it.
 
 | Property | Value |
 |---|---|
-| RustDesk ID | `309803716` |
-| Permanent password | `Cyborg806` |
+| RustDesk identifier | Obtain through the approved out-of-band channel |
+| Authentication | Not recorded in repository documentation |
 | Version | 1.4.9, `aarch64` `.deb` |
 | Service | `rustdesk.service`, enabled at boot |
 
@@ -169,57 +169,21 @@ with no restarts, and the desktop renders over the virtual output.
 
 ### 2.6 WireGuard tunnel `wg0`
 
-Installed on 2026-09-02 from a peer configuration supplied by the developer.
-`wireguard-tools` 1.0.20210914-3, with the in-tree kernel module.
+The field profile uses the NILO-managed `nilo0` tunnel. Private and preshared
+keys remain only in the privileged key store and the authorized peer store.
 
 | Property | Value |
 |---|---|
-| Interface | `wg0`, from `/etc/wireguard/wg0.conf`, mode `0600 root:root` |
+| Interface | `nilo0` |
 | Peer endpoint | `ddp-engineering.go.ro:51820` |
-| Tunnel addresses | `10.205.148.4/32`, `fd11:5ee:bad:c0de::acd:9404/128` |
-| Routing | `AllowedIPs = 0.0.0.0/0, ::/0` — full tunnel |
-| Tunnel DNS | `10.205.148.1` |
-| At boot | **not** enabled; `wg-quick@wg0` is `disabled` |
+| Tunnel address | `10.205.148.11/32` |
+| Startup | Selected through NILO's persisted network profile |
 
-The keys are deliberately not in this table and not in this repository. See
-section 3.2.
-
-This is a full tunnel, so every packet the device originates leaves through the
-peer and its public address becomes the endpoint's rather than the bench's.
-Local subnet traffic is not affected: `wg-quick` installs a
-`suppress_prefixlength 0` rule, so the `192.168.1.0/24` route in the main table
-still wins and SSH and RustDesk over the bench LAN keep working with the tunnel
-up. Verified: handshake established, egress address reported as the endpoint's,
-and the route to the development host still direct on `eth0`.
-
-Bring it up and down by hand:
-
-```bash
-sudo wg-quick up wg0
-sudo wg-quick down wg0
-sudo wg show wg0
-```
-
-Two traps are worth keeping written down.
-
-The `DNS =` line makes `wg-quick` call `resolvconf`, which Raspberry Pi OS does
-not ship. The package that satisfies it is **`openresolv`**, not `resolvconf`.
-Installing Debian's `resolvconf` package instead repoints `/etc/resolv.conf` at
-a file it never populates and takes name resolution on the device down until it
-is purged and the symlink is aimed back at
-`/run/NetworkManager/resolv.conf`. That was done here and undone; do not repeat
-it.
-
-Bringing a full tunnel up over SSH can strip the route that the SSH session is
-running on. Arm a dead-man switch first and cancel it once the session has
-proved it survived:
-
-```bash
-sudo systemd-run --on-active=240 --unit=wg-deadman /usr/bin/wg-quick down wg0
-sudo wg-quick up wg0
-# once verified
-sudo systemctl stop wg-deadman.timer
-```
+Do not manage this NILO-owned connection with `wg-quick`. Activate and inspect
+it through the NILO network workflow so the helper's checkpoint, key custody,
+audit and recovery rules remain in force. A live handshake and return after
+reboot remain Raspberry Pi acceptance evidence, not an assumption from this
+document.
 
 ### 2.7 Power-control checks
 
@@ -260,70 +224,22 @@ manual recovery, and never turn it into a required automated gate.
 
 ## 3. Credential handling
 
-The password above is committed deliberately, so the constraints that make that
-acceptable have to hold and have to keep holding:
+Repository documentation records no bench password, remote-desktop identifier,
+Wi-Fi password, WireGuard private/preshared key, token or other authentication
+secret. Obtain temporary access through the approved out-of-band channel and do
+not paste it into issues, logs, command arguments, API responses or test data.
 
-- the device is a disposable test target on the local bench, reachable from the
-  local network only, and is never exposed to the internet or given a
-  port forward;
-- it is never given a production, delivery, or signing role, and no credential,
-  key, token, or customer data that matters anywhere else is placed on it;
-- the password is used by this device and nothing else, and is not reused for
-  any account, host, or service;
-- anything the device is trusted with is treated as public.
-
-If any of those stops being true, the password is no longer safe to keep here.
-Rotate it on the device, remove it from this document, and move it to an ignored
-local file — a committed value cannot be recalled from the history of a
-repository that has already been cloned or delivered, so the rotation is the
-part that does the work, not the deletion.
-
-### 3.1 What RustDesk changes about that reasoning
-
-The RustDesk installation in section 2.5 breaks the first constraint above, and
-this is recorded rather than argued away.
-
-RustDesk registers outbound with the public rendezvous server
-`rs-ny.rustdesk.com` and falls back to a public relay. No port was forwarded and
-no inbound rule was added, but the effect of the first constraint is gone
-anyway: the device is now reachable from outside the bench by anyone who holds
-the ID and the password, both of which are committed to this repository a few
-lines above, in a repository that may already have been cloned or delivered.
-The ID is stable, so this does not expire on its own.
-
-It also concentrates the risk. The same string is now the SSH login and the
-RustDesk password, so one committed value is the whole of both doors, and the
-RustDesk one is answerable from the internet.
-
-The remaining constraints are what keep this acceptable, and they now have to
-carry more weight than they did: the device stays disposable, holds nothing that
-matters anywhere else, takes no production, delivery, or signing role, and
-everything on it is treated as public. If that is not enough, the fix is to
-change the exposure and not the wording — set a private RustDesk relay, or stop
-the service when it is not in use:
+RustDesk may register with a public rendezvous or relay even when no inbound
+port is forwarded. Disable it when remote desktop is not required:
 
 ```bash
 sudo systemctl disable --now rustdesk
 ```
 
-### 3.2 The WireGuard keys are not covered by any of this
-
-Section 3 permits a committed password because the thing it protects is
-disposable. The WireGuard private key and preshared key in section 2.6 are the
-opposite: they authenticate this device to a network that is not this bench and
-is not disposable, so they get none of that latitude and are handled as ordinary
-secrets.
-
-They live in exactly two places — `/etc/wireguard/wg0.conf` on the device, mode
-`0600 root:root`, and the peer file the developer holds outside the repository.
-The peer file arrived as `DDP_Ubuntu.conf` in the working tree, untracked but
-not ignored, one `git add -A` away from being committed permanently; `.gitignore`
-now excludes it and any `wg*.conf`. Keep it out of the tree entirely rather than
-relying on that.
-
-If either key is ever committed, ignoring or deleting the file does not undo it.
-Rotate the peer on the WireGuard server, exactly as section 3 says about the
-device password.
+WireGuard key material belongs only in the helper-owned root-only key store and
+the authorized peer store outside the repository. If any real credential was
+ever committed in earlier history, deletion from the current document does not
+revoke it; rotate it at its authority and invalidate the exposed value.
 
 Devices added to this document later are not covered by the reasoning above.
 Each one needs its own decision, and the default for anything that is not

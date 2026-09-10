@@ -216,6 +216,15 @@ func (application *App) InterfaceSettingsRepository() *sqlite.InterfaceSettingsR
 	return sqlite.NewInterfaceSettingsRepository(application.database)
 }
 
+// ManagementAccessRepository returns the persistent management listener
+// allowlist and its last known-good recovery target.
+func (application *App) ManagementAccessRepository() *sqlite.ManagementAccessRepository {
+	if application == nil || application.database == nil {
+		return nil
+	}
+	return sqlite.NewManagementAccessRepository(application.database)
+}
+
 // DeviceNetworkRepository returns the saved device networks.
 func (application *App) DeviceNetworkRepository() *sqlite.DeviceNetworkRepository {
 	if application == nil || application.database == nil {

@@ -32,14 +32,21 @@ type Appliance struct {
 	profiles *ProfileManager
 	settings *applianceSettings
 
-	forwarder      Forwarder
-	deviceNetworks *DeviceNetworkManager
-	audit          AuditJournal
+	forwarder        Forwarder
+	deviceNetworks   *DeviceNetworkManager
+	audit            AuditJournal
+	managementAccess interface{ ConfiguredInterfaces() []string }
 	// armed holds the saved device networks as they were when a change was
 	// armed, keyed by checkpoint, so a restoration puts the decisions back
 	// together with the forwarding.
 	armedMu sync.Mutex
 	armed   map[string][]DeviceNetwork
+}
+
+// UseManagementAccessPolicy connects listener intent to the existing
+// management-path guard used by adapter and tunnel changes.
+func (appliance *Appliance) UseManagementAccessPolicy(policy interface{ ConfiguredInterfaces() []string }) {
+	appliance.managementAccess = policy
 }
 
 // NewAppliance composes the two halves. The profile manager is given the

@@ -82,8 +82,30 @@ func (appliance *Appliance) guardManagement(ctx context.Context, change Change) 
 	if err != nil {
 		return err
 	}
+	if appliance.managementAccess != nil {
+		configured := appliance.managementAccess.ConfiguredInterfaces()
+		for _, candidate := range interfaces {
+			if !containsString(configured, candidate.Name) || candidate.AdapterID == "" {
+				continue
+			}
+			if index := settingsIndex(saved, candidate.AdapterID); index >= 0 {
+				saved[index].ManagementProtected = true
+			} else {
+				saved = append(saved, InterfaceSettings{AdapterID: candidate.AdapterID, Method: MethodAutomatic, DNSAutomatic: true, ManagementProtected: true})
+			}
+		}
+	}
 	bound := BindSettings(interfaces, saved).Interfaces
 	return ValidateManagementChange(change, bound, saved, managementContextOf(change, appliance.profiles.ActiveTunnelPath(ctx)))
+}
+
+func settingsIndex(settings []InterfaceSettings, adapterID string) int {
+	for index := range settings {
+		if settings[index].AdapterID == adapterID {
+			return index
+		}
+	}
+	return -1
 }
 
 // resolveSettingsChange binds proposed settings to the target adapter and

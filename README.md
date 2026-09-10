@@ -63,6 +63,11 @@ The Go Bench Core owns orchestration and persistence. Integrations run as
 supervised external processes; the current integration SDK is Python. The
 TypeScript browser interface connects to the same appliance services used by
 automation clients. Privileged network changes are isolated in a Linux helper.
+On an appliance, one HTTPS Bench Core may serve several explicitly allowed
+management interfaces. A connection is admitted by interface-aware socket and
+request gates and by a helper-owned nftables allowlist; the listener is never
+made generally reachable merely by binding a wildcard address. PLC-facing
+interfaces remain excluded unless an administrator deliberately enables them.
 
 ## Quick start
 
@@ -97,10 +102,12 @@ For manual startup, browser tests and simulation scenarios, see the
 Linux ARM64 is the first release target; Linux x86_64 is the additional
 appliance target. Windows is a development host, not an appliance platform.
 
-Appliance startup uses HTTPS, a dedicated service account and explicit
-administrator initialization. Network management requires the separately
-installed privileged helper. Sigrok bundles also require a compatible target
-runtime and backend.
+Appliance startup uses HTTPS, a dedicated service account, explicit
+administrator initialization and either the compatible legacy literal `--bind`
+mode or a persisted management-interface allowlist. Network and management
+firewall changes require the separately installed privileged helper; Bench Core
+remains unprivileged. Sigrok bundles also require a compatible target runtime
+and backend.
 
 - [Appliance setup and network operations](06_SoftwareDocu/Network_Operations.md)
 - [Sigrok bundle preparation and deployment](06_SoftwareDocu/Sigrok_Integration.md)

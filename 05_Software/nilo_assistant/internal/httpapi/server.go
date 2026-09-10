@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/netip"
 	"time"
 
 	"nilo.local/nilo/internal/activity"
@@ -33,7 +34,17 @@ type ServeOptions struct {
 	Handler         http.Handler
 	ShutdownTimeout time.Duration
 	OnListening     func(net.Addr)
+	// ManagementGate makes a wildcard appliance listener safe by admitting
+	// only destination addresses currently carried by enabled interfaces.
+	ManagementGate ManagementConnectionGate
 }
+
+// ManagementConnectionGate is the pre-HTTP interface allowlist.
+type ManagementConnectionGate interface {
+	Allows(netip.Addr) bool
+}
+
+type localAddressContextKey struct{}
 
 // Serve runs until the context is cancelled or the HTTP server fails.
 func Serve(ctx context.Context, options ServeOptions) error {
@@ -46,7 +57,11 @@ func Serve(ctx context.Context, options ServeOptions) error {
 	if options.ShutdownTimeout <= 0 {
 		return errors.New("positive shutdown timeout is required")
 	}
-	if err := ValidateListener(options.Address, options.Certificate, options.Key); err != nil {
+	if options.ManagementGate == nil {
+		if err := ValidateListener(options.Address, options.Certificate, options.Key); err != nil {
+			return err
+		}
+	} else if err := ValidateManagementListener(options.Address, options.Certificate, options.Key, options.ManagementGate); err != nil {
 		return err
 	}
 
@@ -62,11 +77,21 @@ func Serve(ctx context.Context, options ServeOptions) error {
 	if err != nil {
 		return fmt.Errorf("listen on configured address: %w", err)
 	}
+	if options.ManagementGate != nil {
+		listener = &managementListener{Listener: listener, gate: options.ManagementGate}
+	}
+	handler := options.Handler
+	if options.ManagementGate != nil {
+		handler = managementRequestGate(options.ManagementGate, handler)
+	}
 	server := &http.Server{
-		Handler:           options.Handler,
+		Handler:           handler,
 		TLSConfig:         tlsConfig,
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       60 * time.Second,
+		ConnContext: func(ctx context.Context, connection net.Conn) context.Context {
+			return context.WithValue(ctx, localAddressContextKey{}, connection.LocalAddr())
+		},
 	}
 	if options.OnListening != nil {
 		options.OnListening(listener.Addr())
@@ -102,16 +127,74 @@ func Serve(ctx context.Context, options ServeOptions) error {
 	}
 }
 
+type managementListener struct {
+	net.Listener
+	gate ManagementConnectionGate
+}
+
+// Accept rejects a disallowed destination before TLS parsing and before any
+// application handler can observe the connection.
+func (listener *managementListener) Accept() (net.Conn, error) {
+	for {
+		connection, err := listener.Listener.Accept()
+		if err != nil {
+			return nil, err
+		}
+		address := addressOf(connection.LocalAddr())
+		if address.IsValid() && listener.gate.Allows(address) {
+			return connection, nil
+		}
+		_ = connection.Close()
+	}
+}
+
+// managementRequestGate rechecks keep-alive requests after an allowlist
+// change. It remains outside the application handler and therefore rejects a
+// disabled path before authentication, routing, CSRF, or business logic.
+func managementRequestGate(gate ManagementConnectionGate, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		if !gate.Allows(LocalDestination(request.Context())) {
+			response.Header().Set("Connection", "close")
+			http.Error(response, "management interface not enabled", http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(response, request)
+	})
+}
+
+func addressOf(address net.Addr) netip.Addr {
+	if tcp, ok := address.(*net.TCPAddr); ok {
+		parsed, _ := netip.AddrFromSlice(tcp.IP)
+		return parsed.Unmap()
+	}
+	if address == nil {
+		return netip.Addr{}
+	}
+	host, _, err := net.SplitHostPort(address.String())
+	if err != nil {
+		return netip.Addr{}
+	}
+	parsed, _ := netip.ParseAddr(host)
+	return parsed.Unmap()
+}
+
+// LocalDestination returns the server-side address selected by the client.
+func LocalDestination(ctx context.Context) netip.Addr {
+	address, _ := ctx.Value(localAddressContextKey{}).(net.Addr)
+	return addressOf(address)
+}
+
 // HandlerOptions contains the dependencies for the protected HTTP API.
 type HandlerOptions struct {
-	Bench      *bench.Manager
-	Identity   *identity.Service
-	Profile    string
-	Build      buildinfo.Info
-	Catalog    simulation.Catalog
-	Network    *network.Service
-	Operations *network.OperationManager
-	Power      power.Controller
+	Bench            *bench.Manager
+	Identity         *identity.Service
+	Profile          string
+	Build            buildinfo.Info
+	Catalog          simulation.Catalog
+	Network          *network.Service
+	Operations       *network.OperationManager
+	ManagementAccess *network.ManagementAccessService
+	Power            power.Controller
 	// MCP is the read-only Model Context Protocol endpoint, mounted at /mcp
 	// when one is configured. It is optional: a deployment that offers no MCP
 	// access simply has no route there.
@@ -221,6 +304,12 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 	protected.Handle("GET /api/v1/network/statistics", authorize(auth.PermissionNetworkRead, handleNetworkStatistics(options.Network)))
 	protected.Handle("GET /api/v1/network/wireguard", authorize(auth.PermissionNetworkRead, handleWireGuardStatus(options.Network)))
 	protected.Handle("GET /api/v1/network/wireguard/profiles", authorize(auth.PermissionNetworkRead, handleWireGuardStatus(options.Network)))
+	if options.ManagementAccess != nil {
+		protected.Handle("GET /api/v1/network/management-access", authorize(auth.PermissionNetworkManage, handleReadManagementAccess(options.ManagementAccess)))
+		protected.Handle("PUT /api/v1/network/management-access", authorize(auth.PermissionNetworkManage, handleUpdateManagementAccess(options.ManagementAccess)))
+		protected.Handle("POST /api/v1/network/management-access/confirm", authorize(auth.PermissionNetworkManage, handleConfirmManagementAccess(options.ManagementAccess)))
+		protected.Handle("POST /api/v1/network/management-access/recover", authorize(auth.PermissionNetworkManage, handleRecoverManagementAccess(options.ManagementAccess)))
+	}
 	// The preview routes declare their permission here. Acknowledge, confirm and
 	// rollback declare the read permission, because the action they authorize
 	// against is only known once the operation is resolved; each then checks the

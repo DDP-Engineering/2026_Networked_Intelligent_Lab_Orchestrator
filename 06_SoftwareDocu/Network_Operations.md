@@ -10,7 +10,11 @@ The default development topology is described in
 The simulation profile uses simulated network state. The Linux appliance profile
 uses an unprivileged Bench Core and a root NetworkManager helper. The helper
 owns managed connections, WireGuard key storage, device-network forwarding and
-recovery. NILO-managed resources are distinct from external connections and
+recovery. It also owns the dedicated `inet nilo_management` nftables table that
+enforces the HTTPS management-interface allowlist before a request reaches
+Bench Core. Bench Core sends only validated interface names and a port through
+the typed helper protocol; it has no network-administration capability and
+cannot submit arbitrary firewall rules. NILO-managed resources are distinct from external connections and
 tunnels; do not manage an external tunnel as if NILO created it.
 
 In the GUI, Network contains Overview, Network adapters, Device access,
@@ -38,6 +42,23 @@ operation before retrying. NetworkManager checkpoints protect connection changes
 device forwarding has a separate durable inventory of NILO-owned nftables state.
 Unverified recovery blocks further changes rather than reporting success.
 
+Management access is a separate, persistent change with its own last-known-good
+record. The interface names are the policy; their DHCP addresses are only
+observations. A single HTTPS server listens on the configured management port,
+then both the socket gate and the helper firewall admit only connections whose
+destination belongs to an enabled interface. The listener refreshes the
+interface/address mapping while it runs, so address renewal, link loss and link
+return do not require another process or a database restart.
+
+An update must retain at least one currently usable path. Removing the path used
+by the current browser requires a second explicit action. An accepted change is
+`pending` for 90 seconds and must be confirmed through one of the newly enabled
+interfaces. NILO restores the last-known-good allowlist after the deadline, on
+an explicit restore, or on startup when it finds an interrupted pending change.
+The GUI reports `pending`, `applied`, `failed` and `recovered` rather than
+turning a lost response into success. Keep console or independent VPN access
+available while changing the allowlist.
+
 The helper stores recovery records under `/var/lib/nilo-nethelper`. Its service
 and the independent `nilo-nethelper-recovery.timer` reconcile interrupted work.
 The timer invokes `nilo-nethelper recover`; it does not accept arbitrary remote
@@ -63,6 +84,42 @@ nilo network device-networks check ID --tcp-port 502 --server URL --token-file T
 nilo activity list --category audit --operation OPERATION_ID --server URL --token-file TOKEN_FILE
 nilo activity export --format csv --out activity.csv --server URL --token-file TOKEN_FILE
 ```
+
+To initialize interface-managed appliance access, use repeatable interface and
+certificate-identity options. This creates one server and one state directory;
+it must not be replaced by parallel `nilo serve` processes.
+
+```sh
+nilo serve --profile appliance \
+  --data-dir /var/lib/nilo \
+  --management-interface wlan0 \
+  --management-interface nilo0 \
+  --management-port 8443 \
+  --management-tls-name ddp-remote.local \
+  --management-tls-name 10.205.148.11 \
+  --gui-dir /opt/nilo/gui \
+  --tls-cert /etc/nilo/tls/server.crt \
+  --tls-key /etc/nilo/tls/server.key \
+  --nethelper-socket /run/nilo/nethelper.sock
+```
+
+After initialization, start the service with `--management-port 8443` and no
+`--management-interface` options. NILO loads the saved allowlist and TLS names
+from `/var/lib/nilo`; this lets an administrator's later GUI changes survive a
+service restart and reboot. Repeating interface options that still match the
+saved state is harmless. A different console list is refused unless
+`--management-reconfigure` is present; that explicit change is staged as
+pending with the previous list retained for automatic recovery. `--bind` and
+interface-managed options are mutually exclusive. Existing installations
+continue to use their literal `--bind` listener until an administrator
+deliberately initializes interface-managed access.
+
+Interface names must be valid non-loopback Linux interface names. An empty or
+duplicate list or TLS identity is refused. A saved interface may be absent at
+ordinary startup; initialization and explicit reconfiguration cannot select a
+list with no currently usable path. Startup reports the configured interfaces
+and their observed addresses.
+Do not treat a Wi-Fi DHCP address as configuration.
 
 Mutations prompt for acknowledgement or accept their explicit `--acknowledge`
 option. Use the command's help for its complete options. GUI, CLI and exposed MCP
@@ -111,15 +168,38 @@ IP addresses are not deployment configuration.
 5. Bootstrap the administrator once as the service account:
    `nilo admin bootstrap --data-dir /var/lib/nilo --username administrator`.
    The development-administrator convenience is simulation-only.
-6. Start the appliance using its actual private address and certificate paths:
+6. Provision, without having NILO generate or replace it, a certificate whose
+   subject alternative names include every stable management identity. For the
+   field profile this is at least `DNS:ddp-remote.local` and
+   `IP:10.205.148.11`. NILO warns with the missing names when the certificate
+   does not cover the configured identities. Trust the issuing CA on clients.
+7. Initialize the appliance management listener and certificate paths:
 
 ```sh
 nilo serve --profile appliance \
-  --data-dir /var/lib/nilo --bind 192.168.10.24:8443 \
+  --data-dir /var/lib/nilo \
+  --management-interface wlan0 --management-interface nilo0 \
+  --management-port 8443 \
+  --management-tls-name ddp-remote.local \
+  --management-tls-name 10.205.148.11 \
   --gui-dir /opt/nilo/gui \
   --tls-cert /etc/nilo/tls/server.crt --tls-key /etc/nilo/tls/server.key \
   --nethelper-socket /run/nilo/nethelper.sock
 ```
+
+8. Configure the long-running service to use the same data directory with
+   `--management-port 8443` rather than repeating the bootstrap interface list.
+   The persisted selection then remains authoritative across restarts.
+
+The administrator-only **Network > Network adapters > Management access
+interfaces** panel lists detected names, type, link state and current addresses.
+Enable `wlan0` and `nilo0`; leave `eth0` disabled. The panel identifies the
+current browser path, requires explicit confirmation before removing it, and
+offers keep/restore actions while a configuration is pending. It presents
+`https://ddp-remote.local:8443` for local Wi-Fi and
+`https://10.205.148.11:8443` for WireGuard. `.local` discovery works only on the
+local network. The numeric Wi-Fi DHCP address is deliberately shown only as
+current telemetry, not as a durable URL.
 
 For a sigrok-enabled delivery, also follow the bundle instructions in
 [Sigrok integration](Sigrok_Integration.md). Verify service startup, authenticated
@@ -164,6 +244,10 @@ removal of old reports. Reconcile existing test/journal evidence before scheduli
 - Core/helper/NetworkManager crashes, reboot during a pending apply, offline
   startup and migration with existing data on a booted appliance.
 - Real-radio Wi-Fi join, USB adapter hotplug and power-cycle recovery.
+- Dual-path Raspberry Pi acceptance: Wi-Fi DHCP renewal and reconnect,
+  `nilo0` returning as `10.205.148.11`, access through both stable URLs,
+  refusal on the PLC-facing `eth0`, unchanged PLC communication, and a full
+  appliance reboot.
 - PLC register-map validation and vendor download using an authorized tool.
 - Real-backend Activity browser coverage, connection selection when an adapter
   has no remembered connection, and usability on the physical seven-inch panel.

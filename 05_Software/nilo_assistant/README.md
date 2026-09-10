@@ -16,6 +16,8 @@ nilo version
 nilo serve-foundation-check --data-dir <absolute-path>
 nilo development issue-token --data-dir <absolute-path>
 nilo serve --profile simulation [--scenario healthy|unavailable] [--session-cookies development-localhost|https] --data-dir <absolute-path> --bind <loopback-address>
+nilo serve --profile appliance --data-dir <absolute-path> --bind <literal-address> --gui-dir <directory> --tls-cert <pem> --tls-key <pem>
+nilo serve --profile appliance --data-dir <absolute-path> --management-interface <name> [--management-interface <name> ...] --management-port <port> --management-tls-name <dns-or-ip> [--management-tls-name <dns-or-ip> ...] --gui-dir <directory> --tls-cert <pem> --tls-key <pem>
 
 nilo admin bootstrap --data-dir <absolute-path> --username <name>
 nilo admin user list --data-dir <absolute-path>
@@ -45,6 +47,14 @@ changing readiness. Development token issuance creates a non-login identity
 with the least-privileged Viewer role, stores only the one-way token verifier,
 and prints the plaintext token once. The simulation listener rejects wildcard,
 hostname, LAN, and other non-loopback addresses.
+
+The appliance retains literal `--bind` compatibility. Interface-managed mode
+persists validated interface names and uses one TLS listener guarded by local
+destination checks and the privileged helper's dedicated nftables allowlist.
+Its administrator API is `GET|PUT /api/v1/network/management-access` plus
+`POST .../confirm` and `POST .../recover`. The detailed startup, migration,
+recovery and certificate contract is in
+`../../06_SoftwareDocu/Network_Operations.md`.
 
 Identity and access control live in `internal/identity`: fixed Administrator,
 Operator and Viewer roles, browser sessions, and scoped API tokens, enforced

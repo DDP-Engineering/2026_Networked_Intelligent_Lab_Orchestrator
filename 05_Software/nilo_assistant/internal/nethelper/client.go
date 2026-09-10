@@ -46,6 +46,16 @@ func (c *Client) PowerOff(ctx context.Context) error {
 
 var _ power.Controller = (*Client)(nil)
 
+// ApplyManagementAccess asks the privileged helper to install the typed
+// interface-and-port policy. The core receives no network-administration
+// capability and cannot submit raw firewall syntax.
+func (c *Client) ApplyManagementAccess(ctx context.Context, configuration network.ManagementAccessConfiguration) error {
+	_, err := c.call(ctx, Request{Op: "management.access.apply", ManagementAccess: &configuration})
+	return err
+}
+
+var _ network.ManagementAccessFirewall = (*Client)(nil)
+
 func (c *Client) call(ctx context.Context, q Request) (Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, 35*time.Second)
 	defer cancel()

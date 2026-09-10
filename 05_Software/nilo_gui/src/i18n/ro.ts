@@ -922,4 +922,31 @@ export const ro: Catalogue = {
     'Un adaptor dinspre dispozitiv nu are, de regulă, gateway implicit; uplink-ul păstrează ruta implicită.',
   'network.settings.guidance.protect':
     'O modificare care ar lăsa ultima cale de administrare inutilizabilă este refuzată înainte de a fi aplicată.',
+  'network.management.title': 'Interfețe pentru accesul de administrare',
+  'network.management.body':
+    'Alegeți numele interfețelor care pot accepta NILO HTTPS. Adresele sunt stare observată și se pot schimba.',
+  'network.management.refresh': 'Reîmprospătează interfețele',
+  'network.management.enabled': 'Acces de administrare',
+  'network.management.toggle': 'Permite accesul de administrare pe {name}',
+  'network.management.current': 'calea browserului curent',
+  'network.management.apply': 'Aplică lista de interfețe',
+  'network.management.noUsable':
+    'Păstrați activată cel puțin o interfață conectată care are adresă.',
+  'network.management.currentWarning': 'Dezactivați interfața folosită acum',
+  'network.management.currentWarningBody':
+    'Acest browser a ajuns la NILO prin {name}. Verificați mai întâi alt URL activat; lista anterioară va fi restaurată fără confirmare.',
+  'network.management.currentApply': 'Dezactivează interfața curentă și aplică',
+  'network.management.pendingHelp':
+    'În așteptare: confirmați printr-o interfață activată sau restaurați acum ultima listă funcțională.',
+  'network.management.urls': 'URL-uri NILO utilizabile',
+  'network.management.localOnly':
+    'Descoperirea .local funcționează numai în aceeași rețea locală; prin WireGuard folosiți adresa VPN.',
+  'network.management.dhcp':
+    'Adresele DHCP Wi-Fi sunt observații curente, nu identificatori NILO permanenți.',
+  'network.management.tlsMissing':
+    'Certificatului îi lipsesc numele sau adresele necesare: {names}. Reînnoiți-l; NILO nu înlocuiește certificatele de producție.',
+  'network.management.state.pending': 'Confirmare în așteptare.',
+  'network.management.state.applied': 'Aplicat și confirmat.',
+  'network.management.state.failed': 'Aplicarea sau recuperarea a eșuat.',
+  'network.management.state.recovered': 'Ultimul acces funcțional a fost recuperat.',
 };
