@@ -473,13 +473,17 @@ than assuming a fixed `/dev/tty*` or `/dev/bus/usb/*` path.
 
 ### 3.7 Live NILO development deployment
 
-NILO `0.2.0` was deployed to the mini PC on 2026-09-10 for live development
-checks. It runs in the real `appliance` profile, not simulation, and serves the
-built GUI over HTTPS:
+NILO `0.2.0` from source commit
+`11f4644a4df251749cff251871c14f8876b63d7e` was deployed to the mini PC on
+2026-09-10 for live development checks. It runs in the real `appliance`
+profile, not simulation, and serves the built GUI over HTTPS:
 
 | Property | Value |
 |---|---|
-| URL | `https://192.168.1.47:8443` |
+| Local URL | `https://ddp-remote-linux.local:8443` |
+| WireGuard URL | `https://10.205.148.11:8443` |
+| Management allowlist | `wlp6s0`, `ddp_nilo` |
+| Excluded PLC interface | `eno1` |
 | NILO username | `admin` |
 | NILO password | `admin_password` |
 | Core service | `nilo.service`, active and enabled |
@@ -487,6 +491,7 @@ built GUI over HTTPS:
 | Recovery timer | `nilo-nethelper-recovery.timer`, active and enabled |
 | Runtime data | `/var/lib/nilo` |
 | GUI files | `/opt/nilo/gui` |
+| Rollback snapshot | `/var/backups/nilo/pre-dual-path-11f4644` |
 
 The `admin` / `admin_password` pair is the fixed **development-only NILO
 credential** used by this repository. It is separate from the Ubuntu/SSH login
@@ -495,10 +500,56 @@ mini PC remains a disposable development target even though NILO uses the
 `appliance` runtime profile so that live NetworkManager and privileged-helper
 behavior can be exercised.
 
+The service starts with `--management-port 8443` and loads the interface list
+from `/var/lib/nilo`; a service restart confirmed that the saved configuration
+survives without repeating interface arguments. The helper-owned
+`inet nilo_management` table accepts TCP 8443 only through `wlp6s0` and
+`ddp_nilo`, then drops that port on every other ingress interface. The local GUI
+returned HTTP 200 after the restart, while unauthenticated status and management
+API requests returned HTTP 401. The deployed GUI bundle contains the Management
+access interfaces panel.
+
 The current certificate is locally self-signed for the mini PC hostname, LAN
-address and WireGuard address. A browser that does not trust it displays a
-certificate warning; this is acceptable for this bench deployment only and is
-not a production certificate model.
+address and WireGuard address; its SANs include `ddp-remote-linux.local` and
+`10.205.148.11`. A browser that does not trust it displays a certificate
+warning; this is acceptable for this bench deployment only and is not a
+production certificate model. The development host had no route to
+`10.205.148.0/24`, so a separate WireGuard peer must still exercise the VPN URL.
+
+### 3.8 Raspberry Pi dual-path development deployment
+
+The dual-path candidate at `11f4644a4df251749cff251871c14f8876b63d7e` was
+deployed with explicit authorization on 2026-09-11 to
+the Raspberry Pi 4 development appliance `ddp-remote`. Existing NILO state,
+administrator data, TLS material and NetworkManager profiles were preserved.
+The root-only rollback archive is
+`/var/backups/nilo/pre-dual-path-11f4644-pi-20260911-184541/files-and-state.tar`.
+
+The Pi service loads its persistent management policy from `/var/lib/nilo` and
+serves HTTPS on port 8443. The temporary development allowlist is `eth0`,
+`wlan0` and `nilo0` because only the directly attached `eth0` recovery path was
+usable during deployment. `eth0` must be removed from this list before it is
+reconnected to the PLC network. A service restart and a full Pi reboot both
+restored NILO, the helper, the recovery timer and the helper-owned firewall.
+HTTPS returned HTTP 200 after reboot, and protected APIs remained HTTP 401
+without authentication.
+
+The certificate was preserved and contains `DNS:ddp-remote.local` and
+`IP:10.205.148.11`. The `DDP` Wi-Fi profile remains set to autoconnect, but the
+hotspot was unavailable during verification. The saved `nilo0` WireGuard
+profile was offline and had NetworkManager autoconnect disabled; enable it
+through the approved NILO network workflow before expecting VPN recovery after
+a reboot. Do not connect the mini PC and Pi with the duplicated temporary
+WireGuard identity at the same time.
+
+After the `DDP` hotspot became available, the Pi connected as
+`10.44.118.42/24` and `nilo0` was started as `10.205.148.11/32`. The WireGuard
+hub reported a current handshake, and the Windows client at `10.205.148.7`
+received HTTP 200 from `https://10.205.148.11:8443`. The GUI was then updated
+from combined branch commit `04ccc12209c4062855fc28702221f5a0d0f190d6`, which
+includes the newer login interface from remote `master`. The deployed
+JavaScript hash matched the tested production build. Its immediate rollback
+archive is `/var/backups/nilo/pre-master-04ccc12-20260911-1954/runtime.tar`.
 
 ## 4. Credential handling
 
