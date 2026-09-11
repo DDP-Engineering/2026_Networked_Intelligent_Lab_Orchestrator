@@ -11,12 +11,134 @@ SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
 
 ## Purpose and users
 
+NILO, the Networked Intelligent Lab Orchestrator, is an electronics bench
+appliance that brings instrument access, appliance networking and captured
+evidence into one application for both people and AI agents.
+
+Three audiences reach the same services: a bench engineer or technician through
+the browser interface, automation through the `nilo` command line with a scoped
+API token, and an AI client through the MCP endpoint. A human stays responsible
+for wiring, safety and the approval of consequential actions; every actor holds
+one of three fixed roles - Administrator, Operator or Viewer.
+
 ## Product responsibilities
+
+- **One shared core behind three interfaces.** The Go Bench Core owns
+  orchestration and persistence; the React browser interface, the `nilo`
+  command line and the `/mcp` endpoint are clients of the same authenticated
+  `/api/v1` services. The command line is an HTTP client even on the appliance.
+- **Identity and access control.** Argon2id password verifiers, expiring
+  `HttpOnly` browser sessions with a CSRF token, and named API tokens whose
+  scopes are intersected with the owner's current role. The three roles map to
+  a compiled-in permission set; there is no custom-role editor.
+- **Policy and approvals.** Ask, Auto and Full Access resolution over an
+  integration's declared operation policy, immutable policy snapshots, and
+  approvals bound to one canonical request digest.
+- **Managed integrations.** Curated bundles are installed, enabled, disabled,
+  restarted and uninstalled explicitly. The sigrok adapter exposes ATK-DL16
+  discovery, finite digital capture on D0-D15 and UART decoding of saved
+  captures; PWM is refused at both the core and the runner.
+- **Instrument transactions.** Durable transaction identities, a bounded queue,
+  two executing workers with per-analyzer serialization, absolute deadlines,
+  ordered bounded replies, cancellation, and digest-verified retained artifacts.
+- **Appliance networking.** Adapter state and settings, Wi-Fi scan and join,
+  managed WireGuard profiles and routed device networks, each through preview,
+  acknowledgement and a confirmation window with automatic restore.
+- **Activity.** One filtered, paginated audit and event history with bounded
+  JSONL and CSV export, an administrator retention policy, and bounded
+  housekeeping.
+- **Appliance power.** Confirmed restart and power off from an Operator or
+  Administrator browser session, dispatched through the privileged helper.
 
 ## Supported operation
 
+- NILO runs as an appliance: an unprivileged HTTPS Bench Core started with
+  explicit TLS material, a built interface directory, an absolute data
+  directory and an explicit listener, beside the privileged Linux helper that
+  owns networking and key material.
+- Appliance platforms are Linux ARM64, the first target and a Raspberry Pi 4,
+  and Linux x86_64. Windows is a development host and a portable compile
+  target, never an appliance platform.
+- The browser interface offers tabbed workspaces, light, dark and system
+  themes, and English, German and Romanian.
+- One layout serves the whole display range. Small low-resolution panels are
+  supported from 800x480 up, with a seven-inch 1024x600 as the usual field
+  size, and so are large high-resolution displays, where content is bounded to
+  a readable width rather than stretched across it. Three viewport classes
+  decide the shell; no operator-facing text falls below 14px and every
+  interactive target is at least 44 by 44 pixels at any size.
+- Persistence is SQLite through a pure-Go driver with digest-checked embedded
+  migrations, plus a confined artifact root below the data directory.
+- Behaviour is developed and tested against the appliance services on real
+  bench hardware; `.agentic/context/environment.md` owns the development host,
+  its setup and its commands.
+
 ## Established constraints
+
+- Bench Core is authoritative. No interface invokes an integration process,
+  edits the database or reaches a device directly.
+- Two authorization decisions stay separate: `identity.Service` decides whether
+  an actor may *request* an action; `policy.Resolver` decides whether an
+  operation may *run* without a human approval. Neither the Administrator role
+  nor a fully scoped token touches the second decision.
+- No credential is accepted on a command line. Tokens are read from a file,
+  passwords from standard input, and no response, log, audit event, export or
+  error message carries a password, key or verifier.
+- WireGuard key material and wireless passwords exist only inside the
+  privileged helper's root-owned keystore; the core knows profiles by identity.
+- The integration boundary is `nilo.integration/1`: correlated NDJSON over a
+  supervised child process's stdio, a runner declared as an executable plus an
+  argument array rather than a shell string, and a package whose complete file
+  inventory is verified against `files.sha256.json`.
+- The audit history is append-only against the application and bounded by
+  retention. It is not forensic evidence and is never described as
+  tamper-proof.
+- While NILO is in active development, superseded functionality is removed
+  directly; no compatibility aliases, parallel contracts or data conversion are
+  added to preserve an earlier development build.
+- One project-level Semantic Version lives in `VERSION`, mirrored by
+  `internal/buildinfo` and `nilo_gui/package.json`.
+- The project is licensed under PolyForm Noncommercial 1.0.0.
 
 ## Implementation orientation
 
+- `05_Software/nilo_assistant/` - Go module `nilo.local/nilo`, built without
+  CGO. `cmd/nilo/main.go` is the command surface (`version`, `serve`,
+  `serve-foundation-check`, `development issue-token`, `admin`, `network`,
+  `plugin`, `bench`, `activity`); `cmd/nilo-nethelper/` is the privileged Linux
+  helper. `internal/httpapi/server.go` holds the one route table where every
+  route declares its permission, with `internal/httpapi/bench.go` beside it.
+  `internal/identity/service.go` owns identity rules, `internal/auth/role.go`
+  the role matrix, `internal/network/operation.go` the managed-change
+  lifecycle, `internal/bench/` the plugin and job manager,
+  `internal/integration/{manifest,protocol,supervisor}/` the package boundary,
+  and `internal/store/sqlite/` the database with its embedded migrations.
+- `05_Software/nilo_gui/` - React, TypeScript and Vite. Requests are
+  origin-relative under `/api`; `src/api/contract.ts` holds the client
+  contract, `src/components/shell/pages.ts` the navigation, and
+  `src/preferences/store.ts` is the only module that touches browser storage.
+- `05_Software/integration_sdk/python/` is the supported Python authoring
+  surface; `05_Software/integrations/sigrok/` and `.../fake_python/` are the
+  reference packages; `05_Software/schemas/integration/v1/` is the public,
+  language-neutral package contract mirrored by the Go loader.
+- Component detail, per-file routing and requirement links live in
+  `.agentic/knowledge/`.
+
 ## Authoritative references
+
+- `README.md` - product overview, capabilities and repository layout.
+- `CHANGELOG.md` and `VERSION` - delivered changes and the shared version.
+- `01_Documentation/Code_Style.md` - Go, Python and general code conventions.
+- `05_Software/README.md` - software directory map and how the parts relate.
+- `06_SoftwareDocu/Development_and_Simulation_Flow.md` - development topology,
+  daily workflow and verification levels.
+- `06_SoftwareDocu/Network_Operations.md` - network workflow, recovery and
+  appliance preparation.
+- `06_SoftwareDocu/Sigrok_Integration.md` - current instrument lifecycle,
+  limits, shared interfaces and bundle deployment.
+- `07_Delivery/NILO_CLI_and_Authentication.md` - command line, roles,
+  permissions, sessions and tokens.
+- `00_Planning/` - product direction and planned work, including the waveform
+  workspace plan.
+- `.agentic/knowledge/` - component pages for Bench Core, the browser GUI, the
+  integration platform, managed bench integrations and the toolchain.
