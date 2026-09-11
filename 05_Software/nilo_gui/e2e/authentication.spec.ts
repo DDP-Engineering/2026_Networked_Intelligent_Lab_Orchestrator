@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
@@ -18,6 +19,9 @@ import { DevelopmentTopology, withRedactedSecret } from './topology';
 
 const guiRoot = process.cwd();
 const repositoryRoot = resolve(guiRoot, '..', '..');
+const guiVersion = JSON.parse(
+  readFileSync(resolve(guiRoot, 'package.json'), 'utf8'),
+) as { version: string };
 
 const ADMINISTRATOR = 'bench-admin';
 // A fixture credential for a temporary database this run creates and deletes.
@@ -64,10 +68,16 @@ test.afterAll(async () => {
 
 test('signs a real administrator in with a password', async () => {
   const running = requireTopology();
-  await page.goto(running.frontendUrl);
-
-  await expect(page.getByRole('heading', { name: 'Sign in to NILO' })).toBeVisible();
-  await expectSimulationIdentity();
+  for (const viewport of [
+    { width: 800, height: 480 },
+    { width: 1024, height: 600 },
+    { width: 1366, height: 768 },
+    { width: 1920, height: 1080 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto(running.frontendUrl);
+    await expectSignedOutLayout(viewport);
+  }
 
   await signIn(ADMINISTRATOR, ADMINISTRATOR_PASSWORD);
 
@@ -442,17 +452,65 @@ async function signOut(): Promise<void> {
 
 /** One persistent runtime indicator; sign-in also explains the development boundary. */
 async function expectSimulationIdentity(): Promise<void> {
-  await expect(page.getByRole('status', { name: /runtime profile/i })).toContainText(
-    'SIM',
-  );
   if (await page.locator('.shell').count()) {
+    await expect(page.getByRole('status', { name: /runtime profile/i })).toContainText(
+      'SIM',
+    );
     await expect(page.locator('.shell-boundary')).toHaveCount(0);
   } else {
-    await expect(
-      page.getByText(
-        /simulated results never represent evidence from physical equipment/i,
-      ),
-    ).toBeVisible();
+    await expect(page.getByRole('status', { name: /runtime profile/i })).toHaveCount(0);
+  }
+}
+
+async function expectSignedOutLayout(viewport: {
+  width: number;
+  height: number;
+}): Promise<void> {
+  await expect(page.getByRole('heading', { name: 'Sign in to NILO' })).toBeVisible();
+  await expect(page.getByText('NILO', { exact: true })).toBeVisible();
+  await expect(
+    page.getByText(`Version ${guiVersion.version}`, { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByLabel('Username')).toBeVisible();
+  await expect(page.getByLabel('Password', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Show password' })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Sign in', exact: true }),
+  ).toBeVisible();
+  await expect(page.locator('form')).toHaveCount(1);
+  await expect(page.getByRole('status', { name: /runtime profile/i })).toHaveCount(0);
+
+  const geometry = await page.locator('.sign-in-card').evaluate((card) => {
+    const rectangle = card.getBoundingClientRect();
+    const controls = Array.from(card.querySelectorAll('button, input')).map(
+      (element) => {
+        const bounds = element.getBoundingClientRect();
+        return { width: bounds.width, height: bounds.height };
+      },
+    );
+    const textSizes = Array.from(card.querySelectorAll('*'))
+      .filter((element) => (element.textContent ?? '').trim() !== '')
+      .map((element) => Number.parseFloat(getComputedStyle(element).fontSize));
+    return {
+      width: rectangle.width,
+      right: rectangle.right,
+      bottom: rectangle.bottom,
+      controls,
+      smallestText: Math.min(...textSizes),
+      documentWidth: document.documentElement.scrollWidth,
+    };
+  });
+
+  expect(geometry.documentWidth).toBeLessThanOrEqual(viewport.width);
+  expect(geometry.right).toBeLessThanOrEqual(viewport.width);
+  expect(geometry.bottom).toBeLessThanOrEqual(viewport.height);
+  expect(geometry.smallestText).toBeGreaterThanOrEqual(14);
+  for (const control of geometry.controls) {
+    expect(control.width).toBeGreaterThanOrEqual(44);
+    expect(control.height).toBeGreaterThanOrEqual(44);
+  }
+  if (viewport.width >= 1366) {
+    expect(geometry.width).toBeLessThan(viewport.width / 2);
   }
 }
 

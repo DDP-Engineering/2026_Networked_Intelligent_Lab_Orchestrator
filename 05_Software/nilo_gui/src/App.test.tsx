@@ -244,22 +244,9 @@ function signInScreen(): Promise<HTMLElement> {
   return screen.findByRole('heading', { name: /sign in to nilo/i });
 }
 
-function tokenField(): HTMLElement {
-  return screen.getByLabelText(/development bearer token/i);
-}
-
-function connectButton(): HTMLElement {
-  return screen.getByRole('button', { name: /^connect$/i });
-}
-
-async function connectWith(
-  client: BenchCoreClient,
-  token = 'development-token',
-): Promise<void> {
-  renderApp(client);
-  await signInScreen();
-  fireEvent.change(tokenField(), { target: { value: token } });
-  fireEvent.click(connectButton());
+async function connectWith(client: BenchCoreClient): Promise<void> {
+  client.signIn = () => Promise.resolve(viewerSession);
+  await signInAs(client, viewerSession.username, 'viewer-secret');
 }
 
 async function signInAs(
@@ -283,13 +270,14 @@ function devicesRegion(): HTMLElement {
 }
 
 function expectSimulationIdentity(): void {
-  expect(screen.getByRole('status', { name: /runtime profile/i })).toHaveTextContent(
-    'SIM',
-  );
   if (document.querySelector('.shell')) {
+    expect(screen.getByRole('status', { name: /runtime profile/i })).toHaveTextContent(
+      'SIM',
+    );
     expect(screen.queryByText(BOUNDARY)).toBeNull();
   } else {
-    expect(screen.getByText(BOUNDARY)).toBeVisible();
+    expect(screen.queryByRole('status', { name: /runtime profile/i })).toBeNull();
+    expect(screen.queryByText(BOUNDARY)).toBeNull();
   }
 }
 
@@ -301,19 +289,49 @@ afterEach(() => {
 });
 
 describe('sign-in screen', () => {
-  it('offers masked password and token fields and the endpoint it will contact', async () => {
+  it('presents the final product login and canonical version as the only credential path', async () => {
     const client = stubClient();
     const getStatus = vi.spyOn(client, 'getStatus');
     renderApp(client);
 
     await signInScreen();
+    expect(screen.getByText('NILO')).toBeVisible();
+    expect(screen.getByText('Version 0.2.0')).toBeVisible();
+    expect(document.querySelectorAll('form')).toHaveLength(1);
+    expect(screen.getByLabelText('Username')).toBeVisible();
     expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password');
-    expect(tokenField()).toHaveAttribute('type', 'password');
     expect(screen.getByRole('button', { name: /^sign in$/i })).toBeVisible();
-    expect(connectButton()).toBeVisible();
-    expect(screen.getByText(/http:\/\/127\.0\.0\.1:8090/)).toBeVisible();
+    expect(screen.queryByText(/development interface/i)).toBeNull();
+    expect(screen.queryByLabelText(/development bearer token/i)).toBeNull();
+    expect(screen.queryByText(ENDPOINT)).toBeNull();
+    expect(screen.queryByRole('status', { name: /runtime profile/i })).toBeNull();
     expect(getStatus).not.toHaveBeenCalled();
-    expectSimulationIdentity();
+  });
+
+  it('reveals and hides the entered password without changing the submitted value', async () => {
+    const client = stubClient({ signIn: () => Promise.resolve(administratorSession) });
+    const signIn = vi.spyOn(client, 'signIn');
+    renderApp(client);
+    await signInScreen();
+
+    const password = screen.getByLabelText('Password');
+    fireEvent.change(screen.getByLabelText('Username'), { target: { value: 'admin' } });
+    fireEvent.change(password, { target: { value: 'administrator-secret' } });
+
+    const show = screen.getByRole('button', { name: 'Show password' });
+    expect(show).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(show);
+    expect(password).toHaveAttribute('type', 'text');
+    expect(password).toHaveValue('administrator-secret');
+
+    const hide = screen.getByRole('button', { name: 'Hide password' });
+    expect(hide).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(hide);
+    expect(password).toHaveAttribute('type', 'password');
+    expect(password).toHaveValue('administrator-secret');
+
+    fireEvent.click(screen.getByRole('button', { name: /^sign in$/i }));
+    expect(signIn).toHaveBeenCalledExactlyOnceWith('admin', 'administrator-secret');
   });
 
   it('refuses an incomplete sign-in without contacting the backend', async () => {
@@ -328,19 +346,6 @@ describe('sign-in screen', () => {
       await screen.findByText(/enter both a username and a password/i),
     ).toBeVisible();
     expect(signIn).not.toHaveBeenCalled();
-  });
-
-  it('refuses an empty token without contacting the backend', async () => {
-    const client = stubClient();
-    const currentSession = vi.spyOn(client, 'currentSession');
-    renderApp(client);
-    await signInScreen();
-    currentSession.mockClear();
-
-    fireEvent.click(connectButton());
-
-    expect(await screen.findByText(/enter the bearer token/i)).toBeVisible();
-    expect(currentSession).not.toHaveBeenCalled();
   });
 });
 
@@ -480,35 +485,6 @@ describe('main navigation', () => {
   });
 });
 
-describe('development bearer token', () => {
-  it('sends the entered token as the bearer credential for every resource', async () => {
-    const client = stubClient();
-    const getStatus = vi.spyOn(client, 'getStatus');
-    const getIntegrations = vi.spyOn(client, 'getIntegrations');
-    const getDevices = vi.spyOn(client, 'getDevices');
-    const signIn = vi.spyOn(client, 'signIn');
-
-    await connectWith(client, 'issued-development-token');
-
-    const credential = { kind: 'bearer', token: 'issued-development-token' };
-    await waitFor(() => {
-      expect(getStatus).toHaveBeenCalledWith(credential);
-      expect(getIntegrations).toHaveBeenCalledWith(credential);
-      expect(getDevices).toHaveBeenCalledWith(credential);
-    });
-    expect(signIn).not.toHaveBeenCalled();
-  });
-
-  it('shows the identity a development token carries', async () => {
-    await connectWith(stubClient());
-
-    expect(await benchPage()).toBeVisible();
-    expect(screen.getByRole('button', { name: 'Account' })).toHaveTextContent(
-      'development-identity',
-    );
-  });
-});
-
 describe('connection states', () => {
   it('shows a distinct in-progress state while the requests are pending', async () => {
     await connectWith(
@@ -532,17 +508,6 @@ describe('connection states', () => {
     expectSimulationIdentity();
   });
 
-  it('shows a distinct rejected-token state', async () => {
-    await connectWith(failing('unauthorized'));
-
-    expect(await screen.findByText(/rejected this token/i)).toBeVisible();
-    expect(screen.queryByText(/not reachable/i)).toBeNull();
-    expect(
-      screen.getByRole('button', { name: /use a different token/i }),
-    ).toBeVisible();
-    expectSimulationIdentity();
-  });
-
   it('shows a distinct unreachable-backend state', async () => {
     await connectWith(failing('unavailable'));
 
@@ -561,19 +526,7 @@ describe('connection states', () => {
     expectSimulationIdentity();
   });
 
-  it('returns to an empty sign-in screen when a rejected token is replaced', async () => {
-    await connectWith(failing('unauthorized'));
-
-    fireEvent.click(
-      await screen.findByRole('button', { name: /use a different token/i }),
-    );
-
-    expect(await signInScreen()).toBeVisible();
-    expect(tokenField()).toHaveValue('');
-    expectSimulationIdentity();
-  });
-
-  it('retries every resource with the same token when the backend was unreachable', async () => {
+  it('retries every resource with the same session when the backend was unreachable', async () => {
     let attempts = 0;
     const client = stubClient({
       getStatus: () => {
@@ -584,7 +537,7 @@ describe('connection states', () => {
       },
     });
     const getDevices = vi.spyOn(client, 'getDevices');
-    await connectWith(client, 'issued-development-token');
+    await connectWith(client);
 
     fireEvent.click(await screen.findByRole('button', { name: /try again/i }));
 
@@ -592,18 +545,18 @@ describe('connection states', () => {
     // Initial failure, explicit retry, then the shell's reachability refresh.
     expect(attempts).toBe(3);
     expect(getDevices).toHaveBeenLastCalledWith({
-      kind: 'bearer',
-      token: 'issued-development-token',
+      kind: 'session',
+      csrfToken: viewerSession.csrfToken,
     });
   });
 
-  it('keeps the simulation identity on the unauthenticated screen', async () => {
+  it('keeps the signed-out surface focused on product sign-in', async () => {
     renderApp(stubClient());
 
     await signInScreen();
     expectSimulationIdentity();
     expect(screen.getByRole('heading', { name: /sign in to nilo/i })).toBeVisible();
-    expect(screen.getByText(/development interface/i)).toBeVisible();
+    expect(screen.getByText('Version 0.2.0')).toBeVisible();
   });
 });
 
@@ -743,15 +696,6 @@ describe('unusable inventory responses', () => {
     ).toBeVisible();
     expect(within(devicesRegion()).queryByText(/no devices/i)).toBeNull();
   });
-
-  it('is not the screen a rejected token or a stopped backend reaches', async () => {
-    await connectWith(failing('unauthorized'));
-
-    expect(await screen.findByText(/rejected this token/i)).toBeVisible();
-    expect(screen.queryByRole('region', { name: 'Integrations' })).toBeNull();
-    expect(screen.queryByRole('region', { name: 'Devices' })).toBeNull();
-    expect(screen.queryByText(/could not be read/i)).toBeNull();
-  });
 });
 
 describe('credential retention', () => {
@@ -786,60 +730,42 @@ describe('credential retention', () => {
     }
   });
 
-  it('never writes the development token to a durable browser store', async () => {
-    const stored = vi.spyOn(Storage.prototype, 'setItem');
-    const cookie = vi.spyOn(Document.prototype, 'cookie', 'set');
-
-    await connectWith(stubClient(), 'issued-development-token');
-    await benchPage();
-    fireEvent.click(screen.getByRole('button', { name: /refresh/i }));
-    await screen.findByRole('region', { name: 'Devices' });
-
-    for (const [key, value] of stored.mock.calls) {
-      expect(Object.values(PREFERENCE_KEYS)).toContain(key);
-      expect(String(value)).not.toContain('issued-development-token');
-    }
-    expect(cookie).not.toHaveBeenCalled();
-    expect(JSON.stringify(localStorage)).not.toContain('issued-development-token');
-    expect(JSON.stringify(sessionStorage)).not.toContain('issued-development-token');
-    expect(document.body.innerHTML).not.toContain('issued-development-token');
-  });
-
-  it('presents the sign-in screen again after the application is remounted', async () => {
+  it('clears an unsubmitted password when the application is remounted', async () => {
     const { unmount } = renderApp(stubClient());
     await signInScreen();
-    fireEvent.change(tokenField(), { target: { value: 'issued-development-token' } });
-    fireEvent.click(connectButton());
-    await benchPage();
+    fireEvent.change(screen.getByLabelText('Password'), {
+      target: { value: 'unsubmitted-secret' },
+    });
     unmount();
 
     renderApp(stubClient());
 
     expect(await signInScreen()).toBeVisible();
-    expect(tokenField()).toHaveValue('');
+    expect(screen.getByLabelText('Password')).toHaveValue('');
     expect(screen.queryByRole('heading', { name: 'Bench', level: 2 })).toBeNull();
   });
 
-  it('discards the token and the inventory when a different token is asked for', async () => {
-    await connectWith(stubClient(), 'issued-development-token');
+  it('discards the inventory when the user signs out', async () => {
+    await connectWith(stubClient());
     await screen.findByRole('region', { name: 'Devices' });
 
     openAccountMenu();
     fireEvent.click(screen.getByRole('menuitem', { name: /sign out/i }));
 
     expect(await signInScreen()).toBeVisible();
-    expect(tokenField()).toHaveValue('');
+    expect(screen.getByLabelText('Password')).toHaveValue('');
     expect(screen.queryByRole('region', { name: 'Devices' })).toBeNull();
     expect(screen.queryByText('SIMULATION - Electronics Bench 001')).toBeNull();
   });
 });
 
 describe('mock mode', () => {
-  it('says the interface is answering from its own contract mock', async () => {
+  it('presents the same product login in mock mode', async () => {
     renderApp(stubClient(), 'mock');
 
     await signInScreen();
-    expect(screen.getByText(/contract mock/i)).toBeVisible();
+    expect(screen.getByText('Version 0.2.0')).toBeVisible();
+    expect(screen.queryByText(/contract mock/i)).toBeNull();
     expectSimulationIdentity();
   });
 });

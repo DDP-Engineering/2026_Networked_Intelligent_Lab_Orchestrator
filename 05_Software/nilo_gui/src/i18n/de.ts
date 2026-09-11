@@ -48,7 +48,6 @@ export const de: Catalogue = {
   'instrument.preview': 'Erste Abtastwerte · digitale Vorschau',
 
   'app.name': 'NILO',
-  'app.title': 'NILO Entwicklungsoberfläche',
   'nav.label': 'Hauptnavigation',
   'nav.section.working': 'Arbeitsbereich',
   'nav.section.instruments': 'Instrumente',
@@ -115,17 +114,10 @@ export const de: Catalogue = {
   'power.tryAgain': 'Erneut versuchen',
   'power.close': 'Schließen',
 
-  'boundary.unknown':
-    'Melden Sie sich an, um die von Bench Core gemeldeten Laufzeit- und Geräteinformationen zu sehen.',
-  'boundary.appliance':
-    'Live-Netzwerk des Geräts. Instrumentenintegrationen sind nicht verbunden.',
-  'boundary.statement':
-    'Nur Simulationsprofil — simulierte Ergebnisse sind niemals ein Nachweis von physischer Ausrüstung.',
-
   'signIn.title': 'Bei NILO anmelden',
-  'signIn.eyebrow': 'Entwicklungsoberfläche',
-  'signIn.intro':
-    'Melden Sie sich mit Benutzernamen und Passwort einer Identität auf diesem Gerät an. Die erste Administratorin oder der erste Administrator wird einmalig an der Konsole angelegt; eine Selbstregistrierung gibt es nicht.',
+  'signIn.version': 'NILO-Version {version}',
+  'signIn.password.show': 'Passwort anzeigen',
+  'signIn.password.hide': 'Passwort ausblenden',
   'signIn.username': 'Benutzername',
   'signIn.password': 'Passwort',
   'signIn.submit': 'Anmelden',
@@ -136,14 +128,6 @@ export const de: Catalogue = {
     'Zu viele Fehlversuche für diesen Benutzernamen. Warten Sie das Sperrfenster ab und versuchen Sie es erneut.',
   'signIn.ended': 'Ihre Sitzung ist beendet. Melden Sie sich erneut an.',
   'signIn.signedOut': 'Sie sind abgemeldet.',
-  'signIn.token.title': 'Oder mit einem Entwicklungs-Token verbinden',
-  'signIn.token.intro':
-    'Erzeugen Sie eines in WSL2 mit dem Entwicklungs-Token-Befehl. Es bleibt nur für diese Seite im Speicher und liest die Bench auf Viewer-Ebene; die Identitätsverwaltung erfordert eine angemeldete Administratorin oder einen angemeldeten Administrator.',
-  'signIn.token.label': 'Entwicklungs-Bearer-Token',
-  'signIn.token.submit': 'Verbinden',
-  'signIn.token.incomplete':
-    'Geben Sie das vom Entwicklungs-Backend erzeugte Token ein.',
-  'signIn.endpoint': 'Endpunkt',
 
   'restoring.title': 'Sitzung wird wiederhergestellt…',
   'restoring.body':
@@ -154,7 +138,6 @@ export const de: Catalogue = {
   'bench.connecting.body':
     'Warten auf die authentifizierten Status-, Integrations- und Geräteantworten.',
   'bench.refresh': 'Aktualisieren',
-  'bench.useDifferentToken': 'Anderes Token verwenden',
   'bench.signInAgain': 'Erneut anmelden',
   'bench.profile': 'Profil',
   'bench.status': 'Dienststatus',
@@ -521,9 +504,6 @@ export const de: Catalogue = {
   'help.auth.verify':
     'Datensatz aktualisieren, erwartete Zugriffsgrenze testen und die Identitätseinträge in Aktivitäten prüfen.',
 
-  'mode.mock':
-    'Die Antworten stammen aus dem eigenen Vertrags-Mock dieser Oberfläche; es wird kein Backend-Prozess kontaktiert.',
-  'mode.live': 'Anfragen gehen an den konfigurierten Bench-Core-Entwicklungsendpunkt.',
   // Device networks, adapter configuration, Activity and Diagnostics
   'nav.activity': 'Aktivität',
   'network.activity.open': 'Aktivität anzeigen',

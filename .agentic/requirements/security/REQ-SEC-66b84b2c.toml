@@ -62,17 +62,21 @@ affected_paths = [
     "05_Software/nilo_gui/src/components/AuthenticationPage.tsx",
     "05_Software/nilo_gui/src/components/AdministrationForms.tsx",
     "05_Software/nilo_gui/src/api/client.test.ts",
+    "05_Software/nilo_gui/src/App.test.tsx",
+    "05_Software/nilo_gui/e2e/commands.test.ts",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
     "05_Software/nilo_gui/src/App.test.tsx::never writes a password or a CSRF token to a durable store or the console",
+    "05_Software/nilo_gui/src/App.test.tsx::reveals and hides the entered password without changing the submitted value",
     "05_Software/nilo_gui/src/api/client.test.ts::sends a password in one request body and never in the URL",
     "05_Software/nilo_gui/src/api/client.test.ts::sends a replacement password in the body of the reset request only",
     "05_Software/nilo_gui/src/api/client.test.ts::repeats the CSRF token in a header on a state change and not on a read",
-    "05_Software/nilo_gui/src/App.test.tsx::never writes the development token to a durable browser store",
     "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::discloses the secret once, copies it, and never shows it again",
+    "05_Software/nilo_gui/e2e/commands.test.ts::never lets the bench-core spec type its password unredacted",
+    "05_Software/nilo_gui/e2e/commands.test.ts::never lets the administration spec type a password unredacted",
 ]
 
 # --- optional below this line ---
@@ -84,4 +88,4 @@ priority = "high"   # low | normal | high
 rationale = "Web storage and URLs outlive the page and reach logs and history; the session secret itself is deliberately in a cookie the page cannot read at all."
 
 created = 2026-09-02
-updated = 2026-09-02
+updated = 2026-09-10

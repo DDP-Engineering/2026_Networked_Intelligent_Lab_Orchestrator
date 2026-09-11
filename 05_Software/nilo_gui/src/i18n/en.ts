@@ -47,7 +47,6 @@ export const en = {
 
   // Shell and navigation
   'app.name': 'NILO',
-  'app.title': 'NILO Development Interface',
   'nav.label': 'Main',
   'nav.section.working': 'Workspace',
   'nav.section.instruments': 'Instruments',
@@ -115,19 +114,11 @@ export const en = {
   'power.tryAgain': 'Try again',
   'power.close': 'Close',
 
-  // The boundary statement, which every screen carries
-  'boundary.unknown':
-    'Sign in to read the runtime and device information reported by Bench Core.',
-  'boundary.appliance':
-    'Live appliance networking. Instrument integrations are not connected.',
-  'boundary.statement':
-    'Simulation profile only — simulated results never represent evidence from physical equipment.',
-
   // Sign-in
   'signIn.title': 'Sign in to NILO',
-  'signIn.eyebrow': 'Development interface',
-  'signIn.intro':
-    'Sign in with the username and password of an identity on this appliance. The first administrator is created once at the console; there is no self-registration.',
+  'signIn.version': 'Version {version}',
+  'signIn.password.show': 'Show password',
+  'signIn.password.hide': 'Hide password',
   'signIn.username': 'Username',
   'signIn.password': 'Password',
   'signIn.submit': 'Sign in',
@@ -138,14 +129,6 @@ export const en = {
     'Too many failed attempts for that username. Wait for the lock-out window to pass and try again.',
   'signIn.ended': 'Your session ended. Sign in again to continue.',
   'signIn.signedOut': 'You are signed out.',
-  'signIn.token.title': 'Or connect with a development bearer token',
-  'signIn.token.intro':
-    'Issue one in WSL2 with the development token command. It is held in memory for this page only and reads the bench at the Viewer level; identity administration needs a signed-in administrator.',
-  'signIn.token.label': 'Development bearer token',
-  'signIn.token.submit': 'Connect',
-  'signIn.token.incomplete':
-    'Enter the bearer token issued by the development backend.',
-  'signIn.endpoint': 'Endpoint',
 
   // Session restoration
   'restoring.title': 'Restoring your session…',
@@ -157,7 +140,6 @@ export const en = {
   'bench.connecting.body':
     'Waiting for the authenticated status, integration, and device responses.',
   'bench.refresh': 'Refresh',
-  'bench.useDifferentToken': 'Use a different token',
   'bench.signInAgain': 'Sign in again',
   'bench.profile': 'Profile',
   'bench.status': 'Service status',
@@ -521,10 +503,6 @@ export const en = {
   'help.auth.verify':
     'Refresh the record, test the expected access boundary, and inspect the identity entries in Activity.',
 
-  // Mode note
-  'mode.mock':
-    'Answers come from this interface’s own contract mock; no backend process is contacted.',
-  'mode.live': 'Requests go to the configured Bench Core development endpoint.',
   // Device networks, adapter configuration, Activity and Diagnostics
   'nav.activity': 'Activity',
   'network.activity.open': 'View activity',

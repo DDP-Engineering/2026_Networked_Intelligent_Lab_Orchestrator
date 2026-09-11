@@ -10,6 +10,14 @@ import { describe, expect, it } from 'vitest';
 const tokensCss = stylesheet('./styles/tokens.css');
 const shellCss = stylesheet('./styles/shell.css');
 const indexCss = stylesheet('./index.css');
+const indexHtml = readFileSync('index.html', 'utf8');
+
+describe('product document metadata', () => {
+  it('uses final NILO product identity in the browser tab and description', () => {
+    expect(indexHtml).toContain('<title>NILO</title>');
+    expect(indexHtml).toContain('content="NILO electronics bench appliance"');
+  });
+});
 
 function stylesheet(name: string): string {
   // Comments and @import lines are stripped so a documented rule is still found

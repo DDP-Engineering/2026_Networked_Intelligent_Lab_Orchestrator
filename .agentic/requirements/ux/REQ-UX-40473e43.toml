@@ -14,7 +14,7 @@ schema = 1
 # and must match the category folder this file sits in.
 id = "REQ-UX-40473e43"
 
-title = "Present a development bearer-token login screen"
+title = "Present the product sign-in surface"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
@@ -34,34 +34,51 @@ status = "active"
 #   unwanted    If <condition>, then the <system> shall <response>.
 #   optional    Where <feature is included>, the <system> shall <response>.
 #
-# Two "shall" clauses means two behaviors: split it into two requirements.
+# Two independently verifiable responses need two requirements. Split when
+# either clause can vary, fail, change, or be checked independently; keep an
+# inseparable atomic outcome together. Final prose normally has one "shall".
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-While nobody is signed in, the browser GUI shall present a sign-in screen offering a labelled masked bearer-token field and a submit control beside the password form, name the Bench Core endpoint it is configured against, and issue no backend request for that field until it is submitted with a non-empty value.
+While nobody is signed in, the browser GUI shall present a NILO product identity, labelled username and masked password fields, a sign-in action, and state-specific feedback needed to complete or recover human authentication.
 """
 
-# The observation that settles whether the behavior holds — not a
-# restatement of the requirement.
+# The observation that settles whether the behavior holds - not a
+# restatement of the requirement. Work out setup, input or trigger, action,
+# observable oracle, and a relevant boundary or failure case before reducing
+# them to concise prose here. Do not introduce conditions absent from the
+# requirement or its linked spec.
 #
 # Some behaviors no test can settle: a look-and-see judgement, an install
 # on clean hardware, a printed page. Start this field with "Manual:" or
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
-# The prefix alone is not enough — it has to say what someone does.
-verification = "A component test renders the GUI with a recording stub client and asserts that an accessible masked token field, a submit control, and the configured endpoint text are present, that the stub client received no request before submission, and that submitting an empty field reports a validation message and still issues no request."
+# The prefix alone is not enough - it has to say what someone does.
+verification = "A component test renders the signed-out GUI and observes the NILO identity, labelled username and masked password fields and sign-in action, then checks incomplete, refused, throttled, ended-session and signed-out states expose their actionable feedback beside the same form."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
+    "05_Software/nilo_gui/index.html",
+    "05_Software/nilo_gui/README.md",
     "05_Software/nilo_gui/src/components/SignInScreen.tsx",
     "05_Software/nilo_gui/src/App.tsx",
     "05_Software/nilo_gui/src/App.test.tsx",
+    "05_Software/nilo_gui/src/styles/shell.css",
+    "05_Software/nilo_gui/src/i18n/en.ts",
+    "05_Software/nilo_gui/src/i18n/de.ts",
+    "05_Software/nilo_gui/src/i18n/ro.ts",
+    "05_Software/nilo_gui/src/layout.test.ts",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/App.test.tsx",
+    "05_Software/nilo_gui/src/App.test.tsx::presents the final product login and canonical version as the only credential path",
+    "05_Software/nilo_gui/src/App.test.tsx::refuses an incomplete sign-in without contacting the backend",
+    "05_Software/nilo_gui/src/App.test.tsx::stays on the sign-in screen when the credentials are refused",
+    "05_Software/nilo_gui/src/App.test.tsx::says a throttled username has to wait rather than be retyped",
+    "05_Software/nilo_gui/src/App.test.tsx::returns to the sign-in screen when the session has ended",
+    "05_Software/nilo_gui/src/layout.test.ts::uses final NILO product identity in the browser tab and description",
 ]
 
 # --- optional below this line ---
@@ -70,7 +87,7 @@ linked_tests = [
 spec = ""
 
 priority = "high"   # low | normal | high
-rationale = "The backend issues development tokens out of band, so the first GUI screen has to accept one explicitly rather than assume an authenticated session."
+rationale = "The signed-out screen is the delivered product entry point for a human user."
 
 created = 2026-09-01
-updated = 2026-09-02
+updated = 2026-09-10

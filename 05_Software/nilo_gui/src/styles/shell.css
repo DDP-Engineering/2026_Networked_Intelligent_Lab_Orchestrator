@@ -905,6 +905,36 @@ input[type='radio'] {
   font-weight: 620;
   line-height: var(--line-title);
 }
+
+.sign-in-card {
+  width: min(30rem, 100%);
+}
+
+.sign-in-brand {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.sign-in-wordmark,
+.sign-in-version {
+  margin: 0;
+}
+
+.sign-in-wordmark {
+  color: var(--text-strong);
+  font-size: var(--text-section);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.sign-in-version {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+}
 .card h2 {
   margin: 0;
   color: var(--text-strong);
@@ -1005,6 +1035,17 @@ input[type='radio'] {
   background: var(--surface-base);
   font-family: inherit;
   font-size: var(--text-body);
+}
+
+.password-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2);
+}
+
+.password-toggle {
+  min-width: var(--target-min);
+  white-space: nowrap;
 }
 
 .field input[type='checkbox'] {

@@ -1,7 +1,8 @@
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 
-import { DevelopmentTopology } from './topology';
+import { DevelopmentTopology, withRedactedSecret } from './topology';
 
 /**
  * The browser-to-WSL2 simulation path, end to end.
@@ -14,14 +15,19 @@ import { DevelopmentTopology } from './topology';
  *
  * The tests run in order and share one browser page: the second one starts
  * from the connected screen the first one reached, which is the only way to
- * observe recovery without re-entering the token.
+ * observe recovery without signing in again.
  */
 
 const guiRoot = process.cwd();
 const repositoryRoot = resolve(guiRoot, '..', '..');
+const guiVersion = JSON.parse(
+  readFileSync(resolve(guiRoot, 'package.json'), 'utf8'),
+) as { version: string };
 
 const INTEGRATION_ID = 'simulation.fake-python';
 const DEVICE_ID = 'simulation.fake-python.device.stable-001';
+const ADMINISTRATOR = 'bench-core-admin';
+const ADMINISTRATOR_PASSWORD = 'bench-core-admin-password-1';
 
 let topology: DevelopmentTopology | null = null;
 let page: Page;
@@ -34,6 +40,7 @@ test.beforeAll(async ({ browser }) => {
   test.setTimeout(900_000);
   try {
     topology = await DevelopmentTopology.start({ repositoryRoot, guiRoot });
+    await topology.bootstrapAdministrator(ADMINISTRATOR, ADMINISTRATOR_PASSWORD);
   } catch (failure) {
     // The harness already released whatever it had built; re-raise so the run
     // fails loudly with the prerequisite or start-up reason.
@@ -54,17 +61,18 @@ test.afterAll(async () => {
   }
 });
 
-test('signs in with a development token and shows the simulated bench', async () => {
+test('signs in with a human session and shows the simulated bench', async () => {
   const running = requireTopology();
   await page.goto(running.frontendUrl);
 
   await expect(page.getByRole('heading', { name: 'Sign in to NILO' })).toBeVisible();
-  await expectSimulationIdentity();
-
-  // The harness types it in. There is no accessor for the value, and a failing
-  // fill would otherwise repeat its argument in the error it throws.
-  await running.enterTokenInto(page.getByLabel('Development bearer token'));
-  await page.getByRole('button', { name: 'Connect' }).click();
+  await expect(page.getByText(`Version ${guiVersion.version}`)).toBeVisible();
+  await page.getByLabel('Username').fill(ADMINISTRATOR);
+  await fillSecret(
+    page.getByLabel('Password', { exact: true }),
+    ADMINISTRATOR_PASSWORD,
+  );
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 
   await expect(page.getByRole('heading', { name: 'Bench', exact: true })).toBeVisible();
   await expectSimulationIdentity();
@@ -100,30 +108,23 @@ test('presents Bench Core as unreachable and recovers through the interface', as
   await expect(
     page.getByRole('heading', { name: 'Bench Core is not reachable.' }),
   ).toBeVisible();
-  await expectSimulationIdentity();
+  await expect(page.getByText(`Version ${guiVersion.version}`)).toBeVisible();
+  await expect(page.getByRole('status', { name: /runtime profile/i })).toHaveCount(0);
 
   await running.startBackend();
   await page.getByRole('button', { name: 'Try again' }).click();
 
-  // No reload and no second token: the interface reuses the one it still holds.
+  // No reload and no second sign-in: the interface reuses the session it still holds.
   await expect(page.getByRole('heading', { name: 'Bench', exact: true })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Devices' })).toContainText(DEVICE_ID);
 });
 
-/** One persistent runtime indicator; sign-in also explains the development boundary. */
+/** One persistent runtime indicator inside the authenticated workspace. */
 async function expectSimulationIdentity(): Promise<void> {
   await expect(page.getByRole('status', { name: /runtime profile/i })).toContainText(
     'SIM',
   );
-  if (await page.locator('.shell').count()) {
-    await expect(page.locator('.shell-boundary')).toHaveCount(0);
-  } else {
-    await expect(
-      page.getByText(
-        /simulated results never represent evidence from physical equipment/i,
-      ),
-    ).toBeVisible();
-  }
+  await expect(page.locator('.shell-boundary')).toHaveCount(0);
 }
 
 /** The value shown for one labelled fact. */
@@ -132,6 +133,10 @@ function statusValue(label: string) {
     .locator('.fact')
     .filter({ hasText: new RegExp(`^${label}`) })
     .locator('dd');
+}
+
+async function fillSecret(field: Locator, secret: string): Promise<void> {
+  await withRedactedSecret(secret, () => field.fill(secret));
 }
 
 function requireTopology(): DevelopmentTopology {

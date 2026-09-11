@@ -161,17 +161,16 @@ ends the session server-side.
 Nothing about a credential is written to `localStorage`, `sessionStorage`, a
 request URL, or the console.
 
-To reach a backend with no identity yet, issue a development token instead:
+Development bearer tokens remain available for API and command-line tooling:
 
 ```bash
 ../../02_Tools/env/with-tools.sh go run ./cmd/nilo development issue-token \
   --data-dir "$HOME/.local/state/nilo-development"
 ```
 
-Paste the printed `token` into the **Development bearer token** field. That
-identity is a least-privileged Viewer, so it reads the bench and is refused by
-the administration routes. The token is held in memory for the lifetime of the
-page only, so a reload returns to the sign-in screen.
+That identity is a least-privileged Viewer, so it can read the bench through the
+API and is refused by administration routes. The browser sign-in page accepts a
+human username and password only.
 
 In mock mode the seeded identities are `admin`, `operator` and `viewer`, all
 with the password `simulation-password`, and a bearer token authenticates as the

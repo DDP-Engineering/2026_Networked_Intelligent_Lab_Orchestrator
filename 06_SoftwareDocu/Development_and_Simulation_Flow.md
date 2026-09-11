@@ -504,10 +504,10 @@ Start the GUI against the WSL2 backend from the repository root:
 .\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run dev
 ```
 
-Open `http://127.0.0.1:5173/` in the Windows browser. The page displays a
-single persistent `SIM` badge with an accessible simulation label after sign-in.
-The sign-in screen explains that simulated results are not physical evidence;
-authenticated pages do not repeat that statement.
+Open `http://127.0.0.1:5173/` in the Windows browser. Before authentication,
+the page identifies NILO and displays the project version mirrored by the GUI
+package. After sign-in, the page displays a single persistent `SIM` badge with
+an accessible simulation label.
 
 **Signing in as a human.** Enter the username and password of the administrator
 created with `nilo admin bootstrap` in section 8.1 and select **Sign in**. Bench
@@ -522,14 +522,15 @@ cookie stops working for whoever holds it.
 The top bar names the signed-in identity and its role, and offers **Bench** and,
 for an identity holding the administration permissions, **Authentication**.
 
-**Connecting with a development token instead.** Paste the `token` value printed
-by `nilo development issue-token` in section 8.1 into the **Development bearer
-token** field and select **Connect**. That identity is a least-privileged
-Viewer, so it reads the bench and is refused by the administration routes. The
-token is held in memory for that page only — never in `localStorage`,
-`sessionStorage`, a cookie, or a request URL — so reloading the page returns to
-the sign-in screen. No password, session secret, cross-site request forgery
-token or newly created API token secret is written to any of those either.
+The sign-in screen provides labelled username and password fields, a control
+that reveals or masks the entered password without changing it, and one **Sign
+in** action. No password, session secret, cross-site request forgery token or
+newly created API token secret is written to `localStorage`, `sessionStorage`,
+a cookie controlled by the page, a request URL, or the console.
+
+Development bearer tokens issued by `nilo development issue-token` remain
+available to API and command-line tooling. They resolve to a least-privileged
+Viewer and are not part of the browser sign-in interface.
 
 **The shell.** One compact row across the top carries the NILO wordmark, the
 open page tabs, and the network, `SIM`, appearance, language and account
@@ -799,14 +800,13 @@ The browser binaries live under the ignored
 No persistent host environment is changed and a test run downloads nothing.
 
 `e2e/bench-core.spec.ts` covers, in one browser session against one backend:
-submitting a development token on the sign-in screen; the authenticated status
-request completing; the persistent simulation identity and the
-development boundary before sign-in, without repeated authenticated notices; the reported
+the project version before sign-in; human password sign-in; the authenticated
+status request completing; the persistent simulation identity; the reported
 `simulation` profile and `healthy` service status; the deterministic integration
 inventory; the deterministic device inventory with the integration that owns
 each device; Bench Core presented as unreachable once its process is stopped;
 and recovery to the connected screen through the interface's own retry control,
-with no page reload and no second token.
+with no page reload or second sign-in.
 
 `e2e/shell.spec.ts` covers what only a browser settles about the shell: that
 the header really is one row within the agreed height, that the lower cluster is
