@@ -1,0 +1,136 @@
+{
+  "reports": [
+    {
+      "anchor_created_at": "2026-09-12T09:57:56.329260Z",
+      "anchor_head": "0c94a5692cc3850f38af6b417a5346ba082504bb",
+      "anchor_id": "270232e3c89ccc0f",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "973199f380b202e4fb7f999de75ea0684f744d56447c85e571b4bbbe3f75f4fd"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "0b679a27d9336008b06c1ec8c299d2c318a1e331fed9b71beaf804e827902628"
+          },
+          "path": "05_Software/nilo_gui/e2e/field-display.spec.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "790aec13f3f3c50b49ad715d819b6afc677d0bc929e5b67e1d006ac8762ac0ea"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "0ce03bb546a14cd3948ca738ee2a2aeb726a2c8acb724850948b65a0e591ca2e"
+          },
+          "path": "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b730f1ae335096003f422220cf6d64c025347f43dbe0128644febd2a0ac58263"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "792b6b701fd5f5876f4c69295737ce50e5505d2e5e3af1eedf2787b4df9dc6f1"
+          },
+          "path": "05_Software/nilo_gui/src/components/authentication/ApiTokensPage.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "df0cd1d1d8dcbaf3f0aaa0a95bf1e3b2657b0f2a7b53793d857da5b92a3687b1"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "d484095eadc49173ca531679c948d1e93b2a45dec833ba8d0ec32164fd454bfc"
+          },
+          "path": "05_Software/nilo_gui/src/components/authentication/UsersPage.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "43cd23391137f8b0516af4f32f0c8920c639c7a8370639a41c26c3bbf7f14cb9"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "d09851b88107fedde264eb7dbe655c3075ca7fe7171a583201618a514086e58b"
+          },
+          "path": "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "4ae3e7833d19671183f9b4f2b22f156412b2db882f0dbf90886a3582d7681925"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "8717632af1a73a82f64e576bbd53aeba80b82072260e78fe08b3eb1a81d7a258"
+          },
+          "path": "05_Software/nilo_gui/src/styles/shell.css",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ba9bdb55f1c7515717954e810aad6af65696dd6c428fc848860d4a3fb4584e85"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "b4c1c352e438fa7828a71637b116f5c9be531e97a246aeb76bc2a35c2b7aedc5"
+          },
+          "path": "CHANGELOG.md",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 0,
+            "modified": 1,
+            "removed": 0,
+            "unchanged": 149
+          },
+          "source": {
+            "added": 0,
+            "modified": 5,
+            "removed": 0,
+            "unchanged": 297
+          },
+          "tests": {
+            "added": 0,
+            "modified": 1,
+            "removed": 0,
+            "unchanged": 174
+          }
+        },
+        "status": {
+          "added": 0,
+          "modified": 7,
+          "removed": 0,
+          "unchanged": 620
+        }
+      },
+      "current_head": "0c94a5692cc3850f38af6b417a5346ba082504bb",
+      "evolution_stage": "validate",
+      "evolved_at": "2026-09-12T10:00:36.845565Z"
+    }
+  ],
+  "schema": 1,
+  "task": "TASK-7dce5384"
+}

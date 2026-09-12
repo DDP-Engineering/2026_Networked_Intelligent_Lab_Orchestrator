@@ -77,6 +77,11 @@ runtime status.
 
 ## Invariants
 
+- Page-scoped Activity actions use `.page-title-actions` inside `.page-head`:
+  title first, authorized Activity button next, supporting description below.
+  This shared wrapping, left-aligned pattern applies to Network, Authentication
+  and future pages offering that action (REQ-UX-b75fbbc3). Keep resource-create
+  and refresh actions in their existing list toolbar and record actions local.
 - All live requests use the same-origin authenticated client and its CSRF rules.
 - Simulation labels stay explicit; browser state never proves physical accuracy.
 - Instrument submission retries preserve a command key until a response arrives;
@@ -85,6 +90,8 @@ runtime status.
 
 ## Key behaviors
 
+- `REQ-UX-b75fbbc3` - associates page-scoped Activity with the title using the
+  shared responsive header group, while preserving existing Activity context.
 - `REQ-PLAT-e1a2a591` - pins direct and transitive dependencies with exact
   versions, integrity metadata, and a static Vite production build.
 - `REQ-TEST-031b1658` - includes frontend formatting, linting, tests, and build
@@ -217,6 +224,15 @@ runtime status.
   that authenticates.
 - `REQ-TEST-842f1943` - proves the shell, a theme and a language across a real
   reload in a browser against a real WSL2 backend.
+
+## Change map
+
+| Change requested | Start with | Focused verification |
+| --- | --- | --- |
+| Page-title Activity layout | `.page-title-actions` in shell.css; UsersPage, ApiTokensPage and NetworkPage headers | AuthenticationPage.test.tsx; field-display.spec.ts |
+| Contextual Activity navigation and permissions | AppShell.tsx `openActivity` | shell.test.tsx |
+| Networking inventory and managed changes | NetworkPage.tsx and network/ | NetworkPage.test.tsx; network.spec.ts |
+| Identity/token forms | authentication/ and AdministrationForms.tsx | AuthenticationPage.test.tsx; authentication.spec.ts |
 
 ## Architecture
 

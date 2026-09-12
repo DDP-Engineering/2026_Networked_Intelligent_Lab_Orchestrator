@@ -601,6 +601,24 @@ input[type='radio'] {
   margin-left: auto;
 }
 
+/* Page-scoped investigation stays beside the title, not in a list toolbar. */
+.page-title-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.page-title-actions .button {
+  margin-left: 0;
+}
+
+.page-title-actions + .page-sub {
+  flex-basis: 100%;
+}
+
 .page-sub {
   margin: 0;
   color: var(--text-muted);

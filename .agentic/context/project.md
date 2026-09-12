@@ -61,6 +61,10 @@ one of three fixed roles - Administrator, Operator or Viewer.
   target, never an appliance platform.
 - The browser interface offers tabbed workspaces, light, dark and system
   themes, and English, German and Romanian.
+- Page-scoped View activity shortcuts sit immediately beside the page title
+  in one left-aligned, wrapping header group on every page that offers them.
+  Supporting descriptions and list controls follow that group; record-scoped
+  actions remain with their records (REQ-UX-b75fbbc3).
 - One layout serves the whole display range. Small low-resolution panels are
   supported from 800x480 up, with a seven-inch 1024x600 as the usual field
   size, and so are large high-resolution displays, where content is bounded to

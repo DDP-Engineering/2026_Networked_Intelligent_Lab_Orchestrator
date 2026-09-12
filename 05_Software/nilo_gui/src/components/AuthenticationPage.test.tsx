@@ -146,6 +146,53 @@ function identitiesRegion(): HTMLElement {
   return screen.getByRole('region', { name: 'Users' });
 }
 
+describe('page-scoped Activity placement', () => {
+  it.each(['users', 'tokens'] as const)(
+    'groups %s activity beside its title',
+    async (view) => {
+      const onOpenActivity = vi.fn();
+      renderInShell(
+        <AuthenticationPage
+          client={stubClient()}
+          credential={CREDENTIAL}
+          session={session}
+          view={view}
+          onSessionEnded={vi.fn()}
+          onOpenActivity={onOpenActivity}
+        />,
+        { theme: 'light', language: 'en' },
+      );
+      const title = screen.getByRole('heading', { level: 2 });
+      const group = title.closest('.page-title-actions');
+      expect(group).not.toBeNull();
+      const action = within(group as HTMLElement).getByRole('button', {
+        name: 'View activity',
+      });
+      expect(screen.getAllByRole('button', { name: 'View activity' })).toHaveLength(1);
+      expect(title.nextElementSibling).toBe(action);
+      expect(group?.nextElementSibling).toHaveClass('page-sub');
+      fireEvent.click(action);
+      expect(onOpenActivity).toHaveBeenCalledOnce();
+      await screen.findByRole('region', {
+        name: view === 'users' ? 'Users' : 'API Tokens',
+      });
+    },
+  );
+
+  it.each(['users', 'tokens'] as const)(
+    'omits unavailable %s activity',
+    async (view) => {
+      renderPage(stubClient(), vi.fn(), view);
+      await screen.findByRole('region', {
+        name: view === 'users' ? 'Users' : 'API Tokens',
+      });
+      expect(
+        screen.queryByRole('button', { name: 'View activity' }),
+      ).not.toBeInTheDocument();
+    },
+  );
+});
+
 function tokensRegion(): HTMLElement {
   return screen.getByRole('region', { name: 'API Tokens' });
 }

@@ -509,17 +509,19 @@ export function NetworkPage({
   return (
     <div className={`page network-page network-page-${view}`}>
       <header className="page-head">
-        <h2>
-          {t('network.title')} / {t(VIEW_TITLE_KEYS[view])}
-        </h2>
-        {onOpenActivity !== undefined && (
-          <button
-            type="button"
-            onClick={() => onOpenActivity({ component: 'network' })}
-          >
-            {t('network.activity.open')}
-          </button>
-        )}
+        <div className="page-title-actions">
+          <h2>
+            {t('network.title')} / {t(VIEW_TITLE_KEYS[view])}
+          </h2>
+          {onOpenActivity !== undefined && (
+            <button
+              type="button"
+              onClick={() => onOpenActivity({ component: 'network' })}
+            >
+              {t('network.activity.open')}
+            </button>
+          )}
+        </div>
       </header>
 
       <div className="page-body">

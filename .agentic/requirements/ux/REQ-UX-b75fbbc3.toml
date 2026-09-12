@@ -1,0 +1,48 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-b75fbbc3"
+
+title = "Keep contextual Activity actions beside page titles"
+
+status = "active"
+
+requirement = """
+Where a workspace page offers an authorized page-scoped View activity action,
+the browser interface shall place that action immediately after the page title
+in the same left-aligned title/action group, before supporting description or
+list controls, using the same layout on Network, Authentication and future
+pages; the group keeps the title and action side by side where they fit and
+wraps within the page header without clipping or horizontal page scrolling
+when space is insufficient. Record-scoped actions remain with their records.
+"""
+
+verification = "Component tests locate a single authorized Activity button in the title group before supporting text, exercise its existing callback and omit it when unavailable. Browser tests check Network and both Authentication pages at 1920, 1366, 1024 and 800 pixel widths: button follows the title, aligns beside it where space permits, remains in the header with at least a 44px target and no document overflow. Existing shell tests retain identity filters and permission gating."
+
+affected_paths = [
+  "05_Software/nilo_gui/src/components/authentication/UsersPage.tsx",
+  "05_Software/nilo_gui/src/components/authentication/ApiTokensPage.tsx",
+  "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
+  "05_Software/nilo_gui/src/styles/shell.css",
+]
+
+linked_tests = [
+  "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::page-scoped Activity placement",
+  "05_Software/nilo_gui/e2e/field-display.spec.ts::expectPageActivityBesideTitle",
+  "05_Software/nilo_gui/src/components/shell/shell.test.tsx::the navigation > opens Activity from Authentication with the identity component applied",
+]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = "Page-scoped investigation belongs beside the page identity, consistently for human operators and future page authors."
+
+created = 2026-09-12
+updated = 2026-09-12
