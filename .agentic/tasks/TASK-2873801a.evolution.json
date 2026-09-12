@@ -1,0 +1,117 @@
+{
+  "reports": [
+    {
+      "anchor_created_at": "2026-09-12T05:43:25.339953Z",
+      "anchor_head": "0c94a5692cc3850f38af6b417a5346ba082504bb",
+      "anchor_id": "f1da09160d5816df",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "cb4e7618e42f100406513519bff3343182af67cef707755fca65f42b823c4e5e"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/nethelper/adapter_identity.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "42b93ebd535a7d3060673f2fa6125eb7f23f7cb7d3b936a884e2d24cf4a0d7e0"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "6a7f9925916d3d6c454c849aedc13e14c5777c3e1d9e4072381a787d260a057e"
+          },
+          "path": "05_Software/nilo_assistant/internal/nethelper/adapter_identity_test.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "78a0e452f442ca42355096782045d4e8e199bd4c74e2667c12b0c7ffc6e1a44c"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "b2e45dfc8d95641db3d65b5592df257dacb93584b85db2f899f1a2fc8109ae0f"
+          },
+          "path": "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b35f321eb8b7d80fe6cdb36b4ea655e0c4c54892e1b0243c9bc542c902d34c22"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/network/eligibility.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d746bc3995278793ac4a86d2029f58bbb73ef810db13fafc249c346db0049014"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "fb197b1fe2d4db79e59c39ded996a1430f7dfcf2d2b14e5a7008d7a346bfb8b6"
+          },
+          "path": "05_Software/nilo_assistant/internal/network/model.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "9116f59421c3cb17dee569ed8b82309346e9b9986827f4e6b402869e26ea158d"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "498a0d3e1fba6da6e98ded9e77590cf9807f03848fda7df1a8917535fec871fe"
+          },
+          "path": "05_Software/nilo_assistant/internal/network/provider_simulated.go",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 0,
+            "modified": 0,
+            "removed": 0,
+            "unchanged": 151
+          },
+          "source": {
+            "added": 2,
+            "modified": 3,
+            "removed": 0,
+            "unchanged": 298
+          },
+          "tests": {
+            "added": 0,
+            "modified": 1,
+            "removed": 0,
+            "unchanged": 176
+          }
+        },
+        "status": {
+          "added": 2,
+          "modified": 4,
+          "removed": 0,
+          "unchanged": 625
+        }
+      },
+      "current_head": "0c94a5692cc3850f38af6b417a5346ba082504bb",
+      "evolution_stage": "validate",
+      "evolved_at": "2026-09-12T06:51:02.132923Z"
+    }
+  ],
+  "schema": 1,
+  "task": "TASK-2873801a"
+}

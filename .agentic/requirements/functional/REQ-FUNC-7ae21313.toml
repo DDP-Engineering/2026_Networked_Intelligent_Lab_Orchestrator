@@ -1,0 +1,42 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-7ae21313"
+
+title = "Classify management-eligible interfaces from hardware evidence"
+
+status = "active"
+
+requirement = """
+The Network service shall report a network interface as eligible to carry appliance management access when the interface is an Ethernet or Wi-Fi device that the observing provider recorded as a physical adapter and that carries a stable adapter identity, and shall report every other interface as ineligible, deciding only from the recorded device kind, physical-adapter observation and adapter identity and never from the interface name.
+"""
+
+verification = "An automated table-driven test asks the eligibility rule about readings shaped as a physical Ethernet adapter, a physical Wi-Fi adapter, a virtual Ethernet device, a bridge, a loopback device, a WireGuard tunnel device and a physical adapter whose adapter identity is empty, and asserts only the first two are eligible. The same test repeats the physical Ethernet case under the name \"docker0\" and the virtual device case under the name \"enp1s0\", asserting both answers follow the recorded hardware facts and are unchanged by the swapped names. A further test reads the simulated catalog and asserts it contains at least one eligible adapter and at least one interface that is ineligible for a reason other than loopback."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/eligibility.go",
+    "05_Software/nilo_assistant/internal/network/eligibility_test.go",
+    "05_Software/nilo_assistant/internal/network/model.go",
+    "05_Software/nilo_assistant/internal/network/provider_simulated.go",
+    "05_Software/nilo_assistant/internal/network/provider_simulated_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/eligibility_test.go::TestEligibilityFollowsHardwareFactsNotInterfaceNames",
+    "05_Software/nilo_assistant/internal/network/provider_simulated_test.go::TestSimulatedCatalogCarriesEligibleAndIneligibleInterfaces",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "First-boot provisioning decides where management access is offered from this one classification, so an interface name rule would put NILO management on a container network the first time a device was renamed or a veth pair appeared."
+
+created = 2026-09-12
+updated = 2026-09-12

@@ -1,0 +1,41 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-PLAT-18084875"
+
+title = "Observe physical adapter identity on the appliance"
+
+status = "active"
+
+requirement = """
+While the appliance runtime profile is active, the privileged network helper shall record each observed device as a physical adapter when the device reports a permanent hardware address and the kernel presents it as a device on a real bus, and shall record every device missing either signal as not a physical adapter.
+"""
+
+verification = "An automated test drives the helper's physical-adapter decision with recorded device facts: a permanent hardware address together with a present bus device, a permanent hardware address with no bus device, no permanent hardware address with a present bus device, and neither, and asserts only the first is recorded as physical. A second automated test points the bus-device probe at a root whose own parent holds a device directory, and asserts the probe reports present for an interface directory carrying a device entry, and absent for one without it, for an entry that is not a directory, for an interface that is not present, and for every name that is not a single ordinary path element: the empty name, \".\", \"..\" and a name carrying a path separator."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/nethelper/adapter_identity.go",
+    "05_Software/nilo_assistant/internal/nethelper/adapter_identity_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux.go",
+    "05_Software/nilo_assistant/internal/network/model.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/nethelper/adapter_identity_test.go::TestPhysicalAdapterRequiresBothHardwareSignals",
+    "05_Software/nilo_assistant/internal/nethelper/adapter_identity_test.go::TestBusDevicePresentReadsTheInterfaceDeviceEntry",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "NetworkManager reports physical Ethernet and veth under the same wired device API, so neither the device type nor the interface name separates a built-in adapter from a container interface; the permanent hardware address and the kernel bus device are the two facts that do."
+
+created = 2026-09-12
+updated = 2026-09-12

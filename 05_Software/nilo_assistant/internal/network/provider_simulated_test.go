@@ -86,3 +86,31 @@ func TestSimulatedProviderCarriesNoReferenceToAnything(t *testing.T) {
 		}
 	}
 }
+
+// Every later provisioning decision reads the eligibility rule, so the fixed
+// catalog has to carry both of its answers - including an interface that is
+// ineligible for a reason other than being the loopback device.
+func TestSimulatedCatalogCarriesEligibleAndIneligibleInterfaces(t *testing.T) {
+	t.Parallel()
+
+	interfaces, err := NewSimulatedProvider().Interfaces(context.Background())
+	if err != nil {
+		t.Fatalf("Interfaces: %v", err)
+	}
+
+	var eligible, ineligibleBeyondLoopback int
+	for _, candidate := range interfaces {
+		switch {
+		case EligibleForManagement(candidate):
+			eligible++
+		case candidate.Kind != KindLoopback:
+			ineligibleBeyondLoopback++
+		}
+	}
+	if eligible == 0 {
+		t.Fatal("simulated catalog has no interface eligible for management access")
+	}
+	if ineligibleBeyondLoopback == 0 {
+		t.Fatal("simulated catalog has no ineligible interface beyond the loopback device")
+	}
+}

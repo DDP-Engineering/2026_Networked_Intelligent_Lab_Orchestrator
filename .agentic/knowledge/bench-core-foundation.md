@@ -60,6 +60,10 @@ before anything is opened or contacted. The root usage names every group.
 - Network changes go through preview, acknowledgement, confirmation and
   rollback; a noninteractive mutation needs `--acknowledge`, which is never
   consent for anything else.
+- Whether a network interface may carry appliance management access is decided
+  from what a provider observed about the hardware - the device kind, a physical
+  adapter observation and the permanent adapter identity - and never from the
+  interface name. A reading that carries no hardware observation is ineligible.
 
 ## Key behaviors
 
@@ -77,6 +81,8 @@ before anything is opened or contacted. The root usage names every group.
 - `REQ-FUNC-22f4f69c` and `REQ-FUNC-346ffa07` - return stable authenticated simulated integration and device inventories.
 - `REQ-FUNC-9835998b` and `REQ-FUNC-7f4afa6b` - select only supported deterministic simulation scenarios and fail closed on unknown identifiers.
 - `REQ-PLAT-30618e85` - keeps every simulation inventory entry unmistakably separate from physical equipment.
+- `REQ-FUNC-7ae21313` - names which observed interfaces may carry management access, from recorded hardware facts rather than the interface name.
+- `REQ-PLAT-18084875` - records a device as a physical adapter only when it reports a permanent hardware address and the kernel presents it on a real bus.
 - `REQ-SEC-5d0cfe7e` and `REQ-SEC-74b46e3e` - map the three fixed roles to explicit permissions and bound a token by its scopes intersected with its owner's current role.
 - `REQ-SEC-62e54172` - authorizes every protected route server-side and separates unauthenticated from forbidden.
 - `REQ-FUNC-00305f82`, `REQ-SEC-8e89944b` and `REQ-FUNC-519eff58` - restrict first-administrator bootstrap, preserve one enabled administrator, and administer identities from the command line.
@@ -301,6 +307,8 @@ The simulation catalog is deliberately dependency-free and cannot discover or co
 - `02_Tools/tests/network/` - disposable real-NetworkManager and unprivileged HTTPS process tests (opt-in, separate from the ordinary suite).
 
 - `internal/network/` (under the Go module) - operation safety, simulation, profile validation, sampling and statistics, plus the device-network model and the pure forwarding planner.
+- `internal/network/eligibility.go` - the single rule naming which observed interfaces may carry management access. Pure: it reads a reading's kind, physical observation and adapter identity and nothing else.
+- `internal/nethelper/adapter_identity.go` - the physical-adapter decision and the `/sys/class/net/<name>/device` probe. Both are portable and untagged so they are tested on any development host; only the D-Bus read that feeds them lives in `networkmanager_linux.go`.
 - `internal/network/{devicenetwork,forwarding_plan}.go` - the saved device-network decision and the owned resource set it implies. Both are pure: their only imports are `errors`, `fmt`, `sort`, `strings` and `net/netip`, so a plan cannot reach a host. Nothing applies a plan yet.
 - `internal/network/persistence.go`, `internal/store/sqlite/network_operation_repository.go` - the durable record of a managed change, holding public metadata only and refusing a record whose parameters name a secret.
 - `internal/httpapi/network*.go`, `internal/mcp/`, `internal/apiclient/` - shared authenticated Network adapters.
@@ -417,6 +425,34 @@ typed collisions to the secret-free 409
 persist a fixed outcome code and safe adapter/resource labels alongside the
 console detail; legacy plain details still load, while unknown typed outcomes
 are not published as browser metadata.
+
+## Management-eligible interfaces (2026-09-12, TASK-2873801a)
+
+`network.Interface` carries `Physical`, whether the provider that produced the
+reading saw a physical network adapter. The privileged helper sets it from two
+kernel facts read together: NetworkManager's permanent hardware address for the
+device, and the presence of `/sys/class/net/<name>/device`, the entry the kernel
+creates only for a device on a real bus. Both are required, because
+NetworkManager reports built-in Ethernet and a container veth through the same
+wired device API and a veth carries a current hardware address but no permanent
+one. `busDevicePresent` accepts one ordinary path element and refuses an empty
+name, `.`, `..`, and any name carrying a path separator or NUL, so an interface
+name stays inside the root it is joined to.
+
+`network.EligibleForManagement` is the one rule every provisioning decision
+reads: an Ethernet or Wi-Fi device that the provider recorded as physical and
+that carries a non-empty canonical adapter identity. The zero value of
+`Physical` is false, so a reading from a provider that records no hardware
+observation, and a response from an older helper that omits the field, are both
+ineligible. `Physical` crosses the helper socket inside
+`nethelper.Device.Interface` and takes part in no state comparison: `sameState`
+reads named fields only.
+
+The simulated catalog carries both answers - `enp1s0` and `wlan0` are physical,
+and a connected container veth `veth9f2a41` and an addressed bridge `br-lab0`
+are not - so the exclusions are asserted by the ordinary suite on any host. The
+classification reaches no HTTP response: `networkInterfacePayload` in
+`internal/httpapi/network.go` is an explicit struct and names no such field.
 
 ## Whole-appliance power control (2026-09-08, TASK-a3a3d7b2)
 

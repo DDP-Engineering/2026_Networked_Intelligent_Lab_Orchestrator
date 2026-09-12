@@ -34,14 +34,19 @@ func (provider *SimulatedProvider) Interfaces(context.Context) ([]Interface, err
 }
 
 // simulatedInterfaces is the fixed bench-shaped catalog: one wired device, one
-// wireless device that is present but not connected, and the loopback device
-// that exists on every host and is never controllable.
+// wireless device that is present but not connected, the loopback device that
+// exists on every host and is never controllable, and two connected virtual
+// devices. The virtual pair is what makes management eligibility observable
+// under this profile - a container veth reaches NetworkManager through the same
+// wired device API as a built-in adapter, and a bridge can hold an address - so
+// a rule that admitted either would be caught here rather than on a bench.
 var simulatedInterfaces = []Interface{
 	{
 		ID:               "sim-enp1s0",
 		Name:             "enp1s0",
 		AdapterID:        "02:00:00:00:00:01",
 		Kind:             KindEthernet,
+		Physical:         true,
 		State:            StateConnected,
 		IPv4:             []string{"192.168.10.24/24"},
 		IPv6:             []string{"fd00:10::24/64"},
@@ -57,6 +62,7 @@ var simulatedInterfaces = []Interface{
 		Name:             "wlan0",
 		AdapterID:        "02:00:00:00:00:02",
 		Kind:             KindWiFi,
+		Physical:         true,
 		State:            StateDisconnected,
 		LinkCapacityMbps: 0,
 		Controllable:     true,
@@ -70,5 +76,28 @@ var simulatedInterfaces = []Interface{
 		IPv6:                  []string{"::1/128"},
 		Controllable:          false,
 		NotControllableReason: "the loopback device is not an appliance connection",
+	},
+	{
+		// A container veth: NetworkManager reports it as a wired device and it
+		// carries a current hardware address, so its identity alone would not
+		// tell it apart from the adapter above.
+		ID:                    "sim-veth9f2a41",
+		Name:                  "veth9f2a41",
+		AdapterID:             "02:00:00:00:00:03",
+		Kind:                  KindEthernet,
+		State:                 StateConnected,
+		LinkCapacityMbps:      10000,
+		Controllable:          false,
+		NotControllableReason: "not managed by NetworkManager",
+	},
+	{
+		ID:                    "sim-br-lab0",
+		Name:                  "br-lab0",
+		AdapterID:             "02:00:00:00:00:04",
+		Kind:                  KindOther,
+		State:                 StateConnected,
+		IPv4:                  []string{"172.18.0.1/16"},
+		Controllable:          false,
+		NotControllableReason: "unsupported infrastructure interface",
 	},
 }

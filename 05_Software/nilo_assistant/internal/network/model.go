@@ -52,6 +52,11 @@ type Interface struct {
 	// provider cannot read one. Saved configuration binds to it rather than to
 	// the kernel name, which a replug can move.
 	AdapterID string
+	// Physical is whether the provider saw a physical network adapter rather
+	// than a virtual device such as a container veth or a bridge. It is false
+	// until a provider observes otherwise, so a reading that carries no
+	// hardware observation is never treated as a management-capable adapter.
+	Physical bool
 	// Settings reports the saved configuration bound to this adapter, when one
 	// exists. Nil means nothing is saved for it.
 	Settings *SettingsState
