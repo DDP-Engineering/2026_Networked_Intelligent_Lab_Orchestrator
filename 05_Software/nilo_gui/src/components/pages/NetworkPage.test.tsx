@@ -203,18 +203,26 @@ interface PageOverrides {
   acknowledgeOperation?: (id: string, revision: string) => Promise<NetworkOperation>;
   confirmOperation?: (id: string) => Promise<NetworkOperation>;
   rollbackOperation?: (id: string) => Promise<NetworkOperation>;
+  readOperation?: (id: string) => Promise<NetworkOperation>;
   listOperations?: () => Promise<NetworkOperation[]>;
   canManageInterfaces?: boolean;
   readDeviceNetworks?: () => Promise<DeviceNetwork[]>;
   readManagementAccess?: () => Promise<ManagementAccessStatus>;
+  updateManagementAccess?: (
+    interfaces: string[],
+    confirmCurrentInterface: boolean,
+  ) => Promise<ManagementAccessStatus>;
+  confirmManagementAccess?: () => Promise<ManagementAccessStatus>;
+  recoverManagementAccess?: () => Promise<ManagementAccessStatus>;
   previewDeviceNetworkChange?: (
     change: DeviceNetworkChange,
   ) => Promise<NetworkOperation>;
   wireGuardStatus?: WireGuardStatus | null;
   previewInterfaceSettings?: () => Promise<NetworkOperation>;
+  onOpenActivity?: () => void;
 }
 
-type NetworkView = 'overview' | 'adapters' | 'device-access' | 'vpn' | 'diagnostics';
+type NetworkView = 'overview' | 'device-access' | 'vpn' | 'diagnostics';
 
 /** Open the row's compact Actions dialog and choose one action by its full name. */
 function chooseAction(rowName: string, action: RegExp | string): void {
@@ -249,14 +257,19 @@ function renderPage(overrides: PageOverrides = {}, view: NetworkView = 'overview
         overrides.rollbackOperation ??
         (() => Promise.resolve({ ...awaitingConfirmation, state: 'rolled_back' }))
       }
+      readOperation={overrides.readOperation}
       listOperations={overrides.listOperations}
       canManageInterfaces={overrides.canManageInterfaces ?? false}
       benchCoreReachable
       readDeviceNetworks={overrides.readDeviceNetworks}
       readManagementAccess={overrides.readManagementAccess}
+      updateManagementAccess={overrides.updateManagementAccess}
+      confirmManagementAccess={overrides.confirmManagementAccess}
+      recoverManagementAccess={overrides.recoverManagementAccess}
       previewDeviceNetworkChange={overrides.previewDeviceNetworkChange}
       wireGuardStatus={overrides.wireGuardStatus ?? null}
       previewInterfaceSettings={overrides.previewInterfaceSettings}
+      onOpenActivity={overrides.onOpenActivity}
     />,
     { theme: 'light', language: 'en' },
   );
@@ -309,7 +322,9 @@ describe('NetworkPage', () => {
         'device-access',
       );
 
-      fireEvent.click(await screen.findByRole('button', { name: 'Add device network' }));
+      fireEvent.click(
+        await screen.findByRole('button', { name: 'Add device network' }),
+      );
       const editor = screen.getByRole('dialog', { name: 'New device network' });
       expect(await within(editor).findByText(message)).toBeVisible();
       expect(within(editor).getByLabelText('Device-side adapter')).toBeDisabled();
@@ -367,7 +382,9 @@ describe('NetworkPage', () => {
       ).toBeVisible();
       expect(screen.queryByText('backend wording')).toBeNull();
       await vi.advanceTimersByTimeAsync(5000);
-      expect(screen.getByText(/enp1s0 is reserved for management access/i)).toBeVisible();
+      expect(
+        screen.getByText(/enp1s0 is reserved for management access/i),
+      ).toBeVisible();
       await vi.advanceTimersByTimeAsync(5000);
       await waitFor(() =>
         expect(
@@ -383,9 +400,10 @@ describe('NetworkPage', () => {
     renderPage(
       {
         canManageInterfaces: true,
-        readDeviceNetworks: () => Promise.resolve([
-          { ...lineThree, enabled: false, state: 'disabled' as const },
-        ]),
+        readDeviceNetworks: () =>
+          Promise.resolve([
+            { ...lineThree, enabled: false, state: 'disabled' as const },
+          ]),
         previewDeviceNetworkChange: () =>
           Promise.reject(
             new BenchCoreError(
@@ -400,7 +418,9 @@ describe('NetworkPage', () => {
 
     await screen.findByText('Line 3');
     chooseAction('Line 3', 'Enable Line 3');
-    expect(await screen.findByText(/adapter role conflict could not be read/i)).toBeVisible();
+    expect(
+      await screen.findByText(/adapter role conflict could not be read/i),
+    ).toBeVisible();
     expect(screen.queryByText('untrusted backend role wording')).toBeNull();
   });
 
@@ -447,20 +467,78 @@ describe('NetworkPage', () => {
     expect(screen.queryByText('untrusted acknowledgement wording')).toBeNull();
   });
 
-  // REQ-UX-b555166c: each destination carries only its own concern.
+  // REQ-UX-b555166c: Overview combines the decision summary and adapter work.
+  it('shows status first and adapter management next on Overview', async () => {
+    renderPage({
+      canManageInterfaces: true,
+      readDeviceNetworks: () => Promise.resolve([lineThree]),
+      readManagementAccess: () => Promise.resolve(managementAccess),
+      updateManagementAccess: () => Promise.resolve(managementAccess),
+      confirmManagementAccess: () => Promise.resolve(managementAccess),
+      recoverManagementAccess: () => Promise.resolve(managementAccess),
+      wireGuardStatus: officeActive,
+    });
+
+    expect(
+      await screen.findByRole('heading', { name: 'Network / Overview', level: 2 }),
+    ).toBeVisible();
+    const summary = await screen.findByRole('region', { name: 'Overview' });
+    const management = await screen.findByRole('region', {
+      name: 'Management access interfaces',
+    });
+    expect(screen.getAllByRole('table')).toHaveLength(1);
+    const interfaces = within(management).getByRole('table', { name: 'Interfaces' });
+    expect(
+      summary.compareDocumentPosition(management) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).not.toBe(0);
+    expect(management.contains(interfaces)).toBe(true);
+  });
+
+  it('keeps activity, repurposing help, and interface refresh in the Overview header', async () => {
+    const readNetworkStatus = vi.fn(() => Promise.resolve(status));
+    const readDeviceNetworks = vi.fn(() => Promise.resolve([lineThree]));
+    const readManagementAccess = vi.fn(() => Promise.resolve(managementAccess));
+    const onOpenActivity = vi.fn();
+    renderPage({
+      getNetworkStatus: readNetworkStatus,
+      canManageInterfaces: true,
+      readDeviceNetworks,
+      readManagementAccess,
+      updateManagementAccess: () => Promise.resolve(managementAccess),
+      confirmManagementAccess: () => Promise.resolve(managementAccess),
+      recoverManagementAccess: () => Promise.resolve(managementAccess),
+      onOpenActivity,
+    });
+
+    const title = await screen.findByRole('heading', {
+      name: 'Network / Overview',
+      level: 2,
+    });
+    const header = title.closest('header');
+    if (header === null) throw new Error('Network page has no header');
+    expect(within(header).getByRole('button', { name: 'View activity' })).toBeVisible();
+    expect(
+      within(header).getByRole('button', { name: 'How to repurpose an adapter' }),
+    ).toBeVisible();
+    const refresh = within(header).getByRole('button', { name: 'Refresh interfaces' });
+    expect(refresh).toBeVisible();
+    await waitFor(() => expect(readManagementAccess).toHaveBeenCalledTimes(1));
+
+    fireEvent.click(refresh);
+    await waitFor(() => expect(readNetworkStatus).toHaveBeenCalledTimes(2));
+    expect(readDeviceNetworks).toHaveBeenCalledTimes(2);
+    expect(readManagementAccess).toHaveBeenCalledTimes(2);
+
+    fireEvent.click(
+      within(header).getByRole('button', { name: 'How to repurpose an adapter' }),
+    );
+    const guide = screen.getByRole('dialog', { name: 'Safe adapter repurposing' });
+    expect(within(guide).getByText(/^1\. Establish/)).toBeVisible();
+    expect(within(guide).queryByRole('button', { name: /swap/i })).toBeNull();
+  });
+
+  // REQ-UX-b555166c: every other destination carries only its own concern.
   it.each([
-    [
-      'overview',
-      'Network / Overview',
-      'Overview',
-      ['Interfaces', 'WireGuard profiles', 'Statistics'],
-    ],
-    [
-      'adapters',
-      'Network / Network adapters',
-      'Interfaces',
-      ['Overview', 'WireGuard profiles', 'Statistics'],
-    ],
     [
       'device-access',
       'Network / Device access',
@@ -493,11 +571,7 @@ describe('NetworkPage', () => {
       expect(
         await screen.findByRole('heading', { name: pageTitle, level: 2 }),
       ).toBeVisible();
-      if (present === 'Overview') {
-        expect(await screen.findByRole('region', { name: present })).toBeVisible();
-      } else {
-        expect(await screen.findByRole('heading', { name: present })).toBeVisible();
-      }
+      expect(await screen.findByRole('heading', { name: present })).toBeVisible();
       for (const heading of absent) {
         expect(screen.queryByRole('heading', { name: heading })).toBeNull();
       }
@@ -506,14 +580,14 @@ describe('NetworkPage', () => {
 
   it('requests traffic history only from Diagnostics', async () => {
     const getNetworkStatistics = vi.fn(() => Promise.resolve(statistics));
-    renderPage({ getNetworkStatistics }, 'adapters');
+    renderPage({ getNetworkStatistics }, 'overview');
     await screen.findAllByText('enp1s0');
     await Promise.resolve();
     expect(getNetworkStatistics).not.toHaveBeenCalled();
   });
 
   it('lists addresses and gateways without repeating the shell simulation indicator', async () => {
-    renderPage({}, 'adapters');
+    renderPage({}, 'overview');
 
     expect((await screen.findAllByText('enp1s0')).length).toBeGreaterThan(0);
     expect(screen.getByText('192.168.10.24/24')).toBeInTheDocument();
@@ -527,7 +601,7 @@ describe('NetworkPage', () => {
   });
 
   it('states the reason for a read-only device in its details, not in a tooltip', async () => {
-    const { container } = renderPage({}, 'adapters');
+    const { container } = renderPage({}, 'overview');
     await screen.findAllByText('enp1s0');
     expect(container.querySelector('[title]')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Details lo' }));
@@ -539,7 +613,7 @@ describe('NetworkPage', () => {
   // REQ-UX-ff989933: the essential columns stay, everything else is in the
   // explicit details, and several actions are one compact dialog.
   it('keeps the essential columns and puts the secondary values behind Details', async () => {
-    renderPage({ canManageInterfaces: true }, 'adapters');
+    renderPage({ canManageInterfaces: true }, 'overview');
     await screen.findAllByText('enp1s0');
 
     for (const column of ['Interface', 'State', 'IP address', 'Gateway', 'Actions']) {
@@ -568,7 +642,7 @@ describe('NetworkPage', () => {
         canManageInterfaces: true,
         previewInterfaceSettings: () => Promise.resolve(previewed),
       },
-      'adapters',
+      'overview',
     );
     await screen.findAllByText('enp1s0');
 
@@ -621,7 +695,7 @@ describe('NetworkPage', () => {
 
   // REQ-UX-4570c081: the rollback window is in the confirmation, never only in help.
   it('states the two-minute rollback window in the confirmation itself', async () => {
-    renderPage({ canManageInterfaces: true }, 'adapters');
+    renderPage({ canManageInterfaces: true }, 'overview');
     await screen.findAllByText('enp1s0');
     chooseAction('enp1s0', 'Disable enp1s0');
     const dialog = await screen.findByRole('dialog');
@@ -671,13 +745,13 @@ describe('NetworkPage', () => {
   // Bench Core authorizes every request on its own, so hiding a control is
   // presentation. It still must not be offered to somebody who cannot use it.
   it('offers no interface controls to an identity that cannot manage them', async () => {
-    renderPage({ canManageInterfaces: false }, 'adapters');
+    renderPage({ canManageInterfaces: false }, 'overview');
     await screen.findAllByText('enp1s0');
     expect(screen.queryByRole('button', { name: /disable/i })).toBeNull();
   });
 
   it('offers a control only for a device that is actually controllable', async () => {
-    renderPage({ canManageInterfaces: true }, 'adapters');
+    renderPage({ canManageInterfaces: true }, 'overview');
     await screen.findAllByText('enp1s0');
 
     // The wired device can be disabled; loopback carries no control at all.
@@ -704,7 +778,7 @@ describe('NetworkPage', () => {
         previewInterfaceChange,
         acknowledgeOperation,
       },
-      'adapters',
+      'overview',
     );
     await screen.findAllByText('enp1s0');
 
@@ -724,7 +798,7 @@ describe('NetworkPage', () => {
 
   it('abandons a previewed change without acknowledging it', async () => {
     const acknowledgeOperation = vi.fn(() => Promise.resolve(awaitingConfirmation));
-    renderPage({ canManageInterfaces: true, acknowledgeOperation }, 'adapters');
+    renderPage({ canManageInterfaces: true, acknowledgeOperation }, 'overview');
     await screen.findAllByText('enp1s0');
 
     chooseAction('enp1s0', /disable enp1s0/i);
@@ -736,7 +810,7 @@ describe('NetworkPage', () => {
   });
 
   it('counts the confirmation window down and offers both ways out', async () => {
-    renderPage({ canManageInterfaces: true }, 'adapters');
+    renderPage({ canManageInterfaces: true }, 'overview');
     await screen.findAllByText('enp1s0');
 
     chooseAction('enp1s0', /disable enp1s0/i);
@@ -758,7 +832,7 @@ describe('NetworkPage', () => {
     const confirmOperation = vi.fn(() =>
       Promise.resolve({ ...awaitingConfirmation, state: 'confirmed' as const }),
     );
-    renderPage({ canManageInterfaces: true, confirmOperation }, 'adapters');
+    renderPage({ canManageInterfaces: true, confirmOperation }, 'overview');
     await screen.findAllByText('enp1s0');
 
     chooseAction('enp1s0', /disable enp1s0/i);
@@ -786,7 +860,7 @@ describe('NetworkPage', () => {
     const rollbackOperation = vi.fn(() =>
       Promise.resolve({ ...awaitingConfirmation, state: 'rolled_back' as const }),
     );
-    renderPage({ canManageInterfaces: true, rollbackOperation }, 'adapters');
+    renderPage({ canManageInterfaces: true, rollbackOperation }, 'overview');
     await screen.findAllByText('enp1s0');
 
     chooseAction('enp1s0', /disable enp1s0/i);
@@ -816,7 +890,7 @@ describe('NetworkPage', () => {
             failure: 'the previous connection was not observed after restoring',
           }),
       },
-      'adapters',
+      'overview',
     );
     await screen.findAllByText('enp1s0');
 
@@ -832,6 +906,148 @@ describe('NetworkPage', () => {
 
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent(/not observed after restoring/i);
+  });
+
+  it('reattaches a rollback failure after reload and reports its verified recovery', async () => {
+    const rollbackFailed: NetworkOperation = {
+      ...awaitingConfirmation,
+      state: 'rollback_failed',
+      confirmDeadline: null,
+      failure: 'the previous connection was not observed after restoring',
+    };
+    const readOperation = vi.fn(() =>
+      Promise.resolve({
+        ...rollbackFailed,
+        state: 'rolled_back' as const,
+        failure: '',
+      }),
+    );
+
+    renderPage({
+      listOperations: () => Promise.resolve([rollbackFailed]),
+      readOperation,
+    });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /not observed after restoring/i,
+    );
+    await waitFor(() => expect(readOperation).toHaveBeenCalledWith('operation-1'), {
+      timeout: 2500,
+    });
+    expect(await screen.findByText(/previous state was restored/i)).toBeVisible();
+  });
+
+  it('reattaches the authoritative rollback failure after an uncertain acknowledgement', async () => {
+    const rollbackFailed: NetworkOperation = {
+      ...awaitingConfirmation,
+      state: 'rollback_failed',
+      confirmDeadline: null,
+      failure: 'the previous connection was not observed after restoring',
+    };
+    const listOperations = vi
+      .fn<() => Promise<NetworkOperation[]>>()
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([rollbackFailed]);
+
+    renderPage({
+      canManageInterfaces: true,
+      acknowledgeOperation: () => Promise.reject(new Error('connection lost')),
+      listOperations,
+    });
+    await screen.findAllByText('enp1s0');
+    await waitFor(() => expect(listOperations).toHaveBeenCalledTimes(1));
+
+    chooseAction('enp1s0', /disable enp1s0/i);
+    fireEvent.click(
+      within(await screen.findByRole('dialog')).getByRole('button', {
+        name: /^apply$/i,
+      }),
+    );
+
+    await waitFor(() => expect(listOperations).toHaveBeenCalledTimes(2));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /not observed after restoring/i,
+    );
+  });
+
+  it('replaces an older terminal notice with the acknowledged operation recovery', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const oldPreview: NetworkOperation = { ...previewed, id: 'operation-old' };
+    const oldAwaiting: NetworkOperation = {
+      ...oldPreview,
+      state: 'awaiting_confirmation',
+      confirmDeadline: awaitingConfirmation.confirmDeadline,
+    };
+    const newPreview: NetworkOperation = { ...previewed, id: 'operation-new' };
+    const rollbackFailed: NetworkOperation = {
+      ...newPreview,
+      state: 'rollback_failed',
+      confirmDeadline: null,
+      failure: 'the previous connection was not observed after restoring',
+    };
+    const previewInterfaceChange = vi
+      .fn()
+      .mockResolvedValueOnce(oldPreview)
+      .mockResolvedValueOnce(newPreview);
+    const acknowledgeOperation = vi
+      .fn()
+      .mockResolvedValueOnce(oldAwaiting)
+      .mockRejectedValueOnce(new Error('connection lost'));
+    const listOperations = vi
+      .fn<() => Promise<NetworkOperation[]>>()
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([rollbackFailed]);
+    const readOperation = vi.fn(() =>
+      Promise.resolve({
+        ...rollbackFailed,
+        state: 'rolled_back' as const,
+        failure: '',
+      }),
+    );
+
+    try {
+      renderPage({
+        canManageInterfaces: true,
+        previewInterfaceChange,
+        acknowledgeOperation,
+        confirmOperation: () =>
+          Promise.resolve({
+            ...oldAwaiting,
+            state: 'confirmed',
+            confirmDeadline: null,
+          }),
+        listOperations,
+        readOperation,
+      });
+      await screen.findAllByText('enp1s0');
+      await waitFor(() => expect(listOperations).toHaveBeenCalledTimes(1));
+
+      chooseAction('enp1s0', /disable enp1s0/i);
+      fireEvent.click(
+        within(await screen.findByRole('dialog')).getByRole('button', {
+          name: /^apply$/i,
+        }),
+      );
+      fireEvent.click(await screen.findByRole('button', { name: /keep change/i }));
+      await waitFor(() => expect(screen.queryByRole('timer')).toBeNull());
+
+      chooseAction('enp1s0', /disable enp1s0/i);
+      fireEvent.click(
+        within(await screen.findByRole('dialog')).getByRole('button', {
+          name: /^apply$/i,
+        }),
+      );
+
+      await waitFor(() => expect(listOperations).toHaveBeenCalledTimes(2));
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        /not observed after restoring/i,
+      );
+      await vi.advanceTimersByTimeAsync(1000);
+      await waitFor(() => expect(readOperation).toHaveBeenCalledWith('operation-new'));
+      expect(await screen.findByText(/previous state was restored/i)).toBeVisible();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   // A count of minutes is not a chart. The plan asks for a traffic chart, and a

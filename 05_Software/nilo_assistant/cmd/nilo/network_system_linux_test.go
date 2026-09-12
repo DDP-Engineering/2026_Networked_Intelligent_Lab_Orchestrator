@@ -574,17 +574,14 @@ func TestApplianceSystemFailsClosedBeforeListeningOnAnAllPathRoleConflict(t *tes
 	if output, err := exec.CommandContext(ctx, "nmcli", "connection", "up", "safe-management").CombinedOutput(); err != nil {
 		t.Fatalf("activate safe management interface: %v %s", err, output)
 	}
-	safeID, err := os.ReadFile("/sys/class/net/safe0/address")
-	if err != nil {
-		t.Fatal(err)
-	}
 	database, err = sqlite.Open(ctx, databasePath)
 	if err != nil {
 		t.Fatal(err)
 	}
 	management.Interfaces = []string{"eth0", "safe0"}
+	// NetworkManager dummy devices are virtual, so they have name-only bindings.
 	management.Bindings = append(management.Bindings, network.ManagementInterfaceBinding{
-		AdapterID: strings.TrimSpace(string(safeID)), LastKnownName: "safe0",
+		LastKnownName: "safe0",
 	})
 	if err := sqlite.NewManagementAccessRepository(database).SaveManagementAccess(ctx, network.ManagementAccessRecord{
 		Configuration: management, LastKnownGood: management,

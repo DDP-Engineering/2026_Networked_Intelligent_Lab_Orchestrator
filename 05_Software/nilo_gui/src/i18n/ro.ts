@@ -57,7 +57,6 @@ export const ro: Catalogue = {
   'nav.network': 'Rețea',
   'nav.network.overview': 'Prezentare generală',
   'nav.network.overviewTab': 'Prezentare rețea',
-  'nav.network.adapters': 'Adaptoare de rețea',
   'nav.network.deviceAccess': 'Acces dispozitive',
   'nav.network.vpn': 'Profiluri VPN',
   'nav.network.diagnostics': 'Diagnosticare',
@@ -907,10 +906,11 @@ export const ro: Catalogue = {
   'network.management.body':
     'Alegeți numele interfețelor care pot accepta NILO HTTPS. Adresele sunt stare observată și se pot schimba.',
   'network.management.refresh': 'Reîmprospătează interfețele',
+  'network.management.unreadable': 'Accesul de administrare nu este disponibil.',
   'network.management.enabled': 'Acces de administrare',
   'network.management.toggle': 'Permite accesul de administrare pe {name}',
   'network.management.current': 'calea browserului curent',
-  'network.management.apply': 'Aplică lista de interfețe',
+  'network.management.apply': 'Aplică accesul de administrare',
   'network.management.noUsable':
     'Păstrați activată cel puțin o interfață conectată care are adresă.',
   'network.management.currentWarning': 'Dezactivați interfața folosită acum',
@@ -942,6 +942,8 @@ export const ro: Catalogue = {
     'Modificarea propusă și recuperarea automată au eșuat.',
   'network.management.outcome.automaticRestored':
     'Modificarea neconfirmată a fost recuperată automat.',
+  'network.role.deviceSummary':
+    'Partea dispozitivului: {name}. Eliberați atribuirea înainte de activarea administrării.',
   'network.role.deviceUnavailable':
     'Alocat ca adaptor pentru dispozitive pentru {name}. Eliminați această alocare înainte de a activa aici accesul de administrare.',
   'network.role.managementUnavailable':

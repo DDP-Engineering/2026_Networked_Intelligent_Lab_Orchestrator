@@ -438,15 +438,14 @@ func runServe(ctx context.Context, arguments []string) int {
 	if reconciler, ok := provider.(interface{ ReconcileDeviceNetworks(context.Context) error }); ok {
 		reconcileDeviceNetworks = reconciler.ReconcileDeviceNetworks
 	}
+	var reconcileManagementAccess func(context.Context) error
 	if managementAccess != nil {
-		deviceReconcile := reconcileDeviceNetworks
-		reconcileDeviceNetworks = func(ctx context.Context) error {
-			managementErr := managementAccess.Reconcile(ctx)
-			if managementErr != nil || deviceReconcile == nil {
-				return managementErr
-			}
-			return errors.Join(managementErr, deviceReconcile(ctx))
-		}
+		reconcileManagementAccess = managementAccess.Reconcile
+	}
+	reconcileRuntime := func(ctx context.Context) error {
+		return reconcileNetworkRuntime(
+			ctx, operations.Reconcile, reconcileManagementAccess, reconcileDeviceNetworks,
+		)
 	}
 	housekeeper, err := activity.NewHousekeeper(activity.HousekeeperOptions{
 		Service: activityService, Audit: application.AuditWriter(), Pending: operations.PendingIDs,
@@ -460,7 +459,7 @@ func runServe(ctx context.Context, arguments []string) int {
 	go func() {
 		defer close(maintenanceDone)
 		network.RunMaintenanceWith(maintenanceCtx, network.MaintenanceOptions{
-			Sampler: sampler, Operations: operations, Startup: startup, Reconcile: reconcileDeviceNetworks,
+			Sampler: sampler, Operations: operations, Startup: startup, Reconcile: reconcileRuntime,
 			Housekeeping: func(ctx context.Context) error {
 				_, err := housekeeper.Sweep(ctx)
 				return err
@@ -545,6 +544,28 @@ func runServe(ctx context.Context, arguments []string) int {
 		return 1
 	}
 	return 0
+}
+
+// reconcileNetworkRuntime preserves the startup safety order during periodic
+// maintenance. Forwarding must not converge on device intent while operation
+// recovery or the management allowlist is still unsafe.
+func reconcileNetworkRuntime(
+	ctx context.Context,
+	reconcileOperations, reconcileManagement, reconcileDevices func(context.Context) error,
+) error {
+	for _, reconcile := range []func(context.Context) error{
+		reconcileOperations,
+		reconcileManagement,
+		reconcileDevices,
+	} {
+		if reconcile == nil {
+			continue
+		}
+		if err := reconcile(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // rootUsage names every command group, so an operator at the console can find

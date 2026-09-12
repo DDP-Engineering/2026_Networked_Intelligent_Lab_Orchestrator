@@ -1,0 +1,43 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-d5c9784c"
+
+title = "Return addressless management interfaces as valid inventory"
+
+status = "active"
+
+requirement = """
+When management-access status includes an interface with no observed IPv4 or IPv6 addresses, the HTTP API shall encode the corresponding address collection as an empty JSON array so the versioned response remains parseable and the interface remains available for role selection and diagnosis.
+"""
+
+verification = "A Go HTTP API test serves management status containing connected and disconnected interfaces with nil IPv4 and IPv6 observations, decodes the JSON and asserts every address field is an array with the absent values represented as empty arrays; a TypeScript contract test parses that exact addressless payload and retains the interface and role metadata."
+
+affected_paths = [
+    "CHANGELOG.md",
+    ".agentic/knowledge/bench-core-foundation.md",
+    "06_SoftwareDocu/Network_Operations.md",
+    "05_Software/nilo_assistant/internal/httpapi/management_access.go",
+    "05_Software/nilo_assistant/internal/httpapi/management_access_api_test.go",
+    "05_Software/nilo_gui/src/api/management-access.test.ts",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/httpapi/management_access_api_test.go::TestManagementAccessPayloadUsesEmptyAddressArrays",
+    "05_Software/nilo_gui/src/api/management-access.test.ts",
+]
+
+
+spec = ""
+
+priority = "high"
+rationale = "Linux commonly reports no addresses for disconnected and infrastructure interfaces; encoding nil slices as null invalidates the whole management inventory in the strict browser client."
+
+created = 2026-09-12
+updated = 2026-09-12

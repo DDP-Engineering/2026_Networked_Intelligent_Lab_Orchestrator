@@ -589,7 +589,7 @@ configured interface names and drops it elsewhere. The unprivileged server is
 not granted network-administration capabilities.
 
 The administrator-only **Management access interfaces** control is under
-Network adapters. It reports detected names, types, current addresses and link
+**Network > Overview**. It reports detected names, types, current addresses and link
 state, marks the interface used by the browser, and shows stable local/VPN URLs.
 Removing the current path requires an explicit second confirmation. A change
 must retain a usable interface, remains pending until confirmed through a newly

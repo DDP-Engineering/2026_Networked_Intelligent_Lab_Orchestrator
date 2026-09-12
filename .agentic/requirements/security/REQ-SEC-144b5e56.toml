@@ -53,6 +53,11 @@ verification = "Automated tests connect as an unauthorized user and assert refus
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
+    "05_Software/nilo_assistant/internal/network/management_access.go",
+    "05_Software/nilo_assistant/internal/nethelper/management_access.go",
+    "05_Software/nilo_assistant/internal/nethelper/management_nftables.go",
+    "05_Software/nilo_assistant/internal/nethelper/management_access_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/management_nftables_test.go",
     "05_Software/nilo_assistant/internal/nethelper/client.go",
     "05_Software/nilo_assistant/internal/nethelper/engine.go",
     "05_Software/nilo_assistant/internal/nethelper/engine_test.go",
@@ -89,6 +94,11 @@ affected_paths = [
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
+    "05_Software/nilo_assistant/internal/network/operation_test.go::TestOperationInspectionExcludesInternalRecoveryIdentity",
+    "05_Software/nilo_assistant/internal/nethelper/install_system_linux_test.go::TestWireGuardInstallSystem",
+    "05_Software/nilo_assistant/internal/nethelper/management_access_test.go::TestManagementFirewallCanDenyAllAfterAdaptersDisappear",
+    "05_Software/nilo_assistant/internal/nethelper/management_nftables_test.go::TestManagementFirewallWithoutPresentAdaptersDeniesNewConnections",
+    "05_Software/nilo_assistant/internal/nethelper/management_nftables_test.go::TestManagementFirewallSystem",
     "05_Software/nilo_assistant/internal/nethelper/engine_test.go::TestRecoveryMustBeDurableBeforeMutation",
     "05_Software/nilo_assistant/internal/nethelper/engine_test.go::TestHelperBindsOneChangeAndRejectsReplay",
     "05_Software/nilo_assistant/internal/nethelper/engine_test.go::TestExpiryAndStartupVerifyRestoration",
@@ -120,7 +130,7 @@ priority = "high"   # low | normal | high
 rationale = "The helper is the one component running as root; anything it will accept is the whole attack surface of privilege in this service."
 
 created = 2026-09-02
-updated = 2026-09-08
+updated = 2026-09-12
 
 # Planned files not implemented at the 2026-09-03 audit:
 # 05_Software/nilo_assistant/cmd/nilo-nethelper/main.go

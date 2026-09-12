@@ -23,7 +23,7 @@ var (
 // ApplyManagementAccess validates and atomically installs the management
 // listener guard through the privileged driver.
 func (e *Engine) ApplyManagementAccess(ctx context.Context, configuration network.ManagementAccessConfiguration) error {
-	if err := configuration.Validate(); err != nil {
+	if err := configuration.ValidateFirewall(); err != nil {
 		return err
 	}
 	e.mu.Lock()

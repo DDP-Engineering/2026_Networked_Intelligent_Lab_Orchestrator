@@ -35,6 +35,27 @@ const managementAccessBody = {
 };
 
 describe('management access contract', () => {
+  it('keeps an addressless interface when the server sends empty arrays', () => {
+    const parsed = parseManagementAccess({
+      ...managementAccessBody,
+      interfaces: [
+        {
+          ...managementAccessBody.interfaces[0],
+          state: 'disconnected',
+          ipv4: [],
+          ipv6: [],
+        },
+      ],
+    });
+
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) {
+      expect(parsed.value.interfaces[0].name).toBe('enx1234');
+      expect(parsed.value.interfaces[0].ipv4).toEqual([]);
+      expect(parsed.value.interfaces[0].ipv6).toEqual([]);
+    }
+  });
+
   it('preserves safe adapter role metadata', () => {
     const parsed = parseManagementAccess({
       ...managementAccessBody,

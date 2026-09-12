@@ -538,8 +538,8 @@ controls; there is no second tab strip and no page title above the workspace.
 The left navigation lists the working entries and the integrations Bench Core
 actually reports, with a bottom-anchored cluster of **Plugins, Network,
 Authentication, Activity** and **About**. Network is a collapsible
-built-in group with **Overview, Network adapters, Device access, VPN profiles**
-and **Diagnostics**. Choosing the group root opens Overview; choosing any entry
+built-in group with **Overview, Device access, VPN profiles** and **Diagnostics**.
+Choosing the group root opens Overview; choosing any entry
 opens it as a tab; tabs activate on click, move with the arrow, Home and End
 keys, close from their own control, and fall back to the nearest remaining
 neighbour. Authentication is a second collapsible group whose permission-aware
@@ -568,8 +568,9 @@ language.
 WireGuard profiles, applies acknowledged in-memory changes and samples traffic
 into minute history in SQLite. Connectivity changes must be confirmed within
 120 seconds or are restored. The GUI polls the actual operation result and
-reports browser reachability separately. Overview summarizes the next decision;
-Network adapters, Device access and VPN profiles own configuration; Diagnostics
+reports browser reachability separately. Overview summarizes the next decision
+and owns management-access and interface configuration; Device access and VPN
+profiles own their configurations; Diagnostics
 owns WireGuard readiness and traffic history. The history chart identifies RX
 and TX, labels its byte and time scales, preserves unmeasured gaps and exposes
 the exact selected minute by pointer, touch or keyboard. The appliance profile
@@ -711,8 +712,9 @@ or in the confirmation dialog.
 
 The Network group opens with one Overview page — management or uplink adapter
 with its address, device side with its address, the active WireGuard profile or
-None, and whatever needs attention. Network adapters, Device access, VPN profiles
-and Diagnostics then expose only their assigned concern. The device-network
+None, and whatever needs attention — followed directly by management access and
+the interface inventory. Device access, VPN profiles and Diagnostics expose only
+their assigned concern. The device-network
 editor is grouped as Identity,
 Device side, Access path, Addressing, Services, a collapsed Advanced, and a
 Review that states in plain language which adapter carries which address, which

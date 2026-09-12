@@ -56,7 +56,6 @@ export const de: Catalogue = {
   'nav.network': 'Netzwerk',
   'nav.network.overview': 'Übersicht',
   'nav.network.overviewTab': 'Netzwerkübersicht',
-  'nav.network.adapters': 'Netzwerkadapter',
   'nav.network.deviceAccess': 'Gerätezugriff',
   'nav.network.vpn': 'VPN-Profile',
   'nav.network.diagnostics': 'Diagnose',
@@ -909,10 +908,11 @@ export const de: Catalogue = {
   'network.management.body':
     'Wählen Sie die Schnittstellennamen, die NILO-HTTPS annehmen dürfen. Adressen sind beobachteter Zustand und können sich ändern.',
   'network.management.refresh': 'Schnittstellen aktualisieren',
+  'network.management.unreadable': 'Managementzugriff ist nicht verfügbar.',
   'network.management.enabled': 'Verwaltungszugriff',
   'network.management.toggle': 'Verwaltungszugriff über {name} erlauben',
   'network.management.current': 'aktueller Browserpfad',
-  'network.management.apply': 'Schnittstellenliste anwenden',
+  'network.management.apply': 'Verwaltungszugriff anwenden',
   'network.management.noUsable':
     'Mindestens eine verbundene Schnittstelle mit Adresse muss aktiviert bleiben.',
   'network.management.currentWarning': 'Die verwendete Schnittstelle wird deaktiviert',
@@ -945,6 +945,8 @@ export const de: Catalogue = {
     'Die vorgeschlagene Änderung und ihre automatische Wiederherstellung sind fehlgeschlagen.',
   'network.management.outcome.automaticRestored':
     'Die unbestätigte Änderung wurde automatisch wiederhergestellt.',
+  'network.role.deviceSummary':
+    'Geräteseite: {name}. Vor Verwaltungszugriff die Zuordnung aufheben.',
   'network.role.deviceUnavailable':
     'Als geräteseitiger Adapter für {name} zugewiesen. Entfernen Sie diese Zuweisung, bevor Sie hier den Verwaltungszugriff aktivieren.',
   'network.role.managementUnavailable':

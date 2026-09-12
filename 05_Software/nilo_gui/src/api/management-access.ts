@@ -126,7 +126,11 @@ export function parseManagementAccess(
   ) {
     return { ok: false, violation: 'management access has invalid state metadata' };
   }
-  if (body.outcome === null || typeof body.outcome !== 'object' || Array.isArray(body.outcome)) {
+  if (
+    body.outcome === null ||
+    typeof body.outcome !== 'object' ||
+    Array.isArray(body.outcome)
+  ) {
     return { ok: false, violation: 'management access has invalid outcome metadata' };
   }
   const outcome = body.outcome as Record<string, unknown>;

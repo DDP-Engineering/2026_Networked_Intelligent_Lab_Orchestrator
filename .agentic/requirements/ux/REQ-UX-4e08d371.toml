@@ -8,17 +8,24 @@ schema = 1
 
 id = "REQ-UX-4e08d371"
 
-title = "Present each Network configuration list concisely"
+title = "Present Network configuration concisely"
 
 status = "active"
 
 requirement = """
-Across the focused Network configuration pages, the browser shall present Interfaces, WireGuard profiles and Device networks as one concise table each, reveal editor fields only when the selection they depend on is made, keep configured intent, applied state and remote reachability visually distinct, and rely on the shell's single runtime badge rather than repeating one on a page.
+Across the focused Network configuration pages, the browser shall present one concise table for interfaces on Overview, WireGuard profiles on VPN profiles and device networks on Device access, place View activity, How to repurpose an adapter and Refresh interfaces together in the Overview page header, omit a repeated management-access heading and introductory prose, reveal editor fields only when the selection they depend on is made, keep configured intent, applied state and remote reachability visually distinct, and rely on the shell's single runtime badge rather than repeating one on a page.
 """
 
-verification = "Component tests render the Network adapters, VPN profiles and Device access destinations separately, assert each owns exactly one corresponding table, exercise the conditional editor fields and assert no page-level runtime badge; a browser test confirms the three focused layouts at 1024x600 and 800x480."
+verification = "Component tests render Overview, VPN profiles and Device access separately, assert each owns exactly one corresponding interface, profile or device-network table, assert the three Overview actions share its page header and the management selector has no repeated heading or introductory prose, exercise conditional editor fields and assert no page-level runtime badge; a browser test confirms the three focused layouts at 1024x600 and 800x480."
 
 affected_paths = [
+    "CHANGELOG.md",
+    ".agentic/knowledge/gui-foundation.md",
+    "06_SoftwareDocu/Development_and_Simulation_Flow.md",
+    "06_SoftwareDocu/Network_Operations.md",
+    "07_Delivery/NILO_CLI_and_Authentication.md",
+    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.tsx",
+    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.test.tsx",
     "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.tsx",
     "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
     "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
@@ -29,6 +36,7 @@ affected_paths = [
 
 linked_tests = [
     "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
+    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.test.tsx",
     "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx",
     "05_Software/nilo_gui/src/components/network/WireGuardPanel.test.tsx",
     "05_Software/nilo_gui/e2e/field-display.spec.ts",
@@ -39,4 +47,4 @@ priority = "high"
 rationale = ""
 
 created = 2026-09-03
-updated = 2026-09-04
+updated = 2026-09-12

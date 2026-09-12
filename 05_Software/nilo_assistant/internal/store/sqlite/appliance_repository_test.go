@@ -389,7 +389,13 @@ func TestNetworkOperationsSurviveARestartAndListPending(t *testing.T) {
 		ActorID: pending.ActorID, State: string(network.StateConfirmed), Revision: "def456",
 		CreatedAt: created.Add(-time.Hour), UpdatedAt: created.Add(-time.Hour),
 	}
-	for _, record := range []network.OperationRecord{pending, settled} {
+	unverified := network.OperationRecord{
+		ID: "op-3", Action: string(network.ActionInterfaceDisable), Target: "eth2",
+		ActorID: pending.ActorID, State: string(network.StateRollbackFailed), Revision: "ghi789",
+		CheckpointID: "cp-3", Failure: "previous connectivity was not verified",
+		CreatedAt: created.Add(time.Second), UpdatedAt: created.Add(2 * time.Second),
+	}
+	for _, record := range []network.OperationRecord{pending, settled, unverified} {
 		if err := repository.Save(ctx, record); err != nil {
 			t.Fatalf("save %s: %v", record.ID, err)
 		}
@@ -409,8 +415,8 @@ func TestNetworkOperationsSurviveARestartAndListPending(t *testing.T) {
 	if err != nil {
 		t.Fatalf("list unfinished: %v", err)
 	}
-	if len(unfinished) != 1 || unfinished[0].ID != "op-1" {
-		t.Fatalf("unfinished = %+v, want only op-1", unfinished)
+	if len(unfinished) != 2 || unfinished[0].ID != "op-1" || unfinished[1].ID != "op-3" {
+		t.Fatalf("unfinished = %+v, want op-1 followed by unresolved op-3", unfinished)
 	}
 	if unfinished[0].State != string(network.StateAwaitingConfirmation) {
 		t.Fatalf("state = %q, want awaiting_confirmation", unfinished[0].State)
@@ -426,8 +432,8 @@ func TestNetworkOperationsSurviveARestartAndListPending(t *testing.T) {
 	if err != nil {
 		t.Fatalf("list recent: %v", err)
 	}
-	if len(recent) != 2 || recent[0].ID != "op-1" {
-		t.Fatalf("recent = %+v, want op-1 newest first", recent)
+	if len(recent) != 3 || recent[0].ID != "op-3" {
+		t.Fatalf("recent = %+v, want op-3 newest first", recent)
 	}
 
 	// A later save of the same operation is the same operation moving on, not a
@@ -443,15 +449,24 @@ func TestNetworkOperationsSurviveARestartAndListPending(t *testing.T) {
 	if err != nil {
 		t.Fatalf("list unfinished after confirm: %v", err)
 	}
-	if len(stillUnfinished) != 0 {
-		t.Fatalf("unfinished after confirmation = %+v, want none", stillUnfinished)
+	if len(stillUnfinished) != 1 || stillUnfinished[0].ID != "op-3" {
+		t.Fatalf("unfinished after confirmation = %+v, want unresolved op-3", stillUnfinished)
+	}
+	verified := unverified
+	verified.State = string(network.StateRolledBack)
+	verified.UpdatedAt = created.Add(2 * time.Minute)
+	if err := restarted.Save(ctx, verified); err != nil {
+		t.Fatalf("save verified recovery: %v", err)
+	}
+	if unfinished, err := restarted.Unfinished(ctx); err != nil || len(unfinished) != 0 {
+		t.Fatalf("unfinished after verified recovery = %+v, %v; want none", unfinished, err)
 	}
 	afterMove, err := restarted.Recent(ctx, 10)
 	if err != nil {
 		t.Fatalf("list recent after confirm: %v", err)
 	}
-	if len(afterMove) != 2 {
-		t.Fatalf("recent = %d rows, want the same 2 operations", len(afterMove))
+	if len(afterMove) != 3 {
+		t.Fatalf("recent = %d rows, want the same 3 operations", len(afterMove))
 	}
 }
 

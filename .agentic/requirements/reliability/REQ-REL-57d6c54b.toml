@@ -14,12 +14,15 @@ title = "Serialize conflicting adapter role reservations"
 status = "active"
 
 requirement = """
-When concurrent acknowledged management-access and device-network operations request the same stable physical adapter, the network role coordinator shall reserve that adapter for at most one requested role and reject the other request before downstream mutation, releasing or converting the reservation when the winning operation fails, recovers, is cancelled, or becomes durable.
+When concurrent acknowledged management-access and device-network operations request the same stable physical adapter, the network role coordinator shall reserve that adapter for at most one requested role and reject the other request before downstream mutation, releasing or converting the reservation when the winning operation fails, recovers, is cancelled, or becomes durable. A connectivity operation whose prepared-checkpoint cleanup cannot be verified shall remain durably unfinished and block later connectivity acknowledgement across process restart until the helper positively reports restoration.
 """
 
-verification = "A deterministic concurrency test blocks the first operation after reservation, submits the opposite-role operation, observes one conflict and at most one store/helper/forwarder mutation, then exercises failure, recovery and cancellation and verifies a later non-conflicting request can reserve the adapter."
+verification = "Deterministic concurrency tests block the first operation after reservation, submit the opposite-role operation, observe one conflict and at most one store/helper/forwarder mutation, then exercise failure, recovery and cancellation and verify a later non-conflicting request can reserve the adapter. Recovery regressions fail the second prepared-checkpoint save, make cleanup unverified, and verify that the same process and a restarted process retain the interlock until a matching helper restoration is observed; a persisted applying operation with a still-applied helper checkpoint also rehydrates the interlock until matching restoration; the SQLite repository test verifies rollback-failed records remain unfinished."
 
 affected_paths = [
+    "CHANGELOG.md",
+    ".agentic/knowledge/bench-core-foundation.md",
+    "06_SoftwareDocu/Network_Operations.md",
     "05_Software/nilo_assistant/internal/network/adapter_roles.go",
     "05_Software/nilo_assistant/internal/network/management_access.go",
     "05_Software/nilo_assistant/internal/network/device_network_manager.go",
@@ -34,9 +37,14 @@ affected_paths = [
     "05_Software/nilo_assistant/internal/network/operation_test.go",
     "05_Software/nilo_assistant/internal/network/profile_manager_test.go",
     "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/nilo_assistant/cmd/nilo/network_runtime_test.go",
+    "05_Software/nilo_assistant/internal/network/operation_reconcile_test.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/network_operation_repository.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository_test.go",
 ]
 
 linked_tests = [
+    "05_Software/nilo_assistant/internal/network/operation_test.go::TestOperationInspectionExcludesInternalRecoveryIdentity",
     "05_Software/nilo_assistant/internal/network/adapter_roles_test.go::TestAdapterRoleCoordinatorReservationHasOneOppositeRoleWinner",
     "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestApplianceRetainsOldAndNewDeviceRoleClaimsUntilConfirmation",
     "05_Software/nilo_assistant/internal/network/adapter_roles_test.go::TestSimulationReservesTheProposedDeviceAdapterUntilRecovery",
@@ -49,6 +57,12 @@ linked_tests = [
     "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestApplianceReconcilesInterruptedDeviceNetworkCreateWithoutRecoveryMetadata",
     "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestApplianceRefusesRestartWithoutDeviceNetworkRecoveryMetadata",
     "05_Software/nilo_assistant/internal/network/operation_test.go::TestAChangeIsRefusedWhenRecoveryCannotBeArmed",
+    "05_Software/nilo_assistant/internal/network/operation_test.go::TestUnverifiedCheckpointCleanupKeepsTheConnectivityInterlock",
+    "05_Software/nilo_assistant/internal/network/operation_reconcile_test.go::TestUnverifiedCheckpointCleanupClearsAfterVerifiedRecovery",
+    "05_Software/nilo_assistant/internal/network/operation_reconcile_test.go::TestUnverifiedCheckpointCleanupSurvivesRestart",
+    "05_Software/nilo_assistant/internal/network/operation_reconcile_test.go::TestApplyingConnectivityOperationSurvivesRestartWithInterlock",
+    "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository_test.go::TestNetworkOperationsSurviveARestartAndListPending",
+    "05_Software/nilo_assistant/cmd/nilo/network_runtime_test.go::TestRuntimeReconciliationStopsBeforeUnsafeDownstreamWork",
 ]
 
 

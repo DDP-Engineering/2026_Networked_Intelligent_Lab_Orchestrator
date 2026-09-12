@@ -26,7 +26,7 @@ type managementAccessResponse struct {
 func managementAccessPayload(status network.ManagementAccessStatus) managementAccessResponse {
 	payload := managementAccessResponse{
 		APIVersion: apiVersion, State: status.State, Port: status.Port,
-		Interfaces: status.Interfaces, Configured: status.Configured, URLs: status.URLs,
+		Interfaces: append([]network.ManagementAccessInterface(nil), status.Interfaces...), Configured: status.Configured, URLs: status.URLs,
 		TLSNames: status.TLSNames, TLSMissing: status.TLSMissing, Detail: status.Detail,
 		Outcome:          status.Outcome,
 		CurrentInterface: status.CurrentInterface,
@@ -37,6 +37,14 @@ func managementAccessPayload(status network.ManagementAccessStatus) managementAc
 	}
 	if payload.Interfaces == nil {
 		payload.Interfaces = []network.ManagementAccessInterface{}
+	}
+	for index := range payload.Interfaces {
+		if payload.Interfaces[index].IPv4 == nil {
+			payload.Interfaces[index].IPv4 = []string{}
+		}
+		if payload.Interfaces[index].IPv6 == nil {
+			payload.Interfaces[index].IPv6 = []string{}
+		}
 	}
 	if payload.Configured == nil {
 		payload.Configured = []string{}

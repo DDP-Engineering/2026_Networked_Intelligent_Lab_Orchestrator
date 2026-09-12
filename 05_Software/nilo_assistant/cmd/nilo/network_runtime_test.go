@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"errors"
 	"nilo.local/nilo/internal/network"
 	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -25,5 +27,47 @@ func TestRuntimeSelectionNeverConnectsSimulationToHelper(t *testing.T) {
 	}
 	if _, e = newNetworkProvider(context.Background(), "invalid", socket); e == nil {
 		t.Fatal("unknown runtime accepted")
+	}
+}
+
+func TestRuntimeReconciliationStopsBeforeUnsafeDownstreamWork(t *testing.T) {
+	t.Parallel()
+	failure := errors.New("reconciliation failed")
+	for _, test := range []struct {
+		name          string
+		operationErr  error
+		managementErr error
+		wantCalls     []string
+	}{
+		{name: "operation recovery failed", operationErr: failure, wantCalls: []string{"operations"}},
+		{name: "management recovery failed", managementErr: failure, wantCalls: []string{"operations", "management"}},
+		{name: "safe state reaches forwarding", wantCalls: []string{"operations", "management", "device"}},
+	} {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			calls := make([]string, 0, 3)
+			reconciler := func(name string, result error) func(context.Context) error {
+				return func(context.Context) error {
+					calls = append(calls, name)
+					return result
+				}
+			}
+			err := reconcileNetworkRuntime(
+				context.Background(),
+				reconciler("operations", test.operationErr),
+				reconciler("management", test.managementErr),
+				reconciler("device", nil),
+			)
+			if !reflect.DeepEqual(calls, test.wantCalls) {
+				t.Fatalf("calls = %v, want %v", calls, test.wantCalls)
+			}
+			if (test.operationErr != nil || test.managementErr != nil) && !errors.Is(err, failure) {
+				t.Fatalf("error = %v, want injected failure", err)
+			}
+			if test.operationErr == nil && test.managementErr == nil && err != nil {
+				t.Fatalf("error = %v, want nil", err)
+			}
+		})
 	}
 }

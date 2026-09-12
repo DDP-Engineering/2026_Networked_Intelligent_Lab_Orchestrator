@@ -38,6 +38,7 @@ affected_paths = [
 ]
 
 linked_tests = [
+    "05_Software/nilo_assistant/internal/network/management_access_test.go::TestManagementAccessDoesNotAdmitAReplacementWithTheSavedName",
     "05_Software/nilo_assistant/internal/network/adapter_roles_test.go::TestAdapterRoleCoordinatorRejectsTheOppositePhysicalRole",
     "05_Software/nilo_assistant/internal/network/adapter_roles_test.go::TestAdapterRoleCoordinatorRejectsUnknownRoles",
     "05_Software/nilo_assistant/internal/network/management_access_test.go::TestManagementAccessRejectsADeviceClaimBeforeFirewallOrStoreMutation",

@@ -3,6 +3,7 @@ package network
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/netip"
 	"slices"
 	"strings"
@@ -780,6 +781,321 @@ func TestManagementAccessFollowsAStableAdapterAcrossRename(t *testing.T) {
 	}
 	if !found {
 		t.Fatalf("renamed status=%+v", status.Interfaces)
+	}
+}
+
+func TestManagementAccessDoesNotAdmitAReplacementWithTheSavedName(t *testing.T) {
+	for _, startup := range []bool{false, true} {
+		t.Run(fmt.Sprintf("startup=%t", startup), func(t *testing.T) {
+			now := time.Date(2026, 9, 12, 12, 0, 0, 0, time.UTC)
+			provider := &accessProvider{interfaces: accessInterfaces()}
+			store := &accessStore{}
+			firewall := &accessFirewall{}
+			service := newAccessService(t, &now, provider, store, firewall, true)
+			replacement := accessInterfaces()
+			replacement[0].AdapterID = "replacement-adapter"
+			replacement[0].IPv4 = []string{"192.168.50.1/24"}
+			provider.set(replacement)
+			coordinator := NewAdapterRoleCoordinator()
+			coordinator.RegisterClaimSource(func() []AdapterRoleClaim {
+				return []AdapterRoleClaim{{AdapterID: "replacement-adapter", Interface: "wlan0", Role: AdapterRoleDevice}}
+			})
+			firewall.applied = nil
+			if startup {
+				var err error
+				service, err = NewManagementAccessService(context.Background(), ManagementAccessOptions{
+					Provider: provider, Store: store, Firewall: firewall, Coordinator: coordinator,
+				})
+				if err != nil {
+					t.Fatal(err)
+				}
+			} else {
+				service.coordinator = coordinator
+				if err := service.Refresh(context.Background()); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if service.Allows(netip.MustParseAddr("192.168.50.1")) || service.Allows(netip.MustParseAddr("192.168.1.103")) {
+				t.Fatal("saved name admitted a different physical adapter")
+			}
+			if !service.Allows(netip.MustParseAddr("10.205.148.11")) {
+				t.Fatal("safe management path was lost")
+			}
+			if len(firewall.applied) == 0 {
+				t.Fatal("firewall was not reconciled after replacement")
+			}
+			for _, configuration := range firewall.applied {
+				if slices.Contains(configuration.Interfaces, "wlan0") {
+					t.Fatalf("firewall admits replacement: %+v", configuration)
+				}
+			}
+			status := service.status(netip.MustParseAddr("192.168.50.1"))
+			if status.CurrentInterface != "" || slices.Contains(status.Configured, "wlan0") {
+				t.Fatalf("replacement is selected/current: %+v", status)
+			}
+			for _, entry := range status.Interfaces {
+				if entry.AdapterID == "replacement-adapter" && entry.Enabled {
+					t.Fatalf("replacement name appears enabled: %+v", entry)
+				}
+			}
+			// The absent adapter stays reserved and follows its identity on return.
+			claims := service.adapterRoleClaims()
+			if len(claims) != 1 || claims[0].AdapterID != "wifi-adapter" {
+				t.Fatalf("lost saved claim: %+v", claims)
+			}
+			returned := accessInterfaces()[0]
+			returned.Name = "wlan1"
+			provider.set(append(replacement, returned))
+			if err := service.Refresh(context.Background()); err != nil {
+				t.Fatal(err)
+			}
+			if !service.Allows(netip.MustParseAddr("192.168.1.103")) || service.Allows(netip.MustParseAddr("192.168.50.1")) {
+				t.Fatal("return did not follow the saved identity exclusively")
+			}
+		})
+	}
+}
+
+func TestManagementAccessSavePreservesAnAbsentSelectedAdapter(t *testing.T) {
+	now := time.Now()
+	provider := &accessProvider{interfaces: accessInterfaces()}
+	store := &accessStore{}
+	service := newAccessService(t, &now, provider, store, &accessFirewall{}, true)
+	provider.set(accessInterfaces()[1:])
+	if err := service.Refresh(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	status := service.status(netip.MustParseAddr("10.205.148.11"))
+	if !slices.Contains(status.Configured, "wlan0") {
+		t.Fatal("unplugged saved selection disappeared from the form")
+	}
+	if _, err := service.Update(context.Background(), status.Configured, false, netip.MustParseAddr("10.205.148.11")); err != nil {
+		t.Fatal(err)
+	}
+	if claims := service.adapterRoleClaims(); len(claims) != 1 || claims[0].AdapterID != "wifi-adapter" {
+		t.Fatalf("saving unchanged selection lost the absent identity: %+v", claims)
+	}
+	replacement := accessInterfaces()
+	replacement[0].AdapterID = "replacement"
+	provider.set(replacement)
+	if err := service.Refresh(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if service.Allows(netip.MustParseAddr("192.168.1.103")) {
+		t.Fatal("saving an absent selection later admitted a replacement")
+	}
+}
+
+func TestManagementAccessPreservesSavedIdentitiesWhenNamesAreReused(t *testing.T) {
+	for _, replacementSelected := range []bool{false, true} {
+		for _, restart := range []bool{false, true} {
+			t.Run(fmt.Sprintf("selected=%t/restart=%t", replacementSelected, restart), func(t *testing.T) {
+				now := time.Now()
+				provider := &accessProvider{interfaces: accessInterfaces()}
+				store := &accessStore{}
+				firewall := &accessFirewall{}
+				service := newAccessService(t, &now, provider, store, firewall, true)
+				local := netip.MustParseAddr("10.205.148.11")
+				if replacementSelected {
+					if _, err := service.Update(context.Background(), []string{"wlan0", "eth0", "nilo0"}, false, local); err != nil {
+						t.Fatal(err)
+					}
+					if _, err := service.Confirm(context.Background(), local); err != nil {
+						t.Fatal(err)
+					}
+				}
+				observed := accessInterfaces()[1:]
+				observed[1].Name = "wlan0"
+				provider.set(observed)
+				if restart {
+					service = newAccessService(t, &now, provider, store, firewall, false)
+				} else if err := service.Refresh(context.Background()); err != nil {
+					t.Fatal(err)
+				}
+				if err := store.record.Configuration.Validate(); err != nil {
+					t.Fatalf("resolved durable identities are invalid: %v", err)
+				}
+				status, err := service.Update(context.Background(), service.status(local).Configured, false, local)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if status.State == ManagementAccessPending {
+					if _, err := service.Confirm(context.Background(), local); err != nil {
+						t.Fatal(err)
+					}
+				}
+				claims := service.adapterRoleClaims()
+				if !slices.ContainsFunc(claims, func(claim AdapterRoleClaim) bool { return claim.AdapterID == "wifi-adapter" }) {
+					t.Fatalf("unchanged save dropped absent identity: %+v", claims)
+				}
+				if service.Allows(netip.MustParseAddr("192.168.0.1")) != replacementSelected {
+					t.Fatal("admission did not follow the replacement's saved identity")
+				}
+				if !service.Allows(local) || service.Allows(netip.MustParseAddr("192.168.1.103")) {
+					t.Fatal("safe path or absent admission is incorrect")
+				}
+				for _, applied := range firewall.applied {
+					if err := applied.ValidateFirewall(); err != nil {
+						t.Fatalf("invalid effective firewall: %v", err)
+					}
+				}
+				if !replacementSelected {
+					return
+				}
+				// Both saved identities now disappear. Their shared name cannot
+				// express an individual removal, so an ordinary save retains both.
+				provider.set(observed[:1])
+				if err := service.Refresh(context.Background()); err != nil {
+					t.Fatal(err)
+				}
+				status = service.status(local)
+				if !slices.Equal(status.Configured, []string{"nilo0"}) {
+					t.Fatalf("ambiguous names leaked into editable selection: %v", status.Configured)
+				}
+				for _, entry := range status.Interfaces {
+					if entry.AdapterID != "" && (!entry.Enabled || entry.RoleAvailable) {
+						t.Fatalf("ambiguous absent selection is editable or lost: %+v", entry)
+					}
+				}
+				for _, submitted := range [][]string{status.Configured, {"nilo0", "wlan0"}} {
+					status, err = service.Update(context.Background(), submitted, false, local)
+					if err != nil {
+						t.Fatal(err)
+					}
+					if status.State == ManagementAccessPending {
+						if _, err := service.Confirm(context.Background(), local); err != nil {
+							t.Fatal(err)
+						}
+					}
+					if got := service.adapterRoleClaims(); len(got) != 2 {
+						t.Fatalf("both-absent save lost claims: %+v", got)
+					}
+				}
+				// A new observation makes each selection unambiguous and editable.
+				provider.set(accessInterfaces())
+				if err := service.Refresh(context.Background()); err != nil {
+					t.Fatal(err)
+				}
+				for _, entry := range service.status(local).Interfaces {
+					if entry.AdapterID != "" && (!entry.Enabled || !entry.RoleAvailable) {
+						t.Fatalf("returned selection unavailable: %+v", entry)
+					}
+				}
+				if _, err := service.Update(context.Background(), []string{"nilo0"}, false, local); err != nil {
+					t.Fatal(err)
+				}
+				if _, err := service.Confirm(context.Background(), local); err != nil {
+					t.Fatal(err)
+				}
+				if got := service.adapterRoleClaims(); len(got) != 0 {
+					t.Fatalf("explicit unambiguous removal retained claims: %+v", got)
+				}
+			})
+		}
+	}
+}
+
+func TestManagementAccessRemovalChecksEffectiveCurrentPath(t *testing.T) {
+	now := time.Now()
+	provider := &accessProvider{interfaces: accessInterfaces()}
+	store := &accessStore{}
+	firewall := &accessFirewall{}
+	service := newAccessService(t, &now, provider, store, firewall, true)
+	local := netip.MustParseAddr("10.205.148.11")
+	if _, err := service.Update(context.Background(), []string{"wlan0", "eth0", "nilo0"}, false, local); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.Confirm(context.Background(), local); err != nil {
+		t.Fatal(err)
+	}
+	observed := accessInterfaces()[1:]
+	observed[1].Name = "wlan0"
+	provider.set(observed)
+	if err := service.Refresh(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	before := len(firewall.applied)
+	current := netip.MustParseAddr("192.168.0.1")
+	if _, err := service.Update(context.Background(), []string{"nilo0"}, false, current); !errors.Is(err, ErrCurrentAccessConfirmation) {
+		t.Fatalf("current-path removal error=%v", err)
+	}
+	if len(firewall.applied) != before || store.record.State != ManagementAccessApplied || !service.Allows(current) {
+		t.Fatal("refusal mutated the current path")
+	}
+	if _, err := service.Update(context.Background(), []string{"nilo0"}, true, current); err != nil {
+		t.Fatal(err)
+	}
+	if service.Allows(current) || !service.Allows(local) {
+		t.Fatal("explicit removal did not update effective admission")
+	}
+	if err := service.Recover(context.Background(), true); err != nil {
+		t.Fatal(err)
+	}
+	if !service.Allows(current) {
+		t.Fatal("recovery did not restore the live saved identity")
+	}
+}
+
+func TestManagementAccessClosesAdmissionWhenEverySavedAdapterIsAbsent(t *testing.T) {
+	now := time.Now()
+	provider := &accessProvider{interfaces: accessInterfaces()}
+	store := &accessStore{}
+	firewall := &accessFirewall{}
+	service := newAccessService(t, &now, provider, store, firewall, true)
+	provider.set([]Interface{{Name: "wlan0", AdapterID: "replacement", Kind: KindWiFi, State: StateConnected, IPv4: []string{"192.168.1.103/24"}}})
+	if err := service.Refresh(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if service.Allows(netip.MustParseAddr("192.168.1.103")) {
+		t.Fatal("same address on replacement remains admitted")
+	}
+	if got := firewall.applied[len(firewall.applied)-1].Interfaces; len(got) != 0 {
+		t.Fatalf("firewall must deny all new management connections: %v", got)
+	}
+}
+
+func TestManagementReplacementRevocationSurvivesFirewallFailureAndRetry(t *testing.T) {
+	now := time.Now()
+	provider := &accessProvider{interfaces: accessInterfaces()}
+	store := &accessStore{}
+	firewall := &accessFirewall{}
+	service := newAccessService(t, &now, provider, store, firewall, true)
+	replacement := accessInterfaces()
+	replacement[0].AdapterID = "replacement"
+	provider.set(replacement)
+	firewall.fail = errors.New("helper unavailable")
+	if err := service.Refresh(context.Background()); err == nil {
+		t.Fatal("expected firewall failure")
+	}
+	if service.Allows(netip.MustParseAddr("192.168.1.103")) {
+		t.Fatal("failed refresh retained replacement admission")
+	}
+	firewall.fail = nil
+	if err := service.Refresh(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if got := firewall.applied[len(firewall.applied)-1].Interfaces; slices.Contains(got, "wlan0") {
+		t.Fatalf("retry retained stale firewall: %v", got)
+	}
+	// An explicit administrator choice may assign the unclaimed replacement.
+	status, err := service.Update(context.Background(), []string{"wlan0", "nilo0"}, false, netip.MustParseAddr("10.205.148.11"))
+	if err != nil || status.State != ManagementAccessPending {
+		t.Fatalf("explicit replacement selection: %+v, %v", status, err)
+	}
+	absentRows := 0
+	for _, entry := range status.Interfaces {
+		if entry.AdapterID == "wifi-adapter" {
+			absentRows++
+		}
+	}
+	if absentRows != 1 {
+		t.Fatalf("absent identity appears %d times", absentRows)
+	}
+	if _, err := service.Confirm(context.Background(), netip.MustParseAddr("192.168.1.103")); err != nil {
+		t.Fatal(err)
+	}
+	if claims := service.adapterRoleClaims(); len(claims) != 2 || !slices.ContainsFunc(claims, func(claim AdapterRoleClaim) bool { return claim.AdapterID == "replacement" }) {
+		t.Fatalf("confirmed replacement claims: %+v", claims)
 	}
 }
 

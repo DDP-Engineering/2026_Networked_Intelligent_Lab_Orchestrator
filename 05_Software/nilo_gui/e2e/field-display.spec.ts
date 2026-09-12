@@ -185,7 +185,7 @@ for (const viewport of VIEWPORTS) {
 
     // Each focused page keeps its own records and details.
     for (const [destination, name] of [
-      ['Network adapters', 'enp1s0'],
+      ['Overview', 'enp1s0'],
       ['VPN profiles', 'field-office'],
       ['Device access', 'Line 3'],
     ] as const) {
@@ -228,7 +228,7 @@ for (const viewport of VIEWPORTS) {
     await expectNoDocumentOverflow();
 
     // The compact dialog is immediately visible above the table; loopback has none.
-    await openNetwork('Network adapters');
+    await openNetwork('Overview');
     const scrollBefore = await page
       .locator('.shell-workspace')
       .evaluate((workspace) => workspace.scrollTop);
@@ -350,7 +350,7 @@ for (const viewport of VIEWPORTS) {
 test('1024x600: a change awaiting confirmation is stated in the overview and restored', async () => {
   await page.setViewportSize({ width: 1024, height: 600 });
   await openNetworkAfterReload({ width: 1024, height: 600 });
-  await openNetwork('Network adapters');
+  await openNetwork('Overview');
   await page.getByRole('button', { name: 'Actions for enp1s0', exact: true }).click();
   await page
     .getByRole('dialog', { name: 'Actions for enp1s0' })
@@ -499,8 +499,7 @@ async function signIn(): Promise<void> {
   await expect(page.getByRole('heading', { name: 'Bench', level: 2 })).toBeVisible();
 }
 
-type NetworkDestination =
-  'Overview' | 'Network adapters' | 'Device access' | 'VPN profiles' | 'Diagnostics';
+type NetworkDestination = 'Overview' | 'Device access' | 'VPN profiles' | 'Diagnostics';
 
 async function expectPageActivityBesideTitle(): Promise<void> {
   const header = page.locator('#workspace-panel .page-head');

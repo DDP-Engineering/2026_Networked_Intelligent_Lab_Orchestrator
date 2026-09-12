@@ -95,9 +95,10 @@ func TestManagementAccessRepositoryPersistsStableAdapterBindings(t *testing.T) {
 	database := openTemporaryDatabase(t)
 	repository := NewManagementAccessRepository(database)
 	configuration := network.ManagementAccessConfiguration{
-		Interfaces: []string{"enx-old", "nilo0"},
+		Interfaces: []string{"enx-old", "enx-old", "nilo0"},
 		Bindings: []network.ManagementInterfaceBinding{
 			{AdapterID: "aa:bb:cc:dd:ee:ff", LastKnownName: "enx-old"},
+			{AdapterID: "11:22:33:44:55:66", LastKnownName: "enx-old"},
 			{LastKnownName: "nilo0"},
 		},
 		Port: 8443, TLSNames: []string{"ddp-remote.local"},

@@ -208,10 +208,11 @@ runtime status.
   tabs, falling back to the nearest remaining neighbour.
 - `REQ-UX-30821068` - splits the navigation into the working entries and the
   bottom-anchored Plugins, Network, Authentication, Activity, About cluster.
-- `REQ-UX-b718864e` - expands Network into five focused, separately tabbed
+- `REQ-UX-b718864e` - expands Network into four focused, separately tabbed
   destinations and keeps the group usable in the rail and drawer.
-- `REQ-UX-b555166c` - shows only the assigned Network concern on each destination
-  and requests traffic history only from Diagnostics.
+- `REQ-UX-b555166c` - combines the decision summary and adapter configuration on
+  Overview, keeps the other Network concerns focused, and requests traffic
+  history only from Diagnostics.
 - `REQ-UX-6da44516` - gives the active page the whole workspace, with no
   decorative background and no document-level scrolling.
 - `REQ-UX-0697c0ab` and `REQ-UX-2d00dbdb` - Light, Dark and System over one
@@ -243,7 +244,7 @@ flowchart LR
     shell["AppShell: one grid, four cells"]
     toprow["TopRow: tabs, network, SIM, appearance, language, account"]
     sidenav["SideNav: working entries plus keyed Network and Authentication groups"]
-    pages["Bench, five Network views, Activity, focused Authentication views, About, integrations"]
+    pages["Bench, four Network views, Activity, focused Authentication views, About, integrations"]
     tokens["styles/tokens.css: one semantic palette, three themes"]
     catalogue["i18n: en, de, ro over one key set"]
     prefs["preferences/store: nilo.theme and nilo.language"]
@@ -299,12 +300,22 @@ flowchart LR
     browser --> proxy
 ```
 
-`AppShell` binds the Network read/change callbacks and maps five page descriptors
+`AppShell` binds the Network read/change callbacks and maps four page descriptors
 to one view-discriminated `NetworkPage`. `SideNav` renders Network as an expanded
-group by default, with Overview, Network adapters, Device access, VPN profiles
-and Diagnostics opening independent workspace tabs. `NetworkPage` polls active
-operations on every view, requests traffic history only on Diagnostics, renders
-a countdown and uses `NetworkConfirmation` for native modal focus containment.
+group by default, with Overview, Device access, VPN profiles and Diagnostics
+opening independent workspace tabs. Overview puts the decision summary first,
+then one shared `NetworkInterfacesTable` with management selectors, adapter
+observations, and Details/Actions. Secondary URL guidance is collapsed; the
+management outcome occupies one status line. The table keys
+physical rows by stable identity, labels absent adapters with that identity, and
+keeps an absent adapter's reused name from selecting its replacement. An absent
+selection with a reused name stays checked and disabled independently of the
+replacement until its name is unambiguous; active and rollback ownership share
+one row per physical identity.
+`NetworkPage` reattaches and
+polls applying, confirmation, rollback and rollback-failed operations on every
+view, requests traffic history only on Diagnostics, renders a countdown and uses
+`NetworkConfirmation` for native modal focus containment.
 `WireGuardPanel` proposes profile changes without
 applying them; acknowledgement is separate. `api/wireguard.ts` validates the
 wire contract and exposes only safe profile metadata. `e2e/network.spec.ts`
@@ -316,10 +327,11 @@ disabled competing actions and terminal success. An optional operation `progress
 string is parsed at the API boundary; no raw package command output is displayed.
 The install capability is independent of profile-management readiness, including
 when kernel evidence is unknown. Actual APT behavior has separate Linux tests.
-The spec
-exercises the real Windows-browser/WSL2 flow including the full 120-second
-rollback window. Browser mock parity and operation reattachment after reload
-remain unfinished, as listed in the Network implementation status document.
+The spec exercises the real Windows-browser/WSL2 flow including the full
+120-second rollback window. The browser reacquires the appliance's authoritative
+operation after an uncertain acknowledgement and after reload. A matching
+unfinished operation replaces any older terminal notice, preserving a rollback
+failure until the backend reports verified recovery.
 
 `App` owns the whole conversation: which credential is in use, who it belongs
 to, and which page is open. Its shell is `restoring`, `signed-out`,
@@ -464,8 +476,11 @@ The authenticated shell uses one SIM/LIVE badge, without a footer disclaimer. Ne
   Authentication, shown to an identity holding `activity.read`; `AppShell` keeps the filter a Network
   page link chose and remounts the page with it.
 - `pages/NetworkPage.tsx` reads `GET /api/v1/network/operations` on mount and
-  picks up a change still applying or awaiting confirmation; a refused preview
-  is shown with the appliance's reason rather than as an outage.
+  picks up a change still applying, awaiting confirmation, rolling back or
+  blocked in rollback failure; it keeps polling the failure until verified
+  recovery. An uncertain acknowledgement reacquires the matching authoritative
+  operation and replaces any older terminal notice, while a refused preview is
+  shown with the appliance's reason rather than as an outage.
 - Catalogues: 154 keys added to en, de and ro; `messages.test.ts` lists the
   words the languages share.
 
@@ -540,15 +555,15 @@ permission or confirmation behaviour changed with it.
   and a pending confirmation. It is CSS-pixel proof; the physical seven-inch
   panel is still unverified.
 
-## Focused Network navigation (2026-09-04, TASK-b225b22e)
+## Focused Network navigation (2026-09-12, TASK-8f18c927)
 
 Network is one collapsible System group whose root opens Overview and whose
-children open Network adapters, Device access, VPN profiles and Diagnostics.
-Each destination owns one workspace tab and one concern: Overview contains the
-decision summary, adapters contains interface configuration, Device access
-contains forwarding definitions, VPN profiles contains WireGuard lifecycle and
-import, and Diagnostics contains WireGuard readiness plus traffic history. The
-existing `network` page id remains Overview; the children use internal
+children open Device access, VPN profiles and Diagnostics. Each destination owns
+one workspace tab and one concern: Overview contains the decision summary,
+management access and interface configuration; Device access contains forwarding
+definitions; VPN profiles contains WireGuard lifecycle and import; and Diagnostics
+contains WireGuard readiness plus traffic history. The existing `network` page
+id remains Overview; the children use internal
 `network:*` ids. Collapsing navigation never closes a tab, Activity remains a
 peer page, and common operation refusal, confirmation and recovery notices stay
 available on every Network view.
@@ -619,9 +634,9 @@ real simulation-profile runner. Source paths above are relative to `05_Software/
 
 `CORE_PAGES` in `shell/pages.ts` is the top-to-bottom order the lower cluster
 renders, because `SideNav` maps the array as it stands: Plugins, Network with
-its four `network:*` children, Authentication with API tokens, Activity, About.
+its three `network:*` children, Authentication with API tokens, Activity, About.
 The `settings` descriptor, its `AppShell` placeholder branch and the obsolete
 placeholder catalogue entries are gone, so no Settings destination exists to
-open; `Icon`'s `settings` glyph stays, used by Network adapters. The Plugins
+open; `Icon`'s `settings` glyph remains available in the glyph catalogue. The Plugins
 entry remains available through the managed instrument workspace added by
 TASK-f1f2d836.

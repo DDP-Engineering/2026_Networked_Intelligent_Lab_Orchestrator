@@ -84,7 +84,7 @@ func (repository *NetworkOperationRepository) Save(ctx context.Context, record n
 // first, because they are reconciled in the order they were started.
 func (repository *NetworkOperationRepository) Unfinished(ctx context.Context) ([]network.OperationRecord, error) {
 	return repository.query(ctx,
-		"WHERE state IN ('previewed', 'applying', 'awaiting_confirmation', 'rolling_back') ORDER BY created_at ASC", 0)
+		"WHERE state IN ('previewed', 'applying', 'awaiting_confirmation', 'rolling_back', 'rollback_failed') ORDER BY created_at ASC", 0)
 }
 
 // Recent returns the newest operations first, for an interface reattaching

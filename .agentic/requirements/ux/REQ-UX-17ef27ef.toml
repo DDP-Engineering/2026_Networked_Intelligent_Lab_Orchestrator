@@ -30,6 +30,7 @@ affected_paths = [
 ]
 
 linked_tests = [
+    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.test.tsx::distinguishes an absent saved adapter from its same-name replacement",
     "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.test.tsx::keeps a device-owned adapter visible, disabled, and explained",
     "05_Software/nilo_gui/e2e/network.spec.ts::keeps opposite-role adapters visible and explains sequential repurposing",
 ]
@@ -41,4 +42,4 @@ priority = "high"
 rationale = "Keeping the unavailable choice visible teaches the operator why it cannot be selected and how existing state constrains it."
 
 created = 2026-09-11
-updated = 2026-09-11
+updated = 2026-09-12
