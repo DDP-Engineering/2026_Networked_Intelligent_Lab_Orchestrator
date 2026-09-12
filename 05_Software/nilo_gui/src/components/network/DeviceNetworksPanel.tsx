@@ -10,6 +10,7 @@ import type {
   DeviceNetworkState,
 } from '../../api/devicenetworks';
 import type { WireGuardProfile } from '../../api/wireguard';
+import type { ManagementAccessInterface } from '../../api/management-access';
 import { useTranslate } from '../../i18n/languages';
 import type { MessageKey } from '../../i18n/en';
 import { Modal } from '../Modal';
@@ -25,6 +26,10 @@ export interface DeviceNetworksPanelProps {
   interfaces: NetworkInterface[];
   /** NILO-owned WireGuard profiles the editor can offer. */
   profiles: WireGuardProfile[];
+  /** Role claims from the management selector, keyed by stable adapter identity. */
+  managementInterfaces?: ManagementAccessInterface[];
+  /** Distinguishes a known-empty role inventory from one that is unavailable. */
+  managementRoleState?: 'reading' | 'read' | 'failed';
   canManage: boolean;
   busy: boolean;
   unreadable: boolean;
@@ -79,19 +84,27 @@ interface DraftForm {
 
 type FieldErrors = Partial<Record<keyof DraftForm, string>>;
 
-function emptyForm(interfaces: NetworkInterface[]): DraftForm {
+function emptyForm(
+  interfaces: NetworkInterface[],
+  blockedDeviceAdapters: Set<string> = new Set(),
+): DraftForm {
   const adapters = interfaces.filter((entry) => entry.adapterId !== '');
+  const available = adapters.filter(
+    (entry) => !blockedDeviceAdapters.has(entry.adapterId.toLowerCase()),
+  );
+  const device = available[1] ?? available[0];
+  const local = adapters.find((entry) => entry.adapterId !== device?.adapterId) ?? adapters[0];
   return {
     name: '',
     location: '',
-    deviceInterface: adapters[1]?.adapterId ?? adapters[0]?.adapterId ?? '',
+    deviceInterface: device?.adapterId ?? '',
     applianceAddress: '192.168.0.1/24',
     scope: 'host',
     target: '',
     addressing: 'original',
     exposed: '',
     access: 'local',
-    localInterface: adapters[0]?.adapterId ?? '',
+    localInterface: local?.adapterId ?? '',
     localSources: '',
     vpnProfileId: '',
     vpnSources: '',
@@ -189,6 +202,8 @@ export function DeviceNetworksPanel({
   networks,
   interfaces,
   profiles,
+  managementInterfaces = [],
+  managementRoleState = 'read',
   canManage,
   busy,
   unreadable,
@@ -216,6 +231,15 @@ export function DeviceNetworksPanel({
   const adapters = interfaces.filter(
     (entry) => entry.adapterId !== '' && entry.controllable,
   );
+  const managementClaims = new Map(
+    managementInterfaces
+      .filter((entry) => entry.adapterId !== '' && entry.role === 'management')
+      .map((entry) => [entry.adapterId.toLowerCase(), entry]),
+  );
+  const managementRolesReady = managementRoleState === 'read';
+  const selectedDeviceRoleConflict =
+    editing !== null &&
+    managementClaims.has(editing.form.deviceInterface.toLowerCase());
   const owned = profiles.filter((profile) => profile.niloOwned);
   const adapterName = (adapterId: string) =>
     interfaces.find((entry) => entry.adapterId === adapterId)?.name ??
@@ -254,6 +278,25 @@ export function DeviceNetworksPanel({
 
   const submit = async () => {
     if (editing === null) return;
+    if (!managementRolesReady) {
+      setRefusal(
+        t(
+          managementRoleState === 'failed'
+            ? 'network.role.managementInventoryFailed'
+            : 'network.role.managementInventoryReading',
+        ),
+      );
+      return;
+    }
+    if (selectedDeviceRoleConflict) {
+      const claim = managementClaims.get(editing.form.deviceInterface.toLowerCase());
+      setRefusal(
+        t('network.role.managementUnavailable', {
+          name: claim?.name ?? adapterName(editing.form.deviceInterface),
+        }),
+      );
+      return;
+    }
     const found = validate(editing.form);
     setErrors(found);
     if (Object.keys(found).length > 0) {
@@ -343,7 +386,7 @@ export function DeviceNetworksPanel({
     key: keyof DraftForm,
     label: MessageKey,
     choices: ReactNode,
-    options: { help?: MessageKey; guidance?: MessageKey } = {},
+    options: { help?: MessageKey; guidance?: MessageKey; disabled?: boolean } = {},
   ) =>
     editing === null ? null : (
       <Field
@@ -356,17 +399,32 @@ export function DeviceNetworksPanel({
         <select
           id={`dn-${key}`}
           value={String(editing.form[key])}
+          disabled={options.disabled}
           onChange={(event) => set(key, event.target.value)}
         >
           {choices}
         </select>
       </Field>
     );
-  const adapterChoices = (
+  const localAdapterChoices = (
     <>
       <option value="">—</option>
       {adapters.map((adapter) => (
         <option key={adapter.adapterId} value={adapter.adapterId}>
+          {adapter.name} ({adapter.adapterId})
+        </option>
+      ))}
+    </>
+  );
+  const deviceAdapterChoices = (
+    <>
+      <option value="">—</option>
+      {adapters.map((adapter) => (
+        <option
+          key={adapter.adapterId}
+          value={adapter.adapterId}
+          disabled={managementClaims.has(adapter.adapterId.toLowerCase())}
+        >
           {adapter.name} ({adapter.adapterId})
         </option>
       ))}
@@ -434,7 +492,17 @@ export function DeviceNetworksPanel({
           <button
             type="button"
             disabled={busy}
-            onClick={() => open(null, emptyForm(interfaces))}
+            onClick={() =>
+              open(
+                null,
+                emptyForm(
+                  interfaces,
+                  managementRolesReady
+                    ? new Set(managementClaims.keys())
+                    : new Set(adapters.map((entry) => entry.adapterId.toLowerCase())),
+                ),
+              )
+            }
           >
             {t('network.dn.add')}
           </button>
@@ -729,10 +797,40 @@ export function DeviceNetworksPanel({
               {selectInput(
                 'deviceInterface',
                 'network.dn.field.deviceInterface',
-                adapterChoices,
+                deviceAdapterChoices,
                 {
                   help: 'network.dn.help.deviceInterface',
+                  disabled: !managementRolesReady,
                 },
+              )}
+              {!managementRolesReady && (
+                <p className="notice notice-unknown" role="status">
+                  {t(
+                    managementRoleState === 'failed'
+                      ? 'network.role.managementInventoryFailed'
+                      : 'network.role.managementInventoryReading',
+                  )}
+                </p>
+              )}
+              {managementClaims.size > 0 && (
+                <div className="notice" role="note">
+                  {adapters
+                    .filter((adapter) =>
+                      managementClaims.has(adapter.adapterId.toLowerCase()),
+                    )
+                    .map((adapter) => (
+                      <p key={adapter.adapterId}>
+                        {t('network.role.managementUnavailable', {
+                          name: adapter.name,
+                        })}
+                      </p>
+                    ))}
+                  <WorkflowHelp
+                    prefix="help.roles"
+                    title={t('help.roles.title')}
+                    buttonLabel={t('help.roles.open')}
+                  />
+                </div>
               )}
               {textInput('applianceAddress', 'network.dn.field.applianceAddress', {
                 placeholder: '192.168.0.1/24',
@@ -771,7 +869,7 @@ export function DeviceNetworksPanel({
                 selectInput(
                   'localInterface',
                   'network.dn.field.localInterface',
-                  adapterChoices,
+                  localAdapterChoices,
                   {
                     help: 'network.dn.help.localInterface',
                   },
@@ -913,7 +1011,11 @@ export function DeviceNetworksPanel({
               </p>
             )}
             <div className="modal-actions">
-              <button type="submit" className="button button-primary" disabled={busy}>
+              <button
+                type="submit"
+                className="button button-primary"
+                disabled={busy || !managementRolesReady || selectedDeviceRoleConflict}
+              >
                 {t('network.dn.save')}
               </button>
               <button type="button" className="button" onClick={() => setEditing(null)}>

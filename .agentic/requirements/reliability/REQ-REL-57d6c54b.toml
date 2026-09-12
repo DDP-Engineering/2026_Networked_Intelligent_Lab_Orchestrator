@@ -1,0 +1,61 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-REL-57d6c54b"
+
+title = "Serialize conflicting adapter role reservations"
+
+status = "active"
+
+requirement = """
+When concurrent acknowledged management-access and device-network operations request the same stable physical adapter, the network role coordinator shall reserve that adapter for at most one requested role and reject the other request before downstream mutation, releasing or converting the reservation when the winning operation fails, recovers, is cancelled, or becomes durable.
+"""
+
+verification = "A deterministic concurrency test blocks the first operation after reservation, submits the opposite-role operation, observes one conflict and at most one store/helper/forwarder mutation, then exercises failure, recovery and cancellation and verifies a later non-conflicting request can reserve the adapter."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/adapter_roles.go",
+    "05_Software/nilo_assistant/internal/network/management_access.go",
+    "05_Software/nilo_assistant/internal/network/device_network_manager.go",
+    "05_Software/nilo_assistant/internal/network/operation.go",
+    "05_Software/nilo_assistant/internal/network/appliance.go",
+    "05_Software/nilo_assistant/internal/network/wireguard.go",
+    "05_Software/nilo_assistant/internal/network/persistence.go",
+    "05_Software/nilo_assistant/internal/network/simulation.go",
+    "05_Software/nilo_assistant/internal/network/simulation_device_networks.go",
+    "05_Software/nilo_assistant/internal/network/adapter_roles_test.go",
+    "05_Software/nilo_assistant/internal/network/management_access_test.go",
+    "05_Software/nilo_assistant/internal/network/operation_test.go",
+    "05_Software/nilo_assistant/internal/network/profile_manager_test.go",
+    "05_Software/nilo_assistant/cmd/nilo/main.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/adapter_roles_test.go::TestAdapterRoleCoordinatorReservationHasOneOppositeRoleWinner",
+    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestApplianceRetainsOldAndNewDeviceRoleClaimsUntilConfirmation",
+    "05_Software/nilo_assistant/internal/network/adapter_roles_test.go::TestSimulationReservesTheProposedDeviceAdapterUntilRecovery",
+    "05_Software/nilo_assistant/internal/network/management_access_test.go::TestManagementAccessPublishesClaimsBeforeAWaitingDeviceMutation",
+    "05_Software/nilo_assistant/internal/network/management_access_test.go::TestCancelledManagementPublicationReleasesRoleForWaitingDeviceMutation",
+    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestApplianceRehydratesDeviceNetworkRecoveryAcrossRestart",
+    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestApplianceRehydratesConfirmedDeviceNetworkCreateFromDurableInventory",
+    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestAppliancePersistsDeviceRecoveryMetadataBeforeHelperPreparation",
+    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestApplianceRestoresPreparedDeviceRecoveryWhenCheckpointPersistenceIsCancelled",
+    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestApplianceReconcilesInterruptedDeviceNetworkCreateWithoutRecoveryMetadata",
+    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestApplianceRefusesRestartWithoutDeviceNetworkRecoveryMetadata",
+    "05_Software/nilo_assistant/internal/network/operation_test.go::TestAChangeIsRefusedWhenRecoveryCannotBeArmed",
+]
+
+
+spec = "specs/REQ-SEC-b8719eb2.md"
+
+priority = "high"
+rationale = "Independent preflight checks leave a race in which both roles can pass before either becomes visible."
+
+created = 2026-09-11
+updated = 2026-09-12

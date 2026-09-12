@@ -32,7 +32,10 @@ import { DeviceNetworksPanel } from '../network/DeviceNetworksPanel';
 import { InterfaceSettingsDialog } from '../network/InterfaceSettingsDialog';
 import { NetworkOverview } from '../network/NetworkOverview';
 import { ManagementAccessPanel } from '../network/ManagementAccessPanel';
-import type { ManagementAccessStatus } from '../../api/management-access';
+import type {
+  AdapterRoleConflict,
+  ManagementAccessStatus,
+} from '../../api/management-access';
 import { uplinkOf } from '../network/addressing';
 import type { NetworkView } from '../network/views';
 import { DetailsToggle, RowActions, type RowAction } from '../RowActions';
@@ -105,6 +108,15 @@ export interface NetworkPageProps {
 type Reading<T> =
   { state: 'reading' } | { state: 'read'; value: T } | { state: 'failed' };
 
+interface RefusalNotice {
+  detail: string;
+  conflict: AdapterRoleConflict | null;
+}
+
+function sameAdapter(first: string, second: string): boolean {
+  return first.trim().toLowerCase() === second.trim().toLowerCase();
+}
+
 const PERIOD_LABEL_KEYS = {
   '15m': 'network.period.15m',
   '1h': 'network.period.1h',
@@ -176,9 +188,12 @@ export function NetworkPage({
   const t = useTranslate();
   const [deviceNetworks, setDeviceNetworks] = useState<DeviceNetwork[] | null>(null);
   const [deviceNetworksUnreadable, setDeviceNetworksUnreadable] = useState(false);
+  const [managementAccess, setManagementAccess] = useState<
+    Reading<ManagementAccessStatus>
+  >({ state: 'reading' });
   const [configuring, setConfiguring] = useState<NetworkInterface | null>(null);
   const [expandedInterface, setExpandedInterface] = useState<string | null>(null);
-  const [refusal, setRefusal] = useState('');
+  const [refusal, setRefusal] = useState<RefusalNotice | null>(null);
   const [proposal, setProposal] = useState<NetworkOperation | null>(null);
   const [running, setRunning] = useState<NetworkOperation | null>(null);
   const [remaining, setRemaining] = useState(0);
@@ -233,11 +248,52 @@ export function NetworkPage({
         if (abandoned()) return;
         setDeviceNetworks(value);
         setDeviceNetworksUnreadable(false);
+        setRefusal((current) => {
+          const conflict = current?.conflict;
+          if (
+            conflict?.existingRole === 'device' &&
+            !value.some((entry) =>
+              sameAdapter(entry.deviceInterface, conflict.adapterId),
+            )
+          ) {
+            return null;
+          }
+          return current;
+        });
       } catch {
         if (!abandoned()) setDeviceNetworksUnreadable(true);
       }
     },
     [readDeviceNetworks],
+  );
+
+  const reloadManagementAccess = useCallback(
+    async (abandoned: () => boolean) => {
+      if (readManagementAccess === undefined) return;
+      try {
+        const value = await readManagementAccess();
+        if (!abandoned()) {
+          setManagementAccess({ state: 'read', value });
+          setRefusal((current) => {
+            const conflict = current?.conflict;
+            if (
+              conflict?.existingRole === 'management' &&
+              !value.interfaces.some(
+                (entry) =>
+                  entry.role === 'management' &&
+                  sameAdapter(entry.adapterId, conflict.adapterId),
+              )
+            ) {
+              return null;
+            }
+            return current;
+          });
+        }
+      } catch {
+        if (!abandoned()) setManagementAccess({ state: 'failed' });
+      }
+    },
+    [readManagementAccess],
   );
 
   // Both reads are started from inside an async wrapper, matching the
@@ -248,16 +304,18 @@ export function NetworkPage({
     void (async () => {
       await reloadStatus(() => abandoned);
       await reloadDeviceNetworks(() => abandoned);
+      await reloadManagementAccess(() => abandoned);
     })();
     const refresh = setInterval(() => {
       void reloadStatus(() => abandoned);
       void reloadDeviceNetworks(() => abandoned);
+      void reloadManagementAccess(() => abandoned);
     }, 5000);
     return () => {
       abandoned = true;
       clearInterval(refresh);
     };
-  }, [reloadStatus, reloadDeviceNetworks]);
+  }, [reloadStatus, reloadDeviceNetworks, reloadManagementAccess]);
 
   // A change that was in flight when the page was reloaded is picked up again
   // from the appliance's own record, so its window is shown where it is
@@ -358,6 +416,38 @@ export function NetworkPage({
     [previewInterfaceChange],
   );
 
+  const describeRefusal = useCallback(
+    (error: BenchCoreError): RefusalNotice => {
+      const conflict = error.adapterRoleConflict;
+      if (conflict?.existingRole === 'management') {
+        return {
+          detail: t('network.role.managementUnavailable', {
+            name: conflict.interface || conflict.adapterId,
+          }),
+          conflict,
+        };
+      }
+      if (conflict?.existingRole === 'device') {
+        return {
+          detail: t('network.role.deviceUnavailable', {
+            name:
+              conflict.conflictingResourceName ||
+              t('network.role.unnamedDeviceNetwork'),
+          }),
+          conflict,
+        };
+      }
+      if (error.code === 'network_interface_role_conflict') {
+        return {
+          detail: t('network.role.malformedConflict'),
+          conflict: null,
+        };
+      }
+      return { detail: error.detail, conflict: null };
+    },
+    [t],
+  );
+
   const apply = useCallback(async () => {
     if (proposal === null) return;
     const agreed = proposal;
@@ -366,10 +456,20 @@ export function NetworkPage({
       const started = await acknowledgeOperation(agreed.id, agreed.revision);
       setRunning(started);
       void reloadStatus(() => false);
-    } catch {
-      setRunning({ ...agreed, state: 'failed', failure: t('network.change.refused') });
+    } catch (error) {
+      if (error instanceof BenchCoreError && error.failure === 'rejected') {
+        setRefusal(describeRefusal(error));
+        setRunning(null);
+        setOperationUnavailable(false);
+      } else {
+        setRunning({
+          ...agreed,
+          state: 'failed',
+          failure: t('network.change.refused'),
+        });
+      }
     }
-  }, [acknowledgeOperation, proposal, t, reloadStatus]);
+  }, [acknowledgeOperation, proposal, t, reloadStatus, describeRefusal]);
 
   const settle = useCallback(
     async (resolve: (id: string) => Promise<NetworkOperation>, id: string) => {
@@ -390,20 +490,20 @@ export function NetworkPage({
     async (preview: Promise<NetworkOperation>): Promise<NetworkOperation | null> => {
       try {
         const operation = await preview;
-        setRefusal('');
+        setRefusal(null);
         setProposalDetail('');
         setProposal(operation);
         return operation;
       } catch (error) {
         if (error instanceof BenchCoreError && error.failure === 'rejected') {
-          setRefusal(error.detail);
+          setRefusal(describeRefusal(error));
         } else {
           setOperationUnavailable(true);
         }
         return null;
       }
     },
-    [],
+    [describeRefusal],
   );
 
   return (
@@ -423,9 +523,9 @@ export function NetworkPage({
       </header>
 
       <div className="page-body">
-        {refusal !== '' && (
+        {refusal !== null && (
           <p role="alert" className="notice notice-unknown">
-            {t('network.change.refused')} {refusal}
+            {t('network.change.refused')} {refusal.detail}
           </p>
         )}
         {operationUnavailable && (
@@ -552,6 +652,12 @@ export function NetworkPage({
               recoverManagementAccess !== undefined && (
                 <ManagementAccessPanel
                   read={readManagementAccess}
+                  observedStatus={
+                    managementAccess.state === 'read' ? managementAccess.value : null
+                  }
+                  onStatusChange={(value) =>
+                    setManagementAccess({ state: 'read', value })
+                  }
                   update={updateManagementAccess}
                   confirm={confirmManagementAccess}
                   recover={recoverManagementAccess}
@@ -826,6 +932,12 @@ export function NetworkPage({
             networks={deviceNetworks}
             interfaces={status.state === 'read' ? status.value.interfaces : []}
             profiles={wireGuardStatus?.profiles ?? []}
+            managementInterfaces={
+              managementAccess.state === 'read' ? managementAccess.value.interfaces : []
+            }
+            managementRoleState={
+              readManagementAccess === undefined ? 'read' : managementAccess.state
+            }
             canManage={canManageInterfaces && previewDeviceNetworkChange !== undefined}
             busy={busy}
             unreadable={deviceNetworksUnreadable}

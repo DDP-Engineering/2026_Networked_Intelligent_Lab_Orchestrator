@@ -930,6 +930,42 @@ export const en = {
   'network.management.state.applied': 'Applied and confirmed.',
   'network.management.state.failed': 'Apply or recovery failed.',
   'network.management.state.recovered': 'Last known-good access recovered.',
+  'network.management.outcome.startupRecovered':
+    'An unconfirmed change was restored during startup.',
+  'network.management.outcome.consolePending':
+    'Console reconfiguration requires confirmation.',
+  'network.management.outcome.roleConflictRecovered':
+    'Management access was removed from {interface} because {resource} owns its device role.',
+  'network.management.outcome.proposedRestored':
+    'The proposed change failed and the previous access was restored.',
+  'network.management.outcome.recoveryFailed':
+    'The proposed change and its automatic recovery both failed.',
+  'network.management.outcome.automaticRestored':
+    'The unconfirmed change was restored automatically.',
+  'network.role.deviceUnavailable':
+    'Assigned as the device-side adapter for {name}. Remove that assignment before enabling management access here.',
+  'network.role.managementUnavailable':
+    '{name} is reserved for management access. Confirm another management path and remove this adapter from management access before assigning it to a device network.',
+  'network.role.managementInventoryReading':
+    'Management adapter roles are still loading.',
+  'network.role.managementInventoryFailed': 'Management adapter roles are unavailable.',
+  'network.role.malformedConflict':
+    'The adapter role conflict could not be read. Refresh the network inventory before trying again.',
+  'network.role.unnamedDeviceNetwork': 'a saved device network',
+  'help.roles.open': 'How to repurpose an adapter',
+  'help.roles.title': 'Safe adapter repurposing',
+  'help.roles.goal':
+    'Move a physical adapter between management and device-facing use without losing the confirmed administration path.',
+  'help.roles.needs':
+    'Have a second connected management path, such as Wi-Fi or WireGuard, and verify its NILO URL first.',
+  'help.roles.example':
+    'To make a USB Ethernet adapter device-facing, keep Wi-Fi or WireGuard as management while changing its role.',
+  'help.roles.changes':
+    '1. Establish and confirm a replacement management path.\n2. Remove the adapter from management access and confirm that change.\n3. Assign the now-available adapter as the device-side adapter.',
+  'help.roles.external':
+    'NILO does not perform a one-click role swap. The replacement path must remain reachable between the separate confirmed changes.',
+  'help.roles.verify':
+    'After each confirmation, refresh both selectors. Keep current-session and last-management-route warnings visible and follow them before continuing.',
 } as const;
 
 /** Every key the interface may ask for. */

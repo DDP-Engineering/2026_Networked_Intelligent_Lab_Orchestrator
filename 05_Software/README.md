@@ -73,6 +73,9 @@ Important subdirectories:
 - `internal/store/sqlite/` — durable SQLite connection configuration,
   digest-verified migrations, and repositories for configuration, operations,
   policy, sessions, leases, credentials, audit events, and artifacts.
+- `internal/network/` — network observation and managed-change lifecycles,
+  including stable physical-adapter identity, exclusive management/device
+  roles, last-known-good recovery and the unprivileged role coordinator.
 - `internal/acceptance/` — black-box Increment 1 fixture using the real Go
   services, SQLite stores, supervisor, and fake Python child process.
 - `internal/buildinfo/` — version and integration-protocol metadata reported by
@@ -82,7 +85,9 @@ See `nilo_assistant/README.md` for the current command boundary.
 
 ## `nilo_gui/` - browser interface
 
-The Windows-native GUI project uses React, TypeScript, and Vite. Its direct npm
+The Windows-native GUI project uses React, TypeScript, and Vite. Its Network
+workspace keeps conflicting adapters visible but disabled, explains their
+existing role, and guides the confirmed three-step repurposing sequence. Its direct npm
 dependencies are exact and the committed lockfile records every transitive
 package and integrity digest. The current scaffold visibly identifies
 simulation but deliberately makes no backend request; authentication and the

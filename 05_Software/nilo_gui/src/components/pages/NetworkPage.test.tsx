@@ -9,6 +9,8 @@ import type {
   StatisticsPeriod,
 } from '../../api/contract';
 import type { DeviceNetwork } from '../../api/devicenetworks';
+import type { DeviceNetworkChange } from '../../api/devicenetworks';
+import type { ManagementAccessStatus } from '../../api/management-access';
 import type { WireGuardStatus } from '../../api/wireguard';
 import { renderInShell } from '../../test/render';
 import { NetworkPage } from './NetworkPage';
@@ -117,6 +119,37 @@ const status: NetworkStatus = {
   ],
 };
 
+const managementAccess: ManagementAccessStatus = {
+  state: 'applied',
+  port: 8443,
+  interfaces: [
+    {
+      name: 'enp1s0',
+      adapterId: '02:00:00:00:00:01',
+      kind: 'ethernet',
+      state: 'connected',
+      ipv4: ['192.168.10.24/24'],
+      ipv6: [],
+      enabled: true,
+      current: true,
+      usable: true,
+      role: 'management',
+      roleAvailable: true,
+      roleDetail: '',
+      conflictingResourceId: '',
+      conflictingResourceName: '',
+    },
+  ],
+  configuredInterfaces: ['enp1s0'],
+  urls: [],
+  tlsNames: [],
+  tlsMissing: [],
+  confirmBy: null,
+  detail: '',
+  outcome: { code: '', interface: '', resourceName: '' },
+  currentInterface: 'enp1s0',
+};
+
 const statistics: NetworkStatistics = {
   interfaceId: 'sim-enp1s0',
   period: '15m',
@@ -173,6 +206,10 @@ interface PageOverrides {
   listOperations?: () => Promise<NetworkOperation[]>;
   canManageInterfaces?: boolean;
   readDeviceNetworks?: () => Promise<DeviceNetwork[]>;
+  readManagementAccess?: () => Promise<ManagementAccessStatus>;
+  previewDeviceNetworkChange?: (
+    change: DeviceNetworkChange,
+  ) => Promise<NetworkOperation>;
   wireGuardStatus?: WireGuardStatus | null;
   previewInterfaceSettings?: () => Promise<NetworkOperation>;
 }
@@ -216,6 +253,8 @@ function renderPage(overrides: PageOverrides = {}, view: NetworkView = 'overview
       canManageInterfaces={overrides.canManageInterfaces ?? false}
       benchCoreReachable
       readDeviceNetworks={overrides.readDeviceNetworks}
+      readManagementAccess={overrides.readManagementAccess}
+      previewDeviceNetworkChange={overrides.previewDeviceNetworkChange}
       wireGuardStatus={overrides.wireGuardStatus ?? null}
       previewInterfaceSettings={overrides.previewInterfaceSettings}
     />,
@@ -224,6 +263,190 @@ function renderPage(overrides: PageOverrides = {}, view: NetworkView = 'overview
 }
 
 describe('NetworkPage', () => {
+  it('shares one management-role observation with the device selector', async () => {
+    const readManagementAccess = vi.fn(() => Promise.resolve(managementAccess));
+    renderPage(
+      {
+        canManageInterfaces: true,
+        readDeviceNetworks: () => Promise.resolve([lineThree]),
+        readManagementAccess,
+        previewDeviceNetworkChange: () => Promise.resolve(previewed),
+      },
+      'device-access',
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Add device network' }));
+    const editor = screen.getByRole('dialog', { name: 'New device network' });
+    expect(
+      within(within(editor).getByLabelText('Device-side adapter')).getByRole('option', {
+        name: /enp1s0/,
+      }),
+    ).toBeDisabled();
+    expect(readManagementAccess).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    [
+      'reading',
+      () => new Promise<ManagementAccessStatus>(() => undefined),
+      'Management adapter roles are still loading.',
+    ],
+    [
+      'failed',
+      () => Promise.reject(new Error('unavailable')),
+      'Management adapter roles are unavailable.',
+    ],
+  ] as const)(
+    'fails the device editor closed while management roles are %s',
+    async (_state, readManagementAccess, message) => {
+      renderPage(
+        {
+          canManageInterfaces: true,
+          readDeviceNetworks: () => Promise.resolve([lineThree]),
+          readManagementAccess,
+          previewDeviceNetworkChange: () => Promise.resolve(previewed),
+        },
+        'device-access',
+      );
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Add device network' }));
+      const editor = screen.getByRole('dialog', { name: 'New device network' });
+      expect(await within(editor).findByText(message)).toBeVisible();
+      expect(within(editor).getByLabelText('Device-side adapter')).toBeDisabled();
+      expect(within(editor).getByRole('button', { name: 'Preview' })).toBeDisabled();
+    },
+  );
+
+  it('retains a structured role conflict until observed state supersedes it', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const disabled = { ...lineThree, enabled: false, state: 'disabled' as const };
+    const readManagementAccess = vi
+      .fn()
+      .mockResolvedValueOnce(managementAccess)
+      .mockResolvedValueOnce(managementAccess)
+      .mockResolvedValue({
+        ...managementAccess,
+        interfaces: managementAccess.interfaces.map((entry) => ({
+          ...entry,
+          role: '' as const,
+          enabled: false,
+        })),
+        configuredInterfaces: [],
+      });
+    try {
+      renderPage(
+        {
+          canManageInterfaces: true,
+          readDeviceNetworks: () => Promise.resolve([disabled]),
+          readManagementAccess,
+          previewDeviceNetworkChange: () =>
+            Promise.reject(
+              new BenchCoreError(
+                'rejected',
+                'backend wording',
+                'network_interface_role_conflict',
+                {
+                  adapterId: '02:00:00:00:00:01',
+                  interface: 'enp1s0',
+                  existingRole: 'management',
+                  requestedRole: 'device',
+                  conflictingResourceId: '',
+                  conflictingResourceName: '',
+                },
+              ),
+            ),
+        },
+        'device-access',
+      );
+
+      await screen.findByText('Line 3');
+      chooseAction('Line 3', 'Enable Line 3');
+
+      expect(
+        await screen.findByText(/enp1s0 is reserved for management access/i),
+      ).toBeVisible();
+      expect(screen.queryByText('backend wording')).toBeNull();
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(screen.getByText(/enp1s0 is reserved for management access/i)).toBeVisible();
+      await vi.advanceTimersByTimeAsync(5000);
+      await waitFor(() =>
+        expect(
+          screen.queryByText(/enp1s0 is reserved for management access/i),
+        ).toBeNull(),
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('never renders backend prose for malformed structured role conflicts', async () => {
+    renderPage(
+      {
+        canManageInterfaces: true,
+        readDeviceNetworks: () => Promise.resolve([
+          { ...lineThree, enabled: false, state: 'disabled' as const },
+        ]),
+        previewDeviceNetworkChange: () =>
+          Promise.reject(
+            new BenchCoreError(
+              'rejected',
+              'untrusted backend role wording',
+              'network_interface_role_conflict',
+            ),
+          ),
+      },
+      'device-access',
+    );
+
+    await screen.findByText('Line 3');
+    chooseAction('Line 3', 'Enable Line 3');
+    expect(await screen.findByText(/adapter role conflict could not be read/i)).toBeVisible();
+    expect(screen.queryByText('untrusted backend role wording')).toBeNull();
+  });
+
+  it('preserves typed adapter detail when acknowledgement finds a new role conflict', async () => {
+    const disabled = { ...lineThree, enabled: false, state: 'disabled' as const };
+    const acknowledgeOperation = vi.fn(() =>
+      Promise.reject(
+        new BenchCoreError(
+          'rejected',
+          'untrusted acknowledgement wording',
+          'network_interface_role_conflict',
+          {
+            adapterId: '02:00:00:00:00:01',
+            interface: 'enp1s0',
+            existingRole: 'management',
+            requestedRole: 'device',
+            conflictingResourceId: '',
+            conflictingResourceName: '',
+          },
+        ),
+      ),
+    );
+    renderPage(
+      {
+        canManageInterfaces: true,
+        readDeviceNetworks: () => Promise.resolve([disabled]),
+        previewDeviceNetworkChange: () => Promise.resolve(previewed),
+        acknowledgeOperation,
+      },
+      'device-access',
+    );
+
+    await screen.findByText('Line 3');
+    chooseAction('Line 3', 'Enable Line 3');
+    fireEvent.click(
+      within(await screen.findByRole('dialog')).getByRole('button', {
+        name: /^apply$/i,
+      }),
+    );
+
+    expect(
+      await screen.findByText(/enp1s0 is reserved for management access/i),
+    ).toBeVisible();
+    expect(screen.queryByText('untrusted acknowledgement wording')).toBeNull();
+  });
+
   // REQ-UX-b555166c: each destination carries only its own concern.
   it.each([
     [

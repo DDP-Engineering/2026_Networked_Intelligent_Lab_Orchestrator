@@ -1,13 +1,16 @@
 package httpapi
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
 	"testing"
 
 	"nilo.local/nilo/internal/auth"
+	"nilo.local/nilo/internal/network"
 	"nilo.local/nilo/internal/simulation"
+	"nilo.local/nilo/internal/store/sqlite"
 )
 
 const lineBody = `{"action":"create","device_network":{"name":"Line 3","location":"Hall B","device_interface":"02:00:00:00:00:02","appliance_address":"192.168.0.1/24","scope":"host","target":"192.168.0.130","addressing":"original","access":"local","local_interface":"02:00:00:00:00:01","local_sources":["192.168.10.0/24"]}}`
@@ -82,6 +85,35 @@ func TestDeviceNetworkRoutesDriveTheLifecycle(t *testing.T) {
 	f.post("/api/v1/network/operations/"+remove.ID+"/confirm", token, `{}`)
 	if r := f.get("/api/v1/network/device-networks/"+id, token); r.Code != http.StatusNotFound {
 		t.Fatalf("read after delete: %d", r.Code)
+	}
+}
+
+func TestDeviceNetworkPreviewReturnsStructuredManagementRoleConflict(t *testing.T) {
+	f := newAPIFixture(t, simulation.ScenarioHealthy, CookieDevelopmentLocalhost)
+	configuration := network.ManagementAccessConfiguration{
+		Interfaces: []string{"enp1s0"}, Port: 8443, TLSNames: []string{"ddp-remote.local"},
+	}
+	management, err := network.NewManagementAccessService(context.Background(), network.ManagementAccessOptions{
+		Provider: f.provider, Store: sqlite.NewManagementAccessRepository(f.database),
+		Firewall: noOpManagementFirewall{}, Initial: &configuration,
+		Coordinator: f.provider.AdapterRoleCoordinator(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	options := f.options
+	options.ManagementAccess = management
+	f.handler, err = NewHandler(options)
+	if err != nil {
+		t.Fatal(err)
+	}
+	token := f.issueToken(t, "admin", "device-role-conflict", nil, nil)
+	body := strings.Replace(lineBody, `"device_interface":"02:00:00:00:00:02"`, `"device_interface":"02:00:00:00:00:01"`, 1)
+	body = strings.Replace(body, `"local_interface":"02:00:00:00:00:01"`, `"local_interface":"02:00:00:00:00:02"`, 1)
+	response := f.post("/api/v1/network/device-networks/preview", token, body)
+	if response.Code != http.StatusConflict || !strings.Contains(response.Body.String(), `"error":"network_interface_role_conflict"`) ||
+		!strings.Contains(response.Body.String(), `"existing_role":"management"`) {
+		t.Fatalf("conflict status=%d body=%s", response.Code, response.Body.String())
 	}
 }
 

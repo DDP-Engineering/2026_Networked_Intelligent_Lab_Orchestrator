@@ -1,0 +1,44 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-REL-a03b5a30"
+
+title = "Recover legacy adapter-role conflicts through a safe management path"
+
+status = "active"
+
+requirement = """
+When startup or maintenance reconciliation finds a physical adapter in both persisted roles and another non-conflicting usable management path exists, the appliance shall remove the conflicting management binding, apply and persist the safe allowlist, report the management state as recovered with the adapter conflict identified, and accept requests only through the retained management paths.
+"""
+
+verification = "A startup/reconciliation test loads legacy conflicts alongside a usable Ethernet or WireGuard management path, asserts device-facing intent is retained, the conflicting management binding is absent from active and last-known-good state, the recovered detail names only safe adapter metadata, and the destination gate admits only the retained paths after restart."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/adapter_roles.go",
+    "05_Software/nilo_assistant/internal/network/management_access.go",
+    "05_Software/nilo_assistant/internal/network/device_network_manager.go",
+    "05_Software/nilo_assistant/internal/network/appliance_device_networks.go",
+    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/nilo_assistant/internal/network/profile_manager_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/management_access_test.go::TestManagementAccessStartupRecoversAConflictThroughTheRetainedPath",
+    "05_Software/nilo_assistant/internal/network/management_access_test.go::TestManagementAccessMaintenanceReconcilesRolesBeforeOpeningARenamedPath",
+    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestApplianceDefersDeviceForwardingUntilExplicitStartupReconciliation",
+]
+
+
+spec = "specs/REQ-SEC-b8719eb2.md"
+
+priority = "high"
+rationale = "Legacy state must recover without preserving exposure on a device network or unnecessarily removing every management route."
+
+created = 2026-09-11
+updated = 2026-09-11

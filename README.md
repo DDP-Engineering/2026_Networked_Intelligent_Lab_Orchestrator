@@ -39,7 +39,7 @@ tests do not establish electrical accuracy or production hardware acceptance.
 | Access control | Administrator, Operator and Viewer roles; scoped API tokens; operation approval policies |
 | Plugin management | Curated bundles with explicit install, enable, disable, restart and uninstall operations |
 | Instrument operations | Durable transaction IDs, bounded queues, device ownership, cancellation, deadlines and retained artifacts |
-| Networking | Adapter configuration, Wi-Fi scan/join, managed WireGuard profiles and local/VPN device access through the Linux helper |
+| Networking | Adapter configuration, exclusive management/device roles by stable hardware identity, Wi-Fi scan/join, managed WireGuard profiles and local/VPN device access through the Linux helper |
 | Activity | Filtered audit history, export and retention controls |
 
 For exact commands, limits and permissions, use the linked guides below.

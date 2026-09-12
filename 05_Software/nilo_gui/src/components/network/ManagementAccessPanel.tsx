@@ -1,11 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import type { ManagementAccessStatus } from '../../api/management-access';
+import type {
+  AdapterRoleConflict,
+  ManagementAccessStatus,
+} from '../../api/management-access';
+import { BenchCoreError } from '../../api/client';
 import type { MessageKey } from '../../i18n/en';
 import { useTranslate } from '../../i18n/languages';
+import { WorkflowHelp } from '../help/WorkflowHelp';
 
 export interface ManagementAccessPanelProps {
   read: () => Promise<ManagementAccessStatus>;
+  /** Shared observation owned by NetworkPage; omitted in isolated use/tests. */
+  observedStatus?: ManagementAccessStatus | null;
+  onStatusChange?: (status: ManagementAccessStatus) => void;
   update: (
     interfaces: string[],
     confirmCurrentInterface: boolean,
@@ -30,46 +38,132 @@ const INTERFACE_STATE_KEYS: Record<
   unavailable: 'network.state.unavailable',
 };
 
+interface FailureNotice {
+  detail: string;
+  conflict: AdapterRoleConflict | null;
+}
+
+function sameAdapter(first: string, second: string): boolean {
+  return first.trim().toLowerCase() === second.trim().toLowerCase();
+}
+
+function reconcileFailure(
+  current: FailureNotice | null,
+  status: ManagementAccessStatus,
+): FailureNotice | null {
+  if (current === null) return null;
+  const conflict = current.conflict;
+  if (conflict === null) return null;
+  return status.interfaces.some(
+    (entry) =>
+      sameAdapter(entry.adapterId, conflict.adapterId) &&
+      entry.role === conflict.existingRole,
+  )
+    ? current
+    : null;
+}
+
 /** Administrator-only management listener configuration and recovery. */
 export function ManagementAccessPanel({
   read,
+  observedStatus,
+  onStatusChange,
   update,
   confirm,
   recover,
 }: ManagementAccessPanelProps) {
   const t = useTranslate();
-  const [status, setStatus] = useState<ManagementAccessStatus | null>(null);
-  const [selected, setSelected] = useState<string[]>([]);
+  const [localStatus, setLocalStatus] = useState<ManagementAccessStatus | null>(null);
+  const [selected, setSelected] = useState<string[] | null>(null);
   const [working, setWorking] = useState(false);
-  const [failure, setFailure] = useState('');
+  const [failure, setFailure] = useState<FailureNotice | null>(null);
   const [warnCurrent, setWarnCurrent] = useState(false);
+  const status = observedStatus === undefined ? localStatus : observedStatus;
+  const selectedInterfaces = useMemo(
+    () => selected ?? status?.configuredInterfaces ?? [],
+    [selected, status],
+  );
+  const outcomeDetail = useMemo(() => {
+    if (status === null || status.outcome.code === '') return '';
+    switch (status.outcome.code) {
+      case 'startup_recovered':
+        return t('network.management.outcome.startupRecovered');
+      case 'console_confirmation_required':
+        return t('network.management.outcome.consolePending');
+      case 'role_conflict_recovered':
+        return t('network.management.outcome.roleConflictRecovered', {
+          interface: status.outcome.interface || t('network.dn.unnamed'),
+          resource:
+            status.outcome.resourceName || t('network.role.unnamedDeviceNetwork'),
+        });
+      case 'proposed_change_restored':
+        return t('network.management.outcome.proposedRestored');
+      case 'recovery_failed':
+      case 'automatic_recovery_failed':
+        return t('network.management.outcome.recoveryFailed');
+      case 'automatic_change_restored':
+        return t('network.management.outcome.automaticRestored');
+    }
+  }, [status, t]);
+  const describeFailure = useCallback(
+    (error: unknown): FailureNotice => {
+      if (error instanceof BenchCoreError) {
+        const conflict = error.adapterRoleConflict;
+        if (conflict?.existingRole === 'device') {
+          return {
+            detail: t('network.role.deviceUnavailable', {
+              name:
+                conflict.conflictingResourceName ||
+                t('network.role.unnamedDeviceNetwork'),
+            }),
+            conflict,
+          };
+        }
+        if (conflict?.existingRole === 'management') {
+          return {
+            detail: t('network.role.managementUnavailable', {
+              name: conflict.interface || conflict.adapterId,
+            }),
+            conflict,
+          };
+        }
+        if (error.code === 'network_interface_role_conflict') {
+          return { detail: t('network.role.malformedConflict'), conflict: null };
+        }
+        return { detail: error.detail, conflict: null };
+      }
+      return {
+        detail: error instanceof Error ? error.message : String(error),
+        conflict: null,
+      };
+    },
+    [t],
+  );
 
   const load = useCallback(async () => {
     try {
       const value = await read();
-      setStatus(value);
-      setSelected(value.configuredInterfaces);
-      setFailure('');
+      setLocalStatus(value);
+      onStatusChange?.(value);
+      setSelected(null);
+      setFailure((current) => reconcileFailure(current, value));
     } catch (error) {
-      setFailure(error instanceof Error ? error.message : String(error));
+      setFailure(describeFailure(error));
     }
-  }, [read]);
+  }, [describeFailure, onStatusChange, read]);
 
   useEffect(() => {
+    if (observedStatus !== undefined) return;
     let abandoned = false;
     const refresh = async () => {
       try {
         const value = await read();
         if (!abandoned) {
-          setStatus(value);
-          setSelected((current) =>
-            current.length === 0 ? value.configuredInterfaces : current,
-          );
-          setFailure('');
+          setLocalStatus(value);
+          setFailure((current) => reconcileFailure(current, value));
         }
       } catch (error) {
-        if (!abandoned)
-          setFailure(error instanceof Error ? error.message : String(error));
+        if (!abandoned) setFailure(describeFailure(error));
       }
     };
     void refresh();
@@ -78,36 +172,46 @@ export function ManagementAccessPanel({
       abandoned = true;
       clearInterval(timer);
     };
-  }, [read]);
+  }, [describeFailure, observedStatus, read]);
+
+  useEffect(() => {
+    if (observedStatus !== undefined && observedStatus !== null) {
+      setFailure((current) => reconcileFailure(current, observedStatus));
+    }
+  }, [observedStatus]);
 
   const usableSelected = useMemo(
     () =>
       status?.interfaces.some(
-        (entry) => entry.usable && selected.includes(entry.name),
+        (entry) => entry.usable && selectedInterfaces.includes(entry.name),
       ) ?? false,
-    [selected, status],
+    [selectedInterfaces, status],
   );
 
   const apply = useCallback(
     async (confirmCurrentInterface: boolean) => {
       setWorking(true);
-      setFailure('');
+      setFailure(null);
       try {
-        const value = await update(selected, confirmCurrentInterface);
-        setStatus(value);
-        setSelected(value.configuredInterfaces);
+        const value = await update(selectedInterfaces, confirmCurrentInterface);
+        setLocalStatus(value);
+        onStatusChange?.(value);
+        setSelected(null);
         setWarnCurrent(false);
       } catch (error) {
-        setFailure(error instanceof Error ? error.message : String(error));
+        setFailure(describeFailure(error));
       } finally {
         setWorking(false);
       }
     },
-    [selected, update],
+    [describeFailure, onStatusChange, selectedInterfaces, update],
   );
 
   const save = () => {
-    if (status?.currentInterface && !selected.includes(status.currentInterface)) {
+    if (
+      status?.currentInterface &&
+      !selectedInterfaces.includes(status.currentInterface)
+    ) {
       setWarnCurrent(true);
       return;
     }
@@ -116,13 +220,14 @@ export function ManagementAccessPanel({
 
   const settle = async (operation: () => Promise<ManagementAccessStatus>) => {
     setWorking(true);
-    setFailure('');
+    setFailure(null);
     try {
       const value = await operation();
-      setStatus(value);
-      setSelected(value.configuredInterfaces);
+      setLocalStatus(value);
+      onStatusChange?.(value);
+      setSelected(null);
     } catch (error) {
-      setFailure(error instanceof Error ? error.message : String(error));
+      setFailure(describeFailure(error));
     } finally {
       setWorking(false);
     }
@@ -135,14 +240,21 @@ export function ManagementAccessPanel({
           <h3 id="management-access-title">{t('network.management.title')}</h3>
           <p>{t('network.management.body')}</p>
         </div>
-        <button type="button" onClick={() => void load()} disabled={working}>
-          {t('network.management.refresh')}
-        </button>
+        <div className="form-actions">
+          <WorkflowHelp
+            prefix="help.roles"
+            title={t('help.roles.title')}
+            buttonLabel={t('help.roles.open')}
+          />
+          <button type="button" onClick={() => void load()} disabled={working}>
+            {t('network.management.refresh')}
+          </button>
+        </div>
       </div>
 
-      {failure !== '' && (
+      {failure !== null && (
         <p className="notice notice-unknown" role="alert">
-          {failure}
+          {failure.detail}
         </p>
       )}
       {status === null ? (
@@ -154,7 +266,7 @@ export function ManagementAccessPanel({
             role="status"
           >
             {t(ACCESS_STATE_KEYS[status.state])}
-            {status.detail === '' ? '' : ` ${status.detail}`}
+            {outcomeDetail === '' ? '' : ` ${outcomeDetail}`}
           </p>
           {status.tlsMissing.length > 0 && (
             <p className="notice notice-unknown" role="alert">
@@ -182,16 +294,36 @@ export function ManagementAccessPanel({
                         aria-label={t('network.management.toggle', {
                           name: entry.name,
                         })}
-                        checked={selected.includes(entry.name)}
-                        disabled={working || entry.kind === 'loopback'}
+                        checked={selectedInterfaces.includes(entry.name)}
+                        disabled={
+                          working || entry.kind === 'loopback' || !entry.roleAvailable
+                        }
+                        aria-describedby={
+                          !entry.roleAvailable
+                            ? `management-role-conflict-${entry.adapterId}`
+                            : undefined
+                        }
                         onChange={(event) =>
-                          setSelected((current) =>
-                            event.target.checked
-                              ? [...current, entry.name]
-                              : current.filter((name) => name !== entry.name),
-                          )
+                          setSelected((current) => {
+                            const selection = current ?? selectedInterfaces;
+                            return event.target.checked
+                              ? [...selection, entry.name]
+                              : selection.filter((name) => name !== entry.name);
+                          })
                         }
                       />
+                      {!entry.roleAvailable && entry.role === 'device' && (
+                        <small
+                          id={`management-role-conflict-${entry.adapterId}`}
+                          className="network-secondary"
+                        >
+                          {t('network.role.deviceUnavailable', {
+                            name:
+                              entry.conflictingResourceName ||
+                              t('network.role.unnamedDeviceNetwork'),
+                          })}
+                        </small>
+                      )}
                     </td>
                     <th scope="row">
                       {entry.name}

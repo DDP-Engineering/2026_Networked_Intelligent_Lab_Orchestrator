@@ -9,9 +9,11 @@ const SECTIONS = ['goal', 'needs', 'example', 'changes', 'external', 'verify'] a
 
 export interface WorkflowHelpProps {
   /** Catalogue prefix, for example `help.dn`; the six sections hang off it. */
-  prefix: 'help.dn' | 'help.if' | 'help.auth';
+  prefix: 'help.dn' | 'help.if' | 'help.auth' | 'help.roles';
   /** The dialog title. */
   title: string;
+  /** Optional task-specific trigger text. */
+  buttonLabel?: string;
 }
 
 /**
@@ -22,14 +24,14 @@ export interface WorkflowHelpProps {
  * verify and recover. It chooses nothing and applies nothing; the editor it
  * sits in does that, with the operator.
  */
-export function WorkflowHelp({ prefix, title }: WorkflowHelpProps) {
+export function WorkflowHelp({ prefix, title, buttonLabel }: WorkflowHelpProps) {
   const t = useTranslate();
   const [open, setOpen] = useState(false);
 
   return (
     <>
       <button type="button" className="button" onClick={() => setOpen(true)}>
-        {t('help.howTo')}
+        {buttonLabel ?? t('help.howTo')}
       </button>
       {open ? (
         <Modal title={title} onDismiss={() => setOpen(false)}>

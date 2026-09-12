@@ -123,7 +123,7 @@ func (s *Simulation) UseDeviceNetworkStore(ctx context.Context, store DeviceNetw
 		manager, err := NewDeviceNetworkManager(DeviceNetworkManagerOptions{
 			Forwarder: s.forwarder, Environment: simulationEnvironment{s: s}, Now: s.now,
 			NewID:  func() string { return "sim-dn-" + randomIdentity()[:8] },
-			Prober: s.simulatedProbe, Audit: s.audit,
+			Prober: s.simulatedProbe, Audit: s.audit, Coordinator: s.roleCoordinator,
 		})
 		if err != nil {
 			return err
@@ -142,7 +142,9 @@ func (s *Simulation) UseDeviceNetworkStore(ctx context.Context, store DeviceNetw
 func (s *Simulation) DeviceNetworks(ctx context.Context) ([]DeviceNetworkStatus, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.expire()
+	if err := s.expire(); err != nil {
+		return nil, err
+	}
 	if s.deviceNetworks == nil {
 		return []DeviceNetworkStatus{}, nil
 	}
@@ -230,27 +232,16 @@ func (s *Simulation) snapshotDeviceNetworks() {
 
 // restoreDeviceNetworks puts the saved decisions and the installed forwarding
 // back as they were when the checkpoint was armed. Called with the lock held.
-func (s *Simulation) restoreDeviceNetworks(ctx context.Context) {
+// The manager path refreshes its durable adapter-role cache only after every
+// store mutation succeeds.
+func (s *Simulation) restoreDeviceNetworks(ctx context.Context) error {
+	if s.deviceNetworks != nil && s.savedNetworks != nil {
+		if err := s.deviceNetworks.RestoreSnapshot(ctx, s.savedNetworks); err != nil {
+			return err
+		}
+	}
 	if s.forwarder != nil && s.savedForwarding != nil {
 		s.forwarder.restore(s.savedForwarding)
 	}
-	if s.deviceNetworks == nil || s.savedNetworks == nil {
-		return
-	}
-	store, err := s.deviceNetworks.storeOrErr()
-	if err != nil {
-		return
-	}
-	saved := map[string]bool{}
-	for _, record := range s.savedNetworks {
-		saved[record.ID] = true
-		_, _ = store.Save(ctx, record, record.UpdatedAt)
-	}
-	if current, err := store.List(ctx); err == nil {
-		for _, record := range current {
-			if !saved[record.ID] {
-				_ = store.Delete(ctx, record.ID)
-			}
-		}
-	}
+	return nil
 }

@@ -2,6 +2,7 @@ package network
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"sort"
 	"strings"
@@ -177,7 +178,12 @@ func (spy *tunnelDriverSpy) setActive(connectionRef string) {
 type baseSpy struct {
 	armed      []Change
 	applied    []Change
+	restored   []Checkpoint
+	discarded  []Checkpoint
+	restoreCtx []error
 	interfaces []Interface
+	recovery   RecoveryOutcome
+	recovered  bool
 	staged     []string
 	bound      []string
 	dropped    []string
@@ -212,8 +218,15 @@ func (spy *baseSpy) ApplyChange(_ context.Context, change Change) error {
 	spy.applied = append(spy.applied, change)
 	return nil
 }
-func (spy *baseSpy) Restore(context.Context, Checkpoint) (bool, error) { return true, nil }
-func (spy *baseSpy) Discard(context.Context, Checkpoint) error         { return nil }
+func (spy *baseSpy) Restore(ctx context.Context, checkpoint Checkpoint) (bool, error) {
+	spy.restored = append(spy.restored, checkpoint)
+	spy.restoreCtx = append(spy.restoreCtx, ctx.Err())
+	return true, nil
+}
+func (spy *baseSpy) Discard(_ context.Context, checkpoint Checkpoint) error {
+	spy.discarded = append(spy.discarded, checkpoint)
+	return nil
+}
 func (spy *baseSpy) StageSecrets(_ context.Context, secrets Secrets) (string, error) {
 	spy.counter++
 	handle := strings.Repeat("a", 60) + string(rune('0'+spy.counter)) + "000"
@@ -236,6 +249,9 @@ func (spy *baseSpy) StartInstall(context.Context, string, string) (Operation, er
 }
 func (spy *baseSpy) PollInstall(context.Context, string) (Operation, error) {
 	return Operation{}, ErrUnsupported
+}
+func (spy *baseSpy) LastRecovery(context.Context) (RecoveryOutcome, bool, error) {
+	return spy.recovery, spy.recovered, nil
 }
 
 type applianceHarness struct {
@@ -294,6 +310,74 @@ func (applianceForwarderSpy) AppliedForwarding(context.Context) ([]ForwardingPla
 	return nil, nil
 }
 
+type startupForwarderSpy struct{ applied []ForwardingPlan }
+
+func (spy *startupForwarderSpy) ApplyForwarding(_ context.Context, plan ForwardingPlan) error {
+	spy.applied = append(spy.applied, plan)
+	return nil
+}
+func (*startupForwarderSpy) RemoveForwarding(context.Context, string) error { return nil }
+func (spy *startupForwarderSpy) AppliedForwarding(context.Context) ([]ForwardingPlan, error) {
+	return append([]ForwardingPlan(nil), spy.applied...), nil
+}
+
+type interceptOperationStore struct {
+	delegate     *operationStoreSpy
+	mu           sync.Mutex
+	saves        int
+	beforeReturn func(context.Context, int, OperationRecord) error
+}
+
+func (store *interceptOperationStore) Save(ctx context.Context, record OperationRecord) error {
+	store.mu.Lock()
+	store.saves++
+	call := store.saves
+	store.mu.Unlock()
+	if store.beforeReturn != nil {
+		if err := store.beforeReturn(ctx, call, record); err != nil {
+			return err
+		}
+	}
+	return store.delegate.Save(ctx, record)
+}
+
+func (store *interceptOperationStore) Unfinished(ctx context.Context) ([]OperationRecord, error) {
+	return store.delegate.Unfinished(ctx)
+}
+
+func (store *interceptOperationStore) Recent(ctx context.Context, limit int) ([]OperationRecord, error) {
+	return store.delegate.Recent(ctx, limit)
+}
+
+func TestApplianceDefersDeviceForwardingUntilExplicitStartupReconciliation(t *testing.T) {
+	harness := newApplianceHarness(t)
+	proposal := validHost(t)
+	proposal.ID = "device-network-1"
+	proposal.StartEnabled = true
+	harness.base.interfaces = []Interface{
+		{ID: "nm-device", Name: "eth0", AdapterID: proposal.DeviceInterface, Kind: KindEthernet, State: StateConnected, IPv4: []string{proposal.ApplianceAddress.String()}, Controllable: true},
+		{ID: "nm-local", Name: "wlan0", AdapterID: proposal.LocalInterface, Kind: KindWiFi, State: StateConnected, IPv4: []string{"192.168.1.103/24"}, Controllable: true},
+	}
+	store := newMemoryDeviceNetworkStore()
+	if _, err := store.Save(context.Background(), proposal, harness.now); err != nil {
+		t.Fatal(err)
+	}
+	forwarder := &startupForwarderSpy{}
+	harness.appliance.UseForwarder(forwarder)
+	if err := harness.appliance.UseDeviceNetworkStore(context.Background(), store); err != nil {
+		t.Fatal(err)
+	}
+	if len(forwarder.applied) != 0 {
+		t.Fatalf("store attachment installed forwarding: %+v", forwarder.applied)
+	}
+	if err := harness.appliance.ReconcileDeviceNetworks(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if len(forwarder.applied) != 1 || forwarder.applied[0].DeviceNetworkID != proposal.ID {
+		t.Fatalf("explicit reconciliation=%+v", forwarder.applied)
+	}
+}
+
 func TestApplianceCreateSavesDisabledDeviceNetworkWithoutHelperCheckpoint(t *testing.T) {
 	t.Parallel()
 	harness := newApplianceHarness(t)
@@ -313,6 +397,471 @@ func TestApplianceCreateSavesDisabledDeviceNetworkWithoutHelperCheckpoint(t *tes
 	}
 	if len(harness.base.armed) != 0 || len(harness.base.applied) != 0 {
 		t.Fatalf("disabled create touched helper recovery: armed=%v applied=%v", harness.base.armed, harness.base.applied)
+	}
+}
+
+func TestApplianceRetainsOldAndNewDeviceRoleClaimsUntilConfirmation(t *testing.T) {
+	harness := newApplianceHarness(t)
+	proposal := validHost(t)
+	newAdapterID := "aa:bb:cc:dd:ee:03"
+	harness.base.interfaces = []Interface{
+		{ID: "nm-device-old", Name: "eth0", AdapterID: proposal.DeviceInterface, Kind: KindEthernet, State: StateConnected, IPv4: []string{proposal.ApplianceAddress.String()}, Controllable: true},
+		{ID: "nm-local", Name: "wlan0", AdapterID: proposal.LocalInterface, Kind: KindWiFi, State: StateConnected, IPv4: []string{"192.168.1.103/24"}, Controllable: true},
+		{ID: "nm-device-new", Name: "enx1", AdapterID: newAdapterID, Kind: KindEthernet, State: StateDisconnected, Controllable: true},
+	}
+	harness.appliance.UseForwarder(applianceForwarderSpy{})
+	store := newMemoryDeviceNetworkStore()
+	if err := harness.appliance.UseDeviceNetworkStore(context.Background(), store); err != nil {
+		t.Fatal(err)
+	}
+	created := harness.run(t, Change{Action: ActionDeviceNetworkCreate, Target: "new", DeviceNetwork: &proposal})
+	if created.State != StateConfirmed {
+		t.Fatalf("create=%+v", created)
+	}
+	records, _ := store.List(context.Background())
+	edited := records[0]
+	edited.DeviceInterface = newAdapterID
+	pending := harness.run(t, Change{Action: ActionDeviceNetworkUpdate, Target: edited.ID, DeviceNetwork: &edited})
+	if pending.State != StateAwaitingConfirmation {
+		t.Fatalf("update=%+v", pending)
+	}
+	for _, adapterID := range []string{proposal.DeviceInterface, newAdapterID} {
+		err := harness.appliance.AdapterRoleCoordinator().Check([]AdapterRoleClaim{{AdapterID: adapterID, Role: AdapterRoleManagement}})
+		var conflict *AdapterRoleConflictError
+		if !errors.As(err, &conflict) {
+			t.Fatalf("pending adapter %s was not reserved: %v", adapterID, err)
+		}
+	}
+	if _, err := harness.manager.Confirm(context.Background(), firstActor, pending.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := harness.appliance.AdapterRoleCoordinator().Check([]AdapterRoleClaim{{AdapterID: proposal.DeviceInterface, Role: AdapterRoleManagement}}); err != nil {
+		t.Fatalf("old role remained reserved after confirmation: %v", err)
+	}
+	if err := harness.appliance.AdapterRoleCoordinator().Check([]AdapterRoleClaim{{AdapterID: newAdapterID, Role: AdapterRoleManagement}}); err == nil {
+		t.Fatal("confirmed device adapter lost its durable role claim")
+	}
+}
+
+func TestApplianceRehydratesDeviceNetworkRecoveryAcrossRestart(t *testing.T) {
+	for _, test := range []struct {
+		name      string
+		action    Action
+		phase     string
+		wantCount int
+		wantOld   bool
+		wantNew   bool
+		wantState OperationState
+	}{
+		{name: "update still applied", action: ActionDeviceNetworkUpdate, phase: "applied", wantCount: 1, wantOld: true, wantNew: true, wantState: StateAwaitingConfirmation},
+		{name: "update restored", action: ActionDeviceNetworkUpdate, phase: "restored", wantCount: 1, wantOld: true, wantNew: false, wantState: StateRolledBack},
+		{name: "update recovery failed", action: ActionDeviceNetworkUpdate, phase: "recovery_failed", wantCount: 1, wantOld: true, wantNew: true, wantState: StateRollbackFailed},
+		{name: "update confirmed", action: ActionDeviceNetworkUpdate, phase: "confirmed", wantCount: 1, wantOld: false, wantNew: true, wantState: StateConfirmed},
+		{name: "delete still applied", action: ActionDeviceNetworkDelete, phase: "applied", wantCount: 0, wantOld: true, wantNew: false, wantState: StateAwaitingConfirmation},
+		{name: "delete restored", action: ActionDeviceNetworkDelete, phase: "restored", wantCount: 1, wantOld: true, wantNew: false, wantState: StateRolledBack},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			ctx := context.Background()
+			original := validHost(t)
+			original.ID = "device-network-1"
+			newAdapterID := "aa:bb:cc:dd:ee:03"
+			interfaces := []Interface{
+				{ID: "nm-device-old", Name: "eth0", AdapterID: original.DeviceInterface, Kind: KindEthernet, State: StateConnected, IPv4: []string{original.ApplianceAddress.String()}, Controllable: true},
+				{ID: "nm-local", Name: "wlan0", AdapterID: original.LocalInterface, Kind: KindWiFi, State: StateConnected, IPv4: []string{"192.168.1.103/24"}, Controllable: true},
+				{ID: "nm-device-new", Name: "eth1", AdapterID: newAdapterID, Kind: KindEthernet, State: StateDisconnected, Controllable: true},
+			}
+			deviceStore := newMemoryDeviceNetworkStore()
+			if _, err := deviceStore.Save(ctx, original, time.Date(2026, 9, 12, 0, 0, 0, 0, time.UTC)); err != nil {
+				t.Fatal(err)
+			}
+			operationStore := &operationStoreSpy{}
+			first := newApplianceHarness(t)
+			first.base.interfaces = interfaces
+			first.appliance.UseForwarder(applianceForwarderSpy{})
+			if err := first.appliance.UseDeviceNetworkStore(ctx, deviceStore); err != nil {
+				t.Fatal(err)
+			}
+			manager, err := NewOperationManager(OperationManagerOptions{
+				Changer: first.appliance, Observer: first.appliance,
+				Now: func() time.Time { return first.now }, NewID: sequentialIDs(),
+				Store: operationStore, Audit: first.journal, Recovery: first.appliance,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			first.manager = manager
+			change := Change{Action: test.action, Target: original.ID}
+			if test.action == ActionDeviceNetworkUpdate {
+				edited := original
+				edited.DeviceInterface = newAdapterID
+				change.DeviceNetwork = &edited
+			}
+			pending := first.run(t, change)
+			if pending.State != StateAwaitingConfirmation {
+				t.Fatalf("initial operation=%+v", pending)
+			}
+
+			second := newApplianceHarness(t)
+			second.base.interfaces = interfaces
+			second.base.recovery = RecoveryOutcome{OperationID: pending.ID, Phase: test.phase}
+			second.base.recovered = true
+			second.appliance.UseForwarder(applianceForwarderSpy{})
+			if err := second.appliance.UseDeviceNetworkStore(ctx, deviceStore); err != nil {
+				t.Fatal(err)
+			}
+			restarted, err := NewOperationManager(OperationManagerOptions{
+				Changer: second.appliance, Observer: second.appliance,
+				Now: func() time.Time { return second.now }, NewID: sequentialIDs(),
+				Store: operationStore, Audit: second.journal, Recovery: second.appliance,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := restarted.Adopt(ctx); err != nil {
+				t.Fatal(err)
+			}
+			if err := restarted.Reconcile(ctx); err != nil {
+				t.Fatal(err)
+			}
+			adopted, err := restarted.Get(pending.ID)
+			if err != nil || adopted.State != test.wantState {
+				t.Fatalf("adopted state=%+v error=%v, want %s", adopted, err, test.wantState)
+			}
+			records, err := deviceStore.List(ctx)
+			if err != nil || len(records) != test.wantCount {
+				t.Fatalf("records=%+v error=%v, want count %d", records, err, test.wantCount)
+			}
+			if test.wantCount == 1 {
+				wantAdapter := original.DeviceInterface
+				if test.wantNew {
+					wantAdapter = newAdapterID
+				}
+				if records[0].DeviceInterface != wantAdapter {
+					t.Fatalf("stored adapter=%q, want %q", records[0].DeviceInterface, wantAdapter)
+				}
+			}
+			for _, claim := range []struct {
+				adapter string
+				blocked bool
+			}{{original.DeviceInterface, test.wantOld}, {newAdapterID, test.wantNew}} {
+				err := second.appliance.AdapterRoleCoordinator().Check([]AdapterRoleClaim{{AdapterID: claim.adapter, Role: AdapterRoleManagement}})
+				if (err != nil) != claim.blocked {
+					t.Fatalf("management check for %s error=%v, blocked want %t", claim.adapter, err, claim.blocked)
+				}
+			}
+		})
+	}
+}
+
+func TestApplianceRehydratesConfirmedDeviceNetworkCreateFromDurableInventory(t *testing.T) {
+	ctx := context.Background()
+	created := validHost(t)
+	created.ID = ""
+	created.StartEnabled = false
+	interfaces := []Interface{
+		{ID: "nm-device", Name: "eth1", AdapterID: created.DeviceInterface, Kind: KindEthernet, State: StateConnected, IPv4: []string{created.ApplianceAddress.String()}, Controllable: true},
+		{ID: "nm-local", Name: "eth0", AdapterID: created.LocalInterface, Kind: KindEthernet, State: StateConnected, IPv4: []string{"192.168.1.10/24"}, Controllable: true},
+	}
+	deviceStore := newMemoryDeviceNetworkStore()
+	operationStore := &operationStoreSpy{}
+	first := newApplianceHarness(t)
+	first.base.interfaces = interfaces
+	first.appliance.UseForwarder(applianceForwarderSpy{})
+	if err := first.appliance.UseDeviceNetworkStore(ctx, deviceStore); err != nil {
+		t.Fatal(err)
+	}
+	manager, err := NewOperationManager(OperationManagerOptions{
+		Changer: first.appliance, Observer: first.appliance,
+		Now: func() time.Time { return first.now }, NewID: sequentialIDs(),
+		Store: operationStore, Audit: first.journal, Recovery: first.appliance,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	first.manager = manager
+	operation := first.run(t, Change{
+		Action: ActionDeviceNetworkCreate, Target: "created-after-restart", DeviceNetwork: &created,
+	})
+	if operation.State != StateConfirmed {
+		t.Fatalf("create state=%s, want confirmed without a recovery window", operation.State)
+	}
+	latest := operationStore.latest()
+	if len(latest) != 1 || latest[0].CheckpointID != "" {
+		t.Fatalf("create operation persisted a helper checkpoint: %+v", latest)
+	}
+	metadata, present, err := decodeDeviceNetworkRecovery(Checkpoint{Metadata: latest[0].Parameters})
+	if err != nil || !present || metadata.CreatedID == "" {
+		t.Fatalf("create recovery metadata present=%t value=%+v error=%v", present, metadata, err)
+	}
+	records, err := deviceStore.List(ctx)
+	if err != nil || len(records) != 1 || records[0].ID != metadata.CreatedID {
+		t.Fatalf("created records=%+v error=%v, want durable id %q", records, err, metadata.CreatedID)
+	}
+
+	second := newApplianceHarness(t)
+	second.base.interfaces = interfaces
+	second.appliance.UseForwarder(applianceForwarderSpy{})
+	if err := second.appliance.UseDeviceNetworkStore(ctx, deviceStore); err != nil {
+		t.Fatal(err)
+	}
+	restarted, err := NewOperationManager(OperationManagerOptions{
+		Changer: second.appliance, Observer: second.appliance,
+		Now: func() time.Time { return second.now }, NewID: sequentialIDs(),
+		Store: operationStore, Audit: second.journal, Recovery: second.appliance,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := restarted.Adopt(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err := restarted.Reconcile(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err := second.appliance.AdapterRoleCoordinator().Check([]AdapterRoleClaim{{
+		AdapterID: created.DeviceInterface, Role: AdapterRoleManagement,
+	}}); err == nil {
+		t.Fatal("durable created device network did not reclaim its adapter role after restart")
+	}
+}
+
+func TestAppliancePersistsDeviceRecoveryMetadataBeforeHelperPreparation(t *testing.T) {
+	ctx := context.Background()
+	original := validHost(t)
+	original.ID = "device-network-1"
+	edited := original
+	edited.DeviceInterface = "aa:bb:cc:dd:ee:03"
+	deviceStore := newMemoryDeviceNetworkStore()
+	if _, err := deviceStore.Save(ctx, original, time.Date(2026, 9, 12, 0, 0, 0, 0, time.UTC)); err != nil {
+		t.Fatal(err)
+	}
+	firstSave := make(chan OperationRecord, 1)
+	releaseFirstSave := make(chan struct{})
+	operationStore := &interceptOperationStore{
+		delegate: &operationStoreSpy{},
+		beforeReturn: func(_ context.Context, call int, record OperationRecord) error {
+			if call == 1 {
+				firstSave <- record
+				<-releaseFirstSave
+			}
+			return nil
+		},
+	}
+	harness := newApplianceHarness(t)
+	harness.base.interfaces = []Interface{
+		{ID: "nm-device-old", Name: "eth0", AdapterID: original.DeviceInterface, Kind: KindEthernet, State: StateConnected, IPv4: []string{original.ApplianceAddress.String()}, Controllable: true},
+		{ID: "nm-device-new", Name: "eth1", AdapterID: edited.DeviceInterface, Kind: KindEthernet, State: StateDisconnected, Controllable: true},
+		{ID: "nm-local", Name: "wlan0", AdapterID: original.LocalInterface, Kind: KindWiFi, State: StateConnected, IPv4: []string{"192.168.1.103/24"}, Controllable: true},
+	}
+	harness.appliance.UseForwarder(applianceForwarderSpy{})
+	if err := harness.appliance.UseDeviceNetworkStore(ctx, deviceStore); err != nil {
+		t.Fatal(err)
+	}
+	manager, err := NewOperationManager(OperationManagerOptions{
+		Changer: harness.appliance, Observer: harness.appliance,
+		Now: func() time.Time { return harness.now }, NewID: sequentialIDs(),
+		Store: operationStore, Audit: harness.journal, Recovery: harness.appliance,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	preview, err := manager.PreviewChange(ctx, firstActor, Change{
+		Action: ActionDeviceNetworkUpdate, Target: original.ID, DeviceNetwork: &edited,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	acknowledged := make(chan error, 1)
+	go func() {
+		_, acknowledgeErr := manager.Acknowledge(ctx, firstActor, preview.ID, preview.Revision)
+		acknowledged <- acknowledgeErr
+	}()
+	record := <-firstSave
+	helperWasArmed := len(harness.base.armed) != 0
+	close(releaseFirstSave)
+	if err := <-acknowledged; err != nil {
+		t.Fatal(err)
+	}
+	if helperWasArmed {
+		t.Fatal("helper recovery was prepared before the first durable operation record")
+	}
+	if record.CheckpointID != "" {
+		t.Fatalf("first record checkpoint=%q, want no helper checkpoint yet", record.CheckpointID)
+	}
+	metadata, present, err := decodeDeviceNetworkRecovery(Checkpoint{Metadata: record.Parameters})
+	if err != nil || !present {
+		t.Fatalf("first record recovery metadata present=%t error=%v", present, err)
+	}
+	if len(metadata.Snapshot) != 1 || metadata.Snapshot[0].ID != original.ID {
+		t.Fatalf("first record snapshot=%+v, want the pre-change device inventory", metadata.Snapshot)
+	}
+}
+
+func TestApplianceRestoresPreparedDeviceRecoveryWhenCheckpointPersistenceIsCancelled(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	original := validHost(t)
+	original.ID = "device-network-1"
+	edited := original
+	edited.DeviceInterface = "aa:bb:cc:dd:ee:03"
+	deviceStore := newMemoryDeviceNetworkStore()
+	if _, err := deviceStore.Save(ctx, original, time.Date(2026, 9, 12, 0, 0, 0, 0, time.UTC)); err != nil {
+		t.Fatal(err)
+	}
+	secondSave := make(chan struct{})
+	operationStore := &interceptOperationStore{
+		delegate: &operationStoreSpy{},
+		beforeReturn: func(saveCtx context.Context, call int, _ OperationRecord) error {
+			if call != 2 {
+				return nil
+			}
+			close(secondSave)
+			<-saveCtx.Done()
+			return saveCtx.Err()
+		},
+	}
+	harness := newApplianceHarness(t)
+	harness.base.interfaces = []Interface{
+		{ID: "nm-device-old", Name: "eth0", AdapterID: original.DeviceInterface, Kind: KindEthernet, State: StateConnected, IPv4: []string{original.ApplianceAddress.String()}, Controllable: true},
+		{ID: "nm-device-new", Name: "eth1", AdapterID: edited.DeviceInterface, Kind: KindEthernet, State: StateDisconnected, Controllable: true},
+		{ID: "nm-local", Name: "wlan0", AdapterID: original.LocalInterface, Kind: KindWiFi, State: StateConnected, IPv4: []string{"192.168.1.103/24"}, Controllable: true},
+	}
+	harness.appliance.UseForwarder(applianceForwarderSpy{})
+	if err := harness.appliance.UseDeviceNetworkStore(ctx, deviceStore); err != nil {
+		t.Fatal(err)
+	}
+	manager, err := NewOperationManager(OperationManagerOptions{
+		Changer: harness.appliance, Observer: harness.appliance,
+		Now: func() time.Time { return harness.now }, NewID: sequentialIDs(),
+		Store: operationStore, Audit: harness.journal, Recovery: harness.appliance,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	preview, err := manager.PreviewChange(ctx, firstActor, Change{
+		Action: ActionDeviceNetworkUpdate, Target: original.ID, DeviceNetwork: &edited,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	acknowledged := make(chan error, 1)
+	go func() {
+		_, acknowledgeErr := manager.Acknowledge(ctx, firstActor, preview.ID, preview.Revision)
+		acknowledged <- acknowledgeErr
+	}()
+	<-secondSave
+	cancel()
+	if err := <-acknowledged; err == nil {
+		t.Fatal("acknowledge succeeded after checkpoint persistence was cancelled")
+	}
+	if len(harness.base.restored) != 1 || len(harness.base.discarded) != 0 {
+		t.Fatalf("prepared helper cleanup restored=%d discarded=%d, want one restore and no discard", len(harness.base.restored), len(harness.base.discarded))
+	}
+	if harness.base.restoreCtx[0] != nil {
+		t.Fatalf("prepared helper restore inherited cancelled context: %v", harness.base.restoreCtx[0])
+	}
+	latest := operationStore.delegate.latest()
+	if len(latest) != 1 || latest[0].State != string(StateFailed) {
+		t.Fatalf("latest operation record=%+v, want a terminal failed record", latest)
+	}
+	for _, adapterID := range []string{original.DeviceInterface, edited.DeviceInterface} {
+		if err := harness.appliance.AdapterRoleCoordinator().Check([]AdapterRoleClaim{{
+			AdapterID: adapterID, Role: AdapterRoleManagement,
+		}}); err != nil && adapterID == edited.DeviceInterface {
+			t.Fatalf("proposed adapter remained reserved after successful cleanup: %v", err)
+		}
+	}
+}
+
+func TestApplianceReconcilesInterruptedDeviceNetworkCreateWithoutRecoveryMetadata(t *testing.T) {
+	for _, test := range []struct {
+		name      string
+		persisted bool
+		wantState OperationState
+	}{
+		{name: "before durable create", persisted: false, wantState: StateFailed},
+		{name: "after durable create", persisted: true, wantState: StateConfirmed},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			ctx := context.Background()
+			created := validHost(t)
+			created.ID = "device-network-created"
+			created.StartEnabled = false
+			deviceStore := newMemoryDeviceNetworkStore()
+			if test.persisted {
+				if _, err := deviceStore.Save(ctx, created, time.Date(2026, 9, 12, 0, 0, 0, 0, time.UTC)); err != nil {
+					t.Fatal(err)
+				}
+			}
+			operationStore := &operationStoreSpy{}
+			now := time.Date(2026, 9, 12, 1, 0, 0, 0, time.UTC)
+			if err := operationStore.Save(ctx, OperationRecord{
+				ID: "interrupted-create", Action: string(ActionDeviceNetworkCreate),
+				Target: created.ID, ActorID: firstActor, State: string(StateApplying),
+				Revision: "accepted", CreatedAt: now, UpdatedAt: now,
+			}); err != nil {
+				t.Fatal(err)
+			}
+			harness := newApplianceHarness(t)
+			harness.appliance.UseForwarder(applianceForwarderSpy{})
+			if err := harness.appliance.UseDeviceNetworkStore(ctx, deviceStore); err != nil {
+				t.Fatal(err)
+			}
+			manager, err := NewOperationManager(OperationManagerOptions{
+				Changer: harness.appliance, Observer: harness.appliance,
+				Now: func() time.Time { return harness.now }, NewID: sequentialIDs(),
+				Store: operationStore, Audit: harness.journal, Recovery: harness.appliance,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := manager.Adopt(ctx); err != nil {
+				t.Fatal(err)
+			}
+			if err := manager.Reconcile(ctx); err != nil {
+				t.Fatal(err)
+			}
+			operation, err := manager.Get("interrupted-create")
+			if err != nil || operation.State != test.wantState {
+				t.Fatalf("reconciled operation=%+v error=%v, want state %s", operation, err, test.wantState)
+			}
+			claimErr := harness.appliance.AdapterRoleCoordinator().Check([]AdapterRoleClaim{{
+				AdapterID: created.DeviceInterface, Role: AdapterRoleManagement,
+			}})
+			if (claimErr != nil) != test.persisted {
+				t.Fatalf("management claim check error=%v, blocked want %t", claimErr, test.persisted)
+			}
+		})
+	}
+}
+
+func TestApplianceRefusesRestartWithoutDeviceNetworkRecoveryMetadata(t *testing.T) {
+	ctx := context.Background()
+	deviceStore := newMemoryDeviceNetworkStore()
+	operationStore := &operationStoreSpy{}
+	now := time.Date(2026, 9, 12, 0, 0, 0, 0, time.UTC)
+	if err := operationStore.Save(ctx, OperationRecord{
+		ID: "unfinished-device-change", Action: string(ActionDeviceNetworkDelete),
+		Target: "device-network-1", ActorID: firstActor, State: string(StateAwaitingConfirmation),
+		Revision: "accepted", Parameters: json.RawMessage(`{}`), CheckpointID: "checkpoint-legacy",
+		CreatedAt: now, UpdatedAt: now, ConfirmDeadline: now.Add(time.Minute),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	harness := newApplianceHarness(t)
+	harness.appliance.UseForwarder(applianceForwarderSpy{})
+	if err := harness.appliance.UseDeviceNetworkStore(ctx, deviceStore); err != nil {
+		t.Fatal(err)
+	}
+	manager, err := NewOperationManager(OperationManagerOptions{
+		Changer: harness.appliance, Observer: harness.appliance,
+		Now: func() time.Time { return harness.now }, NewID: sequentialIDs(),
+		Store: operationStore, Audit: harness.journal, Recovery: harness.appliance,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := manager.Adopt(ctx); err == nil || !strings.Contains(err.Error(), "recovery metadata is missing") {
+		t.Fatalf("Adopt() error=%v, want fail-closed missing-metadata refusal", err)
 	}
 }
 

@@ -383,6 +383,41 @@ the NetworkManager, WireGuard, settings, local forwarding (three namespaces and 
 Modbus responder), VPN topology (hub, remote client, two sites) and independent
 recovery system tests; the Windows suite covers everything portable.
 
+## Exclusive physical-adapter roles (2026-09-11, TASK-8f18c927)
+
+`internal/network/adapter_roles.go` is an unprivileged, process-local
+coordinator over stable adapter IDs. Management and device-network managers
+publish durable claim snapshots and perform validation plus persistence/helper
+work under one coordinator lock. A manager publishes its persisted claim state
+before releasing that lock; failed firewall recovery retains and reports every
+physical ID whose live ownership is uncertain. Pending recoverable device
+changes persist their pre-change inventory and old/proposed claim union in the
+first applying record, before helper recovery is prepared or device state
+mutates. Creates also persist a deterministic created ID. Startup can therefore
+settle a checkpoint-less create from durable inventory and can fail and restore
+another pre-helper attempt without refusing to start. If the helper is prepared
+but its checkpoint cannot be recorded, Bench Core restores it with a fresh
+bounded context before settling the operation. Adopted helper state retains both
+IDs until reconciliation settles. A restored helper phase restores the device
+store and cached claims; an unverified recovery keeps the union reserved.
+Simulation rollback also restores through the device manager so its
+cached claims match the restored store. Virtual interfaces and
+local device-network ingress do not claim a physical role. Unknown roles are
+rejected.
+
+Management configuration persists `{adapter_id,last_known_name}` objects in the
+existing JSON columns and dual-decodes legacy name arrays. Startup attaches the
+device store without forwarding, adopts and reconciles unfinished device
+recovery, then resolves management bindings. It gives persisted device intent
+precedence only when another usable management route survives, applies the safe
+firewall, and then reconciles forwarding and starts serving.
+All-conflicting state fails before the listener or forwarding opens. HTTP maps
+typed collisions to the secret-free 409
+`network_interface_role_conflict` envelope. Management transition diagnostics
+persist a fixed outcome code and safe adapter/resource labels alongside the
+console detail; legacy plain details still load, while unknown typed outcomes
+are not published as browser metadata.
+
 ## Whole-appliance power control (2026-09-08, TASK-a3a3d7b2)
 
 `POST /api/v1/system/power` accepts only `restart` or `power_off`. The route is

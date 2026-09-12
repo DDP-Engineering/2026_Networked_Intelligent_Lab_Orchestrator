@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"nilo.local/nilo/internal/audit"
@@ -75,14 +76,19 @@ type DeviceNetworkManagerOptions struct {
 	// Audit records a re-plan the runtime made on its own - a tunnel that
 	// came back opened the grants, one that went closed them. Optional.
 	Audit AuditJournal
+	// Coordinator serializes exclusive physical adapter role claims. Optional
+	// callers receive a private coordinator with no management claims.
+	Coordinator *AdapterRoleCoordinator
 }
 
 // DeviceNetworkManager keeps saved device networks and installed forwarding in
 // step.
 type DeviceNetworkManager struct {
-	options DeviceNetworkManagerOptions
-	mu      sync.Mutex
-	store   DeviceNetworkStore
+	options     DeviceNetworkManagerOptions
+	mu          sync.Mutex
+	store       DeviceNetworkStore
+	coordinator *AdapterRoleCoordinator
+	roleClaims  atomic.Value
 }
 
 // NewDeviceNetworkManager binds a manager to its seams.
@@ -96,18 +102,67 @@ func NewDeviceNetworkManager(options DeviceNetworkManagerOptions) (*DeviceNetwor
 	if options.NewID == nil {
 		options.NewID = randomIdentity
 	}
-	return &DeviceNetworkManager{options: options}, nil
+	if options.Coordinator == nil {
+		options.Coordinator = NewAdapterRoleCoordinator()
+	}
+	manager := &DeviceNetworkManager{options: options, coordinator: options.Coordinator}
+	manager.roleClaims.Store([]AdapterRoleClaim{})
+	manager.coordinator.RegisterClaimSource(manager.adapterRoleClaims)
+	return manager, nil
 }
 
 // UseStore attaches the saved inventory.
-func (manager *DeviceNetworkManager) UseStore(_ context.Context, store DeviceNetworkStore) error {
+func (manager *DeviceNetworkManager) UseStore(ctx context.Context, store DeviceNetworkStore) error {
 	if store == nil {
 		return errors.New("a device network store is required")
 	}
 	manager.mu.Lock()
-	defer manager.mu.Unlock()
 	manager.store = store
+	manager.mu.Unlock()
+	records, err := store.List(ctx)
+	if err != nil {
+		return fmt.Errorf("read device networks: %w", err)
+	}
+	manager.setAdapterRoleRecords(records)
 	return nil
+}
+
+func (manager *DeviceNetworkManager) adapterRoleClaims() []AdapterRoleClaim {
+	claims, _ := manager.roleClaims.Load().([]AdapterRoleClaim)
+	return append([]AdapterRoleClaim(nil), claims...)
+}
+
+func (manager *DeviceNetworkManager) setAdapterRoleRecords(records []DeviceNetwork) {
+	claims := make([]AdapterRoleClaim, 0, len(records))
+	for _, record := range records {
+		claims = append(claims, AdapterRoleClaim{
+			AdapterID: record.DeviceInterface, Role: AdapterRoleDevice,
+			ResourceID: record.ID, ResourceName: record.Name,
+		})
+	}
+	manager.roleClaims.Store(claims)
+}
+
+func deviceRoleClaim(record DeviceNetwork, state surroundings) AdapterRoleClaim {
+	claim := AdapterRoleClaim{
+		AdapterID: record.DeviceInterface, Role: AdapterRoleDevice,
+		ResourceID: record.ID, ResourceName: record.Name,
+	}
+	if adapter, ok := state.adapter(record.DeviceInterface); ok {
+		claim.Interface = adapter.Name
+	}
+	return claim
+}
+
+func replaceDeviceRoleRecord(records []DeviceNetwork, saved DeviceNetwork) []DeviceNetwork {
+	result := append([]DeviceNetwork(nil), records...)
+	for index := range result {
+		if result[index].ID == saved.ID {
+			result[index] = saved
+			return result
+		}
+	}
+	return append(result, saved)
 }
 
 func (manager *DeviceNetworkManager) records(ctx context.Context) ([]DeviceNetwork, error) {
@@ -305,6 +360,9 @@ func (manager *DeviceNetworkManager) Inspect(ctx context.Context, change Change)
 		if err := manager.validate(state, proposed, change); err != nil {
 			return nil, err
 		}
+		if err := manager.coordinator.Check([]AdapterRoleClaim{deviceRoleClaim(proposed, state)}); err != nil {
+			return nil, err
+		}
 		observed["name"] = proposed.Name
 	case ActionDeviceNetworkUpdate:
 		if change.DeviceNetwork == nil {
@@ -319,6 +377,9 @@ func (manager *DeviceNetworkManager) Inspect(ctx context.Context, change Change)
 		if err := manager.validate(state, proposed, change); err != nil {
 			return nil, err
 		}
+		if err := manager.coordinator.Check([]AdapterRoleClaim{deviceRoleClaim(proposed, state)}); err != nil {
+			return nil, err
+		}
 		observed["revision"] = existing.Revision
 	default:
 		existing, ok := state.record(change.Target)
@@ -328,6 +389,9 @@ func (manager *DeviceNetworkManager) Inspect(ctx context.Context, change Change)
 		observed["revision"] = existing.Revision
 		observed["enabled"] = fmt.Sprint(existing.StartEnabled)
 		if change.Action == ActionDeviceNetworkEnable {
+			if err := manager.coordinator.Check([]AdapterRoleClaim{deviceRoleClaim(existing, state)}); err != nil {
+				return nil, err
+			}
 			plan, err := PlanForwarding(existing, state.context(existing))
 			if err != nil {
 				return nil, err
@@ -368,12 +432,20 @@ func (manager *DeviceNetworkManager) Apply(ctx context.Context, change Change) e
 			return reject("a device network needs its configuration")
 		}
 		proposed := *change.DeviceNetwork
-		proposed.ID, proposed.StartEnabled = manager.options.NewID(), false
+		if proposed.ID == "" {
+			proposed.ID = manager.options.NewID()
+		}
+		proposed.StartEnabled = false
 		if err := manager.validate(state, proposed, change); err != nil {
 			return err
 		}
-		_, err := store.Save(ctx, proposed, now)
-		return err
+		return manager.coordinator.CheckAndRun([]AdapterRoleClaim{deviceRoleClaim(proposed, state)}, func() error {
+			saved, err := store.Save(ctx, proposed, now)
+			if err == nil {
+				manager.setAdapterRoleRecords(replaceDeviceRoleRecord(state.records, saved))
+			}
+			return err
+		})
 	case ActionDeviceNetworkUpdate:
 		existing, ok := state.record(change.Target)
 		if !ok {
@@ -384,25 +456,31 @@ func (manager *DeviceNetworkManager) Apply(ctx context.Context, change Change) e
 		if err := manager.validate(state, proposed, change); err != nil {
 			return err
 		}
-		saved, err := store.Save(ctx, proposed, now)
-		if err != nil {
-			return err
-		}
-		if saved.StartEnabled {
-			return manager.install(ctx, state, saved)
-		}
-		return nil
+		return manager.coordinator.CheckAndRun([]AdapterRoleClaim{deviceRoleClaim(proposed, state)}, func() error {
+			saved, err := store.Save(ctx, proposed, now)
+			if err != nil {
+				return err
+			}
+			manager.setAdapterRoleRecords(replaceDeviceRoleRecord(state.records, saved))
+			if saved.StartEnabled {
+				return manager.install(ctx, state, saved)
+			}
+			return nil
+		})
 	case ActionDeviceNetworkEnable:
 		existing, ok := state.record(change.Target)
 		if !ok {
 			return fmt.Errorf("%w: %s", ErrDeviceNetworkNotFound, change.Target)
 		}
 		existing.StartEnabled = true
-		saved, err := store.Save(ctx, existing, now)
-		if err != nil {
-			return err
-		}
-		return manager.install(ctx, state, saved)
+		return manager.coordinator.CheckAndRun([]AdapterRoleClaim{deviceRoleClaim(existing, state)}, func() error {
+			saved, err := store.Save(ctx, existing, now)
+			if err != nil {
+				return err
+			}
+			manager.setAdapterRoleRecords(replaceDeviceRoleRecord(state.records, saved))
+			return manager.install(ctx, state, saved)
+		})
 	case ActionDeviceNetworkDisable:
 		existing, ok := state.record(change.Target)
 		if !ok {
@@ -412,7 +490,10 @@ func (manager *DeviceNetworkManager) Apply(ctx context.Context, change Change) e
 			return err
 		}
 		existing.StartEnabled = false
-		_, err := store.Save(ctx, existing, now)
+		saved, err := store.Save(ctx, existing, now)
+		if err == nil {
+			manager.setAdapterRoleRecords(replaceDeviceRoleRecord(state.records, saved))
+		}
 		return err
 	case ActionDeviceNetworkDelete:
 		existing, ok := state.record(change.Target)
@@ -422,7 +503,17 @@ func (manager *DeviceNetworkManager) Apply(ctx context.Context, change Change) e
 		if err := manager.options.Forwarder.RemoveForwarding(ctx, existing.ID); err != nil {
 			return err
 		}
-		return store.Delete(ctx, existing.ID)
+		if err := store.Delete(ctx, existing.ID); err != nil {
+			return err
+		}
+		remaining := make([]DeviceNetwork, 0, len(state.records)-1)
+		for _, record := range state.records {
+			if record.ID != existing.ID {
+				remaining = append(remaining, record)
+			}
+		}
+		manager.setAdapterRoleRecords(remaining)
+		return nil
 	}
 	return ErrUnsupported
 }
@@ -609,6 +700,7 @@ func (manager *DeviceNetworkManager) RestoreSnapshot(ctx context.Context, saved 
 			return err
 		}
 	}
+	manager.setAdapterRoleRecords(saved)
 	return nil
 }
 

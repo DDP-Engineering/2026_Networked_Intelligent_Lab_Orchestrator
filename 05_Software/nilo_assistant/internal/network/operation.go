@@ -119,14 +119,41 @@ const (
 	StateRollbackFailed       OperationState = "rollback_failed"
 )
 
-// Checkpoint identifies armed recovery state. Its contents belong to whatever
-// armed it; this package only carries it back and forth.
-type Checkpoint struct{ ID string }
+// Checkpoint identifies armed recovery state. Metadata is public, changer-owned
+// state that a restarted process needs to reconstitute the recovery boundary.
+// This package only persists and carries it back and forth.
+type Checkpoint struct {
+	ID       string
+	Metadata json.RawMessage
+}
 
 // ChangeRecoveryPreparer binds privileged recovery to the exact validated
 // change. Legacy simulation changers can still use ArmRecovery.
 type ChangeRecoveryPreparer interface {
 	ArmChange(context.Context, string, Change, time.Duration) (Checkpoint, error)
+}
+
+// ChangeRecoveryPlanner captures changer-owned public rollback metadata before
+// the first durable applying record. CancelChangeRecovery releases any
+// process-local reservation when that first write does not succeed.
+type ChangeRecoveryPlanner interface {
+	PlanChangeRecovery(context.Context, string, Change) (json.RawMessage, error)
+	CancelChangeRecovery(string)
+}
+
+// ChangeRecoveryAdopter restores changer-owned recovery state around an
+// unfinished operation and reconciles it after the helper reports a terminal
+// outcome. Changers without durable in-process state need not implement it.
+type ChangeRecoveryAdopter interface {
+	AdoptChangeRecovery(context.Context, string, Change, Checkpoint) error
+	ReconcileChangeRecovery(context.Context, string, Change, Checkpoint, OperationState) error
+}
+
+// UncheckpointedChangeReconciler resolves deliberately checkpoint-less
+// operations whose side effect is itself durable. The boolean reports whether
+// the changer recognizes the action.
+type UncheckpointedChangeReconciler interface {
+	ReconcileUncheckpointedChange(context.Context, string, Change, Checkpoint) (OperationState, bool, error)
 }
 
 // ConnectivityChanger applies changes under recoverable state. The simulated
@@ -336,8 +363,10 @@ func (manager *OperationManager) PreviewChange(ctx context.Context, actorID stri
 		return Operation{}, fmt.Errorf("observe %s on %s: %w", action, target, err)
 	}
 
+	operationID := manager.options.NewID()
+	change.operationID = operationID
 	operation := &Operation{
-		ID: manager.options.NewID(), Action: action, Target: target,
+		ID: operationID, Action: action, Target: target,
 		ActorID: actorID, State: StatePreviewed,
 		CreatedAt: manager.options.Now().UTC(), observed: observed,
 		change: change,
@@ -411,7 +440,19 @@ func (manager *OperationManager) Acknowledge(
 	if err := manager.journal(ctx, operation, audit.OutcomeRequested, audit.ActorKindUser, ""); err != nil {
 		return Operation{}, fmt.Errorf("%w: %v", ErrAuditUnavailable, err)
 	}
+	planner, _ := manager.options.Changer.(ChangeRecoveryPlanner)
+	if planner != nil {
+		metadata, err := planner.PlanChangeRecovery(ctx, operation.ID, operation.change)
+		if err != nil {
+			return Operation{}, fmt.Errorf("%w: plan recovery: %w", ErrRecoveryUnavailable, err)
+		}
+		operation.checkpoint.Metadata = append(json.RawMessage(nil), metadata...)
+	}
 	if err := manager.persist(ctx, operation, StateApplying); err != nil {
+		if planner != nil {
+			planner.CancelChangeRecovery(operation.ID)
+			operation.checkpoint = Checkpoint{}
+		}
 		return Operation{}, fmt.Errorf("%w: %v", ErrAuditUnavailable, err)
 	}
 
@@ -463,8 +504,8 @@ func (manager *OperationManager) journal(
 }
 
 // persist writes the operation down at the state it is about to be in. It
-// stores public metadata only: the change's transient parameters, which may
-// carry an imported profile, never reach it.
+// stores only changer-owned public recovery metadata; transient change
+// parameters, which may carry an imported profile, never reach it.
 func (manager *OperationManager) persist(ctx context.Context, operation *Operation, state OperationState) error {
 	if manager.options.Store == nil {
 		return nil
@@ -474,7 +515,8 @@ func (manager *OperationManager) persist(ctx context.Context, operation *Operati
 		ID: operation.ID, Action: string(operation.Action), Target: operation.Target,
 		ActorID: operation.ActorID, State: string(state), Revision: operation.Revision,
 		CheckpointID: operation.checkpoint.ID, Failure: operation.Failure,
-		CreatedAt: operation.CreatedAt, UpdatedAt: now,
+		Parameters: append(json.RawMessage(nil), operation.checkpoint.Metadata...),
+		CreatedAt:  operation.CreatedAt, UpdatedAt: now,
 	}
 	if state == StateAwaitingConfirmation {
 		record.ConfirmDeadline = operation.ConfirmDeadline
@@ -502,7 +544,7 @@ func (manager *OperationManager) apply(
 	if installer, ok := manager.options.Changer.(InstallationController); ok && operation.Action == ActionWireGuardInstall {
 		return manager.startInstall(ctx, installer, operation)
 	}
-	var checkpoint Checkpoint
+	checkpoint := operation.checkpoint
 	deadline := manager.options.Now().UTC().Add(ConfirmationWindow)
 	if connectivity {
 		// Recovery is armed before anything is touched. If it cannot be armed,
@@ -516,9 +558,46 @@ func (manager *OperationManager) apply(
 			armed, err = manager.options.Changer.ArmRecovery(ctx, operation.ID, ConfirmationWindow)
 		}
 		if err != nil {
-			return Operation{}, fmt.Errorf("%w: %v", ErrRecoveryUnavailable, err)
+			if planner, ok := manager.options.Changer.(ChangeRecoveryPlanner); ok {
+				planner.CancelChangeRecovery(operation.ID)
+			}
+			manager.mutex.Lock()
+			operation.State = StateFailed
+			operation.Failure = "recovery could not be prepared"
+			manager.mutex.Unlock()
+			settleCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+			manager.settle(settleCtx, operation, StateFailed, audit.OutcomeFailed, audit.ActorKindUser, operation.Failure)
+			cancel()
+			return Operation{}, fmt.Errorf("%w: %w", ErrRecoveryUnavailable, err)
 		}
 		checkpoint = armed
+		operation.checkpoint = checkpoint
+		// The helper checkpoint and any changer-owned recovery metadata must be
+		// durable before the first mutation. The earlier applying record captures
+		// accepted intent; this second write binds that intent to its recovery.
+		if err := manager.persist(ctx, operation, StateApplying); err != nil {
+			cleanupCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
+			observed, cleanupErr := manager.options.Changer.Restore(cleanupCtx, checkpoint)
+			manager.mutex.Lock()
+			operation.State = StateFailed
+			operation.Failure = "armed recovery could not be recorded"
+			if cleanupErr != nil || !observed {
+				operation.State = StateRollbackFailed
+				operation.Failure = "armed recovery could not be recorded and the previous state could not be verified"
+			}
+			failedState, failure := operation.State, operation.Failure
+			manager.mutex.Unlock()
+			manager.settle(cleanupCtx, operation, failedState, audit.OutcomeFailed, audit.ActorKindUser, failure)
+			cancel()
+			if cleanupErr != nil {
+				return Operation{}, fmt.Errorf("%w: persist armed recovery: %v; restore armed recovery: %w", ErrRecoveryUnavailable, err, cleanupErr)
+			}
+			if !observed {
+				return Operation{}, fmt.Errorf("%w: persist armed recovery: %v; previous state was not observed", ErrRecoveryUnavailable, err)
+			}
+			operation.checkpoint = Checkpoint{}
+			return Operation{}, fmt.Errorf("%w: persist armed recovery: %v", ErrAuditUnavailable, err)
+		}
 	}
 
 	manager.mutex.Lock()
@@ -545,6 +624,11 @@ func (manager *OperationManager) apply(
 		manager.releaseImport(ctx, operation, importing && applyErr == nil)
 	}
 	if err := applyErr; err != nil {
+		if !connectivity {
+			if planner, ok := manager.options.Changer.(ChangeRecoveryPlanner); ok {
+				planner.CancelChangeRecovery(operation.ID)
+			}
+		}
 		observed, restoreErr := true, error(nil)
 		if connectivity {
 			// The request may already be disconnected. Recovery has its own
@@ -570,6 +654,9 @@ func (manager *OperationManager) apply(
 
 	manager.mutex.Lock()
 	if !connectivity {
+		if planner, ok := manager.options.Changer.(ChangeRecoveryPlanner); ok {
+			planner.CancelChangeRecovery(operation.ID)
+		}
 		operation.State = StateConfirmed
 		result := *operation
 		manager.mutex.Unlock()
@@ -815,7 +902,8 @@ func (manager *OperationManager) restore(ctx context.Context, operation *Operati
 // it back when its window runs out.
 //
 // The change's transient parameters are not restored, because they were never
-// stored. What is restored is enough to expire, roll back and report.
+// stored. Public checkpoint metadata restores changer-owned rollback state;
+// the action and target remain enough to expire, roll back and report.
 func (manager *OperationManager) Adopt(ctx context.Context) error {
 	if manager.options.Store == nil {
 		return nil
@@ -824,24 +912,37 @@ func (manager *OperationManager) Adopt(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("read unfinished network operations: %w", err)
 	}
-	manager.mutex.Lock()
-	defer manager.mutex.Unlock()
 	for _, record := range records {
+		manager.mutex.Lock()
 		if _, known := manager.operations[record.ID]; known {
+			manager.mutex.Unlock()
 			continue
+		}
+		manager.mutex.Unlock()
+		checkpoint := Checkpoint{
+			ID:       record.CheckpointID,
+			Metadata: append(json.RawMessage(nil), record.Parameters...),
+		}
+		change := Change{Action: Action(record.Action), Target: record.Target}
+		if adopter, ok := manager.options.Changer.(ChangeRecoveryAdopter); ok && (checkpoint.ID != "" || len(checkpoint.Metadata) != 0) {
+			if err := adopter.AdoptChangeRecovery(ctx, record.ID, change, checkpoint); err != nil {
+				return fmt.Errorf("adopt recovery for network operation %s: %w", record.ID, err)
+			}
 		}
 		operation := &Operation{
 			ID: record.ID, Action: Action(record.Action), Target: record.Target,
 			ActorID: record.ActorID, State: OperationState(record.State),
 			Revision: record.Revision, CreatedAt: record.CreatedAt,
 			ConfirmDeadline: record.ConfirmDeadline, Failure: record.Failure,
-			checkpoint: Checkpoint{ID: record.CheckpointID},
-			change:     Change{Action: Action(record.Action), Target: record.Target},
+			checkpoint: checkpoint,
+			change:     change,
 		}
+		manager.mutex.Lock()
 		manager.operations[record.ID] = operation
 		if operation.State == StateAwaitingConfirmation && manager.inFlight == "" {
 			manager.inFlight = operation.ID
 		}
+		manager.mutex.Unlock()
 	}
 	return nil
 }
@@ -870,9 +971,37 @@ func (manager *OperationManager) Reconcile(ctx context.Context) error {
 	sort.Slice(unfinished, func(first, second int) bool { return unfinished[first].CreatedAt.Before(unfinished[second].CreatedAt) })
 
 	for _, operation := range unfinished {
-		state, result, failure := resolveAgainstHelper(operation, outcome, present)
+		state, result, failure := OperationState(""), audit.Outcome(""), ""
+		uncheckpointed := operation.checkpoint.ID == ""
+		if uncheckpointed {
+			if reconciler, ok := manager.options.Changer.(UncheckpointedChangeReconciler); ok {
+				resolved, handled, reconcileErr := reconciler.ReconcileUncheckpointedChange(ctx, operation.ID, operation.change, operation.checkpoint)
+				if reconcileErr != nil {
+					return fmt.Errorf("reconcile checkpoint-less network operation %s: %w", operation.ID, reconcileErr)
+				}
+				if handled {
+					state = resolved
+				}
+			}
+			if state == "" {
+				state = StateFailed
+			}
+			if state == StateConfirmed {
+				result = audit.OutcomeApplied
+			} else {
+				result = audit.OutcomeFailed
+				failure = "the change had no recovery checkpoint after restart, so it is not applied"
+			}
+		} else {
+			state, result, failure = resolveAgainstHelper(operation, outcome, present)
+		}
 		if state == "" {
 			continue
+		}
+		if adopter, ok := manager.options.Changer.(ChangeRecoveryAdopter); ok && (operation.checkpoint.ID != "" || len(operation.checkpoint.Metadata) != 0) {
+			if err := adopter.ReconcileChangeRecovery(ctx, operation.ID, operation.change, operation.checkpoint, state); err != nil {
+				return fmt.Errorf("reconcile recovery for network operation %s: %w", operation.ID, err)
+			}
 		}
 		manager.mutex.Lock()
 		operation.State = state

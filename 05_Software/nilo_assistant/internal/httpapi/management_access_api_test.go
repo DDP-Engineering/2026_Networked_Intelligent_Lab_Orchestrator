@@ -65,3 +65,36 @@ func TestManagementAccessAPIIsAdministratorOnlyCSRFProtectedAndSecretFree(t *tes
 		t.Fatalf("cookie update without CSRF status=%d, want 403; body=%s", response.Code, response.Body.String())
 	}
 }
+
+func TestManagementAccessAPIReturnsStructuredAdapterRoleConflict(t *testing.T) {
+	fixture := newAPIFixture(t, simulation.ScenarioHealthy, CookieDevelopmentLocalhost)
+	coordinator := network.NewAdapterRoleCoordinator()
+	coordinator.RegisterClaimSource(func() []network.AdapterRoleClaim {
+		return []network.AdapterRoleClaim{{
+			AdapterID: "02:00:00:00:00:02", Interface: "wlan0", Role: network.AdapterRoleDevice,
+			ResourceID: "device-network-1", ResourceName: "PLC network",
+		}}
+	})
+	configuration := network.ManagementAccessConfiguration{
+		Interfaces: []string{"enp1s0"}, Port: 8443, TLSNames: []string{"ddp-remote.local"},
+	}
+	service, err := network.NewManagementAccessService(context.Background(), network.ManagementAccessOptions{
+		Provider: fixture.provider, Store: sqlite.NewManagementAccessRepository(fixture.database),
+		Firewall: noOpManagementFirewall{}, Initial: &configuration, Coordinator: coordinator,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	options := fixture.options
+	options.ManagementAccess = service
+	fixture.handler, err = NewHandler(options)
+	if err != nil {
+		t.Fatal(err)
+	}
+	token := fixture.issueToken(t, "admin", "role-conflict", nil, nil)
+	response := fixture.put("/api/v1/network/management-access", token, `{"interfaces":["enp1s0","wlan0"],"confirm_current_interface":true}`)
+	if response.Code != http.StatusConflict || !strings.Contains(response.Body.String(), `"error":"network_interface_role_conflict"`) ||
+		!strings.Contains(response.Body.String(), `"conflicting_resource_name":"PLC network"`) {
+		t.Fatalf("conflict status=%d body=%s", response.Code, response.Body.String())
+	}
+}

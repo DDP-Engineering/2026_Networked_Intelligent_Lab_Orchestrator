@@ -43,8 +43,9 @@ device forwarding has a separate durable inventory of NILO-owned nftables state.
 Unverified recovery blocks further changes rather than reporting success.
 
 Management access is a separate, persistent change with its own last-known-good
-record. The interface names are the policy; their DHCP addresses are only
-observations. A single HTTPS server listens on the configured management port,
+record. The API continues to accept interface names, but present physical
+adapters are persisted by stable hardware identity with their last observed
+Linux name; DHCP addresses remain observations. A single HTTPS server listens on the configured management port,
 then both the socket gate and the helper firewall admit only connections whose
 destination belongs to an enabled interface. The listener refreshes the
 interface/address mapping while it runs, so address renewal, link loss and link
@@ -58,6 +59,38 @@ an explicit restore, or on startup when it finds an interrupted pending change.
 The GUI reports `pending`, `applied`, `failed` and `recovered` rather than
 turning a lost response into success. Keep console or independent VPN access
 available while changing the allowlist.
+
+A physical Ethernet, Wi-Fi or USB Ethernet adapter may be management-facing or
+device-facing, never both. Saved device networks claim their device-side adapter
+even while disabled or temporarily absent. Pending changes retain both proposed
+and rollback claims until they settle. Device-network changes persist the
+pre-change inventory and complete claim union in their first applying record,
+before helper preparation or mutation. Creates persist their final record ID at
+the same boundary. On restart, a checkpoint-less create is confirmed only when
+that exact record exists; an earlier attempt is failed, and other pre-helper
+attempts restore the saved inventory. If a prepared helper checkpoint cannot be
+persisted, it is restored before the operation is settled. Helper-backed
+operations otherwise rehydrate and reconcile before management access or
+forwarding is composed. A failed helper recovery keeps the uncertain union
+reserved. Local-access adapters and NILO-owned
+WireGuard interfaces are ingress paths and do not acquire the device role.
+Conflicts return HTTP 409 with `network_interface_role_conflict` before any
+store, firewall, forwarding, NetworkManager or helper mutation.
+The browser disables device-side assignment while management-role inventory is
+unknown and localizes fixed outcome codes; backend diagnostic prose remains a
+console and audit aid rather than browser content. Role-conflict notices from
+preview, acknowledgement and management update survive unchanged polling and
+clear only after the owning claim disappears; malformed conflict details use a
+fixed localized fallback.
+
+Startup loads both stores, restores unfinished device-network recovery state,
+and reconciles roles before it installs device forwarding or opens management
+application traffic. If legacy state assigns one
+adapter to both roles, the saved device network wins only when another usable
+management path remains; NILO removes the conflicting management binding and
+reports `recovered`. If no safe management path remains, startup fails closed
+and requires local correction. Rename and hotplug maintenance use the same
+resolve, reconcile, firewall, then destination-gate ordering.
 
 The helper stores recovery records under `/var/lib/nilo-nethelper`. Its service
 and the independent `nilo-nethelper-recovery.timer` reconcile interrupted work.
@@ -201,6 +234,14 @@ offers keep/restore actions while a configuration is pending. It presents
 local network. The numeric Wi-Fi DHCP address is deliberately shown only as
 current telemetry, not as a durable URL.
 
+Both management and device-side selectors retain unavailable adapters in view,
+disable only the conflicting role choice, and show the owning role and saved
+device-network name where applicable. A management adapter remains valid as a
+device network's local ingress. **How to repurpose an adapter** gives the safe
+sequence: establish and confirm a replacement management path, remove and
+confirm the old management binding, then assign the now-unclaimed adapter as
+device-facing. There is no one-click role swap.
+
 For a sigrok-enabled delivery, also follow the bundle instructions in
 [Sigrok integration](Sigrok_Integration.md). Verify service startup, authenticated
 access and recovery on the target; a successful build is not deployment evidence.
@@ -248,6 +289,10 @@ removal of old reports. Reconcile existing test/journal evidence before scheduli
   `nilo0` returning as `10.205.148.11`, access through both stable URLs,
   refusal on the PLC-facing `eth0`, unchanged PLC communication, and a full
   appliance reboot.
+- Stable-role Raspberry Pi early signal: retain DDP Wi-Fi and `nilo0` as
+  management paths, use the USB Ethernet adapter only on an isolated device
+  segment, exercise accepted/refused assignments, replug and restart, and
+  confirm `https://10.205.148.11:8443/` remains reachable.
 - PLC register-map validation and vendor download using an authorized tool.
 - Real-backend Activity browser coverage, connection selection when an adapter
   has no remembered connection, and usability on the physical seven-inch panel.

@@ -228,6 +228,9 @@ type deviceNetworkListResponse struct {
 }
 
 func writeDeviceNetworkFailure(response http.ResponseWriter, err error) {
+	if writeAdapterRoleConflict(response, err) {
+		return
+	}
 	switch {
 	case errors.Is(err, network.ErrDeviceNetworkNotFound):
 		writeError(response, http.StatusNotFound, "device_network_not_found", "")

@@ -223,6 +223,24 @@ describe('the development mock', () => {
     expect(statistics.points.length).toBeGreaterThan(0);
   });
 
+  it('serves role-aware management access through the development mock', async () => {
+    const { client, credential } = await signedInAdministrator();
+
+    const management = await client.getManagementAccess(credential);
+
+    expect(management.configuredInterfaces).toEqual(['enp1s0']);
+    expect(management.interfaces).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: 'enp1s0',
+          adapterId: '02:00:00:00:00:01',
+          role: 'management',
+          roleAvailable: true,
+        }),
+      ]),
+    );
+  });
+
   // The half-built mock let the Disable button appear and silently do nothing,
   // because the preview route was never mocked. This drives the whole journey
   // through the mock so that gap cannot reopen unnoticed.

@@ -1,0 +1,43 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-DATA-194a7775"
+
+title = "Persist management adapters by stable physical identity"
+
+status = "active"
+
+requirement = """
+When a physical adapter is selected for management access, the appliance shall persist its stable adapter identity with its last observed Linux name and resolve that selection after restart, disconnect, replug, or interface rename without treating a temporarily absent adapter as unclaimed.
+"""
+
+verification = "A repository migration and service test save a management adapter, reload it with the adapter absent, then present the same stable identity under a different Linux name and assert the management claim and status follow it; a virtual WireGuard interface remains represented by its interface identity and no secret data is serialized."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/management_access.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/management_access_repository.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/management_access_repository_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/management_access.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/management_access_test.go::TestManagementAccessFollowsAStableAdapterAcrossRename",
+    "05_Software/nilo_assistant/internal/store/sqlite/management_access_repository_test.go::TestManagementAccessRepositoryMigratesLegacyNamesToBindings",
+    "05_Software/nilo_assistant/internal/store/sqlite/management_access_repository_test.go::TestManagementAccessRepositoryPersistsStableAdapterBindings",
+    "05_Software/nilo_assistant/internal/store/sqlite/management_access_repository_test.go::TestManagementAccessRepositoryPersistsRecoveryWithoutSecrets",
+]
+
+
+spec = "specs/REQ-SEC-b8719eb2.md"
+
+priority = "high"
+rationale = "Linux interface names are observations and can change when USB adapters are replugged."
+
+created = 2026-09-11
+updated = 2026-09-11

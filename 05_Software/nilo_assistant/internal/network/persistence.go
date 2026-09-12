@@ -23,8 +23,9 @@ type OperationRecord struct {
 	ActorID  string
 	State    string
 	Revision string
-	// Parameters are the safe normalized parameters of the change, as JSON.
-	// Empty means the change had none beyond its target.
+	// Parameters are safe public operation metadata as JSON. Connectivity
+	// changers may use it for durable recovery state; transient user parameters
+	// and secrets never enter it. Empty means no durable metadata is needed.
 	Parameters json.RawMessage
 	// CheckpointID references the recovery state the privileged helper armed,
 	// which is what a restart reconciles against.

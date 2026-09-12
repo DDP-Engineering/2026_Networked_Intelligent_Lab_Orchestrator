@@ -2,10 +2,20 @@ package network
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
 )
+
+const deviceNetworkRecoveryMetadataSchema = 1
+
+type deviceNetworkRecoveryMetadata struct {
+	Schema    int                `json:"schema"`
+	Snapshot  []DeviceNetwork    `json:"snapshot"`
+	Claims    []AdapterRoleClaim `json:"claims"`
+	CreatedID string             `json:"created_id,omitempty"`
+}
 
 // ApplianceBase is what the privileged helper client provides: adapters,
 // counters, recovery, the interface and installation changes, key staging and
@@ -36,11 +46,14 @@ type Appliance struct {
 	deviceNetworks   *DeviceNetworkManager
 	audit            AuditJournal
 	managementAccess interface{ ConfiguredInterfaces() []string }
+	roleCoordinator  *AdapterRoleCoordinator
 	// armed holds the saved device networks as they were when a change was
 	// armed, keyed by checkpoint, so a restoration puts the decisions back
 	// together with the forwarding.
-	armedMu sync.Mutex
-	armed   map[string][]DeviceNetwork
+	armedMu         sync.Mutex
+	planned         map[string]deviceNetworkRecoveryMetadata
+	armed           map[string][]DeviceNetwork
+	armedRoleOwners map[string]string
 }
 
 // UseManagementAccessPolicy connects listener intent to the existing
@@ -53,7 +66,12 @@ func (appliance *Appliance) UseManagementAccessPolicy(policy interface{ Configur
 // observations it needs for previews and startup from the base, so it stays
 // free of any device knowledge of its own.
 func NewAppliance(base ApplianceBase, profiles *ProfileManager) *Appliance {
-	appliance := &Appliance{base: base, profiles: profiles, settings: newApplianceSettings(), armed: map[string][]DeviceNetwork{}}
+	appliance := &Appliance{
+		base: base, profiles: profiles, settings: newApplianceSettings(),
+		planned: map[string]deviceNetworkRecoveryMetadata{},
+		armed:   map[string][]DeviceNetwork{}, armedRoleOwners: map[string]string{},
+		roleCoordinator: NewAdapterRoleCoordinator(),
+	}
 	if profiles.options.ManagementPath == nil {
 		profiles.options.ManagementPath = appliance.managementPath
 	}
@@ -61,6 +79,11 @@ func NewAppliance(base ApplianceBase, profiles *ProfileManager) *Appliance {
 		profiles.options.Uplink = appliance.uplink
 	}
 	return appliance
+}
+
+// AdapterRoleCoordinator is shared by management access and device networks.
+func (appliance *Appliance) AdapterRoleCoordinator() *AdapterRoleCoordinator {
+	return appliance.roleCoordinator
 }
 
 func (appliance *Appliance) Source() Source { return appliance.base.Source() }
@@ -145,6 +168,53 @@ func (appliance *Appliance) ArmRecovery(ctx context.Context, operationID string,
 	return appliance.base.ArmRecovery(ctx, operationID, window)
 }
 
+// PlanChangeRecovery captures public device-network rollback state before the
+// first applying record is written. The helper is not contacted here.
+func (appliance *Appliance) PlanChangeRecovery(ctx context.Context, operationID string, change Change) (json.RawMessage, error) {
+	if !deviceNetworkActions[change.Action] {
+		return nil, nil
+	}
+	if _, unsupported := appliance.forwarderOrUnsupported().(unsupportedForwarder); unsupported || appliance.deviceNetworks == nil {
+		return nil, fmt.Errorf("%w: device network forwarding is not available on this appliance yet", ErrUnsupported)
+	}
+	saved, err := appliance.deviceNetworks.Snapshot(ctx)
+	if err != nil {
+		return nil, err
+	}
+	metadata := deviceNetworkRecoveryMetadata{
+		Schema: deviceNetworkRecoveryMetadataSchema, Snapshot: saved,
+	}
+	if change.Action == ActionDeviceNetworkCreate {
+		metadata.CreatedID = operationID
+		if change.DeviceNetwork != nil {
+			proposed := *change.DeviceNetwork
+			proposed.ID = metadata.CreatedID
+			change.DeviceNetwork = &proposed
+		}
+	}
+	metadata.Claims = deviceNetworkReservationClaims(saved, change)
+	encoded, err := json.Marshal(metadata)
+	if err != nil {
+		return nil, fmt.Errorf("encode device network recovery: %w", err)
+	}
+	if err := appliance.roleCoordinator.Reserve(operationID, metadata.Claims); err != nil {
+		return nil, err
+	}
+	appliance.armedMu.Lock()
+	appliance.planned[operationID] = metadata
+	appliance.armedMu.Unlock()
+	return encoded, nil
+}
+
+// CancelChangeRecovery releases a plan that never became an armed helper
+// checkpoint or a durable device-network record.
+func (appliance *Appliance) CancelChangeRecovery(operationID string) {
+	appliance.armedMu.Lock()
+	delete(appliance.planned, operationID)
+	appliance.armedMu.Unlock()
+	appliance.roleCoordinator.Release(operationID)
+}
+
 // ArmChange resolves a tunnel change to its connection before the helper binds
 // recovery to it, so the record the helper keeps names the connection it will
 // actually touch.
@@ -157,16 +227,32 @@ func (appliance *Appliance) ArmChange(ctx context.Context, operationID string, c
 		if _, unsupported := appliance.forwarderOrUnsupported().(unsupportedForwarder); unsupported || appliance.deviceNetworks == nil {
 			return Checkpoint{}, fmt.Errorf("%w: device network forwarding is not available on this appliance yet", ErrUnsupported)
 		}
-		saved, err := appliance.deviceNetworks.Snapshot(ctx)
+		appliance.armedMu.Lock()
+		planned, present := appliance.planned[operationID]
+		appliance.armedMu.Unlock()
+		if !present {
+			if _, err := appliance.PlanChangeRecovery(ctx, operationID, change); err != nil {
+				return Checkpoint{}, err
+			}
+			appliance.armedMu.Lock()
+			planned = appliance.planned[operationID]
+			appliance.armedMu.Unlock()
+		}
+		metadata, err := json.Marshal(planned)
 		if err != nil {
-			return Checkpoint{}, err
+			appliance.CancelChangeRecovery(operationID)
+			return Checkpoint{}, fmt.Errorf("encode device network recovery: %w", err)
 		}
 		checkpoint, err := appliance.base.ArmChange(ctx, operationID, change, window)
 		if err != nil {
+			appliance.CancelChangeRecovery(operationID)
 			return Checkpoint{}, err
 		}
+		checkpoint.Metadata = metadata
 		appliance.armedMu.Lock()
-		appliance.armed[checkpoint.ID] = saved
+		delete(appliance.planned, operationID)
+		appliance.armed[checkpoint.ID] = planned.Snapshot
+		appliance.armedRoleOwners[checkpoint.ID] = operationID
 		appliance.armedMu.Unlock()
 		return checkpoint, nil
 	}
@@ -197,6 +283,144 @@ func (appliance *Appliance) ArmChange(ctx context.Context, operationID string, c
 	return appliance.base.ArmChange(ctx, operationID, change, window)
 }
 
+func decodeDeviceNetworkRecovery(checkpoint Checkpoint) (deviceNetworkRecoveryMetadata, bool, error) {
+	if len(checkpoint.Metadata) == 0 {
+		return deviceNetworkRecoveryMetadata{}, false, nil
+	}
+	var metadata deviceNetworkRecoveryMetadata
+	if err := json.Unmarshal(checkpoint.Metadata, &metadata); err != nil {
+		return deviceNetworkRecoveryMetadata{}, false, fmt.Errorf("decode device network recovery: %w", err)
+	}
+	if metadata.Schema == 0 {
+		return deviceNetworkRecoveryMetadata{}, false, nil
+	}
+	if metadata.Schema != deviceNetworkRecoveryMetadataSchema {
+		return deviceNetworkRecoveryMetadata{}, false, fmt.Errorf("unsupported device network recovery schema %d", metadata.Schema)
+	}
+	for _, claim := range metadata.Claims {
+		if canonicalAdapterID(claim.AdapterID) == "" || claim.Role != AdapterRoleDevice {
+			return deviceNetworkRecoveryMetadata{}, false, fmt.Errorf("invalid device network recovery role claim")
+		}
+	}
+	return metadata, true, nil
+}
+
+// AdoptChangeRecovery reconstitutes the device-network snapshot and union role
+// reservation before startup composes management access around persisted state.
+func (appliance *Appliance) AdoptChangeRecovery(ctx context.Context, operationID string, change Change, checkpoint Checkpoint) error {
+	if !deviceNetworkActions[change.Action] {
+		return nil
+	}
+	metadata, present, err := decodeDeviceNetworkRecovery(checkpoint)
+	if err != nil {
+		return err
+	}
+	if !present {
+		return fmt.Errorf("device network recovery metadata is missing")
+	}
+	if appliance.deviceNetworks == nil {
+		return fmt.Errorf("device network recovery has no attached store")
+	}
+	if err := appliance.roleCoordinator.Reserve(operationID, metadata.Claims); err != nil {
+		return err
+	}
+	if checkpoint.ID != "" {
+		appliance.armedMu.Lock()
+		appliance.armed[checkpoint.ID] = metadata.Snapshot
+		appliance.armedRoleOwners[checkpoint.ID] = operationID
+		appliance.armedMu.Unlock()
+	}
+	return nil
+}
+
+// ReconcileUncheckpointedChange resolves a create from its durable record.
+// Other checkpoint-less operations are pre-helper attempts and are failed by
+// the operation manager, after which their persisted metadata restores state.
+func (appliance *Appliance) ReconcileUncheckpointedChange(ctx context.Context, _ string, change Change, checkpoint Checkpoint) (OperationState, bool, error) {
+	if change.Action != ActionDeviceNetworkCreate {
+		return "", false, nil
+	}
+	if appliance.deviceNetworks == nil {
+		return "", true, fmt.Errorf("device network recovery has no attached store")
+	}
+	createdID := change.Target
+	if metadata, present, err := decodeDeviceNetworkRecovery(checkpoint); err != nil {
+		return "", true, err
+	} else if present && metadata.CreatedID != "" {
+		createdID = metadata.CreatedID
+	}
+	records, err := appliance.deviceNetworks.Snapshot(ctx)
+	if err != nil {
+		return "", true, err
+	}
+	for _, record := range records {
+		if record.ID == createdID {
+			return StateConfirmed, true, nil
+		}
+	}
+	return StateFailed, true, nil
+}
+
+// ReconcileChangeRecovery brings the unprivileged store and role reservation
+// into the terminal state already observed from the privileged helper.
+func (appliance *Appliance) ReconcileChangeRecovery(ctx context.Context, operationID string, change Change, checkpoint Checkpoint, state OperationState) error {
+	if !deviceNetworkActions[change.Action] {
+		return nil
+	}
+	metadata, present, err := decodeDeviceNetworkRecovery(checkpoint)
+	if err != nil {
+		return err
+	}
+	if !present {
+		return fmt.Errorf("device network recovery metadata is missing")
+	}
+	switch state {
+	case StateFailed, StateRolledBack:
+		if appliance.deviceNetworks == nil {
+			return fmt.Errorf("device network recovery has no attached store")
+		}
+		if err := appliance.deviceNetworks.RestoreSnapshot(ctx, metadata.Snapshot); err != nil {
+			return err
+		}
+	case StateRollbackFailed:
+		// Both the old and proposed claims remain reserved because the helper
+		// could not prove which connectivity state survived.
+		return nil
+	case StateConfirmed:
+		// The persisted device inventory is already the confirmed proposal.
+	default:
+		return fmt.Errorf("unsupported device network recovery state %q", state)
+	}
+	appliance.armedMu.Lock()
+	delete(appliance.armed, checkpoint.ID)
+	delete(appliance.armedRoleOwners, checkpoint.ID)
+	appliance.armedMu.Unlock()
+	appliance.roleCoordinator.Release(operationID)
+	return nil
+}
+
+func deviceNetworkReservationClaims(saved []DeviceNetwork, change Change) []AdapterRoleClaim {
+	claims := make([]AdapterRoleClaim, 0, len(saved)+1)
+	for _, record := range saved {
+		claims = append(claims, AdapterRoleClaim{
+			AdapterID: record.DeviceInterface, Role: AdapterRoleDevice,
+			ResourceID: record.ID, ResourceName: record.Name,
+		})
+	}
+	if change.DeviceNetwork != nil &&
+		(change.Action == ActionDeviceNetworkCreate || change.Action == ActionDeviceNetworkUpdate) {
+		resourceID := change.Target
+		if change.DeviceNetwork.ID != "" {
+			resourceID = change.DeviceNetwork.ID
+		}
+		claims = append(claims, AdapterRoleClaim{
+			AdapterID: change.DeviceNetwork.DeviceInterface, Role: AdapterRoleDevice,
+			ResourceID: resourceID, ResourceName: change.DeviceNetwork.Name,
+		})
+	}
+	return claims
+}
+
 func (appliance *Appliance) Apply(ctx context.Context, action Action, target string) error {
 	return appliance.ApplyChange(ctx, Change{Action: action, Target: target})
 }
@@ -223,6 +447,14 @@ func (appliance *Appliance) ApplyChange(ctx context.Context, change Change) erro
 	case ActionDeviceNetworkCreate:
 		if appliance.deviceNetworks == nil {
 			return ErrUnsupported
+		}
+		appliance.armedMu.Lock()
+		planned, present := appliance.planned[change.operationID]
+		appliance.armedMu.Unlock()
+		if present && planned.CreatedID != "" && change.DeviceNetwork != nil {
+			proposed := *change.DeviceNetwork
+			proposed.ID = planned.CreatedID
+			change.DeviceNetwork = &proposed
 		}
 		// Creation saves a disabled definition and changes no live forwarding,
 		// so it has no helper recovery record to apply.
@@ -251,12 +483,19 @@ func (appliance *Appliance) Restore(ctx context.Context, checkpoint Checkpoint) 
 	observed, err := appliance.base.Restore(ctx, checkpoint)
 	appliance.armedMu.Lock()
 	saved, armed := appliance.armed[checkpoint.ID]
-	delete(appliance.armed, checkpoint.ID)
+	owner := appliance.armedRoleOwners[checkpoint.ID]
 	appliance.armedMu.Unlock()
 	if armed && appliance.deviceNetworks != nil {
 		if restoreErr := appliance.deviceNetworks.RestoreSnapshot(ctx, saved); restoreErr != nil {
 			return false, restoreErr
 		}
+	}
+	if err == nil && observed {
+		appliance.armedMu.Lock()
+		delete(appliance.armed, checkpoint.ID)
+		delete(appliance.armedRoleOwners, checkpoint.ID)
+		appliance.armedMu.Unlock()
+		appliance.roleCoordinator.Release(owner)
 	}
 	return observed, err
 }
@@ -267,10 +506,16 @@ func (appliance *Appliance) Discard(ctx context.Context, checkpoint Checkpoint) 
 	if err := appliance.base.Discard(ctx, checkpoint); err != nil {
 		return err
 	}
+	if err := appliance.commitIntent(ctx, checkpoint.ID); err != nil {
+		return err
+	}
 	appliance.armedMu.Lock()
+	owner := appliance.armedRoleOwners[checkpoint.ID]
 	delete(appliance.armed, checkpoint.ID)
+	delete(appliance.armedRoleOwners, checkpoint.ID)
 	appliance.armedMu.Unlock()
-	return appliance.commitIntent(ctx, checkpoint.ID)
+	appliance.roleCoordinator.Release(owner)
+	return nil
 }
 
 func (appliance *Appliance) StageSecrets(ctx context.Context, secrets Secrets) (string, error) {

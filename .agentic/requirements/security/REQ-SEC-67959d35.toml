@@ -1,0 +1,43 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-SEC-67959d35"
+
+title = "Fail closed when legacy adapter roles consume every management path"
+
+status = "active"
+
+requirement = """
+When startup reconciliation finds that every usable persisted management binding conflicts with a device-facing claim, the appliance shall fail before opening the HTTPS listener or accepting application requests and report a console-safe adapter-role conflict that requires local correction.
+"""
+
+verification = "A startup process test loads an all-conflicting legacy state, asserts a non-zero startup result with the stable adapter and both roles but no secrets, proves the listener and application handlers never open and no forwarding or widening firewall mutation occurs, then adds a safe management path and observes recovered startup."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/adapter_roles.go",
+    "05_Software/nilo_assistant/internal/network/management_access.go",
+    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/nilo_assistant/internal/network/appliance_device_networks.go",
+    "05_Software/nilo_assistant/internal/httpapi/serving.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go::TestApplianceSystemFailsClosedBeforeListeningOnAnAllPathRoleConflict",
+    "05_Software/nilo_assistant/internal/network/management_access_test.go::TestManagementAccessStartupFailsClosedWhenEveryUsablePathConflicts",
+    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestApplianceDefersDeviceForwardingUntilExplicitStartupReconciliation",
+]
+
+
+spec = "specs/REQ-SEC-b8719eb2.md"
+
+priority = "high"
+rationale = "Starting without a safe management route is preferable to exposing administrative handlers on equipment wiring."
+
+created = 2026-09-11
+updated = 2026-09-11

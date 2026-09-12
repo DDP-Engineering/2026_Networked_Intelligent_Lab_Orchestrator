@@ -1,0 +1,56 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-e70d524a"
+
+title = "Display adapter role transition outcomes"
+
+status = "active"
+
+requirement = """
+When management access or a device network is in a role-conflict, pending, failed, or recovered outcome, the browser interface shall display that outcome and its safe adapter detail as persistent localized status text until a later observed state supersedes it.
+"""
+
+verification = "Component tests render each outcome from backend responses, assert the state and adapter detail remain visible with dialogs and help closed and no secret fixture value present, then refresh with an applied state and assert the prior outcome is replaced; catalogue tests cover German and Romanian keys."
+
+affected_paths = [
+    "05_Software/nilo_gui/src/api/management-access.ts",
+    "05_Software/nilo_gui/src/api/client.ts",
+    "05_Software/nilo_gui/src/api/devicenetworks.ts",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
+    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.tsx",
+    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.tsx",
+    "05_Software/nilo_gui/src/i18n/en.ts",
+    "05_Software/nilo_gui/src/i18n/de.ts",
+    "05_Software/nilo_gui/src/i18n/ro.ts",
+    "05_Software/nilo_gui/src/api/client.test.ts",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
+    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.test.tsx",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.test.tsx::keeps a recovered outcome visible until refresh supersedes it",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::localizes structured adapter-role conflicts from a device preview",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::retains a structured role conflict until observed state supersedes it",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::never renders backend prose for malformed structured role conflicts",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::preserves typed adapter detail when acknowledgement finds a new role conflict",
+    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.test.tsx::keeps a management-update conflict until observed inventory supersedes its device claim",
+    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.test.tsx::never renders backend prose for a malformed structured role conflict",
+    "05_Software/nilo_gui/src/api/client.test.ts::withholds backend prose when adapter-role conflict details are malformed",
+    "05_Software/nilo_gui/e2e/network.spec.ts::keeps opposite-role adapters visible and explains sequential repurposing",
+]
+
+
+spec = "specs/REQ-SEC-b8719eb2.md"
+
+priority = "high"
+rationale = "Asynchronous and startup recovery outcomes must remain understandable without opening transient help."
+
+created = 2026-09-11
+updated = 2026-09-12

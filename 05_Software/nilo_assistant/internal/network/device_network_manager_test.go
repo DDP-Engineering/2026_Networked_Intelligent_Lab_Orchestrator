@@ -36,6 +36,43 @@ func TestCandidateAdapterIsTreatedAsTheDeviceSideDuringCreate(t *testing.T) {
 	}
 }
 
+func TestDeviceNetworkManagerRejectsAManagementClaimBeforeStoreOrForwarderMutation(t *testing.T) {
+	simulation := NewSimulation(time.Now)
+	coordinator := NewAdapterRoleCoordinator()
+	coordinator.RegisterClaimSource(func() []AdapterRoleClaim {
+		return []AdapterRoleClaim{{
+			AdapterID: proposedNetwork().DeviceInterface, Interface: "wlan0", Role: AdapterRoleManagement,
+		}}
+	})
+	forwarder := newMemoryForwarder()
+	store := newMemoryDeviceNetworkStore()
+	manager, err := NewDeviceNetworkManager(DeviceNetworkManagerOptions{
+		Forwarder: forwarder, Environment: simulationEnvironment{s: simulation},
+		Coordinator: coordinator,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := manager.UseStore(context.Background(), store); err != nil {
+		t.Fatal(err)
+	}
+	change := Change{Action: ActionDeviceNetworkCreate, Target: "new", DeviceNetwork: proposedNetwork()}
+	if _, err := manager.Inspect(context.Background(), change); err == nil {
+		t.Fatal("preview accepted a management adapter as device-facing")
+	} else {
+		var conflict *AdapterRoleConflictError
+		if !errors.As(err, &conflict) || conflict.RequestedRole != AdapterRoleDevice {
+			t.Fatalf("preview error=%v, want device role conflict", err)
+		}
+	}
+	if err := manager.Apply(context.Background(), change); err == nil {
+		t.Fatal("apply accepted a management adapter as device-facing")
+	}
+	if len(store.records) != 0 || len(forwarder.snapshot()) != 0 {
+		t.Fatalf("refusal mutated store or forwarder: records=%+v plans=%+v", store.records, forwarder.snapshot())
+	}
+}
+
 func (store *memoryDeviceNetworkStore) Save(_ context.Context, record DeviceNetwork, at time.Time) (DeviceNetwork, error) {
 	if err := record.Validate(); err != nil {
 		return DeviceNetwork{}, err

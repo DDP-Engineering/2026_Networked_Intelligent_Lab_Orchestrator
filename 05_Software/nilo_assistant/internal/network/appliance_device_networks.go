@@ -61,9 +61,8 @@ func (appliance *Appliance) UseForwarder(forwarder Forwarder) {
 }
 
 // UseDeviceNetworkStore attaches the saved device networks and builds the
-// manager over the appliance's forwarder. Enabled networks are reconciled at
-// once, which is the startup rule: applied when their prerequisites hold,
-// waiting with their guards closed otherwise.
+// manager over the appliance's forwarder. Startup composition explicitly calls
+// ReconcileDeviceNetworks only after management roles and firewall are safe.
 func (appliance *Appliance) UseDeviceNetworkStore(ctx context.Context, store DeviceNetworkStore) error {
 	if appliance.deviceNetworks == nil {
 		forwarder := appliance.forwarder
@@ -72,7 +71,7 @@ func (appliance *Appliance) UseDeviceNetworkStore(ctx context.Context, store Dev
 		}
 		manager, err := NewDeviceNetworkManager(DeviceNetworkManagerOptions{
 			Forwarder: forwarder, Environment: applianceEnvironment{appliance: appliance},
-			Prober: TCPProber, Audit: appliance.audit,
+			Prober: TCPProber, Audit: appliance.audit, Coordinator: appliance.roleCoordinator,
 		})
 		if err != nil {
 			return err
@@ -83,10 +82,7 @@ func (appliance *Appliance) UseDeviceNetworkStore(ctx context.Context, store Dev
 	if err := appliance.deviceNetworks.UseStore(ctx, store); err != nil {
 		return err
 	}
-	if _, unsupported := appliance.forwarderOrUnsupported().(unsupportedForwarder); unsupported {
-		return nil
-	}
-	return appliance.deviceNetworks.Reconcile(ctx)
+	return nil
 }
 
 func (appliance *Appliance) forwarderOrUnsupported() Forwarder {

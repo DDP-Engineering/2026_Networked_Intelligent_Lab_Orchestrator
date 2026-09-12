@@ -1,0 +1,52 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-15904d9e"
+
+title = "Explain unavailable adapter roles in device network selection"
+
+status = "active"
+
+requirement = """
+When the device-network editor displays a physical adapter claimed by applied or pending management access, the browser interface shall keep that adapter visible and disabled with localized persistent text naming its management role.
+"""
+
+verification = "A component test renders applied and pending management claims, asserts matching device-side adapter options are disabled with an associated visible reason while local-ingress selection and a distinct device-side adapter remain available, and the translation catalogue test confirms the text exists in English, German and Romanian."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/management_access.go",
+    "05_Software/nilo_assistant/internal/network/management_access_test.go",
+    "05_Software/nilo_gui/src/api/devicenetworks.ts",
+    "05_Software/nilo_gui/src/api/management-access.ts",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
+    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.tsx",
+    "05_Software/nilo_gui/src/i18n/en.ts",
+    "05_Software/nilo_gui/src/i18n/de.ts",
+    "05_Software/nilo_gui/src/i18n/ro.ts",
+    "05_Software/nilo_gui/src/api/mock.ts",
+    "05_Software/nilo_gui/src/api/network.test.ts",
+    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/management_access_test.go::TestManagementAccessStatusMarksPendingRollbackAdaptersAsManagementOwned",
+    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx::disables a management adapter only for the device-facing selection",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::shares one management-role observation with the device selector",
+    "05_Software/nilo_gui/e2e/network.spec.ts::keeps opposite-role adapters visible and explains sequential repurposing",
+]
+
+
+spec = "specs/REQ-SEC-b8719eb2.md"
+
+priority = "high"
+rationale = "The editor must prevent an invalid role choice without hiding the adapter or confusing local-ingress semantics with device-facing use."
+
+created = 2026-09-11
+updated = 2026-09-12

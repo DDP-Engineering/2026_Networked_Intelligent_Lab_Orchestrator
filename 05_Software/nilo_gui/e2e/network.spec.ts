@@ -112,6 +112,129 @@ async function applyPreview() {
   await dialog.getByRole('button', { name: 'Apply', exact: true }).click();
 }
 
+test('keeps opposite-role adapters visible and explains sequential repurposing', async () => {
+  await page.context().clearCookies();
+  // The development topology is intentionally simulation-only and therefore
+  // omits the appliance management panel. This presentation fixture supplies
+  // an appliance status together with the role-aware management response.
+  await page.route('**/api/v1/status', async (route) => {
+    await route.fulfill({
+      json: {
+        api_version: 'nilo.http/1',
+        status: 'healthy',
+        profile: 'appliance',
+        simulation: false,
+        build: {
+          name: 'nilo',
+          version: '0.2.0',
+          integration_protocol: 'nilo.integration/1',
+        },
+      },
+    });
+  });
+  await page.route('**/api/v1/network/management-access*', async (route) => {
+    await route.fulfill({
+      json: {
+        api_version: 'nilo.http/1',
+        state: 'recovered',
+        port: 8443,
+        interfaces: [
+          {
+            name: 'enp1s0',
+            adapter_id: '02:00:00:00:00:01',
+            kind: 'ethernet',
+            state: 'connected',
+            ipv4: ['192.168.10.24/24'],
+            ipv6: [],
+            enabled: true,
+            current: true,
+            usable: true,
+            role: 'management',
+            role_available: true,
+            role_detail: '',
+            conflicting_resource_id: '',
+            conflicting_resource_name: '',
+          },
+          {
+            name: 'wlan0',
+            adapter_id: '02:00:00:00:00:02',
+            kind: 'wifi',
+            state: 'disconnected',
+            ipv4: [],
+            ipv6: [],
+            enabled: false,
+            current: false,
+            usable: false,
+            role: 'device',
+            role_available: false,
+            role_detail: 'assigned to the device role by PLC line',
+            conflicting_resource_id: 'dn-plc',
+            conflicting_resource_name: 'PLC line',
+          },
+        ],
+        configured_interfaces: ['enp1s0'],
+        urls: [{ url: 'https://nilo.local:8443', kind: 'local' }],
+        tls_names: ['nilo.local'],
+        tls_missing: [],
+        confirm_by: null,
+        detail: 'Removed a conflicting management binding for wlan0.',
+        current_interface: 'enp1s0',
+      },
+    });
+  });
+
+  await page.goto(topology!.frontendUrl);
+  await page.getByLabel('Username').fill('network-admin');
+  await withRedactedSecret(password, () =>
+    page.getByLabel('Password', { exact: true }).fill(password),
+  );
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  const managementObserved = page.waitForResponse((response) =>
+    response.url().includes('/api/v1/network/management-access'),
+  );
+  await page
+    .getByRole('navigation')
+    .getByRole('button', { name: 'Device access', exact: true })
+    .click();
+  await managementObserved;
+  await page.getByRole('button', { name: 'Add device network', exact: true }).click();
+  const editor = page.getByRole('dialog', { name: 'New device network' });
+  await expect(
+    editor.getByLabel('Device-side adapter').getByRole('option', { name: /enp1s0/ }),
+  ).toBeDisabled();
+  await expect(editor.getByText(/reserved for management access/i)).toBeVisible();
+  await expect(
+    editor.getByLabel('Local-access adapter').getByRole('option', { name: /enp1s0/ }),
+  ).toBeEnabled();
+  await editor.getByRole('button', { name: 'How to repurpose an adapter' }).click();
+  const guide = page.getByRole('dialog', { name: 'Safe adapter repurposing' });
+  await expect(guide.getByText(/^1\. Establish/)).toBeVisible();
+  await expect(guide.getByText(/^2\. Remove/)).toBeVisible();
+  await expect(guide.getByText(/^3\. Assign/)).toBeVisible();
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+
+  await page
+    .getByRole('navigation')
+    .getByRole('button', { name: 'Network adapters', exact: true })
+    .click();
+  const management = page.getByRole('region', {
+    name: 'Management access interfaces',
+  });
+  await expect(
+    management.getByRole('checkbox', { name: 'Allow management access on wlan0' }),
+  ).toBeDisabled();
+  await expect(management.getByText(/device-side adapter for PLC line/i)).toBeVisible();
+  await expect(management.getByText(/Last known-good access recovered/i)).toBeVisible();
+  await expect(
+    management.getByText(/Removed a conflicting management binding for wlan0/i),
+  ).toBeVisible();
+
+  await page.unroute('**/api/v1/network/management-access*');
+  await page.unroute('**/api/v1/status');
+  await page.context().clearCookies();
+});
+
 test('shows acknowledged installation progress and its verified result', async () => {
   // Presentation fixture: actual package installation is separately exercised
   // through the privileged helper in the disposable Linux system test.

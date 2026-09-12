@@ -19,6 +19,7 @@ type managementAccessResponse struct {
 	TLSMissing       []string                            `json:"tls_missing"`
 	ConfirmBy        *time.Time                          `json:"confirm_by"`
 	Detail           string                              `json:"detail"`
+	Outcome          network.ManagementAccessOutcome     `json:"outcome"`
 	CurrentInterface string                              `json:"current_interface"`
 }
 
@@ -27,6 +28,7 @@ func managementAccessPayload(status network.ManagementAccessStatus) managementAc
 		APIVersion: apiVersion, State: status.State, Port: status.Port,
 		Interfaces: status.Interfaces, Configured: status.Configured, URLs: status.URLs,
 		TLSNames: status.TLSNames, TLSMissing: status.TLSMissing, Detail: status.Detail,
+		Outcome:          status.Outcome,
 		CurrentInterface: status.CurrentInterface,
 	}
 	if !status.ConfirmBy.IsZero() {
@@ -74,6 +76,9 @@ func handleUpdateManagementAccess(service *network.ManagementAccessService) http
 		}
 		status, err := service.Update(request.Context(), body.Interfaces, body.ConfirmCurrentInterface, LocalDestination(request.Context()))
 		if err != nil {
+			if writeAdapterRoleConflict(response, err) {
+				return
+			}
 			switch {
 			case errors.Is(err, network.ErrCurrentAccessConfirmation):
 				writeRefusal(response, http.StatusConflict, "current_interface_confirmation_required", err.Error())

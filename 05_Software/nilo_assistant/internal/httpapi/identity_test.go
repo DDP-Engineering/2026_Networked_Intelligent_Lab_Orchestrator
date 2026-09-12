@@ -54,6 +54,7 @@ type apiFixture struct {
 	clock         *apiClock
 	administrator auth.User
 	database      *sqlite.DB
+	provider      *network.Simulation
 }
 
 // newAPIFixture builds the production handler over a real database so that
@@ -140,7 +141,7 @@ func newAPIFixture(
 	return apiFixture{
 		options: handlerOptions,
 		handler: handler, service: service, clock: clock,
-		administrator: administrator, database: database,
+		administrator: administrator, database: database, provider: provider,
 	}
 }
 

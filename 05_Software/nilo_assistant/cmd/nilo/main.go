@@ -324,6 +324,42 @@ func runServe(ctx context.Context, arguments []string) int {
 		return 1
 	}
 	var managementAccess *network.ManagementAccessService
+	var roleCoordinator *network.AdapterRoleCoordinator
+	if roles, ok := provider.(interface {
+		AdapterRoleCoordinator() *network.AdapterRoleCoordinator
+	}); ok {
+		roleCoordinator = roles.AdapterRoleCoordinator()
+	}
+	operations, err := network.NewOperationManager(network.OperationManagerOptions{
+		Changer:  provider,
+		Observer: provider,
+		Now:      func() time.Time { return time.Now().UTC() },
+		NewID:    func() string { return uuid.NewString() },
+		Store:    application.NetworkOperationRepository(),
+		Audit:    application.AuditWriter(),
+		// An imported key goes straight to the privileged helper where one is
+		// present. The simulation offers no stager, so it parses an import and
+		// keeps no key at all: it manages no real tunnel, and a real key on a
+		// developer's machine would be a liability with no purpose.
+		Stager:   secretStagerFor(provider),
+		Recovery: recoveryObserverFor(provider),
+	})
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 1
+	}
+	// Rehydrate and settle in-flight device-network state before management
+	// composition. This restores rollback snapshots and reserves the complete
+	// old/new adapter union before any listener, firewall or forwarding plan is
+	// derived from durable state.
+	if err := operations.Adopt(ctx); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 1
+	}
+	if err := operations.Reconcile(ctx); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 1
+	}
 	if managementMode {
 		repository := application.ManagementAccessRepository()
 		var initial *network.ManagementAccessConfiguration
@@ -360,7 +396,7 @@ func runServe(ctx context.Context, arguments []string) int {
 		managementAccess, err = network.NewManagementAccessService(ctx, network.ManagementAccessOptions{
 			Provider: provider, Store: repository, Firewall: nethelper.NewClient(*helperSocket, ""),
 			Now: func() time.Time { return time.Now().UTC() }, Initial: initial,
-			Reconfigure: *managementReconfigure, TLSMissing: missing,
+			Reconfigure: *managementReconfigure, TLSMissing: missing, Coordinator: roleCoordinator,
 		})
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -372,35 +408,13 @@ func runServe(ctx context.Context, arguments []string) int {
 			configured.UseManagementAccessPolicy(managementAccess)
 		}
 	}
-	operations, err := network.NewOperationManager(network.OperationManagerOptions{
-		Changer:  provider,
-		Observer: provider,
-		Now:      func() time.Time { return time.Now().UTC() },
-		NewID:    func() string { return uuid.NewString() },
-		Store:    application.NetworkOperationRepository(),
-		Audit:    application.AuditWriter(),
-		// An imported key goes straight to the privileged helper where one is
-		// present. The simulation offers no stager, so it parses an import and
-		// keeps no key at all: it manages no real tunnel, and a real key on a
-		// developer's machine would be a liability with no purpose.
-		Stager:   secretStagerFor(provider),
-		Recovery: recoveryObserverFor(provider),
-	})
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return 1
-	}
-	// A change that was in flight when the previous run ended is adopted before
-	// anything is served, so its window is honoured by this run rather than
-	// forgotten with the process that opened it, and then settled against the
-	// helper's own record of what became of it.
-	if err := operations.Adopt(ctx); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return 1
-	}
-	if err := operations.Reconcile(ctx); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return 1
+	// Appliance forwarding is intentionally deferred until management role
+	// reconciliation and its firewall have completed.
+	if reconciler, ok := provider.(interface{ ReconcileDeviceNetworks(context.Context) error }); ok {
+		if err := reconciler.ReconcileDeviceNetworks(ctx); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 1
+		}
 	}
 	// The startup selection is connected once the runtime is reconciled and
 	// before anything is served, attributed to the system actor; a missing
@@ -427,11 +441,11 @@ func runServe(ctx context.Context, arguments []string) int {
 	if managementAccess != nil {
 		deviceReconcile := reconcileDeviceNetworks
 		reconcileDeviceNetworks = func(ctx context.Context) error {
-			var deviceErr error
-			if deviceReconcile != nil {
-				deviceErr = deviceReconcile(ctx)
+			managementErr := managementAccess.Reconcile(ctx)
+			if managementErr != nil || deviceReconcile == nil {
+				return managementErr
 			}
-			return errors.Join(deviceErr, managementAccess.Reconcile(ctx))
+			return errors.Join(managementErr, deviceReconcile(ctx))
 		}
 	}
 	housekeeper, err := activity.NewHousekeeper(activity.HousekeeperOptions{

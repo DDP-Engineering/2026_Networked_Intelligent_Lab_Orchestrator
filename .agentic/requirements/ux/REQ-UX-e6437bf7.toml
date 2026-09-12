@@ -1,0 +1,46 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-e6437bf7"
+
+title = "Guide safe adapter repurposing"
+
+status = "active"
+
+requirement = """
+When an administrator needs to repurpose a management adapter for a device network, the browser interface shall present the ordered workflow to establish and confirm a replacement management path, remove the old management role, and only then assign the adapter as device-facing, while keeping the existing current-session and last-route warnings visible.
+"""
+
+verification = "A component and browser test opens repurposing guidance from both selectors, asserts the three ordered actions and persistent current-session/last-route warnings, confirms no one-click role swap is offered, and exercises the workflow with a replacement path before the device-side option becomes available."
+
+affected_paths = [
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
+    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.tsx",
+    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.tsx",
+    "05_Software/nilo_gui/src/components/help/WorkflowHelp.tsx",
+    "05_Software/nilo_gui/src/i18n/en.ts",
+    "05_Software/nilo_gui/src/i18n/de.ts",
+    "05_Software/nilo_gui/src/i18n/ro.ts",
+    "05_Software/nilo_gui/e2e/network.spec.ts",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.test.tsx::keeps a device-owned adapter visible, disabled, and explained",
+    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx::disables a management adapter only for the device-facing selection",
+    "05_Software/nilo_gui/e2e/network.spec.ts::keeps opposite-role adapters visible and explains sequential repurposing",
+]
+
+
+spec = "specs/REQ-SEC-b8719eb2.md"
+
+priority = "high"
+rationale = "Role changes are intentionally sequential so the appliance never transiently loses safe administration or holds both roles."
+
+created = 2026-09-11
+updated = 2026-09-11

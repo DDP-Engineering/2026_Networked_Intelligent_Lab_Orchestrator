@@ -698,6 +698,11 @@ attribute. **How to configure** in the device-network editor and the adapter
 dialog opens the workflow help: the goal, the values to have ready, an
 addressing example, what NILO will change, what must already be configured on
 another computer, router, VPN hub or device, and how to verify and recover.
+When a physical adapter already owns the opposite management/device role, both
+selectors keep it visible but disable that role choice with a persistent
+localized reason. **How to repurpose an adapter** presents the separate,
+confirmed sequence—establish another management path, remove the old management
+binding, then select it as device-facing. Local ingress remains selectable.
 
 Safety information stays outside help. The confirmation window and automatic
 rollback, the countdown, a failed rollback, a refused change, field validation

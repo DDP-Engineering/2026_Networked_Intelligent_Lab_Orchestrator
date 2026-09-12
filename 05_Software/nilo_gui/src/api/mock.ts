@@ -1,4 +1,5 @@
 import type { BenchCoreTransport, TransportRequest, TransportResponse } from './client';
+import { MANAGEMENT_ACCESS_PATH } from './management-access';
 import {
   BENCH_CORE_API_VERSION,
   CSRF_HEADER_NAME,
@@ -263,6 +264,9 @@ class MockAdministration {
   operations = new Map<string, MockOperation>();
   /** Saved device networks, in the wire shape the routes return. */
   deviceNetworks = new Map<string, Record<string, unknown>>();
+  /** Interface-name boundary retained by the management-access API. */
+  managementInterfaces = ['enp1s0'];
+  managementState: 'pending' | 'applied' | 'recovered' = 'applied';
   /** The shared history, appended by every managed change. */
   activity: Record<string, unknown>[] = [];
   policy: {
@@ -599,6 +603,38 @@ function manageNetwork(
 ): TransportResponse {
   const body = decodeBody(request);
   void query;
+
+  if (path === MANAGEMENT_ACCESS_PATH && request.method === 'GET') {
+    return gated(actor, 'network.read', () =>
+      jsonResponse(200, mockManagementAccessBody(store)),
+    );
+  }
+  if (path === MANAGEMENT_ACCESS_PATH && request.method === 'PUT') {
+    return gated(actor, 'network.manage', () => {
+      if (
+        !Array.isArray(body.interfaces) ||
+        !body.interfaces.every((entry) => typeof entry === 'string')
+      ) {
+        return refusal(400, 'management_access_rejected');
+      }
+      store.managementInterfaces = [...body.interfaces];
+      store.managementState = 'pending';
+      return jsonResponse(200, mockManagementAccessBody(store));
+    });
+  }
+  if (path === `${MANAGEMENT_ACCESS_PATH}/confirm` && request.method === 'POST') {
+    return gated(actor, 'network.manage', () => {
+      store.managementState = 'applied';
+      return jsonResponse(200, mockManagementAccessBody(store));
+    });
+  }
+  if (path === `${MANAGEMENT_ACCESS_PATH}/recover` && request.method === 'POST') {
+    return gated(actor, 'network.manage', () => {
+      store.managementInterfaces = ['enp1s0'];
+      store.managementState = 'recovered';
+      return jsonResponse(200, mockManagementAccessBody(store));
+    });
+  }
 
   if (path === '/api/v1/network/operations' && request.method === 'GET') {
     return gated(actor, 'network.read', () =>
@@ -1226,6 +1262,62 @@ const MOCK_NETWORK_STATUS_BODY = {
     },
   ],
 };
+
+/** Management selection with the same stable identities as the mock inventory. */
+function mockManagementAccessBody(store: MockAdministration): unknown {
+  const deviceClaims = new Map<string, Record<string, unknown>>();
+  for (const network of store.deviceNetworks.values()) {
+    const adapterID = String(network.device_interface ?? '').toLowerCase();
+    if (adapterID !== '') deviceClaims.set(adapterID, network);
+  }
+  return {
+    api_version: BENCH_CORE_API_VERSION,
+    state: store.managementState,
+    port: 8443,
+    interfaces: MOCK_NETWORK_STATUS_BODY.interfaces.map((entry) => {
+      const adapterID = 'adapter_id' in entry ? String(entry.adapter_id) : '';
+      const device = deviceClaims.get(adapterID.toLowerCase());
+      const enabled = store.managementInterfaces.includes(entry.name);
+      return {
+        name: entry.name,
+        adapter_id: adapterID,
+        kind: entry.kind,
+        state: entry.state,
+        ipv4: entry.ipv4,
+        ipv6: entry.ipv6,
+        enabled,
+        current: entry.name === 'enp1s0',
+        usable:
+          entry.state === 'connected' && entry.ipv4.length + entry.ipv6.length > 0,
+        role:
+          device === undefined
+            ? enabled && adapterID !== ''
+              ? 'management'
+              : ''
+            : 'device',
+        role_available: device === undefined,
+        role_detail:
+          device === undefined
+            ? ''
+            : `assigned to device network ${String(device.name ?? '')}`,
+        conflicting_resource_id: device === undefined ? '' : String(device.id ?? ''),
+        conflicting_resource_name:
+          device === undefined ? '' : String(device.name ?? ''),
+      };
+    }),
+    configured_interfaces: [...store.managementInterfaces],
+    urls: [{ url: 'https://nilo.local:8443', kind: 'local' }],
+    tls_names: ['nilo.local'],
+    tls_missing: [],
+    confirm_by:
+      store.managementState === 'pending'
+        ? new Date(Date.now() + 120_000).toISOString()
+        : null,
+    detail: '',
+    outcome: { code: '', interface: '', resource_name: '' },
+    current_interface: 'enp1s0',
+  };
+}
 
 /**
  * Build a deterministic series for the requested window.

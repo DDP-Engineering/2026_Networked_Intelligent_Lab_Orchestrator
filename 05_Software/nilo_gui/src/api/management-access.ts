@@ -3,9 +3,35 @@ import { BENCH_CORE_API_VERSION, type ParseResult } from './contract';
 export const MANAGEMENT_ACCESS_PATH = '/api/v1/network/management-access';
 
 export type ManagementAccessState = 'pending' | 'applied' | 'failed' | 'recovered';
+export type AdapterRole = '' | 'management' | 'device';
+export type ManagementAccessOutcomeCode =
+  | ''
+  | 'startup_recovered'
+  | 'console_confirmation_required'
+  | 'role_conflict_recovered'
+  | 'proposed_change_restored'
+  | 'recovery_failed'
+  | 'automatic_recovery_failed'
+  | 'automatic_change_restored';
+
+export interface ManagementAccessOutcome {
+  code: ManagementAccessOutcomeCode;
+  interface: string;
+  resourceName: string;
+}
+
+export interface AdapterRoleConflict {
+  adapterId: string;
+  interface: string;
+  existingRole: Exclude<AdapterRole, ''>;
+  requestedRole: Exclude<AdapterRole, ''>;
+  conflictingResourceId: string;
+  conflictingResourceName: string;
+}
 
 export interface ManagementAccessInterface {
   name: string;
+  adapterId: string;
   kind: 'ethernet' | 'wifi' | 'wireguard' | 'loopback' | 'other';
   state: 'connected' | 'disconnected' | 'unavailable';
   ipv4: string[];
@@ -13,6 +39,11 @@ export interface ManagementAccessInterface {
   enabled: boolean;
   current: boolean;
   usable: boolean;
+  role: AdapterRole;
+  roleAvailable: boolean;
+  roleDetail: string;
+  conflictingResourceId: string;
+  conflictingResourceName: string;
 }
 
 export interface ManagementAccessURL {
@@ -30,6 +61,7 @@ export interface ManagementAccessStatus {
   tlsMissing: string[];
   confirmBy: Date | null;
   detail: string;
+  outcome: ManagementAccessOutcome;
   currentInterface: string;
 }
 
@@ -38,6 +70,39 @@ function strings(value: unknown): string[] | null {
     return null;
   }
   return value;
+}
+
+function physicalRole(value: unknown): Exclude<AdapterRole, ''> | null {
+  return value === 'management' || value === 'device' ? value : null;
+}
+
+/** Parse the secret-free details attached to an adapter-role refusal. */
+export function parseAdapterRoleConflict(value: unknown): AdapterRoleConflict | null {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    return null;
+  }
+  const body = value as Record<string, unknown>;
+  const existingRole = physicalRole(body.existing_role);
+  const requestedRole = physicalRole(body.requested_role);
+  if (
+    typeof body.adapter_id !== 'string' ||
+    typeof body.interface !== 'string' ||
+    existingRole === null ||
+    requestedRole === null ||
+    existingRole === requestedRole ||
+    typeof body.conflicting_resource_id !== 'string' ||
+    typeof body.conflicting_resource_name !== 'string'
+  ) {
+    return null;
+  }
+  return {
+    adapterId: body.adapter_id,
+    interface: body.interface,
+    existingRole,
+    requestedRole,
+    conflictingResourceId: body.conflicting_resource_id,
+    conflictingResourceName: body.conflicting_resource_name,
+  };
 }
 
 export function parseManagementAccess(
@@ -60,6 +125,27 @@ export function parseManagementAccess(
     typeof body.current_interface !== 'string'
   ) {
     return { ok: false, violation: 'management access has invalid state metadata' };
+  }
+  if (body.outcome === null || typeof body.outcome !== 'object' || Array.isArray(body.outcome)) {
+    return { ok: false, violation: 'management access has invalid outcome metadata' };
+  }
+  const outcome = body.outcome as Record<string, unknown>;
+  const outcomeCodes: ManagementAccessOutcomeCode[] = [
+    '',
+    'startup_recovered',
+    'console_confirmation_required',
+    'role_conflict_recovered',
+    'proposed_change_restored',
+    'recovery_failed',
+    'automatic_recovery_failed',
+    'automatic_change_restored',
+  ];
+  if (
+    !outcomeCodes.includes(String(outcome.code) as ManagementAccessOutcomeCode) ||
+    typeof outcome.interface !== 'string' ||
+    typeof outcome.resource_name !== 'string'
+  ) {
+    return { ok: false, violation: 'management access has invalid outcome metadata' };
   }
   const configuredInterfaces = strings(body.configured_interfaces);
   const tlsNames = strings(body.tls_names);
@@ -86,6 +172,7 @@ export function parseManagementAccess(
     const ipv6 = strings(entry.ipv6);
     if (
       typeof entry.name !== 'string' ||
+      typeof entry.adapter_id !== 'string' ||
       !['ethernet', 'wifi', 'wireguard', 'loopback', 'other'].includes(
         String(entry.kind),
       ) ||
@@ -94,12 +181,18 @@ export function parseManagementAccess(
       ipv6 === null ||
       typeof entry.enabled !== 'boolean' ||
       typeof entry.current !== 'boolean' ||
-      typeof entry.usable !== 'boolean'
+      typeof entry.usable !== 'boolean' ||
+      !['', 'management', 'device'].includes(String(entry.role)) ||
+      typeof entry.role_available !== 'boolean' ||
+      typeof entry.role_detail !== 'string' ||
+      typeof entry.conflicting_resource_id !== 'string' ||
+      typeof entry.conflicting_resource_name !== 'string'
     ) {
       return { ok: false, violation: 'management access lists an invalid interface' };
     }
     interfaces.push({
       name: entry.name,
+      adapterId: entry.adapter_id,
       kind: entry.kind as ManagementAccessInterface['kind'],
       state: entry.state as ManagementAccessInterface['state'],
       ipv4,
@@ -107,6 +200,11 @@ export function parseManagementAccess(
       enabled: entry.enabled,
       current: entry.current,
       usable: entry.usable,
+      role: entry.role as AdapterRole,
+      roleAvailable: entry.role_available,
+      roleDetail: entry.role_detail,
+      conflictingResourceId: entry.conflicting_resource_id,
+      conflictingResourceName: entry.conflicting_resource_name,
     });
   }
   const urls: ManagementAccessURL[] = [];
@@ -145,6 +243,11 @@ export function parseManagementAccess(
       tlsMissing,
       confirmBy,
       detail: body.detail,
+      outcome: {
+        code: outcome.code as ManagementAccessOutcomeCode,
+        interface: outcome.interface,
+        resourceName: outcome.resource_name,
+      },
       currentInterface: body.current_interface,
     },
   };

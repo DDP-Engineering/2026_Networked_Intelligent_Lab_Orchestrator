@@ -285,6 +285,9 @@ func previewChange(response http.ResponseWriter, request *http.Request, manager 
 
 	operation, err := manager.PreviewChange(request.Context(), actor.User.ID, change)
 	if err != nil {
+		if writeAdapterRoleConflict(response, err) {
+			return
+		}
 		if errors.Is(err, network.ErrPreviewStale) {
 			writeOperationFailure(response, err)
 			return
@@ -462,6 +465,9 @@ func handleRollbackOperation(manager *network.OperationManager) http.HandlerFunc
 // is a conflict with the operation's current state rather than a bad request:
 // the caller asked for something reasonable that is no longer true.
 func writeOperationFailure(response http.ResponseWriter, err error) {
+	if writeAdapterRoleConflict(response, err) {
+		return
+	}
 	switch {
 	case errors.Is(err, network.ErrOperationNotFound):
 		writeError(response, http.StatusNotFound, "network_operation_not_found", "")

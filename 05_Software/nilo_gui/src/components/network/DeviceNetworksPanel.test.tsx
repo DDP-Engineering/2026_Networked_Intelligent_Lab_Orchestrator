@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { NetworkInterface, NetworkOperation } from '../../api/contract';
 import type { DeviceNetwork, DeviceNetworkChange } from '../../api/devicenetworks';
+import type { ManagementAccessInterface } from '../../api/management-access';
 import { renderInShell } from '../../test/render';
 import { DeviceNetworksPanel } from './DeviceNetworksPanel';
 
@@ -39,6 +40,25 @@ const interfaces: NetworkInterface[] = [
     adapterId: '02:00:00:00:00:02',
     ssid: '',
     settings: null,
+  },
+];
+
+const managementInterfaces: ManagementAccessInterface[] = [
+  {
+    name: 'enp1s0',
+    adapterId: '02:00:00:00:00:01',
+    kind: 'ethernet',
+    state: 'connected',
+    ipv4: ['192.168.10.24/24'],
+    ipv6: [],
+    enabled: true,
+    current: true,
+    usable: true,
+    role: 'management',
+    roleAvailable: true,
+    roleDetail: '',
+    conflictingResourceId: '',
+    conflictingResourceName: '',
   },
 ];
 
@@ -136,6 +156,74 @@ describe('DeviceNetworksPanel', () => {
     chooseAction('Line 3', 'View activity Line 3');
     expect(openActivity).toHaveBeenCalledWith('dn-1');
   });
+
+  it('disables a management adapter only for the device-facing selection', () => {
+    renderInShell(
+      <DeviceNetworksPanel
+        networks={[line]}
+        interfaces={interfaces}
+        profiles={[]}
+        managementInterfaces={managementInterfaces}
+        canManage
+        busy={false}
+        unreadable={false}
+        propose={() => Promise.resolve(previewed)}
+        check={() => Promise.reject(new Error('unused'))}
+        instructions={() => Promise.reject(new Error('unused'))}
+      />,
+      { theme: 'light', language: 'en' },
+    );
+
+    const editor = openEditor();
+    const deviceSide = within(editor).getByLabelText('Device-side adapter');
+    expect(within(deviceSide).getByRole('option', { name: /enp1s0/ })).toBeDisabled();
+    expect(within(editor).getByText(/reserved for management access/i)).toBeVisible();
+
+    const localIngress = within(editor).getByLabelText('Local-access adapter');
+    expect(within(localIngress).getByRole('option', { name: /enp1s0/ })).toBeEnabled();
+    expect(within(deviceSide).getByRole('option', { name: /enp2s0/ })).toBeEnabled();
+
+    fireEvent.click(
+      within(editor).getByRole('button', { name: 'How to repurpose an adapter' }),
+    );
+    const guide = screen.getByRole('dialog', { name: 'Safe adapter repurposing' });
+    expect(within(guide).getByText(/^1\. Establish/)).toBeVisible();
+    expect(within(guide).getByText(/^2\. Remove/)).toBeVisible();
+    expect(within(guide).getByText(/^3\. Assign/)).toBeVisible();
+  });
+
+  it('blocks preview when a refreshed management claim owns the edited adapter', () => {
+    const claimedDeviceAdapter = managementInterfaces.map((entry) => ({
+      ...entry,
+      name: 'enp2s0',
+      adapterId: '02:00:00:00:00:02',
+    }));
+    renderPanel({ managementInterfaces: claimedDeviceAdapter });
+
+    chooseAction('Line 3', 'Edit Line 3');
+    const editor = screen.getByRole('dialog', { name: 'Edit Line 3' });
+    expect(within(editor).getByLabelText('Device-side adapter')).toHaveValue(
+      '02:00:00:00:00:02',
+    );
+    expect(within(editor).getByRole('button', { name: 'Preview' })).toBeDisabled();
+  });
+
+  it.each([
+    ['reading', 'Management adapter roles are still loading.'],
+    ['failed', 'Management adapter roles are unavailable.'],
+  ] as const)(
+    'fails closed while management adapter roles are %s',
+    (managementRoleState, message) => {
+      const propose = vi.fn(() => Promise.resolve(previewed));
+      renderPanel({ managementRoleState, propose });
+
+      const editor = openEditor();
+      expect(within(editor).getByText(message)).toBeVisible();
+      expect(within(editor).getByLabelText('Device-side adapter')).toBeDisabled();
+      expect(within(editor).getByRole('button', { name: 'Preview' })).toBeDisabled();
+      expect(propose).not.toHaveBeenCalled();
+    },
+  );
 
   // REQ-UX-ff989933: compact columns, details and a viewport-level action dialog.
   it('shows the essential columns, keeps the rest in Details and every action in one dialog', () => {

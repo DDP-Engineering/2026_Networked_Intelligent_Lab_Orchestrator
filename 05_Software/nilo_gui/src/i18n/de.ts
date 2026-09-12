@@ -933,4 +933,41 @@ export const de: Catalogue = {
   'network.management.state.failed': 'Anwendung oder Wiederherstellung fehlgeschlagen.',
   'network.management.state.recovered':
     'Letzter funktionierender Zugriff wiederhergestellt.',
+  'network.management.outcome.startupRecovered':
+    'Eine unbestätigte Änderung wurde beim Start wiederhergestellt.',
+  'network.management.outcome.consolePending':
+    'Die Neukonfiguration an der Konsole muss bestätigt werden.',
+  'network.management.outcome.roleConflictRecovered':
+    'Der Verwaltungszugriff wurde von {interface} entfernt, weil {resource} dessen Geräterolle verwendet.',
+  'network.management.outcome.proposedRestored':
+    'Die vorgeschlagene Änderung schlug fehl; der vorherige Zugriff wurde wiederhergestellt.',
+  'network.management.outcome.recoveryFailed':
+    'Die vorgeschlagene Änderung und ihre automatische Wiederherstellung sind fehlgeschlagen.',
+  'network.management.outcome.automaticRestored':
+    'Die unbestätigte Änderung wurde automatisch wiederhergestellt.',
+  'network.role.deviceUnavailable':
+    'Als geräteseitiger Adapter für {name} zugewiesen. Entfernen Sie diese Zuweisung, bevor Sie hier den Verwaltungszugriff aktivieren.',
+  'network.role.managementUnavailable':
+    '{name} ist für den Verwaltungszugriff reserviert. Bestätigen Sie einen anderen Verwaltungspfad und entfernen Sie diesen Adapter aus dem Verwaltungszugriff, bevor Sie ihn einem Gerätenetzwerk zuweisen.',
+  'network.role.managementInventoryReading':
+    'Die Rollen der Verwaltungsadapter werden noch geladen.',
+  'network.role.managementInventoryFailed':
+    'Die Rollen der Verwaltungsadapter sind nicht verfügbar.',
+  'network.role.malformedConflict':
+    'Der Adapterrollenkonflikt konnte nicht gelesen werden. Aktualisieren Sie die Netzwerkübersicht, bevor Sie es erneut versuchen.',
+  'network.role.unnamedDeviceNetwork': 'ein gespeichertes Gerätenetzwerk',
+  'help.roles.open': 'Adapter sicher umwidmen',
+  'help.roles.title': 'Sichere Adapter-Umwidmung',
+  'help.roles.goal':
+    'Einen physischen Adapter zwischen Verwaltung und Geräteseite verschieben, ohne den bestätigten Verwaltungsweg zu verlieren.',
+  'help.roles.needs':
+    'Halten Sie einen zweiten verbundenen Verwaltungsweg wie WLAN oder WireGuard bereit und prüfen Sie zuerst dessen NILO-URL.',
+  'help.roles.example':
+    'Damit ein USB-Ethernet-Adapter geräteseitig verwendet werden kann, bleibt WLAN oder WireGuard während des Rollenwechsels der Verwaltungsweg.',
+  'help.roles.changes':
+    '1. Einen Ersatz-Verwaltungsweg einrichten und bestätigen.\n2. Den Adapter aus dem Verwaltungszugriff entfernen und diese Änderung bestätigen.\n3. Den nun verfügbaren Adapter als geräteseitigen Adapter zuweisen.',
+  'help.roles.external':
+    'NILO führt keinen Rollenwechsel mit einem Klick aus. Der Ersatzweg muss zwischen den getrennt bestätigten Änderungen erreichbar bleiben.',
+  'help.roles.verify':
+    'Aktualisieren Sie nach jeder Bestätigung beide Auswahlen. Beachten Sie weiterhin die Warnungen zum aktuellen Sitzungsweg und zum letzten Verwaltungsweg.',
 };

@@ -3,6 +3,10 @@
 
 schema = 1
 
+[review]
+enabled = true
+max_fix_cycles = 2
+
 [commands]
 # `aegis test` runs `test`; `aegis check --run` runs every entry here.
 test = "python scripts/aegis_test.py full"

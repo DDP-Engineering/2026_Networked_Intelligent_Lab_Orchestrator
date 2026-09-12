@@ -414,7 +414,8 @@ func TestOnlyOneConnectivityChangeMayBeInFlight(t *testing.T) {
 }
 
 // If the appliance cannot be put back, it must not be changed in the first
-// place. The refusal has to come before anything is applied.
+// place. The accepted durable attempt settles as failed before anything is
+// applied, rather than remaining indefinitely previewed.
 func TestAChangeIsRefusedWhenRecoveryCannotBeArmed(t *testing.T) {
 	t.Parallel()
 
@@ -434,8 +435,8 @@ func TestAChangeIsRefusedWhenRecoveryCannotBeArmed(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Get: %v", err)
 	}
-	if operation.State != StatePreviewed {
-		t.Fatalf("state = %q, want the operation left at %q", operation.State, StatePreviewed)
+	if operation.State != StateFailed {
+		t.Fatalf("state = %q, want the operation settled at %q", operation.State, StateFailed)
 	}
 }
 

@@ -1,0 +1,44 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-17ef27ef"
+
+title = "Explain unavailable adapter roles in management selection"
+
+status = "active"
+
+requirement = """
+When the Management access interfaces control displays a physical adapter claimed by any saved or pending device network, the browser interface shall keep that adapter visible and disabled with localized persistent text naming its device-facing role and conflicting device network.
+"""
+
+verification = "A component test renders applied, disabled, pending and temporarily absent device-network claims, asserts each matching management checkbox is disabled with an associated visible reason while a distinct adapter remains enabled, and the translation catalogue test confirms the text exists in English, German and Romanian."
+
+affected_paths = [
+    "05_Software/nilo_gui/src/api/management-access.ts",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
+    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.tsx",
+    "05_Software/nilo_gui/src/i18n/en.ts",
+    "05_Software/nilo_gui/src/i18n/de.ts",
+    "05_Software/nilo_gui/src/i18n/ro.ts",
+    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.test.tsx",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.test.tsx::keeps a device-owned adapter visible, disabled, and explained",
+    "05_Software/nilo_gui/e2e/network.spec.ts::keeps opposite-role adapters visible and explains sequential repurposing",
+]
+
+
+spec = "specs/REQ-SEC-b8719eb2.md"
+
+priority = "high"
+rationale = "Keeping the unavailable choice visible teaches the operator why it cannot be selected and how existing state constrains it."
+
+created = 2026-09-11
+updated = 2026-09-11

@@ -40,10 +40,19 @@ var (
 	managementInterfaceName       = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.-]{0,14}$`)
 )
 
-// ManagementAccessConfiguration is the stable listener identity. Interface
-// names, not their DHCP addresses, are the access-control boundary.
+// ManagementInterfaceBinding keeps the physical identity and last observed
+// Linux name of one management interface. AdapterID is empty for virtual or
+// not-yet-resolved legacy interfaces.
+type ManagementInterfaceBinding struct {
+	AdapterID     string `json:"adapter_id"`
+	LastKnownName string `json:"last_known_name"`
+}
+
+// ManagementAccessConfiguration is the stable listener identity. Interfaces
+// is the current helper-facing name list; Bindings is its durable identity.
 type ManagementAccessConfiguration struct {
 	Interfaces []string
+	Bindings   []ManagementInterfaceBinding `json:"-"`
 	Port       int
 	TLSNames   []string
 }
@@ -51,6 +60,7 @@ type ManagementAccessConfiguration struct {
 // Validate rejects configurations that could become a wildcard listener
 // without an explicit, meaningful allowlist.
 func (configuration ManagementAccessConfiguration) Validate() error {
+	configuration = canonicalManagementConfiguration(configuration)
 	if configuration.Port < 1 || configuration.Port > 65535 {
 		return errors.New("management port must be between 1 and 65535")
 	}
@@ -112,9 +122,38 @@ func asciiAlphaNumeric(value byte) bool {
 }
 
 func canonicalManagementConfiguration(configuration ManagementAccessConfiguration) ManagementAccessConfiguration {
-	configuration.Interfaces = append([]string(nil), configuration.Interfaces...)
+	bindings := append([]ManagementInterfaceBinding(nil), configuration.Bindings...)
+	if len(bindings) == 0 {
+		for _, name := range configuration.Interfaces {
+			bindings = append(bindings, ManagementInterfaceBinding{LastKnownName: name})
+		}
+	}
+	seen := map[string]bool{}
+	canonical := make([]ManagementInterfaceBinding, 0, len(bindings))
+	for _, binding := range bindings {
+		binding.AdapterID = canonicalAdapterID(binding.AdapterID)
+		binding.LastKnownName = strings.TrimSpace(binding.LastKnownName)
+		key := "name:" + binding.LastKnownName
+		if binding.AdapterID != "" {
+			key = "adapter:" + binding.AdapterID
+		}
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		canonical = append(canonical, binding)
+	}
+	sort.Slice(canonical, func(first, second int) bool {
+		firstKey := canonical[first].AdapterID + "\x00" + canonical[first].LastKnownName
+		secondKey := canonical[second].AdapterID + "\x00" + canonical[second].LastKnownName
+		return firstKey < secondKey
+	})
+	configuration.Bindings = canonical
+	configuration.Interfaces = make([]string, 0, len(canonical))
+	for _, binding := range canonical {
+		configuration.Interfaces = append(configuration.Interfaces, binding.LastKnownName)
+	}
 	configuration.TLSNames = append([]string(nil), configuration.TLSNames...)
-	sort.Strings(configuration.Interfaces)
 	sort.Strings(configuration.TLSNames)
 	return configuration
 }
@@ -122,8 +161,44 @@ func canonicalManagementConfiguration(configuration ManagementAccessConfiguratio
 func sameManagementConfiguration(first, second ManagementAccessConfiguration) bool {
 	first = canonicalManagementConfiguration(first)
 	second = canonicalManagementConfiguration(second)
-	return first.Port == second.Port && strings.Join(first.Interfaces, "\x00") == strings.Join(second.Interfaces, "\x00") &&
+	firstClaims := managementBindingKeys(first.Bindings)
+	secondClaims := managementBindingKeys(second.Bindings)
+	return first.Port == second.Port && strings.Join(firstClaims, "\x00") == strings.Join(secondClaims, "\x00") &&
 		strings.Join(first.TLSNames, "\x00") == strings.Join(second.TLSNames, "\x00")
+}
+
+func managementBindingKeys(bindings []ManagementInterfaceBinding) []string {
+	keys := make([]string, 0, len(bindings))
+	for _, binding := range bindings {
+		key := "name:" + binding.LastKnownName
+		if binding.AdapterID != "" {
+			key = "adapter:" + canonicalAdapterID(binding.AdapterID)
+		}
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+func resolveManagementConfiguration(configuration ManagementAccessConfiguration, interfaces []Interface) ManagementAccessConfiguration {
+	configuration = canonicalManagementConfiguration(configuration)
+	for index, binding := range configuration.Bindings {
+		for _, candidate := range interfaces {
+			matches := binding.AdapterID != "" && canonicalAdapterID(candidate.AdapterID) == binding.AdapterID
+			if binding.AdapterID == "" && candidate.Name == binding.LastKnownName {
+				matches = true
+			}
+			if !matches {
+				continue
+			}
+			configuration.Bindings[index].LastKnownName = candidate.Name
+			if (candidate.Kind == KindEthernet || candidate.Kind == KindWiFi) && candidate.AdapterID != "" {
+				configuration.Bindings[index].AdapterID = canonicalAdapterID(candidate.AdapterID)
+			}
+			break
+		}
+	}
+	return canonicalManagementConfiguration(configuration)
 }
 
 // ManagementAccessRecord is the one durable management-listener decision.
@@ -134,7 +209,46 @@ type ManagementAccessRecord struct {
 	State         ManagementAccessState
 	ConfirmBy     time.Time
 	Detail        string
+	Outcome       ManagementAccessOutcome
 	UpdatedAt     time.Time
+}
+
+// ManagementAccessOutcomeCode is a stable, localizable reason for a persisted
+// transition. Detail remains an English console diagnostic and is never
+// rendered directly by the browser.
+type ManagementAccessOutcomeCode string
+
+const (
+	ManagementOutcomeStartupRecovered      ManagementAccessOutcomeCode = "startup_recovered"
+	ManagementOutcomeConsolePending        ManagementAccessOutcomeCode = "console_confirmation_required"
+	ManagementOutcomeRoleConflictRecovered ManagementAccessOutcomeCode = "role_conflict_recovered"
+	ManagementOutcomeProposedRestored      ManagementAccessOutcomeCode = "proposed_change_restored"
+	ManagementOutcomeRecoveryFailed        ManagementAccessOutcomeCode = "recovery_failed"
+	ManagementOutcomeAutomaticFailed       ManagementAccessOutcomeCode = "automatic_recovery_failed"
+	ManagementOutcomeAutomaticRestored     ManagementAccessOutcomeCode = "automatic_change_restored"
+)
+
+// Valid reports whether the code is one of the stable browser-facing outcomes.
+func (code ManagementAccessOutcomeCode) Valid() bool {
+	switch code {
+	case ManagementOutcomeStartupRecovered,
+		ManagementOutcomeConsolePending,
+		ManagementOutcomeRoleConflictRecovered,
+		ManagementOutcomeProposedRestored,
+		ManagementOutcomeRecoveryFailed,
+		ManagementOutcomeAutomaticFailed,
+		ManagementOutcomeAutomaticRestored:
+		return true
+	default:
+		return false
+	}
+}
+
+// ManagementAccessOutcome carries only safe adapter and resource labels.
+type ManagementAccessOutcome struct {
+	Code         ManagementAccessOutcomeCode `json:"code"`
+	Interface    string                      `json:"interface"`
+	ResourceName string                      `json:"resource_name"`
 }
 
 // ManagementAccessStore persists the allowlist in the existing NILO database.
@@ -152,14 +266,20 @@ type ManagementAccessFirewall interface {
 
 // ManagementAccessInterface is the public state shown for one detected device.
 type ManagementAccessInterface struct {
-	Name    string   `json:"name"`
-	Kind    Kind     `json:"kind"`
-	State   State    `json:"state"`
-	IPv4    []string `json:"ipv4"`
-	IPv6    []string `json:"ipv6"`
-	Enabled bool     `json:"enabled"`
-	Current bool     `json:"current"`
-	Usable  bool     `json:"usable"`
+	Name                    string      `json:"name"`
+	AdapterID               string      `json:"adapter_id"`
+	Kind                    Kind        `json:"kind"`
+	State                   State       `json:"state"`
+	IPv4                    []string    `json:"ipv4"`
+	IPv6                    []string    `json:"ipv6"`
+	Enabled                 bool        `json:"enabled"`
+	Current                 bool        `json:"current"`
+	Usable                  bool        `json:"usable"`
+	Role                    AdapterRole `json:"role"`
+	RoleAvailable           bool        `json:"role_available"`
+	RoleDetail              string      `json:"role_detail"`
+	ConflictingResourceID   string      `json:"conflicting_resource_id"`
+	ConflictingResourceName string      `json:"conflicting_resource_name"`
 }
 
 // ManagementURL is a stable URL backed by a certificate identity.
@@ -180,6 +300,7 @@ type ManagementAccessStatus struct {
 	TLSMissing       []string
 	ConfirmBy        time.Time
 	Detail           string
+	Outcome          ManagementAccessOutcome
 	CurrentInterface string
 }
 
@@ -194,6 +315,7 @@ type ManagementAccessOptions struct {
 	Reconfigure   bool
 	TLSMissing    []string
 	ConfirmWindow time.Duration
+	Coordinator   *AdapterRoleCoordinator
 }
 
 // ManagementAccessService owns the active allowlist used by both the socket
@@ -210,6 +332,7 @@ type ManagementAccessService struct {
 	interfaces    []Interface
 	allowed       map[netip.Addr]string
 	tlsMissing    []string
+	coordinator   *AdapterRoleCoordinator
 }
 
 // NewManagementAccessService loads or deliberately initializes the durable
@@ -225,11 +348,15 @@ func NewManagementAccessService(ctx context.Context, options ManagementAccessOpt
 	if options.ConfirmWindow <= 0 {
 		options.ConfirmWindow = ManagementAccessConfirmationWindow
 	}
+	if options.Coordinator == nil {
+		options.Coordinator = NewAdapterRoleCoordinator()
+	}
+	needsSave := false
 	record, present, err := options.Store.LoadManagementAccess(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("load management access: %w", err)
 	}
-	if record.State == ManagementAccessPending {
+	if record.State == ManagementAccessPending || record.State == ManagementAccessFailed {
 		if err := record.LastKnownGood.Validate(); err != nil {
 			return nil, fmt.Errorf("pending management access has no valid recovery configuration: %w", err)
 		}
@@ -237,21 +364,20 @@ func NewManagementAccessService(ctx context.Context, options ManagementAccessOpt
 		record.State = ManagementAccessRecovered
 		record.ConfirmBy = time.Time{}
 		record.Detail = "an unconfirmed management access change was restored during startup"
+		record.Outcome = ManagementAccessOutcome{Code: ManagementOutcomeStartupRecovered}
 		record.UpdatedAt = options.Now().UTC()
-		if err := options.Store.SaveManagementAccess(ctx, record); err != nil {
-			return nil, fmt.Errorf("record startup management recovery: %w", err)
-		}
+		needsSave = true
+	}
+	observed, err := options.Provider.Interfaces(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("observe management interfaces: %w", err)
 	}
 	if options.Initial != nil {
-		configuration := canonicalManagementConfiguration(*options.Initial)
+		configuration := resolveManagementConfiguration(*options.Initial, observed)
 		if err := configuration.Validate(); err != nil {
 			return nil, err
 		}
-		interfaces, err := options.Provider.Interfaces(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("observe initial management interfaces: %w", err)
-		}
-		if !managementConfigurationHasUsableInterface(interfaces, configuration.Interfaces) {
+		if !managementConfigurationHasUsableInterface(observed, configuration.Interfaces) {
 			return nil, ErrManagementAccessUnsafe
 		}
 		switch {
@@ -270,18 +396,46 @@ func NewManagementAccessService(ctx context.Context, options ManagementAccessOpt
 				Configuration: configuration, LastKnownGood: record.Configuration,
 				State: ManagementAccessPending, ConfirmBy: options.Now().UTC().Add(options.ConfirmWindow),
 				UpdatedAt: options.Now().UTC(), Detail: "console management reconfiguration requires confirmation",
+				Outcome: ManagementAccessOutcome{Code: ManagementOutcomeConsolePending},
 			}
 		}
-		if err := options.Store.SaveManagementAccess(ctx, record); err != nil {
-			return nil, fmt.Errorf("save initial management access: %w", err)
-		}
+		needsSave = true
 		present = true
 	}
 	if !present {
 		return nil, errors.New("no persistent management access configuration; specify --management-interface at the appliance console")
 	}
+	resolvedConfiguration := resolveManagementConfiguration(record.Configuration, observed)
+	resolvedLastKnownGood := resolveManagementConfiguration(record.LastKnownGood, observed)
+	bindingsChanged := !sameManagementBindings(record.Configuration, resolvedConfiguration) ||
+		!sameManagementBindings(record.LastKnownGood, resolvedLastKnownGood)
+	record.Configuration = resolvedConfiguration
+	record.LastKnownGood = resolvedLastKnownGood
+	record, recoveredConflict, err := reconcileManagementRoleConflicts(record, observed, options.Coordinator, options.Now().UTC())
+	if err != nil {
+		return nil, err
+	}
+	if recoveredConflict {
+		needsSave = true
+	}
 	if err := record.Configuration.Validate(); err != nil {
 		return nil, fmt.Errorf("invalid saved management access: %w", err)
+	}
+	if bindingsChanged {
+		record.UpdatedAt = options.Now().UTC()
+		needsSave = true
+	}
+	startupReservation := "management-access-startup-" + randomIdentity()
+	if err := options.Coordinator.Reserve(startupReservation, managementRecordRoleClaims(record)); err != nil {
+		return nil, err
+	}
+	defer options.Coordinator.Release(startupReservation)
+	// Persist the authoritative decision before changing the privileged
+	// firewall. A failed initial save therefore leaves no transient exposure.
+	if needsSave {
+		if err := options.Store.SaveManagementAccess(ctx, record); err != nil {
+			return nil, fmt.Errorf("save resolved management access: %w", err)
+		}
 	}
 	if err := options.Firewall.ApplyManagementAccess(ctx, record.Configuration); err != nil {
 		return nil, fmt.Errorf("apply management firewall: %w", err)
@@ -290,25 +444,167 @@ func NewManagementAccessService(ctx context.Context, options ManagementAccessOpt
 		provider: options.Provider, store: options.Store, firewall: options.Firewall,
 		now: options.Now, confirmWindow: options.ConfirmWindow, record: record,
 		allowed: map[netip.Addr]string{}, tlsMissing: append([]string(nil), options.TLSMissing...),
+		interfaces:  cloneInterfaces(observed),
+		coordinator: options.Coordinator,
 	}
-	if err := service.Refresh(ctx); err != nil {
-		return nil, err
-	}
+	service.rebuildAllowedLocked()
+	service.coordinator.RegisterClaimSource(service.adapterRoleClaims)
 	return service, nil
+}
+
+func reconcileManagementRoleConflicts(
+	record ManagementAccessRecord,
+	interfaces []Interface,
+	coordinator *AdapterRoleCoordinator,
+	now time.Time,
+) (ManagementAccessRecord, bool, error) {
+	conflicts := coordinator.Conflicts(managementRoleClaims(record.Configuration))
+	if len(conflicts) == 0 {
+		return record, false, nil
+	}
+	conflicting := map[string]*AdapterRoleConflictError{}
+	for _, conflict := range conflicts {
+		conflicting[canonicalAdapterID(conflict.AdapterID)] = conflict
+	}
+	clean := withoutManagementRoleConflicts(record.Configuration, conflicting)
+	if !managementConfigurationHasUsableInterface(interfaces, clean.Interfaces) {
+		return record, false, conflicts[0]
+	}
+	good := withoutManagementRoleConflicts(record.LastKnownGood, conflicting)
+	if len(good.Interfaces) == 0 {
+		good = clean
+	}
+	first := conflicts[0]
+	detail := fmt.Sprintf("management adapter %s conflicted with the device role and was removed", first.Interface)
+	if first.ConflictingResourceName != "" {
+		detail = fmt.Sprintf("management adapter %s conflicted with device network %q and was removed", first.Interface, first.ConflictingResourceName)
+	}
+	record.Configuration = clean
+	record.LastKnownGood = good
+	record.State = ManagementAccessRecovered
+	record.ConfirmBy = time.Time{}
+	record.Detail = detail
+	record.Outcome = ManagementAccessOutcome{
+		Code: ManagementOutcomeRoleConflictRecovered, Interface: first.Interface,
+		ResourceName: first.ConflictingResourceName,
+	}
+	record.UpdatedAt = now
+	return record, true, nil
+}
+
+func withoutManagementRoleConflicts(
+	configuration ManagementAccessConfiguration,
+	conflicts map[string]*AdapterRoleConflictError,
+) ManagementAccessConfiguration {
+	configuration = canonicalManagementConfiguration(configuration)
+	bindings := make([]ManagementInterfaceBinding, 0, len(configuration.Bindings))
+	for _, binding := range configuration.Bindings {
+		if _, conflict := conflicts[canonicalAdapterID(binding.AdapterID)]; binding.AdapterID != "" && conflict {
+			continue
+		}
+		bindings = append(bindings, binding)
+	}
+	configuration.Bindings = bindings
+	configuration.Interfaces = nil
+	return canonicalManagementConfiguration(configuration)
+}
+
+func managementRoleClaims(configuration ManagementAccessConfiguration) []AdapterRoleClaim {
+	configuration = canonicalManagementConfiguration(configuration)
+	claims := make([]AdapterRoleClaim, 0, len(configuration.Bindings))
+	for _, binding := range configuration.Bindings {
+		if binding.AdapterID == "" {
+			continue
+		}
+		claims = append(claims, AdapterRoleClaim{
+			AdapterID: binding.AdapterID, Interface: binding.LastKnownName, Role: AdapterRoleManagement,
+		})
+	}
+	return claims
+}
+
+func managementRecordRoleClaims(record ManagementAccessRecord) []AdapterRoleClaim {
+	claims := managementRoleClaims(record.Configuration)
+	if record.State == ManagementAccessPending || record.State == ManagementAccessFailed {
+		claims = append(claims, managementRoleClaims(record.LastKnownGood)...)
+	}
+	return claims
+}
+
+func (service *ManagementAccessService) adapterRoleClaims() []AdapterRoleClaim {
+	service.mu.RLock()
+	defer service.mu.RUnlock()
+	return managementRecordRoleClaims(service.record)
+}
+
+func sameManagementBindings(first, second ManagementAccessConfiguration) bool {
+	first = canonicalManagementConfiguration(first)
+	second = canonicalManagementConfiguration(second)
+	if len(first.Bindings) != len(second.Bindings) {
+		return false
+	}
+	for index := range first.Bindings {
+		if first.Bindings[index] != second.Bindings[index] {
+			return false
+		}
+	}
+	return true
 }
 
 // Refresh updates the address cache used by the pre-HTTP socket gate. It does
 // not alter the allowlist, so DHCP renewal and interface return need no restart
 // or configuration write.
 func (service *ManagementAccessService) Refresh(ctx context.Context) error {
+	service.changeMu.Lock()
+	defer service.changeMu.Unlock()
+	return service.refresh(ctx)
+}
+
+func (service *ManagementAccessService) refresh(ctx context.Context) error {
 	interfaces, err := service.provider.Interfaces(ctx)
 	if err != nil {
 		return fmt.Errorf("refresh management interfaces: %w", err)
 	}
+	service.mu.RLock()
+	previous := service.record
+	service.mu.RUnlock()
+	candidate := previous
+	candidate.Configuration = resolveManagementConfiguration(candidate.Configuration, interfaces)
+	candidate.LastKnownGood = resolveManagementConfiguration(candidate.LastKnownGood, interfaces)
+	changed := !sameManagementBindings(previous.Configuration, candidate.Configuration) ||
+		!sameManagementBindings(previous.LastKnownGood, candidate.LastKnownGood)
+	candidate, recovered, err := reconcileManagementRoleConflicts(candidate, interfaces, service.coordinator, service.now().UTC())
+	if err != nil {
+		return err
+	}
+	changed = changed || recovered
+	if changed {
+		candidate.UpdatedAt = service.now().UTC()
+		if err := service.coordinator.CheckAndRun(managementRecordRoleClaims(candidate), func() error {
+			if err := service.firewall.ApplyManagementAccess(ctx, candidate.Configuration); err != nil {
+				return err
+			}
+			if err := service.store.SaveManagementAccess(ctx, candidate); err != nil {
+				return service.publishFailedUpdate(
+					context.WithoutCancel(ctx), previous.Configuration, candidate.Configuration, err,
+				)
+			}
+			service.mu.Lock()
+			service.interfaces = cloneInterfaces(interfaces)
+			service.record = candidate
+			service.rebuildAllowedLocked()
+			service.mu.Unlock()
+			return nil
+		}); err != nil {
+			return fmt.Errorf("reconcile management interfaces: %w", err)
+		}
+		return nil
+	}
 	service.mu.Lock()
-	defer service.mu.Unlock()
 	service.interfaces = cloneInterfaces(interfaces)
+	service.record = candidate
 	service.rebuildAllowedLocked()
+	service.mu.Unlock()
 	return nil
 }
 
@@ -368,46 +664,98 @@ func (service *ManagementAccessService) currentInterface(address netip.Addr) str
 // Status returns the detected inventory and stable URLs. DHCP addresses remain
 // observations on interfaces and are never promoted into permanent URLs.
 func (service *ManagementAccessService) Status(ctx context.Context, localAddress netip.Addr) (ManagementAccessStatus, error) {
-	if err := service.Refresh(ctx); err != nil {
+	service.changeMu.Lock()
+	defer service.changeMu.Unlock()
+	if err := service.refresh(ctx); err != nil {
 		return ManagementAccessStatus{}, err
 	}
+	return service.status(localAddress), nil
+}
+
+func (service *ManagementAccessService) status(localAddress netip.Addr) ManagementAccessStatus {
 	service.mu.RLock()
-	defer service.mu.RUnlock()
 	current := service.currentInterfaceLocked(localAddress)
-	configured := map[string]bool{}
-	for _, name := range service.record.Configuration.Interfaces {
-		configured[name] = true
+	record := service.record
+	interfaces := cloneInterfaces(service.interfaces)
+	tlsMissing := append([]string(nil), service.tlsMissing...)
+	service.mu.RUnlock()
+	configuredNames := map[string]ManagementInterfaceBinding{}
+	configuredAdapters := map[string]ManagementInterfaceBinding{}
+	rollbackAdapters := map[string]ManagementInterfaceBinding{}
+	for _, binding := range record.Configuration.Bindings {
+		if binding.AdapterID != "" {
+			configuredAdapters[binding.AdapterID] = binding
+		} else {
+			configuredNames[binding.LastKnownName] = binding
+		}
+	}
+	if record.State == ManagementAccessPending || record.State == ManagementAccessFailed {
+		for _, binding := range record.LastKnownGood.Bindings {
+			if binding.AdapterID != "" {
+				rollbackAdapters[canonicalAdapterID(binding.AdapterID)] = binding
+			}
+		}
 	}
 	status := ManagementAccessStatus{
-		State: service.record.State, Port: service.record.Configuration.Port,
-		Configured: append([]string(nil), service.record.Configuration.Interfaces...),
-		TLSNames:   append([]string(nil), service.record.Configuration.TLSNames...),
-		TLSMissing: append([]string(nil), service.tlsMissing...), ConfirmBy: service.record.ConfirmBy,
-		Detail: service.record.Detail, CurrentInterface: current,
+		State: record.State, Port: record.Configuration.Port,
+		Configured: append([]string(nil), record.Configuration.Interfaces...),
+		TLSNames:   append([]string(nil), record.Configuration.TLSNames...),
+		TLSMissing: tlsMissing, ConfirmBy: record.ConfirmBy,
+		Detail: record.Detail, Outcome: record.Outcome, CurrentInterface: current,
 	}
-	for _, candidate := range service.interfaces {
-		enabled := configured[candidate.Name]
-		delete(configured, candidate.Name)
-		status.Interfaces = append(status.Interfaces, ManagementAccessInterface{
-			Name: candidate.Name, Kind: candidate.Kind, State: candidate.State,
+	for _, candidate := range interfaces {
+		binding, enabled := configuredAdapters[canonicalAdapterID(candidate.AdapterID)]
+		if enabled {
+			delete(configuredAdapters, binding.AdapterID)
+		} else {
+			binding, enabled = configuredNames[candidate.Name]
+			if enabled {
+				delete(configuredNames, candidate.Name)
+			}
+		}
+		entry := ManagementAccessInterface{
+			Name: candidate.Name, AdapterID: canonicalAdapterID(candidate.AdapterID), Kind: candidate.Kind, State: candidate.State,
 			IPv4: append([]string(nil), candidate.IPv4...), IPv6: append([]string(nil), candidate.IPv6...),
 			Enabled: enabled, Current: candidate.Name == current,
-			Usable: candidate.State == StateConnected && len(candidate.IPv4)+len(candidate.IPv6) > 0,
-		})
+			Usable:        candidate.State == StateConnected && len(candidate.IPv4)+len(candidate.IPv6) > 0,
+			RoleAvailable: true,
+		}
+		if rollback, held := rollbackAdapters[entry.AdapterID]; held && !entry.Enabled {
+			entry.Role = AdapterRoleManagement
+			entry.RoleDetail = "reserved for management access recovery"
+			delete(rollbackAdapters, canonicalAdapterID(rollback.AdapterID))
+		} else {
+			service.addRoleMetadata(&entry)
+			delete(rollbackAdapters, entry.AdapterID)
+		}
+		status.Interfaces = append(status.Interfaces, entry)
 	}
 	// A selected interface may be temporarily absent (for example nilo0 while
 	// WireGuard reconnects). Keep the persistent choice visible without
 	// inventing an address or claiming it is detected.
-	for name := range configured {
+	for _, binding := range configuredAdapters {
 		status.Interfaces = append(status.Interfaces, ManagementAccessInterface{
-			Name: name, Kind: KindOther, State: StateUnavailable, Enabled: true,
-			IPv4: []string{}, IPv6: []string{},
+			Name: binding.LastKnownName, AdapterID: binding.AdapterID, Kind: KindOther, State: StateUnavailable, Enabled: true,
+			IPv4: []string{}, IPv6: []string{}, Role: AdapterRoleManagement, RoleAvailable: true,
+		})
+	}
+	for _, binding := range configuredNames {
+		status.Interfaces = append(status.Interfaces, ManagementAccessInterface{
+			Name: binding.LastKnownName, Kind: KindOther, State: StateUnavailable, Enabled: true,
+			IPv4: []string{}, IPv6: []string{}, Role: AdapterRoleManagement, RoleAvailable: true,
+		})
+	}
+	for _, binding := range rollbackAdapters {
+		status.Interfaces = append(status.Interfaces, ManagementAccessInterface{
+			Name: binding.LastKnownName, AdapterID: binding.AdapterID, Kind: KindOther, State: StateUnavailable,
+			IPv4: []string{}, IPv6: []string{}, Role: AdapterRoleManagement, RoleAvailable: true,
+			RoleDetail: "reserved for management access recovery",
 		})
 	}
 	sort.Slice(status.Interfaces, func(first, second int) bool {
 		return status.Interfaces[first].Name < status.Interfaces[second].Name
 	})
-	for _, name := range service.record.Configuration.TLSNames {
+	for _, name := range record.Configuration.TLSNames {
 		host := name
 		kind := "local"
 		if address, err := netip.ParseAddr(name); err == nil {
@@ -419,7 +767,33 @@ func (service *ManagementAccessService) Status(ctx context.Context, localAddress
 		}
 		status.URLs = append(status.URLs, ManagementURL{URL: "https://" + host + ":" + strconv.Itoa(status.Port), Kind: kind})
 	}
-	return status, nil
+	return status
+}
+
+func (service *ManagementAccessService) addRoleMetadata(entry *ManagementAccessInterface) {
+	if entry.Enabled {
+		entry.Role = AdapterRoleManagement
+		entry.RoleAvailable = true
+		entry.RoleDetail = "assigned to management access"
+		return
+	}
+	if entry.AdapterID == "" {
+		entry.RoleAvailable = true
+		return
+	}
+	err := service.coordinator.Check([]AdapterRoleClaim{{
+		AdapterID: entry.AdapterID, Interface: entry.Name, Role: AdapterRoleManagement,
+	}})
+	var conflict *AdapterRoleConflictError
+	if !errors.As(err, &conflict) {
+		entry.RoleAvailable = true
+		return
+	}
+	entry.Role = conflict.ExistingRole
+	entry.RoleAvailable = false
+	entry.RoleDetail = conflict.Error()
+	entry.ConflictingResourceID = conflict.ConflictingResourceID
+	entry.ConflictingResourceName = conflict.ConflictingResourceName
 }
 
 func (service *ManagementAccessService) currentInterfaceLocked(address netip.Addr) string {
@@ -434,7 +808,7 @@ func (service *ManagementAccessService) currentInterfaceLocked(address netip.Add
 func (service *ManagementAccessService) Update(ctx context.Context, interfaces []string, confirmCurrent bool, localAddress netip.Addr) (ManagementAccessStatus, error) {
 	service.changeMu.Lock()
 	defer service.changeMu.Unlock()
-	if err := service.Refresh(ctx); err != nil {
+	if err := service.refresh(ctx); err != nil {
 		return ManagementAccessStatus{}, err
 	}
 	service.mu.Lock()
@@ -444,6 +818,8 @@ func (service *ManagementAccessService) Update(ctx context.Context, interfaces [
 	}
 	next := service.record.Configuration
 	next.Interfaces = append([]string(nil), interfaces...)
+	next.Bindings = nil
+	next = resolveManagementConfiguration(next, service.interfaces)
 	next = canonicalManagementConfiguration(next)
 	if err := next.Validate(); err != nil {
 		service.mu.Unlock()
@@ -460,50 +836,78 @@ func (service *ManagementAccessService) Update(ctx context.Context, interfaces [
 	}
 	if sameManagementConfiguration(next, service.record.Configuration) {
 		service.mu.Unlock()
-		return service.Status(ctx, localAddress)
+		return service.status(localAddress), nil
 	}
 	previous := service.record.Configuration
 	service.mu.Unlock()
 
-	if err := service.firewall.ApplyManagementAccess(ctx, next); err != nil {
-		return service.failedUpdate(ctx, previous, err, localAddress)
+	var record ManagementAccessRecord
+	if err := service.coordinator.CheckAndRun(managementRoleClaims(next), func() error {
+		if err := service.firewall.ApplyManagementAccess(ctx, next); err != nil {
+			return service.publishFailedUpdate(context.WithoutCancel(ctx), previous, next, err)
+		}
+		record = ManagementAccessRecord{
+			Configuration: next, LastKnownGood: previous, State: ManagementAccessPending,
+			ConfirmBy: service.now().UTC().Add(service.confirmWindow), UpdatedAt: service.now().UTC(),
+		}
+		if err := service.store.SaveManagementAccess(ctx, record); err != nil {
+			return service.publishFailedUpdate(context.WithoutCancel(ctx), previous, next, err)
+		}
+		service.mu.Lock()
+		service.record = record
+		service.rebuildAllowedLocked()
+		service.mu.Unlock()
+		return nil
+	}); err != nil {
+		var conflict *AdapterRoleConflictError
+		if errors.As(err, &conflict) {
+			return ManagementAccessStatus{}, err
+		}
+		return service.status(localAddress), err
 	}
-	record := ManagementAccessRecord{
-		Configuration: next, LastKnownGood: previous, State: ManagementAccessPending,
-		ConfirmBy: service.now().UTC().Add(service.confirmWindow), UpdatedAt: service.now().UTC(),
-	}
-	if err := service.store.SaveManagementAccess(ctx, record); err != nil {
-		return service.failedUpdate(ctx, previous, err, localAddress)
-	}
-	service.mu.Lock()
-	service.record = record
-	service.rebuildAllowedLocked()
-	service.mu.Unlock()
-	return service.Status(ctx, localAddress)
+	return service.status(localAddress), nil
 }
 
-func (service *ManagementAccessService) failedUpdate(ctx context.Context, previous ManagementAccessConfiguration, applyErr error, localAddress netip.Addr) (ManagementAccessStatus, error) {
+// publishFailedUpdate restores the previous firewall and publishes the exact
+// claims that remain protected before the coordinator can admit another role.
+// The caller holds the coordinator exclusion throughout this method.
+func (service *ManagementAccessService) publishFailedUpdate(
+	ctx context.Context,
+	previous ManagementAccessConfiguration,
+	candidate ManagementAccessConfiguration,
+	applyErr error,
+) error {
 	restoreErr := service.firewall.ApplyManagementAccess(ctx, previous)
 	state := ManagementAccessRecovered
 	detail := "the proposed management access failed and the last known-good configuration was restored"
+	lastKnownGood := previous
 	if restoreErr != nil {
 		state = ManagementAccessFailed
 		detail = "the proposed management access and its firewall recovery both failed"
+		// The helper outcome is uncertain, so retain both physical role claims
+		// until an administrator establishes and confirms a safe configuration.
+		lastKnownGood = candidate
+	}
+	outcome := ManagementAccessOutcome{Code: ManagementOutcomeProposedRestored}
+	if restoreErr != nil {
+		outcome.Code = ManagementOutcomeRecoveryFailed
 	}
 	record := ManagementAccessRecord{
-		Configuration: previous, LastKnownGood: previous, State: state,
-		Detail: detail, UpdatedAt: service.now().UTC(),
+		Configuration: previous, LastKnownGood: lastKnownGood, State: state,
+		Detail: detail, Outcome: outcome, UpdatedAt: service.now().UTC(),
 	}
-	_ = service.store.SaveManagementAccess(context.WithoutCancel(ctx), record)
+	persistErr := service.store.SaveManagementAccess(ctx, record)
 	service.mu.Lock()
 	service.record = record
 	service.rebuildAllowedLocked()
 	service.mu.Unlock()
 	if restoreErr != nil {
-		return ManagementAccessStatus{}, fmt.Errorf("apply management access: %v; restore last known-good firewall: %w", applyErr, restoreErr)
+		return fmt.Errorf("apply management access: %v; restore last known-good firewall: %w", applyErr, restoreErr)
 	}
-	status, _ := service.Status(context.WithoutCancel(ctx), localAddress)
-	return status, fmt.Errorf("apply management access: %w", applyErr)
+	if persistErr != nil {
+		return fmt.Errorf("apply management access: %v; persist recovered state: %w", applyErr, persistErr)
+	}
+	return fmt.Errorf("apply management access: %w", applyErr)
 }
 
 func (service *ManagementAccessService) hasUsableLocked(names []string) bool {
@@ -524,7 +928,7 @@ func managementConfigurationHasUsableInterface(interfaces []Interface, names []s
 func (service *ManagementAccessService) Confirm(ctx context.Context, localAddress netip.Addr) (ManagementAccessStatus, error) {
 	service.changeMu.Lock()
 	defer service.changeMu.Unlock()
-	if err := service.Refresh(ctx); err != nil {
+	if err := service.refresh(ctx); err != nil {
 		return ManagementAccessStatus{}, err
 	}
 	service.mu.Lock()
@@ -541,6 +945,7 @@ func (service *ManagementAccessService) Confirm(ctx context.Context, localAddres
 	record.State = ManagementAccessApplied
 	record.ConfirmBy = time.Time{}
 	record.Detail = ""
+	record.Outcome = ManagementAccessOutcome{}
 	record.UpdatedAt = service.now().UTC()
 	service.mu.Unlock()
 	if err := service.store.SaveManagementAccess(ctx, record); err != nil {
@@ -549,7 +954,7 @@ func (service *ManagementAccessService) Confirm(ctx context.Context, localAddres
 	service.mu.Lock()
 	service.record = record
 	service.mu.Unlock()
-	return service.Status(ctx, localAddress)
+	return service.status(localAddress), nil
 }
 
 // Recover restores an unconfirmed configuration. It is safe to call from the
@@ -574,6 +979,7 @@ func (service *ManagementAccessService) recover(ctx context.Context, force bool)
 		service.mu.Lock()
 		service.record.State = ManagementAccessFailed
 		service.record.Detail = "automatic management access recovery failed"
+		service.record.Outcome = ManagementAccessOutcome{Code: ManagementOutcomeAutomaticFailed}
 		service.record.UpdatedAt = service.now().UTC()
 		failed := service.record
 		service.mu.Unlock()
@@ -584,6 +990,7 @@ func (service *ManagementAccessService) recover(ctx context.Context, force bool)
 	record.State = ManagementAccessRecovered
 	record.ConfirmBy = time.Time{}
 	record.Detail = "the unconfirmed management access configuration was automatically restored"
+	record.Outcome = ManagementAccessOutcome{Code: ManagementOutcomeAutomaticRestored}
 	record.UpdatedAt = service.now().UTC()
 	if err := service.store.SaveManagementAccess(ctx, record); err != nil {
 		return err
@@ -598,11 +1005,11 @@ func (service *ManagementAccessService) recover(ctx context.Context, force bool)
 // Reconcile refreshes addresses and expires a pending change. It is intended
 // for the existing network maintenance loop.
 func (service *ManagementAccessService) Reconcile(ctx context.Context) error {
-	if err := service.Refresh(ctx); err != nil {
-		return err
-	}
 	service.changeMu.Lock()
 	defer service.changeMu.Unlock()
+	if err := service.refresh(ctx); err != nil {
+		return err
+	}
 	return service.recover(ctx, false)
 }
 

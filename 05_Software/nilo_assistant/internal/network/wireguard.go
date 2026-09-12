@@ -48,6 +48,10 @@ type Change struct {
 	// knows the staged key material by. It is not a secret and nothing can be
 	// derived from it, which is what lets it travel with the operation.
 	SecretHandle string `json:"secret_handle,omitempty"`
+
+	// operationID correlates process-local recovery planning with the later
+	// apply. It is deliberately absent from serialized change parameters.
+	operationID string
 }
 
 // WiFiJoin is the request to join one wireless network. It has no password

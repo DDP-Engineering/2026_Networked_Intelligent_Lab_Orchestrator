@@ -1,5 +1,21 @@
 # Dual-path NILO management access verification
 
+## Exclusive adapter-role follow-up candidate (2026-09-11)
+
+Issue 5 extends the contract on `master`: physical Ethernet, Wi-Fi and USB
+Ethernet adapters are identified by stable hardware ID and cannot simultaneously
+serve management and device-facing roles. Legacy name arrays are migrated in
+place, startup reconciles device intent before opening management/forwarding,
+and all-conflicting state fails closed. Both GUI selectors show disabled
+opposite-role choices and the confirmed three-step repurposing workflow.
+
+The personal Raspberry Pi topology for the follow-up run keeps the DDP hotspot
+and `https://10.205.148.11:8443/` WireGuard path for management while the USB
+Ethernet adapter connects only to an isolated device segment. Exact Linux names,
+stable IDs, link carrier and certificate trust are run evidence, not product
+constants. This section records the build candidate only; hardware observations
+are added during validation and do not replace reproducible release acceptance.
+
 ## Candidate and scope
 
 This report covers the dual-path management-access candidate in workspace

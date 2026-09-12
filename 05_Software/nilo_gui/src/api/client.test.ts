@@ -606,4 +606,70 @@ describe('credentials on the wire', () => {
       }
     }
   });
+
+  it('carries validated adapter-role conflict details on a 409 refusal', async () => {
+    const client = createBenchCoreClient({
+      baseUrl: '',
+      transport: () =>
+        Promise.resolve(
+          respondWithJson(409, {
+            error: 'network_interface_role_conflict',
+            message: 'adapter enx1234 is already assigned to the device role',
+            details: {
+              adapter_id: 'usb-ethernet-a',
+              interface: 'enx1234',
+              existing_role: 'device',
+              requested_role: 'management',
+              conflicting_resource_id: 'dn-plc',
+              conflicting_resource_name: 'PLC line',
+            },
+          }),
+        ),
+    });
+
+    const error = await client
+      .setManagementAccess(sessionCredential('csrf-value'), ['enx1234'], false)
+      .then(
+        () => null,
+        (thrown: unknown) => thrown as BenchCoreError,
+      );
+
+    expect(error?.code).toBe('network_interface_role_conflict');
+    expect(error?.adapterRoleConflict).toEqual({
+      adapterId: 'usb-ethernet-a',
+      interface: 'enx1234',
+      existingRole: 'device',
+      requestedRole: 'management',
+      conflictingResourceId: 'dn-plc',
+      conflictingResourceName: 'PLC line',
+    });
+    expect(error?.detail).toBe('Bench Core refused the request (HTTP 409).');
+    expect(error?.detail).not.toContain('adapter enx1234');
+  });
+
+  it('withholds backend prose when adapter-role conflict details are malformed', async () => {
+    const client = createBenchCoreClient({
+      baseUrl: '',
+      transport: () =>
+        Promise.resolve(
+          respondWithJson(409, {
+            error: 'network_interface_role_conflict',
+            message: 'untrusted backend role wording',
+            details: { existing_role: 'unknown' },
+          }),
+        ),
+    });
+
+    const error = await client
+      .setManagementAccess(sessionCredential('csrf-value'), ['enx1234'], false)
+      .then(
+        () => null,
+        (thrown: unknown) => thrown as BenchCoreError,
+      );
+
+    expect(error?.code).toBe('network_interface_role_conflict');
+    expect(error?.adapterRoleConflict).toBeNull();
+    expect(error?.detail).toBe('Bench Core refused the request (HTTP 409).');
+    expect(error?.detail).not.toContain('untrusted backend role wording');
+  });
 });

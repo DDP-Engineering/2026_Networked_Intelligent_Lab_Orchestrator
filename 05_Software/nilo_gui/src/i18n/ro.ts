@@ -930,4 +930,41 @@ export const ro: Catalogue = {
   'network.management.state.applied': 'Aplicat și confirmat.',
   'network.management.state.failed': 'Aplicarea sau recuperarea a eșuat.',
   'network.management.state.recovered': 'Ultimul acces funcțional a fost recuperat.',
+  'network.management.outcome.startupRecovered':
+    'O modificare neconfirmată a fost recuperată la pornire.',
+  'network.management.outcome.consolePending':
+    'Reconfigurarea din consolă necesită confirmare.',
+  'network.management.outcome.roleConflictRecovered':
+    'Accesul de administrare a fost eliminat de pe {interface}, deoarece {resource} îi folosește rolul pentru dispozitive.',
+  'network.management.outcome.proposedRestored':
+    'Modificarea propusă a eșuat, iar accesul anterior a fost recuperat.',
+  'network.management.outcome.recoveryFailed':
+    'Modificarea propusă și recuperarea automată au eșuat.',
+  'network.management.outcome.automaticRestored':
+    'Modificarea neconfirmată a fost recuperată automat.',
+  'network.role.deviceUnavailable':
+    'Alocat ca adaptor pentru dispozitive pentru {name}. Eliminați această alocare înainte de a activa aici accesul de administrare.',
+  'network.role.managementUnavailable':
+    '{name} este rezervat pentru accesul de administrare. Confirmați o altă cale de administrare și eliminați acest adaptor din accesul de administrare înainte de a-l aloca unei rețele de dispozitive.',
+  'network.role.managementInventoryReading':
+    'Rolurile adaptoarelor de administrare se încarcă.',
+  'network.role.managementInventoryFailed':
+    'Rolurile adaptoarelor de administrare nu sunt disponibile.',
+  'network.role.malformedConflict':
+    'Conflictul de rol al adaptorului nu a putut fi citit. Reîmprospătați inventarul rețelei înainte de a încerca din nou.',
+  'network.role.unnamedDeviceNetwork': 'o rețea de dispozitive salvată',
+  'help.roles.open': 'Cum realocați un adaptor',
+  'help.roles.title': 'Realocarea sigură a adaptorului',
+  'help.roles.goal':
+    'Mutați un adaptor fizic între administrare și dispozitive fără a pierde calea de administrare confirmată.',
+  'help.roles.needs':
+    'Păstrați o a doua cale de administrare conectată, precum Wi-Fi sau WireGuard, și verificați mai întâi adresa URL NILO.',
+  'help.roles.example':
+    'Pentru a folosi un adaptor USB Ethernet pentru dispozitive, păstrați Wi-Fi sau WireGuard pentru administrare în timpul schimbării rolului.',
+  'help.roles.changes':
+    '1. Stabiliți și confirmați o cale de administrare alternativă.\n2. Eliminați adaptorul din accesul de administrare și confirmați schimbarea.\n3. Alocați adaptorul devenit disponibil ca adaptor pentru dispozitive.',
+  'help.roles.external':
+    'NILO nu efectuează schimbarea rolului dintr-un singur clic. Calea alternativă trebuie să rămână accesibilă între schimbările confirmate separat.',
+  'help.roles.verify':
+    'După fiecare confirmare, reîmprospătați ambele selecții. Respectați avertismentele privind sesiunea curentă și ultima cale de administrare.',
 };

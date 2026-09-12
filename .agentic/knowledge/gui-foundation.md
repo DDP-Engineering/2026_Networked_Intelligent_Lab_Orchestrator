@@ -547,6 +547,24 @@ Statistics title shares one responsive header with the interface and period
 controls. This keeps the initial Diagnostics chart in the workspace without
 vertical scrolling at 1024x600 and larger; 800x480 may scroll vertically.
 
+## Adapter role selection (2026-09-11, TASK-8f18c927)
+
+`management-access.ts` strictly parses stable adapter identity, the fixed
+`management`/`device` role vocabulary and validated 409 conflict details.
+`NetworkPage` owns the one management-access observation shared by its focused
+views. The management checkbox and device-side option stay visible but disabled
+for an opposite claim, with a localized persistent explanation. Device-side
+assignment also fails closed while management inventory is reading or failed;
+defaults exclude known management claims. The same adapter remains available as
+local ingress. `WorkflowHelp` exposes the three confirmed repurposing steps from
+both selectors. The development mock and browser fixture return the same
+role-aware contract. Management transition notices render only fixed typed
+outcomes through the locale catalog, never backend diagnostic prose. A valid
+conflict notice raised during preview, acknowledgement, or management update
+survives unchanged polling and is superseded only when the corresponding
+observed role claim disappears; malformed structured conflicts use a fixed
+localized fallback and never retain backend wording.
+
 ## Account-menu appliance power controls (2026-09-08, TASK-a3a3d7b2)
 
 On a live appliance, `TopRow` adds Restart NILO and Power off NILO beside Sign

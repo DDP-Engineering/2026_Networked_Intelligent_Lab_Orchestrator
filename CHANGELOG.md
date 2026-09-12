@@ -7,6 +7,8 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Added
 
+- Exclusive stable-identity roles for physical management and device-facing
+  adapters, with fail-closed conflicts, restart recovery and guided GUI choices.
 - Persistent, administrator-managed HTTPS interface allowlists with dynamic
   Wi-Fi/WireGuard address tracking, last-known-good recovery and stable URLs.
 - Defense-in-depth management-port filtering through the privileged network

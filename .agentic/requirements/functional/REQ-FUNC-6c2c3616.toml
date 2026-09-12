@@ -1,0 +1,57 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-6c2c3616"
+
+title = "Return structured secret-free adapter role conflicts"
+
+status = "active"
+
+requirement = """
+When an adapter-role request is refused, the Bench Core API shall return HTTP 409 with code `network_interface_role_conflict` and structured details containing the stable adapter identity, last observed interface name, existing role, requested role, and conflicting saved resource identity while containing no address credential, Wi-Fi password, WireGuard key, or other secret.
+"""
+
+verification = "API contract tests trigger both conflict directions and assert status 409, the exact code and safe detail fields, reject unknown role values in parsers, and recursively scan the body and logs for fixture Wi-Fi passwords, private/preshared keys and bearer/session values."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/adapter_roles.go",
+    "05_Software/nilo_assistant/internal/httpapi/management_access.go",
+    "05_Software/nilo_assistant/internal/httpapi/device_networks.go",
+    "05_Software/nilo_assistant/internal/httpapi/network_operations.go",
+    "05_Software/nilo_assistant/internal/httpapi/adapter_roles.go",
+    "05_Software/nilo_assistant/internal/httpapi/adapter_roles_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/management_access_api_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/device_networks_test.go",
+    "05_Software/nilo_gui/src/api/management-access.ts",
+    "05_Software/nilo_gui/src/api/devicenetworks.ts",
+    "05_Software/nilo_gui/src/api/client.ts",
+    "05_Software/nilo_gui/src/api/client.test.ts",
+    "05_Software/nilo_gui/src/api/management-access.test.ts",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/httpapi/adapter_roles_test.go::TestAdapterRoleConflictResponseIsStructuredAndSecretFree",
+    "05_Software/nilo_assistant/internal/httpapi/management_access_api_test.go::TestManagementAccessAPIReturnsStructuredAdapterRoleConflict",
+    "05_Software/nilo_assistant/internal/httpapi/device_networks_test.go::TestDeviceNetworkPreviewReturnsStructuredManagementRoleConflict",
+    "05_Software/nilo_gui/src/api/management-access.test.ts::parses the exact safe role-conflict details and rejects unknown roles",
+    "05_Software/nilo_gui/src/api/client.test.ts::carries validated adapter-role conflict details on a 409 refusal",
+    "05_Software/nilo_gui/src/api/client.test.ts::withholds backend prose when adapter-role conflict details are malformed",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::preserves typed adapter detail when acknowledgement finds a new role conflict",
+]
+
+
+spec = "specs/REQ-SEC-b8719eb2.md"
+
+priority = "high"
+rationale = "Administrators and clients need actionable conflict identity without receiving network secrets."
+
+created = 2026-09-11
+updated = 2026-09-12

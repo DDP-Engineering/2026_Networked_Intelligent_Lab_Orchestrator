@@ -49,7 +49,9 @@ import {
 } from './settings';
 import {
   MANAGEMENT_ACCESS_PATH,
+  parseAdapterRoleConflict,
   parseManagementAccess,
+  type AdapterRoleConflict,
   type ManagementAccessStatus,
 } from './management-access';
 import {
@@ -174,13 +176,21 @@ export class BenchCoreError extends Error {
   readonly detail: string;
   /** The stable error code Bench Core sent, or the empty string. */
   readonly code: string;
+  /** Validated safe metadata for an adapter-role collision, when supplied. */
+  readonly adapterRoleConflict: AdapterRoleConflict | null;
 
-  constructor(failure: BenchCoreFailure, detail: string, code = '') {
+  constructor(
+    failure: BenchCoreFailure,
+    detail: string,
+    code = '',
+    adapterRoleConflict: AdapterRoleConflict | null = null,
+  ) {
     super(`bench core request failed: ${failure}: ${detail}`);
     this.name = 'BenchCoreError';
     this.failure = failure;
     this.detail = detail;
     this.code = code;
+    this.adapterRoleConflict = adapterRoleConflict;
   }
 }
 
@@ -804,12 +814,13 @@ async function refusalOf(response: TransportResponse): Promise<BenchCoreError> {
       'unauthorized',
     );
   }
-  const { code, message } = await readRefusal(response);
+  const { code, message, adapterRoleConflict } = await readRefusal(response);
   if (response.status === 403) {
     return new BenchCoreError(
       'forbidden',
       message || 'This identity is not permitted to do that (HTTP 403).',
       code,
+      adapterRoleConflict,
     );
   }
   if ([400, 404, 409, 429].includes(response.status)) {
@@ -817,6 +828,7 @@ async function refusalOf(response: TransportResponse): Promise<BenchCoreError> {
       'rejected',
       message || `Bench Core refused the request (HTTP ${response.status}).`,
       code,
+      adapterRoleConflict,
     );
   }
   return new BenchCoreError(
@@ -827,23 +839,42 @@ async function refusalOf(response: TransportResponse): Promise<BenchCoreError> {
 }
 
 /** Read the stable code and the fixed message from a refusal body, if any. */
-async function readRefusal(
-  response: TransportResponse,
-): Promise<{ code: string; message: string }> {
+async function readRefusal(response: TransportResponse): Promise<{
+  code: string;
+  message: string;
+  adapterRoleConflict: AdapterRoleConflict | null;
+}> {
   try {
     const decoded: unknown = JSON.parse(await response.text());
     if (typeof decoded === 'object' && decoded !== null) {
-      const body = decoded as { error?: unknown; message?: unknown };
+      const body = decoded as {
+        error?: unknown;
+        message?: unknown;
+        details?: unknown;
+      };
+      const code = typeof body.error === 'string' ? body.error : '';
       return {
-        code: typeof body.error === 'string' ? body.error : '',
-        message: typeof body.message === 'string' ? body.message : '',
+        code,
+        // Role-conflict prose is never a browser contract. Consumers render
+        // validated details through their locale and use a fixed localized
+        // fallback when those details are malformed.
+        message:
+          code === 'network_interface_role_conflict'
+            ? ''
+            : typeof body.message === 'string'
+              ? body.message
+              : '',
+        adapterRoleConflict:
+          code === 'network_interface_role_conflict'
+            ? parseAdapterRoleConflict(body.details)
+            : null,
       };
     }
   } catch {
     // A refusal without a readable body is still a refusal; the status alone
     // carries the meaning, and inventing a reason here would be a guess.
   }
-  return { code: '', message: '' };
+  return { code: '', message: '', adapterRoleConflict: null };
 }
 
 function changesState(method: string): boolean {

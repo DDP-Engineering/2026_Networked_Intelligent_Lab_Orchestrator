@@ -12,18 +12,25 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
+	"net/netip"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 	"testing"
 	"time"
+
+	"nilo.local/nilo/internal/network"
+	"nilo.local/nilo/internal/store/sqlite"
 )
 
 // disposableTunnelKeys makes a real Curve25519 pair for a test peer. The keys
@@ -416,6 +423,227 @@ func TestApplianceSystemHTTPSAndHelperRecovery(t *testing.T) {
 		t.Fatalf("%d keystore entries survived removal", len(secretEntries))
 	}
 	t.Log("two imported profiles survived a restart, were switched, put back, renamed, selected for startup and connected by the system, with no key outside the root-only keystore")
+}
+
+// REQ-SEC-67959d35: an all-conflicting durable role inventory stops the real
+// process before Serve can open a socket. Adding a separate usable management
+// interface turns the next process start into the ordinary recovered path.
+func TestApplianceSystemFailsClosedBeforeListeningOnAnAllPathRoleConflict(t *testing.T) {
+	if os.Getenv("NILO_NETWORK_SYSTEM") != "1" {
+		t.Skip("requires isolated system harness")
+	}
+	if _, err := os.Stat("/.dockerenv"); err != nil || os.Geteuid() != 0 {
+		t.Fatal("requires root inside disposable container")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 180*time.Second)
+	defer cancel()
+	root, err := os.MkdirTemp("/tmp", "nilo-role-startup-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(root)
+	if err := os.Chmod(root, 0755); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"state", "run", "data", "gui", "tls"} {
+		if err := os.Mkdir(filepath.Join(root, name), 0755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	_ = os.Chmod(filepath.Join(root, "state"), 0700)
+	_ = os.Chmod(filepath.Join(root, "run"), 0750)
+	_ = os.Chown(filepath.Join(root, "run"), 0, 65534)
+
+	fixture := httptest.NewTLSServer(http.NotFoundHandler())
+	certificate := fixture.TLS.Certificates[0]
+	keyDER, err := x509.MarshalPKCS8PrivateKey(certificate.PrivateKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	certPath := filepath.Join(root, "tls", "server.crt")
+	keyPath := filepath.Join(root, "tls", "server.key")
+	if err := os.WriteFile(certPath, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certificate.Certificate[0]}), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(keyPath, pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: keyDER}), 0644); err != nil {
+		t.Fatal(err)
+	}
+	guiDir := filepath.Join(root, "gui")
+	if err := os.WriteFile(filepath.Join(guiDir, "index.html"), []byte("<!doctype html><html><head></head><body>NILO role startup test</body></html>"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	fixture.Close()
+
+	eth0ID, err := os.ReadFile("/sys/class/net/eth0/address")
+	if err != nil {
+		t.Fatal(err)
+	}
+	listener, err := net.Listen("tcp4", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	port := listener.Addr().(*net.TCPAddr).Port
+	_ = listener.Close()
+	dataDir := filepath.Join(root, "data")
+	databasePath := filepath.Join(dataDir, "nilo.db")
+	database, err := sqlite.Open(ctx, databasePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	management := network.ManagementAccessConfiguration{
+		Interfaces: []string{"eth0"},
+		Bindings: []network.ManagementInterfaceBinding{{
+			AdapterID: strings.TrimSpace(string(eth0ID)), LastKnownName: "eth0",
+		}},
+		Port: port, TLSNames: []string{"127.0.0.1"},
+	}
+	now := time.Now().UTC()
+	if err := sqlite.NewManagementAccessRepository(database).SaveManagementAccess(ctx, network.ManagementAccessRecord{
+		Configuration: management, LastKnownGood: management,
+		State: network.ManagementAccessApplied, UpdatedAt: now,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := sqlite.NewDeviceNetworkRepository(database).Save(ctx, network.DeviceNetwork{
+		ID: "dn-conflict", Name: "isolated line", DeviceInterface: strings.TrimSpace(string(eth0ID)),
+		ApplianceAddress: netip.MustParsePrefix("192.168.0.1/24"), Scope: network.ScopeHost,
+		Target: netip.MustParseAddr("192.168.0.130"), Addressing: network.AddressingOriginal,
+		Access: network.AccessWireGuard, VPNProfileID: "test-profile",
+		VPNSources: []netip.Prefix{netip.MustParsePrefix("10.205.148.0/24")}, StartEnabled: true,
+	}, now); err != nil {
+		t.Fatal(err)
+	}
+	if err := database.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := filepath.Walk(dataDir, func(path string, _ os.FileInfo, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		return os.Chown(path, 65534, 65534)
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	socket := filepath.Join(root, "run", "nethelper.sock")
+	helper := exec.CommandContext(ctx, "/tmp/nilo-nethelper", "--socket", socket, "--state-dir", filepath.Join(root, "state"), "--allow-uid", "65534", "--socket-gid", "65534")
+	helper.Stderr = os.Stderr
+	if err := helper.Start(); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = helper.Process.Signal(syscall.SIGTERM); _ = helper.Wait() }()
+	waitSystem(t, ctx, func() bool { _, statErr := os.Stat(socket); return statErr == nil })
+	firewallBefore, firewallBeforeErr := exec.CommandContext(ctx, "nft", "list", "table", "inet", "nilo_management").CombinedOutput()
+	asService := func() *exec.Cmd {
+		command := exec.CommandContext(ctx, "/tmp/nilo", "serve", "--profile", "appliance", "--data-dir", dataDir, "--gui-dir", guiDir, "--management-port", strconv.Itoa(port), "--tls-cert", certPath, "--tls-key", keyPath, "--nethelper-socket", socket)
+		command.SysProcAttr = &syscall.SysProcAttr{Credential: &syscall.Credential{Uid: 65534, Gid: 65534}}
+		return command
+	}
+
+	failed := asService()
+	output, runErr := failed.CombinedOutput()
+	if runErr == nil {
+		t.Fatal("all-conflicting startup unexpectedly remained running")
+	}
+	message := string(output)
+	for _, expected := range []string{"eth0", "device role", "management role"} {
+		if !strings.Contains(message, expected) {
+			t.Fatalf("startup error %q does not identify %q", message, expected)
+		}
+	}
+	if connection, dialErr := net.DialTimeout("tcp4", fmt.Sprintf("127.0.0.1:%d", port), 200*time.Millisecond); dialErr == nil {
+		_ = connection.Close()
+		t.Fatal("all-conflicting startup opened its HTTPS listener")
+	}
+	if _, err := os.Stat(filepath.Join(root, "state", "recovery.json")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("rejected startup created recovery state: %v", err)
+	}
+	firewallAfter, firewallAfterErr := exec.CommandContext(ctx, "nft", "list", "table", "inet", "nilo_management").CombinedOutput()
+	if (firewallBeforeErr == nil) != (firewallAfterErr == nil) || !bytes.Equal(firewallBefore, firewallAfter) {
+		t.Fatalf("rejected startup changed the management firewall: before=%q (%v), after=%q (%v)", firewallBefore, firewallBeforeErr, firewallAfter, firewallAfterErr)
+	}
+
+	if output, err := exec.CommandContext(
+		ctx, "nmcli", "connection", "add", "type", "dummy", "ifname", "safe0",
+		"con-name", "safe-management", "ipv4.method", "manual",
+		"ipv4.addresses", "198.51.100.10/24", "ipv6.method", "disabled",
+	).CombinedOutput(); err != nil {
+		t.Fatalf("create safe management interface: %v %s", err, output)
+	}
+	defer exec.Command("nmcli", "connection", "delete", "safe-management").Run()
+	if output, err := exec.CommandContext(ctx, "nmcli", "connection", "up", "safe-management").CombinedOutput(); err != nil {
+		t.Fatalf("activate safe management interface: %v %s", err, output)
+	}
+	safeID, err := os.ReadFile("/sys/class/net/safe0/address")
+	if err != nil {
+		t.Fatal(err)
+	}
+	database, err = sqlite.Open(ctx, databasePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	management.Interfaces = []string{"eth0", "safe0"}
+	management.Bindings = append(management.Bindings, network.ManagementInterfaceBinding{
+		AdapterID: strings.TrimSpace(string(safeID)), LastKnownName: "safe0",
+	})
+	if err := sqlite.NewManagementAccessRepository(database).SaveManagementAccess(ctx, network.ManagementAccessRecord{
+		Configuration: management, LastKnownGood: management,
+		State: network.ManagementAccessApplied, UpdatedAt: time.Now().UTC(),
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := database.Close(); err != nil {
+		t.Fatal(err)
+	}
+	_ = os.Chown(databasePath, 65534, 65534)
+
+	recovered := asService()
+	stdout, err := recovered.StdoutPipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stderr bytes.Buffer
+	recovered.Stderr = &stderr
+	if err := recovered.Start(); err != nil {
+		t.Fatal(err)
+	}
+	ready := make(chan error, 1)
+	go func() {
+		var state struct {
+			Address string `json:"address"`
+		}
+		if decodeErr := json.NewDecoder(stdout).Decode(&state); decodeErr != nil {
+			ready <- decodeErr
+			return
+		}
+		if state.Address == "" {
+			ready <- errors.New("recovered process reported no listener address")
+			return
+		}
+		ready <- nil
+	}()
+	select {
+	case err := <-ready:
+		if err != nil {
+			t.Fatalf("recovered process did not listen: %v; stderr=%s", err, stderr.String())
+		}
+	case <-time.After(20 * time.Second):
+		_ = recovered.Process.Kill()
+		t.Fatalf("recovered process did not become ready; stderr=%s", stderr.String())
+	}
+	_ = recovered.Process.Signal(syscall.SIGTERM)
+	if err := recovered.Wait(); err != nil {
+		t.Fatalf("stop recovered process: %v; stderr=%s", err, stderr.String())
+	}
+	database, err = sqlite.Open(ctx, databasePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	record, present, err := sqlite.NewManagementAccessRepository(database).LoadManagementAccess(ctx)
+	_ = database.Close()
+	if err != nil || !present || record.State != network.ManagementAccessRecovered || len(record.Configuration.Interfaces) != 1 || record.Configuration.Interfaces[0] != "safe0" {
+		t.Fatalf("recovered startup record=%+v present=%t error=%v", record, present, err)
+	}
 }
 
 func waitSystem(t *testing.T, ctx context.Context, ready func() bool) {

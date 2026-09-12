@@ -44,11 +44,13 @@ type Simulation struct {
 
 	// forwarder and deviceNetworks are the device-network half; savedForwarding
 	// and savedNetworks are their snapshot under a checkpoint.
-	forwarder       *memoryForwarder
-	deviceNetworks  *DeviceNetworkManager
-	audit           AuditJournal
-	savedForwarding map[string]ForwardingPlan
-	savedNetworks   []DeviceNetwork
+	forwarder            *memoryForwarder
+	deviceNetworks       *DeviceNetworkManager
+	audit                AuditJournal
+	savedForwarding      map[string]ForwardingPlan
+	savedNetworks        []DeviceNetwork
+	roleCoordinator      *AdapterRoleCoordinator
+	roleReservationOwner string
 }
 
 func NewSimulation(now func() time.Time) *Simulation {
@@ -56,8 +58,12 @@ func NewSimulation(now func() time.Time) *Simulation {
 	return &Simulation{
 		now: now, interfaces: items, profiles: map[string]ProfileStatus{},
 		counters: map[string]CounterReading{}, pendingSettings: map[string][]InterfaceSettings{},
+		roleCoordinator: NewAdapterRoleCoordinator(),
 	}
 }
+
+// AdapterRoleCoordinator is shared by simulated management and device seams.
+func (s *Simulation) AdapterRoleCoordinator() *AdapterRoleCoordinator { return s.roleCoordinator }
 
 func (*Simulation) Source() Source { return SourceSimulation }
 
@@ -95,7 +101,9 @@ func (s *Simulation) reload(ctx context.Context) error {
 func (s *Simulation) Interfaces(context.Context) ([]Interface, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.expire()
+	if err := s.expire(); err != nil {
+		return nil, err
+	}
 	result := BindSettings(s.interfaces, s.settings).Interfaces
 	for i := range result {
 		result[i].IPv4 = append([]string(nil), result[i].IPv4...)
@@ -107,7 +115,9 @@ func (s *Simulation) Interfaces(context.Context) ([]Interface, error) {
 func (s *Simulation) WireGuard(context.Context) (WireGuardStatus, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.expire()
+	if err := s.expire(); err != nil {
+		return WireGuardStatus{}, err
+	}
 	status := WireGuardStatus{Reported: true, MeasuredBy: SourceSimulation, NetworkManagerAvailable: true, NetworkManagerVersion: "simulated", KernelSupported: true, HelperAvailable: true, Tools: []ToolStatus{{Name: "wg", Installed: true, Version: "simulated"}}, Profiles: []ProfileStatus{}}
 	for _, p := range s.profiles {
 		status.Profiles = append(status.Profiles, p)
@@ -123,7 +133,9 @@ func (s *Simulation) Observe(ctx context.Context, action Action, target string) 
 func (s *Simulation) Inspect(_ context.Context, c Change) (map[string]string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.expire()
+	if err := s.expire(); err != nil {
+		return nil, err
+	}
 	if deviceNetworkActions[c.Action] {
 		if s.deviceNetworks == nil {
 			return nil, ErrUnsupported
@@ -226,7 +238,9 @@ func (s *Simulation) Apply(ctx context.Context, action Action, target string) er
 func (s *Simulation) ApplyChange(ctx context.Context, c Change) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.expire()
+	if err := s.expire(); err != nil {
+		return err
+	}
 	if deviceNetworkActions[c.Action] {
 		if s.deviceNetworks == nil {
 			return ErrUnsupported
@@ -358,7 +372,9 @@ func (s *Simulation) persist(ctx context.Context, c Change) error {
 func (s *Simulation) ConnectStartup(context.Context) (StartupOutcome, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.expire()
+	if err := s.expire(); err != nil {
+		return StartupOutcome{}, err
+	}
 	for id, p := range s.profiles {
 		if !p.AutoConnect {
 			continue
@@ -381,7 +397,40 @@ func (s *Simulation) ConnectStartup(context.Context) (StartupOutcome, error) {
 func (s *Simulation) ArmRecovery(_ context.Context, id string, window time.Duration) (Checkpoint, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.expire()
+	if err := s.expire(); err != nil {
+		return Checkpoint{}, err
+	}
+	return s.armRecoveryLocked(id, window)
+}
+
+// ArmChange retains every saved and proposed device-side identity through the
+// recovery window, matching the appliance lifecycle while keeping simulation
+// free of privileged network operations.
+func (s *Simulation) ArmChange(_ context.Context, id string, change Change, window time.Duration) (Checkpoint, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if err := s.expire(); err != nil {
+		return Checkpoint{}, err
+	}
+	if s.checkpoint != "" {
+		return Checkpoint{}, ErrChangeInProgress
+	}
+	if deviceNetworkActions[change.Action] {
+		s.snapshotDeviceNetworks()
+		if err := s.roleCoordinator.Reserve(id, deviceNetworkReservationClaims(s.savedNetworks, change)); err != nil {
+			return Checkpoint{}, err
+		}
+		s.roleReservationOwner = id
+	}
+	checkpoint, err := s.armRecoveryLocked(id, window)
+	if err != nil {
+		s.roleCoordinator.Release(id)
+		s.roleReservationOwner = ""
+	}
+	return checkpoint, err
+}
+
+func (s *Simulation) armRecoveryLocked(id string, window time.Duration) (Checkpoint, error) {
 	if s.checkpoint != "" {
 		return Checkpoint{}, ErrChangeInProgress
 	}
@@ -397,7 +446,7 @@ func (s *Simulation) ArmRecovery(_ context.Context, id string, window time.Durat
 	return Checkpoint{ID: s.checkpoint}, nil
 }
 
-func (s *Simulation) Restore(_ context.Context, cp Checkpoint) (bool, error) {
+func (s *Simulation) Restore(ctx context.Context, cp Checkpoint) (bool, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if cp.ID != s.checkpoint {
@@ -407,16 +456,20 @@ func (s *Simulation) Restore(_ context.Context, cp Checkpoint) (bool, error) {
 	s.profiles = s.savedProfiles
 	s.settings = s.savedSettings
 	s.dropPendingSettings(cp.ID)
-	s.restoreDeviceNetworks(context.Background())
-	s.checkpoint = ""
+	if err := s.restoreDeviceNetworks(ctx); err != nil {
+		return false, fmt.Errorf("restore simulated device networks: %w", err)
+	}
 	// A rollback restores connectivity, not the inventory. An import that
 	// happened alongside is saved configuration and stays saved, so the
 	// in-memory view is brought back in line with what is stored.
 	if s.store != nil {
-		if err := s.reload(context.Background()); err != nil {
+		if err := s.reload(ctx); err != nil {
 			return false, err
 		}
 	}
+	s.roleCoordinator.Release(s.roleReservationOwner)
+	s.roleReservationOwner = ""
+	s.checkpoint = ""
 	return true, nil
 }
 
@@ -431,6 +484,8 @@ func (s *Simulation) Discard(ctx context.Context, cp Checkpoint) error {
 	if err := s.commitSettings(ctx, cp.ID); err != nil {
 		return err
 	}
+	s.roleCoordinator.Release(s.roleReservationOwner)
+	s.roleReservationOwner = ""
 	s.checkpoint = ""
 	s.saved = nil
 	s.savedProfiles = nil
@@ -440,23 +495,32 @@ func (s *Simulation) Discard(ctx context.Context, cp Checkpoint) error {
 
 // expire also runs on reads, so a paused runtime loop never reports an expired
 // simulated change as still active. Keep the checkpoint for verified Restore.
-func (s *Simulation) expire() {
+func (s *Simulation) expire() error {
 	if s.checkpoint != "" && !s.now().Before(s.deadline) {
 		s.interfaces = append([]Interface(nil), s.saved...)
 		s.profiles = s.savedProfiles
 		s.settings = s.savedSettings
 		s.dropPendingSettings(s.checkpoint)
-		s.restoreDeviceNetworks(context.Background())
-		if s.store != nil {
-			_ = s.reload(context.Background())
+		if err := s.restoreDeviceNetworks(context.Background()); err != nil {
+			return fmt.Errorf("expire simulated device networks: %w", err)
 		}
+		if s.store != nil {
+			if err := s.reload(context.Background()); err != nil {
+				return err
+			}
+		}
+		s.roleCoordinator.Release(s.roleReservationOwner)
+		s.roleReservationOwner = ""
 	}
+	return nil
 }
 
 func (s *Simulation) Counters(context.Context) ([]CounterReading, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.expire()
+	if err := s.expire(); err != nil {
+		return nil, err
+	}
 	now := s.now()
 	elapsed := 0.0
 	if !s.lastSample.IsZero() {
