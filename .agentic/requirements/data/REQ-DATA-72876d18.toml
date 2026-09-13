@@ -1,0 +1,45 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-DATA-72876d18"
+
+title = "Seed the commissioning lifecycle state from existing appliance state"
+
+status = "active"
+
+requirement = """
+When the commissioning schema migration is applied, the appliance shall record its commissioning lifecycle state as provisioning if the database holds no appliance identity at that moment, and as commissioned if it already holds one, so that a clean installation begins in first-boot provisioning and an upgraded installation begins already commissioned whether it used interface-managed management access or a single explicit listener address.
+"""
+
+verification = "An automated test opens a brand-new appliance database and reads back the recorded lifecycle state as provisioning. A second automated test applies the migration set up to the migration before this one, writes an appliance identity row into that database, then applies the full set and reads back the recorded lifecycle state as commissioned, asserting the identity row and the rest of the earlier schema are undisturbed. A third asserts the table rejects a lifecycle state outside the two permitted values and rejects a second row."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/013_commissioning.sql",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go",
+    "05_Software/nilo_assistant/internal/appliance/commissioning.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/db_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go::TestNewDatabaseRecordsProvisioningCommissioningState",
+    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go::TestUpgradedDatabaseRecordsCommissionedCommissioningState",
+    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go::TestCommissioningTableRejectsAnUnknownStateAndASecondRow",
+    "05_Software/nilo_assistant/internal/store/sqlite/db_test.go::TestOpenConfiguresDurableDatabaseAndMigratesAllFoundationTables",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "First-boot provisioning temporarily offers management access on every eligible adapter, so an upgrade that wrongly entered that state would widen the exposure of a deployed appliance, and a clean installation that wrongly skipped it would have no way in. The presence of an appliance identity row at migration time is the one fact that separates the two, because migrations always run before the first identity row is written."
+
+created = 2026-09-12
+updated = 2026-09-12

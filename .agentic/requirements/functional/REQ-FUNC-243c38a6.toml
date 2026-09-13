@@ -1,0 +1,42 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-243c38a6"
+
+title = "Derive the provisioning management allowlist from eligible interfaces"
+
+status = "active"
+
+requirement = """
+While the appliance has not completed commissioning, the management listener allowlist shall be every eligible physical interface the provider currently reports rather than an administrator's explicit choice, shall be recomputed as interfaces appear and disappear so that an adapter connected during provisioning begins carrying management access without a restart, and shall be persisted so that a restart resumes the same allowlist.
+"""
+
+verification = "An automated test builds the service over a provider whose interfaces it controls and a recording firewall, with the appliance provisioning and no saved allowlist, and asserts the derived allowlist is exactly the eligible interfaces, that the firewall received it, and that a destination address on an eligible interface is admitted while one on an ineligible interface is not. The test then adds an eligible interface, reconciles, and asserts it joins the allowlist and reaches the firewall without the service being rebuilt; removes one and asserts it leaves. A further test rebuilds the service over the same store and asserts the persisted allowlist is resumed."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/management_access.go",
+    "05_Software/nilo_assistant/internal/network/management_provisioning_test.go",
+    "05_Software/nilo_assistant/internal/network/eligibility.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/management_provisioning_test.go::TestProvisioningDerivesTheAllowlistFromEligibleInterfaces",
+    "05_Software/nilo_assistant/internal/network/management_provisioning_test.go::TestProvisioningFollowsAdaptersAsTheyAppearAndLeave",
+    "05_Software/nilo_assistant/internal/network/management_provisioning_test.go::TestProvisioningResumesThePersistedAllowlistAfterRestart",
+    "05_Software/nilo_assistant/internal/network/management_provisioning_test.go::TestProvisioningWithNoEligibleInterfaceAdmitsNothing",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "An installer cannot know which adapter will become the permanent management path before the appliance is reachable, so first boot has to answer on all of them and follow the hardware as it is plugged in."
+
+created = 2026-09-12
+updated = 2026-09-12

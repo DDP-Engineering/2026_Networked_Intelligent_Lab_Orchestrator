@@ -1,0 +1,41 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-PLAT-b1abf074"
+
+title = "Start first-boot provisioning without console listener options"
+
+status = "active"
+
+requirement = """
+The appliance server shall start without any console listener option when the appliance has not completed commissioning, serving management access on the first-boot HTTPS port, and shall refuse to start with a message naming the options it needs when no listener option is supplied and the appliance is already commissioned.
+"""
+
+verification = "An automated test drives the two decisions the serve command makes. The first asserts that with no listener option the appliance profile resolves to first-boot provisioning on the first-boot port, that an explicit allowlist and a legacy bind still resolve to their own modes and addresses, that the simulation profile with no listener option is refused, and that a bind combined with an allowlist is refused. The second asserts that first-boot serving is permitted when the appliance is recorded as provisioning and refused with a message naming --bind and --management-port when it is recorded as commissioned, while the two explicit modes are permitted in either state."
+
+affected_paths = [
+    "05_Software/nilo_assistant/cmd/nilo/listener_mode.go",
+    "05_Software/nilo_assistant/cmd/nilo/listener_mode_test.go",
+    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/nilo_assistant/cmd/nilo/main_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/cmd/nilo/listener_mode_test.go::TestResolveListenerModeSelectsFirstBootOnlyForTheApplianceProfile",
+    "05_Software/nilo_assistant/cmd/nilo/listener_mode_test.go::TestCheckProvisioningPermittedRefusesACommissionedAppliance",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "A factory appliance has nobody at a console to name interfaces, which is the gap first-boot provisioning exists to close; a commissioned one must not silently widen."
+
+created = 2026-09-12
+updated = 2026-09-12

@@ -31,6 +31,7 @@ import { BenchCoreError } from '../../api/client';
 import { DeviceNetworksPanel } from '../network/DeviceNetworksPanel';
 import { InterfaceSettingsDialog } from '../network/InterfaceSettingsDialog';
 import { NetworkOverview } from '../network/NetworkOverview';
+import { CommissioningPanel } from '../network/CommissioningPanel';
 import { ManagementAccessPanel } from '../network/ManagementAccessPanel';
 import type {
   AdapterRoleConflict,
@@ -76,6 +77,11 @@ export interface NetworkPageProps {
   ) => Promise<ManagementAccessStatus>;
   confirmManagementAccess?: () => Promise<ManagementAccessStatus>;
   recoverManagementAccess?: () => Promise<ManagementAccessStatus>;
+  /** Ends first boot. Absent for an identity that may not manage interfaces. */
+  completeCommissioning?: (
+    interfaces: string[],
+    confirmCurrentInterface: boolean,
+  ) => Promise<ManagementAccessStatus>;
   /** Whether Bench Core answered this interface over HTTP. */
   benchCoreReachable: boolean;
   wireGuardStatus?: WireGuardStatus | null;
@@ -169,6 +175,7 @@ export function NetworkPage({
   updateManagementAccess,
   confirmManagementAccess,
   recoverManagementAccess,
+  completeCommissioning,
   benchCoreReachable,
   wireGuardStatus = null,
   canManageVPN = false,
@@ -645,7 +652,33 @@ export function NetworkPage({
 
         {view === 'adapters' && (
           <>
+            {/*
+              While the appliance is provisioning the allowlist follows the
+              hardware, so the ordinary editor has nothing to edit. The
+              commissioning workflow is shown in its place until first boot ends.
+            */}
+            {managementAccess.state === 'read' &&
+              managementAccess.value.provisioning &&
+              completeCommissioning !== undefined && (
+                <CommissioningPanel
+                  status={managementAccess.value}
+                  canManage={canManageInterfaces}
+                  busy={busy}
+                  complete={async (interfaces, confirmCurrentInterface) => {
+                    const value = await completeCommissioning(
+                      interfaces,
+                      confirmCurrentInterface,
+                    );
+                    setManagementAccess({ state: 'read', value });
+                    return value;
+                  }}
+                />
+              )}
+
             {canManageInterfaces &&
+              !(
+                managementAccess.state === 'read' && managementAccess.value.provisioning
+              ) &&
               readManagementAccess !== undefined &&
               updateManagementAccess !== undefined &&
               confirmManagementAccess !== undefined &&

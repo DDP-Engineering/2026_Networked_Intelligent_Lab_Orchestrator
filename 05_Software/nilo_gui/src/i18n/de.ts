@@ -905,6 +905,31 @@ export const de: Catalogue = {
     'Ein geräteseitiger Adapter hat normalerweise kein Standard-Gateway; der Uplink behält die Standardroute.',
   'network.settings.guidance.protect':
     'Eine Änderung, die den letzten Verwaltungspfad unbrauchbar machen würde, wird vor dem Anwenden abgelehnt.',
+  'network.commissioning.title': 'Inbetriebnahme beim ersten Start',
+  'network.commissioning.temporaryWarning':
+    'Jeder geeignete Adapter ist bis zum Abschluss der Inbetriebnahme ein vorübergehender Verwaltungszugang. Wer eines der unten genannten Netze erreicht, erreicht dieses Gerät.',
+  'network.commissioning.body':
+    'Wählen Sie die Adapter, die künftig den NILO-Verwaltungszugriff tragen sollen. Die übrigen werden für Gerätenetze frei. Eine Auswahl, über die das Gerät nicht erreichbar wäre, wird abgelehnt.',
+  'network.commissioning.select': 'Verwaltungszugriff auf {name} behalten',
+  'network.commissioning.current': 'aktueller Browserpfad',
+  'network.commissioning.notEligible':
+    'Diese Schnittstelle kann keinen Verwaltungszugriff tragen.',
+  'network.commissioning.urls': 'Nutzbare NILO-URLs',
+  'network.commissioning.localOnly':
+    'Der .local-Name wird nur im lokalen Netz beantwortet, mit dem Sie verbunden sind.',
+  'network.commissioning.dhcp':
+    'Adressen stammen aus dem Netz und ändern sich; sie sind keine dauerhaften Kennungen.',
+  'network.commissioning.tlsMissing':
+    'Das Listener-Zertifikat enthält {names} nicht; Browser warnen, bis das behoben ist.',
+  'network.commissioning.noSelection':
+    'Behalten Sie mindestens einen Adapter für den Verwaltungszugriff.',
+  'network.commissioning.currentWarning':
+    'Sie geben {name} auf, den Adapter, über den diese Browsersitzung gekommen ist. Sie müssen das Gerät dann über einen der behaltenen Adapter erreichen.',
+  'network.commissioning.currentConfirm':
+    '{name} aufgeben und Inbetriebnahme abschließen',
+  'network.commissioning.complete': 'Inbetriebnahme abschließen',
+  'network.commissioning.failed':
+    'Die Inbetriebnahme konnte nicht abgeschlossen werden.',
   'network.management.title': 'Schnittstellen für Verwaltungszugriff',
   'network.management.body':
     'Wählen Sie die Schnittstellennamen, die NILO-HTTPS annehmen dürfen. Adressen sind beobachteter Zustand und können sich ändern.',

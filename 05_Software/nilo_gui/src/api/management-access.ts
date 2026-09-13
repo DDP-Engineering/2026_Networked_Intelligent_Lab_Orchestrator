@@ -1,6 +1,7 @@
 import { BENCH_CORE_API_VERSION, type ParseResult } from './contract';
 
 export const MANAGEMENT_ACCESS_PATH = '/api/v1/network/management-access';
+export const COMMISSIONING_PATH = '/api/v1/commissioning/complete';
 
 export type ManagementAccessState = 'pending' | 'applied' | 'failed' | 'recovered';
 export type AdapterRole = '' | 'management' | 'device';
@@ -63,6 +64,13 @@ export interface ManagementAccessStatus {
   detail: string;
   outcome: ManagementAccessOutcome;
   currentInterface: string;
+  /**
+   * Whether the appliance is still in first boot, where the allowlist follows
+   * the hardware instead of an administrator's choice. An appliance that does
+   * not report it is treated as commissioned, which is the safe direction: it
+   * shows the ordinary allowlist editor rather than offering to commission.
+   */
+  provisioning: boolean;
 }
 
 function strings(value: unknown): string[] | null {
@@ -126,7 +134,11 @@ export function parseManagementAccess(
   ) {
     return { ok: false, violation: 'management access has invalid state metadata' };
   }
-  if (body.outcome === null || typeof body.outcome !== 'object' || Array.isArray(body.outcome)) {
+  if (
+    body.outcome === null ||
+    typeof body.outcome !== 'object' ||
+    Array.isArray(body.outcome)
+  ) {
     return { ok: false, violation: 'management access has invalid outcome metadata' };
   }
   const outcome = body.outcome as Record<string, unknown>;
@@ -249,6 +261,7 @@ export function parseManagementAccess(
         resourceName: outcome.resource_name,
       },
       currentInterface: body.current_interface,
+      provisioning: body.provisioning === true,
     },
   };
 }

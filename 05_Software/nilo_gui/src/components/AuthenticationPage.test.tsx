@@ -99,6 +99,7 @@ function stubClient(overrides: Partial<BenchCoreClient> = {}): BenchCoreClient {
     setManagementAccess: unexpected,
     confirmManagementAccess: unexpected,
     recoverManagementAccess: unexpected,
+    completeCommissioning: () => Promise.reject(new Error('not part of this fixture')),
     getNetworkStatistics: unexpected,
     previewInterfaceChange: unexpected,
     acknowledgeNetworkOperation: unexpected,

@@ -44,6 +44,12 @@ one of three fixed roles - Administrator, Operator or Viewer.
 - **Appliance networking.** Adapter state and settings, Wi-Fi scan and join,
   managed WireGuard profiles and routed device networks, each through preview,
   acknowledgement and a confirmation window with automatic restore.
+- **First-boot commissioning.** A clean installation records a commissioning
+  lifecycle state, answers its own local name and serves management access on
+  every eligible physical adapter, and follows adapters as they appear and
+  leave. An administrator ends that state by fixing the allowlist to a path the
+  appliance can still be reached through, after which it never widens itself
+  again. An upgraded installation is never returned to first boot.
 - **Activity.** One filtered, paginated audit and event history with bounded
   JSONL and CSV export, an administrator retention policy, and bounded
   housekeeping.

@@ -1,0 +1,114 @@
+{
+  "reports": [
+    {
+      "anchor_created_at": "2026-09-12T12:33:13.750978Z",
+      "anchor_head": "5ef872e1bbab6df6264b5f1cb1ec007f96c4eb77",
+      "anchor_id": "ae7a84ac3c3dfde8",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "4a17c9fd2a09eeb89e187a11362e3473f4d070ef9a20666f59584d13603720d3"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "55444408561d026c30fbe1f288bc291d9a07b0a98d52942085dd1041457a5d9f"
+          },
+          "path": "05_Software/nilo_assistant/internal/app/app.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "8546a8730fd1d62dbb455d4f8ee5f7ed132c1f099ef279d549900d15250c35c7"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/appliance/commissioning.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "8859ca8d5a2f339088a2138c905ac7bbcb608e36628264bbd1801dd8be206e0c"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "e3d32e2a63edc2ec8624027e55762fc8139b981bccd23648e0bdbd5273487e2b"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "1950dcebe01f46a64cdd89b8479e6dff69ecd8f74ed67b1ef1bcf2bf1864456c"
+          },
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/db_test.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "61bd6f180f7cac2e1cfb9483b65ece6209c92965a61c73a4a881ebfc804da7e7"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "4d6b4acc5552c5234f9d979d84e1953ad3cd97707fcd81bed0de6411c36277de"
+          },
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/migrations.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "4a78e739c139c1ed6afb748d5ae04e8addeda4e57a4f0f87fe24398d464ce25e"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/migrations/013_commissioning.sql",
+          "status": "added"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 0,
+            "modified": 0,
+            "removed": 0,
+            "unchanged": 151
+          },
+          "source": {
+            "added": 3,
+            "modified": 2,
+            "removed": 0,
+            "unchanged": 301
+          },
+          "tests": {
+            "added": 0,
+            "modified": 1,
+            "removed": 0,
+            "unchanged": 178
+          }
+        },
+        "status": {
+          "added": 3,
+          "modified": 3,
+          "removed": 0,
+          "unchanged": 630
+        }
+      },
+      "current_head": "5ef872e1bbab6df6264b5f1cb1ec007f96c4eb77",
+      "evolution_stage": "validate",
+      "evolved_at": "2026-09-12T12:35:36.008205Z"
+    }
+  ],
+  "schema": 1,
+  "task": "TASK-ac1e9003"
+}

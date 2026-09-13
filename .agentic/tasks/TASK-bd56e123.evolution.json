@@ -1,0 +1,163 @@
+{
+  "reports": [
+    {
+      "anchor_created_at": "2026-09-12T18:08:52.084670Z",
+      "anchor_head": "5ef872e1bbab6df6264b5f1cb1ec007f96c4eb77",
+      "anchor_id": "1d0c15e050c6d8b0",
+      "anchor_stage": "frame",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "77228b8a51c7bcc597b19564333de5dd31381fb226c4ce8bc0d28a42e51f34f0"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "2cef319894244a1a7e67dbb98ad1e9b1d66ae718a73325697c2107d922103ba9"
+          },
+          "path": "05_Software/nilo_assistant/cmd/nilo/main.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "30f2e863ae65b659511d1e659359cb6d8f2690a164e0cd864854bb486e877b68"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "4a17c9fd2a09eeb89e187a11362e3473f4d070ef9a20666f59584d13603720d3"
+          },
+          "path": "05_Software/nilo_assistant/internal/app/app.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "54f92e458ee877b18065eec818286c4ae882cb91314cc09de1d8adff96e58d5f"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/appliance/commissioner.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "316be7399eb707153dc4bcc5fae707a4c0eda02cd16bba8adfb3e6dacc468e7c"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "8546a8730fd1d62dbb455d4f8ee5f7ed132c1f099ef279d549900d15250c35c7"
+          },
+          "path": "05_Software/nilo_assistant/internal/appliance/commissioning.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "52223d6e6d5be4724978a04d4898e66fc2ec3488581568b5cf36c64813979a59"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/httpapi/commissioning.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b703ab0079c7bb44357576f6a89ed334f751c36a76ace0838fd8b8899daba576"
+          },
+          "area": "tests",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/httpapi/commissioning_test.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "9a6505f26d6fc659f0bc999c8c258a1ec141677770176260f96de347eb3ad5e6"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "10ab856ab12618947924437a69c76adbb4ff94840cc90450d26db2f5901b9a80"
+          },
+          "path": "05_Software/nilo_assistant/internal/httpapi/server.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "e0f7dc88405df2d27470026e04dced7de4d69503a97272cfbd9938f8d48c65f0"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/network/commissioning.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "41c719f812f7f7e992a8315a679a53b98cafd3d4c4cb098cac28ebf5a41a42fe"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "6d4dc4eb416609f59e54d4939e05070b3fa31a3f9a91ee90579a55ec99dc75dc"
+          },
+          "path": "05_Software/nilo_assistant/internal/network/management_access.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "1918d90b76720a22644e92a6f348f28b8ef602b092d8a487c31ec0c0437ed219"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "8859ca8d5a2f339088a2138c905ac7bbcb608e36628264bbd1801dd8be206e0c"
+          },
+          "path": "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository.go",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 0,
+            "modified": 0,
+            "removed": 0,
+            "unchanged": 151
+          },
+          "source": {
+            "added": 3,
+            "modified": 6,
+            "removed": 0,
+            "unchanged": 306
+          },
+          "tests": {
+            "added": 1,
+            "modified": 0,
+            "removed": 0,
+            "unchanged": 185
+          }
+        },
+        "status": {
+          "added": 4,
+          "modified": 6,
+          "removed": 0,
+          "unchanged": 642
+        }
+      },
+      "current_head": "5ef872e1bbab6df6264b5f1cb1ec007f96c4eb77",
+      "evolution_stage": "validate",
+      "evolved_at": "2026-09-12T18:11:52.454467Z"
+    }
+  ],
+  "schema": 1,
+  "task": "TASK-bd56e123"
+}

@@ -309,6 +309,7 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 		protected.Handle("PUT /api/v1/network/management-access", authorize(auth.PermissionNetworkManage, handleUpdateManagementAccess(options.ManagementAccess)))
 		protected.Handle("POST /api/v1/network/management-access/confirm", authorize(auth.PermissionNetworkManage, handleConfirmManagementAccess(options.ManagementAccess)))
 		protected.Handle("POST /api/v1/network/management-access/recover", authorize(auth.PermissionNetworkManage, handleRecoverManagementAccess(options.ManagementAccess)))
+		protected.Handle("POST /api/v1/commissioning/complete", authorize(auth.PermissionNetworkManage, handleCompleteCommissioning(options.ManagementAccess)))
 	}
 	// The preview routes declare their permission here. Acknowledge, confirm and
 	// rollback declare the read permission, because the action they authorize

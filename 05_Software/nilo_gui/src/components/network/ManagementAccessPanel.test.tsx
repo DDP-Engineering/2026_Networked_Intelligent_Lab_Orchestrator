@@ -70,6 +70,7 @@ const applied: ManagementAccessStatus = {
   detail: '',
   outcome: { code: '', interface: '', resourceName: '' },
   currentInterface: 'wlan0',
+  provisioning: false,
 };
 
 describe('ManagementAccessPanel', () => {
@@ -221,30 +222,33 @@ describe('ManagementAccessPanel', () => {
   it.each([
     ['de', /Verwaltungszugriff wurde von eth0 entfernt/],
     ['ro', /Accesul de administrare a fost eliminat de pe eth0/],
-  ] as const)('localizes a recovered role conflict in %s', async (language, message) => {
-    const recovered: ManagementAccessStatus = {
-      ...applied,
-      state: 'recovered',
-      detail: 'English backend detail',
-      outcome: {
-        code: 'role_conflict_recovered',
-        interface: 'eth0',
-        resourceName: 'PLC line',
-      },
-    };
-    renderInShell(
-      <ManagementAccessPanel
-        read={() => Promise.resolve(recovered)}
-        update={() => Promise.resolve(recovered)}
-        confirm={() => Promise.resolve(recovered)}
-        recover={() => Promise.resolve(recovered)}
-      />,
-      { theme: 'light', language },
-    );
+  ] as const)(
+    'localizes a recovered role conflict in %s',
+    async (language, message) => {
+      const recovered: ManagementAccessStatus = {
+        ...applied,
+        state: 'recovered',
+        detail: 'English backend detail',
+        outcome: {
+          code: 'role_conflict_recovered',
+          interface: 'eth0',
+          resourceName: 'PLC line',
+        },
+      };
+      renderInShell(
+        <ManagementAccessPanel
+          read={() => Promise.resolve(recovered)}
+          update={() => Promise.resolve(recovered)}
+          confirm={() => Promise.resolve(recovered)}
+          recover={() => Promise.resolve(recovered)}
+        />,
+        { theme: 'light', language },
+      );
 
-    expect(await screen.findByText(message)).toBeVisible();
-    expect(screen.queryByText(/English backend detail/)).toBeNull();
-  });
+      expect(await screen.findByText(message)).toBeVisible();
+      expect(screen.queryByText(/English backend detail/)).toBeNull();
+    },
+  );
 
   it('keeps a management-update conflict until observed inventory supersedes its device claim', async () => {
     const claimed: ManagementAccessStatus = {
@@ -308,21 +312,15 @@ describe('ManagementAccessPanel', () => {
       /device-side adapter for PLC line/i,
     );
 
-    fireEvent.click(
-      within(region).getByRole('button', { name: 'Refresh interfaces' }),
-    );
+    fireEvent.click(within(region).getByRole('button', { name: 'Refresh interfaces' }));
     await waitFor(() => expect(read).toHaveBeenCalledTimes(2));
     expect(within(region).getByRole('alert')).toHaveTextContent(
       /device-side adapter for PLC line/i,
     );
 
-    fireEvent.click(
-      within(region).getByRole('button', { name: 'Refresh interfaces' }),
-    );
+    fireEvent.click(within(region).getByRole('button', { name: 'Refresh interfaces' }));
     await waitFor(() => expect(read).toHaveBeenCalledTimes(3));
-    await waitFor(() =>
-      expect(within(region).queryByRole('alert')).toBeNull(),
-    );
+    await waitFor(() => expect(within(region).queryByRole('alert')).toBeNull());
     expect(within(region).queryByText('untrusted backend role wording')).toBeNull();
   });
 
@@ -356,7 +354,9 @@ describe('ManagementAccessPanel', () => {
     fireEvent.click(
       within(region).getByRole('button', { name: 'Apply interface allowlist' }),
     );
-    expect(await within(region).findByText(/adapter role conflict could not be read/i)).toBeVisible();
+    expect(
+      await within(region).findByText(/adapter role conflict could not be read/i),
+    ).toBeVisible();
     expect(within(region).queryByText('untrusted backend role wording')).toBeNull();
   });
 });

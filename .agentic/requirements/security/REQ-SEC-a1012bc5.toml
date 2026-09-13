@@ -1,0 +1,39 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-SEC-a1012bc5"
+
+title = "Freeze the management allowlist once commissioned"
+
+status = "active"
+
+requirement = """
+Once the appliance has completed commissioning, the management listener allowlist shall be the explicitly configured set alone: a newly detected eligible interface shall not be added to it, and the allowlist shall change only through an administrator's explicit management access request.
+"""
+
+verification = "An automated test builds the service over a commissioned appliance with a saved single-interface allowlist, adds a further eligible interface to the provider, reconciles, and asserts the allowlist and the firewall still carry only the configured interface and that a destination address on the new adapter is refused. A second test asserts an explicit management access update is still accepted on a commissioned appliance and is refused while the appliance is provisioning."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/management_access.go",
+    "05_Software/nilo_assistant/internal/network/management_provisioning_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/management_provisioning_test.go::TestCommissionedAllowlistDoesNotAdmitANewlyAttachedAdapter",
+    "05_Software/nilo_assistant/internal/network/management_provisioning_test.go::TestProvisioningRefusesAnExplicitAllowlistChange",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "First boot is a deliberate, temporary widening. If derivation continued after commissioning, plugging in any adapter would silently reopen management access on it."
+
+created = 2026-09-12
+updated = 2026-09-12

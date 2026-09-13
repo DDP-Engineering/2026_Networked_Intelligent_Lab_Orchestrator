@@ -1,0 +1,48 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-REL-d9bfd8ae"
+
+title = "Preserve the commissioning lifecycle state across restart"
+
+status = "active"
+
+requirement = """
+The appliance shall report the commissioning lifecycle state recorded in its data directory whenever it is opened, unchanged by service restart or by reopening the data directory, and shall refuse to start rather than assume a state when the recorded value is absent or outside the permitted set.
+"""
+
+verification = "An automated test opens one data directory, reads the lifecycle state, closes it, opens it again and asserts the same state is reported, repeating the cycle for both permitted values. A further test writes an absent and then an unrecognized recorded value directly and asserts each is refused with an error rather than defaulting."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/appliance/commissioning.go",
+    "05_Software/nilo_assistant/internal/appliance/commissioning_test.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go",
+    "05_Software/nilo_assistant/internal/app/app.go",
+    "05_Software/nilo_assistant/internal/app/app_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/app/app_test.go::TestOpenReportsTheRecordedCommissioningStateAcrossReopen",
+    "05_Software/nilo_assistant/internal/app/app_test.go::TestOpenRefusesADatabaseWithNoRecordedCommissioningState",
+    "05_Software/nilo_assistant/internal/appliance/commissioning_test.go::TestCommissioningStateAcceptsOnlyTheTwoRecordedStates",
+    "05_Software/nilo_assistant/internal/appliance/commissioning_test.go::TestLoadCommissioningReportsTheRecordedState",
+    "05_Software/nilo_assistant/internal/appliance/commissioning_test.go::TestLoadCommissioningRefusesAnAbsentOrUnrecognizedState",
+    "05_Software/nilo_assistant/internal/appliance/commissioning_test.go::TestLoadCommissioningRequiresAStore",
+    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go::TestCommissioningRepositoryRefusesAnAbsentRow",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "A lifecycle state that reset or defaulted on restart would re-open first-boot exposure after every reboot, which is the failure the persistence acceptance test exists to catch."
+
+created = 2026-09-12
+updated = 2026-09-12

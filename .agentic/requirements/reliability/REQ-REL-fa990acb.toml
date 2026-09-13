@@ -1,0 +1,38 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-REL-fa990acb"
+
+title = "Leave a failed commissioning transition provisioning and intact"
+
+status = "active"
+
+requirement = """
+If completing commissioning does not finish, the appliance shall restore the management allowlist it was serving beforehand, remain in first-boot provisioning, and continue to follow the eligible interfaces as they appear and leave, so a transition that fails costs the administrator nothing.
+"""
+
+verification = "An automated test commissions a provisioning appliance through a recorder that refuses to record the lifecycle state, and asserts the failure is reported, the derived allowlist and the firewall are restored to what they were, an adapter that was serving beforehand is still admitted, and an adapter attached afterwards still joins - which is only true while the appliance is still provisioning."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/commissioning.go",
+    "05_Software/nilo_assistant/internal/network/commissioning_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/commissioning_test.go::TestCommissioningRestoresTheDerivedAllowlistWhenTheStateCannotBeRecorded",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "A half-committed transition is the state that strands an appliance: narrowed onto one adapter but not recorded as commissioned, so nothing would widen it back."
+
+created = 2026-09-12
+updated = 2026-09-12

@@ -903,6 +903,30 @@ export const ro: Catalogue = {
     'Un adaptor dinspre dispozitiv nu are, de regulă, gateway implicit; uplink-ul păstrează ruta implicită.',
   'network.settings.guidance.protect':
     'O modificare care ar lăsa ultima cale de administrare inutilizabilă este refuzată înainte de a fi aplicată.',
+  'network.commissioning.title': 'Punere în funcțiune la prima pornire',
+  'network.commissioning.temporaryWarning':
+    'Fiecare adaptor eligibil este o cale de administrare temporară până la finalizarea punerii în funcțiune. Oricine ajunge într-una dintre rețelele de mai jos ajunge la acest aparat.',
+  'network.commissioning.body':
+    'Alegeți adaptoarele care vor purta de acum accesul de administrare NILO. Celelalte rămân libere pentru rețelele de dispozitive. O alegere prin care aparatul nu ar putea fi atins este refuzată.',
+  'network.commissioning.select': 'Păstrează accesul de administrare pe {name}',
+  'network.commissioning.current': 'calea curentă a browserului',
+  'network.commissioning.notEligible':
+    'Această interfață nu poate purta acces de administrare.',
+  'network.commissioning.urls': 'Adrese NILO utilizabile',
+  'network.commissioning.localOnly':
+    'Numele .local este răspuns doar în rețeaua locală la care sunteți conectat.',
+  'network.commissioning.dhcp':
+    'Adresele vin din rețea și se schimbă; nu sunt identificatori permanenți.',
+  'network.commissioning.tlsMissing':
+    'Certificatul ascultătorului nu conține {names}, așa că browserele vor avertiza până atunci.',
+  'network.commissioning.noSelection':
+    'Păstrați cel puțin un adaptor pentru accesul de administrare.',
+  'network.commissioning.currentWarning':
+    'Renunțați la {name}, adaptorul prin care a venit această sesiune de browser. Va trebui să ajungeți la aparat printr-unul dintre adaptoarele păstrate.',
+  'network.commissioning.currentConfirm':
+    'Renunță la {name} și finalizează punerea în funcțiune',
+  'network.commissioning.complete': 'Finalizează punerea în funcțiune',
+  'network.commissioning.failed': 'Punerea în funcțiune nu a putut fi finalizată.',
   'network.management.title': 'Interfețe pentru accesul de administrare',
   'network.management.body':
     'Alegeți numele interfețelor care pot accepta NILO HTTPS. Adresele sunt stare observată și se pot schimba.',

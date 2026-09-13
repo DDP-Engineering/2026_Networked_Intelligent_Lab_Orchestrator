@@ -128,6 +128,7 @@ function client(session: BenchCoreSession = administrator): BenchCoreClient {
     setManagementAccess: () => Promise.reject(new Error('no management access')),
     confirmManagementAccess: () => Promise.reject(new Error('no management access')),
     recoverManagementAccess: () => Promise.reject(new Error('no management access')),
+    completeCommissioning: () => Promise.reject(new Error('not part of this fixture')),
     getNetworkStatistics: () => Promise.reject(new BenchCoreError('unavailable', 'no')),
     previewInterfaceChange: () =>
       Promise.reject(new BenchCoreError('unavailable', 'no')),

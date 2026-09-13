@@ -51,6 +51,9 @@ type Request struct {
 	// ManagementAccess is accepted only by management.access.apply. It carries
 	// validated public interface names and a port, never firewall syntax.
 	ManagementAccess *network.ManagementAccessConfiguration `json:"management_access,omitempty"`
+	// MDNS is accepted only by mdns.publish. It carries a validated host label
+	// and interface names, never responder configuration syntax.
+	MDNS *network.MDNSAdvertisement `json:"mdns,omitempty"`
 }
 
 // Response has no field that can hold key material, and must never gain one.
@@ -121,12 +124,20 @@ func dispatch(ctx context.Context, e *Engine, q Request) Response {
 	if q.ManagementAccess != nil && q.Op != "management.access.apply" {
 		return Response{Error: "unexpected management access configuration", Code: "invalid_request"}
 	}
+	if q.MDNS != nil && q.Op != "mdns.publish" {
+		return Response{Error: "unexpected mDNS advertisement", Code: "invalid_request"}
+	}
 	switch q.Op {
 	case "management.access.apply":
 		if q.ID != "" || q.ManagementAccess == nil {
 			return Response{Error: "management access requires a configuration and nothing else", Code: "invalid_request"}
 		}
 		err = e.ApplyManagementAccess(ctx, *q.ManagementAccess)
+	case "mdns.publish":
+		if q.ID != "" || q.MDNS == nil {
+			return Response{Error: "mDNS publication requires an advertisement and nothing else", Code: "invalid_request"}
+		}
+		err = e.PublishMDNS(ctx, *q.MDNS)
 	case "system.restart":
 		if !emptyPowerRequest(q) {
 			return Response{Error: "power operation requires an empty envelope", Code: "invalid_request"}
@@ -261,4 +272,4 @@ func emptyPowerRequest(q Request) bool {
 		q.Handle == "" && q.ProfileID == "" && q.ConnectionRef == "" && q.Plan == nil && q.DeviceNetworkID == "" && q.ManagementAccess == nil
 }
 
-var knownErrors = map[string]error{"preview_stale": network.ErrPreviewStale, "not_controllable": network.ErrNotControllable, "unsupported": network.ErrUnsupported, "connection_required": network.ErrConnectionRequired, "busy": network.ErrChangeInProgress, "recovery_unavailable": network.ErrRecoveryUnavailable, "operation_not_found": network.ErrOperationNotFound, "not_awaiting_confirmation": network.ErrNotAwaitingConfirm, "external_profile": network.ErrExternalProfile, "profile_active": network.ErrProfileActive, "secrets_not_found": ErrSecretsNotFound, "interface_settings_rejected": network.ErrInterfaceSettingsRejected, "forwarding_foreign": ErrForwardingForeign, "forwarding_unsupported": ErrForwardingUnsupported, "management_access_foreign": ErrManagementAccessForeign, "management_access_unsupported": ErrManagementAccessUnsupported, "power_unavailable": power.ErrUnavailable}
+var knownErrors = map[string]error{"preview_stale": network.ErrPreviewStale, "not_controllable": network.ErrNotControllable, "unsupported": network.ErrUnsupported, "connection_required": network.ErrConnectionRequired, "busy": network.ErrChangeInProgress, "recovery_unavailable": network.ErrRecoveryUnavailable, "operation_not_found": network.ErrOperationNotFound, "not_awaiting_confirmation": network.ErrNotAwaitingConfirm, "external_profile": network.ErrExternalProfile, "profile_active": network.ErrProfileActive, "secrets_not_found": ErrSecretsNotFound, "interface_settings_rejected": network.ErrInterfaceSettingsRejected, "forwarding_foreign": ErrForwardingForeign, "forwarding_unsupported": ErrForwardingUnsupported, "management_access_foreign": ErrManagementAccessForeign, "management_access_unsupported": ErrManagementAccessUnsupported, "mdns_foreign": ErrMDNSForeign, "mdns_unsupported": ErrMDNSUnsupported, "power_unavailable": power.ErrUnavailable}

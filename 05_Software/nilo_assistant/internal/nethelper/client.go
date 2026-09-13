@@ -56,6 +56,14 @@ func (c *Client) ApplyManagementAccess(ctx context.Context, configuration networ
 
 var _ network.ManagementAccessFirewall = (*Client)(nil)
 
+// PublishMDNS asks the privileged helper to answer the appliance's local name
+// on the given interfaces. It sends the validated advertisement, never
+// responder configuration.
+func (c *Client) PublishMDNS(ctx context.Context, advertisement network.MDNSAdvertisement) error {
+	_, err := c.call(ctx, Request{Op: "mdns.publish", MDNS: &advertisement})
+	return err
+}
+
 func (c *Client) call(ctx context.Context, q Request) (Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, 35*time.Second)
 	defer cancel()

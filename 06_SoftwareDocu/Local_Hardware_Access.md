@@ -194,7 +194,64 @@ audit and recovery rules remain in force. A live handshake and return after
 reboot remain Raspberry Pi acceptance evidence, not an assumption from this
 document.
 
-### 2.7 Power-control checks
+### 2.7 Unattended administration
+
+The board carries `/etc/sudoers.d/90-dpasare-automation`, granting `dpasare`
+passwordless `sudo`. It exists so an agent driving the board over SSH can
+install binaries, restart services and read privileged network state without a
+password being handled in plain text.
+
+```bash
+sudo rm /etc/sudoers.d/90-dpasare-automation
+```
+
+Remove it when the board stops being a personal test device. It is recorded here
+and nowhere else, like the rest of this section.
+
+`nilo0` is set to `autoconnect yes` on its NetworkManager profile. It was
+`no`, which meant the tunnel existed only while NILO's startup selection held it
+up — and the tunnel is the only route to this board from outside its local
+networks. Anything that restarted NILO on a data directory without that
+selection would have stranded the board until somebody reached it physically.
+
+### 2.8 First-boot provisioning check (2026-09-13)
+
+The board runs NILO 0.3.0 from `/var/lib/nilo` with `nilo.service` and
+`nilo-nethelper.service` active, reachable at `https://10.205.148.11:8443` over
+the tunnel as before. Nothing from the first-boot check is left on it.
+
+The check ran a candidate against a throwaway data directory and then upgraded
+the real installation. Both halves were observed on this board:
+
+- A fresh data directory started with no listener option at all, derived its
+  management allowlist as `eth0`, `eth1`, `wlan0`, and recorded `provisioning`.
+  `nilo0` was excluded, because a WireGuard device is not an eligible management
+  path, and the helper's nftables table dropped port 8443 there - the tunnel
+  became unreachable for management while that instance ran, which is the
+  intended behavior rather than a fault.
+- The allowlist bound to stable adapter identities `dc:a6:32:77:3a:c4`,
+  `dc:a6:32:77:3a:c5` and `fc:e9:98:e0:01:d7`, and the same allowlist returned
+  after a restart.
+- `nilo-nethelper` published `ddp-remote.local` through avahi on those
+  interfaces, and the name resolved to the `wlan0` address.
+- Upgrading the real `/var/lib/nilo` to the same build recorded `commissioned`,
+  left all three identities and the `{nilo0, wlan0}` allowlist untouched, and
+  returned the appliance exactly as it was. An existing installation is not
+  drawn into first-boot provisioning.
+
+Repeating it needs a throwaway data directory, `--gui-dir` pointing at a build
+that carries the first-boot panel, and the stock `/etc/avahi/avahi-daemon.conf`
+moved aside so `nilo-nethelper` can own one. A fresh data directory holds no
+identities, so `nilo admin bootstrap --data-dir <dir> --username <name>` creates
+the first administrator before the workflow can be used; `admin user create`
+needs an existing administrator as its actor and refuses on an empty database.
+
+Reaching the interface during such a run means using an eligible network. The
+tunnel is excluded by design, `ddp-remote.local` resolves only where multicast
+DNS is carried, and the listener certificate names `ddp-remote.local`,
+`10.205.148.11` and `192.168.1.103` - so any other address warns in a browser.
+
+### 2.9 Power-control checks
 
 Use the board only after deploying the candidate ARM64 binaries, installing the
 candidate privileged helper, and starting Bench Core in the appliance profile.

@@ -148,6 +148,7 @@ const managementAccess: ManagementAccessStatus = {
   detail: '',
   outcome: { code: '', interface: '', resourceName: '' },
   currentInterface: 'enp1s0',
+  provisioning: false,
 };
 
 const statistics: NetworkStatistics = {
@@ -309,7 +310,9 @@ describe('NetworkPage', () => {
         'device-access',
       );
 
-      fireEvent.click(await screen.findByRole('button', { name: 'Add device network' }));
+      fireEvent.click(
+        await screen.findByRole('button', { name: 'Add device network' }),
+      );
       const editor = screen.getByRole('dialog', { name: 'New device network' });
       expect(await within(editor).findByText(message)).toBeVisible();
       expect(within(editor).getByLabelText('Device-side adapter')).toBeDisabled();
@@ -367,7 +370,9 @@ describe('NetworkPage', () => {
       ).toBeVisible();
       expect(screen.queryByText('backend wording')).toBeNull();
       await vi.advanceTimersByTimeAsync(5000);
-      expect(screen.getByText(/enp1s0 is reserved for management access/i)).toBeVisible();
+      expect(
+        screen.getByText(/enp1s0 is reserved for management access/i),
+      ).toBeVisible();
       await vi.advanceTimersByTimeAsync(5000);
       await waitFor(() =>
         expect(
@@ -383,9 +388,10 @@ describe('NetworkPage', () => {
     renderPage(
       {
         canManageInterfaces: true,
-        readDeviceNetworks: () => Promise.resolve([
-          { ...lineThree, enabled: false, state: 'disabled' as const },
-        ]),
+        readDeviceNetworks: () =>
+          Promise.resolve([
+            { ...lineThree, enabled: false, state: 'disabled' as const },
+          ]),
         previewDeviceNetworkChange: () =>
           Promise.reject(
             new BenchCoreError(
@@ -400,7 +406,9 @@ describe('NetworkPage', () => {
 
     await screen.findByText('Line 3');
     chooseAction('Line 3', 'Enable Line 3');
-    expect(await screen.findByText(/adapter role conflict could not be read/i)).toBeVisible();
+    expect(
+      await screen.findByText(/adapter role conflict could not be read/i),
+    ).toBeVisible();
     expect(screen.queryByText('untrusted backend role wording')).toBeNull();
   });
 

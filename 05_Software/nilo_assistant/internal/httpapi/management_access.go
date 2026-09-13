@@ -21,6 +21,7 @@ type managementAccessResponse struct {
 	Detail           string                              `json:"detail"`
 	Outcome          network.ManagementAccessOutcome     `json:"outcome"`
 	CurrentInterface string                              `json:"current_interface"`
+	Provisioning     bool                                `json:"provisioning"`
 }
 
 func managementAccessPayload(status network.ManagementAccessStatus) managementAccessResponse {
@@ -30,6 +31,7 @@ func managementAccessPayload(status network.ManagementAccessStatus) managementAc
 		TLSNames: status.TLSNames, TLSMissing: status.TLSMissing, Detail: status.Detail,
 		Outcome:          status.Outcome,
 		CurrentInterface: status.CurrentInterface,
+		Provisioning:     status.Provisioning,
 	}
 	if !status.ConfirmBy.IsZero() {
 		deadline := status.ConfirmBy

@@ -64,6 +64,20 @@ before anything is opened or contacted. The root usage names every group.
   from what a provider observed about the hardware - the device kind, a physical
   adapter observation and the permanent adapter identity - and never from the
   interface name. A reading that carries no hardware observation is ineligible.
+- The appliance records exactly one commissioning lifecycle state, `provisioning`
+  or `commissioned`. It is seeded by the schema migration that creates it and
+  read on every open; an absent or unrecognized value stops the start rather
+  than resolving to either state.
+- While the appliance is provisioning, the management allowlist is every
+  eligible physical interface currently present, recomputed on each reconcile
+  and persisted. Once it is commissioned the allowlist is the configured set
+  alone and changes only through an administrator's explicit request.
+- The privileged helper manages only the responder configuration it wrote
+  itself, recognized by its own marker, and refuses to replace any other. It
+  receives a validated host label and interface list, never responder syntax.
+- Commissioning is one way and is completed only onto an allowlist the appliance
+  can still be reached through. A transition that does not finish restores the
+  allowlist that was serving and leaves the appliance provisioning.
 
 ## Key behaviors
 
@@ -82,6 +96,16 @@ before anything is opened or contacted. The root usage names every group.
 - `REQ-FUNC-9835998b` and `REQ-FUNC-7f4afa6b` - select only supported deterministic simulation scenarios and fail closed on unknown identifiers.
 - `REQ-PLAT-30618e85` - keeps every simulation inventory entry unmistakably separate from physical equipment.
 - `REQ-FUNC-7ae21313` - names which observed interfaces may carry management access, from recorded hardware facts rather than the interface name.
+- `REQ-DATA-72876d18` - seeds the commissioning lifecycle state from whether the database already held an appliance identity when the migration ran.
+- `REQ-REL-d9bfd8ae` - reports the recorded lifecycle state unchanged across restart and refuses to assume one.
+- `REQ-FUNC-243c38a6` - derives the first-boot management allowlist from the eligible interfaces present and follows them as they appear and leave.
+- `REQ-SEC-a1012bc5` - freezes the allowlist once commissioned so a newly attached adapter never joins it.
+- `REQ-PLAT-b1abf074` - starts a first-boot appliance with no console listener option, and refuses one that is already commissioned.
+- `REQ-FUNC-9a19ad36` - accepts link-local as a wired adapter's IPv4 method so direct commissioning needs no DHCP server and no guessed address.
+- `REQ-FUNC-554b9bbd` - answers the appliance's local name on exactly the interfaces carrying management access and renews it as they change.
+- `REQ-SEC-83deb5c6` - takes a validated advertisement rather than responder configuration, manages only configuration it wrote, and reports an appliance it cannot publish on.
+- `REQ-FUNC-b49d7866` - fixes the management allowlist to what an administrator chose, records the appliance commissioned, and refuses a selection it could not be reached through.
+- `REQ-REL-fa990acb` - restores the allowlist that was serving when a commissioning transition does not finish, leaving the appliance provisioning.
 - `REQ-PLAT-18084875` - records a device as a physical adapter only when it reports a permanent hardware address and the kernel presents it on a real bus.
 - `REQ-SEC-5d0cfe7e` and `REQ-SEC-74b46e3e` - map the three fixed roles to explicit permissions and bound a token by its scopes intersected with its owner's current role.
 - `REQ-SEC-62e54172` - authorizes every protected route server-side and separates unauthenticated from forbidden.
@@ -307,6 +331,14 @@ The simulation catalog is deliberately dependency-free and cannot discover or co
 - `02_Tools/tests/network/` - disposable real-NetworkManager and unprivileged HTTPS process tests (opt-in, separate from the ordinary suite).
 
 - `internal/network/` (under the Go module) - operation safety, simulation, profile validation, sampling and statistics, plus the device-network model and the pure forwarding planner.
+- `internal/network/commissioning.go` - the one-way transition out of first boot: it checks the appliance can still be reached through the chosen interfaces, applies and persists them, stops deriving, and restores what was serving if any step does not finish.
+- `internal/appliance/commissioner.go` - adapts the durable lifecycle writer to the narrow interface the network service calls, returning nil when there is nothing to record through.
+- `internal/httpapi/commissioning.go` - the administrator-only route, mapping each refusal onto a conflict rather than a service failure.
+- `internal/network/mdns.go`, `mdns_announcer.go` - what the appliance asks to be discoverable as, and the announcer that keeps that publication in step with the interfaces actually serving. The announcer republishes only on a change and retries a failure on the next reconcile.
+- `internal/nethelper/avahi_render.go`, `mdns.go`, `avahi_linux.go` - the responder configuration renderer and its ownership check, the privileged operation, and the Linux driver that writes the file and reloads the responder.
+- `cmd/nilo/listener_mode.go` - the two decisions `serve` makes about its listener: which mode the options ask for, and whether first-boot serving is permitted by the appliance's recorded state. Pure, so both are asserted without a subprocess.
+- `internal/appliance/commissioning.go` - the lifecycle vocabulary, its validity rule and the load that refuses an unusable recorded value. It reads nothing itself; `internal/store/sqlite/commissioning_repository.go` satisfies its store interface.
+- `internal/store/sqlite/migrations/013_commissioning.sql` - the singleton `commissioning` table and the seeding rule, expressed in SQL because it is the only code that runs before the first appliance identity row exists.
 - `internal/network/eligibility.go` - the single rule naming which observed interfaces may carry management access. Pure: it reads a reading's kind, physical observation and adapter identity and nothing else.
 - `internal/nethelper/adapter_identity.go` - the physical-adapter decision and the `/sys/class/net/<name>/device` probe. Both are portable and untagged so they are tested on any development host; only the D-Bus read that feeds them lives in `networkmanager_linux.go`.
 - `internal/network/{devicenetwork,forwarding_plan}.go` - the saved device-network decision and the owned resource set it implies. Both are pure: their only imports are `errors`, `fmt`, `sort`, `strings` and `net/netip`, so a plan cannot reach a host. Nothing applies a plan yet.
@@ -453,6 +485,127 @@ and a connected container veth `veth9f2a41` and an addressed bridge `br-lab0`
 are not - so the exclusions are asserted by the ordinary suite on any host. The
 classification reaches no HTTP response: `networkInterfacePayload` in
 `internal/httpapi/network.go` is an explicit struct and names no such field.
+
+## Appliance commissioning lifecycle (2026-09-12, TASK-ac1e9003)
+
+The appliance records one lifecycle state in a singleton `commissioning` table:
+`provisioning` for a clean installation that has not completed commissioning,
+`commissioned` otherwise. Migration `013_commissioning.sql` creates the table
+and seeds it in the same statement, choosing `commissioned` when the database
+already holds an appliance identity row and `provisioning` when it does not.
+
+That discriminator works because `sqlite.Open` applies the migration set and
+`app.Open` calls `appliance.Provision` afterwards, so the migration always runs
+before the first identity row is written. A database carried forward from an
+earlier release therefore takes `commissioned` from the identity it already
+holds, which covers the interface-managed and the legacy single `--bind`
+deployment without detecting either separately.
+
+`appliance.CommissioningState` owns the vocabulary and refuses anything but the
+two values, including the empty one; there is no zero-value default, because a
+guessed `commissioned` would skip first boot on an appliance that needs it and a
+guessed `provisioning` would widen management exposure on one that does not.
+`app.Open` loads the state immediately after provisioning the identity and fails
+the open when the recorded value is absent or unrecognized, exposing it through
+`App.Commissioning()`. Nothing writes the state, and the table carries no
+timestamp: `appliance_identity.commissioned_at` is the identity creation time and
+means something else.
+
+## First-boot management serving (2026-09-12, TASK-20c64f67)
+
+`ManagementAccessService` has a provisioning mode. While the appliance's
+recorded lifecycle state is `provisioning`, the allowlist is derived from every
+interface `EligibleForManagement` accepts rather than from an administrator's
+choice: `NewManagementAccessService` derives it instead of requiring a console
+option or a saved record, and `refresh` re-derives on every reconcile, so an
+adapter connected during first boot begins carrying management access within one
+sampling interval and one removed stops. Each derived change travels the same
+path an administrator's would - helper firewall, then persistence, then the
+socket allowlist - so it inherits the same ordering and failure handling. The
+derived allowlist is persisted, so a restart resumes exactly what was serving.
+
+With no eligible interface present the service persists nothing, installs no
+firewall rule and admits nothing, and the first adapter to appear is applied by
+the ordinary reconcile. That is deliberate: a configuration with an empty
+allowlist cannot be validated or rendered as an nftables interface set, and
+admitting everything instead would leave the wildcard listener unguarded.
+
+`Update` and `Confirm` return `ErrManagementAccessDerived` while provisioning,
+because the allowlist is not an administrator's to set there. Once the appliance
+is commissioned, derivation stops entirely: the configured set alone governs, and
+a newly detected eligible adapter is refused at the socket gate.
+
+`serve` reaches provisioning only when no listener option is given. The
+first-boot wildcard address is adopted before the database is opened, because
+`config.Load` only records `BindAddress`, and `checkProvisioningPermitted`
+judges it immediately after the open, so a commissioned appliance started with
+no options is refused for its real reason rather than by a syntax rule.
+`httpapi.Serve` still validates the wildcard listener against a non-nil gate and
+TLS material, so the three enforcement layers are unchanged.
+
+A wired adapter may also take `link-local` as its IPv4 addressing method,
+rendered as NetworkManager's own link-local method, so an appliance reached over
+a direct cable needs neither a DHCP server nor a guessed address. The standard
+probe reaches a different address on each adapter, which is why NILO allocates
+none itself. The method is refused with a static address or gateway and on a
+wireless adapter. The allowlist needs no special case: it admits every address an
+enabled interface reports, so a 169.254 address is already a usable management
+path.
+
+## First-boot local-name discovery (2026-09-12, TASK-878ab570)
+
+While an appliance is being commissioned it answers one local name on exactly
+the interfaces carrying management access, so an installer can type one URL and
+reach it from whichever network they are on. `network.MDNSAdvertisement` is a
+host label and an interface list, validated before it leaves the unprivileged
+process: a name that is not a single DNS label, an empty list, loopback, a
+duplicate, or anything that could carry a configuration separator is refused.
+The advertisement carries no address, because the responder publishes whatever
+each interface currently holds, which is what lets the URL survive a DHCP
+renewal.
+
+`network.MDNSAnnouncer` holds the last advertisement it published and renews
+only on a change, so the reconcile cadence does not restart the responder every
+few seconds. A publication that fails is reported and recorded as unpublished so
+the next reconcile retries: an appliance whose name is not answered is still
+reachable by address, and neither failing the start nor staying silent would be
+right. An advertisement with no usable interface publishes nothing and reports
+no error, because that is an ordinary first-boot moment.
+
+The privileged helper accepts the operation `mdns.publish`, and its envelope
+refuses an advertisement on every other operation. It manages only responder
+configuration bearing its own marker and refuses to replace any other, the same
+ownership discipline the nftables tables use. The rendered configuration names
+the derived interfaces, publishes addresses, and explicitly declines to publish
+anything further about the appliance. It is staged beside its target and renamed
+over it, so a reading responder never sees a half-written file. A helper with no
+responder to drive reports that it cannot publish rather than appearing to
+succeed.
+
+## Completing commissioning (2026-09-12, TASK-bd56e123)
+
+`POST /api/v1/commissioning/complete` is the administrator-only step that ends
+first boot. `ManagementAccessService.Commission` refuses a selection the
+appliance could not be reached through: it must validate, every interface must
+be one that may carry management access, at least one must be usable now, and
+the interface the request itself arrived on may not be given up unless that was
+confirmed. A second completion is refused, because the step is one way.
+
+The order is the safety argument. Under the role coordinator the service applies
+the firewall, persists the record and stops deriving; the durable lifecycle
+state is recorded **last**, because it is the only step whose failure can be
+undone completely - the allowlist in force is still a valid provisioning
+allowlist, so restoring the previous one returns the appliance exactly to where
+it was. `restoreProvisioning` does that on any failure, and the appliance keeps
+following the hardware afterwards, which is what proves it really is still
+provisioning.
+
+A selection the configuration rejects is answered as a conflict, not a service
+failure, so an administrator's mistake is never dressed up as an outage.
+Reassigning a freed adapter to a device network is the existing device-network
+workflow: the role coordinator already refuses an adapter that is still in the
+management allowlist, and commissioning onto a smaller allowlist is what frees
+one.
 
 ## Whole-appliance power control (2026-09-08, TASK-a3a3d7b2)
 

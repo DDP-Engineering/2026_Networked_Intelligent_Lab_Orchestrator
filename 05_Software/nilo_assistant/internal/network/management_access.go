@@ -37,6 +37,7 @@ var (
 	ErrManagementAccessPending    = errors.New("a management access change is already pending")
 	ErrManagementAccessNotPending = errors.New("no management access change is pending")
 	ErrManagementReconfigure      = errors.New("persistent management access differs; pass --management-reconfigure to stage a recoverable console change")
+	ErrManagementAccessDerived    = errors.New("the management allowlist is derived from eligible interfaces until the appliance is commissioned")
 	managementInterfaceName       = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.-]{0,14}$`)
 )
 
@@ -302,6 +303,10 @@ type ManagementAccessStatus struct {
 	Detail           string
 	Outcome          ManagementAccessOutcome
 	CurrentInterface string
+	// Provisioning is whether the appliance is still in first boot, where the
+	// allowlist is derived rather than chosen. The browser shows the
+	// commissioning workflow instead of the ordinary allowlist editor.
+	Provisioning bool
 }
 
 // ManagementAccessOptions composes the listener policy with observation,
@@ -316,6 +321,18 @@ type ManagementAccessOptions struct {
 	TLSMissing    []string
 	ConfirmWindow time.Duration
 	Coordinator   *AdapterRoleCoordinator
+	// Provisioning derives the allowlist from every eligible physical interface
+	// instead of an administrator's explicit choice. It is set only while the
+	// appliance has not completed commissioning, so the widening it represents
+	// is bounded by durable state rather than by how the process was started.
+	Provisioning bool
+	// ProvisioningTLSNames are the certificate identities a derived
+	// configuration carries, normally the appliance's own host name.
+	ProvisioningTLSNames []string
+	// Commissioner records the appliance as commissioned once an administrator
+	// has fixed the allowlist. A provisioning service without one can serve but
+	// cannot complete commissioning.
+	Commissioner Commissioner
 }
 
 // ManagementAccessService owns the active allowlist used by both the socket
@@ -333,7 +350,47 @@ type ManagementAccessService struct {
 	allowed       map[netip.Addr]string
 	tlsMissing    []string
 	coordinator   *AdapterRoleCoordinator
+	provisioning  bool
+	provisionTLS  []string
+	commissioner  Commissioner
 }
+
+// deriveProvisioningInterfaces is the first-boot allowlist: every interface the
+// provider currently reports that may carry management access, in a stable
+// order. It reads the same rule the rest of the product does and adds nothing.
+func deriveProvisioningInterfaces(interfaces []Interface) []string {
+	names := make([]string, 0, len(interfaces))
+	for _, candidate := range interfaces {
+		if EligibleForManagement(candidate) {
+			names = append(names, candidate.Name)
+		}
+	}
+	sort.Strings(names)
+	return names
+}
+
+// provisioningConfiguration builds the derived configuration for the interfaces
+// currently present. It reports false when no eligible interface is there: a
+// configuration with an empty allowlist cannot be validated, persisted or
+// rendered as an nftables interface set, and admitting everything instead would
+// turn the wildcard listener into an unguarded one. The caller therefore admits
+// nothing until an adapter appears.
+func provisioningConfiguration(
+	interfaces []Interface, port int, tlsNames []string,
+) (ManagementAccessConfiguration, bool) {
+	names := deriveProvisioningInterfaces(interfaces)
+	if len(names) == 0 {
+		return ManagementAccessConfiguration{}, false
+	}
+	configuration := ManagementAccessConfiguration{
+		Interfaces: names, Port: port, TLSNames: append([]string(nil), tlsNames...),
+	}
+	return canonicalManagementConfiguration(resolveManagementConfiguration(configuration, interfaces)), true
+}
+
+// ProvisioningPort is the HTTPS port a first-boot appliance serves on before an
+// administrator has chosen anything.
+const ProvisioningPort = 8443
 
 // NewManagementAccessService loads or deliberately initializes the durable
 // configuration, restores an interrupted pending change, applies the helper
@@ -402,6 +459,42 @@ func NewManagementAccessService(ctx context.Context, options ManagementAccessOpt
 		needsSave = true
 		present = true
 	}
+	if options.Provisioning {
+		// The allowlist is derived here, so a first-boot appliance needs nothing
+		// on the console and a saved one is replaced rather than obeyed.
+		port := ProvisioningPort
+		if present && record.Configuration.Port != 0 {
+			port = record.Configuration.Port
+		}
+		derived, usable := provisioningConfiguration(observed, port, options.ProvisioningTLSNames)
+		if !usable {
+			// No eligible adapter is present. Nothing is persisted and no rule is
+			// installed; the reconcile loop applies the first one to appear.
+			service := &ManagementAccessService{
+				provider: options.Provider, store: options.Store, firewall: options.Firewall,
+				now: options.Now, confirmWindow: options.ConfirmWindow,
+				allowed: map[netip.Addr]string{}, tlsMissing: append([]string(nil), options.TLSMissing...),
+				interfaces: cloneInterfaces(observed), coordinator: options.Coordinator,
+				provisioning: true, provisionTLS: append([]string(nil), options.ProvisioningTLSNames...),
+				commissioner: options.Commissioner,
+			}
+			service.record = ManagementAccessRecord{
+				Configuration: ManagementAccessConfiguration{Port: port},
+				LastKnownGood: ManagementAccessConfiguration{Port: port},
+				State:         ManagementAccessApplied, UpdatedAt: options.Now().UTC(),
+			}
+			service.coordinator.RegisterClaimSource(service.adapterRoleClaims)
+			return service, nil
+		}
+		if !present || !sameManagementConfiguration(derived, record.Configuration) {
+			record = ManagementAccessRecord{
+				Configuration: derived, LastKnownGood: derived,
+				State: ManagementAccessApplied, UpdatedAt: options.Now().UTC(),
+			}
+			needsSave = true
+		}
+		present = true
+	}
 	if !present {
 		return nil, errors.New("no persistent management access configuration; specify --management-interface at the appliance console")
 	}
@@ -444,8 +537,11 @@ func NewManagementAccessService(ctx context.Context, options ManagementAccessOpt
 		provider: options.Provider, store: options.Store, firewall: options.Firewall,
 		now: options.Now, confirmWindow: options.ConfirmWindow, record: record,
 		allowed: map[netip.Addr]string{}, tlsMissing: append([]string(nil), options.TLSMissing...),
-		interfaces:  cloneInterfaces(observed),
-		coordinator: options.Coordinator,
+		interfaces:   cloneInterfaces(observed),
+		coordinator:  options.Coordinator,
+		provisioning: options.Provisioning,
+		provisionTLS: append([]string(nil), options.ProvisioningTLSNames...),
+		commissioner: options.Commissioner,
 	}
 	service.rebuildAllowedLocked()
 	service.coordinator.RegisterClaimSource(service.adapterRoleClaims)
@@ -569,10 +665,33 @@ func (service *ManagementAccessService) refresh(ctx context.Context) error {
 	previous := service.record
 	service.mu.RUnlock()
 	candidate := previous
+	if service.provisioning {
+		// First boot follows the hardware: an adapter that appears joins the
+		// allowlist and one that leaves drops out, without a restart.
+		port := candidate.Configuration.Port
+		if port == 0 {
+			port = ProvisioningPort
+		}
+		derived, usable := provisioningConfiguration(interfaces, port, service.provisionTLS)
+		if !usable {
+			service.mu.Lock()
+			service.interfaces = cloneInterfaces(interfaces)
+			service.record.Configuration = ManagementAccessConfiguration{Port: port}
+			service.record.LastKnownGood = service.record.Configuration
+			service.allowed = map[netip.Addr]string{}
+			service.mu.Unlock()
+			return nil
+		}
+		candidate.Configuration = derived
+		candidate.LastKnownGood = derived
+		candidate.State = ManagementAccessApplied
+		candidate.ConfirmBy = time.Time{}
+	}
 	candidate.Configuration = resolveManagementConfiguration(candidate.Configuration, interfaces)
 	candidate.LastKnownGood = resolveManagementConfiguration(candidate.LastKnownGood, interfaces)
 	changed := !sameManagementBindings(previous.Configuration, candidate.Configuration) ||
-		!sameManagementBindings(previous.LastKnownGood, candidate.LastKnownGood)
+		!sameManagementBindings(previous.LastKnownGood, candidate.LastKnownGood) ||
+		!sameManagementConfiguration(previous.Configuration, candidate.Configuration)
 	candidate, recovered, err := reconcileManagementRoleConflicts(candidate, interfaces, service.coordinator, service.now().UTC())
 	if err != nil {
 		return err
@@ -678,6 +797,7 @@ func (service *ManagementAccessService) status(localAddress netip.Addr) Manageme
 	record := service.record
 	interfaces := cloneInterfaces(service.interfaces)
 	tlsMissing := append([]string(nil), service.tlsMissing...)
+	provisioning := service.provisioning
 	service.mu.RUnlock()
 	configuredNames := map[string]ManagementInterfaceBinding{}
 	configuredAdapters := map[string]ManagementInterfaceBinding{}
@@ -702,6 +822,7 @@ func (service *ManagementAccessService) status(localAddress netip.Addr) Manageme
 		TLSNames:   append([]string(nil), record.Configuration.TLSNames...),
 		TLSMissing: tlsMissing, ConfirmBy: record.ConfirmBy,
 		Detail: record.Detail, Outcome: record.Outcome, CurrentInterface: current,
+		Provisioning: provisioning,
 	}
 	for _, candidate := range interfaces {
 		binding, enabled := configuredAdapters[canonicalAdapterID(candidate.AdapterID)]
@@ -808,6 +929,9 @@ func (service *ManagementAccessService) currentInterfaceLocked(address netip.Add
 func (service *ManagementAccessService) Update(ctx context.Context, interfaces []string, confirmCurrent bool, localAddress netip.Addr) (ManagementAccessStatus, error) {
 	service.changeMu.Lock()
 	defer service.changeMu.Unlock()
+	if service.provisioning {
+		return ManagementAccessStatus{}, ErrManagementAccessDerived
+	}
 	if err := service.refresh(ctx); err != nil {
 		return ManagementAccessStatus{}, err
 	}
@@ -928,6 +1052,9 @@ func managementConfigurationHasUsableInterface(interfaces []Interface, names []s
 func (service *ManagementAccessService) Confirm(ctx context.Context, localAddress netip.Addr) (ManagementAccessStatus, error) {
 	service.changeMu.Lock()
 	defer service.changeMu.Unlock()
+	if service.provisioning {
+		return ManagementAccessStatus{}, ErrManagementAccessDerived
+	}
 	if err := service.refresh(ctx); err != nil {
 		return ManagementAccessStatus{}, err
 	}

@@ -1,0 +1,157 @@
+{
+  "reports": [
+    {
+      "anchor_created_at": "2026-09-12T18:05:10.091451Z",
+      "anchor_head": "5ef872e1bbab6df6264b5f1cb1ec007f96c4eb77",
+      "anchor_id": "25a25af6c33399b4",
+      "anchor_stage": "frame",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "2cef319894244a1a7e67dbb98ad1e9b1d66ae718a73325697c2107d922103ba9"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "43ff741340cca38c2b9b0e04394235d14480b987be05ca78a8901328a0adc4d0"
+          },
+          "path": "05_Software/nilo_assistant/cmd/nilo/main.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "3f6f3edb6dc36208c5793a67277e85a3ca1f8ba248b7ffc0c6117dfa0faa5711"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/nethelper/avahi_linux.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "bc80f5e06403ec2cadfc27b80c3f240cd36c43b4b7e5da16030c015fce2610fd"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/nethelper/avahi_render.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "53afbdb6ea978ecc3cb73c7cb3d1ed0c0e4dd9ce7d6f09c41a04e1601e1d2f7a"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "f58c14459c7d58946e8126ab52b812c72ec562107e892c6f570ee60e28572b05"
+          },
+          "path": "05_Software/nilo_assistant/internal/nethelper/client.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "0f83d318eea3f4ebf59fed45c3adb7c9ed72953e04957ae99db447300b044544"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "c0e64b4a00318e4ec3e948815a5dad5c2614302d086d9be79f0d950e3632658a"
+          },
+          "path": "05_Software/nilo_assistant/internal/nethelper/engine_test.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "01c2b1257c493dd3c1af50f7c333a45b7357600011e0eef08e5679086b038977"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/nethelper/mdns.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d355cc430015272a30893a97c3dcf9cc720b76858eddb2d4104887464e627abd"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "704e6feed36bb125ae04f80d890efa97123b52c326cdd5d3a437838c5d6ae390"
+          },
+          "path": "05_Software/nilo_assistant/internal/nethelper/protocol.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "4f80452f322e2431f7c4626aae08c22bc6dc71d44ad53da55c8268f2aff14016"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/network/mdns.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "8fd45c1de4fdc739f1428c97b7f5dfb5d5945d01c75fb4d6531ff9927a488ea7"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/network/mdns_announcer.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "7c4170f7bb05f255a6ece0abbec961e0d47b279854f577e3482d9b1c610317ab"
+          },
+          "area": "tests",
+          "before": null,
+          "path": "05_Software/nilo_assistant/internal/network/mdns_announcer_test.go",
+          "status": "added"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 0,
+            "modified": 0,
+            "removed": 0,
+            "unchanged": 151
+          },
+          "source": {
+            "added": 5,
+            "modified": 3,
+            "removed": 0,
+            "unchanged": 304
+          },
+          "tests": {
+            "added": 1,
+            "modified": 1,
+            "removed": 0,
+            "unchanged": 182
+          }
+        },
+        "status": {
+          "added": 6,
+          "modified": 4,
+          "removed": 0,
+          "unchanged": 637
+        }
+      },
+      "current_head": "5ef872e1bbab6df6264b5f1cb1ec007f96c4eb77",
+      "evolution_stage": "validate",
+      "evolved_at": "2026-09-12T18:07:42.983736Z"
+    }
+  ],
+  "schema": 1,
+  "task": "TASK-878ab570"
+}

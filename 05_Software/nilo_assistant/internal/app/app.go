@@ -38,6 +38,7 @@ type App struct {
 	authRepository    *sqlite.AuthRepository
 	identityService   *identity.Service
 	applianceRuntime  appliance.Runtime
+	commissioning     appliance.CommissioningState
 	auditWriter       *audit.Writer
 	auditMonitor      *activity.Monitor
 	now               func() time.Time
@@ -116,6 +117,15 @@ func Open(ctx context.Context, options Options) (*App, error) {
 		_ = database.Close()
 		return nil, err
 	}
+	// Read immediately after provisioning, so the ordering the seeding rule
+	// depends on stays visible in one place: sqlite.Open applied the migration
+	// that recorded this state, and it did so before the identity row above
+	// existed. An unusable value stops the start rather than being guessed.
+	commissioning, err := appliance.LoadCommissioning(ctx, sqlite.NewCommissioningRepository(database))
+	if err != nil {
+		_ = database.Close()
+		return nil, err
+	}
 	// Every append is watched, so the Activity page can say when the
 	// appliance can no longer record what it does.
 	auditMonitor := activity.NewMonitor(sqlite.NewAuditRepository(database), func() time.Time { return options.Now().UTC() })
@@ -147,7 +157,8 @@ func Open(ctx context.Context, options Options) (*App, error) {
 		sessionRepository: sessionRepository, sessionService: sessionService,
 		artifactStore: artifactStore, authRepository: sqlite.NewAuthRepository(database),
 		identityService: identityService, applianceRuntime: applianceRuntime,
-		auditWriter: auditWriter, auditMonitor: auditMonitor, now: options.Now,
+		commissioning: commissioning,
+		auditWriter:   auditWriter, auditMonitor: auditMonitor, now: options.Now,
 	}, nil
 }
 
@@ -158,6 +169,21 @@ func (application *App) ApplianceRuntime() appliance.Runtime {
 		return appliance.Runtime{}
 	}
 	return application.applianceRuntime
+}
+
+// CommissioningRepository is the durable lifecycle record, for the one caller
+// that completes commissioning.
+func (application *App) CommissioningRepository() *sqlite.CommissioningRepository {
+	if application == nil {
+		return nil
+	}
+	return sqlite.NewCommissioningRepository(application.database)
+}
+
+// Commissioning reports where this appliance stands in its lifecycle, as
+// recorded in its data directory and read when it was opened.
+func (application *App) Commissioning() appliance.CommissioningState {
+	return application.commissioning
 }
 
 // AuditWriter records events with a complete envelope. Every service that
