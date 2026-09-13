@@ -1,0 +1,196 @@
+{
+  "reports": [
+    {
+      "anchor_created_at": "2026-09-12T06:43:15.028977Z",
+      "anchor_head": "0c94a5692cc3850f38af6b417a5346ba082504bb",
+      "anchor_id": "85309966583f43ee",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "f14887bb390fe3fa8f541cbfc16f2f25da4f68bdcc782e40b782c562288eb182"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/tests/appliance/README.md",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d833f02ff9a6ddc8a975bf2e25edceb7fec161d72e74e4bb4e037677b8f26c03"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/tests/appliance/check.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "14463477f52c7ea4df1aa2004cf672d39ae696d7e4fdd1de936e13729fa70b4f"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/tests/appliance/inventory.json",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "04549b2a43c567e5e6809ae4c17f1310ae5fd7aa2bb89c8b5a32807ea29f541d"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/tests/appliance/run.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "6c2b38d641507dfb2a8a03d39b36d924d492a3a67fc51359aabf7b1b1f34cd43"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "d9dfb6913c143142e6b3e59fd8ce472f44ec08896ea7fba58c0e98669ea445df"
+          },
+          "path": "02_Tools/tests/network/Dockerfile",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "122665a8790b966f1bbb87f1fc560be70ebfdc5cbf57a8bc731f37a6b7d430da"
+          },
+          "area": "other",
+          "before": null,
+          "path": "02_Tools/tests/network/network-up.sh",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "ae81763afaacba0d9a716df3061d785f9124e169989fa890bdf23036c2ee340f"
+          },
+          "area": "other",
+          "before": {
+            "kind": "file",
+            "sha256": "6cfd2c0c4db49dc8dba5e9a5717ba2538afdf122f4698e432c95a541062d5b17"
+          },
+          "path": "02_Tools/tests/network/run.sh",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "680a9b9fabe60d6e4be0714117ca3a69e45aee03a6030374f1e69d0f890b07bc"
+          },
+          "area": "tests",
+          "before": null,
+          "path": "05_Software/nilo_assistant/cmd/nilo/appliance_stage_linux_test.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "cd32c6c26b8e278f906233a5332e895af47beab69064390d496620a813faf83f"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "e406eb68acb277bbb46854bdcf9acb9f09f1dc1f8fa5de60d3f50ea89b9ae427"
+          },
+          "path": "05_Software/nilo_gui/src/api/management-access.ts",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "bda25aa28125b539b76f4b6ae8df534de6252555edaf1d2a920e05097ccfc119"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "287914e0057ebdbc486abaf6415467fc11212709a9177c660e93d3a77f6e06ca"
+          },
+          "path": "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "d318c7c35cdc7b5a91d594940fdccae42bf57acd0d5e8d870923c120362dcc90"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "c1877d1280e2578f7b8bac9bc9075d12bbb3f955f266b3be42498fd6a87db12b"
+          },
+          "path": "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "2a3ebf04fdd4e5c69e527c079d12479b5fad3268e95d4ad2cb371c4bcd255a3c"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "b41adfb364f798f1db14877143805ef1a34fefc27cfe9e7848ea49c0d442dc5c"
+          },
+          "path": "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "476237c8b30a9c0386814ca3bacdcbe0b1ef5737a9c766cdbb7c623187e07337"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "f243b3ac9622289046152fb04d0ad9b4dd7886a59115baf7c72db4197e9b282e"
+          },
+          "path": "05_Software/scripts/tests/test_appliance_stage.py",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 5,
+            "modified": 2,
+            "removed": 0,
+            "unchanged": 149
+          },
+          "source": {
+            "added": 0,
+            "modified": 2,
+            "removed": 0,
+            "unchanged": 299
+          },
+          "tests": {
+            "added": 1,
+            "modified": 3,
+            "removed": 0,
+            "unchanged": 173
+          }
+        },
+        "status": {
+          "added": 6,
+          "modified": 7,
+          "removed": 0,
+          "unchanged": 621
+        }
+      },
+      "current_head": "0c94a5692cc3850f38af6b417a5346ba082504bb",
+      "evolution_stage": "deliver",
+      "evolved_at": "2026-09-12T12:31:11.509414Z"
+    }
+  ],
+  "schema": 1,
+  "task": "TASK-67112aa2"
+}

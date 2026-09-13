@@ -1,0 +1,64 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-PLAT-32b81548"
+
+title = "Provide a real-network appliance verification image"
+
+status = "active"
+
+requirement = """
+The appliance verification image shall be built from a base image pinned by
+content digest together with an explicit package list, carrying the system
+components the stage cannot take from the repository mount: NetworkManager,
+D-Bus, nftables, WireGuard, Node.js at the repository's pinned version, and the
+browser engine at the repository's pinned version. Its appliance target shall
+extend a network-system target that stays free of WireGuard so the production
+installer can be tested from a clean starting point.
+"""
+
+verification = """
+An automated check reads the image definition and asserts its base is named by
+a content digest rather than a mutable tag, that its installed packages are
+listed explicitly, that the target boundary keeps WireGuard out of the network
+fixture and in the appliance, and that Node.js and the browser are pinned to the
+versions declared in 02_Tools/toolchain.versions; a probe run inside the built
+image asserts NetworkManager, D-Bus, nftables, Node.js and the browser engine
+are each present and report a version. A definition whose base carries a tag
+instead of a digest, or whose Node.js or browser version is unpinned, fails the
+check rather than being built.
+"""
+
+affected_paths = [
+    "02_Tools/tests/network/Dockerfile",
+    "02_Tools/tests/appliance/inventory.json",
+    "02_Tools/tests/appliance/check.sh",
+    "02_Tools/tests/appliance/probe.sh",
+    "02_Tools/tests/appliance/run.sh",
+    "02_Tools/tests/network/check.sh",
+    "05_Software/scripts/tests/test_appliance_stage.py",
+]
+
+linked_tests = [
+    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceImageDefinitionTests::test_base_image_is_named_by_digest_and_packages_are_explicit",
+    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceImageDefinitionTests::test_node_and_browser_engine_are_pinned_from_the_toolchain_manifest",
+    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceImageDefinitionTests::test_inventory_names_every_tool_the_stage_depends_on",
+    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceImageDefinitionTests::test_every_inventory_probe_is_actually_run_inside_the_image",
+    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceImageDefinitionTests::test_inventory_probe_preserves_a_failed_commands_status",
+    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceImageDefinitionTests::test_shared_image_keeps_network_install_and_appliance_targets_distinct",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "The stage proves Bench Core against a real NetworkManager, so the image has to carry a real one; pinning it by digest keeps a verification run reproducible enough to trust without the full offline apparatus the release build image carries."
+
+created = 2026-09-12
+updated = 2026-09-13

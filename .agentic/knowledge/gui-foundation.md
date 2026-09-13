@@ -25,9 +25,11 @@ The project root is `05_Software/nilo_gui`. Developers use its npm scripts
 through `02_Tools/env/with-tools.ps1`: `dev` serves the interface against a real
 backend, `dev:mock` serves it against the built-in contract mock, `format:check`
 and `lint` enforce source quality, `test:ci` runs deterministic component tests,
-`test:e2e` runs the integrated browser test against a real WSL2 backend with
-`test:e2e:headed` as its diagnosis variant, and `build` (or `build:mock`) emits
-static production assets into ignored `dist/`.
+and `build` (or `build:mock`) emits static production assets into ignored
+`dist/`. The `test:e2e` scripts are internal runner surfaces for the privileged
+appliance verification stage; the supported acceptance entry point is
+`02_Tools/tests/appliance/check.sh`, which builds the assets and drives the
+appliance-profile HTTPS origin from its pinned container browser.
 
 `*.test.ts` belongs to the component runner and `*.spec.ts` to the browser
 runner; `vite.config.ts` and `playwright.config.ts` each name their own files, so
@@ -143,24 +145,24 @@ runtime status.
   legitimately returns no entries, rather than showing a failure.
 - `REQ-UX-8169ea1d` - names which resource returned an unusable response and
   keeps the resources that were read successfully on screen.
-- `REQ-TEST-0a4f49af` - drives a real browser against a real Bench Core under
-  WSL2 and confirms the bearer-token connection, the simulation identity, the
-  healthy status and both deterministic inventories.
+- `REQ-TEST-0a4f49af` is retired. `REQ-TEST-68eedecb` replaces its simulation
+  journey with a real browser driving a real appliance-profile Bench Core,
+  privileged helper and NetworkManager through password authentication.
+- `REQ-TEST-b1177191` - drives the built assets from Bench Core's own HTTPS
+  origin without a Vite server or proxy in the acceptance topology.
 - `REQ-TEST-0f02f4b8` - stops that backend mid-session, confirms the unreachable
   screen, restarts it and recovers through the interface's own retry control.
 - `REQ-TEST-3c4487d6` - fails a browser run and names the repository command
   that supplies each missing prerequisite, instead of skipping.
-- `REQ-REL-f04744fa` - waits a bounded time for each endpoint and names the one
+- `REQ-REL-f04744fa` - bounds appliance-core readiness and names the endpoint
   that stayed silent.
 - `REQ-REL-f0c8b07c` - stops only the processes that run started, confirms the
   removal of only the directory it created, and fails the run when any part of
   that release did not succeed.
-- `REQ-SEC-4884bc91` - keeps the development token in one private field with no
-  accessor, and redacts it out of anything a failing action throws.
-- `REQ-PLAT-59993b78` - takes free loopback ports and keeps its temporary Bench
-  Core state on the WSL Linux filesystem.
-- `REQ-UX-f479d8b9` - offers one headless browser command and a headed variant
-  for diagnosis.
+- The appliance harness keeps fixture passwords behind its redacted input
+  boundary and retains no browser traces, screenshots or videos.
+- Each run uses disposable container state and an isolated browser network
+  namespace, then removes only the resources it created.
 - `REQ-FUNC-a6c14c23` - signs a human in with a username and password and shows
   the resulting identity and role.
 - `REQ-FUNC-e0da3a06` - restores the signed-in state after a reload from the
@@ -205,8 +207,8 @@ runtime status.
 - `REQ-SEC-66b84b2c` - keeps an entered password, a created token secret and the
   session's request-forgery token out of web storage, request URLs and the
   console.
-- `REQ-TEST-68dcb172` - drives the administration page against a real Bench Core
-  under WSL2 with a real bootstrapped administrator.
+- `REQ-TEST-68dcb172` - drives the administration page against the real
+  appliance-stage Bench Core with a real bootstrapped administrator.
 - `REQ-UX-5503457a` - carries the wordmark, the tabs and every control on one
   46-pixel row, with no second tab strip and no page title above the workspace.
 - `REQ-UX-f300b346` - activates, closes and keyboard-navigates the open page
@@ -229,7 +231,7 @@ runtime status.
 - `REQ-DATA-1a14a1dc` - persists exactly the theme and the language, and nothing
   that authenticates.
 - `REQ-TEST-842f1943` - proves the shell, a theme and a language across a real
-  reload in a browser against a real WSL2 backend.
+  reload in the appliance-stage browser.
 
 ## Change map
 
@@ -263,7 +265,8 @@ flowchart LR
     contract["api/contract: nilo.http/1 types and parsers"]
     mock["api/mock: path-routed contract scenarios and an administration store"]
     proxy["Vite dev server: /api forwarding"]
-    backend["WSL2 Bench Core /api/v1/*"]
+    backend["Development Bench Core /api/v1/*"]
+    appliance["Appliance stage: NetworkManager, helper, appliance-profile core"]
     app --> signin
     app --> shell
     shell --> toprow
@@ -290,19 +293,18 @@ flowchart LR
     client -- "live mode, same-origin /api/v1/*" --> proxy
     proxy -- "VITE_NILO_API_BASE_URL" --> backend
     client -- "mock mode" --> mock
-    harness["e2e/topology: ports, WSL2 backend, Vite, in-memory token, bootstrapped administrator"]
+    harness["e2e/topology: appliance core, bounded lifecycle, bootstrapped administrator"]
     prereq["e2e/prerequisites: fail, never skip"]
     spec["e2e/bench-core.spec: the browser journey"]
     adminspec["e2e/authentication.spec: sign-in and administration"]
-    browser["Chromium from 02_Tools/runtime"]
+    browser["Pinned Chromium in isolated appliance browser namespace"]
     harness --> prereq
-    harness -- "starts, stops, removes its own" --> backend
-    harness -- "starts with the chosen backend port" --> proxy
+    harness -- "starts, stops, removes its own" --> appliance
     spec --> harness
     adminspec --> harness
     spec --> browser
     adminspec --> browser
-    browser --> proxy
+    browser -- "built HTTPS origin" --> appliance
 ```
 
 `AppShell` binds the Network read/change callbacks and maps four page descriptors
@@ -332,7 +334,7 @@ disabled competing actions and terminal success. An optional operation `progress
 string is parsed at the API boundary; no raw package command output is displayed.
 The install capability is independent of profile-management readiness, including
 when kernel evidence is unknown. Actual APT behavior has separate Linux tests.
-The spec exercises the real Windows-browser/WSL2 flow including the full
+The spec exercises the real appliance-stage browser flow including the full
 120-second rollback window. The browser reacquires the appliance's authoritative
 operation after an uncertain acknowledgement and after reload. A matching
 unfinished operation replaces any older terminal notice, preserving a rollback
@@ -427,15 +429,16 @@ visible.
   is declared and takes its target from the environment.
 - `05_Software/nilo_gui/playwright.config.ts` - the integrated browser runner:
   headless, serial, no retries, and no retained trace, video or screenshot.
-- `05_Software/nilo_gui/e2e/topology.ts` - one run's own Bench Core under WSL2
-  and interface server on Windows: free loopback ports, a `mktemp` directory on
-  the WSL Linux filesystem, the in-memory token, bounded readiness waits, and a
-  teardown that signals only its own handles and removes only its own directory.
-- `05_Software/nilo_gui/e2e/prerequisites.ts` - the distribution, checkout and
-  browser checks, each failing with the repository command that supplies it.
-- `05_Software/nilo_gui/e2e/bench-core.spec.ts` - the bearer-token browser
-  journey, in one serial session: connect, status, simulation identity, both
-  inventories, the unreachable screen, and recovery.
+- `05_Software/nilo_gui/e2e/topology.ts` - one run's appliance-profile Bench
+  Core, privileged helper boundary, generated TLS material, temporary database,
+  bootstrapped administrator, bounded readiness and shutdown waits, and teardown
+  limited to its own child processes and state.
+- `05_Software/nilo_gui/e2e/prerequisites.ts` - the appliance-stage binaries,
+  built assets and runtime configuration checks, each failing with the stage
+  action that supplies it.
+- `05_Software/nilo_gui/e2e/bench-core.spec.ts` - the password-authenticated
+  appliance journey: status, empty fresh-appliance inventories, the unreachable
+  screen, and recovery.
 - `05_Software/nilo_gui/e2e/authentication.spec.ts` - the human browser journey
   against a real administrator the harness bootstraps through the real command
   line: password sign-in, identity creation, a role change, a token with its
@@ -606,9 +609,12 @@ available on every Network view.
 
 `TrafficChart` labels received (RX) and sent (TX) traffic, scales bytes per
 measured minute against a visible time axis, and positions bars by timestamp so
-an unmeasured minute remains a gap. Hover, touch or keyboard focus selects one
-minute and shows its time, RX, TX and total; arrow keys move through measured
-minutes with only one chart sample in the tab order. Expanded WireGuard
+an unmeasured minute remains a gap. One field-sized listbox maps pointer
+coordinates to the nearest measured minute, avoiding overlapping targets in
+dense one-hour and one-day histories; its options expose exact values, a visible
+marker preserves measured zeroes, and arrow/Home/End keys move the active
+selection. Hover, touch or keyboard selection shows the minute's time, RX, TX
+and total while only the chart itself enters the tab order. Expanded WireGuard
 readiness renders as a compact grid of left-label/right-value facts, and the
 Statistics title shares one responsive header with the interface and period
 controls. This keeps the initial Diagnostics chart in the workspace without

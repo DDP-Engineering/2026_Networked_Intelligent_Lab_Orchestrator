@@ -41,7 +41,7 @@ requirement = """
 If a prerequisite the browser end-to-end test depends on is absent, then the
 run shall fail with a message naming the missing prerequisite and the
 repository command that provides it, rather than reporting a pass or silently
-skipping the browser-to-WSL2 proof.
+skipping the browser-to-appliance proof.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -53,12 +53,11 @@ skipping the browser-to-WSL2 proof.
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
 verification = """
-A test drives the harness's prerequisite check with each prerequisite absent
-in turn - no WSL distribution available, the checkout not reachable from the
-distribution, and no repository-local browser binary installed - and asserts
-that each case raises an error whose text names that prerequisite and the
-repository command that supplies it, and that no case returns a successful
-result or a skipped test.
+A test drives the harness's prerequisite checks with the appliance-stage
+marker, stage binaries, isolated browser ingress, built interface and pinned
+browser directory absent in turn, and asserts that each case raises an error
+whose text names that prerequisite and the appliance verification command that
+supplies it, with no successful or skipped result.
 """
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
@@ -66,6 +65,7 @@ affected_paths = [
     "05_Software/nilo_gui/e2e/prerequisites.ts",
     "05_Software/nilo_gui/e2e/prerequisites.test.ts",
     "05_Software/nilo_gui/e2e/topology.ts",
+    "02_Tools/tests/appliance/check.sh",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
@@ -80,7 +80,7 @@ linked_tests = [
 spec = ""
 
 priority = "high"   # low | normal | high
-rationale = "A skipped end-to-end test reported as a green gate is worse than no gate, because it claims the browser-to-WSL2 path was proven when nothing was observed."
+rationale = "A skipped end-to-end test reported as a green gate is worse than no gate, because it claims the browser reached a production-shaped appliance when nothing was observed."
 
 created = 2026-09-01
-updated = 2026-09-01
+updated = 2026-09-13

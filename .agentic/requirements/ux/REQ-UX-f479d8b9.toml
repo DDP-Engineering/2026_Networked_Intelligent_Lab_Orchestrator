@@ -38,10 +38,11 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-The interface project shall offer one command that runs the integrated browser
-test headlessly and one further command that runs the same test with the
-browser window visible for diagnosis, with the headless command being the one
-the repository gate and the documentation name.
+The interface project shall offer one internal command that runs the integrated
+browser test headlessly and one headed variant for diagnosis, while the
+repository gate and operator documentation name the appliance verification
+stage that supplies the production-shaped runtime and invokes the headless
+command.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -56,8 +57,8 @@ verification = """
 A test asserts that the interface manifest declares exactly one headless
 integrated browser script and one headed variant of the same suite, that the
 headed one differs only by making the browser visible, and that the repository
-gate and the development documentation both name the headless script; each
-command is run once on the supported host and observed to behave as named.
+gate and development documentation route acceptance through the appliance
+verification stage; the stage is observed to invoke the headless script.
 """
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
@@ -67,6 +68,8 @@ affected_paths = [
     "05_Software/nilo_gui/vite.config.ts",
     "05_Software/nilo_gui/tsconfig.node.json",
     "05_Software/nilo_gui/e2e/commands.test.ts",
+    "02_Tools/tests/appliance/run.sh",
+    "05_Software/scripts/aegis_test.py",
     "05_Software/nilo_gui/README.md",
     "06_SoftwareDocu/Development_and_Simulation_Flow.md",
 ]
@@ -75,8 +78,8 @@ affected_paths = [
 # these select the impacted regression set.
 linked_tests = [
     "05_Software/nilo_gui/e2e/commands.test.ts::the integrated browser test commands",
-    "05_Software/nilo_gui/e2e/commands.test.ts::the documentation and the gate",
-    "05_Software/scripts/tests/test_toolchain_bootstrap.py::ToolchainBootstrapTests::test_frontend_project_is_locked_static_build",
+    "05_Software/nilo_gui/e2e/commands.test.ts::name the headless command, not the headed one",
+    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceBrowserSuiteTests::test_stage_builds_the_interface_and_runs_the_browser_suite",
 ]
 
 # --- optional below this line ---
@@ -88,4 +91,4 @@ priority = "normal"   # low | normal | high
 rationale = "A cross-component test is only used if it is one obvious command, and it is only debuggable if there is a way to watch the browser do what the failure describes."
 
 created = 2026-09-01
-updated = 2026-09-01
+updated = 2026-09-13

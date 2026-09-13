@@ -3,7 +3,7 @@
   "generated_at": "2026-09-05T00:00:00Z",
   "maturity": {
     "implemented": true,
-    "locally_integrity_checked": true,
+    "locally_integrity_checked": false,
     "round_trip_verified": false,
     "clean_host_verified": false,
     "published": false,
@@ -18,10 +18,10 @@
       "detail": "narrow LFS escrow policy and ignored extracted runtimes"
     },
     "BE-02": {
-      "status": "passed",
+      "status": "pending",
       "command": "python 02_Tools/scripts/build_environment.py validate-reconstruction --lock 02_Tools/containers/build/build-environment.lock.json && python 02_Tools/scripts/build_environment.py verify-materialized-inputs --lock 02_Tools/containers/build/build-environment.lock.json --input-dir 02_Tools/cache/containers/upstream",
-      "evidence": ".agentic/tasks/TASK-998d1b00.md build reconstruction verification",
-      "detail": "650 records and 995486423 materialized bytes verified; reconstruction manifest SHA-256 784a1d020ef72bd4c567a3f85287e2b72e456f2f7bc28db7c470d0e82579da3f"
+      "evidence": "the current manifest definition validates; complete materialized-input readback remains pending",
+      "detail": "reconstruction manifest SHA-256 66b1e14f0a02eef6be7b8c0437b259fae576373ae8959226f71d732ca60193be is current, but its complete 650-record materialized cache has not been verified"
     },
     "BE-03": {
       "status": "pending",
@@ -69,7 +69,7 @@
       "status": "passed",
       "command": "python -m unittest 05_Software.scripts.tests.test_build_environment.BuildEnvironmentTests.test_policy_lfs_and_documented_commands_match_the_plan",
       "evidence": "working-tree documentation contract test",
-      "detail": "setup, offline use, archive recovery and maintenance responsibilities are documented; observed external outcomes remain pending in BE-03, BE-04, BE-05, BE-06, BE-07, BE-08 and BE-09"
+      "detail": "setup, offline use, archive recovery and maintenance responsibilities are documented; materialized and external outcomes remain pending in BE-02, BE-03, BE-04, BE-05, BE-06, BE-07, BE-08 and BE-09"
     }
   }
 }

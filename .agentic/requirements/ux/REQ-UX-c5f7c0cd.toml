@@ -16,7 +16,7 @@ requirement = """
 On field layouts, the browser interface shall give every button, icon button, row menu trigger, tab, navigation entry, checkbox label, input and select an interactive target of at least 44 by 44 CSS pixels, with a visible focus ring in every theme and no action or instruction that is revealed only on hover.
 """
 
-verification = "A stylesheet test asserts the control-height and minimum-target tokens are 44px and that the base button, input, select, navigation entry and tab close rules use them; a browser test at 1024x600 and 800x480 measures every visible interactive element on the shell and Network page and finds none smaller than 44 by 44 pixels, and asserts no title attribute is the only carrier of an operator-facing explanation on those pages."
+verification = "A stylesheet test asserts the control-height and minimum-target tokens are 44px and that the base button, input, select, navigation entry and tab close rules use them; a browser test at 1024x600 and 800x480 measures every visible interactive element on the shell and Network page, including the traffic-chart listbox, and finds none smaller than 44 by 44 pixels, and asserts no title attribute is the only carrier of an operator-facing explanation on those pages."
 
 affected_paths = [
     "05_Software/nilo_gui/src/styles/tokens.css",
@@ -24,11 +24,15 @@ affected_paths = [
     "05_Software/nilo_gui/src/components/shell/TabStrip.tsx",
     "05_Software/nilo_gui/src/components/shell/SideNav.tsx",
     "05_Software/nilo_gui/src/layout.test.ts",
+    "05_Software/nilo_gui/src/components/network/TrafficChart.tsx",
+    "05_Software/nilo_gui/src/components/network/TrafficChart.test.tsx",
+    "05_Software/nilo_gui/e2e/field-display.spec.ts",
 ]
 
 linked_tests = [
     "05_Software/nilo_gui/src/layout.test.ts::gives controls a 44 pixel target from one token",
     "05_Software/nilo_gui/e2e/field-display.spec.ts::the shell and the Network page are readable and complete",
+    "05_Software/nilo_gui/src/components/network/TrafficChart.test.tsx::selects adjacent dense samples by unambiguous pointer coordinates",
 ]
 
 spec = ""
@@ -36,4 +40,4 @@ priority = "high"
 rationale = "Coarse touch on a seven-inch panel misses 25 pixel buttons."
 
 created = 2026-09-04
-updated = 2026-09-04
+updated = 2026-09-13

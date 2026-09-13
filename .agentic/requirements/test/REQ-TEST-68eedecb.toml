@@ -1,0 +1,82 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-TEST-68eedecb"
+
+title = "Prove the authenticated browser journey against an appliance"
+
+status = "active"
+
+requirement = """
+When the browser end-to-end suite runs, it shall drive a real browser against a
+Bench Core started on the appliance profile beside the real privileged helper
+and a real NetworkManager, signing in and exercising the interface without any
+simulated runtime profile, catalog or scenario taking part.
+"""
+
+verification = """
+Each production journey starts or shares a real appliance instance and observes
+/api/v1/status answer with the appliance profile. Authentication, core
+lifecycle, network mutation, rollback, sampling, WireGuard lifecycle, shell and
+field-display journeys reach their suite's instance. Explicitly labelled
+presentation-only assertions may replace individual API responses to exercise
+an otherwise impractical UI state, but no simulated runtime profile, catalog or
+scenario participates. A run whose backend reports any other profile, or in
+which an appliance fails to start, fails rather than skipping. The fresh
+appliance journey also asserts that both integration and device inventories are
+empty rather than merely present.
+"""
+
+affected_paths = [
+    "05_Software/nilo_gui/e2e/topology.ts",
+    "05_Software/nilo_gui/e2e/topology.test.ts",
+    "05_Software/nilo_gui/e2e/bench-core.spec.ts",
+    "05_Software/nilo_gui/e2e/authentication.spec.ts",
+    "05_Software/nilo_gui/e2e/network.spec.ts",
+    "05_Software/nilo_gui/e2e/shell.spec.ts",
+    "05_Software/nilo_gui/e2e/field-display.spec.ts",
+    "05_Software/nilo_gui/e2e/prerequisites.ts",
+    "05_Software/nilo_gui/e2e/prerequisites.test.ts",
+    "05_Software/nilo_gui/e2e/token-redaction.spec.ts",
+    "05_Software/nilo_gui/playwright.config.ts",
+    "05_Software/nilo_gui/src/styles/shell.css",
+    "05_Software/nilo_assistant/cmd/nilo/appliance_stage_linux_test.go",
+    "02_Tools/tests/appliance/check.sh",
+    "02_Tools/tests/appliance/README.md",
+    "02_Tools/tests/appliance/run.sh",
+    "02_Tools/tests/network/Dockerfile",
+    "02_Tools/tests/network/check.sh",
+    "02_Tools/tests/network/network-up.sh",
+    "05_Software/scripts/aegis_test.py",
+    "05_Software/scripts/tests/test_aegis_test.py",
+    "05_Software/scripts/tests/test_appliance_stage.py",
+    "05_Software/nilo_gui/README.md",
+    "02_Tools/README.md",
+    "06_SoftwareDocu/Development_and_Simulation_Flow.md",
+    ".agentic/context/environment.md",
+    ".agentic/knowledge/repository-toolchain.md",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/e2e/topology.test.ts::starts Bench Core on the appliance profile and no other",
+    "05_Software/nilo_gui/e2e/prerequisites.test.ts::returns the binaries and isolated browser ingress the stage supplied",
+    "05_Software/nilo_gui/e2e/bench-core.spec.ts::signs in with a human session and shows the appliance bench",
+    "05_Software/nilo_gui/e2e/network.spec.ts::keeps opposite-role adapters visible and explains sequential repurposing",
+    "05_Software/nilo_gui/e2e/network.spec.ts::unconfirmed changes restore automatically and real sampling produces history",
+    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceBrowserSuiteTests",
+]
+
+
+spec = ""
+
+priority = "high"      # low | normal | high
+rationale = "A browser proof against a runtime NILO will not ship proves the interface works against something nobody will ever run."        # why this behavior exists, if not obvious
+
+created = 2026-09-12
+updated = 2026-09-13

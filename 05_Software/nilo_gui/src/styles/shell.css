@@ -1601,6 +1601,8 @@ input[type='radio'] {
   background: var(--surface-sunken);
   border: 1px solid var(--border);
   border-radius: var(--control-radius);
+  cursor: pointer;
+  outline: none;
 }
 
 .traffic-chart .traffic-rx {
@@ -1628,12 +1630,17 @@ input[type='radio'] {
 }
 
 .traffic-sample {
-  cursor: pointer;
-  outline: none;
+  pointer-events: none;
 }
 
-.traffic-sample:focus rect,
-.traffic-sample-selected rect {
+.traffic-zero {
+  fill: var(--text-muted);
+}
+
+.traffic-chart:focus .traffic-sample-selected rect,
+.traffic-chart:focus .traffic-sample-selected circle,
+.traffic-sample-selected rect,
+.traffic-sample-selected circle {
   stroke: var(--focus);
   stroke-width: 2;
 }
@@ -1694,6 +1701,12 @@ input[type='radio'] {
 
 .management-access-details {
   margin-top: var(--space-3);
+}
+
+.management-access-details a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
 }
 
 .network-interfaces-table .network-management-cell {

@@ -6,7 +6,7 @@ import { DevelopmentTopology, withRedactedSecret } from './topology';
 
 /**
  * The compact field interface, in a real browser against a real Bench Core
- * under WSL2, at the four viewports the seven-inch panel, the field laptop and
+ * on the appliance stage, at the four viewports the seven-inch panel, the field laptop and
  * the desktop present: 1920x1080, 1366x768, 1024x600 and 800x480.
  *
  * What only a browser can settle is here: that no operator-facing text is
@@ -53,40 +53,6 @@ test.beforeAll(async ({ browser }) => {
     throw failure;
   }
   page = await browser.newPage();
-  // A new backend does not always complete a sampling minute before this
-  // layout suite reaches Diagnostics. Keep the backend and every other API
-  // real, while giving the chart a deterministic measured window with a gap.
-  await page.route('**/api/v1/network/statistics?*', async (route) => {
-    const requestUrl = new URL(route.request().url());
-    const period = requestUrl.searchParams.get('period') ?? '15m';
-    const minutes = period === '24h' ? 1_440 : period === '1h' ? 60 : 15;
-    const to = new Date('2026-09-04T12:00:00.000Z');
-    const from = new Date(to.getTime() - minutes * 60_000);
-    const sample = (offset: number, rxBytes: number, txBytes: number) => ({
-      minute_start: new Date(from.getTime() + offset * 60_000).toISOString(),
-      rx_bytes: rxBytes,
-      tx_bytes: txBytes,
-      rx_errors: 0,
-      tx_errors: 0,
-      rx_dropped: 0,
-      tx_dropped: 0,
-      samples: 12,
-      stale: false,
-    });
-    await route.fulfill({
-      contentType: 'application/json',
-      json: {
-        api_version: 'nilo.http/1',
-        interface_id: requestUrl.searchParams.get('interface') ?? 'sim-enp1s0',
-        period,
-        from: from.toISOString(),
-        to: to.toISOString(),
-        measured_by: 'simulation',
-        stale: false,
-        points: [sample(0, 1024, 512), sample(2, 4096, 2048)],
-      },
-    });
-  });
   if (REVIEW) mkdirSync(REVIEW_DIR, { recursive: true });
 });
 
@@ -99,16 +65,55 @@ test.afterAll(async () => {
   }
 });
 
-test('signs in and saves one device network and one profile to read back at every size', async () => {
+test('signs in and states then restores a change awaiting confirmation', async () => {
+  test.setTimeout(180_000);
   const running = requireTopology();
-  await page.setViewportSize({ width: 1366, height: 768 });
+  await page.setViewportSize({ width: 1024, height: 600 });
   await page.goto(running.frontendUrl);
   await signIn();
+  await waitForRealNetworkSample();
+  await openNetwork('Overview');
+  await page.getByRole('button', { name: 'Actions for eth0', exact: true }).click();
+  await page
+    .getByRole('dialog', { name: 'Actions for eth0' })
+    .getByRole('button', { name: /^Disable eth0/ })
+    .click();
+  await applyPreview();
+  await expect(page.getByRole('timer')).toBeVisible();
+  await openNetwork('Overview');
+  await expect(page.getByRole('region', { name: 'Overview' })).toContainText(
+    'interface.disable',
+  );
+  await expectNoDocumentOverflow();
+  await review('1024x600-light-pending');
+  const rollbackAnswer = page.waitForResponse((response) =>
+    new URL(response.url()).pathname.endsWith('/rollback'),
+  );
+  await page
+    .getByRole('button', { name: 'Restore previous state', exact: true })
+    .click();
+  const rollback = await rollbackAnswer;
+  const rollbackBody = (await rollback.json()) as {
+    state?: string;
+    failure?: string;
+  };
+  expect(rollback.status(), rollbackBody.failure).toBe(200);
+  expect(rollbackBody.state, rollbackBody.failure).toBe('rolled_back');
+  await expect(
+    page.getByText('The previous state was restored.', { exact: true }),
+  ).toBeVisible({ timeout: 60_000 });
+});
+
+test('saves one device network and one profile to read back at every size', async () => {
   await openNetwork('Device access');
 
   // A device network, so every later viewport has a record to read.
   await page.getByRole('button', { name: 'Add device network', exact: true }).click();
   const editor = page.getByRole('dialog', { name: 'New device network' });
+  // A device network binds a device-facing adapter distinct from the uplink, so
+  // the run chooses both the way an operator does.
+  await selectAdapter(editor, 'Device-side adapter', /eth1/);
+  await selectAdapter(editor, 'Local-access adapter', /eth0/);
   await editor.getByRole('textbox', { name: 'Name', exact: true }).fill('Line 3');
   await editor
     .getByRole('textbox', { name: 'Device address', exact: true })
@@ -176,7 +181,7 @@ for (const viewport of VIEWPORTS) {
       page.getByRole('heading', { name: 'Network / Overview', level: 2 }),
     ).toBeVisible();
     await expect(page.getByRole('region', { name: 'Overview' })).toBeVisible();
-    await expect(page.getByRole('status', { name: /runtime profile/i })).toHaveCount(1);
+    await expect(page.getByRole('status', { name: /appliance/i })).toHaveCount(1);
 
     await expectNoDocumentOverflow();
     await expectReadableText();
@@ -185,7 +190,7 @@ for (const viewport of VIEWPORTS) {
 
     // Each focused page keeps its own records and details.
     for (const [destination, name] of [
-      ['Overview', 'enp1s0'],
+      ['Overview', 'eth0'],
       ['VPN profiles', 'field-office'],
       ['Device access', 'Line 3'],
     ] as const) {
@@ -195,7 +200,7 @@ for (const viewport of VIEWPORTS) {
       await toggle.click();
       const region = page.getByRole('region', { name: `Details ${name}` });
       await expect(region).toBeVisible();
-      if (name === 'enp1s0') await expect(region).toContainText('Mbit/s');
+      if (name === 'eth0') await expect(region).toContainText('Mbit/s');
       if (name === 'field-office')
         await expect(region).toContainText('field.example.test');
       if (name === 'Line 3') await expect(region).toContainText('192.168.10.0/24');
@@ -207,8 +212,8 @@ for (const viewport of VIEWPORTS) {
     // The traffic graphic explains itself at field sizes and an exact sample
     // remains reachable without relying on hover.
     await openNetwork('Diagnostics');
-    const trafficChart = page.getByRole('group', {
-      name: /traffic for .*enp1s0/i,
+    const trafficChart = page.getByRole('listbox', {
+      name: /traffic for .*eth0/i,
     });
     await expect(trafficChart).toBeVisible();
     if (viewport.width >= 1024 && viewport.height >= 600) {
@@ -218,30 +223,33 @@ for (const viewport of VIEWPORTS) {
     }
     await expect(page.getByText('RX · Received', { exact: true })).toBeVisible();
     await expect(page.getByText('TX · Sent', { exact: true })).toBeVisible();
-    const trafficSamples = trafficChart.getByRole('button');
+    const trafficSamples = trafficChart.getByRole('option');
     await expect(trafficSamples.first()).toBeVisible();
-    await trafficSamples.first().focus();
+    await trafficChart.focus();
+    await page.keyboard.press('Home');
+    await expect(trafficSamples.first()).toHaveAttribute('aria-selected', 'true');
     await expect(page.getByRole('status', { name: 'Selected minute' })).toContainText(
       /RX .* TX .* Total /,
     );
     await expectInsideViewport(trafficChart);
     await expectNoDocumentOverflow();
+    if (viewport.field) await expectFieldTargets();
 
     // The compact dialog is immediately visible above the table; loopback has none.
     await openNetwork('Overview');
     const scrollBefore = await page
       .locator('.shell-workspace')
       .evaluate((workspace) => workspace.scrollTop);
-    await page.getByRole('button', { name: 'Actions for enp1s0', exact: true }).click();
-    const actionDialog = page.getByRole('dialog', { name: 'Actions for enp1s0' });
+    await page.getByRole('button', { name: 'Actions for eth0', exact: true }).click();
+    const actionDialog = page.getByRole('dialog', { name: 'Actions for eth0' });
     await expect(actionDialog).toContainText('Network interface');
     await expect(actionDialog).toContainText('Connected');
     await expectInsideViewport(actionDialog);
     await expect(
-      actionDialog.getByRole('button', { name: /^Disable enp1s0/ }),
+      actionDialog.getByRole('button', { name: /^Disable eth0/ }),
     ).toBeEnabled();
     await expect(
-      actionDialog.getByRole('button', { name: /^Configure enp1s0/ }),
+      actionDialog.getByRole('button', { name: /^Configure eth0/ }),
     ).toBeEnabled();
     expect(
       await page
@@ -255,14 +263,14 @@ for (const viewport of VIEWPORTS) {
     await review(`${size}-light-network`);
 
     // The adapter editor reaches its final actions.
-    await page.getByRole('button', { name: 'Actions for enp1s0', exact: true }).click();
+    await page.getByRole('button', { name: 'Actions for eth0', exact: true }).click();
     await page
-      .getByRole('dialog', { name: 'Actions for enp1s0' })
-      .getByRole('button', { name: /^Configure enp1s0/ })
+      .getByRole('dialog', { name: 'Actions for eth0' })
+      .getByRole('button', { name: /^Configure eth0/ })
       .click();
-    const adapter = page.getByRole('dialog', { name: 'Configure enp1s0' });
+    const adapter = page.getByRole('dialog', { name: 'Configure eth0' });
     await expect(
-      adapter.getByRole('heading', { name: 'Configure enp1s0' }),
+      adapter.getByRole('heading', { name: 'Configure eth0' }),
     ).toBeVisible();
     await expect(
       adapter.getByRole('button', { name: 'How to configure' }),
@@ -347,32 +355,9 @@ for (const viewport of VIEWPORTS) {
   });
 }
 
-test('1024x600: a change awaiting confirmation is stated in the overview and restored', async () => {
+test('1024x600: the other pages stay readable without sideways scrolling', async () => {
   await page.setViewportSize({ width: 1024, height: 600 });
   await openNetworkAfterReload({ width: 1024, height: 600 });
-  await openNetwork('Overview');
-  await page.getByRole('button', { name: 'Actions for enp1s0', exact: true }).click();
-  await page
-    .getByRole('dialog', { name: 'Actions for enp1s0' })
-    .getByRole('button', { name: /^Disable enp1s0/ })
-    .click();
-  await applyPreview();
-  await expect(page.getByRole('timer')).toBeVisible();
-  await openNetwork('Overview');
-  await expect(page.getByRole('region', { name: 'Overview' })).toContainText(
-    'interface.disable',
-  );
-  await expectNoDocumentOverflow();
-  await review('1024x600-light-pending');
-  await page
-    .getByRole('button', { name: 'Restore previous state', exact: true })
-    .click();
-  await expect(
-    page.getByText('The previous state was restored.', { exact: true }),
-  ).toBeVisible();
-});
-
-test('1024x600: the other pages stay readable without sideways scrolling', async () => {
   for (const [entry, heading] of [
     ['Bench', 'Bench'],
     ['Activity', 'Activity'],
@@ -497,6 +482,38 @@ async function signIn(): Promise<void> {
   );
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Bench', level: 2 })).toBeVisible();
+}
+
+/** Wait until the appliance sampler has persisted a real interval for the chart. */
+async function waitForRealNetworkSample(): Promise<void> {
+  const interfaceId = await page.evaluate(async () => {
+    const response = await fetch('/api/v1/network/status');
+    const status = (await response.json()) as {
+      interfaces?: Array<{ id?: string; name?: string }>;
+    };
+    return status.interfaces?.find((entry) => entry.name === 'eth0')?.id ?? '';
+  });
+  expect(interfaceId).not.toBe('');
+
+  let measuredBy = '';
+  await expect
+    .poll(
+      async () => {
+        const history = await page.evaluate(async (observedInterfaceId) => {
+          const response = await fetch(
+            `/api/v1/network/statistics?interface=${encodeURIComponent(observedInterfaceId)}&period=15m`,
+          );
+          return { status: response.status, body: await response.json() };
+        }, interfaceId);
+        expect(history.status).toBe(200);
+        const body = history.body as { points: unknown[]; measured_by: string };
+        measuredBy = body.measured_by;
+        return body.points.length;
+      },
+      { timeout: 75_000 },
+    )
+    .toBeGreaterThan(0);
+  expect(measuredBy).not.toBe('simulation');
 }
 
 type NetworkDestination = 'Overview' | 'Device access' | 'VPN profiles' | 'Diagnostics';
@@ -742,7 +759,7 @@ async function expectFieldTargets(): Promise<void> {
     // this file is compiled without the DOM library and cannot name it.
     type Element_ = typeof body;
     const targets = body.querySelectorAll(
-      'button, a[href], input:not([type=checkbox]):not([type=radio]), select, [role=tab], label:has(> input[type=checkbox])',
+      'button, a[href], input:not([type=checkbox]):not([type=radio]), select, [role=button], [role=listbox], [role=tab], label:has(> input[type=checkbox])',
     ) as unknown as ArrayLike<Element_>;
     for (const element of Array.from(targets)) {
       const style = view.getComputedStyle(element);
@@ -787,4 +804,17 @@ function requireTopology(): DevelopmentTopology {
     throw new Error('the development topology is not running');
   }
   return topology;
+}
+
+/** Choose one adapter by the name the interface shows for it. */
+async function selectAdapter(
+  editor: ReturnType<Page['getByRole']>,
+  label: string,
+  name: RegExp,
+): Promise<void> {
+  // The help trigger carries the same accessible name, so the control is
+  // matched exactly rather than by prefix.
+  const select = editor.getByLabel(label, { exact: true });
+  const value = await select.getByRole('option', { name }).getAttribute('value');
+  await select.selectOption(value ?? '');
 }

@@ -39,9 +39,9 @@ status = "active"
 # plainly is better plainly.
 requirement = """
 The repository shall provide a browser end-to-end test that drives the redesigned
-shell against a real Bench Core running under WSL2, covering navigation between pages,
-tab opening and closing, a theme change that survives a reload, and a language change
-that survives a reload.
+shell against an appliance-profile Bench Core in the appliance verification
+stage, covering navigation between pages, tab opening and closing, a theme
+change that survives a reload, and a language change that survives a reload.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -66,10 +66,10 @@ linked_tests = [
     "05_Software/nilo_gui/e2e/shell.spec.ts::puts the wordmark, tabs and every control on one row",
     "05_Software/nilo_gui/e2e/shell.spec.ts::anchors Network in the lower cluster, not among the instruments",
     "05_Software/nilo_gui/e2e/shell.spec.ts::opens and closes pages as tabs",
-    "05_Software/nilo_gui/e2e/shell.spec.ts::reports appliance network state as unavailable rather than inventing it",
+    "05_Software/nilo_gui/e2e/shell.spec.ts::reports the appliance network state the backend actually served",
     "05_Software/nilo_gui/e2e/shell.spec.ts::keeps the theme and the language across a reload, with the session",
-    "05_Software/nilo_gui/e2e/shell.spec.ts::narrows the navigation on a small viewport without clipping it",
-    "05_Software/nilo_gui/e2e/shell.spec.ts::keeps the simulation marking and the boundary statement on every screen",
+    "05_Software/nilo_gui/e2e/shell.spec.ts::narrows the navigation to a labeled rail on a small viewport without clipping it",
+    "05_Software/nilo_gui/e2e/shell.spec.ts::keeps one runtime indicator on every screen",
 ]
 
 # --- optional below this line ---
@@ -81,4 +81,4 @@ priority = "high"   # low | normal | high
 rationale = "A shell that renders in a component test can still be unreachable in a browser; only the real page proves the preferences survive an actual reload."
 
 created = 2026-09-02
-updated = 2026-09-02
+updated = 2026-09-13

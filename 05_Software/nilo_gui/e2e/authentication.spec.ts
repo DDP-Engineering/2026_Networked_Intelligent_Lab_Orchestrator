@@ -5,13 +5,13 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { DevelopmentTopology, withRedactedSecret } from './topology';
 
 /**
- * The Authentication page, end to end, against a real Bench Core under WSL2.
+ * The Authentication page, end to end, against a real appliance-stage core.
  *
  * A real browser signs a real administrator in with a password, administers
  * identities and API tokens, and reloads the page to prove the session survives
  * it. Nothing here is mocked: every refusal and every success is Bench Core's
- * own authorization decision over its own SQLite database, reached through the
- * interface development server's `/api` forwarding.
+ * own authorization decision over its own SQLite database, reached through
+ * the built interface served by Bench Core's HTTPS origin.
  *
  * The tests run in order and share one browser page, because what each one
  * proves is the state the previous one left behind.
@@ -152,9 +152,8 @@ test('keeps keyboard focus inside an open dialog', async () => {
 test('creates an API token and shows its secret exactly once', async () => {
   await openAuthenticationView('API tokens');
   const tokens = page.getByRole('region', { name: 'API Tokens' });
-  // The harness issued itself a development token to reach the bench with, so
-  // this listing already has an entry: an unnarrowed token owned by the
-  // development identity that token belongs to.
+  // Sign-in uses a server-managed human session, so the fresh appliance starts
+  // with no API token. This journey creates the first one explicitly.
   await expect(tokens).toBeVisible();
 
   await page.getByRole('button', { name: 'New token' }).click();
@@ -453,12 +452,12 @@ async function signOut(): Promise<void> {
 /** One persistent runtime indicator; sign-in also explains the development boundary. */
 async function expectSimulationIdentity(): Promise<void> {
   if (await page.locator('.shell').count()) {
-    await expect(page.getByRole('status', { name: /runtime profile/i })).toContainText(
-      'SIM',
+    await expect(page.getByRole('status', { name: /appliance/i })).toContainText(
+      'LIVE',
     );
     await expect(page.locator('.shell-boundary')).toHaveCount(0);
   } else {
-    await expect(page.getByRole('status', { name: /runtime profile/i })).toHaveCount(0);
+    await expect(page.getByRole('status', { name: /appliance/i })).toHaveCount(0);
   }
 }
 
@@ -478,7 +477,7 @@ async function expectSignedOutLayout(viewport: {
     page.getByRole('button', { name: 'Sign in', exact: true }),
   ).toBeVisible();
   await expect(page.locator('form')).toHaveCount(1);
-  await expect(page.getByRole('status', { name: /runtime profile/i })).toHaveCount(0);
+  await expect(page.getByRole('status', { name: /appliance/i })).toHaveCount(0);
 
   const geometry = await page.locator('.sign-in-card').evaluate((card) => {
     const rectangle = card.getBoundingClientRect();

@@ -14,7 +14,7 @@ schema = 1
 # and must match the category folder this file sits in.
 id = "REQ-PLAT-38014f08"
 
-title = "Keep the browser test runtime pinned and repository-local"
+title = "Keep the optional Windows development browser pinned and repository-local"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
@@ -38,10 +38,10 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-The browser used by the end-to-end test shall be an exactly pinned package
-dependency whose browser binaries are installed below the repository's ignored
-platform runtime directory by an explicit bootstrap command that changes no
-persistent host environment, so that an ordinary test run downloads nothing.
+The browser available for optional host-local Windows interface diagnosis shall
+be an exactly pinned package dependency whose browser binaries are installed
+below the repository's ignored platform runtime directory by an explicit
+bootstrap command that changes no persistent host environment.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -54,14 +54,14 @@ persistent host environment, so that an ordinary test run downloads nothing.
 # The prefix alone is not enough — it has to say what someone does.
 verification = """
 A test asserts that the interface manifest and its lockfile pin the browser
-test package to one exact version, that the tool wrapper points the browser
+package to one exact version, that the tool wrapper points the browser
 installation directory below the repository's ignored platform runtime area
 and sets it only for its child process, that the locked dependency restore is
 prevented from downloading browsers into a user-wide location, and that the
 browser bootstrap script installs one named browser through the
-repository-local wrapper and writes nothing outside the repository; a second
-run of the browser test with the network unavailable is observed to start the
-browser without downloading it.
+repository-local wrapper and writes nothing outside the repository. Inspection
+confirms this host-local browser is documented as optional development tooling,
+not as the appliance acceptance browser.
 """
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
@@ -92,4 +92,4 @@ priority = "high"   # low | normal | high
 rationale = "A browser downloaded into a user-wide cache on every machine is an undocumented prerequisite and an unpinned one; keeping it beside the other pinned runtimes keeps a fresh checkout reproducible."
 
 created = 2026-09-01
-updated = 2026-09-01
+updated = 2026-09-13

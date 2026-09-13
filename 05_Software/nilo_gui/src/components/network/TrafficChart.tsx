@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useId, useState } from 'react';
 
 import type { NetworkStatistics } from '../../api/contract';
 import { useTranslate } from '../../i18n/languages';
@@ -46,7 +46,7 @@ function formatTime(at: Date, period: NetworkStatistics['period']): string {
  */
 export function TrafficChart({ statistics }: TrafficChartProps) {
   const t = useTranslate();
-  const sampleRefs = useRef<Array<SVGGElement | null>>([]);
+  const chartId = useId();
   const lastPoint = statistics.points.at(-1);
   const [selectedAt, setSelectedAt] = useState(
     lastPoint?.minuteStart.toISOString() ?? '',
@@ -81,6 +81,28 @@ export function TrafficChart({ statistics }: TrafficChartProps) {
   const yTicks = peak === 0 ? [0] : [0, 0.5, 1];
   const middle = new Date((statistics.from.getTime() + statistics.to.getTime()) / 2);
   const xTicks = [statistics.from, middle, statistics.to];
+  const selectIndex = (index: number) => {
+    const point = statistics.points[index];
+    if (point !== undefined) setSelectedAt(point.minuteStart.toISOString());
+  };
+  const selectAtClientX = (clientX: number, chart: SVGSVGElement) => {
+    if (statistics.points.length === 0) return;
+    const bounds = chart.getBoundingClientRect();
+    if (bounds.width <= 0) return;
+    const logicalX = ((clientX - bounds.left) / bounds.width) * WIDTH;
+    const nearest = statistics.points.reduce((nearestIndex, point, index) => {
+      const offset = (point.minuteStart.getTime() - statistics.from.getTime()) / 60_000;
+      const center = PLOT_LEFT + offset * step + barWidth / 2;
+      const nearestPoint = statistics.points[nearestIndex];
+      const nearestOffset =
+        (nearestPoint.minuteStart.getTime() - statistics.from.getTime()) / 60_000;
+      const nearestCenter = PLOT_LEFT + nearestOffset * step + barWidth / 2;
+      return Math.abs(center - logicalX) < Math.abs(nearestCenter - logicalX)
+        ? index
+        : nearestIndex;
+    }, 0);
+    selectIndex(nearest);
+  };
 
   return (
     <figure
@@ -100,10 +122,41 @@ export function TrafficChart({ statistics }: TrafficChartProps) {
         </span>
       </figcaption>
       <svg
-        role="group"
+        role="listbox"
+        tabIndex={0}
         aria-label={chartLabel}
+        aria-activedescendant={
+          selected === undefined
+            ? undefined
+            : `${chartId}-sample-${statistics.points.indexOf(selected)}`
+        }
         className="traffic-chart"
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+        onPointerDown={(event) => selectAtClientX(event.clientX, event.currentTarget)}
+        onPointerMove={(event) => selectAtClientX(event.clientX, event.currentTarget)}
+        onKeyDown={(event) => {
+          if (statistics.points.length === 0) return;
+          const selectedIndex = Math.max(
+            0,
+            statistics.points.findIndex(
+              (point) => point.minuteStart.toISOString() === selectedIso,
+            ),
+          );
+          let nextIndex: number;
+          if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+            nextIndex = Math.max(0, selectedIndex - 1);
+          } else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+            nextIndex = Math.min(statistics.points.length - 1, selectedIndex + 1);
+          } else if (event.key === 'Home') {
+            nextIndex = 0;
+          } else if (event.key === 'End') {
+            nextIndex = statistics.points.length - 1;
+          } else {
+            return;
+          }
+          event.preventDefault();
+          selectIndex(nextIndex);
+        }}
       >
         {yTicks.map((ratio) => {
           const y = PLOT_TOP + plotHeight * (1 - ratio);
@@ -126,35 +179,12 @@ export function TrafficChart({ statistics }: TrafficChartProps) {
           const description = describePoint(point);
           return (
             <g
-              ref={(node) => {
-                sampleRefs.current[index] = node;
-              }}
+              id={`${chartId}-sample-${index}`}
               key={iso}
-              role="button"
-              tabIndex={selectedIso === iso ? 0 : -1}
+              role="option"
               aria-label={description}
-              aria-pressed={selectedIso === iso}
+              aria-selected={selectedIso === iso}
               className={`traffic-sample${selectedIso === iso ? ' traffic-sample-selected' : ''}`}
-              onFocus={() => setSelectedAt(iso)}
-              onMouseEnter={() => setSelectedAt(iso)}
-              onPointerDown={() => setSelectedAt(iso)}
-              onKeyDown={(event) => {
-                let nextIndex: number;
-                if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
-                  nextIndex = Math.max(0, index - 1);
-                } else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
-                  nextIndex = Math.min(statistics.points.length - 1, index + 1);
-                } else if (event.key === 'Home') {
-                  nextIndex = 0;
-                } else if (event.key === 'End') {
-                  nextIndex = statistics.points.length - 1;
-                } else {
-                  return;
-                }
-                event.preventDefault();
-                setSelectedAt(statistics.points[nextIndex].minuteStart.toISOString());
-                sampleRefs.current[nextIndex]?.focus();
-              }}
             >
               <title>{description}</title>
               <rect
@@ -172,6 +202,14 @@ export function TrafficChart({ statistics }: TrafficChartProps) {
                 width={barWidth}
                 height={transmitted}
               />
+              {received + transmitted === 0 ? (
+                <circle
+                  className="traffic-zero"
+                  cx={x + barWidth / 2}
+                  cy={PLOT_TOP + plotHeight}
+                  r={3}
+                />
+              ) : null}
             </g>
           );
         })}

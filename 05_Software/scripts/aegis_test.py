@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -130,13 +131,126 @@ def _run_full(root: Path) -> int:
             if not result:
                 result = _run(["npm.cmd", "run", "build"], suite_root)
             if not result:
-                # The browser-to-WSL2 proof. It fails the whole command when a
-                # prerequisite is missing rather than skipping, so a green gate
-                # never claims a browser reached Bench Core when none did.
-                result = _run(["npm.cmd", "run", "test:e2e"], suite_root)
+                # The browser-to-appliance proof. It fails the whole command
+                # when a prerequisite is missing rather than skipping, so a
+                # green gate never claims a browser reached Bench Core when none
+                # did.
+                result = _run_appliance_stage(root)
         if result:
             return result
     return 0
+
+
+def _run_appliance_stage(root: Path) -> int:
+    """Run the browser suite where an appliance can exist.
+
+    The suite drives Bench Core on the appliance profile, which needs the
+    privileged helper and a real NetworkManager. Those live in the stage
+    container, so this routes there rather than starting anything here. On a
+    Windows checkout the stage is reached through the WSL2 distribution the
+    supported development host already has.
+    """
+    stage = "02_Tools/tests/appliance/check.sh"
+    repository_root = root.parent
+    if sys.platform == "win32":
+        distribution, selection_status = _select_wsl_distribution()
+        if distribution is None:
+            return selection_status
+        translated = subprocess.run(
+            [
+                "wsl.exe",
+                "-d",
+                distribution,
+                "--exec",
+                "wslpath",
+                "-a",
+                "--",
+                str(repository_root).replace("\\", "/"),
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if translated.returncode != 0:
+            print(
+                "error: the WSL2 distribution could not resolve this checkout, so the"
+                " browser-to-appliance proof cannot run",
+                file=sys.stderr,
+                flush=True,
+            )
+            return translated.returncode
+        linux_root = translated.stdout.strip().rstrip("/")
+        return _run(
+            [
+                "wsl.exe",
+                "-d",
+                distribution,
+                "--exec",
+                "sh",
+                f"{linux_root}/{stage}",
+            ],
+            repository_root,
+        )
+    return _run(["sh", stage], repository_root)
+
+
+def _select_wsl_distribution() -> tuple[str | None, int]:
+    """Select exactly one installed WSL distribution for the appliance stage."""
+    try:
+        discovered = subprocess.run(
+            ["wsl.exe", "--list", "--quiet"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except FileNotFoundError:
+        print("error: required command not found: wsl.exe", file=sys.stderr, flush=True)
+        return None, 127
+    if discovered.returncode != 0:
+        print(
+            "error: installed WSL distributions could not be listed",
+            file=sys.stderr,
+            flush=True,
+        )
+        return None, discovered.returncode
+
+    distributions = [
+        line.strip()
+        for line in discovered.stdout.replace("\x00", "").splitlines()
+        if line.strip()
+    ]
+    requested = os.environ.get("NILO_WSL_DISTRIBUTION", "").strip()
+    if requested:
+        selected = next(
+            (name for name in distributions if name.casefold() == requested.casefold()),
+            None,
+        )
+        if selected is None:
+            print(
+                f"error: WSL distribution '{requested}' is not installed; "
+                "set NILO_WSL_DISTRIBUTION to an installed distribution",
+                file=sys.stderr,
+                flush=True,
+            )
+            return None, 2
+        return selected, 0
+    if len(distributions) == 1:
+        return distributions[0], 0
+    if not distributions:
+        print(
+            "error: no WSL distribution is installed; prepare one with "
+            "02_Tools/bootstrap/bootstrap-development.ps1",
+            file=sys.stderr,
+            flush=True,
+        )
+    else:
+        print(
+            "error: several WSL distributions are installed "
+            f"({', '.join(distributions)}); set NILO_WSL_DISTRIBUTION to choose one",
+            file=sys.stderr,
+            flush=True,
+        )
+    return None, 2
 
 
 def _run_lint(root: Path) -> int:

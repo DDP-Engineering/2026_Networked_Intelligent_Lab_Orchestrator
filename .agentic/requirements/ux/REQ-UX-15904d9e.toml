@@ -33,6 +33,7 @@ affected_paths = [
     "05_Software/nilo_gui/src/api/network.test.ts",
     "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx",
     "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
+    "05_Software/nilo_gui/e2e/network.spec.ts",
 ]
 
 linked_tests = [
@@ -49,4 +50,4 @@ priority = "high"
 rationale = "The editor must prevent an invalid role choice without hiding the adapter or confusing local-ingress semantics with device-facing use."
 
 created = 2026-09-11
-updated = 2026-09-12
+updated = 2026-09-13

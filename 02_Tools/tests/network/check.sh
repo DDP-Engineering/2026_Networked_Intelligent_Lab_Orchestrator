@@ -13,7 +13,7 @@ cleanup() {
  docker rm -f "$name" >/dev/null 2>&1 || true
  docker network rm "$name" >/dev/null 2>&1 || true
 }
-docker build --build-arg "NILO_BASE=$base" -t "$image" "$repo/02_Tools/tests/network"
+docker build --target network-system --build-arg "NILO_BASE=$base" -t "$image" "$repo/02_Tools/tests/network"
 docker network create --ipv6 --subnet "$subnet" "$name" >/dev/null
 trap cleanup EXIT HUP INT TERM
 docker run --rm --name "$name" --network "$name" --cap-add NET_ADMIN --cap-add SYS_ADMIN --security-opt systempaths=unconfined \

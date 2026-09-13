@@ -1074,7 +1074,7 @@ describe('NetworkPage', () => {
       'diagnostics',
     );
 
-    const chart = await screen.findByRole('group', { name: /traffic/i });
+    const chart = await screen.findByRole('listbox', { name: /traffic/i });
     const marks = chart.querySelectorAll('[data-minute]');
     expect(marks).toHaveLength(3);
 
@@ -1094,7 +1094,7 @@ describe('NetworkPage', () => {
 
   it('says in words what the chart shows, for a reader who cannot see it', async () => {
     renderPage({}, 'diagnostics');
-    const chart = await screen.findByRole('group', { name: /traffic/i });
+    const chart = await screen.findByRole('listbox', { name: /traffic/i });
     expect(chart.getAttribute('aria-label')).toMatch(/1 measured minute/i);
   });
 
@@ -1107,7 +1107,7 @@ describe('NetworkPage', () => {
       'diagnostics',
     );
     expect(await screen.findByText(/no traffic was measured/i)).toBeInTheDocument();
-    expect(screen.queryByRole('group', { name: /traffic/i })).toBeNull();
+    expect(screen.queryByRole('listbox', { name: /traffic/i })).toBeNull();
   });
 
   it('charts the interface the operator chose', async () => {

@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "description": "Components the appliance verification image must carry. The Go toolchain is deliberately absent: it comes from the repository's pinned Linux runtime through the read-only mount, via 02_Tools/env/with-go.sh.",
+  "tools": [
+    {
+      "name": "NetworkManager",
+      "command": "NetworkManager --version",
+      "reason": "the stage proves Bench Core against adapters a real NetworkManager detected"
+    },
+    {
+      "name": "dbus",
+      "command": "dbus-daemon --version",
+      "reason": "NetworkManager is reached over the system bus"
+    },
+    {
+      "name": "nftables",
+      "command": "nft --version",
+      "reason": "the privileged helper renders management-access and forwarding rules"
+    },
+    {
+      "name": "WireGuard",
+      "command": "wg --version",
+      "reason": "the browser suite exercises real NetworkManager WireGuard profile lifecycle"
+    },
+    {
+      "name": "node",
+      "command": "node --version",
+      "reason": "the browser suite runs its runner here once it moves onto this stage"
+    },
+    {
+      "name": "chromium",
+      "command": "/tmp/nilo-appliance-chromium --version",
+      "reason": "the pinned browser engine the browser suite drives"
+    }
+  ]
+}

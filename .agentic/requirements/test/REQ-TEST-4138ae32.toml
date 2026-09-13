@@ -1,0 +1,49 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-TEST-4138ae32"
+
+title = "Report appliance network state from detected adapters"
+
+status = "active"
+
+requirement = """
+While the appliance verification stage is running, Bench Core's network status
+shall report the adapters NetworkManager detected inside the stage's own
+network namespace, each attributed to the host that measured it.
+"""
+
+verification = """
+An automated run of the stage asks NetworkManager inside the container for its
+device list and asks Bench Core for /api/v1/network/status, then asserts that
+every adapter Bench Core reports is one NetworkManager named, that the
+configured stage adapter appears with the address NetworkManager assigned it,
+and that the measuring source on the response names the container host rather
+than a simulated source. A run in which NetworkManager reports no device fails
+with that stated, rather than Bench Core answering with placeholder adapters.
+"""
+
+affected_paths = [
+    "02_Tools/tests/appliance/run.sh",
+    "02_Tools/tests/network/network-up.sh",
+    "05_Software/nilo_assistant/cmd/nilo/appliance_stage_linux_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/cmd/nilo/appliance_stage_linux_test.go::TestApplianceStageReportsDetectedAdapters",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "The point of the stage is that what the interface would show is what the machine actually has; an adapter list nobody detected is the simulation this work exists to remove, wearing a different name."
+
+created = 2026-09-12
+updated = 2026-09-12
