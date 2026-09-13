@@ -17,6 +17,9 @@ the typed helper protocol; it has no network-administration capability and
 cannot submit arbitrary firewall rules. NILO-managed resources are distinct from external connections and
 tunnels; do not manage an external tunnel as if NILO created it.
 
+A new appliance starts in first-boot provisioning and is reachable on every
+eligible adapter until it is commissioned; see First-boot provisioning below.
+
 In the GUI, Network contains Overview, Device access, VPN profiles and
 Diagnostics. Overview starts with appliance status and continues directly with
 management access and the interface inventory. Activity provides authorized audit queries,
@@ -296,6 +299,117 @@ restart can be observed remotely. The person at the bench owns the power-off and
 power-restoration sequence because a powered-off board has no remote recovery
 path. These observations are useful development evidence, not repository gates.
 
+## First-boot provisioning and commissioning
+
+A new appliance has nobody at a console to name interfaces, and an installer
+cannot know in advance which adapter becomes the permanent management path. The
+appliance therefore records one lifecycle state, `provisioning` or
+`commissioned`, and behaves differently in each.
+
+### What the state means and where it comes from
+
+The schema migration that creates the state seeds it from what the database
+already held when it ran: a database with no appliance identity is a clean
+installation and records `provisioning`; one that already had an identity is an
+existing installation and records `commissioned`. Migrations run before the
+first identity row is written, so this holds for both interface-managed and
+legacy `--bind` deployments without either being detected separately. An upgrade
+never re-enters first-boot provisioning. Bench Core reads the state on every
+open and refuses to start when the recorded value is absent or unrecognized,
+rather than guessing in either direction.
+
+### While provisioning
+
+The management allowlist is every eligible physical interface currently
+present, not a choice an administrator made. An interface is eligible when the
+provider observed a physical adapter of an Ethernet or Wi-Fi kind carrying a
+stable adapter identity. The privileged helper records an adapter as physical
+only when it reports a permanent hardware address **and** the kernel presents it
+on a real bus, which is what keeps a container veth, a bridge, a tun device and
+the loopback device out: NetworkManager reports built-in Ethernet and a
+container veth through the same wired device API, so neither the device type nor
+the interface name separates them.
+
+The allowlist is recomputed on every reconciliation, so an adapter connected
+during first boot begins carrying management access within one sampling interval
+and one removed stops, with no restart. It is persisted, so a restart resumes
+exactly what was serving. With no eligible adapter present the appliance
+persists nothing, installs no firewall rule and admits nothing; the first
+adapter to appear is applied by the ordinary reconciliation.
+
+Explicit management-access updates are refused while provisioning: the allowlist
+is derived there, and the only way to change it is to commission.
+
+`serve` accepts no listener option at all while the appliance is provisioning,
+and serves on the first-boot HTTPS port. The same command is refused on an
+appliance that is already commissioned, naming `--bind` and `--management-port`.
+
+### Discovery and addressing
+
+The appliance answers one local name on exactly the interfaces currently
+carrying management access, published through the privileged helper rather than
+by Bench Core. The advertisement carries a host label and an interface list and
+no address, because the responder publishes whatever each interface currently
+holds - which is what lets one URL keep working across a DHCP renewal. The
+publication is renewed only when the set of serving interfaces changes, and a
+publication that fails is reported and retried rather than being fatal or
+silent: an appliance whose name is not answered is still reachable by address.
+
+The helper manages only responder configuration it wrote itself, recognized by
+its own marker, and refuses to replace any other, so an appliance that already
+runs a responder is never taken over.
+
+A `.local` name is answered only on the local network the client is attached to.
+Addresses shown in the interface come from the network and change; they are not
+permanent identifiers.
+
+For a direct cable with no DHCP server, a wired adapter accepts `link-local` as
+its IPv4 addressing method, rendered as NetworkManager's own link-local method.
+The standard probe reaches a different address on each adapter by construction,
+which is why NILO allocates none itself and why a fixed conventional address per
+adapter is deliberately not used: two adapters carrying one would create route
+and ARP ambiguity. The method is refused with a static address or gateway and on
+a wireless adapter. An adapter holding only a link-local address is a usable
+management path like any other.
+
+### Completing commissioning
+
+Commissioning is administrator-only and one way. It refuses a selection the
+appliance could not be reached through: the selection must validate, every
+interface in it must be one that may carry management access, at least one must
+be usable at that moment, and the interface the request arrived on may not be
+given up unless that is confirmed explicitly. A second attempt is refused.
+
+The order of the transition is deliberate. Under the role coordinator the
+appliance applies the firewall, persists the record and stops deriving, and
+records the lifecycle state **last** - because that is the only step whose
+failure can be undone completely. If it fails, the allowlist in force is still a
+valid provisioning allowlist, so the previous one is restored and the appliance
+remains provisioning, still following the hardware. A transition that does not
+finish therefore costs nothing.
+
+After commissioning the configured allowlist alone governs. A newly attached
+eligible adapter does not join it and is refused at the socket gate; the
+allowlist changes only through an ordinary management-access request. Freeing an
+adapter for a device network is exactly what commissioning onto a smaller
+allowlist does, and the exclusive-role rule then applies: the role coordinator
+refuses an adapter that is still in the management allowlist.
+
+### What first boot does not weaken
+
+TLS, authentication, authorization, CSRF, session cookies and same-origin
+handling are unchanged. The three enforcement layers are unchanged: the helper's
+`inet nilo_management` nftables table, the socket gate that rejects a disallowed
+destination before TLS, and the per-request recheck outside the application
+handler. The unprivileged process gains no network-administration capability;
+the helper accepts a validated interface list, a port, and a validated host
+label, never firewall or responder syntax. No response, log or export carries a
+Wi-Fi password, a WireGuard key or any other secret.
+
+The listener certificate is read and checked, never generated or replaced. A
+certificate that does not carry the advertised local name produces an actionable
+warning in the interface; browsers warn until it is corrected.
+
 ## Acceptance still requiring explicit evidence
 
 Do not infer that these scenarios passed from the existence of code or the
@@ -304,6 +418,12 @@ removal of old reports. Reconcile existing test/journal evidence before scheduli
 - Core/helper/NetworkManager crashes, reboot during a pending apply, offline
   startup and migration with existing data on a booted appliance.
 - Real-radio Wi-Fi join, USB adapter hotplug and power-cycle recovery.
+- First-boot Mini PC acceptance: first access through each built-in eligible
+  adapter, direct Ethernet access with no DHCP server through the link-local
+  fallback, Wi-Fi DHCP renewal and reconnection, USB Ethernet hotplug during and
+  after commissioning, safe transition of adapters to device-facing roles, loss
+  and recovery of the active management path, persistence across a full reboot,
+  and no NILO management exposure on a commissioned device-facing network.
 - Dual-path Raspberry Pi acceptance: Wi-Fi DHCP renewal and reconnect,
   `nilo0` returning as `10.205.148.11`, access through both stable URLs,
   refusal on the PLC-facing `eth0`, unchanged PLC communication, and a full

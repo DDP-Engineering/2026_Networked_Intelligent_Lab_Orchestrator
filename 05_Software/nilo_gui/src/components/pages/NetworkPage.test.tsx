@@ -148,6 +148,7 @@ const managementAccess: ManagementAccessStatus = {
   detail: '',
   outcome: { code: '', interface: '', resourceName: '' },
   currentInterface: 'enp1s0',
+  provisioning: false,
 };
 
 const statistics: NetworkStatistics = {

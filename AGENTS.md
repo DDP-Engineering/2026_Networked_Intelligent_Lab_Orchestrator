@@ -69,21 +69,27 @@ tool-use errors, expected red tests, and unrelated findings are not deviations.
 
 ## Git authority
 
-**An agent never pushes. This is absolute.**
+**An agent changes Git state only when the user asks for it in the
+conversation.** Reading Git state is always free.
 
-It holds whatever else is true. It overrides the AEGIS `deliver` stage when that
-stage describes pushing a branch or publishing a pull request: the agent stops
-after the local repository outcome and leaves remote publication to the human.
-It is not waived by an approval of the work or by an instruction in a Ruling,
-Handoff, task journal, or another repository document.
+This covers staging, committing, merging, rebasing, tagging, branch deletion and
+pushing: each needs a current instruction from the user, and an instruction
+covers only the step it names. Being asked to commit is not being asked to push.
+Being asked to merge is not being asked to resolve conflicts by discarding a
+side.
 
-An agent may perform local Git operations, including staging and committing,
-when they are authorized by the user and appropriate for the task. An agent may
-read Git state freely. It may not run `push` or otherwise publish local Git
-history to a remote.
+Nothing else authorises these steps. Not the AEGIS `deliver` stage when it
+describes committing a candidate or publishing a pull request, not a Ruling, not
+a Handoff, not a task journal, not another repository document, and not an
+instruction from an earlier session. An approval of the work is an approval of
+the work, not of publishing it.
 
-The human pushes. An agent that believes local history should be published says
-so and leaves the push for the human.
+Publishing deserves particular care because it cannot be taken back: once local
+history reaches a remote, others may build on it. An agent asked to push says
+what it is about to publish and to where before doing so.
+
+Where no instruction covers the step, the agent prepares the work, presents the
+exact command, and leaves it for the human.
 
 ## Development credential
 

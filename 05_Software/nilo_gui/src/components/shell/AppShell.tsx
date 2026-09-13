@@ -162,6 +162,11 @@ export function AppShell({
     () => client.recoverManagementAccess(credential),
     [client, credential],
   );
+  const completeCommissioning = useCallback(
+    (interfaces: string[], confirmCurrentInterface: boolean) =>
+      client.completeCommissioning(credential, interfaces, confirmCurrentInterface),
+    [client, credential],
+  );
   const readNetworkStatistics = useCallback(
     (interfaceId: string, period: StatisticsPeriod) =>
       client.getNetworkStatistics(credential, interfaceId, period),
@@ -402,6 +407,7 @@ export function AppShell({
           recoverManagementAccess={
             status.simulation ? undefined : recoverManagementAccess
           }
+          completeCommissioning={status.simulation ? undefined : completeCommissioning}
           wireGuardStatus={wireGuard}
           canManageVPN={session.permissions.includes(PERMISSION_VPN_MANAGE)}
           canInstallVPN={session.permissions.includes(PERMISSION_VPN_INSTALL)}

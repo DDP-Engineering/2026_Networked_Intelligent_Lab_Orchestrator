@@ -24,6 +24,12 @@ type AddressMethod string
 const (
 	MethodAutomatic AddressMethod = "automatic"
 	MethodStatic    AddressMethod = "static"
+	// MethodLinkLocal claims an IPv4 link-local address through the standard
+	// ARP probe. It is what makes direct Ethernet commissioning possible with
+	// no DHCP server and no address to guess: each adapter probes its way to a
+	// different 169.254 address, so two of them cannot collide on one route the
+	// way a fixed conventional address would.
+	MethodLinkLocal AddressMethod = "link-local"
 )
 
 // WiFiSecurity is the network security an adapter is asked to join with. The
@@ -108,6 +114,16 @@ func (settings InterfaceSettings) Validate() error {
 	case MethodAutomatic:
 		if settings.Address.IsValid() || settings.Gateway.IsValid() {
 			return rejectSettings("an automatic configuration takes no static address or gateway")
+		}
+	case MethodLinkLocal:
+		if settings.Address.IsValid() || settings.Gateway.IsValid() {
+			return rejectSettings("a link-local configuration takes no static address or gateway")
+		}
+		// A link-local address reaches only the segment the cable is on, which
+		// is the wired commissioning case it exists for. Offering it on a
+		// wireless adapter would promise a joined network that cannot route.
+		if settings.WiFi != nil {
+			return rejectSettings("link-local addressing applies to a wired adapter")
 		}
 	default:
 		return rejectSettings("unknown address method %q", settings.Method)

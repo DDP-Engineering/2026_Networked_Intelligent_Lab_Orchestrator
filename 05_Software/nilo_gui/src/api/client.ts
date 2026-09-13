@@ -48,6 +48,7 @@ import {
   type WiFiScan,
 } from './settings';
 import {
+  COMMISSIONING_PATH,
   MANAGEMENT_ACCESS_PATH,
   parseAdapterRoleConflict,
   parseManagementAccess,
@@ -247,6 +248,16 @@ export interface BenchCoreClient {
   ): Promise<ManagementAccessStatus>;
   confirmManagementAccess(credential: Credential): Promise<ManagementAccessStatus>;
   recoverManagementAccess(credential: Credential): Promise<ManagementAccessStatus>;
+  /**
+   * Ends first boot: fixes the allowlist to the interfaces chosen and records
+   * the appliance commissioned. The appliance refuses a selection it could not
+   * be reached through.
+   */
+  completeCommissioning(
+    credential: Credential,
+    interfaces: string[],
+    confirmCurrentInterface: boolean,
+  ): Promise<ManagementAccessStatus>;
   getWireGuardStatus(credential: Credential): Promise<WireGuardStatus>;
   previewWireGuardChange(
     credential: Credential,
@@ -562,6 +573,14 @@ export function createBenchCoreClient(
         credential,
         method: 'POST',
         body: {},
+        parse: parseManagementAccess,
+      }),
+    completeCommissioning: (credential, interfaces, confirmCurrentInterface) =>
+      exchange({
+        path: COMMISSIONING_PATH,
+        credential,
+        method: 'POST',
+        body: { interfaces, confirm_current_interface: confirmCurrentInterface },
         parse: parseManagementAccess,
       }),
     recoverManagementAccess: (credential) =>

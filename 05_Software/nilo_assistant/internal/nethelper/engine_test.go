@@ -196,3 +196,34 @@ func TestHelperRefusesRecoverySnapshotDuringIPActivation(t *testing.T) {
 		t.Fatalf("captured partial IP state: %v %v", err, d.events)
 	}
 }
+
+// An advertisement is accepted only by the operation that publishes one, and
+// that operation accepts nothing else. The request type carries no field able
+// to hold responder configuration text, so the unprivileged process can ask for
+// a name on named interfaces and nothing more.
+func TestHelperAcceptsAnAdvertisementOnlyForLocalNamePublication(t *testing.T) {
+	e, d, _, _ := fixture(t)
+	wanted := network.MDNSAdvertisement{HostName: "ddp-remote", Interfaces: []string{"enp1s0"}}
+
+	for _, op := range []string{"interface.list", "management.access.apply", "forwarding.inventory"} {
+		response := dispatch(context.Background(), e, Request{Op: op, MDNS: &wanted})
+		if response.Error == "" {
+			t.Fatalf("operation %q accepted an mDNS advertisement", op)
+		}
+		if response.Code != "invalid_request" {
+			t.Fatalf("operation %q rejected the advertisement as %q, want invalid_request", op, response.Code)
+		}
+	}
+
+	response := dispatch(context.Background(), e, Request{Op: "mdns.publish"})
+	if response.Error == "" || response.Code != "invalid_request" {
+		t.Fatalf("publication without an advertisement was accepted: %+v", response)
+	}
+	response = dispatch(context.Background(), e, Request{Op: "mdns.publish", ID: "op-1", MDNS: &wanted})
+	if response.Error == "" || response.Code != "invalid_request" {
+		t.Fatalf("publication carrying an operation identity was accepted: %+v", response)
+	}
+	if len(d.events) != 0 {
+		t.Fatal("a refused advertisement reached the network")
+	}
+}

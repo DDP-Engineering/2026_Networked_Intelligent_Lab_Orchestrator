@@ -1,0 +1,104 @@
+{
+  "reports": [
+    {
+      "anchor_created_at": "2026-09-12T17:56:30.444414Z",
+      "anchor_head": "5ef872e1bbab6df6264b5f1cb1ec007f96c4eb77",
+      "anchor_id": "afbd492f71fd6955",
+      "anchor_stage": "build",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "72d507534c6ca4b2612bb97e9cf775ab210a9fca498e1917144f908391248d85"
+          },
+          "area": "source",
+          "before": null,
+          "path": "05_Software/nilo_assistant/cmd/nilo/listener_mode.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "6e993413f8d5a5822e7e5d2c3ad4ed51b4d5e457650e2a6c873b787d443878e0"
+          },
+          "area": "tests",
+          "before": null,
+          "path": "05_Software/nilo_assistant/cmd/nilo/listener_mode_test.go",
+          "status": "added"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "43ff741340cca38c2b9b0e04394235d14480b987be05ca78a8901328a0adc4d0"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "262c8e50c71f95aa99bce00194720f0baa20d2fad29c90792a27e18877fa6042"
+          },
+          "path": "05_Software/nilo_assistant/cmd/nilo/main.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "6d4dc4eb416609f59e54d4939e05070b3fa31a3f9a91ee90579a55ec99dc75dc"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "f430f117649e74b57708689c99240b608d0e1a5ebe9af46a7ae7da80fdab4776"
+          },
+          "path": "05_Software/nilo_assistant/internal/network/management_access.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "e426bbae5e61dd2a61eada1874c0d7fd76172470ea5020f6d5c7ee6f6f76cef3"
+          },
+          "area": "tests",
+          "before": {
+            "kind": "file",
+            "sha256": "a221acfe4cca7c85a02904b19606b8395ab1ad06c97f856c2dd2d8759aed5ec8"
+          },
+          "path": "05_Software/nilo_assistant/internal/network/management_provisioning_test.go",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 0,
+            "modified": 0,
+            "removed": 0,
+            "unchanged": 151
+          },
+          "source": {
+            "added": 1,
+            "modified": 2,
+            "removed": 0,
+            "unchanged": 304
+          },
+          "tests": {
+            "added": 1,
+            "modified": 1,
+            "removed": 0,
+            "unchanged": 179
+          }
+        },
+        "status": {
+          "added": 2,
+          "modified": 3,
+          "removed": 0,
+          "unchanged": 634
+        }
+      },
+      "current_head": "5ef872e1bbab6df6264b5f1cb1ec007f96c4eb77",
+      "evolution_stage": "validate",
+      "evolved_at": "2026-09-12T17:58:44.851787Z"
+    }
+  ],
+  "schema": 1,
+  "task": "TASK-20c64f67"
+}

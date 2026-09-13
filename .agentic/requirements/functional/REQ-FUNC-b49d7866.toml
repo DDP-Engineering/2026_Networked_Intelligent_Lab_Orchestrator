@@ -1,0 +1,52 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-b49d7866"
+
+title = "Complete commissioning onto an explicit management allowlist"
+
+status = "active"
+
+requirement = """
+When an administrator completes commissioning, the appliance shall fix its management allowlist to the interfaces chosen, record itself as commissioned so it stops following the hardware, and refuse a selection that names no interface able to carry management access, names one that is not present, or would give up the interface the request arrived on without that being confirmed. A second attempt to complete commissioning shall be refused.
+"""
+
+verification = "An automated test commissions a provisioning appliance onto one of its two derived interfaces and asserts the allowlist, the firewall and the admitted destinations carry only that interface, that the lifecycle state is recorded exactly once, and that an adapter attached afterwards neither joins the allowlist nor is admitted. Further automated tests assert that an empty selection, an absent interface, an ineligible interface and the loopback device are each refused with the derived allowlist left intact and the firewall untouched, that a second completion is refused, and that giving up the caller's own arrival interface is refused until confirmed. An automated API test asserts the route is administrator-only, refuses a cookie request without a CSRF token, and answers a refused selection as a conflict rather than a service failure."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/commissioning.go",
+    "05_Software/nilo_assistant/internal/network/commissioning_test.go",
+    "05_Software/nilo_assistant/internal/network/management_access.go",
+    "05_Software/nilo_assistant/internal/appliance/commissioner.go",
+    "05_Software/nilo_assistant/internal/appliance/commissioning.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository.go",
+    "05_Software/nilo_assistant/internal/httpapi/commissioning.go",
+    "05_Software/nilo_assistant/internal/httpapi/commissioning_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/server.go",
+    "05_Software/nilo_assistant/internal/app/app.go",
+    "05_Software/nilo_assistant/cmd/nilo/main.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/commissioning_test.go::TestCommissioningFixesTheAllowlistAndStopsDeriving",
+    "05_Software/nilo_assistant/internal/network/commissioning_test.go::TestCommissioningRefusesAnAllowlistWithNoUsablePath",
+    "05_Software/nilo_assistant/internal/network/commissioning_test.go::TestCommissioningIsRefusedOnceAlreadyCommissioned",
+    "05_Software/nilo_assistant/internal/network/commissioning_test.go::TestCommissioningAwayFromTheCurrentInterfaceNeedsConfirmation",
+    "05_Software/nilo_assistant/internal/httpapi/commissioning_test.go::TestCommissioningAPIIsAdministratorOnlyAndCSRFProtected",
+    "05_Software/nilo_assistant/internal/httpapi/commissioning_test.go::TestCommissioningAPIRefusesAnUnusableAllowlist",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "First boot is a deliberate, temporary widening. Commissioning is the moment it ends, so it must end on a path the administrator can still reach the appliance through."
+
+created = 2026-09-12
+updated = 2026-09-12

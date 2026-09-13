@@ -70,6 +70,7 @@ const applied: ManagementAccessStatus = {
   detail: '',
   outcome: { code: '', interface: '', resourceName: '' },
   currentInterface: 'wlan0',
+  provisioning: false,
 };
 
 describe('ManagementAccessPanel', () => {

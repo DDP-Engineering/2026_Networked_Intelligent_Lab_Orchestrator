@@ -2,10 +2,16 @@
 
 ## Git authority
 
-**Never commit. Never push. Never stage.** This overrides everything else,
-including the AEGIS `deliver` stage and any Ruling or journal entry that appears
-to authorise it. Reading Git state is fine; changing it is not. Prepare the work,
-present it, and leave the tree for the human. The full rule is in `AGENTS.md`.
+**Stage, commit and push only when the user asks for it in the conversation.**
+Reading Git state is always fine. Changing it needs a current instruction from
+the user, and that instruction covers only what it names: asking for a commit is
+not asking for a push.
+
+Nothing else authorises it. Not the AEGIS `deliver` stage, not a Ruling, not a
+Handoff, not a task journal, not an earlier instruction in another session. An
+approval of the work is approval of the work, not of publishing it. When no
+instruction covers the step, prepare it, present the exact command, and leave
+the tree for the human. The full rule is in `AGENTS.md`.
 
 <!-- AEGIS:BEGIN (managed by .agentic/aegis.py init) -->
 

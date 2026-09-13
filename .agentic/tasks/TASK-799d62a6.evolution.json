@@ -1,0 +1,71 @@
+{
+  "reports": [
+    {
+      "anchor_created_at": "2026-09-12T18:03:11.655572Z",
+      "anchor_head": "5ef872e1bbab6df6264b5f1cb1ec007f96c4eb77",
+      "anchor_id": "68b3fe62a6c7586b",
+      "anchor_stage": "frame",
+      "changes": [
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "b13ad4496a8621a2ee26677539b7ce80475a018716cbcca936b91d451fb9cd9d"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "f9428d3305236d29142fe41fcb1363b8f99c6c16231dff63b20e1c627aebfec5"
+          },
+          "path": "05_Software/nilo_assistant/internal/nethelper/networkmanager_settings_linux.go",
+          "status": "modified"
+        },
+        {
+          "after": {
+            "kind": "file",
+            "sha256": "befd599cec4fb2e2e89e78afef6890e0d3bdb0e7edc1d044e96dd122fd310964"
+          },
+          "area": "source",
+          "before": {
+            "kind": "file",
+            "sha256": "59c13d13c16416824781f23d836dd7eec71f3ea1097db7f4a27409712ef30dc3"
+          },
+          "path": "05_Software/nilo_assistant/internal/network/interface_settings.go",
+          "status": "modified"
+        }
+      ],
+      "counts": {
+        "area": {
+          "other": {
+            "added": 0,
+            "modified": 0,
+            "removed": 0,
+            "unchanged": 151
+          },
+          "source": {
+            "added": 0,
+            "modified": 2,
+            "removed": 0,
+            "unchanged": 305
+          },
+          "tests": {
+            "added": 0,
+            "modified": 0,
+            "removed": 0,
+            "unchanged": 182
+          }
+        },
+        "status": {
+          "added": 0,
+          "modified": 2,
+          "removed": 0,
+          "unchanged": 638
+        }
+      },
+      "current_head": "5ef872e1bbab6df6264b5f1cb1ec007f96c4eb77",
+      "evolution_stage": "validate",
+      "evolved_at": "2026-09-12T18:04:24.422329Z"
+    }
+  ],
+  "schema": 1,
+  "task": "TASK-799d62a6"
+}

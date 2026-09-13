@@ -1,5 +1,5 @@
 import type { BenchCoreTransport, TransportRequest, TransportResponse } from './client';
-import { MANAGEMENT_ACCESS_PATH } from './management-access';
+import { COMMISSIONING_PATH, MANAGEMENT_ACCESS_PATH } from './management-access';
 import {
   BENCH_CORE_API_VERSION,
   CSRF_HEADER_NAME,
@@ -267,6 +267,8 @@ class MockAdministration {
   /** Interface-name boundary retained by the management-access API. */
   managementInterfaces = ['enp1s0'];
   managementState: 'pending' | 'applied' | 'recovered' = 'applied';
+  /** First boot, where the allowlist follows the hardware rather than a choice. */
+  provisioning = false;
   /** The shared history, appended by every managed change. */
   activity: Record<string, unknown>[] = [];
   policy: {
@@ -632,6 +634,25 @@ function manageNetwork(
     return gated(actor, 'network.manage', () => {
       store.managementInterfaces = ['enp1s0'];
       store.managementState = 'recovered';
+      return jsonResponse(200, mockManagementAccessBody(store));
+    });
+  }
+
+  if (path === COMMISSIONING_PATH && request.method === 'POST') {
+    return gated(actor, 'network.manage', () => {
+      if (
+        !Array.isArray(body.interfaces) ||
+        !body.interfaces.every((entry) => typeof entry === 'string') ||
+        body.interfaces.length === 0
+      ) {
+        return refusal(409, 'management_access_required');
+      }
+      if (!store.provisioning) {
+        return refusal(409, 'already_commissioned');
+      }
+      store.managementInterfaces = [...(body.interfaces as string[])];
+      store.managementState = 'applied';
+      store.provisioning = false;
       return jsonResponse(200, mockManagementAccessBody(store));
     });
   }
@@ -1316,6 +1337,7 @@ function mockManagementAccessBody(store: MockAdministration): unknown {
     detail: '',
     outcome: { code: '', interface: '', resource_name: '' },
     current_interface: 'enp1s0',
+    provisioning: store.provisioning,
   };
 }
 

@@ -75,6 +75,8 @@ func (n *NetworkManager) ownedConnection(ctx context.Context, adapterID string) 
 func ipv4Settings(settings network.InterfaceSettings) map[string]dbus.Variant {
 	ipv4 := map[string]dbus.Variant{"never-default": variant(settings.NeverDefault)}
 	switch settings.Method {
+	case network.MethodLinkLocal:
+		ipv4["method"] = variant("link-local")
 	case network.MethodStatic:
 		ipv4["method"] = variant("manual")
 		ipv4["address-data"] = variant([]map[string]dbus.Variant{{

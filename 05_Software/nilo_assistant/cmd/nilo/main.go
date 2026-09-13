@@ -10,7 +10,6 @@ import (
 	"net/netip"
 	"os"
 	"os/signal"
-	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -18,6 +17,7 @@ import (
 	"github.com/google/uuid"
 	"nilo.local/nilo/internal/activity"
 	"nilo.local/nilo/internal/app"
+	"nilo.local/nilo/internal/appliance"
 	"nilo.local/nilo/internal/buildinfo"
 	"nilo.local/nilo/internal/httpapi"
 	"nilo.local/nilo/internal/mcp"
@@ -171,10 +171,6 @@ func runServe(ctx context.Context, arguments []string) int {
 		fmt.Fprintln(os.Stderr, "simulation requires a literal loopback --bind and does not accept management interfaces")
 		return 2
 	}
-	if *bindAddress == "" && !managementMode {
-		fmt.Fprintln(os.Stderr, "serve requires legacy --bind or --management-port with persistent management interfaces")
-		return 2
-	}
 	if len(managementInterfaces) > 0 && *managementPort == 0 {
 		*managementPort = 8443
 	}
@@ -196,9 +192,10 @@ func runServe(ctx context.Context, arguments []string) int {
 			return 2
 		}
 	}
-	listenerAddress := *bindAddress
-	if managementMode {
-		listenerAddress = "0.0.0.0:" + strconv.Itoa(*managementPort)
+	mode, listenerAddress, err := resolveListenerMode(*profile, *bindAddress, managementMode, *managementPort)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 2
 	}
 	cookieSecurity, err := httpapi.ParseCookieSecurity(*cookieMode)
 	if err != nil {
@@ -232,7 +229,7 @@ func runServe(ctx context.Context, arguments []string) int {
 		}
 		cookieSecurity = httpapi.CookieHTTPSDeployment
 	}
-	if !managementMode {
+	if mode == listenerBind {
 		if err := httpapi.ValidateListener(listenerAddress, *tlsCert, *tlsKey); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			return 2
@@ -260,6 +257,13 @@ func runServe(ctx context.Context, arguments []string) int {
 			fmt.Fprintln(os.Stderr, err)
 		}
 	}()
+
+	// The command line cannot know whether first boot is legitimate; the
+	// appliance's own recorded state can, and it is readable only now.
+	if err := checkProvisioningPermitted(mode, application.Commissioning()); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return 2
+	}
 
 	if *developmentAdministrator {
 		created, err := ensureDevelopmentAdministrator(ctx, application, *profile)
@@ -324,6 +328,7 @@ func runServe(ctx context.Context, arguments []string) int {
 		return 1
 	}
 	var managementAccess *network.ManagementAccessService
+	var mdnsAnnouncer *network.MDNSAnnouncer
 	var roleCoordinator *network.AdapterRoleCoordinator
 	if roles, ok := provider.(interface {
 		AdapterRoleCoordinator() *network.AdapterRoleCoordinator
@@ -359,6 +364,42 @@ func runServe(ctx context.Context, arguments []string) int {
 	if err := operations.Reconcile(ctx); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
+	}
+	if mode == listenerProvisioning {
+		hostname, hostErr := os.Hostname()
+		if hostErr != nil || strings.TrimSpace(hostname) == "" {
+			fmt.Fprintln(os.Stderr, "first-boot provisioning requires a host name for the management certificate identity")
+			return 1
+		}
+		missing, certificateErr := httpapi.ValidateCertificateNames(*tlsCert, []string{hostname + ".local"})
+		if certificateErr != nil {
+			fmt.Fprintln(os.Stderr, certificateErr)
+			return 1
+		}
+		managementAccess, err = network.NewManagementAccessService(ctx, network.ManagementAccessOptions{
+			Provider: provider, Store: application.ManagementAccessRepository(),
+			Firewall:   nethelper.NewClient(*helperSocket, ""),
+			Now:        func() time.Time { return time.Now().UTC() },
+			TLSMissing: missing, Coordinator: roleCoordinator,
+			Provisioning: true, ProvisioningTLSNames: []string{hostname + ".local"},
+			Commissioner: appliance.NewDurableCommissioner(application.CommissioningRepository()),
+		})
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 1
+		}
+		if configured, ok := provider.(interface {
+			UseManagementAccessPolicy(interface{ ConfiguredInterfaces() []string })
+		}); ok {
+			configured.UseManagementAccessPolicy(managementAccess)
+		}
+		// The appliance answers to one name while it is being commissioned, on
+		// whichever interfaces are currently carrying management access, so the
+		// same URL keeps working as adapters come and go.
+		mdnsAnnouncer = network.NewMDNSAnnouncer(nethelper.NewClient(*helperSocket, ""), hostname)
+		if err := mdnsAnnouncer.Announce(ctx, managementAccess.ConfiguredInterfaces()); err != nil {
+			fmt.Fprintln(os.Stderr, "the appliance local name is not being answered yet:", err)
+		}
 	}
 	if managementMode {
 		repository := application.ManagementAccessRepository()
@@ -440,7 +481,16 @@ func runServe(ctx context.Context, arguments []string) int {
 	}
 	var reconcileManagementAccess func(context.Context) error
 	if managementAccess != nil {
-		reconcileManagementAccess = managementAccess.Reconcile
+		// The published local name follows whatever is actually carrying
+		// management access, so it is renewed as part of reconciling the
+		// allowlist rather than beside it. The announcer republishes only on a
+		// change.
+		reconcileManagementAccess = func(ctx context.Context) error {
+			if err := managementAccess.Reconcile(ctx); err != nil {
+				return err
+			}
+			return mdnsAnnouncer.Announce(ctx, managementAccess.ConfiguredInterfaces())
+		}
 	}
 	reconcileRuntime := func(ctx context.Context) error {
 		return reconcileNetworkRuntime(

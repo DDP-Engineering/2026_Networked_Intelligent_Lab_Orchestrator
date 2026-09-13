@@ -131,14 +131,19 @@ func (n *NetworkManager) device(ctx context.Context, path dbus.ObjectPath) (Devi
 		speedKey = "Bitrate"
 	}
 	if more, e := n.properties(ctx, path, specific); e == nil {
-		if address := value[string](more, "PermHwAddress"); address != "" {
-			d.Interface.ID += "-" + strings.ToLower(address)
-			d.Interface.AdapterID = strings.ToLower(address)
+		permanent := value[string](more, "PermHwAddress")
+		if permanent != "" {
+			d.Interface.ID += "-" + strings.ToLower(permanent)
+			d.Interface.AdapterID = strings.ToLower(permanent)
 		} else if address := value[string](more, "HwAddress"); address != "" {
 			// A virtual adapter has no permanent address; its current one is
 			// the only identity it has, and is stable for its lifetime.
 			d.Interface.AdapterID = strings.ToLower(address)
 		}
+		// A container veth answers the same wired API as a built-in adapter, so
+		// the permanent address is paired with the kernel's bus device before
+		// this reading may be treated as a physical adapter.
+		d.Interface.Physical = physicalAdapter(permanent, busDevicePresent(name))
 		d.Interface.LinkCapacityMbps = uint64(value[uint32](more, speedKey))
 		if kind == 2 {
 			d.Interface.LinkCapacityMbps /= 1000

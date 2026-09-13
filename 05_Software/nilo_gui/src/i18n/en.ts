@@ -902,6 +902,28 @@ export const en = {
     'A device-side adapter normally has no default gateway; the uplink keeps the default route.',
   'network.settings.guidance.protect':
     'A change that would leave the last management path unusable is refused before it is applied.',
+  'network.commissioning.title': 'First-boot commissioning',
+  'network.commissioning.temporaryWarning':
+    'Every eligible adapter is a temporary management path until you complete commissioning. Anyone who can reach one of the networks below can reach this appliance.',
+  'network.commissioning.body':
+    'Choose the adapters that should carry NILO management access from now on. The others are freed for device networks. The appliance refuses a choice it could not be reached through.',
+  'network.commissioning.select': 'Keep management access on {name}',
+  'network.commissioning.current': 'current browser path',
+  'network.commissioning.notEligible': 'This interface cannot carry management access.',
+  'network.commissioning.urls': 'Usable NILO URLs',
+  'network.commissioning.localOnly':
+    'The .local name is answered only on the local network you are connected to.',
+  'network.commissioning.dhcp':
+    'Addresses come from the network and change; they are not permanent identifiers.',
+  'network.commissioning.tlsMissing':
+    'The listener certificate does not carry {names}, so browsers will warn until it does.',
+  'network.commissioning.noSelection':
+    'Keep at least one adapter for management access.',
+  'network.commissioning.currentWarning':
+    'You are giving up {name}, the adapter this browser session arrived on. You will have to reach the appliance on one of the adapters you kept.',
+  'network.commissioning.currentConfirm': 'Give up {name} and complete commissioning',
+  'network.commissioning.complete': 'Complete commissioning',
+  'network.commissioning.failed': 'Commissioning could not be completed.',
   'network.management.title': 'Management access interfaces',
   'network.management.body':
     'Choose the interface names that may accept NILO HTTPS. Addresses are observed state and may change.',

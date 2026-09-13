@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"nilo.local/nilo/internal/appliance"
 	"nilo.local/nilo/internal/domain"
 )
 
@@ -167,4 +168,75 @@ func activeLeaseCount(t *testing.T, application *App, id domain.SessionID) int {
 		t.Fatalf("count active leases: %v", err)
 	}
 	return active
+}
+
+// The lifecycle state decides first-boot management exposure, so it has to come
+// back from the data directory exactly as recorded rather than being re-derived
+// or defaulted on every start.
+func TestOpenReportsTheRecordedCommissioningStateAcrossReopen(t *testing.T) {
+	ctx := context.Background()
+	now := time.Date(2030, 8, 31, 12, 0, 0, 0, time.UTC)
+	options := Options{DataDir: t.TempDir(), BindAddress: "127.0.0.1:0", Now: func() time.Time { return now }}
+
+	first, err := Open(ctx, options)
+	if err != nil {
+		t.Fatalf("Open(first) error = %v", err)
+	}
+	if state := first.Commissioning(); state != appliance.CommissioningProvisioning {
+		t.Fatalf("commissioning state on a new data directory = %q, want %q",
+			state, appliance.CommissioningProvisioning)
+	}
+	if err := first.Close(); err != nil {
+		t.Fatalf("close(first) error = %v", err)
+	}
+
+	second, err := Open(ctx, options)
+	if err != nil {
+		t.Fatalf("Open(second) error = %v", err)
+	}
+	if state := second.Commissioning(); state != appliance.CommissioningProvisioning {
+		t.Fatalf("commissioning state after reopen = %q, want %q",
+			state, appliance.CommissioningProvisioning)
+	}
+	if _, err := second.database.SQL().ExecContext(ctx,
+		"UPDATE commissioning SET state = ? WHERE singleton = 1", appliance.CommissioningCommissioned); err != nil {
+		t.Fatalf("record the commissioned state: %v", err)
+	}
+	if err := second.Close(); err != nil {
+		t.Fatalf("close(second) error = %v", err)
+	}
+
+	third, err := Open(ctx, options)
+	if err != nil {
+		t.Fatalf("Open(third) error = %v", err)
+	}
+	t.Cleanup(func() { _ = third.Close() })
+	if state := third.Commissioning(); state != appliance.CommissioningCommissioned {
+		t.Fatalf("commissioning state after reopen = %q, want %q",
+			state, appliance.CommissioningCommissioned)
+	}
+}
+
+// Refusing to start is the safe direction: a guessed commissioned would skip
+// first boot on an appliance that needs it, and a guessed provisioning would
+// widen management exposure on one that does not.
+func TestOpenRefusesADatabaseWithNoRecordedCommissioningState(t *testing.T) {
+	ctx := context.Background()
+	now := time.Date(2030, 8, 31, 12, 0, 0, 0, time.UTC)
+	options := Options{DataDir: t.TempDir(), BindAddress: "127.0.0.1:0", Now: func() time.Time { return now }}
+
+	first, err := Open(ctx, options)
+	if err != nil {
+		t.Fatalf("Open(first) error = %v", err)
+	}
+	if _, err := first.database.SQL().ExecContext(ctx, "DELETE FROM commissioning"); err != nil {
+		t.Fatalf("remove the recorded state: %v", err)
+	}
+	if err := first.Close(); err != nil {
+		t.Fatalf("close(first) error = %v", err)
+	}
+
+	if _, err := Open(ctx, options); err == nil {
+		t.Fatal("Open accepted a data directory with no recorded commissioning state")
+	}
 }

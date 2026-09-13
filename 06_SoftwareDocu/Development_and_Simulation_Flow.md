@@ -992,9 +992,13 @@ change the simulation launcher or its fixed development administrator.
 test command, deployment prerequisites, startup commands and remaining limits.
 The system test never joins the host network namespace or system D-Bus.
 
-An appliance can retain its existing literal `--bind` behavior or deliberately
+An appliance can retain its existing literal `--bind` behavior, deliberately
 initialize a persistent allowlist with repeatable `--management-interface`
-options. In allowlist mode a single wildcard socket is safe only as part of the
+options, or - on a clean installation that has not been commissioned - start
+with no listener option at all and derive the allowlist from every eligible
+physical adapter. That third mode is refused once the appliance is commissioned.
+The simulation profile never reaches it: it is confined to a literal loopback
+`--bind` and has no eligible physical adapter to derive from. In allowlist mode a single wildcard socket is safe only as part of the
 complete contract: TLS, destination-interface admission before HTTP, the same
 check on reused connections, and helper-owned nftables accept/drop rules for the
 management port. Bench Core remains one process with one state directory.

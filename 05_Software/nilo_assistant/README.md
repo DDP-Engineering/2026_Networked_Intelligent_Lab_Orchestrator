@@ -18,6 +18,7 @@ nilo development issue-token --data-dir <absolute-path>
 nilo serve --profile simulation [--scenario healthy|unavailable] [--session-cookies development-localhost|https] --data-dir <absolute-path> --bind <loopback-address>
 nilo serve --profile appliance --data-dir <absolute-path> --bind <literal-address> --gui-dir <directory> --tls-cert <pem> --tls-key <pem>
 nilo serve --profile appliance --data-dir <absolute-path> --management-interface <name> [--management-interface <name> ...] --management-port <port> --management-tls-name <dns-or-ip> [--management-tls-name <dns-or-ip> ...] --gui-dir <directory> --tls-cert <pem> --tls-key <pem>
+nilo serve --profile appliance --data-dir <absolute-path> --gui-dir <directory> --tls-cert <pem> --tls-key <pem>
 
 nilo admin bootstrap --data-dir <absolute-path> --username <name>
 nilo admin user list --data-dir <absolute-path>

@@ -1,0 +1,40 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-9a19ad36"
+
+title = "Offer IPv4 link-local addressing on Ethernet adapters"
+
+status = "active"
+
+requirement = """
+The appliance shall accept link-local as the IPv4 addressing method of a wired adapter, claiming an address through the standard link-local probe rather than a configured one, and shall refuse the method when a static address or gateway is supplied with it or when it is requested for a wireless adapter. An adapter holding only a link-local address shall be treated as a usable management path like any other.
+"""
+
+verification = "An automated test validates a link-local configuration on its own and alongside automatic DNS and asserts both are accepted, and validates it with a static address, with a gateway, and on a wireless adapter and asserts each is refused. A second automated test presents an Ethernet adapter whose only address is a link-local one and asserts it is reported eligible for management access and usable as a management path. The privileged helper renders the method as the NetworkManager link-local IPv4 method, which is compiled and vetted for Linux."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/interface_settings.go",
+    "05_Software/nilo_assistant/internal/network/link_local_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_settings_linux.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/link_local_test.go::TestLinkLocalIsAcceptedOnEthernetAndRefusedElsewhere",
+    "05_Software/nilo_assistant/internal/network/link_local_test.go::TestLinkLocalAddressesCarryManagementAccess",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "Commissioning an appliance over a direct cable has no DHCP server and no address to guess. The standard link-local probe gives each adapter a different address by construction, which a fixed conventional address would not."
+
+created = 2026-09-12
+updated = 2026-09-12

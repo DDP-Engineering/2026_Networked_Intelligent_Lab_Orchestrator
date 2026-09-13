@@ -3,10 +3,22 @@
 All notable changes to NILO are documented in this file. The repository carries
 one project-level Semantic Version, declared in the root `VERSION` file.
 
-## [Unreleased]
+## [0.3.0] - 2026-09-13
 
 ### Added
 
+- First-boot provisioning: a new appliance records a commissioning lifecycle
+  state, serves management access on every eligible physical adapter until an
+  administrator commissions it, follows adapters as they appear and leave, and
+  freezes the allowlist once commissioned. Upgrades are never returned to it.
+- Appliance local-name discovery during first boot, published on exactly the
+  interfaces carrying management access through the privileged helper, which
+  manages only responder configuration it wrote itself.
+- Link-local IPv4 addressing for wired adapters, so direct commissioning needs
+  neither a DHCP server nor a guessed address.
+- A first-boot browser workflow that states the temporary exposure, lists each
+  eligible adapter with its stable identity and addresses, marks the current
+  browser path, and completes commissioning onto a confirmed reachable path.
 - Exclusive stable-identity roles for physical management and device-facing
   adapters, with fail-closed conflicts, restart recovery and guided GUI choices.
 - Persistent, administrator-managed HTTPS interface allowlists with dynamic

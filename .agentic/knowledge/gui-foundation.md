@@ -77,6 +77,11 @@ runtime status.
 
 ## Invariants
 
+- While the appliance reports it is provisioning, the Network page shows the
+  first-boot commissioning workflow in place of the management allowlist editor,
+  never both: every change the editor could make is refused by the appliance
+  until commissioning ends. An appliance that does not report the state at all is
+  treated as commissioned.
 - Page-scoped Activity actions use `.page-title-actions` inside `.page-head`:
   title first, authorized Activity button next, supporting description below.
   This shared wrapping, left-aligned pattern applies to Network, Authentication
@@ -354,6 +359,8 @@ visible.
 
 ## Files
 
+- `src/components/network/CommissioningPanel.tsx` - the first-boot workflow: the standing temporary-exposure alert, the eligible adapters with their stable identities and addresses, the current browser path, the usable URLs and their scope, and the completion control with its confirmation step.
+
 - `src/api/wireguard.ts` - bounded readiness/profile parsing and typed change requests.
 - `src/components/network/{WireGuardPanel,NetworkConfirmation}.tsx` - profile controls and native acknowledgement modal.
 - `e2e/network.spec.ts` - isolated real-backend Network browser scenarios.
@@ -445,6 +452,35 @@ visible.
 - `05_Software/nilo_gui/README.md` - exact local restore, development, quality,
   build, configuration, and authentication commands.
 - `05_Software/scripts/aegis_test.py` - Windows repository-gate integration.
+
+## First-boot commissioning (2026-09-12, TASK-38d62913)
+
+The management-access payload carries `provisioning`, and the browser parser
+reads it as `body.provisioning === true` so an appliance that omits it is
+treated as commissioned - the safe direction, because it shows the ordinary
+allowlist editor rather than offering to commission an appliance that already
+is. `NetworkPage` renders `CommissioningPanel` when that flag is set and
+suppresses the allowlist editor in exactly the same condition; the two are
+mutually exclusive because while provisioning the appliance refuses every change
+the editor could make.
+
+The panel opens with a standing alert naming the exposure as temporary, then
+lists each adapter that may carry management access with its name, stable
+adapter identity, type, connection state and current addresses, marking the one
+this browser session arrived on. An interface that cannot carry management
+access is listed with the appliance's own reason and offers no control at all.
+The URL section shows the usable appliance URLs together with the facts that the
+local name is answered only on the local network and that addresses are not
+permanent identifiers.
+
+Completing commissioning sends the chosen adapters. An empty choice is refused
+in the browser before anything is sent. Giving up the adapter the session
+arrived on raises a second, explicit button naming it, so the consequence is
+read before it is accepted. A refusal from the appliance is shown with the
+selection kept, so the administrator corrects rather than restarts. The control
+is withheld from an identity without the manage permission, and
+`completeCommissioning` is withheld entirely under the simulation profile, which
+has no eligible physical interface to commission.
 
 ## Compact Network overview (2026-09-03)
 
