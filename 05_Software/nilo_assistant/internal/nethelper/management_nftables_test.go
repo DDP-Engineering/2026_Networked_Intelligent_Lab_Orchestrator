@@ -36,6 +36,13 @@ func TestManagementFirewallAllowsOnlyNamedIngressInterfaces(t *testing.T) {
 	}
 }
 
+func TestManagementFirewallWithoutPresentAdaptersDeniesNewConnections(t *testing.T) {
+	script := renderManagementAccess(network.ManagementAccessConfiguration{Port: 8443})
+	if strings.Contains(script, "iifname") || !strings.Contains(script, "tcp dport 8443 drop") {
+		t.Fatalf("empty effective allowlist must deny new connections:\n%s", script)
+	}
+}
+
 func TestManagementFirewallSystem(t *testing.T) {
 	systemTunnelGate(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -66,6 +73,14 @@ func TestManagementFirewallSystem(t *testing.T) {
 	}
 	if err := engine.ApplyManagementAccess(ctx, configuration); err != nil {
 		t.Fatalf("apply management access: %v", err)
+	}
+	denyAll := configuration
+	denyAll.Interfaces = nil
+	if err := engine.ApplyManagementAccess(ctx, denyAll); err != nil {
+		t.Fatalf("install deny-all after adapters disappear: %v", err)
+	}
+	if err := engine.ApplyManagementAccess(ctx, configuration); err != nil {
+		t.Fatalf("restore observed management interfaces: %v", err)
 	}
 	if state, err := driver.ManagementAccessTable(ctx); err != nil || state != TableOwned {
 		t.Fatalf("management table state=%q err=%v", state, err)

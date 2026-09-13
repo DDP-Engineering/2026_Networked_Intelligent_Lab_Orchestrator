@@ -128,12 +128,12 @@ test('reports the appliance network state the backend actually served', async ()
   );
   await page
     .getByRole('navigation')
-    .getByRole('button', { name: 'Network adapters', exact: true })
+    .getByRole('button', { name: 'Overview', exact: true })
     .click();
 
   // Bench Core now serves the simulated catalog on /api/v1/network/status, so
   // the page reports what it was given rather than saying nothing is available.
-  await expect(page.getByRole('heading', { name: 'Interfaces' })).toBeVisible();
+  await expect(page.getByRole('table', { name: 'Interfaces' })).toBeVisible();
   // The row, specifically: the chart's interface chooser lists the same names,
   // so a plain text match would resolve to two elements.
   await expect(page.getByRole('rowheader', { name: /enp1s0/ })).toBeVisible();

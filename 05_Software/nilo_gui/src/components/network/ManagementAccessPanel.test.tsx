@@ -74,6 +74,166 @@ const applied: ManagementAccessStatus = {
 };
 
 describe('ManagementAccessPanel', () => {
+  it('distinguishes an absent saved adapter from its same-name replacement', async () => {
+    const replacement: ManagementAccessStatus = {
+      ...applied,
+      configuredInterfaces: ['nilo0'],
+      currentInterface: 'nilo0',
+      interfaces: [
+        {
+          ...applied.interfaces[0],
+          adapterId: 'wifi-new',
+          enabled: false,
+          current: false,
+          role: '',
+        },
+        {
+          ...applied.interfaces[0],
+          state: 'unavailable',
+          enabled: true,
+          current: false,
+          usable: false,
+          roleAvailable: false,
+          ipv4: [],
+        },
+        applied.interfaces[1],
+      ],
+    };
+    const observedReplacement = {
+      ...replacement.interfaces[0],
+      id: 'observed-wifi-new',
+      linkCapacityMbps: 100,
+      rxBytesPerSecond: 0,
+      txBytesPerSecond: 0,
+      controllable: true,
+      notControllableReason: '',
+      ssid: 'DDP',
+      settings: null,
+    };
+    const toggle = vi.fn();
+    renderInShell(
+      <ManagementAccessPanel
+        read={() => Promise.resolve(replacement)}
+        interfaces={[observedReplacement]}
+        onToggle={toggle}
+        update={() => Promise.resolve(replacement)}
+        confirm={() => Promise.resolve(replacement)}
+        recover={() => Promise.resolve(replacement)}
+      />,
+      { theme: 'light', language: 'en' },
+    );
+    const saved = await screen.findByText('wifi-a');
+    const absentRow = saved.closest('tr')!;
+    const absent = within(absentRow).getByRole('checkbox');
+    expect(absent).toBeChecked();
+    expect(absent).toBeDisabled();
+    expect(within(absentRow).queryByRole('button')).toBeNull();
+    expect(screen.getAllByRole('table')).toHaveLength(1);
+    expect(screen.getAllByRole('checkbox', { name: /wlan0/ })).toHaveLength(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Actions for wlan0' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Disable wlan0/ }));
+    expect(toggle).toHaveBeenCalledWith(observedReplacement);
+    const present = screen
+      .getAllByRole('checkbox')
+      .find(
+        (checkbox) =>
+          checkbox !== absent && checkbox.getAttribute('aria-label')?.includes('wlan0'),
+      )!;
+    fireEvent.click(present);
+    expect(present).toBeChecked();
+    expect(absent).toBeChecked();
+  });
+
+  it('retains both absent identities sharing a name while another selection changes', async () => {
+    const observation: ManagementAccessStatus = {
+      ...applied,
+      configuredInterfaces: ['nilo0'],
+      currentInterface: 'nilo0',
+      interfaces: [
+        ...['wifi-a', 'wifi-b'].map((adapterId) => ({
+          ...applied.interfaces[0],
+          adapterId,
+          state: 'unavailable' as const,
+          current: false,
+          usable: false,
+          roleAvailable: false,
+          ipv4: [],
+        })),
+        applied.interfaces[1],
+        applied.interfaces[2],
+      ],
+    };
+    const update = vi.fn(() => Promise.resolve(observation));
+    renderInShell(
+      <ManagementAccessPanel
+        read={() => Promise.resolve(observation)}
+        update={update}
+        confirm={() => Promise.resolve(observation)}
+        recover={() => Promise.resolve(observation)}
+      />,
+      { theme: 'light', language: 'en' },
+    );
+    const absent = [];
+    for (const identity of ['wifi-a', 'wifi-b']) {
+      const row = (await screen.findByText(identity)).closest('tr')!;
+      const checkbox = within(row).getByRole('checkbox');
+      expect(checkbox).toBeChecked();
+      expect(checkbox).toBeDisabled();
+      absent.push(checkbox);
+    }
+    fireEvent.click(screen.getByRole('checkbox', { name: /eth0/ }));
+    for (const checkbox of absent) expect(checkbox).toBeChecked();
+    fireEvent.click(screen.getByRole('button', { name: 'Apply management access' }));
+    await waitFor(() => expect(update).toHaveBeenCalledWith(['nilo0', 'eth0'], false));
+  });
+
+  it('shows one reading line while the management observation is pending', () => {
+    renderInShell(
+      <ManagementAccessPanel
+        read={() => new Promise<ManagementAccessStatus>(() => undefined)}
+        update={() => Promise.resolve(applied)}
+        confirm={() => Promise.resolve(applied)}
+        recover={() => Promise.resolve(applied)}
+      />,
+      { theme: 'light', language: 'en' },
+    );
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Reading the appliance network state…',
+    );
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('keeps pending confirmation actions beside one management status line', async () => {
+    const pending: ManagementAccessStatus = {
+      ...applied,
+      state: 'pending',
+      confirmBy: new Date(Date.now() + 90_000),
+    };
+    renderInShell(
+      <ManagementAccessPanel
+        read={() => Promise.resolve(pending)}
+        update={() => Promise.resolve(pending)}
+        confirm={() => Promise.resolve(applied)}
+        recover={() => Promise.resolve(applied)}
+      />,
+      { theme: 'light', language: 'en' },
+    );
+
+    const region = await screen.findByRole('region', {
+      name: 'Management access interfaces',
+    });
+    expect(within(region).getAllByRole('status')).toHaveLength(1);
+    expect(within(region).getByRole('status')).toHaveTextContent(
+      'Pending confirmation',
+    );
+    expect(within(region).getByRole('button', { name: 'Keep change' })).toBeVisible();
+    expect(
+      within(region).getByRole('button', { name: 'Restore previous state' }),
+    ).toBeVisible();
+    expect(within(region).queryByText(/confirm it here or restore/i)).toBeNull();
+  });
+
   it('requires an explicit second confirmation before disabling the current session interface', async () => {
     const update = vi.fn().mockResolvedValue({
       ...applied,
@@ -99,7 +259,7 @@ describe('ManagementAccessPanel', () => {
       }),
     );
     fireEvent.click(
-      within(region).getByRole('button', { name: 'Apply interface allowlist' }),
+      within(region).getByRole('button', { name: 'Apply management access' }),
     );
     expect(update).not.toHaveBeenCalled();
     const warning = within(region).getByRole('alertdialog');
@@ -166,24 +326,16 @@ describe('ManagementAccessPanel', () => {
         name: 'Allow management access on eth0',
       }),
     ).toBeDisabled();
-    expect(within(region).getByText(/device-side adapter for PLC line/i)).toBeVisible();
+    expect(within(region).getByText(/Device side: PLC line/i)).toBeVisible();
     expect(
       within(region).getByRole('checkbox', {
         name: 'Allow management access on wlan0',
       }),
     ).toBeEnabled();
-
-    fireEvent.click(
-      within(region).getByRole('button', { name: 'How to repurpose an adapter' }),
-    );
-    const guide = screen.getByRole('dialog', { name: 'Safe adapter repurposing' });
-    expect(within(guide).getByText(/^1\. Establish/)).toBeVisible();
-    expect(within(guide).getByText(/^2\. Remove/)).toBeVisible();
-    expect(within(guide).getByText(/^3\. Assign/)).toBeVisible();
-    expect(within(guide).queryByRole('button', { name: /swap/i })).toBeNull();
   });
 
   it('keeps a recovered outcome visible until refresh supersedes it', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     const read = vi
       .fn()
       .mockResolvedValueOnce({
@@ -197,26 +349,34 @@ describe('ManagementAccessPanel', () => {
         },
       })
       .mockResolvedValue(applied);
-    renderInShell(
-      <ManagementAccessPanel
-        read={read}
-        update={() => Promise.resolve(applied)}
-        confirm={() => Promise.resolve(applied)}
-        recover={() => Promise.resolve(applied)}
-      />,
-      { theme: 'light', language: 'en' },
-    );
+    try {
+      renderInShell(
+        <ManagementAccessPanel
+          read={read}
+          update={() => Promise.resolve(applied)}
+          confirm={() => Promise.resolve(applied)}
+          recover={() => Promise.resolve(applied)}
+        />,
+        { theme: 'light', language: 'en' },
+      );
 
-    expect(await screen.findByText(/Last known-good access recovered/i)).toBeVisible();
-    expect(
-      screen.getByText(/Management access was removed from eth0 because PLC line/i),
-    ).toBeVisible();
-    expect(screen.queryByText(/backend wording/)).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Refresh interfaces' }));
-    await waitFor(() =>
-      expect(screen.queryByText(/Management access was removed from eth0/i)).toBeNull(),
-    );
-    expect(screen.getByText(/Applied and confirmed/i)).toBeVisible();
+      expect(
+        await screen.findByText(/Management access was removed from eth0/i),
+      ).toBeVisible();
+      expect(
+        screen.getByText(/Management access was removed from eth0 because PLC line/i),
+      ).toBeVisible();
+      expect(screen.queryByText(/backend wording/)).toBeNull();
+      await vi.advanceTimersByTimeAsync(5000);
+      await waitFor(() =>
+        expect(
+          screen.queryByText(/Management access was removed from eth0/i),
+        ).toBeNull(),
+      );
+      expect(screen.getByText(/Applied and confirmed/i)).toBeVisible();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it.each([
@@ -251,6 +411,7 @@ describe('ManagementAccessPanel', () => {
   );
 
   it('keeps a management-update conflict until observed inventory supersedes its device claim', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     const claimed: ManagementAccessStatus = {
       ...applied,
       interfaces: applied.interfaces.map((entry) =>
@@ -271,26 +432,90 @@ describe('ManagementAccessPanel', () => {
       .mockResolvedValueOnce(applied)
       .mockResolvedValueOnce(claimed)
       .mockResolvedValue(applied);
+    try {
+      renderInShell(
+        <ManagementAccessPanel
+          read={read}
+          update={() =>
+            Promise.reject(
+              new BenchCoreError(
+                'rejected',
+                'untrusted backend role wording',
+                'network_interface_role_conflict',
+                {
+                  adapterId: 'ethernet-a',
+                  interface: 'eth0',
+                  existingRole: 'device',
+                  requestedRole: 'management',
+                  conflictingResourceId: 'dn-plc',
+                  conflictingResourceName: 'PLC line',
+                },
+              ),
+            )
+          }
+          confirm={() => Promise.resolve(applied)}
+          recover={() => Promise.resolve(applied)}
+        />,
+        { theme: 'light', language: 'en' },
+      );
+
+      const region = await screen.findByRole('region', {
+        name: 'Management access interfaces',
+      });
+      fireEvent.click(
+        within(region).getByRole('checkbox', {
+          name: 'Allow management access on eth0',
+        }),
+      );
+      fireEvent.click(
+        within(region).getByRole('button', { name: 'Apply management access' }),
+      );
+      expect(await within(region).findByRole('alert')).toHaveTextContent(
+        /device-side adapter for PLC line/i,
+      );
+
+      await vi.advanceTimersByTimeAsync(5000);
+      await waitFor(() => expect(read).toHaveBeenCalledTimes(2));
+      expect(within(region).getByRole('alert')).toHaveTextContent(
+        /device-side adapter for PLC line/i,
+      );
+
+      await vi.advanceTimersByTimeAsync(5000);
+      await waitFor(() => expect(read).toHaveBeenCalledTimes(3));
+      await waitFor(() => expect(within(region).queryByRole('alert')).toBeNull());
+      expect(within(region).queryByText('untrusted backend role wording')).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('shows one primary line when the management observation fails', async () => {
     renderInShell(
       <ManagementAccessPanel
-        read={read}
-        update={() =>
-          Promise.reject(
-            new BenchCoreError(
-              'rejected',
-              'untrusted backend role wording',
-              'network_interface_role_conflict',
-              {
-                adapterId: 'ethernet-a',
-                interface: 'eth0',
-                existingRole: 'device',
-                requestedRole: 'management',
-                conflictingResourceId: 'dn-plc',
-                conflictingResourceName: 'PLC line',
-              },
-            ),
-          )
+        read={() =>
+          Promise.reject(new Error('management access lists an invalid interface'))
         }
+        update={() => Promise.resolve(applied)}
+        confirm={() => Promise.resolve(applied)}
+        recover={() => Promise.resolve(applied)}
+      />,
+      { theme: 'light', language: 'en' },
+    );
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Management access is unavailable.',
+    );
+    expect(screen.queryByText('Reading the appliance network state…')).toBeNull();
+    expect(
+      screen.queryByText('management access lists an invalid interface'),
+    ).toBeNull();
+  });
+
+  it('uses an accessible region name without repeating a heading or instructions', async () => {
+    renderInShell(
+      <ManagementAccessPanel
+        read={() => Promise.resolve(applied)}
+        update={() => Promise.resolve(applied)}
         confirm={() => Promise.resolve(applied)}
         recover={() => Promise.resolve(applied)}
       />,
@@ -300,28 +525,16 @@ describe('ManagementAccessPanel', () => {
     const region = await screen.findByRole('region', {
       name: 'Management access interfaces',
     });
-    fireEvent.click(
-      within(region).getByRole('checkbox', {
-        name: 'Allow management access on eth0',
-      }),
-    );
-    fireEvent.click(
-      within(region).getByRole('button', { name: 'Apply interface allowlist' }),
-    );
-    expect(await within(region).findByRole('alert')).toHaveTextContent(
-      /device-side adapter for PLC line/i,
-    );
-
-    fireEvent.click(within(region).getByRole('button', { name: 'Refresh interfaces' }));
-    await waitFor(() => expect(read).toHaveBeenCalledTimes(2));
-    expect(within(region).getByRole('alert')).toHaveTextContent(
-      /device-side adapter for PLC line/i,
-    );
-
-    fireEvent.click(within(region).getByRole('button', { name: 'Refresh interfaces' }));
-    await waitFor(() => expect(read).toHaveBeenCalledTimes(3));
-    await waitFor(() => expect(within(region).queryByRole('alert')).toBeNull());
-    expect(within(region).queryByText('untrusted backend role wording')).toBeNull();
+    expect(
+      within(region).queryByRole('heading', { name: 'Management access interfaces' }),
+    ).toBeNull();
+    expect(within(region).queryByText(/Choose the interface names/i)).toBeNull();
+    expect(
+      within(region).queryByRole('button', { name: 'Refresh interfaces' }),
+    ).toBeNull();
+    expect(
+      within(region).queryByRole('button', { name: 'How to repurpose an adapter' }),
+    ).toBeNull();
   });
 
   it('never renders backend prose for a malformed structured role conflict', async () => {
@@ -352,7 +565,7 @@ describe('ManagementAccessPanel', () => {
       }),
     );
     fireEvent.click(
-      within(region).getByRole('button', { name: 'Apply interface allowlist' }),
+      within(region).getByRole('button', { name: 'Apply management access' }),
     );
     expect(
       await within(region).findByText(/adapter role conflict could not be read/i),

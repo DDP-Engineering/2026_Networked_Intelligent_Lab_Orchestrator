@@ -34,6 +34,12 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Changed
 
+- Standardized page-scoped View activity beside Network and Authentication titles.
+- Renamed the management-access apply button to clearly describe its purpose.
+- Unified Overview's adapter inventory and management controls in one compact,
+  responsive table; secondary access guidance is expandable.
+- Network Overview now leads with appliance status and continues directly with
+  management access and interfaces; the redundant Network adapters page is gone.
 - The signed-out interface now presents NILO's version and human sign-in in a
   responsive layout, with an accessible password visibility control.
 - Updated the installed AEGIS workflow to 0.12.0 for focused verification and
@@ -58,6 +64,13 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Fixed
 
+- Saved management identities survive interface-name reuse and ordinary saves;
+  WireGuard installation acknowledgement excludes internal recovery metadata.
+- Removing the current management path requires confirmation even when an
+  unplugged adapter retains the same interface name.
+- Addressless management adapters now remain valid GUI inventory entries, and
+  unresolved checkpoint cleanup stays interlocked across restarts until the
+  helper verifies restoration.
 - Documentation now states the exact supported host boundary, the Git LFS
   prerequisite, and that checksums prove integrity rather than publisher
   authenticity; image scanning and real Podman verification are recorded as

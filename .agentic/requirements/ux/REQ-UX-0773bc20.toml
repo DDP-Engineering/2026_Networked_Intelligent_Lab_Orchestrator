@@ -1,0 +1,44 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-0773bc20"
+
+title = "Present one management access status line"
+
+status = "active"
+
+requirement = """
+When Network Overview presents management-access state, the browser interface shall use exactly one persistent status line showing either the current read in progress, an operator-facing read failure, or the current management state together with any localized outcome, with a failure replacing rather than accompanying the reading state.
+"""
+
+verification = "A component test renders Network Overview while management access is reading, pending confirmation, after the read fails with an internal contract violation, and after it returns recovered state with an outcome; each case asserts exactly one management status line is visible, pending confirmation keeps its action controls without another explanatory status, the failure case contains localized operator text but neither a simultaneous reading line nor the internal parser text, and the recovered case contains both state and localized outcome."
+
+affected_paths = [
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
+    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.tsx",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
+    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.test.tsx",
+    "05_Software/nilo_gui/src/i18n/en.ts",
+    "05_Software/nilo_gui/src/i18n/de.ts",
+    "05_Software/nilo_gui/src/i18n/ro.ts",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.test.tsx",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
+]
+
+
+spec = ""
+
+priority = "high"
+rationale = "A single authoritative line preserves state and recovery evidence without consuming the field display with contradictory or implementation-facing notices."
+
+created = 2026-09-12
+updated = 2026-09-12

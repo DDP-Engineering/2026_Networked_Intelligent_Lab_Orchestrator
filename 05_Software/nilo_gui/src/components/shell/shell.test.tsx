@@ -551,20 +551,15 @@ describe('the navigation', () => {
     expect(await screen.findByLabelText('Component')).toHaveValue('identity');
   });
 
-  // REQ-UX-b718864e: one nested Network group, five routable destinations.
-  it('expands Network into five focused pages without duplicating their tabs', async () => {
+  // REQ-UX-b718864e: one nested Network group, four routable destinations.
+  it('expands Network into four focused pages without duplicating their tabs', async () => {
     renderShell();
     await benchPage();
 
-    for (const name of [
-      'Overview',
-      'Network adapters',
-      'Device access',
-      'VPN profiles',
-      'Diagnostics',
-    ]) {
+    for (const name of ['Overview', 'Device access', 'VPN profiles', 'Diagnostics']) {
       expect(nav().getByRole('button', { name })).toBeVisible();
     }
+    expect(nav().queryByRole('button', { name: 'Network adapters' })).toBeNull();
 
     openFromNav('Device access');
     expect(

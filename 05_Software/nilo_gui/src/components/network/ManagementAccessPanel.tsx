@@ -4,15 +4,22 @@ import type {
   AdapterRoleConflict,
   ManagementAccessStatus,
 } from '../../api/management-access';
+import {
+  NetworkInterfacesTable,
+  type NetworkInterfacesTableProps,
+} from './NetworkInterfacesTable';
 import { BenchCoreError } from '../../api/client';
 import type { MessageKey } from '../../i18n/en';
 import { useTranslate } from '../../i18n/languages';
-import { WorkflowHelp } from '../help/WorkflowHelp';
 
-export interface ManagementAccessPanelProps {
+export interface ManagementAccessPanelProps extends Omit<
+  NetworkInterfacesTableProps,
+  'management'
+> {
   read: () => Promise<ManagementAccessStatus>;
   /** Shared observation owned by NetworkPage; omitted in isolated use/tests. */
   observedStatus?: ManagementAccessStatus | null;
+  observedReadState?: 'reading' | 'read' | 'failed';
   onStatusChange?: (status: ManagementAccessStatus) => void;
   update: (
     interfaces: string[],
@@ -27,15 +34,6 @@ const ACCESS_STATE_KEYS: Record<ManagementAccessStatus['state'], MessageKey> = {
   applied: 'network.management.state.applied',
   failed: 'network.management.state.failed',
   recovered: 'network.management.state.recovered',
-};
-
-const INTERFACE_STATE_KEYS: Record<
-  ManagementAccessStatus['interfaces'][number]['state'],
-  MessageKey
-> = {
-  connected: 'network.state.connected',
-  disconnected: 'network.state.disconnected',
-  unavailable: 'network.state.unavailable',
 };
 
 interface FailureNotice {
@@ -67,18 +65,28 @@ function reconcileFailure(
 export function ManagementAccessPanel({
   read,
   observedStatus,
+  observedReadState,
   onStatusChange,
   update,
   confirm,
   recover,
+  interfaces,
+  deviceNetworks,
+  busy,
+  onToggle,
+  onConfigure,
 }: ManagementAccessPanelProps) {
   const t = useTranslate();
   const [localStatus, setLocalStatus] = useState<ManagementAccessStatus | null>(null);
+  const [localReadFailed, setLocalReadFailed] = useState(false);
   const [selected, setSelected] = useState<string[] | null>(null);
   const [working, setWorking] = useState(false);
   const [failure, setFailure] = useState<FailureNotice | null>(null);
   const [warnCurrent, setWarnCurrent] = useState(false);
   const status = observedStatus === undefined ? localStatus : observedStatus;
+  const readState =
+    observedReadState ??
+    (localReadFailed ? 'failed' : status === null ? 'reading' : 'read');
   const selectedInterfaces = useMemo(
     () => selected ?? status?.configuredInterfaces ?? [],
     [selected, status],
@@ -140,18 +148,6 @@ export function ManagementAccessPanel({
     [t],
   );
 
-  const load = useCallback(async () => {
-    try {
-      const value = await read();
-      setLocalStatus(value);
-      onStatusChange?.(value);
-      setSelected(null);
-      setFailure((current) => reconcileFailure(current, value));
-    } catch (error) {
-      setFailure(describeFailure(error));
-    }
-  }, [describeFailure, onStatusChange, read]);
-
   useEffect(() => {
     if (observedStatus !== undefined) return;
     let abandoned = false;
@@ -160,10 +156,11 @@ export function ManagementAccessPanel({
         const value = await read();
         if (!abandoned) {
           setLocalStatus(value);
+          setLocalReadFailed(false);
           setFailure((current) => reconcileFailure(current, value));
         }
-      } catch (error) {
-        if (!abandoned) setFailure(describeFailure(error));
+      } catch {
+        if (!abandoned) setLocalReadFailed(true);
       }
     };
     void refresh();
@@ -172,12 +169,19 @@ export function ManagementAccessPanel({
       abandoned = true;
       clearInterval(timer);
     };
-  }, [describeFailure, observedStatus, read]);
+  }, [observedStatus, read]);
 
   useEffect(() => {
-    if (observedStatus !== undefined && observedStatus !== null) {
-      setFailure((current) => reconcileFailure(current, observedStatus));
-    }
+    if (observedStatus === undefined || observedStatus === null) return;
+    let active = true;
+    queueMicrotask(() => {
+      if (active) {
+        setFailure((current) => reconcileFailure(current, observedStatus));
+      }
+    });
+    return () => {
+      active = false;
+    };
   }, [observedStatus]);
 
   const usableSelected = useMemo(
@@ -234,40 +238,44 @@ export function ManagementAccessPanel({
   };
 
   return (
-    <section aria-labelledby="management-access-title" className="management-access">
-      <div className="network-section-head">
-        <div>
-          <h3 id="management-access-title">{t('network.management.title')}</h3>
-          <p>{t('network.management.body')}</p>
-        </div>
-        <div className="form-actions">
-          <WorkflowHelp
-            prefix="help.roles"
-            title={t('help.roles.title')}
-            buttonLabel={t('help.roles.open')}
-          />
-          <button type="button" onClick={() => void load()} disabled={working}>
-            {t('network.management.refresh')}
-          </button>
-        </div>
-      </div>
-
-      {failure !== null && (
-        <p className="notice notice-unknown" role="alert">
-          {failure.detail}
-        </p>
-      )}
-      {status === null ? (
-        <p>{t('network.reading')}</p>
-      ) : (
+    <section aria-label={t('network.management.title')} className="management-access">
+      <p
+        className={`management-status ${failure !== null || readState === 'failed' || status?.state === 'failed' ? 'notice notice-unknown' : ''}`}
+        role={
+          failure !== null || readState === 'failed' || status?.state === 'failed'
+            ? 'alert'
+            : 'status'
+        }
+      >
+        {failure !== null
+          ? failure.detail
+          : readState === 'failed'
+            ? t('network.management.unreadable')
+            : status === null
+              ? t('network.reading')
+              : outcomeDetail || t(ACCESS_STATE_KEYS[status.state])}
+      </p>
+      <NetworkInterfacesTable
+        interfaces={interfaces}
+        deviceNetworks={deviceNetworks}
+        busy={busy}
+        onToggle={onToggle}
+        onConfigure={onConfigure}
+        management={{
+          status,
+          selected: selectedInterfaces,
+          disabled: working || status === null,
+          onSelectionChange: (name, checked) =>
+            setSelected((current) => {
+              const selection = current ?? selectedInterfaces;
+              return checked
+                ? [...selection, name]
+                : selection.filter((item) => item !== name);
+            }),
+        }}
+      />
+      {status !== null && (
         <>
-          <p
-            className={`notice ${status.state === 'failed' ? 'notice-unknown' : ''}`}
-            role="status"
-          >
-            {t(ACCESS_STATE_KEYS[status.state])}
-            {outcomeDetail === '' ? '' : ` ${outcomeDetail}`}
-          </p>
           {status.tlsMissing.length > 0 && (
             <p className="notice notice-unknown" role="alert">
               {t('network.management.tlsMissing', {
@@ -275,73 +283,6 @@ export function ManagementAccessPanel({
               })}
             </p>
           )}
-          <div className="table-scroll">
-            <table className="data-table record-table">
-              <thead>
-                <tr>
-                  <th scope="col">{t('network.management.enabled')}</th>
-                  <th scope="col">{t('network.table.interface')}</th>
-                  <th scope="col">{t('network.table.state')}</th>
-                  <th scope="col">{t('network.table.address')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {status.interfaces.map((entry) => (
-                  <tr key={entry.name}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        aria-label={t('network.management.toggle', {
-                          name: entry.name,
-                        })}
-                        checked={selectedInterfaces.includes(entry.name)}
-                        disabled={
-                          working || entry.kind === 'loopback' || !entry.roleAvailable
-                        }
-                        aria-describedby={
-                          !entry.roleAvailable
-                            ? `management-role-conflict-${entry.adapterId}`
-                            : undefined
-                        }
-                        onChange={(event) =>
-                          setSelected((current) => {
-                            const selection = current ?? selectedInterfaces;
-                            return event.target.checked
-                              ? [...selection, entry.name]
-                              : selection.filter((name) => name !== entry.name);
-                          })
-                        }
-                      />
-                      {!entry.roleAvailable && entry.role === 'device' && (
-                        <small
-                          id={`management-role-conflict-${entry.adapterId}`}
-                          className="network-secondary"
-                        >
-                          {t('network.role.deviceUnavailable', {
-                            name:
-                              entry.conflictingResourceName ||
-                              t('network.role.unnamedDeviceNetwork'),
-                          })}
-                        </small>
-                      )}
-                    </td>
-                    <th scope="row">
-                      {entry.name}
-                      <small className="network-secondary">
-                        {entry.kind}
-                        {entry.current ? ` · ${t('network.management.current')}` : ''}
-                      </small>
-                    </th>
-                    <td>{t(INTERFACE_STATE_KEYS[entry.state])}</td>
-                    <td className="network-address">
-                      {[...entry.ipv4, ...entry.ipv6].join(', ') ||
-                        t('network.notReported')}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
           {!usableSelected && (
             <p className="notice notice-unknown" role="alert">
               {t('network.management.noUsable')}
@@ -379,8 +320,7 @@ export function ManagementAccessPanel({
             </div>
           )}
           {status.state === 'pending' && (
-            <div className="notice" role="status">
-              <p>{t('network.management.pendingHelp')}</p>
+            <div className="form-actions">
               <button
                 type="button"
                 onClick={() => void settle(confirm)}
@@ -397,16 +337,18 @@ export function ManagementAccessPanel({
               </button>
             </div>
           )}
-          <h4>{t('network.management.urls')}</h4>
-          <ul>
-            {status.urls.map((entry) => (
-              <li key={entry.url}>
-                <a href={entry.url}>{entry.url}</a> · {entry.kind}
-              </li>
-            ))}
-          </ul>
-          <p>{t('network.management.localOnly')}</p>
-          <p>{t('network.management.dhcp')}</p>
+          <details className="management-access-details">
+            <summary>{t('network.management.urls')}</summary>
+            <ul>
+              {status.urls.map((entry) => (
+                <li key={entry.url}>
+                  <a href={entry.url}>{entry.url}</a> · {entry.kind}
+                </li>
+              ))}
+            </ul>
+            <p>{t('network.management.localOnly')}</p>
+            <p>{t('network.management.dhcp')}</p>
+          </details>
         </>
       )}
     </section>

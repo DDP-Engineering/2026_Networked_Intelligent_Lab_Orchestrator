@@ -17,7 +17,7 @@ requirement = """
 When management access or a device network is in a role-conflict, pending, failed, or recovered outcome, the browser interface shall display that outcome and its safe adapter detail as persistent localized status text until a later observed state supersedes it.
 """
 
-verification = "Component tests render each outcome from backend responses, assert the state and adapter detail remain visible with dialogs and help closed and no secret fixture value present, then refresh with an applied state and assert the prior outcome is replaced; catalogue tests cover German and Romanian keys."
+verification = "Component tests render each outcome from backend responses, assert the state and adapter detail remain visible with dialogs and help closed and no secret fixture value present, then refresh with an applied state and assert the prior outcome is replaced. Reattachment tests verify an authoritative unfinished operation replaces an older terminal notice after uncertain acknowledgement and continues polling through verified recovery; catalogue tests cover German and Romanian keys."
 
 affected_paths = [
     "05_Software/nilo_gui/src/api/management-access.ts",
@@ -40,6 +40,9 @@ linked_tests = [
     "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::retains a structured role conflict until observed state supersedes it",
     "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::never renders backend prose for malformed structured role conflicts",
     "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::preserves typed adapter detail when acknowledgement finds a new role conflict",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::reattaches a rollback failure after reload and reports its verified recovery",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::reattaches the authoritative rollback failure after an uncertain acknowledgement",
+    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::replaces an older terminal notice with the acknowledged operation recovery",
     "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.test.tsx::keeps a management-update conflict until observed inventory supersedes its device claim",
     "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.test.tsx::never renders backend prose for a malformed structured role conflict",
     "05_Software/nilo_gui/src/api/client.test.ts::withholds backend prose when adapter-role conflict details are malformed",

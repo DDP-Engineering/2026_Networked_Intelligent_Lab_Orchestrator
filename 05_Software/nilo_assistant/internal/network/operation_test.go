@@ -56,6 +56,45 @@ func (spy *changerSpy) Discard(_ context.Context, checkpoint Checkpoint) error {
 // observerStub is the state a preview is computed against.
 type observerStub struct{ observed map[string]string }
 
+type parameterOnlyChanger struct {
+	*changerSpy
+	inspections int
+	appliedID   string
+}
+
+func (changer *parameterOnlyChanger) Inspect(_ context.Context, change Change) (map[string]string, error) {
+	changer.inspections++
+	if change != (Change{Action: ActionWireGuardInstall, Target: "wireguard"}) {
+		return nil, ErrUnsupported
+	}
+	return map[string]string{"install_revision": "ready"}, nil
+}
+
+func (changer *parameterOnlyChanger) ApplyChange(_ context.Context, change Change) error {
+	changer.appliedID = change.operationID
+	return nil
+}
+
+func TestOperationInspectionExcludesInternalRecoveryIdentity(t *testing.T) {
+	changer := &parameterOnlyChanger{changerSpy: newChangerSpy()}
+	manager, err := NewOperationManager(OperationManagerOptions{
+		Changer: changer, Observer: &observerStub{}, Now: time.Now, NewID: sequentialIDs(),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	preview, err := manager.Preview(context.Background(), firstActor, ActionWireGuardInstall, "wireguard")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := manager.Acknowledge(context.Background(), firstActor, preview.ID, preview.Revision); err != nil {
+		t.Fatal(err)
+	}
+	if changer.inspections != 2 || changer.appliedID != preview.ID {
+		t.Fatalf("inspection count=%d, apply ID=%q", changer.inspections, changer.appliedID)
+	}
+}
+
 func (stub *observerStub) Observe(context.Context, Action, string) (map[string]string, error) {
 	copied := make(map[string]string, len(stub.observed))
 	for key, value := range stub.observed {
@@ -410,6 +449,80 @@ func TestOnlyOneConnectivityChangeMayBeInFlight(t *testing.T) {
 	if _, err := harness.manager.Acknowledge(
 		context.Background(), firstActor, second.ID, second.Revision); err != nil {
 		t.Fatalf("Acknowledge after the first resolved: %v", err)
+	}
+}
+
+// If the prepared checkpoint cannot be saved and cleanup cannot prove the old
+// state, the manager still owns unresolved recovery. No later connectivity
+// change may start on top of that uncertainty.
+func TestUnverifiedCheckpointCleanupKeepsTheConnectivityInterlock(t *testing.T) {
+	t.Parallel()
+
+	for _, test := range []struct {
+		name    string
+		arrange func(*changerSpy)
+	}{
+		{
+			name:    "restore failed",
+			arrange: func(spy *changerSpy) { spy.restoreErr = errors.New("checkpoint unavailable") },
+		},
+		{
+			name:    "restored state was not observed",
+			arrange: func(spy *changerSpy) { spy.observedRestored = false },
+		},
+	} {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			changer := newChangerSpy()
+			test.arrange(changer)
+			store := &interceptOperationStore{
+				delegate: &operationStoreSpy{},
+				beforeReturn: func(_ context.Context, call int, _ OperationRecord) error {
+					if call == 2 {
+						return errors.New("second save failed")
+					}
+					return nil
+				},
+			}
+			manager, err := NewOperationManager(OperationManagerOptions{
+				Changer: changer,
+				Observer: &observerStub{observed: map[string]string{
+					"state": "connected", "connection": "wired-1",
+				}},
+				Now:   func() time.Time { return time.Date(2026, 9, 12, 9, 0, 0, 0, time.UTC) },
+				NewID: sequentialIDs(),
+				Store: store,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			first, err := manager.Preview(context.Background(), firstActor, ActionInterfaceDisable, "enp1s0")
+			if err != nil {
+				t.Fatal(err)
+			}
+			second, err := manager.Preview(context.Background(), firstActor, ActionVPNActivate, "office")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if _, err := manager.Acknowledge(context.Background(), firstActor, first.ID, first.Revision); !errors.Is(err, ErrRecoveryUnavailable) {
+				t.Fatalf("first Acknowledge error = %v, want ErrRecoveryUnavailable", err)
+			}
+			operation, err := manager.Get(first.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if operation.State != StateRollbackFailed {
+				t.Fatalf("first state = %q, want %q", operation.State, StateRollbackFailed)
+			}
+			if _, err := manager.Acknowledge(context.Background(), firstActor, second.ID, second.Revision); !errors.Is(err, ErrChangeInProgress) {
+				t.Fatalf("second Acknowledge error = %v, want ErrChangeInProgress", err)
+			}
+			if len(changer.applied) != 0 {
+				t.Fatalf("a change was applied while recovery was unresolved: %v", changer.applied)
+			}
+		})
 	}
 }
 

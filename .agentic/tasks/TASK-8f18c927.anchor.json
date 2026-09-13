@@ -1,5 +1,5 @@
 {
-  "anchor_id": "796df49149d282ae",
+  "anchor_id": "8f1c9d8580ac5e57",
   "categories": {
     ".gitattributes": "other",
     ".gitignore": "other",
@@ -620,7 +620,6 @@
     "07_Delivery/NILO_Dual_Path_Management_Verification.md": "other",
     "07_Delivery/README.md": "other",
     "07_Delivery/TEMP_Remote_PC_Worx_ILC151_Access.md": "other",
-    "09_Others/Preview.mp4": "other",
     "09_Others/README.md": "other",
     "AGENTS.md": "other",
     "CHANGELOG.md": "other",
@@ -629,7 +628,7 @@
     "README.md": "other",
     "VERSION": "other"
   },
-  "created_at": "2026-09-11T21:56:55.172515Z",
+  "created_at": "2026-09-12T07:21:50.356300Z",
   "files": {
     ".gitattributes": {
       "kind": "file",
@@ -637,7 +636,7 @@
     },
     ".gitignore": {
       "kind": "file",
-      "sha256": "c2a1c47e7ba2607e644b5978bdc9a8693ee46b3e04282203652ffefed54753f5"
+      "sha256": "b2cd87de6f3c8db54ba8fa09ea52e765ea9202a99f18323b484ef0e5f7f02039"
     },
     "00_Planning/Development_Build_Environment_Plan.md": {
       "kind": "file",
@@ -1297,7 +1296,7 @@
     },
     "05_Software/nilo_assistant/cmd/nilo/main.go": {
       "kind": "file",
-      "sha256": "262c8e50c71f95aa99bce00194720f0baa20d2fad29c90792a27e18877fa6042"
+      "sha256": "c4f3c99435af6058a9de7df5be0632969761c3e3943c24344eca78e6b7088c0f"
     },
     "05_Software/nilo_assistant/cmd/nilo/main_test.go": {
       "kind": "file",
@@ -1333,7 +1332,7 @@
     },
     "05_Software/nilo_assistant/cmd/nilo/network_runtime_test.go": {
       "kind": "file",
-      "sha256": "d11fbed543e0447410a13bef276932fe79220ef8b52f5bd08d3da11adff386a1"
+      "sha256": "f268dec1dd0d3c234d2e518949d353609340695d59d16d0a0eee462e260c19b2"
     },
     "05_Software/nilo_assistant/cmd/nilo/network_settings.go": {
       "kind": "file",
@@ -1649,11 +1648,11 @@
     },
     "05_Software/nilo_assistant/internal/httpapi/management_access.go": {
       "kind": "file",
-      "sha256": "d5f6db098b6fa275d708b9631f06a0b988459bf764c0fe9e2a6df5d8d6102135"
+      "sha256": "6e0a0d2ae2b83fa478263aea9783e48b592b7b7d380bc9cb13d41ce56578f37f"
     },
     "05_Software/nilo_assistant/internal/httpapi/management_access_api_test.go": {
       "kind": "file",
-      "sha256": "79ce8981d82220df098292fb6e345d66c65d58add15e16d2e62de680bfeb2648"
+      "sha256": "c9bebe5146f2130f6f3e5c5d1c0cc83e6733e3c5788b2220437c2976f639617f"
     },
     "05_Software/nilo_assistant/internal/httpapi/management_certificate_test.go": {
       "kind": "file",
@@ -1893,19 +1892,19 @@
     },
     "05_Software/nilo_assistant/internal/nethelper/management_access.go": {
       "kind": "file",
-      "sha256": "60a01eab23d5e284b1daf16322c099ced9000755398bf65bf47c30b543f4a57f"
+      "sha256": "0741038dafcbc5822657182c1e4aa377dfc5e39f3c0b908f236a36082af6ad0f"
     },
     "05_Software/nilo_assistant/internal/nethelper/management_access_test.go": {
       "kind": "file",
-      "sha256": "67f1ed94dea0724e999593e9b9c10ec5941b2f1e26ff47b4c39ac3d7a248b942"
+      "sha256": "dcf7e5a3e20fcd3bcd797182175291fb8bdbcd9104a7747f36dbba730f3fc236"
     },
     "05_Software/nilo_assistant/internal/nethelper/management_nftables.go": {
       "kind": "file",
-      "sha256": "0a272b93abba0653cc20fa7ab41f57f727346f32cc221975ab2390025f374a3e"
+      "sha256": "2654be63e8eccaf8993afd13018d7306a67c82fb22c74a9a62ac841c0bd9e983"
     },
     "05_Software/nilo_assistant/internal/nethelper/management_nftables_test.go": {
       "kind": "file",
-      "sha256": "3fb1529f4375a824b4a9a382847d384a495b79b3d4b5c75c528b9a5cd98c3fde"
+      "sha256": "510f0e211ef8abd6ae2b97b72ce34260675ba201a35de8ea963d9d39d794eb76"
     },
     "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux.go": {
       "kind": "file",
@@ -2033,7 +2032,7 @@
     },
     "05_Software/nilo_assistant/internal/network/adapter_roles.go": {
       "kind": "file",
-      "sha256": "91b989b887f904be6de6661dd7d5589424e024716bd939d808fd3d43d739f9c3"
+      "sha256": "0556b0d58da35e2f1e2573fa9e7df0e304d6f273522d95cbd266d3bd6c8e43d6"
     },
     "05_Software/nilo_assistant/internal/network/adapter_roles_test.go": {
       "kind": "file",
@@ -2041,7 +2040,7 @@
     },
     "05_Software/nilo_assistant/internal/network/appliance.go": {
       "kind": "file",
-      "sha256": "fbd678d6fb5e886ef98e1d2bb8286cb86fb8c67bb907eeaa1f56174fd226506e"
+      "sha256": "f2aa1af2971cca6fbf433968e95064234c60028172d214a6818e594f29416f7a"
     },
     "05_Software/nilo_assistant/internal/network/appliance_device_networks.go": {
       "kind": "file",
@@ -2065,7 +2064,7 @@
     },
     "05_Software/nilo_assistant/internal/network/device_network_manager.go": {
       "kind": "file",
-      "sha256": "2ad957b571dc09c5e78da354117b846b3eeb52cf15fcda01e16e2becb2e7c356"
+      "sha256": "f9e166ded3bfec9ca95b41ebf4b60ebab03956c96ae92fe6ce72f7c4e3aad973"
     },
     "05_Software/nilo_assistant/internal/network/device_network_manager_test.go": {
       "kind": "file",
@@ -2113,11 +2112,11 @@
     },
     "05_Software/nilo_assistant/internal/network/management_access.go": {
       "kind": "file",
-      "sha256": "f430f117649e74b57708689c99240b608d0e1a5ebe9af46a7ae7da80fdab4776"
+      "sha256": "b6d2063da71b197a37b5c098922105061851df314da645ef3a57ee8fddd3f96e"
     },
     "05_Software/nilo_assistant/internal/network/management_access_test.go": {
       "kind": "file",
-      "sha256": "d50d3b799f1df8559659df893878280b097fe4c708ebe3c979f927d694d7ded9"
+      "sha256": "e5b45b895672528d41f18e66eb1f2142ef1da414474148f1c76f8983594d2d3e"
     },
     "05_Software/nilo_assistant/internal/network/management_test.go": {
       "kind": "file",
@@ -2129,7 +2128,7 @@
     },
     "05_Software/nilo_assistant/internal/network/operation.go": {
       "kind": "file",
-      "sha256": "f28a41f3f04156dae99a2d42110930cf0471bef73089fdb7af876f9f75380af2"
+      "sha256": "40b4fb575e8bc5c6cc7041a8fe46edb6d4257e3fe02baa13163e48d71182ff31"
     },
     "05_Software/nilo_assistant/internal/network/operation_durability_test.go": {
       "kind": "file",
@@ -2137,7 +2136,7 @@
     },
     "05_Software/nilo_assistant/internal/network/operation_reconcile_test.go": {
       "kind": "file",
-      "sha256": "86e12ed77f5dd9fe698ac3cca7af560d86945110e0bfcfb612c1bac4fe602ffb"
+      "sha256": "efc82793ed7dbc451caaa5cc590bd40dc477ec039fd45acbb8f63d450b73aebf"
     },
     "05_Software/nilo_assistant/internal/network/operation_safety_test.go": {
       "kind": "file",
@@ -2145,11 +2144,11 @@
     },
     "05_Software/nilo_assistant/internal/network/operation_test.go": {
       "kind": "file",
-      "sha256": "124ce267e688d664d9f1a1b7abc7150375fe34f12886cdc5ad3d3398ed7cc2da"
+      "sha256": "c60e90637729913891c922d4d54fe2a52586c524ab1d483e23d5b299d072297d"
     },
     "05_Software/nilo_assistant/internal/network/persistence.go": {
       "kind": "file",
-      "sha256": "0be7e942adb855ab3ed2dd31998466ed6c5e7ebee3d59015908f4c7464ba67f9"
+      "sha256": "c4544fd2019c56ca14439c25a4aa2f812974194834ef6092d9a7471a66d59a50"
     },
     "05_Software/nilo_assistant/internal/network/profile.go": {
       "kind": "file",
@@ -2161,7 +2160,7 @@
     },
     "05_Software/nilo_assistant/internal/network/profile_manager_test.go": {
       "kind": "file",
-      "sha256": "caa978a4f9a169fc550b283cf73aa4172298732271d0b436412d8fbf797fdb62"
+      "sha256": "d991b41007852e20193a4c92965ae9263fe8b18289a755f54e9f869edc06477c"
     },
     "05_Software/nilo_assistant/internal/network/profile_test.go": {
       "kind": "file",
@@ -2241,7 +2240,7 @@
     },
     "05_Software/nilo_assistant/internal/network/wireguard.go": {
       "kind": "file",
-      "sha256": "00519dbd8ad1391dba654249457d6b155f19bd5fdcdf027c767137ea266fac8f"
+      "sha256": "fa2c5dad88aeb32f75817a267cd8dfad07e38b8e9b8b06214c98c9e6e5df2419"
     },
     "05_Software/nilo_assistant/internal/operation/queue_test.go": {
       "kind": "file",
@@ -2305,7 +2304,7 @@
     },
     "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository_test.go": {
       "kind": "file",
-      "sha256": "cc3528c8e682a368ff0ef020e623eb3eb02c11b5dd9165ff5928659b57dbb255"
+      "sha256": "3e3156cfbee34f21a84d02e0cc4834c8e6a2040fb5479667ddd8dc1f86cd8574"
     },
     "05_Software/nilo_assistant/internal/store/sqlite/artifact_repository.go": {
       "kind": "file",
@@ -2369,7 +2368,7 @@
     },
     "05_Software/nilo_assistant/internal/store/sqlite/management_access_repository_test.go": {
       "kind": "file",
-      "sha256": "713ef4d545932039440e27a8a7577e47e70d53969d1a1aee43b92a30da16aa43"
+      "sha256": "0af035e1cf7de08fcaa1136e65bf3cfa9ac777b37862199c08a839d579df9447"
     },
     "05_Software/nilo_assistant/internal/store/sqlite/migrations.go": {
       "kind": "file",
@@ -2425,7 +2424,7 @@
     },
     "05_Software/nilo_assistant/internal/store/sqlite/network_operation_repository.go": {
       "kind": "file",
-      "sha256": "ce936904c564bdc140ae035fa347e501e98bc585ecfcd19afe76c5acf2b15f12"
+      "sha256": "f0ae3d340482f4478d4b3ee3385b09e649fd7d226e8f2a0a43628f138738ee1b"
     },
     "05_Software/nilo_assistant/internal/store/sqlite/network_repository.go": {
       "kind": "file",
@@ -2501,11 +2500,11 @@
     },
     "05_Software/nilo_gui/e2e/field-display.spec.ts": {
       "kind": "file",
-      "sha256": "e92ff23c54d62ec0c4557e269dba0b33df5fbec7b1f918db44a3909378efe1ae"
+      "sha256": "0b679a27d9336008b06c1ec8c299d2c318a1e331fed9b71beaf804e827902628"
     },
     "05_Software/nilo_gui/e2e/network.spec.ts": {
       "kind": "file",
-      "sha256": "6d7816ad8a105f30b2a93d1ade807b358b71b900e1f7f67449754c720f8c06a4"
+      "sha256": "0c05272fe0e3a7385e9702bde66e39fabc08deaa4d301d557ffb67130eb08160"
     },
     "05_Software/nilo_gui/e2e/prerequisites.test.ts": {
       "kind": "file",
@@ -2517,7 +2516,7 @@
     },
     "05_Software/nilo_gui/e2e/shell.spec.ts": {
       "kind": "file",
-      "sha256": "7e33f63687cb202fcd8de32f86e8ebf716bb29d66733fbd3311f76f93c71150f"
+      "sha256": "6bac9a4968d41a390eed6400894d34be82e32a793c9d5c9a44ee73e6d6f1aab9"
     },
     "05_Software/nilo_gui/e2e/token-redaction.spec.ts": {
       "kind": "file",
@@ -2601,11 +2600,11 @@
     },
     "05_Software/nilo_gui/src/api/management-access.test.ts": {
       "kind": "file",
-      "sha256": "aa4e24d4486b790d0b1455b56da412b3c8e801e97543090c62b46badb11d0fe0"
+      "sha256": "959e25f3238dc6dfb547d5a400cd0c38040db7dabedf34ba6c3d54b04bda3f7b"
     },
     "05_Software/nilo_gui/src/api/management-access.ts": {
       "kind": "file",
-      "sha256": "e406eb68acb277bbb46854bdcf9acb9f09f1dc1f8fa5de60d3f50ea89b9ae427"
+      "sha256": "cd32c6c26b8e278f906233a5332e895af47beab69064390d496620a813faf83f"
     },
     "05_Software/nilo_gui/src/api/mock.test.ts": {
       "kind": "file",
@@ -2753,7 +2752,7 @@
     },
     "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.tsx": {
       "kind": "file",
-      "sha256": "287914e0057ebdbc486abaf6415467fc11212709a9177c660e93d3a77f6e06ca"
+      "sha256": "bda25aa28125b539b76f4b6ae8df534de6252555edaf1d2a920e05097ccfc119"
     },
     "05_Software/nilo_gui/src/components/network/InstallationProgress.test.tsx": {
       "kind": "file",
@@ -2773,11 +2772,11 @@
     },
     "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.test.tsx": {
       "kind": "file",
-      "sha256": "c1877d1280e2578f7b8bac9bc9075d12bbb3f955f266b3be42498fd6a87db12b"
+      "sha256": "0ad1e749502f2c653bea7db794fdcf79e0b3c2a4a33b8ab54d12da1f2862c251"
     },
     "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.tsx": {
       "kind": "file",
-      "sha256": "714105e9d8b3a224da0d4fb507944721ecc89fe622f289f01b342da7c75033ad"
+      "sha256": "1bf110d216e5ce26a55b10f6a2d9dea6c2f7510bb9aab8a76d5cbc87db6d3e31"
     },
     "05_Software/nilo_gui/src/components/network/NetworkConfirmation.tsx": {
       "kind": "file",
@@ -2809,7 +2808,7 @@
     },
     "05_Software/nilo_gui/src/components/network/views.ts": {
       "kind": "file",
-      "sha256": "7b1eafe67f95ef212cc943684f20bf08a74486dcf774b12bac438b0dcd892e79"
+      "sha256": "8be450f6c01add95dbcfcd865cd4c5c9d83a64113aa1743abed0ed38b52b377d"
     },
     "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx": {
       "kind": "file",
@@ -2825,11 +2824,11 @@
     },
     "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx": {
       "kind": "file",
-      "sha256": "b41adfb364f798f1db14877143805ef1a34fefc27cfe9e7848ea49c0d442dc5c"
+      "sha256": "a9066a09b9d7d7b11ada6d9878e5fee00cd63b7d2523ddfaf403b746cc09c85d"
     },
     "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx": {
       "kind": "file",
-      "sha256": "5b8330bc3b6921288fa2fa3b6aa106ac5fa505f568f50cdf62e0c08335b57f44"
+      "sha256": "77d0b2123a96884a85c18f4f8537be224afd59c0104addaaf110a195025733ac"
     },
     "05_Software/nilo_gui/src/components/pages/PluginsPage.test.tsx": {
       "kind": "file",
@@ -2881,11 +2880,11 @@
     },
     "05_Software/nilo_gui/src/components/shell/pages.ts": {
       "kind": "file",
-      "sha256": "9ed6d36aec85899efde5a2001db1eac1bcfd7863f883dcf5279df64bd2710063"
+      "sha256": "7b0446edd28141280db49248f5d4dda8ee35e8df46d6a87a322f86636537fab7"
     },
     "05_Software/nilo_gui/src/components/shell/shell.test.tsx": {
       "kind": "file",
-      "sha256": "b01f1b3bb36924e8c81982d56d543eab14e9b25f5194847c28f9bfa2d073dd41"
+      "sha256": "0373b7373be6ef83730644bf402fa45876c4561e3855c9095c973e4c17c501de"
     },
     "05_Software/nilo_gui/src/components/shell/useViewportClass.ts": {
       "kind": "file",
@@ -2913,11 +2912,11 @@
     },
     "05_Software/nilo_gui/src/i18n/de.ts": {
       "kind": "file",
-      "sha256": "ed2030a9d753646856e0a899c84cfffbc025f861c8e2687a538c8949eb5c9989"
+      "sha256": "e93dfbf5b1ccd4b650a27902b94934195080d9744409b24692c23a301e898665"
     },
     "05_Software/nilo_gui/src/i18n/en.ts": {
       "kind": "file",
-      "sha256": "25de0a42e03ae8bf4c3143d1a400ba8c567d95d988ccd42e0450333976623cc5"
+      "sha256": "fac398d6036fb3c8a28c6805edba6f3bfba76d8006aa5e9ba2a44822a313999a"
     },
     "05_Software/nilo_gui/src/i18n/languages.ts": {
       "kind": "file",
@@ -2929,7 +2928,7 @@
     },
     "05_Software/nilo_gui/src/i18n/ro.ts": {
       "kind": "file",
-      "sha256": "c71946a4f76648bf56431ef5d95b398001b77f159d431f623312fea10edfb83d"
+      "sha256": "f88dd672aec3eb85589528047bc217508ee8410e09a0b8e3805f518a63c15394"
     },
     "05_Software/nilo_gui/src/index.css": {
       "kind": "file",
@@ -3069,7 +3068,7 @@
     },
     "06_SoftwareDocu/Development_and_Simulation_Flow.md": {
       "kind": "file",
-      "sha256": "e36255f42111f9bc8a7f86b7cec4011b72544dbe9be200e44016bc25e3b65ac0"
+      "sha256": "2fbb221154869c319fad71575d30ef6425bd224535ea0d20808d5e2d7c0017e5"
     },
     "06_SoftwareDocu/Local_Hardware_Access.md": {
       "kind": "file",
@@ -3077,7 +3076,7 @@
     },
     "06_SoftwareDocu/Network_Operations.md": {
       "kind": "file",
-      "sha256": "ceb4dffd07d9d69619d0508216670df2aede1545e83a14b63fca9fce42e2261e"
+      "sha256": "f7f812055212c8dcb73c149dd6dc1901ec57a2a11438b0a86219c03e7e12ea44"
     },
     "06_SoftwareDocu/README.md": {
       "kind": "file",
@@ -3093,7 +3092,7 @@
     },
     "07_Delivery/NILO_CLI_and_Authentication.md": {
       "kind": "file",
-      "sha256": "d781414789772ca182e96ba9c6d7ab3d615d4e1f1989c6184d62f879d35148d4"
+      "sha256": "3241c03f37305d70be000cf8f36c792641cb814f4f225cca153ecc0a25ffadfd"
     },
     "07_Delivery/NILO_Dual_Path_Management_Verification.md": {
       "kind": "file",
@@ -3107,10 +3106,6 @@
       "kind": "file",
       "sha256": "3ec5bd4028bd6cdb1286adaaea11ca393534b05221e0ca577cc5ca201b5de50f"
     },
-    "09_Others/Preview.mp4": {
-      "kind": "file",
-      "sha256": "f9424aa14274906933d64c22ec54e97bf3e8ba0644cb1a180e6e86898d1b2c6e"
-    },
     "09_Others/README.md": {
       "kind": "file",
       "sha256": "63b12bdf7152279f3f3f95259e31e210f3de706f833914ab43f4ad923c9df01f"
@@ -3121,7 +3116,7 @@
     },
     "CHANGELOG.md": {
       "kind": "file",
-      "sha256": "3769e59d2f1b5d814154f0c8acc949ad14c9d1da664b06240fa63a03596c14ff"
+      "sha256": "c8be82fbc7e21cf8c4ab295c345c898a5a71921b8f754ca8c8ae3bf22f21bb6b"
     },
     "CLAUDE.md": {
       "kind": "file",
@@ -3140,7 +3135,7 @@
       "sha256": "1f930dd1f133c1f97a94fe3acb8db34372cf4c01ffdb2b3ff4ca72f9494121e9"
     }
   },
-  "head": "b56f7f3f497368e939e967be59a35d7be95c718a",
+  "head": "0c94a5692cc3850f38af6b417a5346ba082504bb",
   "schema": 1,
   "source_globs": [
     "05_Software/integrations/sigrok/",

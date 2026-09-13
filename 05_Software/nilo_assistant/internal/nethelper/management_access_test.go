@@ -48,3 +48,19 @@ func TestHelperAcceptsOnlyTypedValidManagementFirewallRequests(t *testing.T) {
 		t.Fatalf("configuration rode an unrelated operation: %+v", response)
 	}
 }
+
+func TestManagementFirewallCanDenyAllAfterAdaptersDisappear(t *testing.T) {
+	driver := &managementDriver{state: TableOwned}
+	engine, err := NewEngine(driver, &memoryStore{}, time.Now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	configuration := network.ManagementAccessConfiguration{Port: 8443, TLSNames: []string{"nilo.local"}}
+	if err := configuration.Validate(); err == nil {
+		t.Fatal("empty user configuration must remain invalid")
+	}
+	response := dispatch(context.Background(), engine, Request{Op: "management.access.apply", ManagementAccess: &configuration})
+	if response.Error != "" || len(driver.applied) != 1 || len(driver.applied[0].Interfaces) != 0 {
+		t.Fatalf("deny-all firewall request = %+v, applied=%v", response, driver.applied)
+	}
+}

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/netip"
 	"slices"
+	"sort"
 	"testing"
 	"time"
 )
@@ -85,8 +86,8 @@ func TestProvisioningDerivesTheAllowlistFromEligibleInterfaces(t *testing.T) {
 	if len(firewall.applied) == 0 {
 		t.Fatal("the derived allowlist never reached the firewall")
 	}
-	if got := firewall.applied[len(firewall.applied)-1].Interfaces; !slices.Equal(got, want) {
-		t.Fatalf("firewall allowlist = %v, want %v", got, want)
+	if got := firewallAllowlist(firewall); !slices.Equal(got, sortedNames(want)) {
+		t.Fatalf("firewall allowlist = %v, want %v", got, sortedNames(want))
 	}
 	if !store.present {
 		t.Fatal("the derived allowlist was not persisted")
@@ -135,8 +136,8 @@ func TestProvisioningFollowsAdaptersAsTheyAppearAndLeave(t *testing.T) {
 	if !service.Allows(mustAddr(t, "192.168.30.7/24")) {
 		t.Fatal("the attached adapter is not carrying management access")
 	}
-	if got := firewall.applied[len(firewall.applied)-1].Interfaces; !slices.Equal(got, want) {
-		t.Fatalf("firewall allowlist after attach = %v, want %v", got, want)
+	if got := firewallAllowlist(firewall); !slices.Equal(got, sortedNames(want)) {
+		t.Fatalf("firewall allowlist after attach = %v, want %v", got, sortedNames(want))
 	}
 
 	provider.set(provisioningInterfaces())
@@ -281,4 +282,21 @@ func TestProvisioningRefusesAnExplicitAllowlistChange(t *testing.T) {
 	if got := service.ConfiguredInterfaces(); !slices.Equal(got, []string{"enp1s0", "wlp2s0"}) {
 		t.Fatalf("allowlist after a refused update = %v, want the derived set", got)
 	}
+}
+
+// firewallAllowlist reports the last set the firewall was handed. The double
+// re-canonicalises what it records, and the effective configuration carries no
+// bindings, so the recorded order degrades to kernel-name order regardless of
+// adapter identity. Membership is what the firewall contract promises here;
+// ConfiguredInterfaces asserts the canonical order.
+func firewallAllowlist(firewall *accessFirewall) []string {
+	applied := append([]string(nil), firewall.applied[len(firewall.applied)-1].Interfaces...)
+	sort.Strings(applied)
+	return applied
+}
+
+func sortedNames(names []string) []string {
+	sorted := append([]string(nil), names...)
+	sort.Strings(sorted)
+	return sorted
 }

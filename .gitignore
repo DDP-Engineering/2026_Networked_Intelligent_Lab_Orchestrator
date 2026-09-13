@@ -34,3 +34,6 @@ __pycache__/
 *.conf.wg
 **/wg*.conf
 /DDP_Ubuntu.conf
+
+# Local reference capture; it is not part of the product source or delivery.
+/09_Others/Preview.mp4

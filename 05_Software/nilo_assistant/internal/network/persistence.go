@@ -45,6 +45,7 @@ var unfinishedStates = map[OperationState]bool{
 	StateApplying:             true,
 	StateAwaitingConfirmation: true,
 	StateRollingBack:          true,
+	StateRollbackFailed:       true,
 }
 
 // Unfinished reports whether a stored state still needs reconciling.

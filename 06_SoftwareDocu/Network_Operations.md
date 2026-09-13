@@ -20,8 +20,9 @@ tunnels; do not manage an external tunnel as if NILO created it.
 A new appliance starts in first-boot provisioning and is reachable on every
 eligible adapter until it is commissioned; see First-boot provisioning below.
 
-In the GUI, Network contains Overview, Network adapters, Device access,
-VPN profiles and Diagnostics. Activity provides authorized audit queries,
+In the GUI, Network contains Overview, Device access, VPN profiles and
+Diagnostics. Overview starts with appliance status and continues directly with
+management access and the interface inventory. Activity provides authorized audit queries,
 exports and retention controls. Use the real simulation backend for integrated
 workflows; the browser mock does not reproduce every network lifecycle.
 
@@ -48,7 +49,14 @@ Unverified recovery blocks further changes rather than reporting success.
 Management access is a separate, persistent change with its own last-known-good
 record. The API continues to accept interface names, but present physical
 adapters are persisted by stable hardware identity with their last observed
-Linux name; DHCP addresses remain observations. A single HTTPS server listens on the configured management port,
+Linux name; DHCP addresses remain observations. A saved physical adapter admits
+only its matching observed identity: reusing its old Linux name does not grant
+a replacement adapter management access. Absent adapters retain their role
+claims. If saved or observed adapters share a name, ordinary saves retain every
+absent selection and its checkbox stays checked and disabled. Reconnect the
+saved adapters under distinct names to make those selections editable again.
+An empty observed allowlist blocks new management connections until
+a saved interface returns. A single HTTPS server listens on the configured management port,
 then both the socket gate and the helper firewall admit only connections whose
 destination belongs to an enabled interface. The listener refreshes the
 interface/address mapping while it runs, so address renewal, link loss and link
@@ -74,7 +82,11 @@ that exact record exists; an earlier attempt is failed, and other pre-helper
 attempts restore the saved inventory. If a prepared helper checkpoint cannot be
 persisted, it is restored before the operation is settled. Helper-backed
 operations otherwise rehydrate and reconcile before management access or
-forwarding is composed. A failed helper recovery keeps the uncertain union
+forwarding is composed. A failed or unverified helper recovery remains durably
+unfinished, rehydrates its connectivity interlock after restart, and is checked
+again by runtime maintenance; only a matching restored helper record releases
+it. Runtime maintenance stops on an operation or management reconciliation
+error before refreshing device forwarding. The uncertain adapter union remains
 reserved. Local-access adapters and NILO-owned
 WireGuard interfaces are ingress paths and do not acquire the device role.
 Conflicts return HTTP 409 with `network_interface_role_conflict` before any
@@ -150,8 +162,10 @@ interface-managed options are mutually exclusive. Existing installations
 continue to use their literal `--bind` listener until an administrator
 deliberately initializes interface-managed access.
 
-Interface names must be valid non-loopback Linux interface names. An empty or
-duplicate list or TLS identity is refused. A saved interface may be absent at
+Interface names must be valid non-loopback Linux interface names. Empty selections
+and invalid or duplicate TLS identities are refused. Physical saved selections are unique by adapter
+identity and may share a last-known name; the active firewall names remain unique.
+A saved interface may be absent at
 ordinary startup; initialization and explicit reconfiguration cannot select a
 list with no currently usable path. Startup reports the configured interfaces
 and their observed addresses.
@@ -227,8 +241,8 @@ nilo serve --profile appliance \
    `--management-port 8443` rather than repeating the bootstrap interface list.
    The persisted selection then remains authoritative across restarts.
 
-The administrator-only **Network > Network adapters > Management access
-interfaces** panel lists detected names, type, link state and current addresses.
+The administrator-only management selector on **Network > Overview** lists
+detected names, type, link state and current addresses below the compact status.
 Enable `wlan0` and `nilo0`; leave `eth0` disabled. The panel identifies the
 current browser path, requires explicit confirmation before removing it, and
 offers keep/restore actions while a configuration is pending. It presents
@@ -236,6 +250,11 @@ offers keep/restore actions while a configuration is pending. It presents
 `https://10.205.148.11:8443` for WireGuard. `.local` discovery works only on the
 local network. The numeric Wi-Fi DHCP address is deliberately shown only as
 current telemetry, not as a durable URL.
+
+The Overview header owns View activity, safe repurposing help and interface
+refresh. Management read progress, failure, state and localized recovery outcome
+share one mutually exclusive status line. Interfaces without observed addresses
+remain valid inventory entries and use empty address arrays on the HTTP contract.
 
 Both management and device-side selectors retain unavailable adapters in view,
 disable only the conflicting role choice, and show the owning role and saved

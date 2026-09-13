@@ -584,6 +584,7 @@ func (manager *OperationManager) apply(
 			if cleanupErr != nil || !observed {
 				operation.State = StateRollbackFailed
 				operation.Failure = "armed recovery could not be recorded and the previous state could not be verified"
+				manager.inFlight = operation.ID
 			}
 			failedState, failure := operation.State, operation.Failure
 			manager.mutex.Unlock()
@@ -735,6 +736,8 @@ func (manager *OperationManager) releaseImport(ctx context.Context, operation *O
 }
 
 func (manager *OperationManager) observe(ctx context.Context, change Change) (map[string]string, error) {
+	// Recovery correlation belongs to apply, not to the inspected parameters.
+	change.operationID = ""
 	var observed map[string]string
 	var err error
 	if controller, ok := manager.options.Changer.(ChangeController); ok {
@@ -939,8 +942,11 @@ func (manager *OperationManager) Adopt(ctx context.Context) error {
 		}
 		manager.mutex.Lock()
 		manager.operations[record.ID] = operation
-		if operation.State == StateAwaitingConfirmation && manager.inFlight == "" {
-			manager.inFlight = operation.ID
+		if operation.Action.ChangesConnectivity() && manager.inFlight == "" {
+			switch operation.State {
+			case StateApplying, StateAwaitingConfirmation, StateRollingBack, StateRollbackFailed:
+				manager.inFlight = operation.ID
+			}
 		}
 		manager.mutex.Unlock()
 	}
@@ -955,6 +961,10 @@ func (manager *OperationManager) Reconcile(ctx context.Context) error {
 	if manager.options.Recovery == nil {
 		return nil
 	}
+	if !manager.changeMutex.TryLock() {
+		return nil
+	}
+	defer manager.changeMutex.Unlock()
 	outcome, present, err := manager.options.Recovery.LastRecovery(ctx)
 	if err != nil {
 		return fmt.Errorf("read the helper's recovery record: %w", err)
@@ -963,7 +973,7 @@ func (manager *OperationManager) Reconcile(ctx context.Context) error {
 	var unfinished []*Operation
 	for _, operation := range manager.operations {
 		switch operation.State {
-		case StateApplying, StateAwaitingConfirmation, StateRollingBack:
+		case StateApplying, StateAwaitingConfirmation, StateRollingBack, StateRollbackFailed:
 			unfinished = append(unfinished, operation)
 		}
 	}
@@ -972,8 +982,21 @@ func (manager *OperationManager) Reconcile(ctx context.Context) error {
 
 	for _, operation := range unfinished {
 		state, result, failure := OperationState(""), audit.Outcome(""), ""
+		if operation.State == StateRollbackFailed {
+			state, result, failure = resolveUnverifiedRecoveryAgainstHelper(operation, outcome, present)
+			if state == "" {
+				continue
+			}
+		}
 		uncheckpointed := operation.checkpoint.ID == ""
-		if uncheckpointed {
+		if state == "" && present && outcome.OperationID == operation.ID {
+			// The helper may have armed recovery before the core could save its
+			// checkpoint ID. Its matching record still owns that recovery.
+			state, result, failure = resolveAgainstHelper(operation, outcome, present)
+			if state == "" {
+				continue
+			}
+		} else if state == "" && uncheckpointed {
 			if reconciler, ok := manager.options.Changer.(UncheckpointedChangeReconciler); ok {
 				resolved, handled, reconcileErr := reconciler.ReconcileUncheckpointedChange(ctx, operation.ID, operation.change, operation.checkpoint)
 				if reconcileErr != nil {
@@ -992,7 +1015,7 @@ func (manager *OperationManager) Reconcile(ctx context.Context) error {
 				result = audit.OutcomeFailed
 				failure = "the change had no recovery checkpoint after restart, so it is not applied"
 			}
-		} else {
+		} else if state == "" {
 			state, result, failure = resolveAgainstHelper(operation, outcome, present)
 		}
 		if state == "" {
@@ -1020,6 +1043,19 @@ func (manager *OperationManager) Reconcile(ctx context.Context) error {
 		manager.settle(ctx, operation, state, result, audit.ActorKindSystem, failure)
 	}
 	return nil
+}
+
+// resolveUnverifiedRecoveryAgainstHelper is deliberately narrower than the
+// ordinary restart mapping. Once restoration was unverified, a missing,
+// applied, confirmed, mismatched or failed helper record cannot prove the old
+// connectivity state. Only a matching restored record releases the interlock.
+func resolveUnverifiedRecoveryAgainstHelper(
+	operation *Operation, outcome RecoveryOutcome, present bool,
+) (OperationState, audit.Outcome, string) {
+	if present && outcome.OperationID == operation.ID && outcome.Phase == "restored" {
+		return StateRolledBack, audit.OutcomeRecovered, ""
+	}
+	return "", "", ""
 }
 
 // resolveAgainstHelper maps the helper's phase to the operation's terminal

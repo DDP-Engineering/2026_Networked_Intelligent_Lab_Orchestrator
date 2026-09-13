@@ -125,7 +125,14 @@ export function ApiTokensPage({
   return (
     <div className="page authentication-page">
       <header className="page-head">
-        <h2>{t('auth.tokensTitle')}</h2>
+        <div className="page-title-actions">
+          <h2>{t('auth.tokensTitle')}</h2>
+          {onOpenActivity !== undefined && (
+            <button type="button" className="button" onClick={onOpenActivity}>
+              {t('auth.viewActivity')}
+            </button>
+          )}
+        </div>
         <p className="page-sub">
           {t('auth.signedInAs', { username: session.username, role: session.role })}{' '}
           {t('auth.tokensNote')}
@@ -150,11 +157,6 @@ export function ApiTokensPage({
           resource={t('auth.resource.tokens')}
           action={
             <>
-              {onOpenActivity === undefined ? null : (
-                <button type="button" className="button" onClick={onOpenActivity}>
-                  {t('auth.viewActivity')}
-                </button>
-              )}
               <button
                 type="button"
                 className="button button-primary"

@@ -601,6 +601,24 @@ input[type='radio'] {
   margin-left: auto;
 }
 
+/* Page-scoped investigation stays beside the title, not in a list toolbar. */
+.page-title-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.page-title-actions .button {
+  margin-left: 0;
+}
+
+.page-title-actions + .page-sub {
+  flex-basis: 100%;
+}
+
 .page-sub {
   margin: 0;
   color: var(--text-muted);
@@ -1657,6 +1675,37 @@ input[type='radio'] {
 .network-page .page-body {
   gap: var(--space-5);
 }
+
+.network-page-overview .page-body {
+  gap: var(--space-3);
+}
+
+.network-overview .fact-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.management-access {
+  min-width: 0;
+}
+
+.management-status {
+  margin: 0 0 var(--space-3);
+}
+
+.management-access-details {
+  margin-top: var(--space-3);
+}
+
+.network-interfaces-table .network-management-cell {
+  width: 7rem;
+  text-align: center;
+  overflow-wrap: normal;
+}
+
+.network-interfaces-table tbody th {
+  width: 20%;
+}
+
 .network-page-diagnostics .page-body {
   gap: var(--space-3);
 }
@@ -2349,6 +2398,16 @@ input[type='radio'] {
 /* ---------- narrow viewport: records as cards ---------- */
 
 @media (width <= 56rem) {
+  .network-overview .fact-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .network-interfaces-table tbody th,
+  .network-interfaces-table .network-management-cell {
+    width: auto;
+    text-align: left;
+  }
+
   .record-table,
   .record-table tbody,
   .record-table tr,

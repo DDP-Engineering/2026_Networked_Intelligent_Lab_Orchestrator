@@ -3,6 +3,7 @@ package httpapi
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -13,6 +14,46 @@ import (
 	"nilo.local/nilo/internal/simulation"
 	"nilo.local/nilo/internal/store/sqlite"
 )
+
+func TestManagementAccessPayloadUsesEmptyAddressArrays(t *testing.T) {
+	payload := managementAccessPayload(network.ManagementAccessStatus{
+		Interfaces: []network.ManagementAccessInterface{
+			{
+				Name: "wlan0", Kind: network.KindWiFi, State: network.StateConnected,
+				IPv4: []string{"192.168.1.103/24"},
+			},
+			{
+				Name: "eth1", Kind: network.KindEthernet, State: network.StateDisconnected,
+			},
+		},
+	})
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var decoded struct {
+		Interfaces []struct {
+			IPv4 json.RawMessage `json:"ipv4"`
+			IPv6 json.RawMessage `json:"ipv6"`
+		} `json:"interfaces"`
+	}
+	if err := json.Unmarshal(body, &decoded); err != nil {
+		t.Fatal(err)
+	}
+	want := [][2]string{
+		{`["192.168.1.103/24"]`, `[]`},
+		{`[]`, `[]`},
+	}
+	if len(decoded.Interfaces) != len(want) {
+		t.Fatalf("interfaces = %d, want %d: %s", len(decoded.Interfaces), len(want), body)
+	}
+	for index, entry := range decoded.Interfaces {
+		if string(entry.IPv4) != want[index][0] || string(entry.IPv6) != want[index][1] {
+			t.Fatalf("interface %d addresses = ipv4:%s ipv6:%s, want ipv4:%s ipv6:%s", index, entry.IPv4, entry.IPv6, want[index][0], want[index][1])
+		}
+	}
+}
 
 type noOpManagementFirewall struct{}
 

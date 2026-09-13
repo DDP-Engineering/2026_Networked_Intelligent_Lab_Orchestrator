@@ -14,7 +14,7 @@ schema = 1
 # and must match the category folder this file sits in.
 id = "REQ-UX-b555166c"
 
-title = "Show each Network function only on its focused page"
+title = "Show the Network summary and adapters together on Overview"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
@@ -40,7 +40,7 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-When a Network destination is active, the browser shall render only that destination's function: Overview shows the appliance summary and attention state without configuration tables; Network adapters shows interface state and configuration; Device access shows device-network definitions and their checks; VPN profiles shows profile lifecycle and import; Diagnostics shows network and WireGuard readiness together with interface traffic history; common operation, refusal, rollback and confirmation notices remain reachable on every destination, and Activity remains a separate System page opened through the existing related-activity action.
+When a Network destination is active, the browser shall render Overview with the compact appliance summary and attention state first followed by management-access configuration and the interface inventory, Device access with device-network definitions and checks, VPN profiles with profile lifecycle and import, and Diagnostics with network and WireGuard readiness together with interface traffic history, while common operation, refusal, rollback and confirmation notices remain reachable on every destination and Activity remains a separate System page opened through the related-activity action.
 """
 
 # The observation that settles whether the behavior holds - not a
@@ -54,10 +54,14 @@ When a Network destination is active, the browser shall render only that destina
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "A NetworkPage component matrix renders all five destinations from the same fixture and asserts the required section is present while every unrelated section is absent, verifies statistics are requested only for Diagnostics, and confirms an interface, device-network and VPN action still reaches the existing preview and confirmation path on its owning page; a browser test opens each destination and asserts its heading, focused content and related Activity action."
+verification = "A NetworkPage component matrix renders all four destinations from the same fixture, asserts Overview orders the summary before management access and the interface inventory, asserts each other destination contains only its assigned concern, verifies statistics are requested only for Diagnostics, and confirms interface, device-network and VPN actions still reach their preview and confirmation paths; a browser test opens each destination and asserts its heading, focused content and related Activity action."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
+    "CHANGELOG.md",
+    ".agentic/knowledge/gui-foundation.md",
+    "06_SoftwareDocu/Development_and_Simulation_Flow.md",
+    "06_SoftwareDocu/Network_Operations.md",
     "05_Software/nilo_gui/src/components/shell/AppShell.tsx",
     "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
     "05_Software/nilo_gui/src/components/network/views.ts",
@@ -88,4 +92,4 @@ priority = "high"
 rationale = "Separating navigation without separating content would preserve the long, complicated page the operator asked to remove."
 
 created = 2026-09-04
-updated = 2026-09-04
+updated = 2026-09-12

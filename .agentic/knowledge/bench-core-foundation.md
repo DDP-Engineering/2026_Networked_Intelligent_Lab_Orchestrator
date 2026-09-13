@@ -437,16 +437,38 @@ mutates. Creates also persist a deterministic created ID. Startup can therefore
 settle a checkpoint-less create from durable inventory and can fail and restore
 another pre-helper attempt without refusing to start. If the helper is prepared
 but its checkpoint cannot be recorded, Bench Core restores it with a fresh
-bounded context before settling the operation. Adopted helper state retains both
-IDs until reconciliation settles. A restored helper phase restores the device
-store and cached claims; an unverified recovery keeps the union reserved.
+bounded context before settling the operation. If that restoration fails or
+cannot be observed, the operation remains durably unfinished and owns the
+connectivity interlock after restart. Adoption restores that interlock for
+every unfinished connectivity state (`applying`, confirmation, rolling back,
+or rollback failed) while the helper still owns recovery. Runtime maintenance
+checks a matching helper record before the checkpoint-less fallback, including
+when the core could not persist its checkpoint ID. Nonterminal helper phases
+retain the interlock; an unverified restoration requires a matching restored
+phase to clear it. Adopted helper
+state retains both IDs until reconciliation settles. A restored helper phase
+restores the device store and cached claims; an unverified recovery keeps the
+union reserved.
+Periodic reconciliation preserves the same fail-closed order as startup:
+operation recovery must succeed before management reconciliation, and
+management reconciliation must succeed before device forwarding is refreshed.
 Simulation rollback also restores through the device manager so its
 cached claims match the restored store. Virtual interfaces and
 local device-network ingress do not claim a physical role. Unknown roles are
 rejected.
 
 Management configuration persists `{adapter_id,last_known_name}` objects in the
-existing JSON columns and dual-decodes legacy name arrays. Startup attaches the
+existing JSON columns and dual-decodes legacy name arrays. The effective
+firewall allowlist and HTTPS destination gate admit only observed
+interfaces matching those bindings. An absent physical adapter retains its
+role claim, but its last-known name cannot admit a replacement adapter. Distinct
+physical bindings may share a last-known name. Name-only updates retain an absent
+binding while another adapter uses that name; an unambiguous selection permits
+its removal. Inspection receives change parameters without process-local recovery
+correlation, while apply retains that correlation. The
+typed firewall request supports an empty effective list to deny new management
+connections when all saved interfaces disappear; administrator configuration
+still requires a selection. Startup attaches the
 device store without forwarding, adopts and reconciles unfinished device
 recovery, then resolves management bindings. It gives persisted device intent
 precedence only when another usable management route survives, applies the safe
@@ -456,7 +478,9 @@ typed collisions to the secret-free 409
 `network_interface_role_conflict` envelope. Management transition diagnostics
 persist a fixed outcome code and safe adapter/resource labels alongside the
 console detail; legacy plain details still load, while unknown typed outcomes
-are not published as browser metadata.
+are not published as browser metadata. The management-status mapper normalizes
+every interface's absent IPv4 and IPv6 observations to empty JSON arrays, so a
+disconnected or addressless adapter remains valid strict-client inventory.
 
 ## Management-eligible interfaces (2026-09-12, TASK-2873801a)
 

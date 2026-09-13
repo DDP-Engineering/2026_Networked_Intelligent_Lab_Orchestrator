@@ -55,7 +55,6 @@ export const en = {
   'nav.network': 'Network',
   'nav.network.overview': 'Overview',
   'nav.network.overviewTab': 'Network overview',
-  'nav.network.adapters': 'Network adapters',
   'nav.network.deviceAccess': 'Device access',
   'nav.network.vpn': 'VPN profiles',
   'nav.network.diagnostics': 'Diagnostics',
@@ -929,10 +928,11 @@ export const en = {
   'network.management.body':
     'Choose the interface names that may accept NILO HTTPS. Addresses are observed state and may change.',
   'network.management.refresh': 'Refresh interfaces',
+  'network.management.unreadable': 'Management access is unavailable.',
   'network.management.enabled': 'Management access',
   'network.management.toggle': 'Allow management access on {name}',
   'network.management.current': 'current browser path',
-  'network.management.apply': 'Apply interface allowlist',
+  'network.management.apply': 'Apply management access',
   'network.management.noUsable':
     'Keep at least one connected interface with an address enabled. An empty or unusable allowlist cannot be applied.',
   'network.management.currentWarning': 'You are disabling the interface in use',
@@ -964,6 +964,8 @@ export const en = {
     'The proposed change and its automatic recovery both failed.',
   'network.management.outcome.automaticRestored':
     'The unconfirmed change was restored automatically.',
+  'network.role.deviceSummary':
+    'Device side: {name}. Release assignment before enabling management.',
   'network.role.deviceUnavailable':
     'Assigned as the device-side adapter for {name}. Remove that assignment before enabling management access here.',
   'network.role.managementUnavailable':

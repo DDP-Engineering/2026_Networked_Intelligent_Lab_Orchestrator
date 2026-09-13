@@ -25,7 +25,9 @@ func renderManagementAccess(configuration network.ManagementAccessConfiguration)
 	// pending response. The outer HTTP gate checks every request again, so a
 	// keep-alive connection cannot bypass a newly disabled interface.
 	fmt.Fprintf(&script, "\t\tct state established,related tcp dport %d accept\n", configuration.Port)
-	fmt.Fprintf(&script, "\t\tiifname { %s } tcp dport %d accept\n", quotedInterfaceSet(configuration.Interfaces), configuration.Port)
+	if len(configuration.Interfaces) > 0 {
+		fmt.Fprintf(&script, "\t\tiifname { %s } tcp dport %d accept\n", quotedInterfaceSet(configuration.Interfaces), configuration.Port)
+	}
 	fmt.Fprintf(&script, "\t\ttcp dport %d drop\n", configuration.Port)
 	script.WriteString("\t}\n}\n")
 	return script.String()

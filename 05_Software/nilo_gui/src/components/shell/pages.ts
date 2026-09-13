@@ -66,15 +66,6 @@ const CORE_PAGES: PageDescriptor[] = [
     available: true,
   },
   {
-    id: 'network:adapters',
-    parentId: 'network',
-    cluster: 'core',
-    icon: 'settings',
-    titleKey: 'nav.network.adapters',
-    networkView: 'adapters',
-    available: true,
-  },
-  {
     id: 'network:device-access',
     parentId: 'network',
     cluster: 'core',

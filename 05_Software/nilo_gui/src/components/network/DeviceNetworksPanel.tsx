@@ -93,7 +93,8 @@ function emptyForm(
     (entry) => !blockedDeviceAdapters.has(entry.adapterId.toLowerCase()),
   );
   const device = available[1] ?? available[0];
-  const local = adapters.find((entry) => entry.adapterId !== device?.adapterId) ?? adapters[0];
+  const local =
+    adapters.find((entry) => entry.adapterId !== device?.adapterId) ?? adapters[0];
   return {
     name: '',
     location: '',

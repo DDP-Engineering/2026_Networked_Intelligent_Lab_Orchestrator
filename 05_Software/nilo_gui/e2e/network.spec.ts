@@ -114,6 +114,15 @@ async function applyPreview() {
 
 test('keeps opposite-role adapters visible and explains sequential repurposing', async () => {
   await page.context().clearCookies();
+  await page.route('**/api/v1/network/status', async (route) => {
+    const response = await route.fetch();
+    const body = await response.json();
+    body.interfaces[0].ipv6 = [
+      'fe80::2c78:a86:2f1c:24ae/64',
+      'fd11:5ee:bad:c0de::acd:9411/128',
+    ];
+    await route.fulfill({ json: body });
+  });
   // The development topology is intentionally simulation-only and therefore
   // omits the appliance management panel. This presentation fixture supplies
   // an appliance status together with the role-aware management response.
@@ -178,6 +187,11 @@ test('keeps opposite-role adapters visible and explains sequential repurposing',
         tls_missing: [],
         confirm_by: null,
         detail: 'Removed a conflicting management binding for wlan0.',
+        outcome: {
+          code: 'role_conflict_recovered',
+          interface: 'wlan0',
+          resource_name: 'PLC line',
+        },
         current_interface: 'enp1s0',
       },
     });
@@ -216,7 +230,7 @@ test('keeps opposite-role adapters visible and explains sequential repurposing',
 
   await page
     .getByRole('navigation')
-    .getByRole('button', { name: 'Network adapters', exact: true })
+    .getByRole('button', { name: 'Overview', exact: true })
     .click();
   const management = page.getByRole('region', {
     name: 'Management access interfaces',
@@ -224,12 +238,50 @@ test('keeps opposite-role adapters visible and explains sequential repurposing',
   await expect(
     management.getByRole('checkbox', { name: 'Allow management access on wlan0' }),
   ).toBeDisabled();
-  await expect(management.getByText(/device-side adapter for PLC line/i)).toBeVisible();
-  await expect(management.getByText(/Last known-good access recovered/i)).toBeVisible();
+  await expect(management.getByText(/Device side: PLC line/i)).toBeVisible();
+  await expect(management.getByRole('status')).toHaveCount(1);
+  await expect(page.getByRole('table')).toHaveCount(1);
+  await expect(
+    management.getByText(
+      /Management access was removed from wlan0 because PLC line owns its device role/i,
+    ),
+  ).toBeVisible();
   await expect(
     management.getByText(/Removed a conflicting management binding for wlan0/i),
-  ).toBeVisible();
+  ).toHaveCount(0);
 
+  const originalViewport = page.viewportSize()!;
+  for (const viewport of [
+    { width: 1366, height: 768 },
+    { width: 1024, height: 600 },
+    { width: 800, height: 480 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await expect(management.getByText('fd11:5ee:bad:c0de::acd:9411/128')).toBeVisible();
+    const layout = await management.evaluate((region) => {
+      const table = region.querySelector('table')!;
+      const states = [...table.querySelectorAll('.network-state')];
+      return {
+        fits: table.scrollWidth <= region.clientWidth + 1,
+        statesFit: states.every((state) => {
+          const cell = state.parentElement!;
+          return (
+            getComputedStyle(state).whiteSpace === 'nowrap' &&
+            state.getBoundingClientRect().right <= cell.getBoundingClientRect().right
+          );
+        }),
+      };
+    });
+    expect(layout).toEqual({ fits: true, statesFit: true });
+    if (process.env.NILO_NETWORK_REVIEW === '1') {
+      await page.screenshot({
+        path: resolve('test-results', `network-unified-${viewport.width}.png`),
+      });
+    }
+  }
+  await page.setViewportSize(originalViewport);
+
+  await page.unroute('**/api/v1/network/status');
   await page.unroute('**/api/v1/network/management-access*');
   await page.unroute('**/api/v1/status');
   await page.context().clearCookies();
@@ -347,7 +399,7 @@ test('reports simulated changes, restores them and permits another change', asyn
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page
     .getByRole('navigation')
-    .getByRole('button', { name: 'Network adapters', exact: true })
+    .getByRole('button', { name: 'Overview', exact: true })
     .click();
   await rowAction('enp1s0', 'Disable enp1s0');
   await applyPreview();
@@ -437,7 +489,7 @@ test('unconfirmed changes restore automatically and real sampling produces histo
   test.setTimeout(180_000);
   await page
     .getByRole('navigation')
-    .getByRole('button', { name: 'Network adapters', exact: true })
+    .getByRole('button', { name: 'Overview', exact: true })
     .click();
   await rowAction('enp1s0', 'Disable enp1s0');
   await applyPreview();
