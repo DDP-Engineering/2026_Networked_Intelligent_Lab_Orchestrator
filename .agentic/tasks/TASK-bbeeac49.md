@@ -9,7 +9,7 @@ SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
 
 # TASK-bbeeac49 - Document first-boot provisioning and commissioning
 
-stage: deliver
+stage: done
 type: change
 path: quick
 interaction: autopilot
@@ -22,11 +22,11 @@ opened: 2026-09-12
 ## Done checklist (current stage)
 
 - [x] validated candidate confirmed unchanged; otherwise returned to validate
-- [ ] validation evidence, diff, exclusions, and outcome presented
-- [ ] delivery confirmed by the human
-- [ ] journal and report included in the delivery commit
-- [ ] agreed outcome delivered, normally a PR
-- [ ] close-out committed after the outcome succeeded, or carried by the
+- [x] validation evidence, diff, exclusions, and outcome presented
+- [x] delivery confirmed by the human
+- [x] journal and report included in the delivery commit
+- [x] agreed outcome delivered, normally a PR
+- [x] close-out committed after the outcome succeeded, or carried by the
       delivery commit where nothing could fail after it
 
 ## Frame
@@ -184,28 +184,52 @@ and recovery material, and a delivery report in the shape of
   advances on the evidence above rather than one green gate command. No new
   failure was introduced.
 
+- 2026-09-13 deliver: delivered. The human committed the whole issue #6
+  candidate as `47f4ad6` "Feature: First-boot management provisioning on
+  eligible interfaces" on `ddp/nilo-first-boot-provisioning`, together with the
+  other work packages and the 0.3.0 version bump. This task contributed the first-boot documentation and delivery report.
+  A per-package split was no longer clean by then - five files had been edited by
+  more than one package, so separate commits would not have built individually -
+  and the human chose one commit over hunk-level staging. Per-package
+  traceability remains in these journals and their requirements. Repository Git
+  authority reserves committing to the human; the agent neither staged,
+  committed nor pushed. No push, PR or release was part of this outcome.
+- 2026-09-13 deliver: hardware evidence recorded for the feature as a whole on
+  the Raspberry Pi `ddp-remote` before the commit. A fresh data directory started
+  with no listener option, derived `eth0`/`eth1`/`wlan0`, excluded the WireGuard
+  device, recorded `provisioning`, bound to the documented stable adapter
+  identities, published `ddp-remote.local` through avahi, and resumed the same
+  allowlist after a restart. Upgrading the real installation recorded
+  `commissioned` and left its identities and `{nilo0, wlan0}` allowlist
+  untouched. The board now runs 0.3.0. Detail is in
+  `06_SoftwareDocu/Local_Hardware_Access.md` section 2.8; this is early bench
+  evidence from a personal board, not a reproducible acceptance gate.
+- 2026-09-13 done: task closed. This close-out line is journal-only and rides
+  with the next commit the human makes.
+
 ## Rulings
 
 
 ## Handoff
 
 
-current: deliver
-status: waiting
-next: present the validated candidate and wait for the human to commit it; repository Git authority forbids the agent committing, staging or pushing
-must_read: .agentic/tasks/TASK-bbeeac49.md, .agentic/steps/6_deliver.md
-blockers: none - the base-branch failures accepted under TASK-2873801a RULING-003 remain open on the branch
+current: done
+status: ready
+next: none - issue #6 is delivered in commit 47f4ad6 and verified on ddp-remote
+must_read: .agentic/tasks/TASK-bbeeac49.md
+blockers: none
 
 ## Stage report
 
-stage: validate
+stage: deliver
 result: completed
-current: deliver
-changed: 6 files - 1 added (07_Delivery/NILO_First_Boot_Provisioning_Verification.md) and 5 modified (06_SoftwareDocu/Network_Operations.md, 06_SoftwareDocu/Development_and_Simulation_Flow.md, 05_Software/nilo_assistant/README.md, CHANGELOG.md, .agentic/context/project.md), plus this journal. The task evolution report describes zero files; see the build deviation
-evidence: documentation only, so no suite could be affected and none was rerun for this task; the last full evidence on this branch is recorded under TASK-38d62913. check --task --strict --run exit 1 on the two accepted pre-existing causes
-issues: no new failure; the accepted base-branch failures are the build-environment manifest test, prettier on DeviceNetworksPanel.tsx and eslint on ManagementAccessPanel.tsx:179
-next: present for delivery; the human commits
-needs_user: yes
+current: done
+changed: delivered in commit 47f4ad6 together with the rest of issue #6 and the 0.3.0 version bump; this task contributed the first-boot documentation and delivery report
+evidence: automated suites green before delivery, recorded in this journal's validate entries; hardware observations on ddp-remote recorded in the deliver entry above and in 06_SoftwareDocu/Local_Hardware_Access.md section 2.8
+issues: the base-branch failures accepted under TASK-2873801a RULING-003 remain open on the branch and still fail CI, as they do on master
+next: none
+needs_user: no
 spec_compliance: approved
 implementation_quality: approved
 review_round: 1
+
