@@ -14,7 +14,7 @@ schema = 1
 # and must match the category folder this file sits in.
 id = "REQ-TEST-74c72bbe"
 
-title = "Verify native and ARM64 build toolchains"
+title = "Verify native and ARM64 build toolchains offline"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
@@ -40,7 +40,11 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-When the build environment is verified, the acceptance command shall report exact tool versions, compile and link native x86-64 and ARM64 C smoke programs with GCC/binutils, build designed Go targets for amd64 and arm64, run the mandatory headless browser gate, and provide an explicit authorized-appliance Sigrok ABI check that cannot be silently skipped.
+When the locked build environment is verified offline, the acceptance command
+shall report exact tool versions, compile and link native x86-64 and ARM64 C
+smoke programs with GCC/binutils, build the designated Go targets for amd64 and
+arm64, and leave privileged appliance-only evidence explicitly pending rather
+than claiming that it ran in the network-disabled container.
 """
 
 # The observation that settles whether the behavior holds - not a
@@ -54,10 +58,10 @@ When the build environment is verified, the acceptance command shall report exac
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "Run the image verification command and assert its inventory, ELF architecture checks, Go target builds, headless browser result, and ARM64 appliance evidence record; missing compiler, linker, browser, target, or appliance evidence leaves the corresponding gate pending or failed rather than passed."
+verification = "Run the offline image verification command and assert its inventory, ELF architecture checks and Go target builds; inspect the resulting evidence and confirm that browser acceptance and the authorized-appliance Sigrok ABI check remain separate named gates whose absent evidence is pending or failed, never passed."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
-affected_paths = ["02_Tools/scripts/verify-build-environment.sh", "02_Tools/tests/build-environment/verify-offline.sh", "02_Tools/tests/build-environment/verify-arm64-abi.sh", "05_Software/nilo_gui/e2e/topology.ts", "05_Software/nilo_gui/playwright.config.ts", "05_Software/scripts/tests/test_build_environment.py"]
+affected_paths = ["02_Tools/scripts/verify-build-environment.sh", "02_Tools/tests/build-environment/verify-offline.sh", "02_Tools/tests/build-environment/verify-arm64-abi.sh", "02_Tools/tests/build-environment/evidence.example.json", "05_Software/scripts/tests/test_build_environment.py"]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
@@ -72,4 +76,4 @@ priority = "normal"   # low | normal | high
 rationale = ""        # why this behavior exists, if not obvious
 
 created = 2026-09-05
-updated = 2026-09-05
+updated = 2026-09-13

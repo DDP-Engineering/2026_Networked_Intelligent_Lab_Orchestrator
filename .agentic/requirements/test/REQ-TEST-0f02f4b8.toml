@@ -41,8 +41,8 @@ requirement = """
 When the Bench Core process behind a connected browser session stops answering
 and later answers again, the integrated browser test shall confirm that the
 interface first presents the backend as unreachable and then, through its own
-retry control and without a page reload or a re-entered token, returns to the
-connected screen.
+retry control and without a page reload or a repeated password sign-in, returns
+to the connected screen with its server-managed session intact.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -59,8 +59,7 @@ Core process it started, activates the interface's refresh control, and
 asserts that the unreachable-backend screen appears; it then starts Bench Core
 again on the same port and data directory, activates the retry control on that
 screen, and asserts that the connected screen returns with the same
-deterministic inventory, without the browser being navigated and without the
-token being entered a second time.
+appliance inventory, without browser navigation or another password sign-in.
 """
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
@@ -84,4 +83,4 @@ priority = "high"   # low | normal | high
 rationale = "A development backend is restarted constantly, so the interface's behavior while it is down and its recovery afterwards are the states a developer meets most often and the ones a mock cannot prove."
 
 created = 2026-09-01
-updated = 2026-09-01
+updated = 2026-09-13

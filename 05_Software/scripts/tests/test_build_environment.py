@@ -669,8 +669,11 @@ class BuildEnvironmentTests(unittest.TestCase):
         self.assertIn("/opt/nilo/cache-seed", source)
         self.assertIn("target=/work/runtime-cache", source)
         self.assertIn(".nilo-seed-", source)
-        topology = (REPOSITORY_ROOT / "05_Software/nilo_gui/e2e/topology.ts").read_text(encoding="utf-8")
-        self.assertIn("process.platform !== 'win32'", topology)
+        topology = (
+            REPOSITORY_ROOT / "05_Software/nilo_gui/e2e/topology.ts"
+        ).read_text(encoding="utf-8")
+        self.assertIn("requireApplianceStage(process.env", topology)
+        self.assertNotIn("process.platform !== 'win32'", topology)
 
     def test_source_identity_accepts_dirty_content_and_ignores_outputs(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -912,12 +915,16 @@ class BuildEnvironmentTests(unittest.TestCase):
         report = json.loads(result.stdout)
         self.assertEqual(set(report), {f"BE-{number:02d}" for number in range(1, 11)})
         self.assertEqual(report["BE-01"]["status"], "passed")
-        self.assertEqual(report["BE-02"]["status"], "passed")
+        self.assertEqual(report["BE-02"]["status"], "pending")
         self.assertIn("verify-materialized-inputs", report["BE-02"]["command"])
-        self.assertIn("784a1d020ef72bd4c567a3f85287e2b72e456f2f7bc28db7c470d0e82579da3f", report["BE-02"]["detail"])
+        lock = json.loads(LOCK.read_text(encoding="utf-8"))
+        self.assertIn(
+            lock["reconstruction"]["manifest_sha256"],
+            report["BE-02"]["detail"],
+        )
         self.assertEqual(report["BE-04"]["status"], "pending")
         self.assertIn("closure-test", report["BE-04"]["detail"])
-        for gate in ("BE-03", "BE-04", "BE-05", "BE-06", "BE-07", "BE-08", "BE-09"):
+        for gate in ("BE-02", "BE-03", "BE-04", "BE-05", "BE-06", "BE-07", "BE-08", "BE-09"):
             self.assertIn(report[gate]["status"], {"pending", "failed"})
 
     def test_reconstruction_acquires_base_and_frontend_images_by_digest(self) -> None:

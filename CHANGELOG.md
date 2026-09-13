@@ -3,6 +3,25 @@
 All notable changes to NILO are documented in this file. The repository carries
 one project-level Semantic Version, declared in the root `VERSION` file.
 
+## [Unreleased]
+
+## [0.3.1] - 2026-09-13
+
+### Changed
+
+- Replaced the simulated integrated-browser topology with a disposable
+  appliance-profile stage exercising the production GUI, NetworkManager,
+  privileged network helper, firewall, and WireGuard paths.
+- Aligned browser acceptance, repository validation, and development guidance
+  with production appliance behavior and Raspberry Pi hardware acceptance.
+
+### Fixed
+
+- Dense and zero-value network traffic samples remain pointer-selectable and
+  keyboard accessible without overlapping interactive chart targets.
+- Appliance browser credentials are kept out of command lines and redacted from
+  runner errors and retained diagnostics.
+
 ## [0.3.0] - 2026-09-13
 
 ### Added

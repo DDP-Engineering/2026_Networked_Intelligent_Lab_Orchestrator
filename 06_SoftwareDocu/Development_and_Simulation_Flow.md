@@ -789,29 +789,25 @@ Run the complete focused frontend gate with:
 
 ### 8.3 Integrated browser test
 
-The browser-to-WSL2 path is proven by one command. It needs no running topology
-and no token: it builds and starts its own Bench Core inside the distribution on
-the simulation profile, starts its own interface server on Windows, issues its
-own development token, and drives a real browser against them.
-
-Install the pinned browser once — the combined development bootstrap in section
-8 already does this — and then run the suite:
+The browser-to-appliance path is proven by one command. It needs no running
+topology and no token: the stage builds the production interface and binaries,
+starts a real root helper and an unprivileged Bench Core on the appliance
+profile, and drives Chromium through the production management ingress.
 
 ```powershell
-.\02_Tools\bootstrap\bootstrap-browser.ps1
-.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run test:e2e
+wsl.exe -- sh /mnt/<drive>/<checkout>/02_Tools/tests/appliance/check.sh
 ```
 
-The browser binaries live under the ignored
-`02_Tools/runtime/windows-x86_64/playwright/`, beside the other pinned runtimes.
-No persistent host environment is changed and a test run downloads nothing.
+On native Linux run `./02_Tools/tests/appliance/check.sh`. The stage image pins
+Node.js and Playwright from `02_Tools/toolchain.versions`, restores the GUI
+lockfile and carries Chromium. Direct `npm run test:e2e` is an internal stage
+command and refuses to run when the appliance prerequisites are absent.
 
 `e2e/bench-core.spec.ts` covers, in one browser session against one backend:
 the project version before sign-in; human password sign-in; the authenticated
-status request completing; the persistent simulation identity; the reported
-`simulation` profile and `healthy` service status; the deterministic integration
-inventory; the deterministic device inventory with the integration that owns
-each device; Bench Core presented as unreachable once its process is stopped;
+status request completing; the reported `appliance` profile and `healthy`
+service status; the valid empty integration and device inventories of a fresh
+appliance; Bench Core presented as unreachable once its process is stopped;
 and recovery to the connected screen through the interface's own retry control,
 with no page reload or second sign-in.
 
@@ -823,14 +819,15 @@ that the Network pages report nothing they were not told, that
 a theme and a language survive a real reload together with the session, and that
 a narrow viewport narrows the navigation without clipping or naming nothing.
 
-Management-access component and backend acceptance tests separately cover the
+The browser and backend acceptance tests together cover the
 administrator interface selector, the explicit warning before removing the
 current browser path, stable local/VPN URLs, dynamic DHCP address refresh,
 independent Wi-Fi/WireGuard loss and return, pending confirmation, restart and
 reboot recovery, certificate SAN warnings, legacy `--bind`, and rejection before
-application handlers run. The isolated Linux network test is still the required
-evidence for the real nftables/helper boundary; Raspberry Pi radio, WireGuard
-and reboot behavior remain hardware acceptance.
+application handlers run. The stage drives Chromium from a dedicated network
+namespace through the management veth, so the real listener and nftables/helper
+boundary are in the browser path. Raspberry Pi radio and reboot behavior remain
+hardware acceptance.
 
 `e2e/field-display.spec.ts` covers the compact field interface at `1920x1080`,
 `1366x768`, `1024x600` and `800x480` in the light and dark themes: the labelled
@@ -859,21 +856,12 @@ disable the last enabled administrator; the Authentication entry a Viewer does
 not get; and a sign-out that a reload confirms was server-side. Nothing in it is
 mocked: every refusal is Bench Core's own decision over its own database.
 
-It is headless and retains nothing: no trace, no video, no screenshot, no
-database, and no token. To watch a failure, run the same suite with the browser
-visible:
-
-```powershell
-.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run test:e2e:headed
-```
-
-Each run takes loopback ports that are free at the moment it starts, so it does
-not collide with a `nilo-dev.ps1` topology already using the defaults, and it
-keeps its Bench Core database and artifacts in a fresh temporary directory under
-`$HOME/.local/state/nilo-e2e/` inside the distribution — never under `/mnt/`. At
-the end of the run, passing or failing, it stops only the processes it started
-and removes only that directory. It never frees a port and never matches a
-process by name.
+It is headless and retains nothing: no trace, video, screenshot, database,
+password or token. Stage output and the failing assertion are the diagnostics.
+Each run keeps its Bench Core database and artifacts in a fresh
+`/tmp/nilo-e2e-*` directory inside the disposable container. At the end of the
+run it stops only its own processes within bounded SIGTERM/SIGKILL deadlines and
+removes only that directory. It never frees a port or matches a process by name.
 
 That removal is confirmed rather than assumed: the release script checks the
 directory is absent afterwards instead of trusting the removal command's exit
@@ -882,14 +870,10 @@ directory that may survive. A distribution that could not delete the database
 has not deleted it, and reporting that as a clean pass would be the opposite of
 the guarantee.
 
-Every secret the suites type — the development token and the fixture passwords —
-reaches the browser only through a harness method that redacts the value out of
-anything the action throws, and the administrator's password is written to the
-bootstrap command's standard input rather than its command line.
-
-The development token is held in one private field with no accessor and reaches
-the browser only through the harness method that types it into a supplied field.
-That method redacts the value out of anything the action throws, which matters
+Every fixture password reaches the browser only through a harness method that
+redacts the value out of anything the action throws, and the administrator's
+password is written to the bootstrap command's standard input rather than its
+command line. That redaction matters
 because a browser action failing *after* its locator has resolved repeats its
 argument in the error message — and that message reaches the console reporter
 and the error-context note whether or not trace, video, and screenshot are off.
@@ -902,17 +886,11 @@ suite. That entry point is for visible manual development windows: it owns no
 process, records no identifier, and signals nothing, so it could neither stop
 the backend mid-run nor guarantee it cleaned up only its own work.
 
-Select the distribution explicitly when more than one is installed:
-
-```powershell
-$env:NILO_E2E_DISTRIBUTION = 'Ubuntu-24.04'
-```
-
-A missing prerequisite — no WSL2 distribution, a checkout the distribution
-cannot see, or no repository-local browser — fails the run and names the
-repository command that provides it. The suite never skips itself, because a
-skipped browser test reported as a pass would claim a browser reached Bench Core
-under WSL2 when nothing was observed.
+A missing prerequisite — Linux, an answering Docker or Podman daemon, `ip`, the
+running kernel's module inventory, or a checkout visible to WSL2 — fails the run
+and names the remedy. The suite never skips itself, because a skipped browser
+test reported as a pass would claim a browser reached an appliance when nothing
+was observed.
 
 ## 9. Verification levels
 
@@ -921,7 +899,7 @@ under WSL2 when nothing was observed.
 | GUI unit/component | Windows, mock API | Rendering, interaction, accessibility, and deterministic UI states |
 | GUI contract | Windows | Frontend requests and responses conform to versioned API schemas |
 | Backend unit/contract | WSL2 | Go services, Python SDK, protocol, packages, persistence, and failure handling |
-| Integrated browser E2E | Windows browser plus WSL2 backend | Real GUI-to-core-to-simulated-runner workflows |
+| Integrated browser E2E | Linux appliance stage, native or under WSL2 | Real built GUI-to-appliance-core, NetworkManager, firewall and WireGuard workflows |
 | Linux system test | Linux VM | Installation, systemd, permissions, networking, firewall, and service recovery |
 | ARM64 smoke | ARM64 emulator or native runner | Build, packaging, startup, and dependency architecture compatibility |
 | Hardware-in-the-loop | Raspberry Pi and real equipment | Actual device discovery, I/O, flashing, timing, cleanup, and safety behavior |
@@ -948,15 +926,19 @@ The existing Windows foundation gate is:
 `nilo serve-foundation-check` remains a short-lived composition check. `nilo
 serve --profile simulation` is the long-running development server.
 
-On a Windows host the repository gate runs that browser test after the GUI
-component tests and the production build, so the browser-to-WSL2 simulation path
-is repository-gated evidence rather than a manual check recorded in a task
-journal. A missing prerequisite fails the gate and names its remedy; it is never
-skipped and then presented as proof.
+On a Windows host the repository gate routes to the WSL2 appliance stage after
+the GUI component tests and production build. The stage rebuilds the interface
+inside its image and runs the browser against the production appliance profile,
+so this is repository-gated evidence rather than a manual observation. A
+missing prerequisite fails the gate and names its remedy; it is never skipped
+and then presented as proof. The gate selects the only installed WSL
+distribution automatically. If the host has several, set
+`NILO_WSL_DISTRIBUTION` to the distribution prepared with
+`bootstrap-development.ps1 -Distribution <name>`.
 
-That gate proves the simulated path only. It certifies nothing about Raspberry
-Pi hardware, real device I/O, or PLC flashing, all of which remain the later
-Linux VM, ARM64, and hardware-in-the-loop gates in section 9.
+That gate certifies no Raspberry Pi hardware, real instrument I/O, or PLC
+flashing. Those remain the later ARM64 and hardware-in-the-loop gates in section
+9 and use the equipment described in [Local Hardware Access](Local_Hardware_Access.md).
 
 ## 11. Relationship to product delivery
 

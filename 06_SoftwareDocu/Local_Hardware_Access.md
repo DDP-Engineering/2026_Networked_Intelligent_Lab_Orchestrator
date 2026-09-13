@@ -216,7 +216,7 @@ selection would have stranded the board until somebody reached it physically.
 
 ### 2.8 First-boot provisioning check (2026-09-13)
 
-The board runs NILO 0.3.0 from `/var/lib/nilo` with `nilo.service` and
+The board runs NILO 0.3.1 from `/var/lib/nilo` with `nilo.service` and
 `nilo-nethelper.service` active, reachable at `https://10.205.148.11:8443` over
 the tunnel as before. Nothing from the first-boot check is left on it.
 

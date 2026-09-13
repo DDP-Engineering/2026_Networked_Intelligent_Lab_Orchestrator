@@ -1,0 +1,54 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-TEST-6072fc2d"
+
+title = "Leave the developer host network untouched by the appliance stage"
+
+status = "active"
+
+requirement = """
+The appliance verification stage shall confine every network namespace,
+adapter and firewall rule it creates, configures or removes to a disposable
+engine network it created for that run and removes afterwards, leaving the
+developer host's own interface list and default route as they were.
+"""
+
+verification = """
+A run records the host's interface list and default route before and after a
+full stage run and asserts both are identical, and asserts that the engine
+network the stage created is absent afterwards. A source assertion over the
+stage scripts confirms every adapter and firewall operation names the stage's
+own container or its created network, and that no operation names a host
+interface or the host network.
+"""
+
+affected_paths = [
+    "02_Tools/tests/appliance/check.sh",
+    "02_Tools/tests/appliance/run.sh",
+    "02_Tools/tests/network/network-up.sh",
+    "05_Software/scripts/tests/test_appliance_stage.py",
+]
+
+linked_tests = [
+    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceHostIsolationTests::test_entry_point_creates_and_removes_its_own_engine_network",
+    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceHostIsolationTests::test_cleanup_does_not_remove_a_container_that_create_never_created",
+    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceHostIsolationTests::test_entry_point_compares_host_interfaces_and_route_around_the_run",
+    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceHostIsolationTests::test_container_side_touches_no_host_interface",
+    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceHostIsolationTests::test_container_side_refuses_to_run_outside_its_container",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "A verification stage that can take the developer's own connection down is a stage people stop running, and it would run on the same machine they need to stay online."
+
+created = 2026-09-12
+updated = 2026-09-13

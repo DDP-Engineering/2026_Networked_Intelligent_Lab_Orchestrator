@@ -14,7 +14,7 @@ schema = 1
 # and must match the category folder this file sits in.
 id = "REQ-PLAT-59993b78"
 
-title = "Isolate each browser end-to-end run from the developer topology"
+title = "Isolate each browser acceptance run inside the appliance stage"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
@@ -38,11 +38,10 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-Each browser end-to-end run shall take the loopback ports it binds from ports
-that are free at the moment it starts and place the Bench Core data directory
-it creates in a fresh temporary directory on the WSL Linux filesystem, so that
-it neither collides with a development topology already running on the default
-ports nor writes runtime state to a Windows-mounted filesystem.
+Each browser acceptance run shall reserve its Bench Core port at startup, place
+helper state, runtime data and TLS material below a fresh temporary directory
+inside the appliance-stage Linux filesystem, and admit its browser only through
+the stage's isolated management ingress.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -54,26 +53,27 @@ ports nor writes runtime state to a Windows-mounted filesystem.
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
 verification = """
-A test asserts that the harness obtains each port by binding a loopback socket
-to an operating-system assigned port and releasing it rather than using a
-constant, that the two chosen ports differ, and that the data directory it
-requests is refused when the distribution's home directory resolves under a
-Windows drive mount; a run performed while the ordinary development topology
-occupies the default backend and interface ports is observed to pass without
-disturbing it.
+A test asserts that the harness obtains its port from an operating-system
+assigned reservation rather than a constant, creates a fresh appliance layout
+with separate helper, data and TLS paths, and takes the browser namespace and
+management interface from the stage. The appliance run is observed to remove
+its temporary state and namespace on both success and failure.
 """
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
     "05_Software/nilo_gui/e2e/topology.ts",
     "05_Software/nilo_gui/e2e/topology.test.ts",
+    "02_Tools/tests/appliance/run.sh",
+    "05_Software/scripts/tests/test_appliance_stage.py",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/e2e/topology.test.ts::loopback port reservation",
-    "05_Software/nilo_gui/e2e/topology.test.ts::WSL-native runtime state",
+    "05_Software/nilo_gui/e2e/topology.test.ts::reserving loopback ports",
+    "05_Software/nilo_gui/e2e/topology.test.ts::the appliance layout",
+    "05_Software/scripts/tests/test_appliance_stage.py",
 ]
 
 # --- optional below this line ---
@@ -85,4 +85,4 @@ priority = "normal"   # low | normal | high
 rationale = "A developer runs the gate while their own topology is up; fixed ports would make the two fight, and a live SQLite database on a Windows drive mount is exactly the arrangement the development flow forbids."
 
 created = 2026-09-01
-updated = 2026-09-01
+updated = 2026-09-13

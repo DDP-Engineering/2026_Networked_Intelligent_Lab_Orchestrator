@@ -29,7 +29,8 @@ and the environment wrappers change `PATH` only for their child process.
   generation `noble-20260905-01`, defined by `02_Tools/containers/build/` and
   run through Docker Engine or Podman. It carries the pinned language tools,
   native and ARM64 cross toolchains, offline dependency caches and headless
-  Chromium.
+  Chromium. Its network-disabled suite stops at GUI component/build checks;
+  browser acceptance runs separately in the privileged appliance-stage image.
 
 ## Setup
 
@@ -42,7 +43,9 @@ Host-local interactive development:
 ```
 
 It verifies the selected WSL2 distribution, bootstraps the Windows and Linux
-toolchains, restores the GUI lockfile and installs the pinned browser.
+toolchains, restores the GUI lockfile and installs the pinned Windows browser
+for host-local manual GUI work. The appliance acceptance stage supplies its own
+browser.
 `bootstrap.ps1` and `bootstrap.sh` prepare one host alone;
 `bootstrap-frontend.ps1` and `bootstrap-browser.ps1` are the focused steps.
 `-Offline` on PowerShell and `--offline` on POSIX forbid downloads and require
@@ -182,9 +185,12 @@ checkout mounted read-only; declared artifacts are published to the ignored
 The router in `05_Software/scripts/aegis_test.py` discovers every Go module and
 locked Python project below `05_Software`, and on Windows the frontend project
 as well. `full` runs the script tests, `go test ./...`, each Python suite
-through `uv run pytest`, then the GUI `test:ci`, `build` and `test:e2e`;
-impacted routing is deliberately conservative and runs the same set. `lint`
-runs `go vet`, Python compilation, and the GUI `format:check` and `lint`.
+through `uv run pytest`, then GUI `test:ci` and `build`, followed by
+`02_Tools/tests/appliance/check.sh` under WSL2. That stage rebuilds the GUI and
+runs Playwright against an appliance-profile core; direct browser execution on
+the host is not acceptance evidence. Impacted routing is deliberately
+conservative and runs the same set. `lint` runs `go vet`, Python compilation,
+and GUI `format:check` and `lint`.
 
 Other entry points:
 
@@ -193,9 +199,19 @@ Other entry points:
   CGO-free builds for Linux ARM64, Linux x86_64 and Windows x86_64.
 - `02_Tools/env/with-build-environment.ps1 test` (or the `.sh` wrapper) - the
   authoritative offline gate: locked restores, lint, unit, contract and build
-  gates, amd64 and ARM64 checks, and headless Playwright.
+  gates plus amd64 and ARM64 checks. It cannot run the privileged browser stage.
 - `02_Tools/tests/build-environment/verify-host-isolation.sh` - proves from the
   host side that a container run changed no guarded dependency tree.
+- `02_Tools/tests/appliance/check.sh` - the appliance verification stage: Bench
+  Core on `--profile appliance` with generated TLS material, a built interface
+  directory and the real root helper, against adapters a real NetworkManager
+  detected in disposable container networks. Chromium reaches the management
+  listener from a dedicated network namespace. Live journeys exercise real
+  network sampling and WireGuard lifecycle behavior; explicitly labelled
+  presentation fixtures cover bounded UI-only states. Each specification owns
+  a fresh backend. Linux and WSL2 only; a missing container engine or an
+  unsupported host is named and refused rather than skipped, and the host's
+  interfaces and default route are compared around every run.
 - `02_Tools/tests/network/check.sh` - opt-in system test in a disposable
   NetworkManager container; it never joins the host network or system bus.
 - `02_Tools/scripts/check-sigrok-integration.py` - opt-in smoke against an

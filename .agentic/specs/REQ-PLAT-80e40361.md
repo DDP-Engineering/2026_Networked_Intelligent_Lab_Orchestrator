@@ -39,11 +39,13 @@ or tag-only base causes a validation error before the engine build.
 ## Acceptance
 
 The definition check, clean input materialization and network-disabled build,
-exact inventory, native and ARM64
-compiler/linker smokes, Go cross builds, offline dependency restoration, and
-headless browser gate all pass. Two independent clean builds are compared;
-until their OCI digests match, documentation says locked repeatable rather than
-bit-reproducible.
+exact inventory, native and ARM64 compiler/linker smokes, Go cross builds, and
+offline dependency restoration, component tests, and production GUI build all
+pass. Browser acceptance is a separate privileged appliance-stage gate because
+the network-disabled build environment cannot provide its real NetworkManager,
+helper, and management-ingress topology. Two independent clean builds are
+compared; until their OCI digests match, documentation says locked repeatable
+rather than bit-reproducible.
 
 ## Assumptions and open decisions
 

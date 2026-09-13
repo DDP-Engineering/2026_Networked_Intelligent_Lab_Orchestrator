@@ -193,9 +193,11 @@ Outputs remain editable through UID/GID mapping.
 `tests/build-environment/verify-host-isolation.sh` proves this from the host
 side after every full verification: it fingerprints the guarded dependency
 trees, drops a host-owned sentinel in each, runs the container operations that
-previously mutated them, and fails closed on any difference. The mandatory test command restores locked
-Go, Python, npm, and Chromium inputs offline, runs lint/unit/contract/build
-gates, performs amd64 and ARM64 Go/C checks, and runs Playwright headlessly.
+previously mutated them, and fails closed on any difference. The mandatory test
+command restores locked Go, Python, npm, and Chromium inputs offline, runs
+lint/unit/contract/build gates, and performs amd64 and ARM64 Go/C checks.
+Browser acceptance runs separately in the privileged appliance stage described
+below.
 
 ### Export, storage, and replicas
 
@@ -360,34 +362,28 @@ PowerShell script execution policy.
 
 ## Browser for the integrated browser test
 
-The integrated browser test drives one pinned browser engine, Chromium. Its
-binaries are a repository-local runtime like every other pinned tool, installed
-below `runtime/windows-x86_64/playwright/` by:
+The acceptance browser gate runs only in the appliance verification stage:
 
-```powershell
-.\02_Tools\bootstrap\bootstrap-browser.ps1
+```sh
+./02_Tools/tests/appliance/check.sh
 ```
 
-The combined development bootstrap invokes this step automatically, after the
-locked frontend restore it depends on. `env/with-tools.ps1` points
-`PLAYWRIGHT_BROWSERS_PATH` at that directory for its child process only, so
-nothing is written to the per-user cache the browser package would otherwise
-choose, and the frontend restore additionally forbids browser downloads of its
-own in case a future package version reintroduces an install hook. An
-already-installed browser is left alone, so a test run downloads nothing;
-`-Offline` refuses to download and requires the directory to be populated
-already.
+From Windows, the repository gate invokes that script through the prepared WSL2
+distribution. It selects the only installed distribution automatically; when
+several are installed, set `NILO_WSL_DISTRIBUTION` to the same distribution
+prepared by `bootstrap-development.ps1 -Distribution <name>`. The
+stage image pins Node.js and Playwright from `toolchain.versions`, restores the
+GUI's exact lockfile, and installs Chromium. It then builds the production GUI
+and serves it from Bench Core's appliance-profile HTTPS origin. Chromium enters
+through an isolated network namespace and the real management-interface
+firewall. Direct `npm run test:e2e` is an internal stage command and refuses to
+run without the appliance-stage environment.
 
-The test package itself is pinned by exact version in the GUI `package.json` and
-lockfile. Run the suite with:
-
-```powershell
-.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run test:e2e
-```
-
-That suite starts and stops its own short-lived Bench Core and interface
-processes. It does not use `scripts/nilo-dev.ps1`, which owns no process by
-design. See `06_SoftwareDocu/Development_and_Simulation_Flow.md`, section 8.3.
+The Windows repository-local Chromium installed by
+`bootstrap/bootstrap-browser.ps1` remains useful for manual frontend work, but
+it is not evidence for the acceptance gate. See
+`02_Tools/tests/appliance/README.md` and
+`06_SoftwareDocu/Development_and_Simulation_Flow.md`, section 8.3.
 
 ## One-command development lifecycle
 
@@ -467,8 +463,9 @@ drive mount is refused and nothing is started.
   checkout; `-Offline` is forwarded to every step.
 - `bootstrap/bootstrap-frontend.ps1` restores the committed GUI lockfile with
   the pinned Windows Node.js and repository-local npm cache.
-- `bootstrap/bootstrap-browser.ps1` installs the pinned browser the integrated
-  browser test drives, below the ignored platform runtime directory.
+- `bootstrap/bootstrap-browser.ps1` installs the pinned browser used for
+  optional host-local interface diagnosis below the ignored platform runtime
+  directory; appliance acceptance supplies its own browser image.
 - `scripts/doctor-wsl.ps1` verifies the WSL2 kernel, Windows-to-WSL repository
   mapping, and the pinned Linux toolchain.
 - `lib/Wsl.ps1` centralizes checked WSL invocation and path translation.

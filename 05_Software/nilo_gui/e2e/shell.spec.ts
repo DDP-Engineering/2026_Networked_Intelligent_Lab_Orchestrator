@@ -4,7 +4,7 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { DevelopmentTopology, withRedactedSecret } from './topology';
 
 /**
- * The redesigned shell, in a real browser against a real Bench Core under WSL2.
+ * The redesigned shell, in a real browser against an appliance-stage core.
  *
  * What only a browser can settle is here: that the header really is one row,
  * that a theme and a language survive an actual page reload, and that the
@@ -123,35 +123,37 @@ test('reports the appliance network state the backend actually served', async ()
   ).toBeVisible();
 
   // Overview states where NILO is reachable before the focused pages add detail.
+  // The address is the one the stage's own adapter carries, read back through
+  // Bench Core rather than asserted from a catalog.
   await expect(page.getByRole('region', { name: 'Overview' })).toContainText(
-    'enp1s0 · 192.168.10.24/24',
+    'eth0 · 192.0.2.2/24',
   );
   await page
     .getByRole('navigation')
     .getByRole('button', { name: 'Overview', exact: true })
     .click();
 
-  // Bench Core now serves the simulated catalog on /api/v1/network/status, so
-  // the page reports what it was given rather than saying nothing is available.
+  // Bench Core serves the adapters NetworkManager detected, so the page reports
+  // what it was given rather than saying nothing is available.
   await expect(page.getByRole('table', { name: 'Interfaces' })).toBeVisible();
   // The row, specifically: the chart's interface chooser lists the same names,
   // so a plain text match would resolve to two elements.
-  await expect(page.getByRole('rowheader', { name: /enp1s0/ })).toBeVisible();
+  await expect(page.getByRole('rowheader', { name: /eth0/ })).toBeVisible();
   // In the interfaces row specifically: the overview above names the same
   // address, so a plain text match would resolve to two elements.
   await expect(
     page
       .getByRole('row')
-      .filter({ has: page.getByRole('rowheader', { name: /enp1s0/ }) })
-      .getByText('192.168.10.24/24', { exact: true }),
+      .filter({ has: page.getByRole('rowheader', { name: /eth0/ }) })
+      .getByText('192.0.2.2/24', { exact: true }),
   ).toBeVisible();
 
-  await expect(page.getByRole('status', { name: /runtime profile/i })).toHaveCount(1);
+  await expect(page.getByRole('status', { name: /appliance/i })).toHaveCount(1);
   await expect(
     page.getByText('Measured in the simulated environment, not on a bench.'),
   ).toHaveCount(0);
   await expect(page.getByRole('columnheader', { name: 'Gateway' })).toBeVisible();
-  await expect(page.getByText('192.168.10.1', { exact: true })).toBeVisible();
+  await expect(page.getByText('192.0.2.1', { exact: true })).toBeVisible();
   // None of the illustrative values from the design references is present.
   const body = (await page.locator('body').innerText()).replace(/\s+/g, ' ');
   for (const value of [
@@ -231,9 +233,9 @@ test('keeps one runtime indicator on every screen', async () => {
       .locator('.sidenav')
       .getByRole('button', { name: entry, exact: true })
       .click();
-    await expect(page.getByRole('status', { name: /runtime profile/i })).toBeVisible();
+    await expect(page.getByRole('status', { name: /appliance/i })).toBeVisible();
     await expect(page.locator('.shell-boundary')).toHaveCount(0);
-    await expect(page.locator('.sim-badge')).toHaveCount(1);
+    await expect(page.locator('.runtime-badge')).toHaveCount(1);
   }
 });
 

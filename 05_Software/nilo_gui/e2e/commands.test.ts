@@ -3,10 +3,9 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 /**
- * The integrated browser test is only used if it is one obvious command, and
- * it is only debuggable if there is a way to watch the browser. It must also
- * leave nothing behind: a trace or a video would record values typed into
- * credential fields.
+ * The integrated browser test is only used if it has one obvious acceptance
+ * entry point. It must also leave nothing behind: a trace or video would record
+ * values typed into credential fields.
  */
 
 const guiRoot = process.cwd();
@@ -48,10 +47,28 @@ describe('the documentation and the gate', () => {
       'utf8',
     );
 
-    expect(readme).toContain('run test:e2e');
-    expect(flow).toContain('run test:e2e');
-    expect(router).toContain('test:e2e');
+    expect(readme).toContain('02_Tools/tests/appliance/check.sh');
+    expect(flow).toContain('02_Tools/tests/appliance/check.sh');
+    // The gate no longer runs the browser suite itself: it needs an appliance,
+    // so the router reaches the stage that can start one.
+    expect(router).toContain('_run_appliance_stage');
+    expect(router).toContain('02_Tools/tests/appliance/check.sh');
     expect(router).not.toContain('test:e2e:headed');
+  });
+
+  it('keeps every browser assertion on the appliance response path', () => {
+    const field = readFileSync(
+      resolve(
+        repositoryRoot,
+        '05_Software',
+        'nilo_gui',
+        'e2e',
+        'field-display.spec.ts',
+      ),
+      'utf8',
+    );
+
+    expect(field).not.toContain("page.route('**/api/v1/network/statistics?*'");
   });
 });
 
@@ -77,9 +94,6 @@ describe('what a browser run is allowed to leave behind', () => {
   });
 
   it('never lets the bench-core spec type its password unredacted', () => {
-    // A failing browser action repeats its argument in the error it throws once
-    // the locator has resolved, so the fixture password must be typed behind
-    // the same redaction wrapper used by the administration suite.
     const spec = readFileSync(resolve(guiRoot, 'e2e', 'bench-core.spec.ts'), 'utf8');
 
     expect(spec).toContain('withRedactedSecret');
@@ -87,9 +101,6 @@ describe('what a browser run is allowed to leave behind', () => {
   });
 
   it('never lets the administration spec type a password unredacted', () => {
-    // A failing fill repeats its argument. The administration spec types real
-    // passwords, so every one of them goes
-    // through the harness's redaction wrapper rather than straight into fill.
     const spec = readFileSync(
       resolve(guiRoot, 'e2e', 'authentication.spec.ts'),
       'utf8',
@@ -106,7 +117,9 @@ describe('what a browser run is allowed to leave behind', () => {
     const method = harness.slice(harness.indexOf('async bootstrapAdministrator'));
     const body = method.slice(0, method.indexOf('\n  }'));
 
-    expect(body).toContain('input:');
+    expect(body).toContain('runWithInput');
+    expect(body).toMatch(/\$\{password\}\n\$\{password\}\n/);
+    expect(body).not.toMatch(/'--password'/);
     expect(body).toContain('withRedactedSecret');
     expect(body).not.toContain('--password');
   });

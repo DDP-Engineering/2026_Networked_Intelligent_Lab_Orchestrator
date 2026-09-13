@@ -1,0 +1,51 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-TEST-a276c88a"
+
+title = "Name a missing appliance verification prerequisite"
+
+status = "active"
+
+requirement = """
+If a prerequisite the appliance verification stage depends on is absent, then
+the stage shall exit unsuccessfully with a message naming the missing
+prerequisite and how to supply it, rather than reporting a pass or skipping the
+appliance proof.
+"""
+
+verification = """
+A test drives the stage entry point with each prerequisite absent in turn - no
+container engine on the path, an engine present whose daemon does not answer,
+and an unsupported host where the stage does not run - and asserts that each
+case exits non-zero with text naming that prerequisite and the command or
+supported host that supplies it, and that no case exits successfully or reports
+a skip.
+"""
+
+affected_paths = [
+    "02_Tools/tests/appliance/check.sh",
+    "05_Software/scripts/tests/test_appliance_stage.py",
+]
+
+linked_tests = [
+    "05_Software/scripts/tests/test_appliance_stage.py::AppliancePrerequisiteTests::test_absent_container_engine_is_named_and_the_run_fails",
+    "05_Software/scripts/tests/test_appliance_stage.py::AppliancePrerequisiteTests::test_unreachable_engine_daemon_is_named_and_the_run_fails",
+    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceUnsupportedHostTests::test_entry_point_refuses_an_unsupported_host_by_name",
+    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceUnsupportedHostTests::test_a_windows_host_is_refused_rather_than_passing",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "A skipped appliance proof reported as a green gate is worse than no gate, because it claims Bench Core was exercised against a real network when nothing was observed."
+
+created = 2026-09-12
+updated = 2026-09-12

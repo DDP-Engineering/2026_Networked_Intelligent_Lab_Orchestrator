@@ -39,9 +39,9 @@ status = "active"
 # plainly is better plainly.
 requirement = """
 The repository shall provide a browser end-to-end test that signs a real
-administrator into the interface against a real Bench Core running under WSL2 and
-administers identities and API tokens through that backend's own authorization
-decisions rather than a substituted response.
+administrator into the interface against an appliance-profile Bench Core in the
+appliance verification stage and administers identities and API tokens through
+that backend's own authorization decisions rather than a substituted response.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -85,4 +85,4 @@ priority = "high"   # low | normal | high
 rationale = "Mocked authorization answers prove the interface renders; only the real backend proves the cookie, the CSRF token and the permission checks line up."
 
 created = 2026-09-02
-updated = 2026-09-02
+updated = 2026-09-13

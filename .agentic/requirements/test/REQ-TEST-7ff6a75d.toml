@@ -54,11 +54,14 @@ browser run as a failure of the whole command.
 # The prefix alone is not enough — it has to say what someone does.
 verification = """
 A test of the verification router asserts that a Windows run of the full mode
-invokes the interface project's end-to-end script after its component-test and
-build scripts, that a non-zero exit from that script stops the run and is
-returned as the command's own exit code, and that no other suite's commands
-were removed or reordered; a real run of the full command on the supported
-Windows host is observed to execute the browser test.
+invokes the appliance browser stage after its component-test and build scripts,
+that a non-zero stage exit stops the run and is returned as the command's own
+exit code, and that no other suite's commands were removed or reordered. Router
+tests also prove that the only installed WSL distribution is selected, an
+explicit NILO_WSL_DISTRIBUTION is validated and used for both path translation
+and execution, and absent or ambiguous distributions fail before running the
+stage. A real run on the supported Windows host is observed to execute the
+browser test.
 """
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
@@ -66,6 +69,9 @@ affected_paths = [
     "05_Software/scripts/aegis_test.py",
     "05_Software/scripts/tests/test_aegis_test.py",
     "05_Software/nilo_gui/package.json",
+    "02_Tools/README.md",
+    "06_SoftwareDocu/Development_and_Simulation_Flow.md",
+    ".agentic/knowledge/repository-toolchain.md",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
@@ -73,6 +79,11 @@ affected_paths = [
 linked_tests = [
     "05_Software/scripts/tests/test_aegis_test.py::AegisTestRouterTests::test_windows_frontend_runs_test_build_format_and_lint_commands",
     "05_Software/scripts/tests/test_aegis_test.py::AegisTestRouterTests::test_a_failing_browser_end_to_end_run_fails_the_whole_command",
+    "05_Software/scripts/tests/test_aegis_test.py::AegisTestRouterTests::test_windows_appliance_stage_invokes_the_translated_script_without_shell_code",
+    "05_Software/scripts/tests/test_aegis_test.py::AegisTestRouterTests::test_windows_appliance_stage_selects_the_only_installed_distribution",
+    "05_Software/scripts/tests/test_aegis_test.py::AegisTestRouterTests::test_windows_appliance_stage_rejects_an_uninstalled_selected_distribution",
+    "05_Software/scripts/tests/test_aegis_test.py::AegisTestRouterTests::test_windows_appliance_stage_fails_when_no_distribution_is_installed",
+    "05_Software/scripts/tests/test_aegis_test.py::AegisTestRouterTests::test_windows_appliance_stage_requires_selection_for_multiple_distributions",
 ]
 
 # --- optional below this line ---
@@ -84,4 +95,4 @@ priority = "high"   # low | normal | high
 rationale = "A cross-component proof that only ever runs when someone remembers to run it is not a gate; the vertical slice is only met when the repository's own verification command exercises the browser-to-WSL2 path."
 
 created = 2026-09-01
-updated = 2026-09-01
+updated = 2026-09-13

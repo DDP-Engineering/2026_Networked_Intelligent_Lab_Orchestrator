@@ -114,18 +114,39 @@ async function applyPreview() {
 
 test('keeps opposite-role adapters visible and explains sequential repurposing', async () => {
   await page.context().clearCookies();
-  await page.route('**/api/v1/network/status', async (route) => {
-    const response = await route.fetch();
-    const body = await response.json();
-    body.interfaces[0].ipv6 = [
-      'fe80::2c78:a86:2f1c:24ae/64',
-      'fd11:5ee:bad:c0de::acd:9411/128',
-    ];
-    await route.fulfill({ json: body });
-  });
-  // The development topology is intentionally simulation-only and therefore
-  // omits the appliance management panel. This presentation fixture supplies
-  // an appliance status together with the role-aware management response.
+  await page.goto(topology!.frontendUrl);
+  await page.getByLabel('Username').fill('network-admin');
+  await withRedactedSecret(password, () =>
+    page.getByLabel('Password', { exact: true }).fill(password),
+  );
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await page
+    .getByRole('navigation')
+    .getByRole('button', { name: 'Device access', exact: true })
+    .click();
+  await page.getByRole('button', { name: 'Add device network', exact: true }).click();
+  const liveEditor = page.getByRole('dialog', { name: 'New device network' });
+  const eth0AdapterId =
+    (await liveEditor
+      .getByLabel('Device-side adapter')
+      .getByRole('option', { name: /eth0/ })
+      .getAttribute('value')) ?? '';
+  const eth1AdapterId =
+    (await liveEditor
+      .getByLabel('Device-side adapter')
+      .getByRole('option', { name: /eth1/ })
+      .getAttribute('value')) ?? '';
+  expect(eth0AdapterId).not.toBe('');
+  expect(eth1AdapterId).not.toBe('');
+  await liveEditor.getByRole('button', { name: 'Close', exact: true }).click();
+  await page.context().clearCookies();
+  let configuredInterfaces = ['eth0'];
+  let managementState: 'recovered' | 'pending' | 'applied' = 'recovered';
+  let currentInterface = 'eth0';
+  let showRoleRecovery = true;
+  // The appliance reserves its real browser ingress for management. This
+  // presentation fixture adds a second, conflicting role assignment that the
+  // disposable two-adapter stage cannot naturally hold at the same time.
   await page.route('**/api/v1/status', async (route) => {
     await route.fulfill({
       json: {
@@ -141,24 +162,70 @@ test('keeps opposite-role adapters visible and explains sequential repurposing',
       },
     });
   });
-  await page.route('**/api/v1/network/management-access*', async (route) => {
+  await page.route('**/api/v1/network/management-access**', async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    if (request.method() === 'PUT') {
+      const body = request.postDataJSON() as {
+        interfaces: string[];
+        confirm_current_interface: boolean;
+      };
+      if (configuredInterfaces.length === 1 && configuredInterfaces[0] === 'eth0') {
+        expect(body).toEqual({
+          interfaces: ['eth0', 'eth1'],
+          confirm_current_interface: false,
+        });
+      } else {
+        expect(body).toEqual({
+          interfaces: ['eth1'],
+          confirm_current_interface: true,
+        });
+      }
+      configuredInterfaces = [...body.interfaces];
+      managementState = 'pending';
+      showRoleRecovery = false;
+    } else if (request.method() === 'POST' && url.pathname.endsWith('/confirm')) {
+      expect(managementState).toBe('pending');
+      managementState = 'applied';
+      if (configuredInterfaces.length === 1) currentInterface = 'eth1';
+    } else {
+      expect(request.method()).toBe('GET');
+    }
+
+    const ownsManagement = (name: string) => configuredInterfaces.includes(name);
     await route.fulfill({
       json: {
         api_version: 'nilo.http/1',
-        state: 'recovered',
+        state: managementState,
         port: 8443,
         interfaces: [
           {
-            name: 'enp1s0',
-            adapter_id: '02:00:00:00:00:01',
+            name: 'eth0',
+            adapter_id: eth0AdapterId,
             kind: 'ethernet',
             state: 'connected',
             ipv4: ['192.168.10.24/24'],
             ipv6: [],
-            enabled: true,
-            current: true,
+            enabled: ownsManagement('eth0'),
+            current: currentInterface === 'eth0',
             usable: true,
-            role: 'management',
+            role: ownsManagement('eth0') ? 'management' : '',
+            role_available: true,
+            role_detail: '',
+            conflicting_resource_id: '',
+            conflicting_resource_name: '',
+          },
+          {
+            name: 'eth1',
+            adapter_id: eth1AdapterId,
+            kind: 'ethernet',
+            state: 'connected',
+            ipv4: ['192.168.20.24/24'],
+            ipv6: [],
+            enabled: ownsManagement('eth1'),
+            current: currentInterface === 'eth1',
+            usable: true,
+            role: ownsManagement('eth1') ? 'management' : '',
             role_available: true,
             role_detail: '',
             conflicting_resource_id: '',
@@ -181,18 +248,20 @@ test('keeps opposite-role adapters visible and explains sequential repurposing',
             conflicting_resource_name: 'PLC line',
           },
         ],
-        configured_interfaces: ['enp1s0'],
+        configured_interfaces: configuredInterfaces,
         urls: [{ url: 'https://nilo.local:8443', kind: 'local' }],
         tls_names: ['nilo.local'],
         tls_missing: [],
-        confirm_by: null,
-        detail: 'Removed a conflicting management binding for wlan0.',
+        confirm_by: managementState === 'pending' ? '2026-09-13T15:00:00Z' : null,
+        detail: showRoleRecovery
+          ? 'Removed a conflicting management binding for wlan0.'
+          : '',
         outcome: {
-          code: 'role_conflict_recovered',
-          interface: 'wlan0',
-          resource_name: 'PLC line',
+          code: showRoleRecovery ? 'role_conflict_recovered' : '',
+          interface: showRoleRecovery ? 'wlan0' : '',
+          resource_name: showRoleRecovery ? 'PLC line' : '',
         },
-        current_interface: 'enp1s0',
+        current_interface: currentInterface,
       },
     });
   });
@@ -213,12 +282,14 @@ test('keeps opposite-role adapters visible and explains sequential repurposing',
   await managementObserved;
   await page.getByRole('button', { name: 'Add device network', exact: true }).click();
   const editor = page.getByRole('dialog', { name: 'New device network' });
+  // The fixture claims the real eth0 identity for management, so the device
+  // selector must preserve it but prevent simultaneous assignment.
   await expect(
-    editor.getByLabel('Device-side adapter').getByRole('option', { name: /enp1s0/ }),
+    editor.getByLabel('Device-side adapter').getByRole('option', { name: /eth0/ }),
   ).toBeDisabled();
   await expect(editor.getByText(/reserved for management access/i)).toBeVisible();
   await expect(
-    editor.getByLabel('Local-access adapter').getByRole('option', { name: /enp1s0/ }),
+    editor.getByLabel('Local-access adapter').getByRole('option', { name: /eth0/ }),
   ).toBeEnabled();
   await editor.getByRole('button', { name: 'How to repurpose an adapter' }).click();
   const guide = page.getByRole('dialog', { name: 'Safe adapter repurposing' });
@@ -257,7 +328,7 @@ test('keeps opposite-role adapters visible and explains sequential repurposing',
     { width: 800, height: 480 },
   ]) {
     await page.setViewportSize(viewport);
-    await expect(management.getByText('fd11:5ee:bad:c0de::acd:9411/128')).toBeVisible();
+    await expect(management.getByText('fd00:10::2/64')).toBeVisible();
     const layout = await management.evaluate((region) => {
       const table = region.querySelector('table')!;
       const states = [...table.querySelectorAll('.network-state')];
@@ -281,9 +352,126 @@ test('keeps opposite-role adapters visible and explains sequential repurposing',
   }
   await page.setViewportSize(originalViewport);
 
+  const eth0Management = management.getByRole('checkbox', {
+    name: 'Allow management access on eth0',
+  });
+  const eth1Management = management.getByRole('checkbox', {
+    name: 'Allow management access on eth1',
+  });
+
+  // The last-route guard prevents removal before a replacement exists.
+  await eth0Management.uncheck();
+  await expect(
+    management.getByText(/Keep at least one connected interface/i),
+  ).toBeVisible();
+  await expect(
+    management.getByRole('button', { name: 'Apply management access' }),
+  ).toBeDisabled();
+  await eth0Management.check();
+
+  // Establish and confirm eth1 as a replacement while eth0 remains enabled.
+  await eth1Management.check();
+  await management.getByRole('button', { name: 'Apply management access' }).click();
+  await expect(management.getByRole('status')).toHaveText(/Pending confirmation/i);
+  await management.getByRole('button', { name: 'Keep change' }).click();
+  await expect(management.getByRole('status')).toHaveText(/Applied/i);
+
+  // Removing the browser's current path requires the explicit second warning,
+  // and the interface offers no one-click role swap around either guard.
+  await eth0Management.uncheck();
+  await management.getByRole('button', { name: 'Apply management access' }).click();
+  const currentWarning = management.getByRole('alertdialog');
+  await expect(currentWarning).toContainText(/This browser reached NILO through eth0/i);
+  await expect(currentWarning).toContainText(/previous allowlist will be restored/i);
+  await expect(management.getByRole('button', { name: /swap/i })).toHaveCount(0);
+  await currentWarning
+    .getByRole('button', { name: 'Disable current interface and apply' })
+    .click();
+  await expect(management.getByRole('status')).toHaveText(/Pending confirmation/i);
+  await management.getByRole('button', { name: 'Keep change' }).click();
+  await expect(management.getByRole('status')).toHaveText(/Applied/i);
+
+  // Only after both confirmations does eth0 become device-facing availability.
+  await page
+    .getByRole('navigation')
+    .getByRole('button', { name: 'Device access', exact: true })
+    .click();
+  await page.getByRole('button', { name: 'Add device network', exact: true }).click();
+  const replacedEditor = page.getByRole('dialog', { name: 'New device network' });
+  await expect(
+    replacedEditor
+      .getByLabel('Device-side adapter')
+      .getByRole('option', { name: /eth0/ }),
+  ).toBeEnabled();
+  await expect(
+    replacedEditor
+      .getByLabel('Device-side adapter')
+      .getByRole('option', { name: /eth1/ }),
+  ).toBeDisabled();
+  await expect(
+    replacedEditor
+      .getByLabel('Local-access adapter')
+      .getByRole('option', { name: /eth0/ }),
+  ).toBeEnabled();
+  await replacedEditor.getByRole('button', { name: 'Close', exact: true }).click();
+
   await page.unroute('**/api/v1/network/status');
-  await page.unroute('**/api/v1/network/management-access*');
+  await page.unroute('**/api/v1/network/management-access**');
   await page.unroute('**/api/v1/status');
+  await page.context().clearCookies();
+});
+
+test('selects adjacent dense traffic minutes by real pointer position', async () => {
+  await page.route('**/api/v1/network/statistics*', async (route) => {
+    const from = Date.parse('2026-09-13T10:00:00Z');
+    await route.fulfill({
+      json: {
+        api_version: 'nilo.http/1',
+        interface_id: 'dense-fixture',
+        period: '1h',
+        from: new Date(from).toISOString(),
+        to: new Date(from + 60 * 60_000).toISOString(),
+        measured_by: 'presentation-fixture',
+        stale: false,
+        points: Array.from({ length: 60 }, (_, minute) => ({
+          minute_start: new Date(from + minute * 60_000).toISOString(),
+          rx_bytes: minute === 1 ? 0 : minute + 1,
+          tx_bytes: 0,
+          rx_errors: 0,
+          tx_errors: 0,
+          rx_dropped: 0,
+          tx_dropped: 0,
+          samples: 1,
+          stale: false,
+        })),
+      },
+    });
+  });
+  await page.goto(topology!.frontendUrl);
+  await page.getByLabel('Username').fill('network-admin');
+  await withRedactedSecret(password, () =>
+    page.getByLabel('Password', { exact: true }).fill(password),
+  );
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await page
+    .getByRole('navigation')
+    .getByRole('button', { name: 'Diagnostics', exact: true })
+    .click();
+  const chart = page.getByRole('listbox', { name: /traffic for dense-fixture/i });
+  await expect(chart).toBeVisible();
+  const box = await chart.boundingBox();
+  expect(box).not.toBeNull();
+  const step = ((box?.width ?? 0) * (720 - 64 - 12)) / 720 / 60;
+  const plotLeft = ((box?.width ?? 0) * 64) / 720;
+  await page.mouse.click((box?.x ?? 0) + plotLeft + step * 1.35, (box?.y ?? 0) + 80);
+  await expect(page.getByRole('status', { name: 'Selected minute' })).toContainText(
+    /RX 0 B.*TX 0 B.*Total 0 B/i,
+  );
+  await page.mouse.click((box?.x ?? 0) + plotLeft + step * 2.35, (box?.y ?? 0) + 80);
+  await expect(page.getByRole('status', { name: 'Selected minute' })).toContainText(
+    /RX 3 B.*TX 0 B.*Total 3 B/i,
+  );
+  await page.unroute('**/api/v1/network/statistics*');
   await page.context().clearCookies();
 });
 
@@ -367,7 +555,7 @@ test('shows acknowledged installation progress and its verified result', async (
     page.getByRole('button', { name: 'Install WireGuard tools', exact: true }),
   ).toBeDisabled();
   await expect(
-    page.getByRole('button', { name: 'Actions for enp1s0', exact: true }),
+    page.getByRole('button', { name: 'Actions for eth0', exact: true }),
   ).toHaveCount(0);
   await expect(
     page.getByRole('button', { name: 'Keep change', exact: true }),
@@ -390,7 +578,7 @@ test('shows acknowledged installation progress and its verified result', async (
   await page.context().clearCookies();
 });
 
-test('reports simulated changes, restores them and permits another change', async () => {
+test('applies appliance changes, restores them and permits another change', async () => {
   await page.goto(topology!.frontendUrl);
   await page.getByLabel('Username').fill('network-admin');
   await withRedactedSecret(password, () =>
@@ -401,18 +589,18 @@ test('reports simulated changes, restores them and permits another change', asyn
     .getByRole('navigation')
     .getByRole('button', { name: 'Overview', exact: true })
     .click();
-  await rowAction('enp1s0', 'Disable enp1s0');
+  await rowAction('eth0', 'Disable eth0');
   await applyPreview();
   await expect(
     page
       .getByRole('row')
-      .filter({ has: page.getByRole('rowheader', { name: /enp1s0/ }) }),
+      .filter({ has: page.getByRole('rowheader', { name: /eth0/ }) }),
   ).toContainText(/disconnected/i);
   await page.getByRole('button', { name: 'Keep change', exact: true }).focus();
   await page.keyboard.press('Enter');
   await expect(page.getByText('The change was kept.', { exact: true })).toBeVisible();
-  await expectRowAction('enp1s0', 'Enable enp1s0', true);
-  await rowAction('enp1s0', 'Enable enp1s0');
+  await expectRowAction('eth0', 'Enable eth0', true);
+  await rowAction('eth0', 'Enable eth0');
   await applyPreview();
   await page
     .getByRole('button', { name: 'Restore previous state', exact: true })
@@ -420,12 +608,12 @@ test('reports simulated changes, restores them and permits another change', asyn
   await expect(
     page.getByText('The previous state was restored.', { exact: true }),
   ).toBeVisible();
-  await rowAction('enp1s0', 'Enable enp1s0');
+  await rowAction('eth0', 'Enable eth0');
   await applyPreview();
   await page.getByRole('button', { name: 'Keep change', exact: true }).click();
 });
 
-test('imports, selects startup and toggles a simulated WireGuard tunnel', async () => {
+test('imports, selects startup and toggles a WireGuard tunnel', async () => {
   const conf =
     '[Interface]\nPrivateKey = AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=\nAddress = 10.20.0.2/32, fd00:20::2/128\nDNS = 10.20.0.1\n[Peer]\nPublicKey = ERERERERERERERERERERERERERERERERERERERERERE=\nAllowedIPs = 10.20.0.0/24, fd00:20::/64\nEndpoint = vpn.example.test:51820\nPersistentKeepalive = 0\n';
   await page
@@ -486,12 +674,12 @@ test('imports, selects startup and toggles a simulated WireGuard tunnel', async 
 });
 
 test('unconfirmed changes restore automatically and real sampling produces history', async () => {
-  test.setTimeout(180_000);
+  test.setTimeout(240_000);
   await page
     .getByRole('navigation')
     .getByRole('button', { name: 'Overview', exact: true })
     .click();
-  await rowAction('enp1s0', 'Disable enp1s0');
+  await rowAction('eth0', 'Disable eth0');
   await applyPreview();
   await expect(page.getByRole('timer')).toBeVisible();
   // No accelerated server clock and no request to the rollback route: this
@@ -499,17 +687,37 @@ test('unconfirmed changes restore automatically and real sampling produces histo
   await expect(
     page.getByText('The previous state was restored.', { exact: true }),
   ).toBeVisible({ timeout: 140_000 });
-  await expectRowAction('enp1s0', 'Disable enp1s0', true);
-  const history = await page.request.get(
-    new URL(
-      '/api/v1/network/statistics?interface=sim-enp1s0&period=15m',
-      topology!.frontendUrl,
-    ).href,
-  );
-  expect(history.status()).toBe(200);
-  const body = (await history.json()) as { points: unknown[]; measured_by: string };
-  expect(body.measured_by).toBe('simulation');
-  expect(body.points.length).toBeGreaterThan(0);
+  await expectRowAction('eth0', 'Disable eth0', true);
+  const interfaceId = await page.evaluate(async () => {
+    const response = await fetch('/api/v1/network/status');
+    const status = (await response.json()) as {
+      interfaces?: Array<{ id?: string; name?: string }>;
+    };
+    return status.interfaces?.find((entry) => entry.name === 'eth0')?.id ?? '';
+  });
+  expect(interfaceId).not.toBe('');
+  // Fetch through the browser network stack: Chromium lives on the isolated
+  // management ingress, while Playwright's API request client lives beside the
+  // appliance and would correctly be refused by the interface firewall.
+  let measuredBy = '';
+  await expect
+    .poll(
+      async () => {
+        const history = await page.evaluate(async (observedInterfaceId) => {
+          const response = await fetch(
+            `/api/v1/network/statistics?interface=${encodeURIComponent(observedInterfaceId)}&period=15m`,
+          );
+          return { status: response.status, body: await response.json() };
+        }, interfaceId);
+        expect(history.status).toBe(200);
+        const body = history.body as { points: unknown[]; measured_by: string };
+        measuredBy = body.measured_by;
+        return body.points.length;
+      },
+      { timeout: 75_000 },
+    )
+    .toBeGreaterThan(0);
+  expect(measuredBy).not.toBe('simulation');
   expect(
     await page
       .locator('html')

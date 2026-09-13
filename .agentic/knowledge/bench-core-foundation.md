@@ -12,8 +12,10 @@ operations, the simulation catalog, and the SQLite repositories. Start at
 rule, and `internal/network/operation.go` for a managed change; the focused
 tests sit beside each file. The browser interface belongs to *Browser GUI
 foundation*; the privileged NetworkManager helper and its system tests are in
-`internal/nethelper/` and `02_Tools/tests/network/`; the Python integration
-packages belong to *Integration platform*.
+`internal/nethelper/` and `02_Tools/tests/network/`, and the appliance
+verification stage's proof is `cmd/nilo/appliance_stage_linux_test.go`, run by
+`02_Tools/tests/appliance/`; the Python integration packages belong to
+*Integration platform*.
 
 ## Purpose and boundaries
 
@@ -369,6 +371,11 @@ The simulation catalog is deliberately dependency-free and cannot discover or co
 ### Network gateway observations
 
 Network interface readings expose Gateway4 and Gateway6 from the active NetworkManager IP configurations. HTTP adds gateway4/gateway6 strings (empty when absent); the deterministic simulation catalog includes both families for its wired device. The disposable dual-stack NetworkManager fixture checks these observations and recovery with default gateways present. No routing configuration is edited by this read path.
+- `cmd/nilo/appliance_stage_linux_test.go` - the appliance verification stage's
+  proof: starts the root helper and an unprivileged appliance-profile core with
+  generated TLS material and a built interface directory, then asserts the
+  listening record, the authenticated boundary, and that every adapter Bench
+  Core reports is one NetworkManager detected in the stage's own namespace.
 
 ## Device networks, forwarding, Activity and diagnostics (2026-09-04)
 

@@ -1,0 +1,64 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-TEST-b1177191"
+
+title = "Prove the browser journey against the interface the appliance serves"
+
+status = "active"
+
+requirement = """
+When the browser end-to-end suite runs, the interface it drives shall be the
+built asset directory Bench Core itself serves on the appliance origin, rather
+than a development server proxying to a separate backend.
+"""
+
+verification = """
+The suite's browser navigates to the appliance's own HTTPS origin, and the
+interface answers there with the built assets; no development server is started
+by the run. Removing the built interface directory fails the run with that
+stated.
+"""
+
+affected_paths = [
+    "05_Software/nilo_gui/e2e/topology.ts",
+    "05_Software/nilo_gui/e2e/topology.test.ts",
+    "05_Software/nilo_gui/e2e/commands.test.ts",
+    "05_Software/nilo_gui/e2e/prerequisites.ts",
+    "05_Software/nilo_gui/e2e/prerequisites.test.ts",
+    "05_Software/nilo_gui/playwright.config.ts",
+    "02_Tools/tests/appliance/check.sh",
+    "02_Tools/tests/appliance/run.sh",
+    "02_Tools/tests/network/Dockerfile",
+    "02_Tools/tests/network/check.sh",
+    "05_Software/scripts/aegis_test.py",
+    "05_Software/scripts/tests/test_aegis_test.py",
+    "05_Software/scripts/tests/test_appliance_stage.py",
+    "05_Software/nilo_gui/README.md",
+    "02_Tools/README.md",
+    "02_Tools/tests/appliance/README.md",
+    "06_SoftwareDocu/Development_and_Simulation_Flow.md",
+    ".agentic/context/environment.md",
+    ".agentic/knowledge/repository-toolchain.md",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/e2e/topology.test.ts::serves the built interface rather than starting a development server",
+    "05_Software/nilo_gui/e2e/prerequisites.test.ts::fails when nothing was built, rather than falling back to a dev server",
+    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceBrowserSuiteTests",
+]
+
+
+spec = ""
+
+priority = "high"      # low | normal | high
+rationale = "The assets an appliance serves are what ships; a proof through a development server tests a bundle nobody installs."        # why this behavior exists, if not obvious
+
+created = 2026-09-12
+updated = 2026-09-13

@@ -1,11 +1,37 @@
 # Repository-local toolchain
 
-## Purpose
+## Routing
+
+Select this page for how a checkout is provisioned and verified rather than for
+product behavior: `02_Tools/` in full - the pinned runtimes under the ignored
+`runtime/` and `cache/`, `toolchain.versions`, the `bootstrap/` entry points,
+the `env/` child-process wrappers, the `doctor*` readiness checks, the locked
+OCI build environment under `containers/build/` with
+`env/with-build-environment.*`, the container test runs under `tests/`, and
+`05_Software/scripts/aegis_test.py`, which routes the repository gate.
+
+Start at `02_Tools/toolchain.versions` for a pinned version, `02_Tools/env/`
+for how a command reaches a tool, `02_Tools/tests/appliance/check.sh` for the
+appliance verification stage, `02_Tools/tests/build-environment/verify-offline.sh`
+for what the locked container gate runs, and `05_Software/scripts/aegis_test.py`
+for what the host gate discovers and runs.
+
+The privileged NetworkManager helper, its system tests under
+`02_Tools/tests/network/` and the Go stage proof belong to *Bench Core
+foundation*; this page owns those runs only as verification entry points and
+owns the shared image definition they build. Product behavior belongs to the
+component that implements it.
+
+## Purpose and boundaries
 
 The toolchain component gives a fresh supported checkout pinned Go, uv,
 managed Python, Node.js, and npm runtimes without persistent host changes.
 Downloaded runtimes and caches remain ignored so they can be populated online
 or carried in an offline development kit without bloating source history.
+
+The component owns how verification environments are materialized and entered.
+It does not own Bench Core network behavior, GUI behavior, integration behavior,
+release publication, or hardware acceptance results.
 
 ## Public interface
 
@@ -15,11 +41,12 @@ distribution from one checkout. `setup-wsl.ps1` keeps host installation and
 conversion opt-in, while `doctor-wsl.ps1` proves the distribution, repository
 mapping, and Linux tools. `bootstrap-frontend.ps1` restores the locked browser
 GUI dependencies, including from a populated offline cache, and
-`bootstrap-browser.ps1` installs the browser engine the integrated browser test
-drives. Commands run through `with-tools` or the Go-only compatibility wrapper.
-`toolchain.versions` is the authority for versions, platform archive URLs,
-and SHA-256 checksums; the browser test package and its engine are pinned by the
-GUI lockfile rather than by that manifest, because npm resolves them.
+`bootstrap-browser.ps1` installs a Windows browser for host-local manual GUI
+work. Acceptance does not use that installation: the appliance-stage image
+installs its own pinned Playwright and Chromium. Commands run through
+`with-tools` or the Go-only compatibility wrapper. `toolchain.versions` is the
+authority for versions, platform archive URLs, and SHA-256 checksums; the GUI
+lockfile pins the Playwright package graph.
 
 The OCI migration adds a stricter Linux acceptance boundary without removing
 the interactive host-local workflow. `bootstrap-build-environment.ps1`
@@ -35,6 +62,39 @@ cache embedded in the image, and explicit source and output mounts. The
 checked-in `current.json` remains a pending-generation
 record until the real image, archive, replica readback, and external acceptance
 evidence have actually been produced.
+
+Two container runs sit outside that locked boundary because they need
+capabilities it drops. `02_Tools/tests/network/check.sh` runs the privileged
+helper's system tests and `02_Tools/tests/appliance/check.sh` runs the
+appliance verification stage; both build one multi-target image definition,
+`02_Tools/tests/network/Dockerfile`, and run it with `NET_ADMIN`, `SYS_ADMIN`
+and engine networks the scripts create and remove. The `network-system` target
+deliberately has no WireGuard tools so it can test their production installer.
+The `appliance` target extends it with WireGuard, Node.js, the locked GUI graph,
+Playwright and Chromium. Both take Go from the repository's pinned Linux runtime
+through the read-only mount and share one Go cache volume and one NetworkManager
+bring-up, `02_Tools/tests/network/network-up.sh`.
+
+The appliance verification stage runs Bench Core the way an appliance ships it -
+`--profile appliance` with TLS material minted for the run, a built interface
+directory and the real root helper - against adapters a real NetworkManager
+detected in that container's own namespace. It runs on Linux natively and inside
+WSL2; a Windows-native invocation, a missing container engine, an engine whose
+daemon does not answer, and a host without `ip` are each named and refused with
+exit 2 rather than reported as a pass or a skip. It records the host's interface
+list and default route before the run and compares them after it on every exit
+path, so a run that changed the developer's own machine fails even when the
+stage passed. `02_Tools/tests/appliance/README.md` carries the command, the
+layout and the relationship between the three container runs.
+
+The stage builds the GUI and runs Playwright against Bench Core's own HTTPS
+origin. Chromium lives in a dedicated browser namespace connected to the
+management interface, so requests cross the production listener and firewall.
+Its live journeys exercise real NetworkManager state, sampling and WireGuard
+lifecycle behavior. Narrow, explicitly labelled response fixtures cover only
+presentation states the disposable appliance cannot safely create. Each
+Playwright specification owns a fresh appliance process and database, and
+removes its processes and `/tmp/nilo-e2e-*` data within fixed deadlines.
 
 Reconstruction has two distinct phases. The networked materialization phase
 acquires and digest-verifies the reviewed base and BuildKit frontend images and
@@ -56,6 +116,33 @@ engine store, or - under WSL - the Windows volume backing the ext4 virtual disk
 cannot hold it. Explicit host engine installation calculates and prints the
 exact package transaction first and refuses downgrades and architecture
 replacements without an explicit override.
+
+## Invariants
+
+- The shared network-system image remains free of WireGuard before the
+  installer system test begins; browser-only tools belong to the appliance
+  target.
+- The browser acceptance suite runs only inside the appliance stage. Production
+  journeys reach their suite's appliance-profile core through the production
+  management ingress; explicitly labelled presentation-only assertions may
+  replace an individual API response without replacing that runtime.
+- Stage cleanup names and removes only resources successfully created by that
+  invocation, and host network state compares equal before and after.
+- Checked-out source is mounted read-only; generated dependencies, build output,
+  runtime state and caches remain outside tracked source.
+
+## Change map
+
+- Change image contents or target layering in
+  `02_Tools/tests/network/Dockerfile`, then update inventory and stage contract
+  tests together.
+- Change stage ownership, engine networking or cleanup in
+  `02_Tools/tests/appliance/check.sh` and `run.sh`.
+- Change browser process topology, deadlines or the appliance origin in
+  `05_Software/nilo_gui/e2e/topology.ts`; keep its component tests and
+  prerequisite contracts synchronized.
+- Change repository routing in `05_Software/scripts/aegis_test.py`; its unit
+  tests prove native and Windows/WSL invocation and failure propagation.
 
 ## Key behaviors
 
@@ -94,11 +181,16 @@ replacements without an explicit override.
 - `REQ-PLAT-022e39b0` - reports each outcome through its own exit code.
 - `REQ-TEST-daa9a99d` - exposes the WSL, endpoint, port, launcher and browser
   boundaries as injectable options so tests open no window and bind no port.
-- `REQ-PLAT-38014f08` - installs the pinned browser the integrated browser test
-  drives below the ignored platform runtime directory, so no test run downloads
-  one and no per-user cache is written.
+- `REQ-PLAT-38014f08` - installs the pinned Windows browser below the ignored
+  platform runtime directory for host-local manual GUI work, so that workflow
+  writes no per-user cache; appliance acceptance owns a separate image browser.
 - `REQ-TEST-7ff6a75d` - runs the integrated browser test from the Windows
   repository gate, after the interface component tests and the production build.
+- `REQ-TEST-68eedecb` and `REQ-TEST-b1177191` - run every production browser
+  journey against the built interface on a real appliance-profile core and
+  narrowly label presentation-only response fixtures.
+- `REQ-PLAT-32b81548` - pins the real-network appliance image and its browser,
+  system-service and WireGuard inventory.
 - `REQ-PLAT-80e40361` - defines the digest-pinned Ubuntu OCI environment and
   its exact tool, package, browser, licence, SBOM, and provenance inventory.
 - `REQ-PLAT-dd007527` - verifies or explicitly installs one WSL-native OCI
@@ -163,6 +255,19 @@ flowchart TD
     gui_lock --> browser_bootstrap
     browser_bootstrap --> browser_runtime
     browser_runtime --> wrapper
+    repository_gate(["repository full gate"])
+    appliance_stage(["appliance check under Linux / WSL2"])
+    appliance_image[("appliance image target")]
+    network_manager(["real NetworkManager + helper"])
+    browser_namespace(["Chromium browser namespace"])
+    appliance_core(["appliance-profile HTTPS Bench Core"])
+    repository_gate --> appliance_stage
+    appliance_stage --> appliance_image
+    appliance_image --> network_manager
+    appliance_image --> browser_namespace
+    network_manager --> appliance_core
+    browser_namespace --> appliance_core
+    static_assets --> appliance_core
 ```
 
 The scripts modify environment variables only in their child process. The
@@ -185,9 +290,9 @@ only durable state, and they live on the WSL Linux filesystem.
 - `02_Tools/bootstrap/bootstrap-frontend.ps1` - locked online or offline npm
   restore for the browser GUI, with browser downloads forbidden during the
   restore so browsers are only ever acquired deliberately.
-- `02_Tools/bootstrap/bootstrap-browser.ps1` - installs the one pinned browser
-  engine the integrated browser test drives, below the ignored platform runtime,
-  and refuses to download under `-Offline`.
+- `02_Tools/bootstrap/bootstrap-browser.ps1` - installs the pinned Windows
+  browser for host-local manual GUI work below the ignored platform runtime and
+  refuses to download under `-Offline`; appliance acceptance does not use it.
 - `02_Tools/bootstrap/setup-wsl.ps1` - read-only WSL2 readiness check with
   explicit installation or conversion requests.
 - `02_Tools/lib/Wsl.ps1` - checked WSL invocation, discovery, kernel check, and
@@ -200,6 +305,20 @@ only durable state, and they live on the WSL Linux filesystem.
 - `02_Tools/env/with-go.ps1` and `02_Tools/env/with-go.sh` - Go-only compatibility wrappers.
 - `02_Tools/containers/build/` - locked OCI definition, expected inventory,
   source metadata, licence seed, SBOM seed, and provenance seed.
+- `02_Tools/tests/network/Dockerfile` - the one capability-carrying image
+  definition, pinned by base digest and an explicit package list, shared by the
+  helper system run and the appliance verification stage.
+- `02_Tools/tests/network/network-up.sh` - the shared D-Bus, NetworkManager and
+  `eth0` bring-up both container runs source.
+- `02_Tools/tests/appliance/check.sh` - the appliance verification stage's host
+  entry point: prerequisite refusals, the disposable engine network, and the
+  host interface and route comparison around the run.
+- `02_Tools/tests/appliance/run.sh` - its container side, which builds the
+  binaries from the read-only mount and runs the stage proof.
+- `02_Tools/tests/appliance/inventory.json` - the components that image must
+  carry and how to probe each.
+- `02_Tools/tests/appliance/README.md` - the stage's command, contents and
+  relationship to the other container runs.
 - `02_Tools/bootstrap/bootstrap-build-environment.ps1` and
   `bootstrap-build-environment.sh` - Windows/WSL2 and native-Ubuntu host gates
   over shared engine verification and local restore or explicit rebuild logic.
@@ -226,7 +345,10 @@ only durable state, and they live on the WSL Linux filesystem.
   and exit-code guidance.
 - `05_Software/scripts/aegis_test.py` - Go, Python, integration, and Windows
   frontend suite discovery that excludes generated environments and outputs, and
-  the Windows browser end-to-end step that follows the frontend build.
+  the WSL2 appliance-stage browser step that follows the frontend build.
+- `05_Software/scripts/tests/test_appliance_stage.py` - the appliance stage's
+  image definition, prerequisite refusals and host-isolation contract, driven
+  against the real entry point.
 - `05_Software/scripts/tests/test_toolchain_bootstrap.py` - manifest,
   non-global bootstrap, WSL safety, orchestration, and diagnostic contract
   tests.

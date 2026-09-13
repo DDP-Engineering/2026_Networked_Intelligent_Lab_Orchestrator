@@ -38,10 +38,11 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-When a browser end-to-end run starts the Bench Core and interface processes it
-needs, it shall wait for each of them to answer on its own loopback endpoint
-within a bounded deadline and abort the run with the endpoint that stayed
-silent named, rather than waiting indefinitely.
+When a browser acceptance run starts the privileged helper and the appliance-
+profile Bench Core that serves the built interface, it shall wait for the
+helper socket and the core's HTTPS status endpoint within bounded deadlines and
+abort with the resource that stayed unavailable named rather than waiting
+indefinitely.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -53,11 +54,11 @@ silent named, rather than waiting indefinitely.
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
 verification = """
-A test drives the readiness wait against an endpoint that never answers and
-asserts that it gives up within the supplied deadline, that the resulting
-error names that endpoint, and that no wait in the harness is written without
-a deadline; a passing end-to-end run shows both endpoints answering before the
-first browser navigation.
+A test drives both path and HTTPS readiness waits against resources that never
+become ready and asserts that they give up within the supplied deadline and
+name the unavailable resource; a passing appliance run observes the helper
+socket and a 401 status response through the isolated browser namespace before
+the first browser navigation.
 """
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
@@ -68,9 +69,7 @@ affected_paths = [
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
-linked_tests = [
-    "05_Software/nilo_gui/e2e/topology.test.ts::bounded readiness wait",
-]
+linked_tests = ["05_Software/nilo_gui/e2e/topology.test.ts"]
 
 # --- optional below this line ---
 
@@ -81,4 +80,4 @@ priority = "normal"   # low | normal | high
 rationale = "An unbounded wait on a backend that failed to build turns a test failure into a hung gate that reports nothing at all."
 
 created = 2026-09-01
-updated = 2026-09-01
+updated = 2026-09-13

@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import importlib.util
+import os
+import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 SOFTWARE_ROOT = Path(__file__).resolve().parents[2]
 ROUTER_PATH = SOFTWARE_ROOT / "scripts" / "aegis_test.py"
@@ -49,6 +51,7 @@ class AegisTestRouterTests(unittest.TestCase):
             commands: list[tuple[list[str], Path]] = []
             with (
                 patch.object(module.sys, "platform", "win32"),
+                patch.object(module, "_run_appliance_stage", return_value=0) as stage,
                 patch.object(
                     module,
                     "_run",
@@ -64,12 +67,12 @@ class AegisTestRouterTests(unittest.TestCase):
                 [
                     (["npm.cmd", "run", "test:ci"], frontend),
                     (["npm.cmd", "run", "build"], frontend),
-                    (["npm.cmd", "run", "test:e2e"], frontend),
                     (["npm.cmd", "run", "format:check"], frontend),
                     (["npm.cmd", "run", "lint"], frontend),
                     ([sys.executable, "-m", "compileall", "-q", "scripts"], root),
                 ],
             )
+            stage.assert_called_once_with(root)
 
     def test_a_failing_browser_end_to_end_run_fails_the_whole_command(self) -> None:
         """A skipped or failed browser run must never be reported as a pass."""
@@ -82,19 +85,157 @@ class AegisTestRouterTests(unittest.TestCase):
             )
 
             module = self._load_router()
-            attempted: list[list[str]] = []
-
-            def fail_end_to_end(command: list[str], cwd: Path) -> int:
-                attempted.append(command)
-                return 6 if command[-1] == "test:e2e" else 0
-
             with (
                 patch.object(module.sys, "platform", "win32"),
-                patch.object(module, "_run", side_effect=fail_end_to_end),
+                patch.object(module, "_run", return_value=0),
+                patch.object(module, "_run_appliance_stage", return_value=6) as stage,
             ):
                 self.assertEqual(module._run_full(root), 6)
 
-            self.assertEqual(attempted[-1], ["npm.cmd", "run", "test:e2e"])
+            stage.assert_called_once_with(root)
+
+    def test_windows_appliance_stage_invokes_the_translated_script_without_shell_code(
+        self,
+    ) -> None:
+        module = self._load_router()
+        software_root = Path("C:/work/NILO/05_Software")
+        translated = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="/mnt/c/work/NILO\n", stderr=""
+        )
+        distributions = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="Ubuntu Dev\nUbuntu-24.04\n", stderr=""
+        )
+        with (
+            patch.object(module.sys, "platform", "win32"),
+            patch.dict(os.environ, {"NILO_WSL_DISTRIBUTION": "Ubuntu Dev"}),
+            patch.object(
+                module.subprocess, "run", side_effect=[distributions, translated]
+            ) as convert,
+            patch.object(module, "_run", return_value=0) as run,
+        ):
+            self.assertEqual(module._run_appliance_stage(software_root), 0)
+
+        self.assertEqual(
+            convert.call_args_list,
+            [
+                call(
+                    ["wsl.exe", "--list", "--quiet"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                ),
+                call(
+                    [
+                        "wsl.exe",
+                        "-d",
+                        "Ubuntu Dev",
+                        "--exec",
+                        "wslpath",
+                        "-a",
+                        "--",
+                        "C:/work/NILO",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                ),
+            ],
+        )
+        run.assert_called_once_with(
+            [
+                "wsl.exe",
+                "-d",
+                "Ubuntu Dev",
+                "--exec",
+                "sh",
+                "/mnt/c/work/NILO/02_Tools/tests/appliance/check.sh",
+            ],
+            Path("C:/work/NILO"),
+        )
+
+    def test_windows_appliance_stage_selects_the_only_installed_distribution(
+        self,
+    ) -> None:
+        module = self._load_router()
+        discovered = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="Ubuntu-24.04\n", stderr=""
+        )
+        translated = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="/mnt/c/work/NILO\n", stderr=""
+        )
+        with (
+            patch.object(module.sys, "platform", "win32"),
+            patch.dict(os.environ, {}, clear=False),
+            patch.object(
+                module.subprocess, "run", side_effect=[discovered, translated]
+            ),
+            patch.object(module, "_run", return_value=0) as run,
+        ):
+            os.environ.pop("NILO_WSL_DISTRIBUTION", None)
+            self.assertEqual(
+                module._run_appliance_stage(Path("C:/work/NILO/05_Software")), 0
+            )
+
+        self.assertEqual(
+            run.call_args.args[0][0:4],
+            ["wsl.exe", "-d", "Ubuntu-24.04", "--exec"],
+        )
+
+    def test_windows_appliance_stage_rejects_an_uninstalled_selected_distribution(
+        self,
+    ) -> None:
+        module = self._load_router()
+        discovered = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="Ubuntu-24.04\n", stderr=""
+        )
+        with (
+            patch.object(module.sys, "platform", "win32"),
+            patch.dict(os.environ, {"NILO_WSL_DISTRIBUTION": "Missing Linux"}),
+            patch.object(module.subprocess, "run", return_value=discovered),
+            patch.object(module, "_run") as run,
+        ):
+            self.assertEqual(
+                module._run_appliance_stage(Path("C:/work/NILO/05_Software")), 2
+            )
+        run.assert_not_called()
+
+    def test_windows_appliance_stage_fails_when_no_distribution_is_installed(
+        self,
+    ) -> None:
+        module = self._load_router()
+        discovered = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="", stderr=""
+        )
+        with (
+            patch.object(module.sys, "platform", "win32"),
+            patch.dict(os.environ, {}, clear=False),
+            patch.object(module.subprocess, "run", return_value=discovered),
+            patch.object(module, "_run") as run,
+        ):
+            os.environ.pop("NILO_WSL_DISTRIBUTION", None)
+            self.assertEqual(
+                module._run_appliance_stage(Path("C:/work/NILO/05_Software")), 2
+            )
+        run.assert_not_called()
+
+    def test_windows_appliance_stage_requires_selection_for_multiple_distributions(
+        self,
+    ) -> None:
+        module = self._load_router()
+        discovered = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="Ubuntu\nUbuntu-24.04\n", stderr=""
+        )
+        with (
+            patch.object(module.sys, "platform", "win32"),
+            patch.dict(os.environ, {}, clear=False),
+            patch.object(module.subprocess, "run", return_value=discovered),
+            patch.object(module, "_run") as run,
+        ):
+            os.environ.pop("NILO_WSL_DISTRIBUTION", None)
+            self.assertEqual(
+                module._run_appliance_stage(Path("C:/work/NILO/05_Software")), 2
+            )
+        run.assert_not_called()
 
     def test_discover_suites_finds_go_module_and_each_python_integration(self) -> None:
         """A future integration must not be silently omitted from AEGIS runs."""

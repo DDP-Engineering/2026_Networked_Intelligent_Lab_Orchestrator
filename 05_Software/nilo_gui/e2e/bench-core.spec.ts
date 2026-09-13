@@ -5,13 +5,12 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import { DevelopmentTopology, withRedactedSecret } from './topology';
 
 /**
- * The browser-to-WSL2 simulation path, end to end.
+ * The browser-to-appliance path, end to end.
  *
- * A real browser drives the interface development server on Windows; that
- * server forwards `/api` to a real Bench Core compiled and running inside a
- * WSL2 distribution on the simulation profile, with its database on the WSL
- * Linux filesystem. Nothing here is mocked, and nothing here proves anything
- * about physical equipment.
+ * A real browser drives the built interface from Bench Core's HTTPS origin.
+ * Bench Core runs inside the appliance verification stage on the appliance
+ * profile, with its database on that disposable Linux filesystem. Nothing here
+ * is mocked, and nothing here proves anything about physical equipment.
  *
  * The tests run in order and share one browser page: the second one starts
  * from the connected screen the first one reached, which is the only way to
@@ -24,8 +23,8 @@ const guiVersion = JSON.parse(
   readFileSync(resolve(guiRoot, 'package.json'), 'utf8'),
 ) as { version: string };
 
-const INTEGRATION_ID = 'simulation.fake-python';
-const DEVICE_ID = 'simulation.fake-python.device.stable-001';
+// A fresh appliance carries no managed integration until one is installed, and
+// the empty inventory is itself the assertion: nothing invented appears there.
 const ADMINISTRATOR = 'bench-core-admin';
 const ADMINISTRATOR_PASSWORD = 'bench-core-admin-password-1';
 
@@ -52,7 +51,7 @@ test.beforeAll(async ({ browser }) => {
 
 test.afterAll(async () => {
   // Runs after a passing suite and after a failing one, which is the only
-  // reason no WSL process or temporary database outlives the run.
+  // reason no owned appliance process or temporary database outlives the run.
   try {
     await page?.close();
   } finally {
@@ -61,7 +60,7 @@ test.afterAll(async () => {
   }
 });
 
-test('signs in with a human session and shows the simulated bench', async () => {
+test('signs in with a human session and shows the appliance bench', async () => {
   const running = requireTopology();
   await page.goto(running.frontendUrl);
 
@@ -75,28 +74,22 @@ test('signs in with a human session and shows the simulated bench', async () => 
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 
   await expect(page.getByRole('heading', { name: 'Bench', exact: true })).toBeVisible();
-  await expectSimulationIdentity();
+  await expectApplianceIdentity();
 
-  await expect(statusValue('Profile')).toHaveText('simulation');
+  await expect(statusValue('Profile')).toHaveText('appliance');
   await expect(statusValue('Service status')).toHaveText('healthy');
-  await expect(statusValue('Simulation')).toHaveText('Yes');
 
+  // An appliance dispatches power through the privileged helper, so an
+  // administrator session offers both controls. They are observed, never
+  // clicked: this run has no business restarting the machine it is proving.
   await page.getByRole('button', { name: 'Account' }).click();
-  await expect(page.getByRole('menuitem', { name: 'Restart NILO' })).toHaveCount(0);
-  await expect(page.getByRole('menuitem', { name: 'Power off NILO' })).toHaveCount(0);
+  await expect(page.getByRole('menuitem', { name: 'Restart NILO' })).toHaveCount(1);
+  await expect(page.getByRole('menuitem', { name: 'Power off NILO' })).toHaveCount(1);
   await page.keyboard.press('Escape');
 
-  const integrations = page.getByRole('region', { name: 'Integrations' });
-  await expect(integrations).toContainText(INTEGRATION_ID);
-  await expect(integrations).toContainText('SIMULATION - Fake Python Integration');
-  await expect(integrations).toContainText('healthy');
-
-  const devices = page.getByRole('region', { name: 'Devices' });
-  await expect(devices).toContainText(DEVICE_ID);
-  await expect(devices).toContainText('SIMULATION - Electronics Bench 001');
-  await expect(devices).toContainText('ready');
-  // The device names the integration that owns it, not just itself.
-  await expect(devices).toContainText(INTEGRATION_ID);
+  // A fresh appliance offers no integration and no device, and says so rather
+  // than presenting anything nobody installed.
+  await expectEmptyInventory();
 });
 
 test('presents Bench Core as unreachable and recovers through the interface', async () => {
@@ -109,21 +102,29 @@ test('presents Bench Core as unreachable and recovers through the interface', as
     page.getByRole('heading', { name: 'Bench Core is not reachable.' }),
   ).toBeVisible();
   await expect(page.getByText(`Version ${guiVersion.version}`)).toBeVisible();
-  await expect(page.getByRole('status', { name: /runtime profile/i })).toHaveCount(0);
+  await expect(page.getByRole('status', { name: /appliance/i })).toHaveCount(0);
 
   await running.startBackend();
   await page.getByRole('button', { name: 'Try again' }).click();
 
   // No reload and no second sign-in: the interface reuses the session it still holds.
   await expect(page.getByRole('heading', { name: 'Bench', exact: true })).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Devices' })).toContainText(DEVICE_ID);
+  await expectEmptyInventory();
 });
 
+/** A fresh appliance remains empty after a backend restart. */
+async function expectEmptyInventory(): Promise<void> {
+  const integrations = page.getByRole('region', { name: 'Integrations' });
+  const devices = page.getByRole('region', { name: 'Devices' });
+  await expect(integrations.getByText(/no integrations/i)).toBeVisible();
+  await expect(devices.getByText(/no devices/i)).toBeVisible();
+  await expect(integrations.getByRole('row')).toHaveCount(0);
+  await expect(devices.getByRole('row')).toHaveCount(0);
+}
+
 /** One persistent runtime indicator inside the authenticated workspace. */
-async function expectSimulationIdentity(): Promise<void> {
-  await expect(page.getByRole('status', { name: /runtime profile/i })).toContainText(
-    'SIM',
-  );
+async function expectApplianceIdentity(): Promise<void> {
+  await expect(page.getByRole('status', { name: /appliance/i })).toContainText('LIVE');
   await expect(page.locator('.shell-boundary')).toHaveCount(0);
 }
 
@@ -141,7 +142,7 @@ async function fillSecret(field: Locator, secret: string): Promise<void> {
 
 function requireTopology(): DevelopmentTopology {
   if (topology === null) {
-    throw new Error('the development topology is not running');
+    throw new Error('the appliance topology is not running');
   }
   return topology;
 }

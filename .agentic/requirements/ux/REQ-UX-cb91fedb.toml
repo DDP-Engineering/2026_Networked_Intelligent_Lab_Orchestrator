@@ -54,7 +54,7 @@ When Diagnostics has at least one measured traffic minute, the browser shall ren
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "A TrafficChart component test renders separated RX and TX values over a window with a missing minute, asserts the visible legend, time labels and scaled byte labels, verifies the later bar remains positioned after the gap, and focuses and points at bars to assert the visible selected-minute readout contains time, RX, TX and total values; the field-display browser test opens Diagnostics at 1024x600 and 800x480 and confirms the chart remains inside the viewport."
+verification = "TrafficChart component tests render separated RX and TX values over a window with a missing minute, assert the visible legend, time labels and scaled byte labels, verify the later bar remains positioned after the gap, and prove keyboard, click/tap, and hover movement all select the nearest measured minute through one coordinate-aware listbox with option semantics and a visible readout containing time, RX, TX and total values. A real-browser test selects adjacent dense one-hour samples, including a measured zero-byte minute, by pointer coordinates without overlapping targets. The field-display browser test opens Diagnostics against real appliance samples at 1024x600 and 800x480, confirms the chart remains inside the viewport, and includes the chart listbox in the 44-by-44 CSS-pixel geometry oracle."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
@@ -66,6 +66,7 @@ affected_paths = [
     "05_Software/nilo_gui/src/i18n/de.ts",
     "05_Software/nilo_gui/src/i18n/ro.ts",
     "05_Software/nilo_gui/e2e/field-display.spec.ts",
+    "05_Software/nilo_gui/e2e/network.spec.ts",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
@@ -74,6 +75,7 @@ linked_tests = [
     "05_Software/nilo_gui/src/components/network/TrafficChart.test.tsx",
     "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
     "05_Software/nilo_gui/e2e/field-display.spec.ts",
+    "05_Software/nilo_gui/e2e/network.spec.ts::selects adjacent dense traffic minutes by real pointer position",
 ]
 
 # --- optional below this line ---
@@ -85,4 +87,4 @@ priority = "high"   # low | normal | high
 rationale = "An unexplained stack of bars cannot tell a field operator which direction, time or byte amount it represents."
 
 created = 2026-09-04
-updated = 2026-09-04
+updated = 2026-09-13

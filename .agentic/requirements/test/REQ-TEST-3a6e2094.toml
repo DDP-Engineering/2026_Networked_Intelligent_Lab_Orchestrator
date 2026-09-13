@@ -1,0 +1,52 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-TEST-3a6e2094"
+
+title = "Start an appliance under a real privileged helper and NetworkManager"
+
+status = "active"
+
+requirement = """
+When the appliance verification stage is run, the stage shall bring up D-Bus,
+NetworkManager, the privileged network helper as root and Bench Core as an
+unprivileged service account on the appliance profile, with generated TLS
+material and a built interface directory, and report the HTTPS address that
+Bench Core is listening on.
+"""
+
+verification = """
+An automated run of the stage on a host with a container engine asserts that
+the stage prints one listening record naming an HTTPS address and the appliance
+profile, that an unauthenticated request to /api/v1/status on that address is
+refused, and that the same request with a credential issued inside the stage is
+answered. A run whose privileged helper socket never answers fails with the
+helper named, rather than reporting a started appliance.
+"""
+
+affected_paths = [
+    "02_Tools/tests/appliance/check.sh",
+    "02_Tools/tests/appliance/run.sh",
+    "02_Tools/tests/network/network-up.sh",
+    "02_Tools/tests/network/run.sh",
+    "05_Software/nilo_assistant/cmd/nilo/appliance_stage_linux_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/cmd/nilo/appliance_stage_linux_test.go::TestApplianceStageStartsUnderRealHelperAndNetworkManager",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "The appliance profile refuses to start without a privileged helper answering its socket, so a stage that does not stand the whole pairing up proves nothing about the runtime NILO ships."
+
+created = 2026-09-12
+updated = 2026-09-12
