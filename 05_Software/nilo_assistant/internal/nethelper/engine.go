@@ -75,9 +75,16 @@ type Engine struct {
 	keystore *Keystore
 	// forwarding is the durable device-network inventory, present when the
 	// store keeps one; inventory caches what it holds.
-	forwarding ForwardingStore
-	inventory  *ForwardingInventory
-	power      power.Controller
+	forwarding          ForwardingStore
+	inventory           *ForwardingInventory
+	power               power.Controller
+	hardware            RecoveryHardware
+	directRecoveryStore DirectRecoveryStore
+	directRecovery      *DirectRecoveryRecord
+	steadyNow           func() time.Time
+	recoverySteadyUntil time.Time
+	recoverySteadySeen  time.Time
+	recoveryWallSeen    time.Time
 }
 
 // ConfigurePower installs the fixed whole-appliance power implementation.
@@ -112,7 +119,11 @@ func (e *Engine) PowerOff(ctx context.Context) error {
 }
 
 func NewEngine(d Driver, s Store, now func() time.Time) (*Engine, error) {
-	if d == nil || s == nil || now == nil {
+	return newEngineWithClocks(d, s, now, time.Now)
+}
+
+func newEngineWithClocks(d Driver, s Store, now, steadyNow func() time.Time) (*Engine, error) {
+	if d == nil || s == nil || now == nil || steadyNow == nil {
 		return nil, errors.New("helper requires driver, durable store and clock")
 	}
 	r, err := s.Load()
@@ -120,10 +131,36 @@ func NewEngine(d Driver, s Store, now func() time.Time) (*Engine, error) {
 		return nil, fmt.Errorf("read recovery: %w", err)
 	}
 	forwarding, _ := s.(ForwardingStore)
+	directRecoveryStore, _ := s.(DirectRecoveryStore)
 	if r != nil && (r.Version != 1 || !validID.MatchString(r.ID) || !knownPhase(r.Phase)) {
 		return nil, errors.New("invalid recovery record")
 	}
-	e := &Engine{driver: d, store: s, now: now, record: r, disabled: map[string]string{}, forwarding: forwarding}
+	var directRecovery *DirectRecoveryRecord
+	if directRecoveryStore != nil {
+		directRecovery, err = directRecoveryStore.LoadDirectRecovery()
+		if err != nil {
+			return nil, fmt.Errorf("read direct recovery: %w", err)
+		}
+		if directRecovery != nil && !validDirectRecoveryRecord(*directRecovery) {
+			return nil, errors.New("invalid direct recovery record")
+		}
+	}
+	e := &Engine{
+		driver: d, store: s, now: now, record: r, disabled: map[string]string{}, forwarding: forwarding,
+		directRecoveryStore: directRecoveryStore, directRecovery: directRecovery, steadyNow: steadyNow,
+	}
+	if directRecovery != nil && directRecovery.Phase == "active" {
+		e.trackDirectRecoveryDeadline(now().UTC(), directRecovery.Deadline)
+	}
+	if consumer, ok := d.(commissioningStoreConsumer); ok {
+		commissioningStore, storeOK := s.(CommissioningProfileStore)
+		if !storeOK {
+			return nil, errors.New("commissioning profile ownership store is unavailable")
+		}
+		if err := consumer.ConfigureCommissioningProfileStore(commissioningStore); err != nil {
+			return nil, fmt.Errorf("configure commissioning profile ownership: %w", err)
+		}
+	}
 	if r != nil {
 		e.disabled = copyMap(r.Disabled)
 	}
@@ -393,6 +430,12 @@ func (e *Engine) RunRecovery(ctx context.Context, report func(error)) {
 			recovery, cancel := context.WithTimeout(ctx, 30*time.Second)
 			err := e.Expire(recovery)
 			cancel()
+			if err != nil && report != nil {
+				report(err)
+			}
+			directRecovery, cancelDirectRecovery := context.WithTimeout(ctx, 30*time.Second)
+			err = e.ExpireDirectRecovery(directRecovery)
+			cancelDirectRecovery()
 			if err != nil && report != nil {
 				report(err)
 			}

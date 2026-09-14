@@ -1,0 +1,51 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-d2d75f06"
+
+title = "Automatically provide direct commissioning link-local addressing"
+
+status = "active"
+
+requirement = """
+While an appliance is provisioning, NILO shall automatically obtain an RFC 3927 IPv4 link-local address on every eligible physical Ethernet interface that has no usable routable address, without replacing or altering an existing usable network profile, so either Ethernet port can commission the appliance without DHCP or manual address configuration.
+"""
+
+verification = "An automated service test presents eligible Ethernet interfaces with DHCP, static, addressless, protected, and wireless states and observes that only safe addressless Ethernet interfaces request helper-owned RFC 3927 addressing; disposable NetworkManager system tests create and remove an inventoried in-memory profile, observe a 169.254/16 address after conflict probing without a default route or DNS configuration, and prove a foreign same-prefix profile remains byte-for-byte unchanged."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/commissioning_link.go",
+    "05_Software/nilo_assistant/internal/network/commissioning_link_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_commissioning_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_recovery_linux_test.go",
+    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/nilo_assistant/internal/nethelper/commissioning_link.go",
+    "05_Software/nilo_assistant/internal/nethelper/store.go",
+    "05_Software/nilo_assistant/internal/nethelper/engine.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_commissioning_linux.go",
+    "05_Software/nilo_assistant/internal/network/model.go",
+    "02_Tools/tests/network/run.sh",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/commissioning_link_test.go::TestProvisioningArmsEverySafeUnconfiguredEthernetForLinkLocal",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_recovery_linux_test.go::TestCommissioningConnectionAutoStartsButNeverRoutesOrResolves",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_recovery_linux_test.go::TestCommissioningReconcileNeverDeletesAForeignSamePrefixProfile",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_recovery_linux_test.go::TestCommissioningReconcileCreatesAndRemovesAnInventoriedVolatileProfile",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "A new appliance must be reachable through either Ethernet port even when a direct cable has no DHCP server."
+
+created = 2026-09-13
+updated = 2026-09-14

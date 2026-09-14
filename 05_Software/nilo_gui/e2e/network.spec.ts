@@ -156,7 +156,7 @@ test('keeps opposite-role adapters visible and explains sequential repurposing',
         simulation: false,
         build: {
           name: 'nilo',
-          version: '0.2.0',
+          version: '0.4.0',
           integration_protocol: 'nilo.integration/1',
         },
       },

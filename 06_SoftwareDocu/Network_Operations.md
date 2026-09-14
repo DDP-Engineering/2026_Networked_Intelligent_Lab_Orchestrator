@@ -20,6 +20,99 @@ tunnels; do not manage an external tunnel as if NILO created it.
 A new appliance starts in first-boot provisioning and is reachable on every
 eligible adapter until it is commissioned; see First-boot provisioning below.
 
+### Local discovery and Raspberry Pi recovery
+
+During first boot, NILO prepares a volatile IPv4 link-local profile on every
+unassigned, role-safe physical Ethernet adapter. Exact ownership is recorded in
+the root-only helper inventory `commissioning-profiles.json` by stable adapter
+identity, interface, and NetworkManager UUID; reconciliation removes only an
+inventoried profile whose complete settings still match. A foreign profile is
+never owned merely because its name uses a NILO prefix. The profiles use standard
+address conflict detection and never supply DHCP, DNS, a default route,
+forwarding, NAT, or router advertisements. `nilo.local` follows the interfaces
+that currently carry commissioning management access. A saved interface
+profile, a device-network/PLC role, or existing usable addressing excludes an
+adapter; no physical port is designated as the setup port.
+
+After commissioning, the shared setup name is withdrawn and the appliance
+permanently advertises `_nilo._tcp.local` on its configured management
+interfaces. The instance name is `NILO <appliance-UUID>`. Version 1 TXT records
+contain only `txtvers`, `id`, `hostname`, `url`, `path`, and `state`; the SRV
+target and URL use the commissioned system hostname (`<hostname>.local`) and
+configured HTTPS port. That name must be unique on the local link and present
+in the TLS certificate. If Avahi reports a collision-resolved suffixed name,
+NILO fails the publication and retries instead of advertising an uncertified
+URL; resolve the hostname collision administratively. The UUID makes service
+instances unique, so multiple appliances coexist without all of them claiming
+`nilo.local`. NILO publishes
+process-owned Avahi D-Bus entries; it does not replace
+`/etc/avahi/avahi-daemon.conf`.
+
+The optional Raspberry Pi delivery wiring gives the physical button two
+network-only actions, both performed on release:
+
+- less than 3 seconds: no action;
+- 3 seconds to less than 10 seconds: arm or extend a 10-minute temporary
+  direct-connect recovery window;
+- 10 seconds or longer: clear the commissioned lifecycle, explicit management
+  selection, and temporary recovery state, then continue live in commissioning.
+
+At a recovery-duration button release, the privileged helper durably records the UTC release time
+and snapshots which identified adapters already have carrier. If a connected
+Ethernet adapter has no stable identity, the snapshot is invalid and recovery
+is refused safely. Only a later link-up
+on an identified, unassigned physical Ethernet adapter may activate. Core and
+helper independently refuse saved/static profiles, management/device/recovery
+roles, existing IPv4 or non-link-local IPv6 addresses or gateways, active or available production
+profiles, and transitioning or identity-mismatched devices. DHCP detection is
+only an additional refusal signal. Candidates are ordered by stable adapter
+identity and only the first safe one wins.
+
+An active recovery link gets one helper-owned in-memory NetworkManager IPv4LL
+profile, the existing HTTPS destination admission, and an interface-scoped
+`nilo.local` alias. The permanent service stays on its commissioned interfaces.
+Authentication, authorization, TLS, CSRF protection, and Activity audit remain
+unchanged. Expiry removes the alias and admission before deleting the exact
+owned profile after verifying its durable UUID, adapter/interface/MAC binding,
+volatile status, and non-routing settings. Both core and helper persist the deadline, and the helper plus
+its independent recovery timer remove an expired or interrupted link even when
+Bench Core is unavailable. On Bench Core restart, non-idle recovery is restored
+before another button event is handled; it is not silently re-adopted. Pending
+button events are coalesced so reset supersedes recovery and a later recovery
+release extends from its actual release time. The highest handled generation is
+retained in an idle tombstone, including after network commissioning reset, so
+an acknowledgement failure cannot replay the action. A failed post-mutation
+audit remains durably pending and is retried without repeating its network
+effect. An incomplete restore
+retains the role interlock for retry. No
+password, token, TLS identity, appliance identity, hostname, audit record,
+integration, saved interface setting, PLC assignment, or device network is
+changed by the long-press reset.
+
+A GPIO read error invalidates the press in progress. When sampling resumes, the
+current level establishes a new baseline and a fresh debounced press is required;
+an unreadable interval can never lengthen a short press into network reset.
+
+Reference Raspberry Pi wiring is an active-low momentary button between BCM17
+and ground using the internal pull-up, and an active-high LED from BCM27 through
+an appropriate resistor. Power the Raspberry Pi down and disconnect its supply
+before installing or changing this wiring. LED states are off when idle, 500 ms blinking while
+armed, steady while active, 125 ms blinking while reset is pending, and a
+two-flash failure pattern. Enable it only through the Pi-specific installer
+option:
+
+```sh
+sudo sh 02_Tools/scripts/install-nethelper.sh \
+  /path/to/nilo-nethelper nilo --raspberry-pi-recovery
+```
+
+The installer validates Raspberry Pi hardware and `/dev/gpiochip0`. Omit the
+option on mini PCs, ordinary PCs, laptops, simulations, and other Ubuntu hosts;
+those systems use their normal console/display and reinstall procedures for
+recovery. Before enabling the Pi option, install a certificate that covers both
+the permanent `<system-hostname>.local` URL and temporary `nilo.local`; startup
+fails closed if either recovery discovery name is not covered.
+
 In the GUI, Network contains Overview, Device access, VPN profiles and
 Diagnostics. Overview starts with appliance status and continues directly with
 management access and the interface inventory. Activity provides authorized audit queries,
@@ -160,7 +253,12 @@ saved state is harmless. A different console list is refused unless
 pending with the previous list retained for automatic recovery. `--bind` and
 interface-managed options are mutually exclusive. Existing installations
 continue to use their literal `--bind` listener until an administrator
-deliberately initializes interface-managed access.
+deliberately initializes interface-managed access. A commissioned legacy
+private-address listener still publishes the permanent `_nilo._tcp.local`
+service on the Ethernet interface owning that literal address; a loopback
+listener remains undiscoverable. Its certificate must cover the commissioned
+`<system-hostname>.local` discovery target even when clients also use the
+literal listener address.
 
 Interface names must be valid non-loopback Linux interface names. Empty selections
 and invalid or duplicate TLS identities are refused. Physical saved selections are unique by adapter
@@ -219,10 +317,13 @@ IP addresses are not deployment configuration.
    `nilo admin bootstrap --data-dir /var/lib/nilo --username administrator`.
    The development-administrator convenience is simulation-only.
 6. Provision, without having NILO generate or replace it, a certificate whose
-   subject alternative names include every stable management identity. For the
-   field profile this is at least `DNS:ddp-remote.local` and
-   `IP:10.205.148.11`. NILO warns with the missing names when the certificate
-   does not cover the configured identities. Trust the issuing CA on clients.
+   subject alternative names include every stable management identity and the
+   commissioned `<system-hostname>.local` discovery name. A Pi delivery with
+   hardware recovery enabled must also include `DNS:nilo.local`. For the field
+   profile this is at least `DNS:ddp-remote.local`, `DNS:nilo.local`, and
+   `IP:10.205.148.11`. NILO refuses startup when a required discovery name is
+   missing and warns for other configured identities. Trust the issuing CA on
+   clients.
 7. Initialize the appliance management listener and certificate paths:
 
 ```sh

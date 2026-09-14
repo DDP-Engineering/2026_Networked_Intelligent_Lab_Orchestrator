@@ -1,0 +1,39 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-REL-59115be5"
+
+title = "Serialize simultaneous recovery links"
+
+status = "active"
+
+requirement = """
+If two or more eligible Ethernet links appear in one observed sample before recovery activation is settled, NILO shall select exactly one winner by canonical stable adapter-identity order, reserve it atomically, refuse all remaining candidates for that window, and expose no overlapping temporary subnets or ambiguous recovery route.
+"""
+
+verification = "A deterministic test submits the same simultaneous candidate sample in both input orders and observes exactly one atomic recovery claim, one temporary link-local profile and one alias/admission; the selected identity is the same lowest canonical stable adapter identity and all losers remain byte-for-byte unchanged."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/hardware_recovery.go",
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go",
+    "05_Software/nilo_assistant/internal/network/adapter_roles.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryRequiresAPostArmSafeLinkTransitionAndChoosesOneAdapter",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "One recovery link avoids ambiguous routing while still supporting either physical Ethernet port."
+
+created = 2026-09-13
+updated = 2026-09-13

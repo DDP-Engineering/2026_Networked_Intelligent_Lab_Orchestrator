@@ -12,6 +12,7 @@ type AdapterRole string
 const (
 	AdapterRoleManagement AdapterRole = "management"
 	AdapterRoleDevice     AdapterRole = "device"
+	AdapterRoleRecovery   AdapterRole = "recovery"
 )
 
 // AdapterRoleClaim is safe role ownership metadata. AdapterID is empty for a
@@ -185,7 +186,7 @@ func (coordinator *AdapterRoleCoordinator) conflictLocked(requested []AdapterRol
 }
 
 func validAdapterRole(role AdapterRole) bool {
-	return role == AdapterRoleManagement || role == AdapterRoleDevice
+	return role == AdapterRoleManagement || role == AdapterRoleDevice || role == AdapterRoleRecovery
 }
 
 func canonicalAdapterID(adapterID string) string {

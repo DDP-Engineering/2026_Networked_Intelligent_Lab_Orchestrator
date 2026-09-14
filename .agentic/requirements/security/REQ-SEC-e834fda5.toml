@@ -1,0 +1,46 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-SEC-e834fda5"
+
+title = "Preserve management controls during network recovery"
+
+status = "active"
+
+requirement = """
+While temporary network recovery is active, NILO shall expose only the existing HTTPS management service through its normal TLS, authentication, authorization, browser-session, CSRF, request-admission, and destination-interface controls, adding no unauthenticated recovery endpoint or credential bypass.
+"""
+
+verification = "Composed appliance-profile, active-recovery-overlay, certificate-name, and profile tests observe the normal TLS listener and secure cookie, HTTP 401 for unauthenticated protected APIs, CSRF refusal for an authenticated cookie mutation without its token, ordinary role refusal, non-persistent destination admission only on the selected link, and no additional listener or route."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/hardware_recovery.go",
+    "05_Software/nilo_assistant/internal/network/management_access.go",
+    "05_Software/nilo_assistant/internal/httpapi/server.go",
+    "05_Software/nilo_assistant/internal/httpapi/management_access_api_test.go",
+    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/nilo_assistant/cmd/nilo/appliance_stage_linux_test.go",
+    "02_Tools/tests/appliance/run.sh",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/management_access_test.go::TestRecoveryManagementOverlayWidensAdmissionWithoutPersistingTheInterface",
+    "05_Software/nilo_assistant/internal/httpapi/management_access_api_test.go::TestTemporaryRecoveryReachabilityKeepsTheExistingHTTPSIdentityAndAccessControls",
+    "05_Software/nilo_assistant/cmd/nilo/appliance_stage_linux_test.go::TestApplianceStageStartsUnderRealHelperAndNetworkManager",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::TestDiscoveryCertificateNamesAddTheSharedAliasOnlyForPiRecovery",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "A physical network-recovery request grants reachability, not identity or authorization."
+
+created = 2026-09-13
+updated = 2026-09-13

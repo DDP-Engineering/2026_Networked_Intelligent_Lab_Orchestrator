@@ -14,7 +14,7 @@ if [ "${NILO_NETWORK_RACE:-0}" = 1 ]; then race_flag=-race; fi
 # and one NetworkManager sequence stay in one place.
 . /repo/02_Tools/tests/network/network-up.sh
 nilo_network_up
-trap 'kill "$nm_pid" 2>/dev/null || true' EXIT
+trap 'kill "$avahi_pid" "$nm_pid" 2>/dev/null || true' EXIT
 # Install only inside this disposable namespace, before connectivity tests
 # replace its online route. The image deliberately starts without wg.
 NILO_INSTALL_SYSTEM=1 /tmp/nethelper.test -test.v -test.timeout 5m -test.run '^TestWireGuardInstallSystem$'

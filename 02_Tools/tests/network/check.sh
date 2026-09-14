@@ -16,7 +16,7 @@ cleanup() {
 docker build --target network-system --build-arg "NILO_BASE=$base" -t "$image" "$repo/02_Tools/tests/network"
 docker network create --ipv6 --subnet "$subnet" "$name" >/dev/null
 trap cleanup EXIT HUP INT TERM
-docker run --rm --name "$name" --network "$name" --cap-add NET_ADMIN --cap-add SYS_ADMIN --security-opt systempaths=unconfined \
+docker run --rm --name "$name" --hostname nilo-system-test --network "$name" --cap-add NET_ADMIN --cap-add SYS_ADMIN --security-opt systempaths=unconfined \
  -e NILO_NETWORK_SYSTEM=1 -e NILO_NETWORK_RACE="${NILO_NETWORK_RACE:-0}" \
  -e NILO_INSTALL_ONLY="${NILO_INSTALL_ONLY:-0}" \
  -e GOCACHE=/cache/build -e GOMODCACHE=/cache/mod \

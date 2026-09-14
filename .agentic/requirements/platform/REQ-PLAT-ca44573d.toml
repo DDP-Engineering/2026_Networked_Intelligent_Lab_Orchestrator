@@ -1,0 +1,45 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-PLAT-ca44573d"
+
+title = "Confine the hardware button to Raspberry Pi deliveries"
+
+status = "active"
+
+requirement = """
+Where the appliance is not a configured Raspberry Pi delivery, NILO shall leave hardware recovery disabled, require no GPIO device or permission, and continue to use local console access or reinstall procedures for network recovery.
+"""
+
+verification = "Portable Linux and simulation startup tests omit hardware-recovery configuration on x86_64 and observe successful startup without opening a GPIO device or starting a button loop; invalid partial GPIO configuration is refused, and installation documentation identifies console/reinstall as the generic-host path."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/config/config.go",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/recovery_hardware.go",
+    "05_Software/nilo_assistant/cmd/nilo-nethelper/serve_linux.go",
+    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/nilo_assistant/cmd/nilo-nethelper/main.go",
+    "02_Tools/scripts/install-nethelper.sh",
+    "06_SoftwareDocu/Network_Operations.md",
+    "06_SoftwareDocu/Local_Hardware_Access.md",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/nethelper/engine_test.go::TestHardwareRecoveryIsUnavailableUntilExplicitlyConfigured",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "Mini-PC, desktop and laptop hardware has no stable GPIO contract and already has practical console recovery."
+
+created = 2026-09-13
+updated = 2026-09-13

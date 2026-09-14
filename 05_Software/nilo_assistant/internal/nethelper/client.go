@@ -64,6 +64,71 @@ func (c *Client) PublishMDNS(ctx context.Context, advertisement network.MDNSAdve
 	return err
 }
 
+func (c *Client) WithdrawMDNS(ctx context.Context) error {
+	_, err := c.call(ctx, Request{Op: "mdns.withdraw"})
+	return err
+}
+
+func (c *Client) MDNSPublicationCurrent(ctx context.Context) (bool, error) {
+	response, err := c.call(ctx, Request{Op: "mdns.status"})
+	if err != nil || response.MDNSCurrent == nil {
+		return false, err
+	}
+	return *response.MDNSCurrent, nil
+}
+
+// ActivateRecoveryLink asks the helper to perform its independent safety
+// checks and create one volatile link-local profile.
+func (c *Client) ActivateRecoveryLink(ctx context.Context, adapterID, interfaceName string, expiresAt time.Time) (string, error) {
+	response, err := c.call(ctx, Request{
+		Op: "recovery.link.activate", AdapterID: adapterID, InterfaceName: interfaceName,
+		RecoveryExpiresAt: expiresAt,
+	})
+	return response.RecoveryRecordID, err
+}
+
+func (c *Client) ExtendRecoveryLink(ctx context.Context, recordID string, expiresAt time.Time) error {
+	_, err := c.call(ctx, Request{
+		Op: "recovery.link.extend", RecoveryRecordID: recordID, RecoveryExpiresAt: expiresAt,
+	})
+	return err
+}
+
+// RestoreRecoveryLink removes only the exact helper-owned volatile profile.
+func (c *Client) RestoreRecoveryLink(ctx context.Context, recordID string) error {
+	_, err := c.call(ctx, Request{Op: "recovery.link.restore", RecoveryRecordID: recordID})
+	return err
+}
+
+var _ network.HardwareRecoveryDriver = (*Client)(nil)
+
+func (c *Client) ReadRecoveryEvent(ctx context.Context) (HardwareRecoveryEvent, bool, error) {
+	response, err := c.call(ctx, Request{Op: "hardware.recovery.read"})
+	if err != nil || response.HardwareEvent == nil {
+		return HardwareRecoveryEvent{}, false, err
+	}
+	return *response.HardwareEvent, true, nil
+}
+
+func (c *Client) AcknowledgeRecoveryEvent(ctx context.Context, eventID string) error {
+	_, err := c.call(ctx, Request{Op: "hardware.recovery.ack", HardwareEventID: eventID})
+	return err
+}
+
+func (c *Client) SetRecoveryIndicator(ctx context.Context, state HardwareIndicatorState) error {
+	_, err := c.call(ctx, Request{Op: "hardware.indicator.set", Indicator: &state})
+	return err
+}
+
+func (c *Client) ReconcileCommissioningLinks(ctx context.Context, links []network.CommissioningLink) error {
+	copyOfLinks := make([]network.CommissioningLink, len(links))
+	copy(copyOfLinks, links)
+	_, err := c.call(ctx, Request{Op: "commissioning.links.reconcile", CommissioningLinks: &copyOfLinks})
+	return err
+}
+
+var _ network.CommissioningLinkDriver = (*Client)(nil)
+
 func (c *Client) call(ctx context.Context, q Request) (Response, error) {
 	ctx, cancel := context.WithTimeout(ctx, 35*time.Second)
 	defer cancel()

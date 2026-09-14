@@ -14,14 +14,15 @@ title = "Freeze the management allowlist once commissioned"
 status = "active"
 
 requirement = """
-Once the appliance has completed commissioning, the management listener allowlist shall be the explicitly configured set alone: a newly detected eligible interface shall not be added to it, and the allowlist shall change only through an administrator's explicit management access request.
+Once the appliance has completed commissioning, NILO shall keep the persistent management allowlist equal to the administrator's explicitly configured set, never add a newly detected adapter to it, and keep any hardware-recovery admission separate, temporary, and unable to modify that persistent selection.
 """
 
-verification = "An automated test builds the service over a commissioned appliance with a saved single-interface allowlist, adds a further eligible interface to the provider, reconciles, and asserts the allowlist and the firewall still carry only the configured interface and that a destination address on the new adapter is refused. A second test asserts an explicit management access update is still accepted on a commissioned appliance and is refused while the appliance is provisioning."
+verification = "Automated tests start commissioned with one saved management adapter, attach another adapter, and observe the persisted selection unchanged and the new destination refused; a temporary recovery test observes ephemeral admission without a persistence write and exact removal on expiry, while an explicit administrator update remains accepted and provisioning still refuses explicit selection."
 
 affected_paths = [
     "05_Software/nilo_assistant/internal/network/management_access.go",
     "05_Software/nilo_assistant/internal/network/management_provisioning_test.go",
+    "05_Software/nilo_assistant/internal/network/management_access_test.go",
 ]
 
 linked_tests = [
@@ -36,4 +37,4 @@ priority = "high"   # low | normal | high
 rationale = "First boot is a deliberate, temporary widening. If derivation continued after commissioning, plugging in any adapter would silently reopen management access on it."
 
 created = 2026-09-12
-updated = 2026-09-12
+updated = 2026-09-13

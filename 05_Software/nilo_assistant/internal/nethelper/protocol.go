@@ -5,6 +5,7 @@ import (
 	"errors"
 	"nilo.local/nilo/internal/network"
 	"nilo.local/nilo/internal/power"
+	"time"
 )
 
 // SecretPayload is the one type in this protocol that carries key material, and
@@ -54,6 +55,15 @@ type Request struct {
 	// MDNS is accepted only by mdns.publish. It carries a validated host label
 	// and interface names, never responder configuration syntax.
 	MDNS *network.MDNSAdvertisement `json:"mdns,omitempty"`
+	// AdapterID and InterfaceName are accepted together only by recovery link
+	// activation. RecoveryRecordID is the opaque owned link returned by it.
+	AdapterID          string                       `json:"adapter_id,omitempty"`
+	InterfaceName      string                       `json:"interface_name,omitempty"`
+	RecoveryRecordID   string                       `json:"recovery_record_id,omitempty"`
+	RecoveryExpiresAt  time.Time                    `json:"recovery_expires_at,omitempty"`
+	HardwareEventID    string                       `json:"hardware_event_id,omitempty"`
+	Indicator          *HardwareIndicatorState      `json:"indicator,omitempty"`
+	CommissioningLinks *[]network.CommissioningLink `json:"commissioning_links,omitempty"`
 }
 
 // Response has no field that can hold key material, and must never gain one.
@@ -78,6 +88,10 @@ type Response struct {
 	Networks []network.WiFiNetwork `json:"networks,omitempty"`
 	// Plans is the installed device-network forwarding.
 	Plans []network.ForwardingPlan `json:"plans,omitempty"`
+	// RecoveryRecordID names only a helper-owned volatile recovery link.
+	RecoveryRecordID string                 `json:"recovery_record_id,omitempty"`
+	HardwareEvent    *HardwareRecoveryEvent `json:"hardware_event,omitempty"`
+	MDNSCurrent      *bool                  `json:"mdns_current,omitempty"`
 }
 
 // secretOperations are the only operations that may name staged key material.
@@ -127,6 +141,24 @@ func dispatch(ctx context.Context, e *Engine, q Request) Response {
 	if q.MDNS != nil && q.Op != "mdns.publish" {
 		return Response{Error: "unexpected mDNS advertisement", Code: "invalid_request"}
 	}
+	if (q.AdapterID != "" || q.InterfaceName != "") && q.Op != "recovery.link.activate" {
+		return Response{Error: "unexpected recovery adapter identity", Code: "invalid_request"}
+	}
+	if q.RecoveryRecordID != "" && q.Op != "recovery.link.restore" && q.Op != "recovery.link.extend" {
+		return Response{Error: "unexpected recovery record identity", Code: "invalid_request"}
+	}
+	if !q.RecoveryExpiresAt.IsZero() && q.Op != "recovery.link.activate" && q.Op != "recovery.link.extend" {
+		return Response{Error: "unexpected recovery expiry", Code: "invalid_request"}
+	}
+	if q.HardwareEventID != "" && q.Op != "hardware.recovery.ack" {
+		return Response{Error: "unexpected hardware event identity", Code: "invalid_request"}
+	}
+	if q.Indicator != nil && q.Op != "hardware.indicator.set" {
+		return Response{Error: "unexpected hardware indicator", Code: "invalid_request"}
+	}
+	if q.CommissioningLinks != nil && q.Op != "commissioning.links.reconcile" {
+		return Response{Error: "unexpected commissioning links", Code: "invalid_request"}
+	}
 	switch q.Op {
 	case "management.access.apply":
 		if q.ID != "" || q.ManagementAccess == nil {
@@ -138,6 +170,58 @@ func dispatch(ctx context.Context, e *Engine, q Request) Response {
 			return Response{Error: "mDNS publication requires an advertisement and nothing else", Code: "invalid_request"}
 		}
 		err = e.PublishMDNS(ctx, *q.MDNS)
+	case "mdns.withdraw":
+		if q.ID != "" || q.MDNS != nil {
+			return Response{Error: "mDNS withdrawal requires an empty envelope", Code: "invalid_request"}
+		}
+		err = e.WithdrawMDNS(ctx)
+	case "mdns.status":
+		if q.ID != "" || q.MDNS != nil {
+			return Response{Error: "mDNS status requires an empty envelope", Code: "invalid_request"}
+		}
+		var current bool
+		current, err = e.MDNSPublicationCurrent(ctx)
+		r.MDNSCurrent = &current
+	case "recovery.link.activate":
+		if q.ID != "" || q.AdapterID == "" || q.InterfaceName == "" || q.RecoveryRecordID != "" || q.RecoveryExpiresAt.IsZero() {
+			return Response{Error: "recovery activation requires one adapter identity and interface", Code: "invalid_request"}
+		}
+		r.RecoveryRecordID, err = e.ActivateRecoveryLink(ctx, q.AdapterID, q.InterfaceName, q.RecoveryExpiresAt)
+	case "recovery.link.extend":
+		if q.ID != "" || q.RecoveryRecordID == "" || q.AdapterID != "" || q.InterfaceName != "" || q.RecoveryExpiresAt.IsZero() {
+			return Response{Error: "recovery extension requires one owned record identity and expiry", Code: "invalid_request"}
+		}
+		err = e.ExtendRecoveryLink(ctx, q.RecoveryRecordID, q.RecoveryExpiresAt)
+	case "recovery.link.restore":
+		if q.ID != "" || q.RecoveryRecordID == "" || q.AdapterID != "" || q.InterfaceName != "" || !q.RecoveryExpiresAt.IsZero() {
+			return Response{Error: "recovery restoration requires one owned record identity", Code: "invalid_request"}
+		}
+		err = e.RestoreRecoveryLink(ctx, q.RecoveryRecordID)
+	case "hardware.recovery.read":
+		if q.ID != "" || q.HardwareEventID != "" || q.Indicator != nil {
+			return Response{Error: "hardware event read requires an empty envelope", Code: "invalid_request"}
+		}
+		var event HardwareRecoveryEvent
+		var present bool
+		event, present, err = e.ReadRecoveryEvent(ctx)
+		if present {
+			r.HardwareEvent = &event
+		}
+	case "hardware.recovery.ack":
+		if q.ID != "" || q.HardwareEventID == "" || q.Indicator != nil {
+			return Response{Error: "hardware event acknowledgement requires one event identity", Code: "invalid_request"}
+		}
+		err = e.AcknowledgeRecoveryEvent(ctx, q.HardwareEventID)
+	case "hardware.indicator.set":
+		if q.ID != "" || q.Indicator == nil || q.HardwareEventID != "" {
+			return Response{Error: "hardware indicator requires one bounded state", Code: "invalid_request"}
+		}
+		err = e.SetRecoveryIndicator(ctx, *q.Indicator)
+	case "commissioning.links.reconcile":
+		if q.ID != "" || q.CommissioningLinks == nil {
+			return Response{Error: "commissioning reconciliation requires a typed link list", Code: "invalid_request"}
+		}
+		err = e.ReconcileCommissioningLinks(ctx, *q.CommissioningLinks)
 	case "system.restart":
 		if !emptyPowerRequest(q) {
 			return Response{Error: "power operation requires an empty envelope", Code: "invalid_request"}
@@ -256,7 +340,11 @@ func dispatch(ctx context.Context, e *Engine, q Request) Response {
 		return Response{Error: "unsupported helper operation", Code: "invalid_request"}
 	}
 	if err != nil {
-		r = Response{Error: err.Error(), Code: "helper_failure"}
+		// Some failed operations return an owned resource identity that the
+		// caller must retain for exact cleanup. Preserve typed response fields
+		// while adding the bounded error envelope.
+		r.Error = err.Error()
+		r.Code = "helper_failure"
 		for code, candidate := range knownErrors {
 			if errors.Is(err, candidate) {
 				r.Code = code
@@ -269,7 +357,9 @@ func dispatch(ctx context.Context, e *Engine, q Request) Response {
 
 func emptyPowerRequest(q Request) bool {
 	return q.ID == "" && q.Change == (network.Change{}) && q.Revision == "" && q.Secret == nil &&
-		q.Handle == "" && q.ProfileID == "" && q.ConnectionRef == "" && q.Plan == nil && q.DeviceNetworkID == "" && q.ManagementAccess == nil
+		q.Handle == "" && q.ProfileID == "" && q.ConnectionRef == "" && q.Plan == nil && q.DeviceNetworkID == "" && q.ManagementAccess == nil &&
+		q.MDNS == nil && q.AdapterID == "" && q.InterfaceName == "" && q.RecoveryRecordID == ""
+	// Hardware fields are checked separately by their only operations.
 }
 
-var knownErrors = map[string]error{"preview_stale": network.ErrPreviewStale, "not_controllable": network.ErrNotControllable, "unsupported": network.ErrUnsupported, "connection_required": network.ErrConnectionRequired, "busy": network.ErrChangeInProgress, "recovery_unavailable": network.ErrRecoveryUnavailable, "operation_not_found": network.ErrOperationNotFound, "not_awaiting_confirmation": network.ErrNotAwaitingConfirm, "external_profile": network.ErrExternalProfile, "profile_active": network.ErrProfileActive, "secrets_not_found": ErrSecretsNotFound, "interface_settings_rejected": network.ErrInterfaceSettingsRejected, "forwarding_foreign": ErrForwardingForeign, "forwarding_unsupported": ErrForwardingUnsupported, "management_access_foreign": ErrManagementAccessForeign, "management_access_unsupported": ErrManagementAccessUnsupported, "mdns_foreign": ErrMDNSForeign, "mdns_unsupported": ErrMDNSUnsupported, "power_unavailable": power.ErrUnavailable}
+var knownErrors = map[string]error{"preview_stale": network.ErrPreviewStale, "not_controllable": network.ErrNotControllable, "unsupported": network.ErrUnsupported, "connection_required": network.ErrConnectionRequired, "busy": network.ErrChangeInProgress, "recovery_unavailable": network.ErrRecoveryUnavailable, "operation_not_found": network.ErrOperationNotFound, "not_awaiting_confirmation": network.ErrNotAwaitingConfirm, "external_profile": network.ErrExternalProfile, "profile_active": network.ErrProfileActive, "secrets_not_found": ErrSecretsNotFound, "interface_settings_rejected": network.ErrInterfaceSettingsRejected, "forwarding_foreign": ErrForwardingForeign, "forwarding_unsupported": ErrForwardingUnsupported, "management_access_foreign": ErrManagementAccessForeign, "management_access_unsupported": ErrManagementAccessUnsupported, "mdns_foreign": ErrMDNSForeign, "mdns_unsupported": ErrMDNSUnsupported, "direct_recovery_unavailable": ErrDirectRecoveryUnsupported, "commissioning_links_unavailable": ErrCommissioningLinkUnsupported, "power_unavailable": power.ErrUnavailable}

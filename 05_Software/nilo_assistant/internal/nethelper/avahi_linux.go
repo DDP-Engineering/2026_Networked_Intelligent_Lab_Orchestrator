@@ -6,70 +6,156 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
-	"os/exec"
-	"path/filepath"
+	"net"
+	"net/netip"
 
+	"github.com/godbus/dbus/v5"
 	"nilo.local/nilo/internal/network"
 )
 
-// avahiConfigurationPath is the responder configuration NILO owns. It is a
-// variable so a system test can point it at a temporary tree.
-var avahiConfigurationPath = "/etc/avahi/avahi-daemon.conf"
+const (
+	avahiService           = "org.freedesktop.Avahi"
+	avahiServerAPI         = avahiService + ".Server"
+	avahiGroupAPI          = avahiService + ".EntryGroup"
+	avahiProtocolAny int32 = -1
+)
 
-// avahiReloadCommand restarts the responder after its configuration changes.
-var avahiReloadCommand = []string{"/bin/systemctl", "restart", "avahi-daemon"}
-
-// MDNSConfigurationState reads the responder configuration and reports whether
-// NILO wrote it. Anything else on the appliance is left strictly alone.
-func (n *NetworkManager) MDNSConfigurationState(context.Context) (TableState, error) {
-	raw, err := os.ReadFile(avahiConfigurationPath)
-	if errors.Is(err, os.ErrNotExist) {
-		return avahiConfigurationState("", false), nil
-	}
+// ReplaceMDNS resets only the D-Bus entry group owned by this helper process.
+// The stock Avahi configuration and every other publisher remain untouched.
+func (n *NetworkManager) ReplaceMDNS(ctx context.Context, advertisement network.MDNSAdvertisement) error {
+	plan, err := avahiPublicationPlan(advertisement)
 	if err != nil {
-		return "", fmt.Errorf("read responder configuration: %w", err)
-	}
-	return avahiConfigurationState(string(raw), true), nil
-}
-
-// InstallMDNS writes the rendered configuration and reloads the responder.
-//
-// The file is written beside its target and renamed over it, so a responder
-// reading it never sees a half-written configuration.
-func (n *NetworkManager) InstallMDNS(ctx context.Context, advertisement network.MDNSAdvertisement) error {
-	if err := advertisement.Validate(); err != nil {
 		return err
 	}
-	directory := filepath.Dir(avahiConfigurationPath)
-	if err := os.MkdirAll(directory, 0o755); err != nil {
-		return fmt.Errorf("prepare responder configuration directory: %w", err)
+	group := n.mdnsGroup
+	server := n.bus.Object(avahiService, dbus.ObjectPath("/"))
+	if plan.Service != nil {
+		var effectiveFQDN string
+		if err := server.CallWithContext(ctx, avahiServerAPI+".GetHostNameFqdn", 0).Store(&effectiveFQDN); err != nil {
+			return fmt.Errorf("read effective Avahi hostname: %w", err)
+		}
+		plan, err = applyAvahiEffectiveHost(plan, effectiveFQDN)
+		if err != nil {
+			return err
+		}
 	}
-	staged, err := os.CreateTemp(directory, ".nilo-avahi-*")
+	if group == "" {
+		if err := server.CallWithContext(ctx, avahiServerAPI+".EntryGroupNew", 0).Store(&group); err != nil {
+			return fmt.Errorf("create Avahi entry group: %w", err)
+		}
+	} else if err := n.bus.Object(avahiService, group).CallWithContext(ctx, avahiGroupAPI+".Reset", 0).Err; err != nil {
+		group = ""
+		if createErr := server.CallWithContext(ctx, avahiServerAPI+".EntryGroupNew", 0).Store(&group); createErr != nil {
+			return fmt.Errorf("recreate Avahi entry group after responder restart: %w", createErr)
+		}
+	}
+	entry := n.bus.Object(avahiService, group)
+	failed := true
+	defer func() {
+		if failed {
+			_ = entry.Call(avahiGroupAPI+".Reset", 0).Err
+		}
+	}()
+	devices, err := n.Devices(ctx)
 	if err != nil {
-		return fmt.Errorf("stage responder configuration: %w", err)
+		return err
 	}
-	stagedPath := staged.Name()
-	defer func() { _ = os.Remove(stagedPath) }()
-	if _, err := staged.WriteString(renderAvahiConfiguration(advertisement)); err != nil {
-		_ = staged.Close()
-		return fmt.Errorf("write responder configuration: %w", err)
+	byName := make(map[string]Device, len(devices))
+	for _, device := range devices {
+		byName[device.Interface.Name] = device
 	}
-	if err := staged.Chmod(0o644); err != nil {
-		_ = staged.Close()
-		return fmt.Errorf("set responder configuration mode: %w", err)
+	names := append([]avahiAliasPlan(nil), plan.Aliases...)
+	if plan.Service == nil {
+		names = append([]avahiAliasPlan{{HostFQDN: plan.HostFQDN, Interfaces: plan.Interfaces}}, names...)
 	}
-	if err := staged.Close(); err != nil {
-		return fmt.Errorf("close responder configuration: %w", err)
+	for _, publication := range names {
+		for _, interfaceName := range publication.Interfaces {
+			device, ok := byName[interfaceName]
+			if !ok {
+				return fmt.Errorf("mDNS interface %s is no longer present", interfaceName)
+			}
+			link, err := net.InterfaceByName(interfaceName)
+			if err != nil {
+				return fmt.Errorf("resolve mDNS interface %s: %w", interfaceName, err)
+			}
+			addresses := append(append([]string(nil), device.Interface.IPv4...), device.Interface.IPv6...)
+			for _, prefixText := range addresses {
+				prefix, err := netip.ParsePrefix(prefixText)
+				if err != nil || prefix.Addr().IsUnspecified() {
+					continue
+				}
+				if err := entry.CallWithContext(ctx, avahiGroupAPI+".AddAddress", 0,
+					int32(link.Index), avahiProtocolAny, uint32(0), publication.HostFQDN, prefix.Addr().String()).Err; err != nil {
+					return fmt.Errorf("publish %s on %s: %w", publication.HostFQDN, interfaceName, err)
+				}
+			}
+		}
 	}
-	if err := os.Rename(stagedPath, avahiConfigurationPath); err != nil {
-		return fmt.Errorf("install responder configuration: %w", err)
+	if plan.Service != nil {
+		for _, interfaceName := range plan.Interfaces {
+			link, err := net.InterfaceByName(interfaceName)
+			if err != nil {
+				return fmt.Errorf("resolve service interface %s: %w", interfaceName, err)
+			}
+			txt := make([][]byte, len(plan.Service.TXT))
+			for index, value := range plan.Service.TXT {
+				txt[index] = []byte(value)
+			}
+			if err := entry.CallWithContext(ctx, avahiGroupAPI+".AddService", 0,
+				int32(link.Index), avahiProtocolAny, uint32(0), plan.Service.Instance,
+				plan.Service.Type, plan.Service.Domain, plan.Service.HostFQDN,
+				plan.Service.Port, txt).Err; err != nil {
+				return fmt.Errorf("publish NILO service on %s: %w", interfaceName, err)
+			}
+		}
 	}
-	command := exec.CommandContext(ctx, avahiReloadCommand[0], avahiReloadCommand[1:]...)
-	if output, err := command.CombinedOutput(); err != nil {
-		return fmt.Errorf("reload responder: %w: %s", err, string(output))
+	if err := entry.CallWithContext(ctx, avahiGroupAPI+".Commit", 0).Err; err != nil {
+		return fmt.Errorf("commit Avahi entry group: %w", err)
+	}
+	n.mdnsGroup = group
+	failed = false
+	return nil
+}
+
+func (n *NetworkManager) MDNSPublicationCurrent(ctx context.Context) (bool, error) {
+	if n.mdnsGroup == "" {
+		return false, nil
+	}
+	var state int32
+	if err := n.bus.Object(avahiService, n.mdnsGroup).CallWithContext(ctx, avahiGroupAPI+".GetState", 0).Store(&state); err != nil {
+		return false, nil
+	}
+	return state == 2, nil
+}
+
+func (n *NetworkManager) WithdrawMDNS(ctx context.Context) error {
+	if n.mdnsGroup == "" {
+		return nil
+	}
+	if err := n.bus.Object(avahiService, n.mdnsGroup).CallWithContext(ctx, avahiGroupAPI+".Reset", 0).Err; err != nil {
+		if avahiGroupMissing(err) {
+			n.mdnsGroup = ""
+			return nil
+		}
+		return fmt.Errorf("withdraw Avahi entry group: %w", err)
 	}
 	return nil
+}
+
+func avahiGroupMissing(err error) bool {
+	var busErr dbus.Error
+	if !errors.As(err, &busErr) {
+		return false
+	}
+	switch busErr.Name {
+	case "org.freedesktop.DBus.Error.UnknownObject",
+		"org.freedesktop.DBus.Error.ServiceUnknown",
+		"org.freedesktop.DBus.Error.NameHasNoOwner",
+		"org.freedesktop.Avahi.InvalidObject":
+		return true
+	default:
+		return false
+	}
 }
 
 var _ MDNSDriver = (*NetworkManager)(nil)

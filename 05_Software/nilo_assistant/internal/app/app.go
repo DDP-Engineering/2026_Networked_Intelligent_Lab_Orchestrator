@@ -180,6 +180,14 @@ func (application *App) CommissioningRepository() *sqlite.CommissioningRepositor
 	return sqlite.NewCommissioningRepository(application.database)
 }
 
+// HardwareRecoveryRepository is the durable temporary-recovery interlock.
+func (application *App) HardwareRecoveryRepository() *sqlite.HardwareRecoveryRepository {
+	if application == nil {
+		return nil
+	}
+	return sqlite.NewHardwareRecoveryRepository(application.database)
+}
+
 // Commissioning reports where this appliance stands in its lifecycle, as
 // recorded in its data directory and read when it was opened.
 func (application *App) Commissioning() appliance.CommissioningState {

@@ -13,6 +13,11 @@
       "reason": "NetworkManager is reached over the system bus"
     },
     {
+      "name": "Avahi",
+      "command": "avahi-daemon --version",
+      "reason": "the helper publishes permanent and recovery discovery through process-owned D-Bus entries"
+    },
+    {
       "name": "nftables",
       "command": "nft --version",
       "reason": "the privileged helper renders management-access and forwarding rules"

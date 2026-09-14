@@ -1,0 +1,59 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-4249d837"
+
+title = "Activate a temporary direct-connect recovery link"
+
+status = "active"
+
+requirement = """
+When an armed recovery window observes its first eligible post-arm Ethernet link transition, NILO shall temporarily give that one interface helper-owned RFC 3927 IPv4 link-local addressing, HTTPS management admission, and the interface-scoped alias `nilo.local`, without offering DHCP, DNS, a default route, router advertisements, NAT, or forwarding.
+"""
+
+verification = "Automated state-machine, helper, discovery, and management-admission tests activate a safe link and observe one temporary NetworkManager connection, one non-persistent scoped management admission, and one scoped `nilo.local` address record; pure and disposable real-NetworkManager profile tests prove no DHCP/DNS service, default route, forwarding, NAT, or router advertisement is created and that only the complete normalized helper-owned volatile profile is restorable, while the appliance HTTPS and active-overlay security tests prove the existing authenticated handler and controls remain in force."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/hardware_recovery.go",
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go",
+    "05_Software/nilo_assistant/internal/network/management_access.go",
+    "05_Software/nilo_assistant/internal/network/adapter_roles.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_recovery_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_recovery_linux_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/avahi_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/management_access.go",
+    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
+    "05_Software/nilo_assistant/internal/nethelper/direct_recovery.go",
+    "05_Software/nilo_assistant/internal/nethelper/direct_recovery_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/engine.go",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery.go",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go",
+    "02_Tools/tests/network/run.sh",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryRequiresAPostArmSafeLinkTransitionAndChoosesOneAdapter",
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryRestoresTheHelperEffectWhenActiveStateCannotBePersisted",
+    "05_Software/nilo_assistant/internal/network/management_access_test.go::TestRecoveryManagementOverlayWidensAdmissionWithoutPersistingTheInterface",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_recovery_linux_test.go::TestRecoveryConnectionIsVolatileLinkLocalAndNeverRoutesOrResolves",
+    "05_Software/nilo_assistant/internal/nethelper/direct_recovery_test.go::TestDirectRecoveryActivationFailureReturnsItsDurableIdentityForCleanup",
+    "05_Software/nilo_assistant/internal/nethelper/direct_recovery_test.go::TestDirectRecoveryRefusesToOverwriteAnExistingOwnedLink",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::TestRuntimeRecoveryDriverPreservesPartialHelperIdentity",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_recovery_linux_test.go::TestRecoveryProfileOwnershipRequiresExactSettingsAndVolatileState",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_recovery_linux_test.go::TestNetworkManagerProducesAnExactlyOwnedRestorableRecoveryProfile",
+]
+
+
+spec = "specs/REQ-FUNC-4249d837.md"
+
+priority = "high"   # low | normal | high
+rationale = "Recovery needs only local address discovery and the existing secured management service, not a second routed network."
+
+created = 2026-09-13
+updated = 2026-09-14

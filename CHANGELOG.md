@@ -5,6 +5,22 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-14
+
+### Added
+
+- Commissioned appliances permanently advertise a unique `_nilo._tcp.local`
+  service with their stable identity, hostname, and current HTTPS URL.
+- Raspberry Pi deliveries can use a BCM17 recovery button and BCM27 status LED
+  for bounded direct-connect recovery or a network-only commissioning reset.
+
+### Changed
+
+- First boot automatically prepares every safe, unassigned Ethernet adapter
+  for IPv4 link-local commissioning without DHCP, DNS, or routing service.
+- Local-name publication now uses process-owned Avahi D-Bus entries and leaves
+  the system responder configuration unchanged.
+
 ## [0.3.1] - 2026-09-13
 
 ### Changed

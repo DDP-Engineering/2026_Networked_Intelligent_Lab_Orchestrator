@@ -183,6 +183,44 @@ func accessConfiguration() ManagementAccessConfiguration {
 	}
 }
 
+func TestNetworkCommissioningResetPreparationAppliesOnlySafeDerivedAdmissionAndCanRollback(t *testing.T) {
+	provider := &accessProvider{interfaces: []Interface{
+		{Name: "eth0", AdapterID: "management", Kind: KindEthernet, Physical: true, State: StateConnected, IPv4: []string{"192.0.2.10/24"}},
+		{Name: "eth1", AdapterID: "free", Kind: KindEthernet, Physical: true, State: StateConnected, IPv4: []string{"169.254.20.10/16"}},
+		{Name: "eth2", AdapterID: "plc", Kind: KindEthernet, Physical: true, State: StateConnected, IPv4: []string{"192.168.0.1/24"}},
+	}}
+	store := &accessStore{present: true, record: ManagementAccessRecord{
+		Configuration: ManagementAccessConfiguration{Interfaces: []string{"eth0"}, Port: 8443, TLSNames: []string{"bench.local", "nilo.local"}},
+		LastKnownGood: ManagementAccessConfiguration{Interfaces: []string{"eth0"}, Port: 8443, TLSNames: []string{"bench.local", "nilo.local"}},
+		State:         ManagementAccessApplied, UpdatedAt: time.Now(),
+	}}
+	coordinator := NewAdapterRoleCoordinator()
+	coordinator.RegisterClaimSource(func() []AdapterRoleClaim {
+		return []AdapterRoleClaim{{AdapterID: "plc", Interface: "eth2", Role: AdapterRoleDevice}}
+	})
+	firewall := &accessFirewall{}
+	service, err := NewManagementAccessService(context.Background(), ManagementAccessOptions{
+		Provider: provider, Store: store, Firewall: firewall, Coordinator: coordinator,
+		ProvisioningTLSNames: []string{"bench.local", "nilo.local"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	prepared, err := service.PrepareNetworkCommissioningReset(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := prepared.Record().Configuration.Interfaces; len(got) != 2 || !slices.Contains(got, "eth0") || !slices.Contains(got, "eth1") {
+		t.Fatalf("derived interfaces = %v, want safe management and free Ethernet", got)
+	}
+	if err := prepared.Rollback(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if service.Provisioning() || !slices.Equal(firewall.applied[len(firewall.applied)-1].Interfaces, []string{"eth0"}) {
+		t.Fatalf("rollback left provisioning=%t firewall=%+v", service.Provisioning(), firewall.applied)
+	}
+}
+
 func newAccessService(t *testing.T, now *time.Time, provider *accessProvider, store *accessStore, firewall *accessFirewall, initial bool) *ManagementAccessService {
 	t.Helper()
 	var configuration *ManagementAccessConfiguration
@@ -214,6 +252,45 @@ func TestManagementAccessStartupDoesNotMutateFirewallWhenInitialPersistenceFails
 	}
 	if calls := firewall.callCount(); calls != 0 {
 		t.Fatalf("startup mutated the firewall %d time(s) before persistence succeeded", calls)
+	}
+}
+
+func TestRecoveryManagementOverlayWidensAdmissionWithoutPersistingTheInterface(t *testing.T) {
+	now := time.Date(2026, 9, 13, 12, 0, 0, 0, time.UTC)
+	interfaces := append(accessInterfaces(), Interface{
+		Name: "eth9", AdapterID: "recovery-adapter", Kind: KindEthernet, Physical: true,
+		State: StateConnected, IPv4: []string{"169.254.44.21/16"},
+	})
+	provider := &accessProvider{interfaces: interfaces}
+	store := &accessStore{}
+	firewall := &accessFirewall{}
+	service := newAccessService(t, &now, provider, store, firewall, true)
+	persistent := append([]string(nil), service.ConfiguredInterfaces()...)
+
+	if err := service.SetRecoveryInterface(context.Background(), "eth9"); err != nil {
+		t.Fatalf("SetRecoveryInterface: %v", err)
+	}
+	if !service.Allows(netip.MustParseAddr("169.254.44.21")) {
+		t.Fatal("the recovery link address was not admitted")
+	}
+	if got := service.ConfiguredInterfaces(); !slices.Equal(got, persistent) {
+		t.Fatalf("persistent interfaces changed from %v to %v", persistent, got)
+	}
+	if got := firewall.applied[len(firewall.applied)-1].Interfaces; !slices.Contains(got, "eth9") {
+		t.Fatalf("effective firewall does not contain recovery interface: %v", got)
+	}
+	if slices.Contains(store.record.Configuration.Interfaces, "eth9") {
+		t.Fatalf("recovery interface was persisted: %+v", store.record.Configuration)
+	}
+
+	if err := service.SetRecoveryInterface(context.Background(), ""); err != nil {
+		t.Fatalf("remove recovery interface: %v", err)
+	}
+	if service.Allows(netip.MustParseAddr("169.254.44.21")) {
+		t.Fatal("recovery address remained admitted after restoration")
+	}
+	if got := firewall.applied[len(firewall.applied)-1].Interfaces; slices.Contains(got, "eth9") {
+		t.Fatalf("restored firewall still contains recovery interface: %v", got)
 	}
 }
 

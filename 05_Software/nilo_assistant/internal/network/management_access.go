@@ -386,6 +386,116 @@ type ManagementAccessService struct {
 	provisioning  bool
 	provisionTLS  []string
 	commissioner  Commissioner
+	// recoveryInterface is a volatile admission overlay. It is never written to
+	// ManagementAccessStore and therefore cannot widen commissioned policy after
+	// a restart.
+	recoveryInterface string
+}
+
+// Provisioning reports the live lifecycle policy owned by this service.
+func (service *ManagementAccessService) Provisioning() bool {
+	service.mu.RLock()
+	defer service.mu.RUnlock()
+	return service.provisioning
+}
+
+// NetworkCommissioningPreparation holds the management mutation lock while a
+// network-only reset joins its derived admission to the lifecycle transaction.
+type NetworkCommissioningPreparation struct {
+	service    *ManagementAccessService
+	previous   ManagementAccessRecord
+	next       ManagementAccessRecord
+	interfaces []Interface
+	finished   bool
+}
+
+// PrepareNetworkCommissioningReset applies the safe derived firewall before
+// the durable lifecycle transaction. Commit or Rollback must be called.
+func (service *ManagementAccessService) PrepareNetworkCommissioningReset(ctx context.Context) (*NetworkCommissioningPreparation, error) {
+	service.changeMu.Lock()
+	service.mu.RLock()
+	if service.provisioning {
+		service.mu.RUnlock()
+		service.changeMu.Unlock()
+		return nil, ErrAlreadyCommissioned
+	}
+	previous := service.record
+	port := previous.Configuration.Port
+	tlsNames := append([]string(nil), service.provisionTLS...)
+	service.mu.RUnlock()
+	if port == 0 {
+		port = ProvisioningPort
+	}
+	if len(tlsNames) == 0 {
+		tlsNames = append([]string(nil), previous.Configuration.TLSNames...)
+	}
+	interfaces, err := service.provider.Interfaces(ctx)
+	if err != nil {
+		service.changeMu.Unlock()
+		return nil, fmt.Errorf("observe interfaces for network commissioning reset: %w", err)
+	}
+	names := make([]string, 0, len(interfaces))
+	for _, candidate := range interfaces {
+		if !EligibleForManagement(candidate) {
+			continue
+		}
+		if err := service.coordinator.Check([]AdapterRoleClaim{{
+			AdapterID: candidate.AdapterID, Interface: candidate.Name, Role: AdapterRoleManagement,
+		}}); err != nil {
+			continue
+		}
+		names = append(names, candidate.Name)
+	}
+	sort.Strings(names)
+	configuration := canonicalManagementConfiguration(resolveManagementConfiguration(ManagementAccessConfiguration{
+		Interfaces: names, Port: port, TLSNames: tlsNames,
+	}, interfaces))
+	if err := configuration.ValidateFirewall(); err != nil {
+		service.changeMu.Unlock()
+		return nil, err
+	}
+	next := ManagementAccessRecord{
+		Configuration: configuration, LastKnownGood: configuration,
+		State: ManagementAccessApplied, UpdatedAt: service.now().UTC(),
+	}
+	if err := service.firewall.ApplyManagementAccess(ctx, configuration); err != nil {
+		service.changeMu.Unlock()
+		return nil, fmt.Errorf("prepare provisioning management admission: %w", err)
+	}
+	return &NetworkCommissioningPreparation{
+		service: service, previous: previous, next: next, interfaces: cloneInterfaces(interfaces),
+	}, nil
+}
+
+func (preparation *NetworkCommissioningPreparation) Record() ManagementAccessRecord {
+	return preparation.next
+}
+
+func (preparation *NetworkCommissioningPreparation) Commit() {
+	if preparation == nil || preparation.finished {
+		return
+	}
+	service := preparation.service
+	service.mu.Lock()
+	service.record = preparation.next
+	service.interfaces = cloneInterfaces(preparation.interfaces)
+	service.provisioning = true
+	service.recoveryInterface = ""
+	service.rebuildAllowedLocked()
+	service.mu.Unlock()
+	preparation.finished = true
+	service.changeMu.Unlock()
+}
+
+func (preparation *NetworkCommissioningPreparation) Rollback(ctx context.Context) error {
+	if preparation == nil || preparation.finished {
+		return nil
+	}
+	service := preparation.service
+	err := service.firewall.ApplyManagementAccess(ctx, effectiveManagementConfiguration(preparation.previous.Configuration, preparation.interfaces))
+	preparation.finished = true
+	service.changeMu.Unlock()
+	return err
 }
 
 // deriveProvisioningInterfaces is the first-boot allowlist: every interface the
@@ -743,7 +853,7 @@ func (service *ManagementAccessService) refresh(ctx context.Context) error {
 	if changed {
 		candidate.UpdatedAt = service.now().UTC()
 		if err := service.coordinator.CheckAndRun(managementRecordRoleClaims(candidate), func() error {
-			if err := service.firewall.ApplyManagementAccess(ctx, effectiveManagementConfiguration(candidate.Configuration, interfaces)); err != nil {
+			if err := service.firewall.ApplyManagementAccess(ctx, withRecoveryInterface(candidate.Configuration, interfaces, service.recoveryInterface)); err != nil {
 				return err
 			}
 			if err := service.store.SaveManagementAccess(ctx, candidate); err != nil {
@@ -780,7 +890,60 @@ func cloneInterfaces(interfaces []Interface) []Interface {
 }
 
 func (service *ManagementAccessService) rebuildAllowedLocked() {
-	service.allowed = managementAllowedAddresses(service.record.Configuration, service.interfaces)
+	configuration := withRecoveryInterface(service.record.Configuration, service.interfaces, service.recoveryInterface)
+	service.allowed = managementAllowedAddresses(configuration, service.interfaces)
+}
+
+func withRecoveryInterface(
+	configuration ManagementAccessConfiguration, interfaces []Interface, recoveryInterface string,
+) ManagementAccessConfiguration {
+	configuration = effectiveManagementConfiguration(configuration, interfaces)
+	if recoveryInterface == "" || containsString(configuration.Interfaces, recoveryInterface) {
+		return configuration
+	}
+	configuration.Interfaces = append(configuration.Interfaces, recoveryInterface)
+	sort.Strings(configuration.Interfaces)
+	return configuration
+}
+
+// SetRecoveryInterface atomically applies or removes one volatile management
+// path. Persistent management selection, TLS identities, and credentials are
+// untouched; the existing socket destination gate uses the same effective set.
+func (service *ManagementAccessService) SetRecoveryInterface(ctx context.Context, interfaceName string) error {
+	service.changeMu.Lock()
+	defer service.changeMu.Unlock()
+	interfaceName = strings.TrimSpace(interfaceName)
+	interfaces, err := service.provider.Interfaces(ctx)
+	if err != nil {
+		return fmt.Errorf("observe recovery management interface: %w", err)
+	}
+	if interfaceName != "" {
+		found := false
+		for _, candidate := range interfaces {
+			if candidate.Name == interfaceName && candidate.Kind == KindEthernet && candidate.Physical && candidate.State == StateConnected {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return errors.New("recovery management interface is not a connected physical Ethernet adapter")
+		}
+	}
+	service.mu.Lock()
+	configuration := withRecoveryInterface(service.record.Configuration, interfaces, interfaceName)
+	service.mu.Unlock()
+	if err := configuration.ValidateFirewall(); err != nil {
+		return err
+	}
+	if err := service.firewall.ApplyManagementAccess(ctx, configuration); err != nil {
+		return fmt.Errorf("apply recovery management admission: %w", err)
+	}
+	service.mu.Lock()
+	service.interfaces = cloneInterfaces(interfaces)
+	service.recoveryInterface = interfaceName
+	service.rebuildAllowedLocked()
+	service.mu.Unlock()
+	return nil
 }
 
 func managementAllowedAddresses(configuration ManagementAccessConfiguration, interfaces []Interface) map[netip.Addr]string {
@@ -1074,6 +1237,7 @@ func (service *ManagementAccessService) Update(ctx context.Context, interfaces [
 
 	var record ManagementAccessRecord
 	if err := service.coordinator.CheckAndRun(managementRoleClaims(next), func() error {
+		nextEffective = withRecoveryInterface(next, service.interfaces, service.recoveryInterface)
 		if err := service.firewall.ApplyManagementAccess(ctx, nextEffective); err != nil {
 			return service.publishFailedUpdate(context.WithoutCancel(ctx), previous, next, service.interfaces, err)
 		}
@@ -1109,7 +1273,7 @@ func (service *ManagementAccessService) publishFailedUpdate(
 	interfaces []Interface,
 	applyErr error,
 ) error {
-	restoreErr := service.firewall.ApplyManagementAccess(ctx, effectiveManagementConfiguration(previous, interfaces))
+	restoreErr := service.firewall.ApplyManagementAccess(ctx, withRecoveryInterface(previous, interfaces, service.recoveryInterface))
 	state := ManagementAccessRecovered
 	detail := "the proposed management access failed and the last known-good configuration was restored"
 	lastKnownGood := previous
@@ -1214,7 +1378,7 @@ func (service *ManagementAccessService) recover(ctx context.Context, force bool)
 	if !force && service.now().UTC().Before(record.ConfirmBy) {
 		return nil
 	}
-	if err := service.firewall.ApplyManagementAccess(ctx, effectiveManagementConfiguration(record.LastKnownGood, service.interfaces)); err != nil {
+	if err := service.firewall.ApplyManagementAccess(ctx, withRecoveryInterface(record.LastKnownGood, service.interfaces, service.recoveryInterface)); err != nil {
 		service.mu.Lock()
 		service.record.State = ManagementAccessFailed
 		service.record.Detail = "automatic management access recovery failed"

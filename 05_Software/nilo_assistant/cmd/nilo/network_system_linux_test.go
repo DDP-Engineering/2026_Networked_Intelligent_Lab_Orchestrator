@@ -6,15 +6,19 @@ import (
 	"bytes"
 	"context"
 	"crypto/ecdh"
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/tls"
 	"crypto/x509"
+	"crypto/x509/pkix"
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
+	"math/big"
 	"net"
 	"net/http"
 	"net/http/cookiejar"
@@ -32,6 +36,33 @@ import (
 	"nilo.local/nilo/internal/network"
 	"nilo.local/nilo/internal/store/sqlite"
 )
+
+func disposableServerCertificate(t *testing.T, dnsNames []string, ipAddresses []net.IP) (tls.Certificate, *x509.Certificate) {
+	t.Helper()
+	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	template := &x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject:      pkix.Name{CommonName: "NILO disposable system test"},
+		DNSNames:     append([]string(nil), dnsNames...),
+		IPAddresses:  append([]net.IP(nil), ipAddresses...),
+		NotBefore:    time.Now().Add(-time.Minute),
+		NotAfter:     time.Now().Add(time.Hour),
+		KeyUsage:     x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+	}
+	certificateDER, err := x509.CreateCertificate(rand.Reader, template, template, &privateKey.PublicKey, privateKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	leaf, err := x509.ParseCertificate(certificateDER)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return tls.Certificate{Certificate: [][]byte{certificateDER}, PrivateKey: privateKey, Leaf: leaf}, leaf
+}
 
 // disposableTunnelKeys makes a real Curve25519 pair for a test peer. The keys
 // live for one container and identify nothing outside it.
@@ -454,8 +485,11 @@ func TestApplianceSystemFailsClosedBeforeListeningOnAnAllPathRoleConflict(t *tes
 	_ = os.Chmod(filepath.Join(root, "run"), 0750)
 	_ = os.Chown(filepath.Join(root, "run"), 0, 65534)
 
-	fixture := httptest.NewTLSServer(http.NotFoundHandler())
-	certificate := fixture.TLS.Certificates[0]
+	hostname, err := os.Hostname()
+	if err != nil {
+		t.Fatal(err)
+	}
+	certificate, _ := disposableServerCertificate(t, []string{hostname + ".local"}, nil)
 	keyDER, err := x509.MarshalPKCS8PrivateKey(certificate.PrivateKey)
 	if err != nil {
 		t.Fatal(err)
@@ -472,7 +506,6 @@ func TestApplianceSystemFailsClosedBeforeListeningOnAnAllPathRoleConflict(t *tes
 	if err := os.WriteFile(filepath.Join(guiDir, "index.html"), []byte("<!doctype html><html><head></head><body>NILO role startup test</body></html>"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	fixture.Close()
 
 	eth0ID, err := os.ReadFile("/sys/class/net/eth0/address")
 	if err != nil {
@@ -495,7 +528,7 @@ func TestApplianceSystemFailsClosedBeforeListeningOnAnAllPathRoleConflict(t *tes
 		Bindings: []network.ManagementInterfaceBinding{{
 			AdapterID: strings.TrimSpace(string(eth0ID)), LastKnownName: "eth0",
 		}},
-		Port: port, TLSNames: []string{"127.0.0.1"},
+		Port: port, TLSNames: []string{hostname + ".local"},
 	}
 	now := time.Now().UTC()
 	if err := sqlite.NewManagementAccessRepository(database).SaveManagementAccess(ctx, network.ManagementAccessRecord{

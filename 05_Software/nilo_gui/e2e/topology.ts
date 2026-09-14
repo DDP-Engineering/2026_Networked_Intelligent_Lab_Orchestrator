@@ -11,7 +11,7 @@ import {
 } from 'node:fs';
 import { request as httpsRequest } from 'node:https';
 import { createServer, type AddressInfo, type Server } from 'node:net';
-import { tmpdir } from 'node:os';
+import { hostname, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { requireApplianceStage, requireBuiltInterface } from './prerequisites';
@@ -652,7 +652,7 @@ function generateListenerMaterial(managementHost: string): {
         '-subj',
         `/CN=${managementHost}`,
         '-addext',
-        `subjectAltName=IP:${managementHost}`,
+        `subjectAltName=IP:${managementHost},DNS:${hostname()}.local`,
       ],
       { stdio: 'ignore' },
     );

@@ -14,32 +14,31 @@ title = "Advertise the appliance name on every provisioning interface"
 status = "active"
 
 requirement = """
-While the appliance is being commissioned, it shall answer its configured local name on every interface currently carrying management access and on no other, publishing the addresses those interfaces hold rather than a fixed address, and shall renew that publication when the set of serving interfaces changes. If the name cannot be published, the appliance shall report why and remain reachable by address, retrying on the next reconciliation.
+While the appliance is provisioning, NILO shall answer `nilo.local` on exactly the interfaces currently carrying commissioning management access, publish each interface's current addresses rather than a fixed address, replace the scoped publication when that set changes, and report and retry a failed publication while remaining reachable by address.
 """
 
-verification = "An automated test renders the responder configuration for a name and two interfaces and asserts it names exactly those interfaces, publishes addresses, and publishes nothing further about the appliance. A second automated test drives the announcer through a repeated identical advertisement and asserts nothing is republished, then through an added interface and asserts one further publication carrying the new interface. A third asserts a failed publication is reported, recorded as unpublished and retried successfully, and that an advertisement with no interface publishes nothing and reports no error. A fourth asserts an advertisement naming loopback, a duplicate interface, an empty name or a name carrying a configuration separator is refused."
+verification = "Automated announcer/helper tests publish `nilo.local` across two interface indexes and observe only their current A/AAAA records, no DNS-SD service, no publication when the set is empty, no republish for an identical request, replacement after an interface change, and retry after responder failure; invalid aliases, loopback, duplicates, unknown interfaces, and configuration separators are refused."
 
 affected_paths = [
     "05_Software/nilo_assistant/internal/network/mdns.go",
     "05_Software/nilo_assistant/internal/network/mdns_announcer.go",
     "05_Software/nilo_assistant/internal/network/mdns_announcer_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/avahi_render.go",
+    "05_Software/nilo_assistant/internal/nethelper/avahi_plan.go",
     "05_Software/nilo_assistant/internal/nethelper/avahi_render_test.go",
     "05_Software/nilo_assistant/internal/nethelper/avahi_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/avahi_linux_test.go",
     "05_Software/nilo_assistant/internal/nethelper/mdns.go",
     "05_Software/nilo_assistant/internal/nethelper/client.go",
     "05_Software/nilo_assistant/internal/nethelper/protocol.go",
     "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/nilo_assistant/cmd/nilo/discovery_runtime.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/nethelper/avahi_render_test.go::TestRenderAvahiConfigurationClosesTheInterfaceList",
-    "05_Software/nilo_assistant/internal/nethelper/avahi_render_test.go::TestMDNSAdvertisementRefusesWhatTheResponderCannotAnswer",
-    "05_Software/nilo_assistant/internal/nethelper/avahi_render_test.go::TestMDNSLocalNameAppendsTheDomainOnce",
-    "05_Software/nilo_assistant/internal/network/mdns_announcer_test.go::TestAnnouncerPublishesOnlyWhenTheAdvertisementChanges",
-    "05_Software/nilo_assistant/internal/network/mdns_announcer_test.go::TestAnnouncerRetriesAfterAFailedPublication",
-    "05_Software/nilo_assistant/internal/network/mdns_announcer_test.go::TestAnnouncerStaysQuietWithNothingToAdvertise",
-    "05_Software/nilo_assistant/internal/network/mdns_announcer_test.go::TestAnnouncerWithoutAPublisherIsInert",
+    "05_Software/nilo_assistant/internal/network/mdns_announcer_test.go::TestProvisioningAnnouncerUsesSharedRecoveryNameWithoutPermanentService",
+    "05_Software/nilo_assistant/internal/network/mdns_announcer_test.go::TestAnnouncerWithdrawsANameWhenItsLastInterfaceLeaves",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::TestLiveCommissioningWithdrawsSharedAliasBeforeAFailedPermanentReplacement",
+    "05_Software/nilo_assistant/internal/nethelper/avahi_linux_test.go::TestAvahiMissingGroupErrorsAreAlreadyWithdrawn",
 ]
 
 
@@ -49,4 +48,4 @@ priority = "high"   # low | normal | high
 rationale = "An installer should be able to type one URL and reach the appliance from whichever cable or network they happen to be on, without being told a DHCP address that changes."
 
 created = 2026-09-12
-updated = 2026-09-12
+updated = 2026-09-14

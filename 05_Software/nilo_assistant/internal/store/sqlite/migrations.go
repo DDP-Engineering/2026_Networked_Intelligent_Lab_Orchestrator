@@ -54,6 +54,9 @@ var managementAccessMigration string
 //go:embed migrations/013_commissioning.sql
 var commissioningMigration string
 
+//go:embed migrations/014_network_recovery.sql
+var networkRecoveryMigration string
+
 var migrations = []migration{
 	{version: "001_initial", sql: initialMigration},
 	{version: "002_policy_snapshots", sql: policySnapshotsMigration},
@@ -68,6 +71,7 @@ var migrations = []migration{
 	{version: "011_bench", sql: benchMigration},
 	{version: "012_management_access", sql: managementAccessMigration},
 	{version: "013_commissioning", sql: commissioningMigration},
+	{version: "014_network_recovery", sql: networkRecoveryMigration},
 }
 
 func applyMigrations(ctx context.Context, database *sql.DB) error {

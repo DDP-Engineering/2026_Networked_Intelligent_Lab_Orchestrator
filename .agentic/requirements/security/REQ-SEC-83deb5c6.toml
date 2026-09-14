@@ -14,23 +14,20 @@ title = "Own the mDNS responder configuration the helper writes"
 status = "active"
 
 requirement = """
-The privileged helper shall accept a validated local-name advertisement rather than responder configuration text, shall manage only responder configuration it created itself and refuse to replace configuration it did not, and shall report that it cannot publish a local name when the appliance has no responder it can drive.
+The privileged helper shall accept only validated local-name and DNS-SD publication objects, manage only the Avahi entry groups created by its own process, reject raw responder configuration and commands, and report publication unavailable when no supported responder can be reached.
 """
 
-verification = "An automated test asserts the helper request carrying an advertisement is refused for every operation but local-name publication, and that publication without one is refused. A second automated test asserts responder configuration bearing the helper's own marker is recognized as owned, configuration without it as foreign, and its absence as absent. Inspection: the helper rejects foreign configuration before writing and reports an unsupported driver, and the request type carries no field able to hold responder syntax."
+verification = "Automated protocol tests pass validated alias/service objects only to their matching publication operation and observe all mixed or malformed requests refused; a fake Avahi bus proves replacement frees only entry groups owned by that helper connection and reports responder unavailability, while inspection confirms the request schema contains no responder text, file path, command, or arbitrary TXT map."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/nethelper/mdns.go",
-    "05_Software/nilo_assistant/internal/nethelper/avahi_render.go",
-    "05_Software/nilo_assistant/internal/nethelper/avahi_render_test.go",
     "05_Software/nilo_assistant/internal/nethelper/avahi_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/avahi_render_test.go",
     "05_Software/nilo_assistant/internal/nethelper/protocol.go",
     "05_Software/nilo_assistant/internal/nethelper/engine_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/nethelper/avahi_render_test.go::TestAvahiConfigurationStateRecognizesOwnership",
-    "05_Software/nilo_assistant/internal/nethelper/avahi_render_test.go::TestMDNSAdvertisementRefusesWhatTheResponderCannotAnswer",
+    "05_Software/nilo_assistant/internal/nethelper/avahi_render_test.go::TestAvahiPublicationPlanCarriesScopedAliasAndPermanentService",
     "05_Software/nilo_assistant/internal/nethelper/engine_test.go::TestHelperAcceptsAnAdvertisementOnlyForLocalNamePublication",
 ]
 
@@ -41,4 +38,4 @@ priority = "high"   # low | normal | high
 rationale = "The unprivileged process must never be able to hand the helper configuration text, and an appliance that already runs a responder must not have it taken over."
 
 created = 2026-09-12
-updated = 2026-09-12
+updated = 2026-09-13

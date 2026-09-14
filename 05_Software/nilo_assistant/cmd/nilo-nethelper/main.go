@@ -12,8 +12,9 @@ import (
 )
 
 type options struct {
-	socket, state string
-	uid, gid      int
+	socket, state       string
+	uid, gid            int
+	raspberryPiRecovery bool
 }
 
 func main() {
@@ -46,6 +47,7 @@ func main() {
 	flag.StringVar(&o.state, "state-dir", "/var/lib/nilo-nethelper", "root-owned recovery directory")
 	flag.IntVar(&o.uid, "allow-uid", -1, "non-root Bench Core service UID")
 	flag.IntVar(&o.gid, "socket-gid", -1, "Bench Core service group")
+	flag.BoolVar(&o.raspberryPiRecovery, "raspberry-pi-recovery", false, "enable BCM17 recovery button and BCM27 status LED")
 	flag.Parse()
 	if flag.NArg() != 0 || o.uid <= 0 || o.gid < 0 {
 		fmt.Fprintln(os.Stderr, "explicit non-root --allow-uid and --socket-gid required")

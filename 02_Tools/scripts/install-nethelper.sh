@@ -1,12 +1,21 @@
 #!/bin/sh
 # Explicit Linux installation; build the helper unprivileged before invoking.
 set -eu
-if [ "$(id -u)" -ne 0 ] || [ "$#" -ne 2 ]; then
- echo 'Usage (as root): install-nethelper.sh HELPER_BINARY EXISTING_SERVICE_USER' >&2
+if [ "$(id -u)" -ne 0 ] || { [ "$#" -ne 2 ] && [ "$#" -ne 3 ]; }; then
+ echo 'Usage (as root): install-nethelper.sh HELPER_BINARY EXISTING_SERVICE_USER [--raspberry-pi-recovery]' >&2
  exit 2
 fi
 binary=$(realpath -- "$1")
 service_user=$2
+hardware_option=
+device_policy=
+if [ "$#" -eq 3 ]; then
+ [ "$3" = '--raspberry-pi-recovery' ] || { echo 'Unknown installation option' >&2; exit 2; }
+ grep -q 'Raspberry Pi' /proc/device-tree/model 2>/dev/null || { echo 'Raspberry Pi recovery option requires Raspberry Pi hardware' >&2; exit 1; }
+ [ -c /dev/gpiochip0 ] || { echo 'Raspberry Pi recovery option requires /dev/gpiochip0' >&2; exit 1; }
+ hardware_option=' --raspberry-pi-recovery'
+ device_policy='DeviceAllow=/dev/gpiochip0 rw'
+fi
 case "$service_user" in ''|*[!a-zA-Z0-9_-]*) echo 'Invalid service user' >&2; exit 2;; esac
 service_uid=$(id -u "$service_user")
 service_gid=$(id -g "$service_user")
@@ -15,14 +24,15 @@ service_gid=$(id -g "$service_user")
 # Device-network forwarding renders into nftables; the helper refuses to
 # forward without it rather than falling back to anything else.
 command -v nft >/dev/null 2>&1 || echo 'warning: nft is not installed; device networks stay saved but unsupported until nftables is installed' >&2
+command -v avahi-daemon >/dev/null 2>&1 || { echo 'avahi-daemon is required for NILO discovery' >&2; exit 1; }
 install -d -o root -g root -m 0755 /usr/local/libexec
 install -o root -g root -m 0755 "$binary" /usr/local/libexec/nilo-nethelper
 install -d -o root -g root -m 0700 /var/lib/nilo-nethelper
 cat > /etc/systemd/system/nilo-nethelper.service <<EOF
 [Unit]
 Description=NILO restricted privileged appliance helper
-After=dbus.service NetworkManager.service
-Requires=NetworkManager.service
+After=dbus.service NetworkManager.service avahi-daemon.service
+Requires=NetworkManager.service avahi-daemon.service
 
 [Service]
 Type=simple
@@ -30,7 +40,7 @@ User=root
 Group=$service_gid
 RuntimeDirectory=nilo
 RuntimeDirectoryMode=0750
-ExecStart=/usr/local/libexec/nilo-nethelper --allow-uid $service_uid --socket-gid $service_gid
+ExecStart=/usr/local/libexec/nilo-nethelper --allow-uid $service_uid --socket-gid $service_gid$hardware_option
 Restart=on-failure
 RestartSec=3
 UMask=0077
@@ -42,6 +52,7 @@ ProtectSystem=strict
 # signed repository access. /boot and home directories remain protected.
 ReadWritePaths=/var/lib/nilo-nethelper /run/nilo /usr /etc /var/lib/dpkg /var/lib/apt /var/lib/systemd /var/cache/apt /var/log
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+$device_policy
 
 [Install]
 WantedBy=multi-user.target

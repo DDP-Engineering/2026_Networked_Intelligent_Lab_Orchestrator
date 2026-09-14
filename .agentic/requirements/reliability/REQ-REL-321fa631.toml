@@ -1,0 +1,62 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-REL-321fa631"
+
+title = "Restore temporary recovery networking"
+
+status = "active"
+
+requirement = """
+When a recovery window expires, is cancelled, the service restarts, or activation only partly succeeds, NILO shall remove the temporary alias and management admission and restore the selected adapter's exact pre-recovery NetworkManager state, retaining a durable fail-closed recovery record and retrying restoration when exact restoration cannot yet be proved.
+"""
+
+verification = "Deterministic dual-clock and restart tests snapshot representative absent, disconnected, and foreign-profile states; after expiry, cancellation, clock rollback, each injected activation failure, and process restart they compare the resulting connection/profile/admission/publication state with the snapshot. Pure and disposable real-NetworkManager tests require normalized complete profile ownership before deletion, while an injected restore failure leaves a durable nonterminal record that blocks reuse until a later retry proves restoration."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/hardware_recovery.go",
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_recovery_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_recovery_linux_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/direct_recovery.go",
+    "05_Software/nilo_assistant/internal/nethelper/direct_recovery_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/engine.go",
+    "05_Software/nilo_assistant/internal/nethelper/recovery.go",
+    "05_Software/nilo_assistant/internal/nethelper/store.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/hardware_recovery_repository.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/014_network_recovery.sql",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery.go",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryRestoreFailureRetainsInterlock",
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryRestoresTheHelperEffectWhenActiveStateCannotBePersisted",
+    "05_Software/nilo_assistant/internal/nethelper/direct_recovery_test.go::TestDirectRecoveryDeadlineIsDurableAndExtended",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_recovery_linux_test.go::TestMissingVolatileRecoveryProfileIsAlreadyRestored",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::TestRuntimeStartupRestoresAnActiveRecoveryLinkInsteadOfReadoptingIt",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_recovery_linux_test.go::TestRecoveryProfileOwnershipRequiresExactSettingsAndVolatileState",
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestPendingActivationAuditCannotBlockExpiryCleanup",
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryPersistsPendingAuditWithTheFirstAdvancedFailureOrCancelState",
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryExpiresByElapsedTimeAfterWallClockRollback",
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryRestartFailsClosedAfterTheLastPersistedClockObservation",
+    "05_Software/nilo_assistant/internal/nethelper/direct_recovery_test.go::TestDirectRecoveryExpiresByElapsedTimeAcrossWallClockRollback",
+    "05_Software/nilo_assistant/internal/nethelper/direct_recovery_test.go::TestDirectRecoveryRestartFailsClosedOnPersistedClockRollback",
+    "05_Software/nilo_assistant/internal/nethelper/direct_recovery_test.go::TestDirectRecoveryPersistsItsLastClockObservationForRestart",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_recovery_linux_test.go::TestNetworkManagerProducesAnExactlyOwnedRestorableRecoveryProfile",
+]
+
+
+spec = "specs/REQ-FUNC-4249d837.md"
+
+priority = "high"   # low | normal | high
+rationale = "Temporary reachability is safe only if loss of the core or helper cannot strand a production interface in recovery configuration."
+
+created = 2026-09-13
+updated = 2026-09-14

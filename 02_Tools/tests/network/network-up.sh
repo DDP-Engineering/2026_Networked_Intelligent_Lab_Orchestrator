@@ -1,5 +1,5 @@
 #!/bin/sh
-# Bring up D-Bus, NetworkManager and this container's own eth0.
+# Bring up D-Bus, NetworkManager, Avahi and this container's own eth0.
 #
 # Sourced, never executed: the caller keeps the NetworkManager process so it can
 # stop it in its own trap, and keeps the shell's exit status handling. It only
@@ -17,6 +17,14 @@ nilo_network_up() {
     until nmcli general status >/dev/null 2>&1; do
         attempt=$((attempt + 1))
         [ "$attempt" -lt 50 ] || { cat /tmp/networkmanager.log; return 1; }
+        sleep 0.2
+    done
+    avahi-daemon --no-drop-root --no-chroot >/tmp/avahi.log 2>&1 &
+    avahi_pid=$!
+    attempt=0
+    until avahi-daemon --check >/dev/null 2>&1; do
+        attempt=$((attempt + 1))
+        [ "$attempt" -lt 50 ] || { cat /tmp/avahi.log; return 1; }
         sleep 0.2
     done
 }

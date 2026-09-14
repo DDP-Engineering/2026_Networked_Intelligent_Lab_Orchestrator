@@ -67,6 +67,16 @@ func serve(ctx context.Context, o options) error {
 	if err = engine.ConfigurePower(powerController); err != nil {
 		return err
 	}
+	if o.raspberryPiRecovery {
+		hardware, hardwareErr := nethelper.NewPiRecoveryHardware(ctx, "/dev/gpiochip0", store, driver)
+		if hardwareErr != nil {
+			return hardwareErr
+		}
+		defer hardware.Close()
+		if err = engine.ConfigureRecoveryHardware(hardware); err != nil {
+			return err
+		}
+	}
 	// Key storage is a subdirectory of the helper's own private state, created
 	// here rather than by the keystore itself: deciding where privileged storage
 	// lives belongs to startup, not to the code that writes into it.

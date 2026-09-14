@@ -45,11 +45,12 @@ one of three fixed roles - Administrator, Operator or Viewer.
   managed WireGuard profiles and routed device networks, each through preview,
   acknowledgement and a confirmation window with automatic restore.
 - **First-boot commissioning.** A clean installation records a commissioning
-  lifecycle state, answers its own local name and serves management access on
-  every eligible physical adapter, and follows adapters as they appear and
-  leave. An administrator ends that state by fixing the allowlist to a path the
-  appliance can still be reached through, after which it never widens itself
-  again. An upgraded installation is never returned to first boot.
+  lifecycle state, prepares safe Ethernet links with IPv4LL, answers
+  `nilo.local`, and serves management access on every eligible physical adapter.
+  Commissioned appliances permanently advertise a unique `_nilo._tcp.local`
+  service. The Raspberry Pi delivery may add a dual-duration GPIO button for a
+  bounded, post-link-transition recovery path or a network-only return to
+  commissioning; generic Linux hardware has no GPIO assumption.
 - **Activity.** One filtered, paginated audit and event history with bounded
   JSONL and CSV export, an administrator retention policy, and bounded
   housekeeping.
@@ -96,6 +97,9 @@ one of three fixed roles - Administrator, Operator or Viewer.
   error message carries a password, key or verifier.
 - WireGuard key material and wireless passwords exist only inside the
   privileged helper's root-owned keystore; the core knows profiles by identity.
+- Temporary network recovery never changes a configured management, production,
+  PLC, or device-network interface. Its IPv4LL profile, management admission and
+  `nilo.local` alias are helper/core-owned, deadline-bounded and exactly restored.
 - The integration boundary is `nilo.integration/1`: correlated NDJSON over a
   supervised child process's stdio, a runner declared as an executable plus an
   argument array rather than a shell string, and a package whose complete file

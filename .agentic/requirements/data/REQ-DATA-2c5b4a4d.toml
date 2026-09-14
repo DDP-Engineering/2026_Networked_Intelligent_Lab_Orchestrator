@@ -1,0 +1,41 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-DATA-2c5b4a4d"
+
+title = "Preserve appliance state during a network commissioning reset"
+
+status = "active"
+
+requirement = """
+When a hardware long press requests a network commissioning reset, NILO shall preserve the stable appliance identity and hostname, TLS material, users, password verifiers, sessions and API tokens, audit history, integrations, PLC/device-network assignments, unrelated NetworkManager profiles, and the highest handled hardware-event generation while clearing only the commissioned lifecycle, explicit management-interface selection, and temporary recovery effect.
+"""
+
+verification = "An automated repository test seeds every named data class plus commissioned management and active recovery state, performs the reset, and compares stable identity, security, audit, integration, PLC/device-network and unrelated profile records byte-for-byte while observing only provisioning lifecycle, derived management selection, and an idle recovery tombstone carrying the handled generation but no temporary link identity."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/appliance/commissioner.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/management_access_repository.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/hardware_recovery_repository.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go::TestNetworkCommissioningResetClearsOnlyLifecycleManagementAndRecovery",
+]
+
+
+spec = "specs/REQ-FUNC-fb666359.md"
+
+priority = "high"   # low | normal | high
+rationale = "Network commissioning recovery is separate from password recovery and factory reset."
+
+created = 2026-09-13
+updated = 2026-09-14

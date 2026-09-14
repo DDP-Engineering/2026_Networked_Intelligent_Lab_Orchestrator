@@ -3,10 +3,14 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"nilo.local/nilo/internal/appliance"
+	"nilo.local/nilo/internal/audit"
+	"nilo.local/nilo/internal/network"
 )
 
 // CommissioningRepository reads the single durable record of where this
@@ -66,6 +70,117 @@ func (repository *CommissioningRepository) SaveCommissioning(ctx context.Context
 	}
 	if changed != 1 {
 		return errors.New("no appliance commissioning state is recorded")
+	}
+	return nil
+}
+
+// ResetNetworkCommissioning atomically returns only network access to first
+// boot. Appliance identity, hostname, TLS, users, credentials, audit history,
+// integrations, interface settings, and device networks are not touched.
+func (repository *CommissioningRepository) ResetNetworkCommissioning(ctx context.Context, access network.ManagementAccessRecord) (err error) {
+	return repository.resetNetworkCommissioning(ctx, access, nil, 0)
+}
+
+// ResetNetworkCommissioningAudited joins the network-only reset and its
+// already composed audit event in one SQLite transaction.
+func (repository *CommissioningRepository) ResetNetworkCommissioningAudited(
+	ctx context.Context, access network.ManagementAccessRecord, event audit.Event, hardwareGeneration uint64,
+) error {
+	return repository.resetNetworkCommissioning(ctx, access, &event, hardwareGeneration)
+}
+
+func (repository *CommissioningRepository) resetNetworkCommissioning(
+	ctx context.Context, access network.ManagementAccessRecord, event *audit.Event, hardwareGeneration uint64,
+) (err error) {
+	if err := repository.ready(); err != nil {
+		return err
+	}
+	if err := access.Configuration.ValidateFirewall(); err != nil {
+		return fmt.Errorf("invalid derived management access: %w", err)
+	}
+	if err := access.LastKnownGood.ValidateFirewall(); err != nil {
+		return fmt.Errorf("invalid derived last known-good access: %w", err)
+	}
+	if access.State != network.ManagementAccessApplied || access.UpdatedAt.IsZero() {
+		return errors.New("derived management access must be applied and timestamped")
+	}
+	transaction, err := repository.database.SQL().BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin network commissioning reset: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			_ = transaction.Rollback()
+		}
+	}()
+	result, err := transaction.ExecContext(ctx,
+		"UPDATE commissioning SET state = ? WHERE singleton = 1 AND state = ?",
+		string(appliance.CommissioningProvisioning), string(appliance.CommissioningCommissioned))
+	if err != nil {
+		return fmt.Errorf("reset commissioning lifecycle: %w", err)
+	}
+	if changed, rowsErr := result.RowsAffected(); rowsErr != nil || changed != 1 {
+		if rowsErr != nil {
+			return fmt.Errorf("confirm commissioning reset: %w", rowsErr)
+		}
+		return errors.New("network commissioning reset requires a commissioned appliance")
+	}
+	interfaces, err := json.Marshal(bindingsForStorage(access.Configuration))
+	if err != nil {
+		return err
+	}
+	tlsNames, err := json.Marshal(access.Configuration.TLSNames)
+	if err != nil {
+		return err
+	}
+	goodInterfaces, err := json.Marshal(bindingsForStorage(access.LastKnownGood))
+	if err != nil {
+		return err
+	}
+	goodTLSNames, err := json.Marshal(access.LastKnownGood.TLSNames)
+	if err != nil {
+		return err
+	}
+	detail, err := encodeManagementAccessDetail(access)
+	if err != nil {
+		return err
+	}
+	if _, err = transaction.ExecContext(ctx, `
+		INSERT INTO management_access (
+			singleton, interfaces_json, port, tls_names_json,
+			last_good_interfaces_json, last_good_port, last_good_tls_names_json,
+			state, confirm_by, detail, updated_at
+		) VALUES (1, ?, ?, ?, ?, ?, ?, ?, '', ?, ?)
+		ON CONFLICT(singleton) DO UPDATE SET
+			interfaces_json=excluded.interfaces_json, port=excluded.port, tls_names_json=excluded.tls_names_json,
+			last_good_interfaces_json=excluded.last_good_interfaces_json,
+			last_good_port=excluded.last_good_port, last_good_tls_names_json=excluded.last_good_tls_names_json,
+			state=excluded.state, confirm_by='', detail=excluded.detail, updated_at=excluded.updated_at
+	`, string(interfaces), access.Configuration.Port, string(tlsNames), string(goodInterfaces),
+		access.LastKnownGood.Port, string(goodTLSNames), string(access.State), detail,
+		access.UpdatedAt.UTC().Format(time.RFC3339Nano)); err != nil {
+		return fmt.Errorf("replace explicit management selection with derived access: %w", err)
+	}
+	if _, err = transaction.ExecContext(ctx, `
+		INSERT INTO network_recovery (
+			singleton, version, state, armed_at, expires_at, connected_at_arm_json,
+			adapter_id, interface_name, helper_record_id, hardware_generation, pending_audits_json, detail, updated_at
+		) VALUES (1, 1, ?, '', '', '[]', '', '', '', ?, '[]', '', ?)
+		ON CONFLICT(singleton) DO UPDATE SET
+			version=1, state=excluded.state, armed_at='', expires_at='', connected_at_arm_json='[]',
+			adapter_id='', interface_name='', helper_record_id='',
+			hardware_generation=MAX(network_recovery.hardware_generation, excluded.hardware_generation),
+			pending_audits_json='[]', detail='', updated_at=excluded.updated_at
+	`, string(network.RecoveryIdle), hardwareGeneration, access.UpdatedAt.UTC().Format(time.RFC3339Nano)); err != nil {
+		return fmt.Errorf("clear temporary network recovery: %w", err)
+	}
+	if event != nil {
+		if err = NewAuditRepository(repository.database).AppendInTransaction(ctx, transaction, *event); err != nil {
+			return fmt.Errorf("record network commissioning reset: %w", err)
+		}
+	}
+	if err = transaction.Commit(); err != nil {
+		return fmt.Errorf("commit network commissioning reset: %w", err)
 	}
 	return nil
 }

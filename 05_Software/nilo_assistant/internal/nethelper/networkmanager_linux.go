@@ -27,7 +27,11 @@ const deviceAPI = nm + ".Device"
 
 // NetworkManager uses the system bus exclusively. No shell or nmcli participates
 // in production operations, and saved connection settings are never rewritten.
-type NetworkManager struct{ bus *dbus.Conn }
+type NetworkManager struct {
+	bus                *dbus.Conn
+	mdnsGroup          dbus.ObjectPath
+	commissioningStore CommissioningProfileStore
+}
 
 func NewNetworkManager() (*NetworkManager, error) {
 	bus, err := dbus.ConnectSystemBus()
@@ -145,6 +149,9 @@ func (n *NetworkManager) device(ctx context.Context, path dbus.ObjectPath) (Devi
 		// this reading may be treated as a physical adapter.
 		d.Interface.Physical = physicalAdapter(permanent, busDevicePresent(name))
 		d.Interface.LinkCapacityMbps = uint64(value[uint32](more, speedKey))
+		if kind == 1 || kind == 20 {
+			d.Interface.LinkUp = value[bool](more, "Carrier")
+		}
 		if kind == 2 {
 			d.Interface.LinkCapacityMbps /= 1000
 			if point := value[dbus.ObjectPath](more, "ActiveAccessPoint"); point != "" && point != "/" {

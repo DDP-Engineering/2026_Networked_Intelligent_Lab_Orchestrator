@@ -10,9 +10,9 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"io"
+	"net"
 	"net/http"
 	"net/http/cookiejar"
-	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -72,10 +72,15 @@ func applianceStageRoot(t *testing.T) (root, certPath, keyPath string, leaf *x50
 
 	// TLS material is minted here and dies with the container: no certificate
 	// is checked in, and none outlives the run.
-	fixture := httptest.NewTLSServer(http.NotFoundHandler())
-	certificate := fixture.TLS.Certificates[0]
-	leaf = fixture.Certificate()
-	fixture.Close()
+	hostname, err := os.Hostname()
+	if err != nil || strings.TrimSpace(hostname) == "" {
+		t.Fatalf("read the appliance-stage hostname: %v", err)
+	}
+	certificate, leaf := disposableServerCertificate(
+		t,
+		[]string{hostname + ".local"},
+		[]net.IP{net.ParseIP("127.0.0.1")},
+	)
 	keyDER, err := x509.MarshalPKCS8PrivateKey(certificate.PrivateKey)
 	if err != nil {
 		t.Fatal(err)

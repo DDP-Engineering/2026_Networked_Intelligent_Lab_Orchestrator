@@ -1,0 +1,48 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-SEC-281ef5e4"
+
+title = "Exclude protected adapters from network recovery"
+
+status = "active"
+
+requirement = """
+Before activating recovery on an Ethernet adapter, NILO shall refuse any adapter that is already connected when armed, lacks stable physical identity, is assigned to commissioned management, an integration, a device/PLC network, a saved static or production profile, or any other durable role, is controlled by a foreign active or autoconnect profile, or currently has a usable routable address, treating DHCP observation only as an additional refusal signal.
+"""
+
+verification = "A table-driven eligibility test supplies each protected role/profile/link/address condition alone and in combinations and observes a refusal with no helper mutation; the positive control is a newly linked, physical, unclaimed Ethernet adapter with no foreign profile or routable address, and a DHCP lease always refuses but its absence never suffices to allow recovery."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/hardware_recovery.go",
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go",
+    "05_Software/nilo_assistant/internal/network/adapter_roles.go",
+    "05_Software/nilo_assistant/internal/network/profile_manager.go",
+    "05_Software/nilo_assistant/internal/network/device_network_manager.go",
+    "05_Software/nilo_assistant/internal/nethelper/recovery_hardware.go",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/commissioning_link.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_commissioning_linux.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryRefusesProtectedSavedAndConfiguredAdapters",
+    "05_Software/nilo_assistant/internal/nethelper/direct_recovery_test.go::TestRecoveryDeviceSafetyMatrix",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::TestRecoveryLinkSnapshotRejectsAnUnidentifiedConnectedEthernet",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_recovery_linux_test.go::TestCommissioningReconcileNeverDeletesAForeignSamePrefixProfile",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "Changing an assigned or externally controlled port can interrupt or expose laboratory production networks."
+
+created = 2026-09-13
+updated = 2026-09-14

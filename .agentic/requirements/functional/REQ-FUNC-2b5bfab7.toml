@@ -1,0 +1,67 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-2b5bfab7"
+
+title = "Arm recovery for a subsequent Ethernet link"
+
+status = "active"
+
+requirement = """
+When a commissioned Raspberry Pi reports a recovery-duration button release, NILO shall arm a ten-minute recovery window from that release, snapshot which Ethernet links were already connected, wait for a later disconnected-to-connected transition, and restart the same deadline on a further recovery-duration release without changing an active recovery link.
+"""
+
+verification = "Deterministic wall- and steady-clock state-machine tests inject button releases and link samples, observe the ten-minute deadline and captured connected set, prove an already-connected or merely addressless link does nothing, prove its refusal audit completes before the hardware generation is handled or acknowledged, activate only after a later link transition, prove a repeat press retains the active adapter, and fail closed across in-process or persisted wall-clock rollback."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/hardware_recovery.go",
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/hardware_recovery_repository.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/hardware_recovery_repository_test.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/db_test.go",
+    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery.go",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/recovery_hardware.go",
+    "05_Software/nilo_assistant/internal/nethelper/direct_recovery.go",
+    "05_Software/nilo_assistant/internal/nethelper/direct_recovery_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/engine.go",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_linux_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryRequiresAPostArmSafeLinkTransitionAndChoosesOneAdapter",
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryExpiryRestoresOwnedLinkAndRepeatArmExtendsWithoutSwitching",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::TestLongPressTransitionsTheLiveRuntimeToSafeProvisioningWithoutARebootGap",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::TestHardwareEventReplayAfterAcknowledgementFailureDoesNotRearmOrReset",
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryArmUsesTheDurableButtonReleaseTimeAndLinkSnapshot",
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryEventGenerationSurvivesIdleAndClockRollbackCannotExtendTheWindow",
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestFutureDatedHardwareEventIsConsumedBeforeWallClockCatchesUp",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::TestProvisioningRefusalConsumesEventBeforeAcknowledgementFailure",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::TestArmPersistenceFailureCannotPublishHandledStateBeforeRetryAndRestart",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::TestPhysicalArmRefusalAuditPrecedesHandledGenerationAndAcknowledgement",
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryExpiresByElapsedTimeAfterWallClockRollback",
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryRestartFailsClosedAfterTheLastPersistedClockObservation",
+    "05_Software/nilo_assistant/internal/nethelper/direct_recovery_test.go::TestDirectRecoveryExpiresByElapsedTimeAcrossWallClockRollback",
+    "05_Software/nilo_assistant/internal/nethelper/direct_recovery_test.go::TestDirectRecoveryRestartFailsClosedOnPersistedClockRollback",
+    "05_Software/nilo_assistant/internal/nethelper/direct_recovery_test.go::TestDirectRecoveryPersistsItsLastClockObservationForRestart",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::TestHardwareEventQueueCoalescesRecoveryAndLetsResetSupersede",
+]
+
+
+spec = "specs/REQ-FUNC-2b5bfab7.md"
+
+priority = "high"   # low | normal | high
+rationale = "A deliberate physical request and a subsequent cable event prevent DHCP absence or a pre-existing production connection from becoming recovery."
+
+created = 2026-09-13
+updated = 2026-09-14

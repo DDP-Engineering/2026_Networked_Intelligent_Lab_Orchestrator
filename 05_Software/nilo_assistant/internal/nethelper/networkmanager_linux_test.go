@@ -7,13 +7,91 @@ import (
 	"encoding/json"
 	"github.com/godbus/dbus/v5"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
 	"nilo.local/nilo/internal/network"
 )
+
+func TestAvahiSystemPublishesResolvableCommissionedService(t *testing.T) {
+	if os.Getenv("NILO_NETWORK_SYSTEM") != "1" {
+		t.Skip("requires isolated NetworkManager test container")
+	}
+	if _, err := os.Stat("/.dockerenv"); err != nil {
+		t.Fatal("system test requires disposable container")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	driver, err := NewNetworkManager()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer driver.Close()
+	wanted := network.MDNSAdvertisement{
+		HostName: "nilo-system-test", Interfaces: []string{"eth0"},
+		Service: &network.MDNSService{
+			Type: "_nilo._tcp", Domain: "local",
+			Instance: "NILO 7e799b52-624f-4cc8-9be6-213a3525a726", Port: 8443,
+			TXT: []string{
+				"txtvers=1", "id=7e799b52-624f-4cc8-9be6-213a3525a726",
+				"hostname=nilo-system-test", "url=https://nilo-system-test.local:8443/",
+				"path=/", "state=commissioned",
+			},
+		},
+	}
+	if err := driver.ReplaceMDNS(ctx, wanted); err != nil {
+		t.Fatal(err)
+	}
+	output, err := exec.CommandContext(ctx, "avahi-browse", "-rtp", "_nilo._tcp").CombinedOutput()
+	if err != nil {
+		t.Fatalf("browse commissioned service: %v\n%s", err, output)
+	}
+	text := string(output)
+	if !strings.Contains(text, "_nilo._tcp") ||
+		!strings.Contains(text, "id=7e799b52-624f-4cc8-9be6-213a3525a726") ||
+		!strings.Contains(text, "hostname=nilo-system-test") {
+		t.Fatalf("service not discoverable:\n%s", text)
+	}
+	pidText, err := os.ReadFile("/run/avahi-daemon/pid")
+	if err != nil {
+		t.Fatal(err)
+	}
+	pid, err := strconv.Atoi(strings.TrimSpace(string(pidText)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := syscall.Kill(pid, syscall.SIGTERM); err != nil {
+		t.Fatalf("stop disposable Avahi: %v", err)
+	}
+	for attempt := 0; attempt < 50; attempt++ {
+		if exec.CommandContext(ctx, "avahi-daemon", "--check").Run() != nil {
+			break
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	if output, err := exec.CommandContext(ctx, "avahi-daemon", "--daemonize", "--no-drop-root", "--no-chroot").CombinedOutput(); err != nil {
+		t.Fatalf("restart disposable Avahi: %v\n%s", err, output)
+	}
+	for attempt := 0; attempt < 50; attempt++ {
+		if exec.CommandContext(ctx, "avahi-daemon", "--check").Run() == nil {
+			break
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	if err := driver.WithdrawMDNS(ctx); err != nil {
+		t.Fatalf("withdraw stale pre-restart group: %v", err)
+	}
+	wanted.Service.Port = 9443
+	wanted.Service.TXT[3] = "url=https://nilo-system-test.local:9443/"
+	if err := driver.ReplaceMDNS(ctx, wanted); err != nil {
+		t.Fatalf("publish lifecycle replacement after Avahi restart: %v", err)
+	}
+}
 
 func TestInterfaceCountersTolerateDevicesWithoutSysfsStatistics(t *testing.T) {
 	counters, err := readInterfaceCounters(filepath.Join(t.TempDir(), "missing-device"), "nm-p2p-dev-wlan0")

@@ -1,0 +1,42 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-8062385f"
+
+title = "Indicate Raspberry Pi network recovery state"
+
+status = "active"
+
+requirement = """
+Where Raspberry Pi hardware recovery is enabled, NILO shall drive an active-high BCM GPIO27 status LED through distinct documented patterns for idle, recovery armed, recovery active, reset pending, and failure, returning to the state that reflects the durable recovery record after restart.
+"""
+
+verification = "A fake output test drives every recovery transition and restart state and compares the emitted GPIO27 pattern with the documented cadence, including reset-pending while a long press is held and a persistent failure pattern after an unproved restore; a wired Pi observation confirms electrical polarity and visible patterns when hardware is available."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/nethelper/gpio_button.go",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go",
+    "05_Software/nilo_assistant/cmd/nilo-nethelper/main.go",
+    "06_SoftwareDocu/Network_Operations.md",
+    "07_Delivery/NILO_First_Boot_Provisioning_Verification.md",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::TestRecoveryIndicatorCadence",
+]
+
+
+spec = "specs/REQ-PLAT-c6a335b0.md"
+
+priority = "high"   # low | normal | high
+rationale = "A physical request needs local feedback before network access exists."
+
+created = 2026-09-13
+updated = 2026-09-13

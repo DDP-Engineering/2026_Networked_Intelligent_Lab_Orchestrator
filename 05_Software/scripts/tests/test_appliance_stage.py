@@ -73,7 +73,7 @@ class ApplianceImageDefinitionTests(unittest.TestCase):
             text,
             "the package list must be explicit rather than pulling recommendations",
         )
-        for package in ("network-manager", "dbus", "nftables", "wireguard-tools"):
+        for package in ("network-manager", "avahi-daemon", "dbus", "nftables", "wireguard-tools"):
             self.assertIn(package, text, f"the image must carry {package}")
 
     def test_node_and_browser_engine_are_pinned_from_the_toolchain_manifest(self) -> None:
@@ -92,7 +92,7 @@ class ApplianceImageDefinitionTests(unittest.TestCase):
         names = {entry["name"] for entry in inventory["tools"]}
         self.assertEqual(
             names,
-            {"NetworkManager", "dbus", "nftables", "WireGuard", "node", "chromium"},
+            {"NetworkManager", "Avahi", "dbus", "nftables", "WireGuard", "node", "chromium"},
             "the inventory must probe exactly the components the image carries",
         )
         for entry in inventory["tools"]:

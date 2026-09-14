@@ -79,6 +79,67 @@ func (s *FileStore) SaveInstall(r InstallRecord) error {
 	return s.save("install.json", r)
 }
 
+func (s *FileStore) LoadDirectRecovery() (*DirectRecoveryRecord, error) {
+	var record DirectRecoveryRecord
+	found, err := s.load("direct-recovery.json", &record)
+	if !found || err != nil {
+		return nil, err
+	}
+	return &record, nil
+}
+
+func (s *FileStore) SaveDirectRecovery(record DirectRecoveryRecord) error {
+	return s.save("direct-recovery.json", record)
+}
+
+func (s *FileStore) ClearDirectRecovery() error {
+	path := filepath.Join(s.directory, "direct-recovery.json")
+	if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+	if runtime.GOOS == "windows" {
+		return nil
+	}
+	directory, err := os.Open(s.directory)
+	if err != nil {
+		return err
+	}
+	defer directory.Close()
+	return directory.Sync()
+}
+
+func (s *FileStore) LoadHardwareRecoveryEvent() (HardwareRecoveryEventRecord, error) {
+	var record HardwareRecoveryEventRecord
+	_, err := s.load("hardware-recovery-event.json", &record)
+	return record, err
+}
+
+func (s *FileStore) SaveHardwareRecoveryEvent(record HardwareRecoveryEventRecord) error {
+	return s.save("hardware-recovery-event.json", record)
+}
+
+func (s *FileStore) LoadCommissioningProfiles() (CommissioningProfileOwnership, error) {
+	record := CommissioningProfileOwnership{Version: 1, Profiles: []CommissioningProfileRecord{}}
+	found, err := s.load("commissioning-profiles.json", &record)
+	if err != nil {
+		return CommissioningProfileOwnership{}, err
+	}
+	if !found {
+		return record, nil
+	}
+	if !validCommissioningProfileOwnership(record) {
+		return CommissioningProfileOwnership{}, errors.New("invalid commissioning profile ownership record")
+	}
+	return record, nil
+}
+
+func (s *FileStore) SaveCommissioningProfiles(record CommissioningProfileOwnership) error {
+	if !validCommissioningProfileOwnership(record) {
+		return errors.New("invalid commissioning profile ownership record")
+	}
+	return s.save("commissioning-profiles.json", record)
+}
+
 // LoadForwarding reads the device-network inventory, absent when nothing was
 // ever installed.
 func (s *FileStore) LoadForwarding() (*ForwardingInventory, error) {

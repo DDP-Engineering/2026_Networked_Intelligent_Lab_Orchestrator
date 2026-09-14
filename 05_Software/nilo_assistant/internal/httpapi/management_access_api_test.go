@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
 	"testing"
 
@@ -59,6 +60,81 @@ type noOpManagementFirewall struct{}
 
 func (noOpManagementFirewall) ApplyManagementAccess(context.Context, network.ManagementAccessConfiguration) error {
 	return nil
+}
+
+type recordingManagementFirewall struct {
+	configuration network.ManagementAccessConfiguration
+}
+
+func (firewall *recordingManagementFirewall) ApplyManagementAccess(_ context.Context, configuration network.ManagementAccessConfiguration) error {
+	firewall.configuration = configuration
+	return nil
+}
+
+type recoveryManagementProvider struct{}
+
+func (recoveryManagementProvider) Source() network.Source { return network.SourceSimulation }
+
+func (recoveryManagementProvider) Interfaces(context.Context) ([]network.Interface, error) {
+	return []network.Interface{
+		{Name: "enp1s0", AdapterID: "02:00:00:00:00:01", Kind: network.KindEthernet, Physical: true, State: network.StateConnected, IPv4: []string{"192.168.10.24/24"}},
+		{Name: "eth9", AdapterID: "02:00:00:00:00:09", Kind: network.KindEthernet, Physical: true, State: network.StateConnected, IPv4: []string{"169.254.44.21/16"}},
+	}, nil
+}
+
+func TestTemporaryRecoveryReachabilityKeepsTheExistingHTTPSIdentityAndAccessControls(t *testing.T) {
+	fixture := newAPIFixture(t, simulation.ScenarioHealthy, CookieHTTPSDeployment)
+	configuration := network.ManagementAccessConfiguration{
+		Interfaces: []string{"enp1s0"}, Port: 8443,
+		TLSNames: []string{"ddp-remote.local", "nilo.local"},
+	}
+	firewall := &recordingManagementFirewall{}
+	store := sqlite.NewManagementAccessRepository(fixture.database)
+	service, err := network.NewManagementAccessService(context.Background(), network.ManagementAccessOptions{
+		Provider: recoveryManagementProvider{}, Store: store, Firewall: firewall, Initial: &configuration,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := service.SetRecoveryInterface(context.Background(), "eth9"); err != nil {
+		t.Fatal(err)
+	}
+	if got := firewall.configuration.Interfaces; !slices.Equal(got, []string{"enp1s0", "eth9"}) {
+		t.Fatalf("temporary admission = %v, want commissioned plus recovery interfaces", got)
+	}
+	persisted, present, err := store.LoadManagementAccess(context.Background())
+	if err != nil || !present || !slices.Equal(persisted.Configuration.Interfaces, []string{"enp1s0"}) {
+		t.Fatalf("persistent management selection changed during recovery: %+v present=%t err=%v", persisted, present, err)
+	}
+
+	options := fixture.options
+	options.Profile = "appliance"
+	options.CookieSecurity = CookieHTTPSDeployment
+	options.ManagementAccess = service
+	fixture.handler, err = NewHandler(options)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if response := fixture.get("/api/v1/status", ""); response.Code != http.StatusUnauthorized {
+		t.Fatalf("unauthenticated recovery request = %d, want 401", response.Code)
+	}
+	narrow := fixture.issueToken(t, "admin", "recovery-read-only", []auth.Permission{auth.PermissionNetworkRead}, nil)
+	if response := fixture.get("/api/v1/network/management-access", narrow); response.Code != http.StatusForbidden {
+		t.Fatalf("underprivileged recovery request = %d, want 403", response.Code)
+	}
+	session := fixture.login(t, "admin", administratorPassword)
+	if !session.sessionCookie.Secure || !session.sessionCookie.HttpOnly {
+		t.Fatalf("recovery session cookie is not the HTTPS deployment cookie: %+v", session.sessionCookie)
+	}
+	request := httptest.NewRequest(http.MethodPut, "/api/v1/network/management-access", bytes.NewBufferString(`{"interfaces":["enp1s0"]}`))
+	request.Header.Set("Content-Type", "application/json")
+	request.AddCookie(session.sessionCookie)
+	if response := fixture.do(request); response.Code != http.StatusForbidden {
+		t.Fatalf("recovery mutation without CSRF = %d, want 403", response.Code)
+	}
+	if response := fixture.sessionGet("/api/v1/status", session); response.Code != http.StatusOK {
+		t.Fatalf("authenticated recovery request = %d, want 200", response.Code)
+	}
 }
 
 func TestManagementAccessAPIIsAdministratorOnlyCSRFProtectedAndSecretFree(t *testing.T) {

@@ -46,6 +46,9 @@ func RecoverOnce(ctx context.Context, driver Driver, store Store, now func() tim
 	if restoreErr != nil {
 		return outcome, fmt.Errorf("restore the interrupted change: %w", restoreErr)
 	}
+	if err := engine.restoreDirectRecoveryNow(ctx); err != nil && !errors.Is(err, ErrDirectRecoveryUnsupported) {
+		return outcome, fmt.Errorf("restore temporary direct recovery: %w", err)
+	}
 	verifyErr := engine.VerifyForwarding(ctx)
 	switch {
 	case verifyErr == nil:

@@ -19,6 +19,7 @@ ln -sf "$chromium" /tmp/nilo-appliance-chromium
 echo '--- appliance verification image inventory ---'
 probe NetworkManager NetworkManager --version
 probe dbus dbus-daemon --version
+probe Avahi avahi-daemon --version
 probe nftables nft --version
 probe WireGuard wg --version
 probe node node --version
@@ -42,6 +43,7 @@ browser_host=198.18.0.1
 cleanup_runtime() {
     ip netns delete "$browser_namespace" 2>/dev/null || true
     kill "$nm_pid" 2>/dev/null || true
+    kill "$avahi_pid" 2>/dev/null || true
 }
 trap cleanup_runtime EXIT
 nilo_network_configure

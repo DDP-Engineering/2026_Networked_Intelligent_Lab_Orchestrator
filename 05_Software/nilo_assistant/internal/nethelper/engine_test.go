@@ -10,12 +10,14 @@ import (
 )
 
 type fakeDriver struct {
-	device     Device
-	events     []string
-	restoreErr error
-	tunnels    fakeTunnels
-	settings   fakeSettings
-	forwarding fakeForwarding
+	device      Device
+	events      []string
+	restoreErr  error
+	tunnels     fakeTunnels
+	settings    fakeSettings
+	forwarding  fakeForwarding
+	recovery    []string
+	recoveryErr error
 }
 
 func (d *fakeDriver) Devices(context.Context) ([]Device, error) { return []Device{d.device}, nil }
@@ -51,10 +53,42 @@ func (d *fakeDriver) Destroy(context.Context, string) error {
 	return nil
 }
 
+func (d *fakeDriver) ActivateRecoveryLink(_ context.Context, _ string, adapterID, interfaceName string) error {
+	d.recovery = append(d.recovery, "activate:"+adapterID+":"+interfaceName)
+	return d.recoveryErr
+}
+
+func (d *fakeDriver) RestoreRecoveryLink(_ context.Context, record DirectRecoveryRecord) error {
+	d.recovery = append(d.recovery, "restore:"+record.ID)
+	return nil
+}
+
 type memoryStore struct {
-	record     *Record
-	fail       bool
-	forwarding *ForwardingInventory
+	record         *Record
+	directRecovery *DirectRecoveryRecord
+	fail           bool
+	forwarding     *ForwardingInventory
+}
+
+func (s *memoryStore) LoadDirectRecovery() (*DirectRecoveryRecord, error) {
+	if s.directRecovery == nil {
+		return nil, nil
+	}
+	record := *s.directRecovery
+	return &record, nil
+}
+
+func (s *memoryStore) SaveDirectRecovery(record DirectRecoveryRecord) error {
+	if s.fail {
+		return errors.New("disk full")
+	}
+	s.directRecovery = &record
+	return nil
+}
+
+func (s *memoryStore) ClearDirectRecovery() error {
+	s.directRecovery = nil
+	return nil
 }
 
 func (s *memoryStore) Load() (*Record, error) { return s.record, nil }
@@ -106,6 +140,86 @@ func TestHelperBindsOneChangeAndRejectsReplay(t *testing.T) {
 	}
 	if len(d.events) != 2 {
 		t.Fatal(d.events)
+	}
+}
+
+func TestDirectRecoveryProtocolCarriesOnlyTypedAdapterIdentity(t *testing.T) {
+	e, driver, _, now := fixture(t)
+	response := dispatch(context.Background(), e, Request{
+		Op: "recovery.link.activate", AdapterID: "aa:bb:cc:dd:ee:ff", InterfaceName: "eth1",
+		RecoveryExpiresAt: now.Add(10 * time.Minute),
+	})
+	if response.Error != "" || response.RecoveryRecordID == "" {
+		t.Fatalf("activate response = %+v", response)
+	}
+	if got := driver.recovery; len(got) != 1 || got[0] != "activate:aa:bb:cc:dd:ee:ff:eth1" {
+		t.Fatalf("driver calls = %v", got)
+	}
+	if refused := dispatch(context.Background(), e, Request{
+		Op: "interface.list", AdapterID: "aa:bb:cc:dd:ee:ff",
+	}); refused.Code != "invalid_request" {
+		t.Fatalf("unrelated operation accepted adapter identity: %+v", refused)
+	}
+	if restored := dispatch(context.Background(), e, Request{
+		Op: "recovery.link.restore", RecoveryRecordID: response.RecoveryRecordID,
+	}); restored.Error != "" {
+		t.Fatalf("restore response = %+v", restored)
+	}
+}
+
+type fakeRecoveryHardware struct {
+	event     HardwareRecoveryEvent
+	indicator HardwareIndicatorState
+	acked     string
+}
+
+func (hardware *fakeRecoveryHardware) ReadRecoveryEvent(context.Context) (HardwareRecoveryEvent, bool, error) {
+	return hardware.event, hardware.event.ID != "" && hardware.acked != hardware.event.ID, nil
+}
+
+func (hardware *fakeRecoveryHardware) AcknowledgeRecoveryEvent(_ context.Context, eventID string) error {
+	hardware.acked = eventID
+	return nil
+}
+
+func (hardware *fakeRecoveryHardware) SetRecoveryIndicator(_ context.Context, state HardwareIndicatorState) error {
+	hardware.indicator = state
+	return nil
+}
+
+func TestHardwareRecoveryProtocolReadsAcknowledgesAndIndicates(t *testing.T) {
+	e, _, _, _ := fixture(t)
+	hardware := &fakeRecoveryHardware{event: HardwareRecoveryEvent{ID: "event-1", Action: HardwareRecoveryArm}}
+	if err := e.ConfigureRecoveryHardware(hardware); err != nil {
+		t.Fatal(err)
+	}
+	read := dispatch(context.Background(), e, Request{Op: "hardware.recovery.read"})
+	if read.Error != "" || read.HardwareEvent == nil || read.HardwareEvent.ID != "event-1" {
+		t.Fatalf("read response = %+v", read)
+	}
+	if ack := dispatch(context.Background(), e, Request{Op: "hardware.recovery.ack", HardwareEventID: "event-1"}); ack.Error != "" {
+		t.Fatalf("ack response = %+v", ack)
+	}
+	state := HardwareIndicatorArmed
+	if indicated := dispatch(context.Background(), e, Request{Op: "hardware.indicator.set", Indicator: &state}); indicated.Error != "" {
+		t.Fatalf("indicator response = %+v", indicated)
+	}
+	if hardware.acked != "event-1" || hardware.indicator != HardwareIndicatorArmed {
+		t.Fatalf("hardware state = %+v", hardware)
+	}
+	if refused := dispatch(context.Background(), e, Request{Op: "interface.list", HardwareEventID: "event-1"}); refused.Code != "invalid_request" {
+		t.Fatalf("unrelated operation accepted hardware event: %+v", refused)
+	}
+}
+
+func TestHardwareRecoveryIsUnavailableUntilExplicitlyConfigured(t *testing.T) {
+	engine, _, _, _ := fixture(t)
+	response := dispatch(context.Background(), engine, Request{Op: "hardware.recovery.read"})
+	if response.Code != "direct_recovery_unavailable" {
+		t.Fatalf("unconfigured hardware response = %+v", response)
+	}
+	if err := engine.ConfigureRecoveryHardware(nil); err == nil {
+		t.Fatal("partial hardware configuration was accepted")
 	}
 }
 func TestExpiryAndStartupVerifyRestoration(t *testing.T) {

@@ -39,6 +39,7 @@ not move.
 | Wired hardware address | `dc:a6:32:77:3a:c4` |
 | Wireless hardware address | `dc:a6:32:77:3a:c5` |
 | Operating system | Debian 13 (trixie), 64-bit |
+| Board model | Raspberry Pi 4 Model B Rev 1.2 (observed 2026-09-13) |
 | SSH service | OpenSSH 10.0p2, `Debian-7+deb13u4` |
 | Login account | `dpasare` |
 | Authentication | Obtain through the approved out-of-band channel |
@@ -54,8 +55,8 @@ wired and wireless interfaces; the mapping of the lower address to the wired
 interface follows that convention and has not been confirmed on the device
 itself.
 
-The exact board model is **not confirmed**. Establish it on the device rather
-than assuming it:
+Reconfirm the exact board model after a hardware replacement rather than
+assuming the hostname still names the same board:
 
 ```bash
 cat /proc/device-tree/model
@@ -111,6 +112,48 @@ observation was made on — including whoever made it. The hardware-in-the-loop
 level in section 9 of the development flow still requires a controlled device
 and real equipment. Recording an observation from this device in a task journal
 is fine; presenting one as a passed gate is not.
+
+### 2.4 Optional NILO recovery wiring
+
+The Raspberry Pi delivery supports an optional local recovery button and LED.
+Shut down the Raspberry Pi, disconnect its power supply, and verify that it is
+unpowered before installing or changing any GPIO wiring. Never move the button,
+LED, or resistor connections while the board is powered.
+Wire a normally-open momentary button between **BCM GPIO17** and ground; NILO
+uses the SoC internal pull-up, so no external pull-up is required. Wire an LED
+from **BCM GPIO27** through a suitable current-limiting resistor to ground. The
+LED output is active high.
+
+Enable this hardware path only when installing on a Raspberry Pi:
+
+```bash
+sudo ./02_Tools/scripts/install-nethelper.sh <nilo-nethelper-binary> <service-user> --raspberry-pi-recovery
+```
+
+The installer refuses this option when the kernel model is not a Raspberry Pi
+or `/dev/gpiochip0` is unavailable. Generic mini PCs, desktops, laptops and
+virtual machines omit the option and expose no GPIO recovery protocol.
+
+Release the button between 3 and 10 seconds to arm or extend temporary network
+recovery for ten minutes. Release it at or after 10 seconds to reset only the
+network commissioning state and continue live in first boot. Short presses do
+nothing. Network reset does not reset passwords, appliance identity, hostname,
+TLS material, users, audit history, integrations, or PLC/device-network
+assignments. The helper timestamps each recovery-duration release and records which
+identified Ethernet links were already connected at that instant; only a later
+link-up can be considered. A connected interface without stable identity makes
+the snapshot unsafe and recovery is refused. After a service restart, any
+non-idle temporary recovery is restored before a new event is accepted.
+A GPIO read interruption invalidates the current gesture, so recovery requires
+a fresh press after sampling resumes.
+
+The current personal bench record does not confirm that this optional button
+and LED are physically wired. A GPIO build or service-start observation is not
+evidence that the press thresholds or LED circuit passed hardware acceptance.
+On 2026-09-13 an isolated ARM64 candidate helper successfully claimed GPIO17 as
+an active-low input and GPIO27 as a low output through the Linux GPIO v2 ABI,
+then released both on shutdown. This proves the kernel/ABI capability on this
+board, not the unwired physical actions.
 
 ### 2.5 RustDesk remote desktop
 
@@ -216,9 +259,9 @@ selection would have stranded the board until somebody reached it physically.
 
 ### 2.8 First-boot provisioning check (2026-09-13)
 
-The board runs NILO 0.3.1 from `/var/lib/nilo` with `nilo.service` and
-`nilo-nethelper.service` active, reachable at `https://10.205.148.11:8443` over
-the tunnel as before. Nothing from the first-boot check is left on it.
+The 2026-09-13 check initially deployed NILO 0.3.1. The board now runs NILO
+0.4.0 from `/var/lib/nilo` with `nilo.service` and `nilo-nethelper.service`
+active. Nothing from the first-boot check is left on it.
 
 The check ran a candidate against a throwaway data directory and then upgraded
 the real installation. Both halves were observed on this board:
@@ -250,6 +293,21 @@ Reaching the interface during such a run means using an eligible network. The
 tunnel is excluded by design, `ddp-remote.local` resolves only where multicast
 DNS is carried, and the listener certificate names `ddp-remote.local`,
 `10.205.148.11` and `192.168.1.103` - so any other address warns in a browser.
+
+NILO 0.4.0 was deployed on 2026-09-14 over the DDP network without changing
+the existing state, administrator data, TLS material or NetworkManager
+profiles. The appliance answered HTTPS with HTTP 200 at
+`https://10.44.118.42:8443/`; an unauthenticated protected status request
+returned HTTP 401. Permanent DNS-SD discovery advertised `_nilo._tcp` on
+`wlan0` as `ddp-remote.local:8443`, with appliance identity
+`01a06e44-9b79-70b2-8923-1264db5d2ca5` and the commissioned management URL.
+The root-only rollback archive is
+`/var/backups/nilo/pre-0.4.0-20260914-132831/files-and-state.tar`, with SHA-256
+`ed22252e87912253e24c1b18a2221259978731308a8fb9b3ae150e25c6199cb3`.
+The optional GPIO recovery path was not enabled because the button and LED
+circuit is not wired on this board. Temporary direct-connect recovery therefore
+remains unavailable until the documented hardware is fitted and acceptance
+tested; permanent discovery is active independently.
 
 ### 2.9 Power-control checks
 

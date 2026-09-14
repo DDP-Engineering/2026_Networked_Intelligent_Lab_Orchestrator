@@ -1,0 +1,55 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-PLAT-c6a335b0"
+
+title = "Classify Raspberry Pi recovery button presses"
+
+status = "active"
+
+requirement = """
+Where Raspberry Pi hardware recovery is enabled, the privileged helper shall debounce an active-low BCM GPIO17 input using its internal pull-up and classify the duration at release as no action below three seconds, temporary network recovery from three seconds up to but excluding ten seconds, and network commissioning reset at ten seconds or longer. Each recovery-duration release shall durably carry its release time and a valid snapshot of already-connected identified Ethernet adapters; a missing identity makes that snapshot invalid and causes core to refuse recovery safely. A GPIO read discontinuity shall invalidate the current gesture and require a fresh debounced press.
+"""
+
+verification = "Fake GPIO clock tests inject contact bounce, releases immediately below, exactly at, and immediately above the 3 s and 10 s boundaries, and a read discontinuity followed by a continuously held input; they observe one classified event only on a fresh stable press/release after a released baseline. An ARM64 build proves the Raspberry Pi implementation compiles without CGO, and a wired Pi observation checks the three physical durations when hardware is available."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/nethelper/gpio_button.go",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/recovery_hardware.go",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_linux_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
+    "05_Software/nilo_assistant/cmd/nilo-nethelper/main.go",
+    "02_Tools/scripts/install-nethelper.sh",
+    "05_Software/nilo_assistant/cmd/nilo-nethelper/serve_linux.go",
+    "06_SoftwareDocu/Local_Hardware_Access.md",
+    "CHANGELOG.md",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::TestClassifyRecoveryButtonReleaseBoundaries",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::TestButtonDetectorEmitsOnceOnDebouncedRelease",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::TestButtonDetectorReportsResetPendingOnlyWhileAStableLongPressIsHeld",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::TestHardwareEventQueueRetainsUnacknowledgedReleaseAndMonotonicGenerationAcrossRestart",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_linux_test.go::TestGPIOV2RequestMatchesLinuxABI",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::TestRecoveryLinkSnapshotRejectsAnUnidentifiedConnectedEthernet",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::TestHardwareEventQueueCoalescesRecoveryAndLetsResetSupersede",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::TestButtonDetectorDiscontinuityCannotTurnAShortPressIntoReset",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::TestButtonDetectorDiscontinuityRequiresAReleasedBaseline",
+]
+
+
+spec = "specs/REQ-PLAT-c6a335b0.md"
+
+priority = "high"   # low | normal | high
+rationale = "Classification on release makes the two destructive levels unambiguous and testable."
+
+created = 2026-09-13
+updated = 2026-09-14

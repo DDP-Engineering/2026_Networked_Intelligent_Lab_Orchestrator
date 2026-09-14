@@ -96,7 +96,9 @@ explicitly requested host change.
   `nilo-nethelper` service and its independent recovery timer, installed
   explicitly with `02_Tools/scripts/install-nethelper.sh`. The helper keeps its
   records and the WireGuard keystore under `/var/lib/nilo-nethelper`; the
-  service account owns `/var/lib/nilo`.
+  service account owns `/var/lib/nilo`. On Raspberry Pi deliveries only, append
+  `--raspberry-pi-recovery` after wiring BCM17 (active-low button) and BCM27
+  (active-high LED); omit it on every generic Linux system.
 - Credentials are supplied by route, never on a command line: an API token from
   `--token-file`, a password on standard input, TLS material from operator-owned
   paths, and WireGuard keys and wireless passwords only inside the helper's

@@ -1,7 +1,7 @@
 package nethelper
 
 import (
-	"strings"
+	"slices"
 	"testing"
 
 	"nilo.local/nilo/internal/network"
@@ -13,63 +13,42 @@ func advertisement() network.MDNSAdvertisement {
 	}
 }
 
-// The rendered configuration answers on the derived interfaces and nowhere
-// else, and carries the marker that lets the helper recognize its own work.
-func TestRenderAvahiConfigurationClosesTheInterfaceList(t *testing.T) {
+func TestAvahiPublicationPlanCarriesScopedAliasAndPermanentService(t *testing.T) {
 	t.Parallel()
 
-	rendered := renderAvahiConfiguration(advertisement())
-
-	for _, wanted := range []string{
-		avahiOwnershipMarker,
-		"host-name=ddp-remote",
-		"domain-name=local",
-		"allow-interfaces=enp1s0,wlp2s0",
-		"publish-addresses=yes",
-	} {
-		if !strings.Contains(rendered, wanted) {
-			t.Fatalf("rendered configuration is missing %q:\n%s", wanted, rendered)
-		}
+	wanted := advertisement()
+	wanted.Service = &network.MDNSService{
+		Type: "_nilo._tcp", Domain: "local", Instance: "NILO 7e799b52-624f-4cc8-9be6-213a3525a726", Port: 8443,
+		TXT: []string{"txtvers=1", "id=7e799b52-624f-4cc8-9be6-213a3525a726", "hostname=ddp-remote", "url=https://ddp-remote.local:8443/", "path=/", "state=commissioned"},
 	}
-	// The responder must not volunteer anything about the appliance beyond the
-	// name and addresses it was asked to publish.
-	for _, refused := range []string{"publish-hinfo=yes", "publish-workstation=yes"} {
-		if strings.Contains(rendered, refused) {
-			t.Fatalf("rendered configuration publishes more than it was asked to: %q", refused)
-		}
+	plan, err := avahiPublicationPlan(wanted)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if strings.Contains(rendered, ".local.local") {
-		t.Fatal("the host name was rendered with the domain suffix already attached")
+	if plan.HostFQDN != "ddp-remote.local" || !slices.Equal(plan.Interfaces, wanted.Interfaces) {
+		t.Fatalf("plan = %+v", plan)
+	}
+	if plan.Service == nil || plan.Service.Type != "_nilo._tcp" || plan.Service.HostFQDN != "ddp-remote.local" {
+		t.Fatalf("service plan = %+v", plan.Service)
+	}
+	if !slices.Equal(plan.Service.TXT, wanted.Service.TXT) {
+		t.Fatalf("service TXT = %v", plan.Service.TXT)
 	}
 }
 
-// NILO manages only configuration it wrote itself, the same way it treats its
-// nftables tables, so an appliance that already runs a responder is not taken
-// over.
-func TestAvahiConfigurationStateRecognizesOwnership(t *testing.T) {
-	t.Parallel()
-
-	for _, testCase := range []struct {
-		name     string
-		existing string
-		present  bool
-		state    TableState
-	}{
-		{name: "nothing configured", state: TableAbsent},
-		{name: "written by nilo", existing: renderAvahiConfiguration(advertisement()), present: true, state: TableOwned},
-		{
-			name:     "written by somebody else",
-			existing: "[server]\nhost-name=bench\n", present: true, state: TableForeign,
+func TestAvahiEffectiveHostRefusesAnUncertifiedCollisionName(t *testing.T) {
+	plan, err := avahiPublicationPlan(network.MDNSAdvertisement{
+		HostName: "ddp-remote", Interfaces: []string{"enp1s0"},
+		Service: &network.MDNSService{
+			Type: "_nilo._tcp", Domain: "local", Instance: "NILO 7e799b52-624f-4cc8-9be6-213a3525a726", Port: 8443,
+			TXT: []string{"txtvers=1", "id=7e799b52-624f-4cc8-9be6-213a3525a726", "hostname=ddp-remote", "url=https://ddp-remote.local:8443/", "path=/", "state=commissioned"},
 		},
-		{name: "empty file", existing: "", present: true, state: TableForeign},
-	} {
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			if state := avahiConfigurationState(testCase.existing, testCase.present); state != testCase.state {
-				t.Fatalf("avahiConfigurationState = %q, want %q", state, testCase.state)
-			}
-		})
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = applyAvahiEffectiveHost(plan, "ddp-remote-2.local"); err == nil {
+		t.Fatal("an unpredictable collision-renamed hostname was advertised as a TLS URL")
 	}
 }
 

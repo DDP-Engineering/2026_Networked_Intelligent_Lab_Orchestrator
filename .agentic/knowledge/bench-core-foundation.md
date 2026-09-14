@@ -72,11 +72,35 @@ before anything is opened or contacted. The root usage names every group.
   than resolving to either state.
 - While the appliance is provisioning, the management allowlist is every
   eligible physical interface currently present, recomputed on each reconcile
-  and persisted. Once it is commissioned the allowlist is the configured set
-  alone and changes only through an administrator's explicit request.
-- The privileged helper manages only the responder configuration it wrote
-  itself, recognized by its own marker, and refuses to replace any other. It
-  receives a validated host label and interface list, never responder syntax.
+  and persisted. Once commissioned, the persistent allowlist is the configured
+  set alone. A Pi hardware request may add one non-persistent, deadline-bounded
+  recovery interface without changing that record.
+- The privileged helper publishes only process-owned Avahi D-Bus entries. It
+  receives validated host/service/alias values and interface lists, never raw
+  responder configuration, and does not replace daemon policy. Permanent
+  discovery advertises only the configured TLS-covered system hostname; an
+  Avahi collision suffix is refused rather than turned into an uncertified URL.
+- Raspberry Pi button events are stored by the helper before exposure with the
+  release time; recovery-duration events additionally carry the connected-link
+  snapshot while reset events do not. Events are coalesced with reset precedence
+  and acknowledged only after core handles them. Nonterminal recovery ownership
+  is restored before a later event; an idle highest-generation tombstone stops
+  acknowledgement failures from replaying an action. A long press atomically changes the live
+  lifecycle and management admission to provisioning without restarting the
+  process or touching identities, credentials, TLS, audit, integrations, or
+  device configuration. For a recovery-duration event, already-connected-link
+  refusal audits complete before core persists the handled generation, so an
+  audit failure leaves the helper event available for a safe retry.
+- A GPIO read discontinuity cancels the gesture in progress and requires a
+  stable released baseline before another press. Recovery-profile
+restoration proves the exact durable UUID, adapter/interface/MAC binding,
+  volatile state and non-routing settings before deletion. NetworkManager's
+  generated empty `proxy` section is part of the normalized owned profile;
+  populated proxy settings or any other unexpected setting remain foreign.
+  Post-mutation audit
+  failures retain a durable ordered queue covering every required audit that
+  can outlive a state advance or network effect, and never repeat or delay
+  expiry cleanup of the network effect.
 - Commissioning is one way and is completed only onto an allowlist the appliance
   can still be reached through. A transition that does not finish restores the
   allowlist that was serving and leaves the appliance provisioning.
@@ -106,6 +130,11 @@ before anything is opened or contacted. The root usage names every group.
 - `REQ-FUNC-9a19ad36` - accepts link-local as a wired adapter's IPv4 method so direct commissioning needs no DHCP server and no guessed address.
 - `REQ-FUNC-554b9bbd` - answers the appliance's local name on exactly the interfaces carrying management access and renews it as they change.
 - `REQ-SEC-83deb5c6` - takes a validated advertisement rather than responder configuration, manages only configuration it wrote, and reports an appliance it cannot publish on.
+- `REQ-FUNC-6334add6` - permanently advertises one stable `_nilo._tcp.local` instance per commissioned appliance with identity, configured hostname and usable HTTPS URL, withdrawing the shared alias before replacement.
+- `REQ-FUNC-d2d75f06` - gives every role-safe first-boot Ethernet adapter an exactly inventoried, volatile, non-routing IPv4LL commissioning profile without inferring ownership from its name.
+- `REQ-FUNC-2b5bfab7`, `REQ-FUNC-4249d837` and `REQ-SEC-281ef5e4` - arm a bounded post-transition recovery window, select only the first doubly verified unassigned Ethernet adapter, and exactly restore its temporary effects.
+- `REQ-PLAT-c6a335b0`, `REQ-UX-8062385f` and `REQ-PLAT-ca44573d` - confine the BCM17/BCM27 button and indication path to explicitly enabled Raspberry Pi deliveries.
+- `REQ-FUNC-fb666359` and `REQ-DATA-2c5b4a4d` - return only network access to commissioning while preserving appliance identity, credentials, TLS, audit and integration/device configuration.
 - `REQ-FUNC-b49d7866` - fixes the management allowlist to what an administrator chose, records the appliance commissioned, and refuses a selection it could not be reached through.
 - `REQ-REL-fa990acb` - restores the allowlist that was serving when a commissioning transition does not finish, leaving the appliance provisioning.
 - `REQ-PLAT-18084875` - records a device as a physical adapter only when it reports a permanent hardware address and the kernel presents it on a real bus.
@@ -157,16 +186,24 @@ flowchart TD
     authorize["permission check"]
     catalog["simulation.Catalog"]
     network["network.Service"]
+    management["network.ManagementAccessService"]
+    hwrecovery["network.HardwareRecoveryService"]
+    mdns["network.MDNSAnnouncer"]
     operations["network.OperationManager"]
     provider["network.Provider: simulation or helper client"]
     changer["network.ConnectivityChanger: simulation or helper client"]
     sampler["network sampler"]
     helper["root nethelper: peer-authenticated Unix RPC"]
     nm["NetworkManager D-Bus and independent checkpoint timer"]
-    recovery[("root-only recovery.json")]
+    avahi["Avahi process-owned D-Bus group"]
+    gpio["Pi GPIO v2 button and LED"]
+    recovery[("root-only recovery records")]
+    networkrecovery[("SQLite network_recovery")]
     provider --> helper
     changer --> helper
     helper --> nm
+    helper --> avahi
+    helper --> gpio
     helper --> recovery
     apiclient["internal/apiclient"]
     app["app.New"]
@@ -218,6 +255,13 @@ flowchart TD
     netroutes --> operations
     network --> provider
     network --> sqlite
+    app --> management
+    app --> hwrecovery
+    management --> helper
+    hwrecovery --> management
+    hwrecovery --> helper
+    hwrecovery --> networkrecovery
+    mdns --> helper
     operations --> changer
     operations --> provider
     sampler --> network
@@ -264,8 +308,9 @@ pinned Debian 13 and Ubuntu 24.04 disposable fixtures. The separate HTTPS proces
 test exercises the already-installed path through a real unprivileged core.
 
 Appliance serving requires a built GUI and TLS certificate/key, forces secure
-session cookies, refuses public/wildcard binds, and labels the GUI with safe
-runtime metadata before authentication. Instrument inventory is empty. WireGuard
+session cookies, confines a legacy literal listener to a private address, and
+guards the provisioning wildcard listener by the derived interface allowlist.
+It labels the GUI with safe runtime metadata before authentication. Instrument inventory is empty. WireGuard
 has no live fallback. NetworkManager pseudo-devices or hot-unplugged adapters
 without sysfs counters produce a zero counter sample instead of stopping the
 service. See `06_SoftwareDocu/Network_Service_Implementation_Status.md` for the
@@ -328,7 +373,7 @@ The simulation catalog is deliberately dependency-free and cannot discover or co
 
 ## Files
 
-- `internal/nethelper/`, `cmd/nilo-nethelper/` - bounded privileged D-Bus interface operations, durable store and independent recovery.
+- `internal/nethelper/`, `cmd/nilo-nethelper/` - bounded privileged D-Bus interface operations, root-only durable recovery/event records, process-owned Avahi publication, and the explicitly enabled Pi GPIO path.
 - `cmd/nilo/network_runtime*.go`, `internal/httpapi/serving.go` - explicit live provider selection, TLS and runtime-aware static GUI.
 - `02_Tools/tests/network/` - disposable real-NetworkManager and unprivileged HTTPS process tests (opt-in, separate from the ordinary suite).
 
@@ -336,8 +381,12 @@ The simulation catalog is deliberately dependency-free and cannot discover or co
 - `internal/network/commissioning.go` - the one-way transition out of first boot: it checks the appliance can still be reached through the chosen interfaces, applies and persists them, stops deriving, and restores what was serving if any step does not finish.
 - `internal/appliance/commissioner.go` - adapts the durable lifecycle writer to the narrow interface the network service calls, returning nil when there is nothing to record through.
 - `internal/httpapi/commissioning.go` - the administrator-only route, mapping each refusal onto a conflict rather than a service failure.
-- `internal/network/mdns.go`, `mdns_announcer.go` - what the appliance asks to be discoverable as, and the announcer that keeps that publication in step with the interfaces actually serving. The announcer republishes only on a change and retries a failure on the next reconcile.
-- `internal/nethelper/avahi_render.go`, `mdns.go`, `avahi_linux.go` - the responder configuration renderer and its ownership check, the privileged operation, and the Linux driver that writes the file and reloads the responder.
+- `internal/network/mdns.go`, `mdns_announcer.go` - validated provisioning aliases and commissioned DNS-SD records, plus restart-aware reconciliation against the helper's actual publication.
+- `internal/nethelper/avahi_plan.go`, `mdns.go`, `avahi_linux.go` - the typed publication plan, privileged operation, and Linux Avahi D-Bus entry-group implementation; no daemon configuration file is replaced.
+- `internal/network/commissioning_link.go`, `internal/nethelper/networkmanager_commissioning_linux.go` - role-safe first-boot IPv4LL intent and the exact owned volatile NetworkManager profile lifecycle.
+- `internal/network/hardware_recovery.go`, `cmd/nilo/hardware_recovery.go` - durable arm/link/expiry/reset coordination and live runtime composition.
+- `internal/nethelper/direct_recovery.go`, `networkmanager_recovery_linux.go`, `recovery_hardware.go`, `gpio_*.go` - exact temporary-link ownership/restoration and durable Pi button/indicator behavior.
+- `internal/store/sqlite/hardware_recovery_repository.go`, `migrations/014_network_recovery.sql` - durable core recovery interlock and handled hardware generation.
 - `cmd/nilo/listener_mode.go` - the two decisions `serve` makes about its listener: which mode the options ask for, and whether first-boot serving is permitted by the appliance's recorded state. Pure, so both are asserted without a subprocess.
 - `internal/appliance/commissioning.go` - the lifecycle vocabulary, its validity rule and the load that refuses an unusable recorded value. It reads nothing itself; `internal/store/sqlite/commissioning_repository.go` satisfies its store interface.
 - `internal/store/sqlite/migrations/013_commissioning.sql` - the singleton `commissioning` table and the seeding rule, expressed in SQL because it is the only code that runs before the first appliance identity row exists.
@@ -588,30 +637,30 @@ path.
 While an appliance is being commissioned it answers one local name on exactly
 the interfaces carrying management access, so an installer can type one URL and
 reach it from whichever network they are on. `network.MDNSAdvertisement` is a
-host label and an interface list, validated before it leaves the unprivileged
-process: a name that is not a single DNS label, an empty list, loopback, a
-duplicate, or anything that could carry a configuration separator is refused.
-The advertisement carries no address, because the responder publishes whatever
-each interface currently holds, which is what lets the URL survive a DHCP
-renewal.
+validated host/service/alias object and an interface list before it leaves the
+unprivileged process. Invalid labels, loopback or duplicate interfaces, unknown
+service fields, and configuration separators are refused. During provisioning
+the object contains only the scoped `nilo.local` alias; after commissioning it
+contains only one `_nilo._tcp.local` service with stable appliance UUID,
+configured hostname and current HTTPS URL. A temporary recovery overlay adds
+`nilo.local` only on the selected recovery interface without widening the
+permanent service.
 
-`network.MDNSAnnouncer` holds the last advertisement it published and renews
-only on a change, so the reconcile cadence does not restart the responder every
-few seconds. A publication that fails is reported and recorded as unpublished so
-the next reconcile retries: an appliance whose name is not answered is still
-reachable by address, and neither failing the start nor staying silent would be
-right. An advertisement with no usable interface publishes nothing and reports
-no error, because that is an ordinary first-boot moment.
+`network.MDNSAnnouncer` compares desired publication with both its local cache
+and `mdns.status` from the helper. An unchanged healthy entry group is left
+alone; a helper or Avahi restart, failed publication, interface change, port
+change, or lifecycle change causes replacement or withdrawal on the next
+reconcile. An empty provisioning interface set withdraws the alias. Discovery
+failure is reported and retried while address reachability remains available.
 
-The privileged helper accepts the operation `mdns.publish`, and its envelope
-refuses an advertisement on every other operation. It manages only responder
-configuration bearing its own marker and refuses to replace any other, the same
-ownership discipline the nftables tables use. The rendered configuration names
-the derived interfaces, publishes addresses, and explicitly declines to publish
-anything further about the appliance. It is staged beside its target and renamed
-over it, so a reading responder never sees a half-written file. A helper with no
-responder to drive reports that it cannot publish rather than appearing to
-succeed.
+The privileged helper accepts only the typed `mdns.publish` and `mdns.status`
+operations and owns one entry group on its Avahi D-Bus connection. It publishes
+the current addresses of the requested interface indexes and never rewrites
+daemon configuration or another publisher's group. The configured system
+hostname is the permanent service target; if Avahi reports a collision-renamed
+effective host, publication fails closed so NILO never advertises a URL outside
+the installed certificate. A helper with no reachable responder reports the
+publication unavailable rather than appearing to succeed.
 
 ## Completing commissioning (2026-09-12, TASK-bd56e123)
 

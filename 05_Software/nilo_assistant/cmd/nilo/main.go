@@ -10,6 +10,7 @@ import (
 	"net/netip"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -329,6 +330,27 @@ func runServe(ctx context.Context, arguments []string) int {
 	}
 	var managementAccess *network.ManagementAccessService
 	var mdnsAnnouncer *network.MDNSAnnouncer
+	var provisioningAnnouncer *network.MDNSAnnouncer
+	var commissionedAnnouncer *network.MDNSAnnouncer
+	var mdnsInterfaces func(context.Context) ([]string, error)
+	systemHostname := ""
+	hardwareRecoveryEnabled := false
+	if *profile == "appliance" {
+		systemHostname, err = os.Hostname()
+		if err != nil || strings.TrimSpace(systemHostname) == "" {
+			fmt.Fprintln(os.Stderr, "appliance discovery requires the system host name")
+			return 1
+		}
+		_, _, hardwareErr := nethelper.NewClient(*helperSocket, "").ReadRecoveryEvent(ctx)
+		switch {
+		case hardwareErr == nil:
+			hardwareRecoveryEnabled = true
+		case errors.Is(hardwareErr, nethelper.ErrDirectRecoveryUnsupported):
+		default:
+			fmt.Fprintln(os.Stderr, "probe Raspberry Pi recovery hardware:", hardwareErr)
+			return 1
+		}
+	}
 	var roleCoordinator *network.AdapterRoleCoordinator
 	if roles, ok := provider.(interface {
 		AdapterRoleCoordinator() *network.AdapterRoleCoordinator
@@ -365,23 +387,37 @@ func runServe(ctx context.Context, arguments []string) int {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
 	}
-	if mode == listenerProvisioning {
-		hostname, hostErr := os.Hostname()
-		if hostErr != nil || strings.TrimSpace(hostname) == "" {
-			fmt.Fprintln(os.Stderr, "first-boot provisioning requires a host name for the management certificate identity")
+	var commissioningLinks *network.CommissioningLinkService
+	if *profile == "appliance" {
+		commissioningLinks, err = network.NewCommissioningLinkService(
+			provider, nethelper.NewClient(*helperSocket, ""), roleCoordinator,
+		)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
 			return 1
 		}
-		missing, certificateErr := httpapi.ValidateCertificateNames(*tlsCert, []string{hostname + ".local"})
+		if err := commissioningLinks.Reconcile(ctx, mode == listenerProvisioning); err != nil {
+			fmt.Fprintln(os.Stderr, "prepare commissioning Ethernet links:", err)
+			return 1
+		}
+	}
+	if mode == listenerProvisioning {
+		provisioningTLSNames := requiredDiscoveryTLSNames(systemHostname, true)
+		missing, certificateErr := httpapi.ValidateCertificateNames(*tlsCert, provisioningTLSNames)
 		if certificateErr != nil {
 			fmt.Fprintln(os.Stderr, certificateErr)
 			return 1
+		}
+		if len(missing) != 0 {
+			fmt.Fprintf(os.Stderr, "the provisioning certificate is missing required discovery SAN %q\n", missing[0])
+			return 2
 		}
 		managementAccess, err = network.NewManagementAccessService(ctx, network.ManagementAccessOptions{
 			Provider: provider, Store: application.ManagementAccessRepository(),
 			Firewall:   nethelper.NewClient(*helperSocket, ""),
 			Now:        func() time.Time { return time.Now().UTC() },
 			TLSMissing: missing, Coordinator: roleCoordinator,
-			Provisioning: true, ProvisioningTLSNames: []string{hostname + ".local"},
+			Provisioning: true, ProvisioningTLSNames: provisioningTLSNames,
 			Commissioner: appliance.NewDurableCommissioner(application.CommissioningRepository()),
 		})
 		if err != nil {
@@ -396,9 +432,9 @@ func runServe(ctx context.Context, arguments []string) int {
 		// The appliance answers to one name while it is being commissioned, on
 		// whichever interfaces are currently carrying management access, so the
 		// same URL keeps working as adapters come and go.
-		mdnsAnnouncer = network.NewMDNSAnnouncer(nethelper.NewClient(*helperSocket, ""), hostname)
-		if err := mdnsAnnouncer.Announce(ctx, managementAccess.ConfiguredInterfaces()); err != nil {
-			fmt.Fprintln(os.Stderr, "the appliance local name is not being answered yet:", err)
+		provisioningAnnouncer = network.NewProvisioningMDNSAnnouncer(nethelper.NewClient(*helperSocket, ""))
+		mdnsInterfaces = func(context.Context) ([]string, error) {
+			return managementAccess.ConfiguredInterfaces(), nil
 		}
 	}
 	if managementMode {
@@ -431,6 +467,16 @@ func runServe(ctx context.Context, arguments []string) int {
 			fmt.Fprintln(os.Stderr, certificateErr)
 			return 2
 		}
+		discoveryTLSNames := requiredDiscoveryTLSNames(systemHostname, hardwareRecoveryEnabled)
+		discoveryMissing, certificateErr := httpapi.ValidateCertificateNames(*tlsCert, discoveryTLSNames)
+		if certificateErr != nil {
+			fmt.Fprintln(os.Stderr, certificateErr)
+			return 2
+		}
+		if len(discoveryMissing) != 0 {
+			fmt.Fprintf(os.Stderr, "the appliance certificate is missing required discovery SAN %q\n", discoveryMissing[0])
+			return 2
+		}
 		for _, name := range missing {
 			fmt.Fprintf(os.Stderr, "WARNING: listener certificate is missing SAN %q; renew the configured certificate before using that URL\n", name)
 		}
@@ -438,6 +484,7 @@ func runServe(ctx context.Context, arguments []string) int {
 			Provider: provider, Store: repository, Firewall: nethelper.NewClient(*helperSocket, ""),
 			Now: func() time.Time { return time.Now().UTC() }, Initial: initial,
 			Reconfigure: *managementReconfigure, TLSMissing: missing, Coordinator: roleCoordinator,
+			ProvisioningTLSNames: requiredDiscoveryTLSNames(systemHostname, true),
 		})
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -447,6 +494,98 @@ func runServe(ctx context.Context, arguments []string) int {
 			UseManagementAccessPolicy(interface{ ConfiguredInterfaces() []string })
 		}); ok {
 			configured.UseManagementAccessPolicy(managementAccess)
+		}
+		mdnsInterfaces = func(context.Context) ([]string, error) {
+			return managementAccess.ConfiguredInterfaces(), nil
+		}
+	}
+	discoveryPort := *managementPort
+	if mode == listenerBind {
+		hostText, portText, splitErr := net.SplitHostPort(listenerAddress)
+		if splitErr != nil {
+			fmt.Fprintln(os.Stderr, splitErr)
+			return 2
+		}
+		discoveryPort, err = strconv.Atoi(portText)
+		if err != nil || discoveryPort < 0 || discoveryPort > 65535 {
+			fmt.Fprintln(os.Stderr, "invalid discovery listener port")
+			return 2
+		}
+		if address, addressErr := netip.ParseAddr(hostText); discoveryPort == 0 &&
+			(addressErr != nil || !address.IsLoopback()) {
+			fmt.Fprintln(os.Stderr, "a discoverable private-address listener requires a fixed port")
+			return 2
+		}
+	}
+	if discoveryPort == 0 {
+		discoveryPort = network.ProvisioningPort
+	}
+	if *profile == "appliance" {
+		commissionedAnnouncer, err = network.NewCommissionedMDNSAnnouncer(
+			nethelper.NewClient(*helperSocket, ""), systemHostname,
+			application.ApplianceRuntime().Identity.ID, uint16(discoveryPort),
+		)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 1
+		}
+	}
+	if managementAccess != nil {
+		if provisioningAnnouncer == nil {
+			provisioningAnnouncer = network.NewProvisioningMDNSAnnouncer(nethelper.NewClient(*helperSocket, ""))
+		}
+		if err := reconcileApplianceDiscovery(ctx, managementAccess, &mdnsAnnouncer, provisioningAnnouncer, commissionedAnnouncer); err != nil {
+			fmt.Fprintln(os.Stderr, "appliance discovery is not being answered yet:", err)
+		}
+	} else if *profile == "appliance" && mode == listenerBind {
+		host, _, _ := net.SplitHostPort(listenerAddress)
+		address, _ := netip.ParseAddr(host)
+		if !address.IsLoopback() {
+			missing, certificateErr := httpapi.ValidateCertificateNames(*tlsCert, requiredDiscoveryTLSNames(systemHostname, false))
+			if certificateErr != nil {
+				fmt.Fprintln(os.Stderr, certificateErr)
+				return 2
+			}
+			if len(missing) != 0 {
+				fmt.Fprintf(os.Stderr, "the appliance certificate is missing required discovery SAN %q\n", missing[0])
+				return 2
+			}
+			mdnsInterfaces = func(ctx context.Context) ([]string, error) {
+				return boundDiscoveryInterfaces(ctx, provider, listenerAddress)
+			}
+			interfaces, discoveryErr := mdnsInterfaces(ctx)
+			if discoveryErr == nil {
+				discoveryErr = commissionedAnnouncer.Announce(ctx, interfaces)
+			}
+			if discoveryErr != nil {
+				fmt.Fprintln(os.Stderr, "appliance discovery is not being answered yet:", discoveryErr)
+			}
+		}
+	}
+	var recoveryRuntime *hardwareRecoveryRuntime
+	if hardwareRecoveryEnabled && managementAccess != nil && commissionedAnnouncer != nil {
+		helper := nethelper.NewClient(*helperSocket, "")
+		driver := &runtimeRecoveryDriver{
+			helper: helper, management: managementAccess, announcer: commissionedAnnouncer,
+			interfaces: mdnsInterfaces,
+		}
+		recoveryService, recoveryErr := network.NewHardwareRecoveryService(network.HardwareRecoveryOptions{
+			Provider: provider, Driver: driver, Store: application.HardwareRecoveryRepository(),
+			Coordinator: roleCoordinator, Now: func() time.Time { return time.Now().UTC() },
+			Audit: application.AuditWriter(), SubjectID: application.ApplianceRuntime().Identity.ID,
+		})
+		if recoveryErr != nil {
+			fmt.Fprintln(os.Stderr, recoveryErr)
+			return 1
+		}
+		recoveryRuntime = &hardwareRecoveryRuntime{
+			helper: helper, service: recoveryService, driver: driver,
+			commission: application.CommissioningRepository(), management: managementAccess, audit: application.AuditWriter(),
+			applianceID: application.ApplianceRuntime().Identity.ID,
+		}
+		if err := recoveryRuntime.Adopt(ctx); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 1
 		}
 	}
 	// Appliance forwarding is intentionally deferred until management role
@@ -486,10 +625,31 @@ func runServe(ctx context.Context, arguments []string) int {
 		// allowlist rather than beside it. The announcer republishes only on a
 		// change.
 		reconcileManagementAccess = func(ctx context.Context) error {
+			if commissioningLinks != nil {
+				if err := commissioningLinks.Reconcile(ctx, managementAccess.Provisioning()); err != nil {
+					return err
+				}
+			}
 			if err := managementAccess.Reconcile(ctx); err != nil {
 				return err
 			}
-			return mdnsAnnouncer.Announce(ctx, managementAccess.ConfiguredInterfaces())
+			if recoveryRuntime != nil {
+				if err := recoveryRuntime.Reconcile(ctx); err != nil {
+					return err
+				}
+			}
+			if mdnsInterfaces == nil {
+				return nil
+			}
+			return reconcileApplianceDiscovery(ctx, managementAccess, &mdnsAnnouncer, provisioningAnnouncer, commissionedAnnouncer)
+		}
+	} else if commissionedAnnouncer != nil && mdnsInterfaces != nil {
+		reconcileManagementAccess = func(ctx context.Context) error {
+			interfaces, err := mdnsInterfaces(ctx)
+			if err != nil {
+				return err
+			}
+			return commissionedAnnouncer.Announce(ctx, interfaces)
 		}
 	}
 	reconcileRuntime := func(ctx context.Context) error {

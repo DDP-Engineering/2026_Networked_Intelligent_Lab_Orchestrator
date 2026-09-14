@@ -1,0 +1,47 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-fb666359"
+
+title = "Return network access to commissioning on a long press"
+
+status = "active"
+
+requirement = """
+When a commissioned Raspberry Pi reports a button release held for at least ten seconds, NILO shall cancel temporary recovery and atomically return network access to provisioning by clearing the explicit commissioned management selection, recording the lifecycle as provisioning, and retaining an idle highest-generation tombstone so the durable hardware event cannot replay, while retaining protected adapter assignments for provisioning eligibility decisions.
+"""
+
+verification = "Automated commissioning-reset tests start from commissioned state with management and protected device claims, inject a long-press request, and observe temporary recovery removed, lifecycle provisioning, explicit management selection cleared, protected adapters still excluded, and all other eligible Ethernet adapters derived for commissioning; injected persistence or helper failures leave the original commissioned access intact."
+
+affected_paths = [
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go",
+    "05_Software/nilo_assistant/internal/network/management_access.go",
+    "05_Software/nilo_assistant/internal/appliance/commissioner.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository.go",
+    "05_Software/nilo_assistant/internal/app/app.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations.go",
+    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryCancelRestoresActiveLinkBeforeCommissioningReset",
+    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go::TestNetworkCommissioningResetClearsOnlyLifecycleManagementAndRecovery",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::TestHardwareEventReplayAfterAcknowledgementFailureDoesNotRearmOrReset",
+]
+
+
+spec = "specs/REQ-FUNC-fb666359.md"
+
+priority = "high"   # low | normal | high
+rationale = "A physical long press must recover network commissioning without becoming password recovery or an implicit factory reset."
+
+created = 2026-09-13
+updated = 2026-09-14

@@ -2,10 +2,11 @@
 
 ## Candidate and scope
 
-This report covers the first-boot provisioning candidate for issue #6 in
-workspace `F:\NILO_first_boot_provisioning`, branch
-`ddp/nilo-first-boot-provisioning`, based on `master` commit
-`0c94a56` and building on the exclusive adapter-role work delivered there.
+This report began as the issue #6 first-boot provisioning record. Its issue #12
+addendum below records the current `master` candidate that closes the automatic
+link-local and post-commissioning discovery gaps and adds optional Raspberry Pi
+network recovery. The older issue #6 evidence is retained as historical
+provenance; its former open decisions are not the current product contract.
 
 The feature was built as seven governed tasks, each independently validated:
 
@@ -146,21 +147,63 @@ to device-facing roles; loss and recovery of the active management path;
 persistence across a full reboot; and no NILO management exposure on a
 commissioned device-facing network.
 
-## Open decisions carried forward
+The issue #12 candidate additionally owes wired Raspberry Pi acceptance for the
+3-second and 10-second press boundaries, every documented LED pattern, safe
+selection of either Ethernet adapter, simultaneous-link arbitration, expiry and
+exact restoration. The personal DDP Pi proved only ARM64 helper startup and
+GPIO17/GPIO27 acquisition because no physical button/LED circuit was installed.
 
-- **The standing link-local fallback.** Acceptance 4 asks that direct Ethernet
-  commissioning work with nothing configured. This candidate makes link-local
-  expressible and proves an adapter holding one is a usable management path, but
-  does not make it automatic. Closing it needs either a NetworkManager system
-  default shipped with the appliance image - deployment configuration, which
-  belongs with the offline-installer work that is not on this branch - or NILO
-  applying the method during provisioning, which would be an automatic network
-  change with no acknowledgement or rollback window through machinery built
-  around both. Recorded in `TASK-799d62a6` rather than chosen.
-- **Where the deployment change lands.** The appliance unit file still passes
-  legacy `--bind`, and the installer and its responder unit live on an unpushed
-  branch in a separate clone. First-boot provisioning needs the unit to stop
-  passing `--bind` before it takes effect on a real appliance.
+## Issue #12 discovery and recovery addendum
+
+- During provisioning, NILO now creates helper-owned volatile IPv4LL profiles
+  on every safe, unassigned physical Ethernet interface. It retains its own
+  exact inventory- and UUID-owned IPv4LL profile across reconciliation and
+  refuses foreign or routable profiles, gateways, and protected roles. A
+  foreign same-prefix profile remains byte-for-byte unchanged. There is no
+  setup-port designation.
+- Commissioning changes discovery live: the shared `nilo.local` alias is
+  withdrawn and the unique `NILO <UUID>._nilo._tcp.local` service is published
+  on commissioned management interfaces. An unchanged desired service is
+  reasserted if the helper or Avahi loses its process-owned entry group.
+- Permanent discovery always advertises the configured
+  `<system-hostname>.local` URL. That hostname must be unique and covered by the
+  TLS certificate. A collision-resolved Avahi suffix is refused rather than
+  advertised as an uncertified URL.
+- The Pi-only 3-to-under-10-second action arms or extends a ten-minute window;
+  only a subsequent safe link transition can activate one recovery interface.
+  The temporary profile has IPv4LL only, no DHCP server, DNS, default route,
+  forwarding, NAT, or router advertisement. Existing HTTPS authentication,
+  authorization, CSRF, destination admission, and audit remain the boundary.
+- The at-least-10-second action performs an audited network-only transition to
+  provisioning in the live process. It preserves identities, credentials,
+  tokens, TLS, audit, integrations, PLC/device-network assignments, and other
+  profiles; failure rolls management admission back to the commissioned state.
+- Recovery-duration helper events include the real release time and
+  connected-link snapshot; pending actions are coalesced so reset supersedes
+  recovery. Active recovery ownership and the
+  highest handled event generation are durable; reset retains an idle replay
+  tombstone. Core restores any non-idle link on restart before handling a later
+  button event. Failed required audits remain durably retryable without
+  repeating network mutation, while audit failure cannot prevent active-link
+  safety cleanup. GPIO read discontinuities invalidate the gesture in progress.
+
+Automated proof for this addendum consists of focused Go tests for discovery,
+profile ownership, hardware-event durability, state transitions, admission,
+reset persistence, and the live commissioning discovery switch; disposable
+Linux NetworkManager/Avahi tests for DNS-SD and non-routing volatile profiles;
+the appliance stage for the unchanged HTTPS security boundary; and the full
+repository AEGIS validation suite. Exact commands and outcomes are retained in
+`TASK-bcd66e18`.
+
+## Historical issue #6 decisions now resolved
+
+- **The standing link-local fallback.** Resolved by issue #12: Bench Core asks
+  the privileged helper to maintain only its own volatile IPv4LL profiles on
+  eligible provisioning Ethernet interfaces and to remove them on commission.
+- **Where the deployment change lands.** Persistent management mode is the
+  appliance path for commissioning, permanent DNS-SD, and Pi recovery. Legacy
+  `--bind` remains a compatibility/development listener and does not provide
+  those hardware-management capabilities.
 - **The seeded administrator.** RULING-002 records that the image seeds `admin`
   with a fixed password. A published default credential on an appliance that is
   deliberately reachable on every eligible adapter during first boot is worth a

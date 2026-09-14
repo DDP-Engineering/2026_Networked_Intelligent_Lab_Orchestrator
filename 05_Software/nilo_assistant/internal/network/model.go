@@ -57,6 +57,9 @@ type Interface struct {
 	// until a provider observes otherwise, so a reading that carries no
 	// hardware observation is never treated as a management-capable adapter.
 	Physical bool
+	// LinkUp reports physical carrier independently from IP configuration.
+	// Providers that cannot observe carrier leave it false.
+	LinkUp bool
 	// Settings reports the saved configuration bound to this adapter, when one
 	// exists. Nil means nothing is saved for it.
 	Settings *SettingsState
