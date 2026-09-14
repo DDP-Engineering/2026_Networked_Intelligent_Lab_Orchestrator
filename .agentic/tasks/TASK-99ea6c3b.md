@@ -9,7 +9,7 @@ SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
 
 # TASK-99ea6c3b - Sign in to a new NILO without a console step
 
-stage: build
+stage: done
 type: feature
 path: full
 interaction: checkpoint
@@ -21,18 +21,13 @@ opened: 2026-09-13
 
 ## Done checklist (current stage)
 
-- [ ] each automated behavior increment has a pre-implementation red record
-      with requirement IDs, exact selector or command, non-zero exit, and
-      expected failure reason, plus one final focused green result; each manual
-      increment has a consolidated post-implementation observation
-- [ ] repository anchor recorded after red and evolution reviewed after
-      implementation
-- [ ] implementation makes those tests pass
-- [ ] focused project tests green, with their actual scope recorded
-- [ ] `affected_paths` and `linked_tests` updated on every requirement
-- [ ] `status = "active"` on every requirement this task delivers
-- [ ] `check` clean, or each remaining warning explained in the log
-- [ ] `stage: validate`
+- [x] validated candidate confirmed unchanged; otherwise returned to validate
+- [x] validation evidence, diff, exclusions, and outcome presented
+- [x] delivery confirmed by the human
+- [x] journal and report included in the delivery commit
+- [x] agreed outcome delivered, normally a PR
+- [x] close-out committed after the outcome succeeded, or carried by the
+      delivery commit where nothing could fail after it
 
 ## Frame
 
@@ -884,6 +879,28 @@ above: the credential test rather than a marker, and the gate in
   signer rather than a fault introduced here. `git diff a9573fc` on
   cmd/nilo/main.go touches no mDNS or announcer line.
 
+- 2026-09-15 validate proof: command=`python .agentic/aegis.py check --task
+  TASK-99ea6c3b --strict --run`; exit=0; `strict: ok`; run commands `test` ok
+  (355.7s, the full Go, Python, GUI and appliance-stage suite) and `lint` ok
+  (7.3s); summary errors=0 warnings=45 notes=2. This proof describes the staged
+  tree, version 0.5.0 included. The only warning naming this task's own files
+  was a stale Handoff line, corrected here; the remaining 44 are pre-existing
+  master-state findings in other tasks' journals and requirements. Review round
+  4: specification compliance approved and implementation quality approved
+  against this candidate.
+- 2026-09-15 deliver: closed out before the delivery commit, because the agreed
+  outcome is a repository-local commit with no push, PR or release, so nothing
+  can fail after it and a second commit would record nothing the first does not
+  already carry. The commit itself is the human's to run, per the repository's
+  Git authority rule; the exact command and message were presented. Delivered:
+  three requirements active - REQ-SEC-c9e034de, REQ-PLAT-3c35bacd,
+  REQ-SEC-d0d3d4c4 - across 36 staged files, with the project version raised to
+  0.5.0. Known limits carried forward rather than closed: acceptance items 1, 4,
+  5 and 6 rest on the user's own hardware observation because this branch cannot
+  produce that evidence, and the commissioned management-access construction's
+  missing Commissioner, fixed here for the recovery path, was a pre-existing gap
+  belonging to a9573fc.
+
 ## Rulings
 
 - RULING-001 | date=2026-09-13 | decision=the published first credential is user name `admin` with password `admin_password`, not the `admin`/`admin` pair issue #13 specifies | reason=`admin_password` is 14 bytes and already satisfies the compiled-in 12-byte minimum, so the explicit confined password-rule exception issue #13 asks for is no longer needed; the credential-bound commissioning refusal that carries the security argument is unaffected | source=user | supersedes=none
@@ -897,22 +914,35 @@ above: the credential test rather than a marker, and the gate in
 
 ## Handoff
 
-current: deliver
-status: waiting
-next: obtain the human's publication decision, then commit on ddp/nilo-first-boot-signin
+current: done
+status: ready
+next: nothing; the task is closed and the delivery commit is staged for the human to make
 must_read: .agentic/tasks/TASK-99ea6c3b.md, .agentic/steps/6_deliver.md
-blockers: none. The candidate is validated and unchanged since the proof; publication needs the human's approval and the commit is the human's to run per CLAUDE.md
+blockers: none
 
 ## Stage report
 
-stage: build
-result: blocked
-current: build
-changed: since the last full proof - internal/store/sqlite/commissioning_repository.go and its test, internal/appliance/{commissioner,published_credential}.go, internal/network/commissioning.go and its test, cmd/nilo/{main,discovery_runtime}.go, and the requirement file
-evidence: go build ./... exit=0; go test across store/sqlite, appliance, network, identity, httpapi and cmd/nilo exit=0. The last strict run failed only on this task's own requirement TOML, with `run: test ok (374.6s)` and `lint ok`; the TOML is repaired and `check --task` reports no errors. A fresh full strict run is owed and has not been made since these changes.
-issues: one decision is owed before this can be finished - acceptance item 8 cannot be met for the legacy --bind appliance listener without giving that mode interface-visible warning state, because it composes no ManagementAccessService and so never registers the route that carries TLSMissing. Acceptance items 1, 4, 5 and 6 remain unproven on hardware, because the bench appliance ddp-remote is commissioned and Commission refuses before the gate.
-next: take the item 8 decision, then re-prove with check --strict --run
-needs_user: yes
-spec_compliance: changes_required
-implementation_quality: changes_required
-review_round: 3
+stage: deliver
+result: completed
+current: done
+changed: 36 staged files - the commissioning gate and its atomic commit, the certificate-name reporting across all three listener modes, the published credential and its adapter, three new requirements, the component page, the project profile, two documents, the changelog and the project version raised to 0.5.0
+evidence: `python .agentic/aegis.py check --task TASK-99ea6c3b --strict --run` exit=0, `strict: ok`, run commands test ok (355.7s, the full Go, Python, GUI and appliance-stage suite) and lint ok (7.3s), summary errors=0 warnings=45 notes=2. The candidate also runs on appliance hardware: deployed to ddp-remote as 0.5.0, sha256 9eb31094, serving GUI 200 and API 401 over HTTPS with NRestarts=0. REQ-SEC-d0d3d4c4 is inspection-verified with its observation in the Log.
+issues: acceptance items 1, 4, 5 and 6 rest on the user's own hardware testing, because a commissioned appliance refuses commissioning before the gate is consulted and this branch cannot exercise them. The 45 warnings are pre-existing master-state findings in other tasks' files. A pre-existing gap in the commissioned management-access construction, which supplied no Commissioner, was fixed here so a recovered appliance can recommission without a restart; it belonged to the recovery path a9573fc delivered.
+next: nothing; the delivery commit is staged and is the human's to make
+needs_user: no
+spec_compliance: approved
+implementation_quality: approved
+review_round: 4
+
+## Delivery report (2026-09-15)
+
+- stage: done; type: feature; path: full; branch: ddp/nilo-first-boot-signin
+- requirements:
+  - REQ-SEC-c9e034de - Refuse commissioning while the published first credential still opens the appliance
+  - REQ-PLAT-3c35bacd - Report first-contact certificate names the appliance cannot offer
+  - REQ-SEC-d0d3d4c4 - Disclose the published first credential and shipped key exposure
+- deviations: none recorded
+- explicit review: enabled; spec_compliance=approved; implementation_quality=approved; review_round=4
+- diff vs task base a9573fc: 36 file(s) changed, 6166 line(s) added
+- checks: errors=0 warnings=44 notes=2
+- checklist: 6/6 done
