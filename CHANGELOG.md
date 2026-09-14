@@ -5,6 +5,30 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-14
+
+### Added
+
+- A newly imaged appliance can be signed into with the administrator credential
+  published with its image, so first contact is plug in, open the address, sign
+  in and finish setup, with no console step.
+- Completing commissioning is refused while the appliance still stores a
+  verifier matching the published password, so the published credential cannot
+  outlive first boot. The refusal names the change that has to happen first, and
+  the credential check and the lifecycle record are settled in one transaction
+  so a password reset cannot slip between them.
+
+### Changed
+
+- An appliance whose certificate does not carry a name it advertises now starts,
+  serves and reports the missing name instead of refusing to start, so a
+  misprepared image stays reachable and correctable. A first-boot or
+  interface-managed listener reports it in the interface; the legacy bound
+  listener reports it on its diagnostic output. A certificate that cannot be
+  read or parsed still stops the start.
+- A name that is both a configured management name and an advertised discovery
+  name is reported once rather than twice.
+
 ## [0.4.0] - 2026-09-14
 
 ### Added

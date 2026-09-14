@@ -1,0 +1,64 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-SEC-c9e034de"
+
+title = "Refuse commissioning while the published first credential still opens the appliance"
+
+status = "active"
+
+requirement = """
+While the appliance is provisioning and it still stores a password verifier matching the password published with the appliance image under the published user name, the appliance shall refuse to complete commissioning and report as a conflict that the published password must be changed first. The refusal follows the stored verifier alone: it applies however that identity was created and whether or not it is currently disabled, the verifier predicate and the lifecycle write are decided together under one write lock so a verifier restored in between cannot survive, and it ends as soon as the verifier no longer matches.
+"""
+
+verification = "An automated test provisions an appliance storing the published user name with the published password, attempts to complete commissioning onto a usable allowlist, and asserts the attempt is refused, that the refusal names changing the password, that the management allowlist, the persisted record and the recorded lifecycle state are unchanged, and that the appliance is still provisioning; it then sets a different password for that identity and asserts the identical request commissions. Identity tests assert the same verifier is recognized however the identity arose: an administrator created at a console who chose the published pair is recognized, a different user name or a different password is not, and an identity that still holds the published password while disabled is recognized, because disabling is reversible. A service that cannot check refuses rather than passing. A further automated test has the commit refuse because the verifier was present when the record would have been written, standing in for a password reset committing on its own transaction mid-flight, and asserts the appliance is refused as the same conflict, is not recorded as commissioned, and is left provisioning on the allowlist it was already serving. Repository tests against a real database assert the predicate the single transaction applies: a stored published verifier is refused with the lifecycle state left provisioning, replacing that password lets the identical call through, and an appliance holding no identity under the published user name commissions. An automated API test asserts the refusal is answered as a conflict with its own reason code rather than a service failure, and that no response carries the published password or any verifier."
+
+affected_paths = [
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go",
+    "05_Software/nilo_assistant/internal/network/commissioning.go",
+    "05_Software/nilo_assistant/internal/network/commissioning_test.go",
+    "05_Software/nilo_assistant/internal/network/management_access.go",
+    "05_Software/nilo_assistant/internal/appliance/published_credential.go",
+    "05_Software/nilo_assistant/internal/appliance/published_credential_test.go",
+    "05_Software/nilo_assistant/internal/identity/service.go",
+    "05_Software/nilo_assistant/internal/identity/service_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/commissioning.go",
+    "05_Software/nilo_assistant/internal/httpapi/commissioning_test.go",
+    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go",
+    "05_Software/nilo_assistant/internal/appliance/commissioner.go",
+    "05_Software/nilo_assistant/cmd/nilo/discovery_runtime.go",
+    "05_Software/nilo_assistant/cmd/nilo/discovery_runtime_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/commissioning_test.go::TestCommissioningIsRefusedWhileThePublishedCredentialStillOpensTheAppliance",
+    "05_Software/nilo_assistant/internal/network/commissioning_test.go::TestCommissioningIsRefusedWhenThePublishedCredentialCannotBeChecked",
+    "05_Software/nilo_assistant/internal/network/commissioning_test.go::TestCommissioningIsRefusedWhenTheCommitFindsThePublishedCredentialBack",
+    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go::TestCommissionUnlessPasswordMatchesRefusesAStoredPublishedVerifier",
+    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go::TestCommissionUnlessPasswordMatchesAllowsAnAppliesWithNoPublishedIdentity",
+    "05_Software/nilo_assistant/internal/identity/service_test.go::TestPasswordVerifierMatchesReportsWhetherTheStoredVerifierMatches",
+    "05_Software/nilo_assistant/internal/identity/service_test.go::TestPasswordVerifierMatchesReportsADisabledIdentityThatStillHoldsIt",
+    "05_Software/nilo_assistant/internal/identity/service_test.go::TestPublishedVerifierIsRecognizedHoweverTheIdentityWasCreated",
+    "05_Software/nilo_assistant/internal/appliance/published_credential_test.go::TestPublishedCredentialReportsWhetherThePublishedVerifierRemains",
+    "05_Software/nilo_assistant/internal/appliance/published_credential_test.go::TestPublishedCredentialReportsWhenItCannotAnswer",
+    "05_Software/nilo_assistant/internal/appliance/published_credential_test.go::TestPublishedAdministratorPasswordSatisfiesTheOrdinaryPasswordRule",
+    "05_Software/nilo_assistant/internal/httpapi/commissioning_test.go::TestCommissioningAPIRefusesWhileThePublishedPasswordStands",
+    "05_Software/nilo_assistant/cmd/nilo/discovery_runtime_test.go::TestCommissioningDependenciesSuppliesBothHalvesOfTheCommissioningPath",
+]
+
+
+spec = ""
+
+priority = "high"
+rationale = "The published password is acceptable only because first boot is already the appliance's widest exposure and commissioning is the moment that exposure ends; binding the two means the weak window cannot outlive the wide one."
+
+created = 2026-09-14
+updated = 2026-09-14

@@ -5,8 +5,12 @@ import (
 	"fmt"
 	"net"
 	"net/netip"
+	"slices"
 	"sort"
 
+	"nilo.local/nilo/internal/app"
+	"nilo.local/nilo/internal/appliance"
+	"nilo.local/nilo/internal/httpapi"
 	"nilo.local/nilo/internal/network"
 )
 
@@ -16,6 +20,52 @@ func requiredDiscoveryTLSNames(systemHostname string, includeRecoveryAlias bool)
 		names = append(names, "nilo.local")
 	}
 	return names
+}
+
+// missingDiscoveryNames reports which of the names the appliance will tell a
+// user to visit are absent from the certificate it was given.
+//
+// A gap here is a misprepared image rather than a reason to stop. An appliance
+// that refuses to start cannot be reached or commissioned at all, which is the
+// very failure first-boot provisioning exists to remove, so the appliance
+// serves on what it has, carries the gap in its management access status and
+// reports it in the interface. A certificate that cannot be read or parsed is
+// still an error: there is nothing to serve TLS from at all.
+//
+// The appliance reads the certificate it was given and never generates or
+// replaces one.
+func missingDiscoveryNames(certificatePath, systemHostname string, includeRecoveryAlias bool) ([]string, error) {
+	required := requiredDiscoveryTLSNames(systemHostname, includeRecoveryAlias)
+	return httpapi.ValidateCertificateNames(certificatePath, required)
+}
+
+// commissioningDependencies returns the two things completing commissioning
+// needs: somewhere to record the lifecycle state, and a way to find out whether
+// the credential published with the image still opens the appliance.
+//
+// Both start modes take them from here rather than assembling their own,
+// because a hardware recovery reset turns a commissioned service back into a
+// provisioning one while it runs. A mode wired with one and not the other would
+// recover but refuse to recommission until the process was restarted, and that
+// is exactly the kind of gap a second construction site invites.
+func commissioningDependencies(application *app.App) (network.Commissioner, network.PublishedCredential) {
+	return appliance.NewDurableCommissioner(application.CommissioningRepository()),
+		appliance.NewPublishedCredential(application.IdentityService())
+}
+
+// mergeMissingNames joins two missing-name reports without repeating a name.
+// The configured management names and the advertised discovery names overlap by
+// design - the appliance's own host name is normally in both - so appending one
+// list to the other would report that name twice, once in the log and again in
+// the interface, as though two separate things were wrong.
+func mergeMissingNames(first, second []string) []string {
+	merged := append([]string(nil), first...)
+	for _, name := range second {
+		if !slices.Contains(merged, name) {
+			merged = append(merged, name)
+		}
+	}
+	return merged
 }
 
 // boundDiscoveryInterfaces maps a legacy literal listener address back to the

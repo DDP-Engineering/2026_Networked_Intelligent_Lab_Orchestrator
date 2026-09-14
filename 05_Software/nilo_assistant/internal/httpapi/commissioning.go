@@ -37,6 +37,14 @@ func handleCompleteCommissioning(service *network.ManagementAccessService) http.
 				writeRefusal(response, http.StatusConflict, "current_interface_confirmation_required", err.Error())
 			case errors.Is(err, network.ErrAlreadyCommissioned):
 				writeRefusal(response, http.StatusConflict, "already_commissioned", err.Error())
+			case errors.Is(err, network.ErrPublishedCredentialUnchanged):
+				// Something the administrator can fix from the interface they
+				// are already signed into, so it is a conflict naming the
+				// change rather than a failure. The sentinel's own text says
+				// what to change and carries no credential.
+				writeRefusal(response, http.StatusConflict, "published_password_unchanged", err.Error())
+			case errors.Is(err, network.ErrPublishedCredentialUnknown):
+				writeError(response, http.StatusServiceUnavailable, "commissioning_unavailable", "")
 			case errors.Is(err, network.ErrManagementAccessRequired),
 				errors.Is(err, network.ErrManagementAccessUnsafe):
 				writeRefusal(response, http.StatusConflict, "management_access_required", err.Error())

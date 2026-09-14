@@ -104,6 +104,18 @@ restoration proves the exact durable UUID, adapter/interface/MAC binding,
 - Commissioning is one way and is completed only onto an allowlist the appliance
   can still be reached through. A transition that does not finish restores the
   allowlist that was serving and leaves the appliance provisioning.
+- Commissioning is refused while a stored verifier under the published user name
+  still matches the published password, and refused when that cannot be
+  determined. The stored verifier is tested rather than a provenance marker, so
+  the rule holds however the identity arose and whether or not it is disabled.
+- A name the appliance advertises that its certificate does not carry is
+  reported, never a reason to stop: an appliance that refused to start over a
+  certificate gap could not be reached or commissioned at all. A first-boot or
+  interface-managed listener records it in `TLSMissing` and reports it in the
+  interface; the operator-configured legacy bound listener composes no
+  management access service and reports it on its diagnostic output alone. A
+  certificate that cannot be read or parsed does stop the start. The appliance
+  never generates or replaces a certificate.
 
 ## Key behaviors
 
@@ -137,6 +149,8 @@ restoration proves the exact durable UUID, adapter/interface/MAC binding,
 - `REQ-FUNC-fb666359` and `REQ-DATA-2c5b4a4d` - return only network access to commissioning while preserving appliance identity, credentials, TLS, audit and integration/device configuration.
 - `REQ-FUNC-b49d7866` - fixes the management allowlist to what an administrator chose, records the appliance commissioned, and refuses a selection it could not be reached through.
 - `REQ-REL-fa990acb` - restores the allowlist that was serving when a commissioning transition does not finish, leaving the appliance provisioning.
+- `REQ-SEC-c9e034de` - refuses to complete commissioning while the published first credential still opens the appliance, so the published password cannot outlive first boot.
+- `REQ-PLAT-3c35bacd` - reports every advertised name its certificate does not carry, rather than refusing to start, so a misprepared image stays reachable.
 - `REQ-PLAT-18084875` - records a device as a physical adapter only when it reports a permanent hardware address and the kernel presents it on a real bus.
 - `REQ-SEC-5d0cfe7e` and `REQ-SEC-74b46e3e` - map the three fixed roles to explicit permissions and bound a token by its scopes intersected with its owner's current role.
 - `REQ-SEC-62e54172` - authorizes every protected route server-side and separates unauthenticated from forbidden.
@@ -187,6 +201,7 @@ flowchart TD
     catalog["simulation.Catalog"]
     network["network.Service"]
     management["network.ManagementAccessService"]
+    publishedcred["appliance.PublishedCredential"]
     hwrecovery["network.HardwareRecoveryService"]
     mdns["network.MDNSAnnouncer"]
     operations["network.OperationManager"]
@@ -258,6 +273,8 @@ flowchart TD
     app --> management
     app --> hwrecovery
     management --> helper
+    management --> publishedcred
+    publishedcred --> identity
     hwrecovery --> management
     hwrecovery --> helper
     hwrecovery --> networkrecovery
@@ -380,6 +397,7 @@ The simulation catalog is deliberately dependency-free and cannot discover or co
 - `internal/network/` (under the Go module) - operation safety, simulation, profile validation, sampling and statistics, plus the device-network model and the pure forwarding planner.
 - `internal/network/commissioning.go` - the one-way transition out of first boot: it checks the appliance can still be reached through the chosen interfaces, applies and persists them, stops deriving, and restores what was serving if any step does not finish.
 - `internal/appliance/commissioner.go` - adapts the durable lifecycle writer to the narrow interface the network service calls, returning nil when there is nothing to record through.
+- `internal/appliance/published_credential.go` - the credential published with every appliance image, and the adapter that answers whether it still opens this appliance. It reports one boolean over `identity.Service.PasswordVerifierMatches` and never the credential, so the network service can gate commissioning on it without learning what an identity is.
 - `internal/httpapi/commissioning.go` - the administrator-only route, mapping each refusal onto a conflict rather than a service failure.
 - `internal/network/mdns.go`, `mdns_announcer.go` - validated provisioning aliases and commissioned DNS-SD records, plus restart-aware reconciliation against the helper's actual publication.
 - `internal/nethelper/avahi_plan.go`, `mdns.go`, `avahi_linux.go` - the typed publication plan, privileged operation, and Linux Avahi D-Bus entry-group implementation; no daemon configuration file is replaced.
@@ -388,6 +406,7 @@ The simulation catalog is deliberately dependency-free and cannot discover or co
 - `internal/nethelper/direct_recovery.go`, `networkmanager_recovery_linux.go`, `recovery_hardware.go`, `gpio_*.go` - exact temporary-link ownership/restoration and durable Pi button/indicator behavior.
 - `internal/store/sqlite/hardware_recovery_repository.go`, `migrations/014_network_recovery.sql` - durable core recovery interlock and handled hardware generation.
 - `cmd/nilo/listener_mode.go` - the two decisions `serve` makes about its listener: which mode the options ask for, and whether first-boot serving is permitted by the appliance's recorded state. Pure, so both are asserted without a subprocess.
+- `cmd/nilo/discovery_runtime.go` - the names the appliance advertises and tells a user to visit, which of them the certificate it was given does not carry, and the reconciliation that follows the live lifecycle. The certificate decision is pure, so it is asserted without starting a server.
 - `internal/appliance/commissioning.go` - the lifecycle vocabulary, its validity rule and the load that refuses an unusable recorded value. It reads nothing itself; `internal/store/sqlite/commissioning_repository.go` satisfies its store interface.
 - `internal/store/sqlite/migrations/013_commissioning.sql` - the singleton `commissioning` table and the seeding rule, expressed in SQL because it is the only code that runs before the first appliance identity row exists.
 - `internal/network/eligibility.go` - the single rule naming which observed interfaces may carry management access. Pure: it reads a reading's kind, physical observation and adapter identity and nothing else.
@@ -679,6 +698,22 @@ allowlist, so restoring the previous one returns the appliance exactly to where
 it was. `restoreProvisioning` does that on any failure, and the appliance keeps
 following the hardware afterwards, which is what proves it really is still
 provisioning.
+
+Before any of that, commissioning settles one property of the appliance rather
+than of the selection: whether the credential published with the image still
+opens it. While a stored verifier under `admin` still matches `admin_password` - however
+that identity was created, and whether or not it is currently disabled, because
+disabling is reversible - completion is refused with
+`ErrPublishedCredentialUnchanged`, answered as `409 published_password_unchanged`
+naming the change. The check sits ahead of every read and every apply, so a
+refusal has nothing to undo. A service that cannot answer - no checker, or a
+checker that failed - refuses with `ErrPublishedCredentialUnknown` and a `503`,
+because a gate that cannot answer must not silently pass.
+
+`internal/network` declares the `PublishedCredential` interface and
+`internal/appliance` satisfies it over `identity.Service.PasswordVerifierMatches`, so the
+network service never learns what an identity is, exactly as `Commissioner`
+already works. The interface answers one boolean and never the credential.
 
 A selection the configuration rejects is answered as a conflict, not a service
 failure, so an administrator's mistake is never dressed up as an outage.

@@ -214,6 +214,14 @@ func (publisher *runtimePublisher) WithdrawMDNS(context.Context) error {
 	return nil
 }
 
+// changedPublishedCredential is an appliance whose published administrator
+// password has already been replaced, so the commissioning gate lets it past.
+type changedPublishedCredential struct{}
+
+func (changedPublishedCredential) PublishedVerifierRemains(context.Context) (bool, error) {
+	return false, nil
+}
+
 type runtimeCommissioner struct{}
 
 func (runtimeCommissioner) CompleteCommissioning(context.Context) error { return nil }
@@ -229,6 +237,9 @@ func TestLiveCommissioningReplacesNiloAliasWithPermanentService(t *testing.T) {
 		Provider: provider, Store: &runtimeAccessStore{}, Firewall: &runtimeFirewall{},
 		Now: func() time.Time { return now }, Provisioning: true,
 		ProvisioningTLSNames: []string{"bench.local", "nilo.local"}, Commissioner: runtimeCommissioner{},
+		// These appliances have had the published password replaced already,
+		// which is what lets them commission at all.
+		PublishedCredential: changedPublishedCredential{},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -265,6 +276,9 @@ func TestLiveCommissioningWithdrawsSharedAliasBeforeAFailedPermanentReplacement(
 		Provider: provider, Store: &runtimeAccessStore{}, Firewall: &runtimeFirewall{},
 		Now: func() time.Time { return now }, Provisioning: true,
 		ProvisioningTLSNames: []string{"bench.local", "nilo.local"}, Commissioner: runtimeCommissioner{},
+		// These appliances have had the published password replaced already,
+		// which is what lets them commission at all.
+		PublishedCredential: changedPublishedCredential{},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -442,6 +456,9 @@ func TestProvisioningRefusalConsumesEventBeforeAcknowledgementFailure(t *testing
 		Provider: provider, Store: &runtimeAccessStore{}, Firewall: &runtimeFirewall{},
 		Now: func() time.Time { return now }, Provisioning: true,
 		ProvisioningTLSNames: []string{"bench.local", "nilo.local"}, Commissioner: runtimeCommissioner{},
+		// These appliances have had the published password replaced already,
+		// which is what lets them commission at all.
+		PublishedCredential: changedPublishedCredential{},
 	})
 	if err != nil {
 		t.Fatal(err)

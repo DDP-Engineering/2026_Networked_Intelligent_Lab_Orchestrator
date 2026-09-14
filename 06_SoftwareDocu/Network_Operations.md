@@ -473,6 +473,53 @@ and ARP ambiguity. The method is refused with a static address or gateway and on
 a wireless adapter. An adapter holding only a link-local address is a usable
 management path like any other.
 
+### First contact and the published credential
+
+A freshly imaged appliance is signed into with a credential that is published
+rather than secret: user name `admin`, password `admin_password`. It is the same
+in every image, it appears here and in the delivery documentation, and anyone
+holding an image holds it. It exists so that somebody who has just imaged an
+appliance can reach it and commission it without being handed anything and
+without a console step.
+
+Two things bound what that costs.
+
+The exposure ends at commissioning, and is made to end there. Completing
+commissioning is refused while this password is still in place, with a refusal
+naming the change that has to happen first; replace the password and the same
+request succeeds. First boot is already the widest the appliance's management
+access ever gets, and commissioning is the moment that widening ends, so binding
+the two means the weak credential cannot outlive the wide window. An appliance
+whose administrator was created some other way is not affected by the rule.
+
+The published password is ordinary in every other respect. It is stored as an
+Argon2id verifier like any other, and the replacement is held to the ordinary
+password rule: nothing about shipping a known first credential relaxes what any
+later password has to satisfy.
+
+**Expect a certificate warning, and expect it as the first step.** Open
+`https://nilo.local:8443/` or `https://<system-hostname>.local:8443/`. The
+browser will object to the certificate, and that objection is part of the
+procedure rather than a fault:
+
+- No publicly trusted certificate can exist for these identities. `.local` is
+  reserved for multicast DNS and no public authority will issue for a reserved
+  name or a private address, so the shipped certificate is signed by nobody the
+  browser already trusts.
+- The certificate carries both names the appliance advertises, so the objection
+  is to the signer alone and never to a name mismatch. An appliance whose
+  certificate is missing one of them still starts and still serves; it reports
+  the missing name in the interface as an actionable warning, and first contact
+  at that particular name shows a mismatch until the certificate is corrected.
+- **The shipped certificate's private key is in every image and is therefore not
+  secret.** Anyone holding an image can present it. The exposure is bounded to
+  appliances that have not been commissioned, on the network segment you are
+  on.
+- The certificate stays with the appliance for its working life. Commissioning
+  does not replace it: a replacement would be signed by nobody the browser has
+  seen either, so it would raise a second warning exactly when setup appears to
+  finish.
+
 ### Completing commissioning
 
 Commissioning is administrator-only and one way. It refuses a selection the
@@ -508,8 +555,21 @@ label, never firewall or responder syntax. No response, log or export carries a
 Wi-Fi password, a WireGuard key or any other secret.
 
 The listener certificate is read and checked, never generated or replaced. A
-certificate that does not carry the advertised local name produces an actionable
-warning in the interface; browsers warn until it is corrected.
+name the certificate does not carry - an advertised discovery name or a
+configured management name - is reported rather than fatal: an appliance that
+refused to start over a certificate gap would be unreachable, which is worse
+than one that is reachable and says what is wrong. A first-boot or
+interface-managed listener carries the gap into the interface as an actionable
+warning. The legacy `--bind` listener is operator-configured and offers no
+management-access interface, so it reports the gap on its diagnostic output and
+in the journal instead. A certificate that cannot be read or parsed does stop
+the start in every mode, because there is then nothing to serve TLS from at
+all. Browsers warn about the signer
+either way, for the reasons set out under first contact above.
+
+The published first credential does not weaken any of this either. It is one
+ordinary administrator identity, subject to the same roles, sessions, throttling
+and audit as any other, and it cannot survive commissioning.
 
 ## Acceptance still requiring explicit evidence
 

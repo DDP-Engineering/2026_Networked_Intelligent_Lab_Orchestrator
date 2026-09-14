@@ -15,6 +15,17 @@ var (
 	// ErrCommissioningUnavailable is a service built without anywhere to record
 	// the lifecycle state, which must not silently commission in memory only.
 	ErrCommissioningUnavailable = errors.New("this service cannot record the appliance lifecycle state")
+	// ErrPublishedCredentialUnchanged is an appliance that still stores the
+	// verifier published with its image, whoever created that identity and
+	// whether or not it is currently disabled. First boot is the widest exposure the
+	// appliance ever has and commissioning is the moment that exposure ends, so
+	// ending it while a published credential still opens the appliance would
+	// carry the weakest moment of its life into normal service.
+	ErrPublishedCredentialUnchanged = errors.New("change the published administrator password before completing commissioning")
+	// ErrPublishedCredentialUnknown is a service that cannot find out whether
+	// the published credential still opens the appliance. A gate that cannot
+	// answer refuses rather than passing.
+	ErrPublishedCredentialUnknown = errors.New("this service cannot check the published administrator credential")
 )
 
 // Commissioner records that the appliance has finished commissioning. The
@@ -23,6 +34,14 @@ var (
 // rather than one that is half-committed.
 type Commissioner interface {
 	CompleteCommissioning(context.Context) error
+}
+
+// PublishedCredential reports whether the appliance still stores the verifier
+// published with its image. It answers a single boolean and never the
+// credential itself, so no implementation of it can become a way to read the
+// published password out of a running appliance.
+type PublishedCredential interface {
+	PublishedVerifierRemains(context.Context) (bool, error)
 }
 
 // Commission fixes the management allowlist to the interfaces an administrator
@@ -60,6 +79,19 @@ func (service *ManagementAccessService) commission(
 	}
 	if service.commissioner == nil {
 		return ManagementAccessStatus{}, ErrCommissioningUnavailable
+	}
+	// The published credential is a property of the appliance rather than of the
+	// selection, so it is settled before anything is read or applied: a refusal
+	// here has nothing to undo.
+	if service.published == nil {
+		return ManagementAccessStatus{}, ErrPublishedCredentialUnknown
+	}
+	remains, err := service.published.PublishedVerifierRemains(ctx)
+	if err != nil {
+		return ManagementAccessStatus{}, fmt.Errorf("%w: %v", ErrPublishedCredentialUnknown, err)
+	}
+	if remains {
+		return ManagementAccessStatus{}, ErrPublishedCredentialUnchanged
 	}
 	if err := service.refresh(ctx); err != nil {
 		return ManagementAccessStatus{}, err
@@ -134,14 +166,36 @@ func (service *ManagementAccessService) commission(
 	// failure can be undone completely: the allowlist above is still a valid
 	// provisioning allowlist, and restoring it leaves the appliance exactly
 	// where it was.
+	//
+	// The credential check above is a fast refusal, not the guarantee. Setting a
+	// password is an ordinary administrative change committing on its own
+	// transaction, so the published verifier can be restored after that check
+	// passes. The commissioner settles the credential and the lifecycle state
+	// together, under one write lock, which is what actually stops a published
+	// verifier surviving commissioning; a refusal from there is reported as the
+	// same conflict the early check reports.
 	if err := service.commissioner.CompleteCommissioning(ctx); err != nil {
-		service.mu.Lock()
-		service.provisioning = true
-		service.mu.Unlock()
-		service.restoreProvisioning(ctx, previous)
+		service.restoreProvisioningAfterCommit(ctx, previous)
+		var refusal interface{ PublishedCredentialPresent() bool }
+		if errors.As(err, &refusal) && refusal.PublishedCredentialPresent() {
+			return ManagementAccessStatus{}, ErrPublishedCredentialUnchanged
+		}
 		return ManagementAccessStatus{}, fmt.Errorf("record the appliance as commissioned: %w", err)
 	}
 	return service.status(localAddress), nil
+}
+
+// restoreProvisioningAfterCommit undoes an applied allowlist that has not yet
+// been recorded as commissioned. The apply above already marked the service
+// commissioned in memory, so the flag has to go back before the allowlist does,
+// exactly as the failure path below does it.
+func (service *ManagementAccessService) restoreProvisioningAfterCommit(
+	ctx context.Context, previous ManagementAccessRecord,
+) {
+	service.mu.Lock()
+	service.provisioning = true
+	service.mu.Unlock()
+	service.restoreProvisioning(ctx, previous)
 }
 
 // restoreProvisioning puts back the allowlist the appliance was serving before

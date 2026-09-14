@@ -25,6 +25,28 @@ credential was modified. No hardware appliance was changed by this candidate.
 
 ## Implemented contract
 
+- The image carries one published administrator credential, user name `admin`
+  with password `admin_password`, so an imaged appliance can be signed into with
+  no console step. It is published, not secret: it is the same in every image
+  and is documented here and in `06_SoftwareDocu/Network_Operations.md`.
+  Completing commissioning is refused while that password is still in place,
+  with a refusal naming the change; replacing it lets the same request through,
+  and an administrator created some other way is unaffected. The replacement is
+  held to the ordinary password rule. The exposure is bounded to an appliance
+  that has not been commissioned, on the network segment the user is on, and it
+  ends at commissioning by construction rather than by procedure.
+- The image carries one certificate covering both identities a user is told to
+  visit at first boot, `<system-hostname>.local` and `nilo.local`. **Its private
+  key is present in every image and is therefore not secret**; anyone holding an
+  image can present it, bounded the same way as the credential above. **First
+  contact shows a certificate warning**, because no publicly trusted certificate
+  can exist for a reserved `.local` name, and that warning is documented as the
+  expected first step of setup rather than engineered away. A certificate missing a
+  name the appliance advertises does not stop it: the appliance serves, records
+  the gap and reports it in the interface, so a misprepared image is a visible
+  defect rather than an appliance nobody can reach. The certificate
+  stays for the appliance's working life; commissioning does not replace it.
+
 - A clean installation records the lifecycle state `provisioning`; an
   installation carried forward from an earlier release records `commissioned`.
   The seeding rule reads whether the database already held an appliance identity

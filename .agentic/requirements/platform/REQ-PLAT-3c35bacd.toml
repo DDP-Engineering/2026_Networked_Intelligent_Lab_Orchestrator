@@ -1,0 +1,44 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-PLAT-3c35bacd"
+
+title = "Report first-contact certificate names the appliance cannot offer"
+
+status = "active"
+
+requirement = """
+When the appliance starts, it shall serve management access over HTTPS from the certificate it was given and report every name it advertises for discovery that the certificate does not carry, rather than refusing to start; a successfully prepared first-boot image carries both the appliance's own `<system-hostname>.local` name and the `nilo.local` recovery alias. A first-boot or interface-managed listener reports each missing name as an actionable warning in the interface and on its diagnostic output; an operator-configured legacy bound listener, which offers no management-access interface, reports them on its diagnostic output alone. If the certificate cannot be read or parsed, the appliance shall refuse to start and say so.
+"""
+
+verification = "An automated test drives the decision the start makes about the certificate it was given. It passes a certificate carrying both names and asserts nothing is reported missing, then passes certificates carrying only the host name, only the recovery alias, and neither, and asserts each reports the name it lacks while the appliance still starts; a certificate advertised without the recovery alias reports nothing when it carries the host name alone. An unreadable and a malformed certificate are refused as errors rather than treated as complete. The test asserts no certificate or key file is created or modified in any case. A further case asserts a legacy bound appliance listener reports a missing name and still serves. Inspection of a running first-boot appliance confirms a browser reaching either name over HTTPS objects to the signer alone and not to a name mismatch."
+
+affected_paths = [
+    "05_Software/nilo_assistant/cmd/nilo/discovery_runtime.go",
+    "05_Software/nilo_assistant/cmd/nilo/discovery_runtime_test.go",
+    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/nilo_assistant/internal/httpapi/serving.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/cmd/nilo/discovery_runtime_test.go::TestMissingDiscoveryNamesReportsEveryAdvertisedNameTheCertificateLacks",
+    "05_Software/nilo_assistant/cmd/nilo/discovery_runtime_test.go::TestMissingDiscoveryNamesErrorsOnAnUnreadableOrMalformedCertificate",
+    "05_Software/nilo_assistant/cmd/nilo/discovery_runtime_test.go::TestMissingDiscoveryNamesIgnoresTheRecoveryAliasWhenItIsNotAdvertised",
+    "05_Software/nilo_assistant/cmd/nilo/discovery_runtime_test.go::TestMissingDiscoveryNamesAnswersEveryListenerModeTheSameWay",
+    "05_Software/nilo_assistant/cmd/nilo/discovery_runtime_test.go::TestMergeMissingNamesReportsAnOverlappingNameOnce",
+]
+
+
+spec = ""
+
+priority = "high"
+rationale = "No publicly trusted certificate can exist for a reserved .local name, so first contact will warn about the signer; carrying both advertised names keeps that the only objection. An appliance that refused to start over a missing name would be unreachable instead, which is the failure first-boot provisioning exists to remove, so the gap is reported rather than fatal."
+
+created = 2026-09-14
+updated = 2026-09-14

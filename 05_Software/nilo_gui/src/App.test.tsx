@@ -297,7 +297,7 @@ describe('sign-in screen', () => {
 
     await signInScreen();
     expect(screen.getByText('NILO')).toBeVisible();
-    expect(screen.getByText('Version 0.4.0')).toBeVisible();
+    expect(screen.getByText('Version 0.5.0')).toBeVisible();
     expect(document.querySelectorAll('form')).toHaveLength(1);
     expect(screen.getByLabelText('Username')).toBeVisible();
     expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password');
@@ -557,7 +557,7 @@ describe('connection states', () => {
     await signInScreen();
     expectSimulationIdentity();
     expect(screen.getByRole('heading', { name: /sign in to nilo/i })).toBeVisible();
-    expect(screen.getByText('Version 0.4.0')).toBeVisible();
+    expect(screen.getByText('Version 0.5.0')).toBeVisible();
   });
 });
 
@@ -765,7 +765,7 @@ describe('mock mode', () => {
     renderApp(stubClient(), 'mock');
 
     await signInScreen();
-    expect(screen.getByText('Version 0.4.0')).toBeVisible();
+    expect(screen.getByText('Version 0.5.0')).toBeVisible();
     expect(screen.queryByText(/contract mock/i)).toBeNull();
     expectSimulationIdentity();
   });
