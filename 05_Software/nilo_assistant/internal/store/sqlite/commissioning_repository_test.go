@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
 	"encoding/json"
 	"path/filepath"
@@ -12,6 +13,7 @@ import (
 
 	"nilo.local/nilo/internal/appliance"
 	"nilo.local/nilo/internal/audit"
+	"nilo.local/nilo/internal/auth"
 	"nilo.local/nilo/internal/domain"
 	"nilo.local/nilo/internal/network"
 )
@@ -312,5 +314,98 @@ func TestCommissioningRepositoryRefusesAnAbsentRow(t *testing.T) {
 	}
 	if !strings.Contains(strings.ToLower(err.Error()), "commissioning") {
 		t.Fatalf("error %q does not name the missing commissioning state", err)
+	}
+}
+
+// REQ-SEC-c9e034de: the credential predicate and the lifecycle write are one
+// transaction, so a published verifier cannot be restored between them. These
+// cases prove the predicate the transaction applies; the transaction is what
+// makes applying it indivisible.
+func TestCommissionUnlessPasswordMatchesRefusesAStoredPublishedVerifier(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	database, err := Open(ctx, filepath.Join(t.TempDir(), "nilo.sqlite"))
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	t.Cleanup(func() {
+		if err := database.Close(); err != nil {
+			t.Errorf("close: %v", err)
+		}
+	})
+	repository := NewCommissioningRepository(database)
+
+	const published = "admin_password"
+	verifier, err := auth.HashPassword([]byte(published), rand.Reader)
+	if err != nil {
+		t.Fatalf("HashPassword: %v", err)
+	}
+	insert := func(t *testing.T, username, storedVerifier string) {
+		t.Helper()
+		if _, err := database.SQL().ExecContext(ctx,
+			"INSERT INTO users (id, username, password_hash, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+			username, username, storedVerifier, "2026-09-14T00:00:00Z", "2026-09-14T00:00:00Z"); err != nil {
+			t.Fatalf("insert %s: %v", username, err)
+		}
+	}
+
+	// An appliance still storing the published verifier is refused, and stays
+	// provisioning: the lifecycle write is inside the refusal.
+	insert(t, "admin", verifier)
+	if err := repository.CommissionUnlessPasswordMatches(ctx, "admin", []byte(published)); err == nil {
+		t.Fatal("commissioning was recorded although the published verifier was stored")
+	}
+	state, err := repository.LoadCommissioning(ctx)
+	if err != nil {
+		t.Fatalf("LoadCommissioning: %v", err)
+	}
+	if state != appliance.CommissioningProvisioning {
+		t.Fatalf("lifecycle state after the refusal = %q, want provisioning", state)
+	}
+
+	// Replacing the password lets the identical call through.
+	replacement, err := auth.HashPassword([]byte("a-replacement-password"), rand.Reader)
+	if err != nil {
+		t.Fatalf("HashPassword: %v", err)
+	}
+	if _, err := database.SQL().ExecContext(ctx,
+		"UPDATE users SET password_hash = ? WHERE username = ?", replacement, "admin"); err != nil {
+		t.Fatalf("replace password: %v", err)
+	}
+	if err := repository.CommissionUnlessPasswordMatches(ctx, "admin", []byte(published)); err != nil {
+		t.Fatalf("CommissionUnlessPasswordMatches after the password was replaced: %v", err)
+	}
+	state, err = repository.LoadCommissioning(ctx)
+	if err != nil {
+		t.Fatalf("LoadCommissioning: %v", err)
+	}
+	if state != appliance.CommissioningCommissioned {
+		t.Fatalf("lifecycle state after commissioning = %q, want commissioned", state)
+	}
+}
+
+// REQ-SEC-c9e034de: an appliance holding no identity under the published user
+// name has no published verifier to survive, so it commissions.
+func TestCommissionUnlessPasswordMatchesAllowsAnAppliesWithNoPublishedIdentity(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	database, err := Open(ctx, filepath.Join(t.TempDir(), "nilo.sqlite"))
+	if err != nil {
+		t.Fatalf("Open: %v", err)
+	}
+	t.Cleanup(func() { _ = database.Close() })
+
+	repository := NewCommissioningRepository(database)
+	if err := repository.CommissionUnlessPasswordMatches(ctx, "admin", []byte("admin_password")); err != nil {
+		t.Fatalf("CommissionUnlessPasswordMatches on an appliance with no identities: %v", err)
+	}
+	state, err := repository.LoadCommissioning(ctx)
+	if err != nil {
+		t.Fatalf("LoadCommissioning: %v", err)
+	}
+	if state != appliance.CommissioningCommissioned {
+		t.Fatalf("lifecycle state = %q, want commissioned", state)
 	}
 }

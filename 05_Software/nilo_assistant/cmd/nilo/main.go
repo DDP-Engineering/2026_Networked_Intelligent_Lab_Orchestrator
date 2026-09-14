@@ -18,7 +18,6 @@ import (
 	"github.com/google/uuid"
 	"nilo.local/nilo/internal/activity"
 	"nilo.local/nilo/internal/app"
-	"nilo.local/nilo/internal/appliance"
 	"nilo.local/nilo/internal/buildinfo"
 	"nilo.local/nilo/internal/httpapi"
 	"nilo.local/nilo/internal/mcp"
@@ -403,14 +402,19 @@ func runServe(ctx context.Context, arguments []string) int {
 	}
 	if mode == listenerProvisioning {
 		provisioningTLSNames := requiredDiscoveryTLSNames(systemHostname, true)
-		missing, certificateErr := httpapi.ValidateCertificateNames(*tlsCert, provisioningTLSNames)
+		provisioningCommissioner, provisioningCredential := commissioningDependencies(application)
+		// A missing first-contact name is a misprepared image, not a reason to
+		// leave the appliance unreachable: first boot serves on what it has and
+		// carries the gap into the interface, where an administrator can see it.
+		missing, certificateErr := missingDiscoveryNames(*tlsCert, systemHostname, true)
 		if certificateErr != nil {
 			fmt.Fprintln(os.Stderr, certificateErr)
 			return 1
 		}
-		if len(missing) != 0 {
-			fmt.Fprintf(os.Stderr, "the provisioning certificate is missing required discovery SAN %q\n", missing[0])
-			return 2
+		for _, name := range missing {
+			fmt.Fprintf(os.Stderr,
+				"WARNING: the provisioning certificate is missing required discovery SAN %q; "+
+					"first contact at that name reports a name mismatch until it is corrected\n", name)
 		}
 		managementAccess, err = network.NewManagementAccessService(ctx, network.ManagementAccessOptions{
 			Provider: provider, Store: application.ManagementAccessRepository(),
@@ -418,7 +422,7 @@ func runServe(ctx context.Context, arguments []string) int {
 			Now:        func() time.Time { return time.Now().UTC() },
 			TLSMissing: missing, Coordinator: roleCoordinator,
 			Provisioning: true, ProvisioningTLSNames: provisioningTLSNames,
-			Commissioner: appliance.NewDurableCommissioner(application.CommissioningRepository()),
+			Commissioner: provisioningCommissioner, PublishedCredential: provisioningCredential,
 		})
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -467,24 +471,30 @@ func runServe(ctx context.Context, arguments []string) int {
 			fmt.Fprintln(os.Stderr, certificateErr)
 			return 2
 		}
-		discoveryTLSNames := requiredDiscoveryTLSNames(systemHostname, hardwareRecoveryEnabled)
-		discoveryMissing, certificateErr := httpapi.ValidateCertificateNames(*tlsCert, discoveryTLSNames)
+		discoveryMissing, certificateErr := missingDiscoveryNames(*tlsCert, systemHostname, hardwareRecoveryEnabled)
 		if certificateErr != nil {
 			fmt.Fprintln(os.Stderr, certificateErr)
 			return 2
 		}
-		if len(discoveryMissing) != 0 {
-			fmt.Fprintf(os.Stderr, "the appliance certificate is missing required discovery SAN %q\n", discoveryMissing[0])
-			return 2
-		}
+		// The same reasoning as first boot: a commissioned appliance that will
+		// not start cannot be administered back into shape either. The two lists
+		// overlap by design - the appliance's own host name is normally both a
+		// configured management name and an advertised discovery name - so they
+		// are merged rather than concatenated.
+		missing = mergeMissingNames(missing, discoveryMissing)
 		for _, name := range missing {
 			fmt.Fprintf(os.Stderr, "WARNING: listener certificate is missing SAN %q; renew the configured certificate before using that URL\n", name)
 		}
+		managementCommissioner, managementCredential := commissioningDependencies(application)
 		managementAccess, err = network.NewManagementAccessService(ctx, network.ManagementAccessOptions{
 			Provider: provider, Store: repository, Firewall: nethelper.NewClient(*helperSocket, ""),
 			Now: func() time.Time { return time.Now().UTC() }, Initial: initial,
 			Reconfigure: *managementReconfigure, TLSMissing: missing, Coordinator: roleCoordinator,
 			ProvisioningTLSNames: requiredDiscoveryTLSNames(systemHostname, true),
+			// A hardware recovery reset returns this running service to
+			// provisioning, so it needs everything completing commissioning
+			// needs, not just the gate.
+			Commissioner: managementCommissioner, PublishedCredential: managementCredential,
 		})
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -541,14 +551,19 @@ func runServe(ctx context.Context, arguments []string) int {
 		host, _, _ := net.SplitHostPort(listenerAddress)
 		address, _ := netip.ParseAddr(host)
 		if !address.IsLoopback() {
-			missing, certificateErr := httpapi.ValidateCertificateNames(*tlsCert, requiredDiscoveryTLSNames(systemHostname, false))
+			// A legacy bound appliance listener is a supported mode, so it
+			// reports a certificate gap exactly as the other two do rather than
+			// refusing to start: an appliance nobody can reach cannot be
+			// corrected either.
+			legacyMissing, certificateErr := missingDiscoveryNames(*tlsCert, systemHostname, false)
 			if certificateErr != nil {
 				fmt.Fprintln(os.Stderr, certificateErr)
 				return 2
 			}
-			if len(missing) != 0 {
-				fmt.Fprintf(os.Stderr, "the appliance certificate is missing required discovery SAN %q\n", missing[0])
-				return 2
+			for _, name := range legacyMissing {
+				fmt.Fprintf(os.Stderr,
+					"WARNING: the appliance certificate is missing required discovery SAN %q; "+
+						"first contact at that name reports a name mismatch until it is corrected\n", name)
 			}
 			mdnsInterfaces = func(ctx context.Context) ([]string, error) {
 				return boundDiscoveryInterfaces(ctx, provider, listenerAddress)

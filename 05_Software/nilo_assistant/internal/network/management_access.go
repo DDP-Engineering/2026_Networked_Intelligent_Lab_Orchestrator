@@ -366,6 +366,11 @@ type ManagementAccessOptions struct {
 	// has fixed the allowlist. A provisioning service without one can serve but
 	// cannot complete commissioning.
 	Commissioner Commissioner
+	// PublishedCredential reports whether the credential published with the
+	// appliance image still opens this appliance. A provisioning service
+	// without one can serve but cannot complete commissioning, because a gate
+	// that cannot answer must not silently pass.
+	PublishedCredential PublishedCredential
 }
 
 // ManagementAccessService owns the active allowlist used by both the socket
@@ -386,6 +391,7 @@ type ManagementAccessService struct {
 	provisioning  bool
 	provisionTLS  []string
 	commissioner  Commissioner
+	published     PublishedCredential
 	// recoveryInterface is a volatile admission overlay. It is never written to
 	// ManagementAccessStore and therefore cannot widen commissioned policy after
 	// a restart.
@@ -620,6 +626,7 @@ func NewManagementAccessService(ctx context.Context, options ManagementAccessOpt
 				interfaces: cloneInterfaces(observed), coordinator: options.Coordinator,
 				provisioning: true, provisionTLS: append([]string(nil), options.ProvisioningTLSNames...),
 				commissioner: options.Commissioner,
+				published:    options.PublishedCredential,
 			}
 			service.record = ManagementAccessRecord{
 				Configuration: ManagementAccessConfiguration{Port: port},
@@ -685,6 +692,7 @@ func NewManagementAccessService(ctx context.Context, options ManagementAccessOpt
 		provisioning: options.Provisioning,
 		provisionTLS: append([]string(nil), options.ProvisioningTLSNames...),
 		commissioner: options.Commissioner,
+		published:    options.PublishedCredential,
 	}
 	service.rebuildAllowedLocked()
 	service.coordinator.RegisterClaimSource(service.adapterRoleClaims)

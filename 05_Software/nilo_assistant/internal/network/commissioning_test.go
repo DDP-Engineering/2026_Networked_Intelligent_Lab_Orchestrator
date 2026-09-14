@@ -32,15 +32,53 @@ func (commissioner *recordingCommissioner) count() int {
 	return commissioner.completed
 }
 
+// stubPublishedCredential stands in for the appliance adapter that reports
+// whether the credential published with the image still opens this appliance.
+type stubPublishedCredential struct {
+	mu         sync.Mutex
+	stillOpens bool
+	fail       error
+	calls      int
+}
+
+func (credential *stubPublishedCredential) PublishedVerifierRemains(context.Context) (bool, error) {
+	credential.mu.Lock()
+	defer credential.mu.Unlock()
+	credential.calls++
+	if credential.fail != nil {
+		return false, credential.fail
+	}
+	return credential.stillOpens, nil
+}
+
+func (credential *stubPublishedCredential) set(stillOpens bool) {
+	credential.mu.Lock()
+	defer credential.mu.Unlock()
+	credential.stillOpens = stillOpens
+}
+
 func newCommissionableService(
 	t *testing.T, now *time.Time, provider *accessProvider, store *accessStore,
 	firewall *accessFirewall, commissioner *recordingCommissioner,
+) *ManagementAccessService {
+	t.Helper()
+	// An appliance whose published password has already been replaced is the
+	// ordinary case these tests are about, so they supply a checker that says so.
+	return newCommissionableServiceWithCredential(
+		t, now, provider, store, firewall, commissioner, &stubPublishedCredential{})
+}
+
+func newCommissionableServiceWithCredential(
+	t *testing.T, now *time.Time, provider *accessProvider, store *accessStore,
+	firewall *accessFirewall, commissioner *recordingCommissioner,
+	credential PublishedCredential,
 ) *ManagementAccessService {
 	t.Helper()
 	service, err := NewManagementAccessService(context.Background(), ManagementAccessOptions{
 		Provider: provider, Store: store, Firewall: firewall, Now: func() time.Time { return *now },
 		Provisioning: true, ProvisioningTLSNames: []string{"ddp-remote.local"},
 		Commissioner: commissioner, ConfirmWindow: time.Minute,
+		PublishedCredential: credential,
 	})
 	if err != nil {
 		t.Fatalf("NewManagementAccessService: %v", err)
@@ -237,5 +275,158 @@ func TestCommissioningAwayFromTheCurrentInterfaceNeedsConfirmation(t *testing.T)
 	}
 	if commissioner.count() != 1 {
 		t.Fatalf("the lifecycle state was recorded %d times, want once", commissioner.count())
+	}
+}
+
+// REQ-SEC-c9e034de: the published credential cannot survive commissioning. While
+// it still opens the appliance, completing commissioning is refused, and the
+// refusal changes nothing; once it no longer does, the identical request works.
+func TestCommissioningIsRefusedWhileThePublishedCredentialStillOpensTheAppliance(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	now := time.Date(2026, 9, 14, 9, 0, 0, 0, time.UTC)
+	provider := &accessProvider{}
+	provider.set(provisioningInterfaces())
+	store := &accessStore{}
+	firewall := &accessFirewall{}
+	commissioner := &recordingCommissioner{}
+	credential := &stubPublishedCredential{stillOpens: true}
+
+	service := newCommissionableServiceWithCredential(
+		t, &now, provider, store, firewall, commissioner, credential)
+	// The service derives and applies a provisioning allowlist as it starts, so
+	// the baseline is what it was already serving, not an empty one.
+	applied := len(firewall.applied)
+	persisted := store.record
+
+	_, err := service.Commission(ctx, []string{"enp1s0"}, mustAddr(t, "192.168.10.24/24"))
+	if !errors.Is(err, ErrPublishedCredentialUnchanged) {
+		t.Fatalf("Commission with the published password in place = %v, want ErrPublishedCredentialUnchanged", err)
+	}
+	if commissioner.count() != 0 {
+		t.Fatal("a refused commissioning still recorded the lifecycle state")
+	}
+	if len(firewall.applied) != applied {
+		t.Fatal("a refused commissioning still reached the firewall")
+	}
+	if store.record.State != persisted.State ||
+		!slices.Equal(store.record.Configuration.Interfaces, persisted.Configuration.Interfaces) {
+		t.Fatal("a refused commissioning still changed the persisted management access record")
+	}
+	if got := service.ConfiguredInterfaces(); !slices.Equal(got, []string{"enp1s0", "wlp2s0"}) {
+		t.Fatalf("allowlist after the refusal = %v, want the derived set intact", got)
+	}
+	if !service.Provisioning() {
+		t.Fatal("a refused commissioning left the appliance no longer provisioning")
+	}
+
+	// The administrator changes the password; the identical request now works.
+	credential.set(false)
+	if _, err := service.Commission(ctx, []string{"enp1s0"}, mustAddr(t, "192.168.10.24/24")); err != nil {
+		t.Fatalf("Commission after the published password was changed: %v", err)
+	}
+	if commissioner.count() != 1 {
+		t.Fatalf("lifecycle state recorded %d times, want exactly once", commissioner.count())
+	}
+}
+
+// REQ-SEC-c9e034de: a gate that cannot answer must not silently pass, so a
+// missing or failing checker refuses commissioning rather than allowing it.
+func TestCommissioningIsRefusedWhenThePublishedCredentialCannotBeChecked(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	now := time.Date(2026, 9, 14, 9, 0, 0, 0, time.UTC)
+
+	for _, testCase := range []struct {
+		name       string
+		credential PublishedCredential
+	}{
+		{name: "no checker at all", credential: nil},
+		{name: "a checker that fails", credential: &stubPublishedCredential{fail: errors.New("identity store unavailable")}},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			provider := &accessProvider{}
+			provider.set(provisioningInterfaces())
+			store := &accessStore{}
+			firewall := &accessFirewall{}
+			commissioner := &recordingCommissioner{}
+			service := newCommissionableServiceWithCredential(
+				t, &now, provider, store, firewall, commissioner, testCase.credential)
+			applied := len(firewall.applied)
+
+			_, err := service.Commission(ctx, []string{"enp1s0"}, mustAddr(t, "192.168.10.24/24"))
+			if !errors.Is(err, ErrPublishedCredentialUnknown) {
+				t.Fatalf("Commission = %v, want ErrPublishedCredentialUnknown", err)
+			}
+			if commissioner.count() != 0 {
+				t.Fatal("an unanswerable gate still recorded the lifecycle state")
+			}
+			if len(firewall.applied) != applied {
+				t.Fatal("an unanswerable gate still reached the firewall")
+			}
+			if !service.Provisioning() {
+				t.Fatal("an unanswerable gate left the appliance no longer provisioning")
+			}
+		})
+	}
+}
+
+// refusingCommissioner is the store refusing to record the appliance because
+// the published verifier was present at the moment the record would have been
+// written. It reports itself the way the real one does, through a method rather
+// than a shared sentinel value.
+type refusingCommissioner struct{}
+
+func (refusingCommissioner) CompleteCommissioning(context.Context) error {
+	return publishedCredentialStillThere{}
+}
+
+type publishedCredentialStillThere struct{}
+
+func (publishedCredentialStillThere) Error() string {
+	return "the appliance still stores the published administrator verifier"
+}
+
+func (publishedCredentialStillThere) PublishedCredentialPresent() bool { return true }
+
+// REQ-SEC-c9e034de: the early check is a fast refusal, not the guarantee. A
+// password reset commits on its own transaction, so the published verifier can
+// be back by the time the appliance would be recorded as commissioned. The
+// commissioner settles both together and refuses; commissioning must report
+// that as the same conflict and leave the appliance provisioning.
+func TestCommissioningIsRefusedWhenTheCommitFindsThePublishedCredentialBack(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	now := time.Date(2026, 9, 14, 9, 0, 0, 0, time.UTC)
+	provider := &accessProvider{}
+	provider.set(provisioningInterfaces())
+	store := &accessStore{}
+	firewall := &accessFirewall{}
+
+	// The gate sees a changed password; the commit sees it restored.
+	service, err := NewManagementAccessService(context.Background(), ManagementAccessOptions{
+		Provider: provider, Store: store, Firewall: firewall, Now: func() time.Time { return now },
+		Provisioning: true, ProvisioningTLSNames: []string{"ddp-remote.local"},
+		Commissioner: refusingCommissioner{}, ConfirmWindow: time.Minute,
+		PublishedCredential: &stubPublishedCredential{},
+	})
+	if err != nil {
+		t.Fatalf("NewManagementAccessService: %v", err)
+	}
+
+	_, err = service.Commission(ctx, []string{"enp1s0"}, mustAddr(t, "192.168.10.24/24"))
+	if !errors.Is(err, ErrPublishedCredentialUnchanged) {
+		t.Fatalf("Commission when the commit refuses = %v, want ErrPublishedCredentialUnchanged", err)
+	}
+	if !service.Provisioning() {
+		t.Fatal("a refused commit left the appliance no longer provisioning")
+	}
+	if got := service.ConfiguredInterfaces(); !slices.Equal(got, []string{"enp1s0", "wlp2s0"}) {
+		t.Fatalf("allowlist after the refused commit = %v, want the derived set restored", got)
 	}
 }

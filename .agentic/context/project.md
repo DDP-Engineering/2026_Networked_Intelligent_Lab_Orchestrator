@@ -48,7 +48,12 @@ one of three fixed roles - Administrator, Operator or Viewer.
   lifecycle state, prepares safe Ethernet links with IPv4LL, answers
   `nilo.local`, and serves management access on every eligible physical adapter.
   Commissioned appliances permanently advertise a unique `_nilo._tcp.local`
-  service. The Raspberry Pi delivery may add a dual-duration GPIO button for a
+  service. A user signs in to a newly imaged appliance with the administrator
+  credential published with the image, over a shipped certificate that carries
+  both first-contact names and is signed by nobody a browser trusts; completing
+  commissioning is refused while that published password is still in place, so
+  the credential cannot outlive first boot. The Raspberry Pi delivery may add a
+  dual-duration GPIO button for a
   bounded, post-link-transition recovery path or a network-only return to
   commissioning; generic Linux hardware has no GPIO assumption.
 - **Activity.** One filtered, paginated audit and event history with bounded

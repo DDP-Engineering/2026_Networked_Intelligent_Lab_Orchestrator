@@ -744,6 +744,45 @@ func (service *Service) Login(ctx context.Context, username string, password []b
 	return LoginResult{Session: created, User: user}, nil
 }
 
+// PasswordVerifierMatches reports whether the named identity's stored verifier
+// matches password.
+//
+// It answers what the stored state is, not whether anybody could sign in with
+// it. A disabled identity whose verifier still matches answers true, because
+// disabling is reversible: the verifier is still there to be re-enabled, and a
+// caller asking whether a known credential survives has to be told that it
+// does. Use Login for the question of who may actually get in.
+//
+// It is not an authentication attempt: it establishes no session, records no
+// audit event, and takes no part in login throttling, because the caller is an
+// administrator asking about the appliance they already hold rights over. An
+// identity that is not there is a plain false.
+func (service *Service) PasswordVerifierMatches(ctx context.Context, username string, password []byte) (bool, error) {
+	normalized, err := auth.NormalizeUsername(username)
+	if err != nil {
+		return false, nil
+	}
+	user, err := service.repository.UserByUsername(ctx, normalized)
+	if err != nil {
+		if errors.Is(err, auth.ErrUserNotFound) {
+			return false, nil
+		}
+		return false, err
+	}
+	if !user.CanPasswordLogin() {
+		// A development-token identity carries a marker instead of a verifier,
+		// so there is no password of any kind stored against it.
+		return false, nil
+	}
+	matched, err := auth.VerifyPassword(user.PasswordVerifier, password)
+	if err != nil {
+		// A password the rule would refuse to set cannot be the one stored,
+		// and a verifier this build cannot parse is not a match either.
+		return false, nil
+	}
+	return matched, nil
+}
+
 // recordLogin writes one login outcome where a journal is configured. The
 // outcome of the login itself does not depend on the record being written:
 // a login is not a change to the appliance, and refusing it would lock the

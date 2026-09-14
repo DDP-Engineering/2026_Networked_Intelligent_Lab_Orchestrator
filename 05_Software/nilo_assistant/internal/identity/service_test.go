@@ -1383,3 +1383,167 @@ func assertDetails(t *testing.T, event audit.Event, want map[string]string) {
 		}
 	}
 }
+
+// REQ-SEC-c9e034de: the commissioning gate needs to know whether a stored
+// verifier still accepts a particular password, without logging anybody in.
+func TestPasswordVerifierMatchesReportsWhetherTheStoredVerifierMatches(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	f := newFixture(t)
+	f.bootstrap(t)
+
+	holds, err := f.service.PasswordVerifierMatches(ctx, "admin", []byte(administratorPassword))
+	if err != nil {
+		t.Fatalf("PasswordVerifierMatches with the current password: %v", err)
+	}
+	if !holds {
+		t.Fatal("PasswordVerifierMatches said the stored verifier does not match the current password")
+	}
+
+	holds, err = f.service.PasswordVerifierMatches(ctx, "admin", []byte(replacementPassword))
+	if err != nil {
+		t.Fatalf("PasswordVerifierMatches with another password: %v", err)
+	}
+	if holds {
+		t.Fatal("PasswordVerifierMatches accepted a password the identity does not hold")
+	}
+
+	// An identity that is not there is a plain no, not an error: an appliance
+	// whose administrator was created under another name has nothing to answer.
+	holds, err = f.service.PasswordVerifierMatches(ctx, "nobody", []byte(administratorPassword))
+	if err != nil {
+		t.Fatalf("PasswordVerifierMatches for an absent identity: %v", err)
+	}
+	if holds {
+		t.Fatal("PasswordVerifierMatches accepted a password for an identity that does not exist")
+	}
+
+	// It is a question, not an authentication: it must not consume the login
+	// throttle budget that protects the appliance from password guessing.
+	for range 20 {
+		if _, err := f.service.PasswordVerifierMatches(ctx, "admin", []byte(replacementPassword)); err != nil {
+			t.Fatalf("repeated PasswordVerifierMatches: %v", err)
+		}
+	}
+	if _, err := f.service.Login(ctx, "admin", []byte(administratorPassword)); err != nil {
+		t.Fatalf("Login after repeated PasswordVerifierMatches calls: %v", err)
+	}
+}
+
+// REQ-SEC-c9e034de: disabling is reversible, so a disabled identity whose
+// verifier still matches is still reported as matching. Answering otherwise
+// would let a published credential through commissioning to be re-enabled
+// afterwards, on an appliance whose first-boot exposure is supposed to be over.
+func TestPasswordVerifierMatchesReportsADisabledIdentityThatStillHoldsIt(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	f := newFixture(t)
+	administrator := f.bootstrap(t)
+	second, err := f.service.CreateUser(ctx, administrator, "bench-lead", auth.RoleAdministrator, []byte(operatorPassword))
+	if err != nil {
+		t.Fatalf("CreateUser: %v", err)
+	}
+
+	if err := f.service.SetEnabled(ctx, second, "admin", false); err != nil {
+		t.Fatalf("SetEnabled: %v", err)
+	}
+	matches, err := f.service.PasswordVerifierMatches(ctx, "admin", []byte(administratorPassword))
+	if err != nil {
+		t.Fatalf("PasswordVerifierMatches for a disabled identity: %v", err)
+	}
+	if !matches {
+		t.Fatal("a disabled identity whose verifier still matches was reported as not matching")
+	}
+}
+
+// REQ-SEC-c9e034de: the property the commissioning gate enforces is that no
+// verifier matching the published password survives commissioning. These are
+// the three cases that property has to get right, checked against the real
+// identity service rather than a stub, because provenance is exactly what the
+// stored state does not record.
+func TestPublishedVerifierIsRecognizedHoweverTheIdentityWasCreated(t *testing.T) {
+	t.Parallel()
+
+	const publishedUsername = "admin"
+	const publishedPassword = "admin_password"
+	ctx := context.Background()
+
+	t.Run("an administrator created at a console who chose the published pair", func(t *testing.T) {
+		t.Parallel()
+
+		f := newFixture(t)
+		// Nothing seeded this: it is an ordinary bootstrap that happens to use
+		// the published pair, and the appliance cannot tell the difference.
+		if _, err := f.service.Bootstrap(ctx, publishedUsername, []byte(publishedPassword)); err != nil {
+			t.Fatalf("Bootstrap: %v", err)
+		}
+		matches, err := f.service.PasswordVerifierMatches(ctx, publishedUsername, []byte(publishedPassword))
+		if err != nil {
+			t.Fatalf("PasswordVerifierMatches: %v", err)
+		}
+		if !matches {
+			t.Fatal("a console-created administrator holding the published pair was not recognized")
+		}
+	})
+
+	t.Run("a different user name or a different password", func(t *testing.T) {
+		t.Parallel()
+
+		f := newFixture(t)
+		administrator := f.bootstrap(t)
+		if _, err := f.service.CreateUser(
+			ctx, administrator, "bench-lead", auth.RoleAdministrator, []byte(publishedPassword),
+		); err != nil {
+			t.Fatalf("CreateUser: %v", err)
+		}
+
+		// The published password under another name is not the published
+		// credential, and the published name under another password is not
+		// either; both commission normally.
+		matches, err := f.service.PasswordVerifierMatches(ctx, publishedUsername, []byte(publishedPassword))
+		if err != nil {
+			t.Fatalf("PasswordVerifierMatches for the published name: %v", err)
+		}
+		if matches {
+			t.Fatal("an administrator holding another password was treated as holding the published one")
+		}
+	})
+
+	t.Run("a disabled identity still holding the published password", func(t *testing.T) {
+		t.Parallel()
+
+		f := newFixture(t)
+		if _, err := f.service.Bootstrap(ctx, publishedUsername, []byte(publishedPassword)); err != nil {
+			t.Fatalf("Bootstrap: %v", err)
+		}
+		second, err := f.service.CreateUser(
+			ctx, mustUser(t, f, publishedUsername), "bench-lead", auth.RoleAdministrator, []byte(operatorPassword))
+		if err != nil {
+			t.Fatalf("CreateUser: %v", err)
+		}
+		if err := f.service.SetEnabled(ctx, second, publishedUsername, false); err != nil {
+			t.Fatalf("SetEnabled: %v", err)
+		}
+
+		// Disabling is reversible, so the published verifier is still there to
+		// be re-enabled after commissioning: it must still be recognized.
+		matches, err := f.service.PasswordVerifierMatches(ctx, publishedUsername, []byte(publishedPassword))
+		if err != nil {
+			t.Fatalf("PasswordVerifierMatches for a disabled identity: %v", err)
+		}
+		if !matches {
+			t.Fatal("a disabled identity still holding the published password was not recognized")
+		}
+	})
+}
+
+func mustUser(t *testing.T, f fixture, username string) auth.User {
+	t.Helper()
+	user, err := f.service.UserByUsername(context.Background(), username)
+	if err != nil {
+		t.Fatalf("UserByUsername(%q): %v", username, err)
+	}
+	return user
+}

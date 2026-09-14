@@ -10,6 +10,7 @@ import (
 
 	"nilo.local/nilo/internal/appliance"
 	"nilo.local/nilo/internal/audit"
+	"nilo.local/nilo/internal/auth"
 	"nilo.local/nilo/internal/network"
 )
 
@@ -77,6 +78,80 @@ func (repository *CommissioningRepository) SaveCommissioning(ctx context.Context
 // ResetNetworkCommissioning atomically returns only network access to first
 // boot. Appliance identity, hostname, TLS, users, credentials, audit history,
 // integrations, interface settings, and device networks are not touched.
+// CommissionUnlessPasswordMatches records the appliance as commissioned, but
+// only if no identity under username still stores a verifier matching password.
+//
+// The two halves are one transaction, begun with `BEGIN IMMEDIATE` so that it
+// holds the database's write lock before it reads anything - the same way an
+// administrative identity change does. Checking the credential and recording the
+// lifecycle state as separate statements would leave a window in which a
+// password reset, which commits on its own transaction and may come from
+// another process holding the same data directory, can restore the published
+// verifier after the check has passed and before the appliance is recorded as
+// commissioned. Taking the write lock up front means such a reset lands either
+// entirely before this transaction, and is seen, or entirely after it, by which
+// time the appliance is already commissioned and the published password is an
+// ordinary password like any other.
+func (repository *CommissioningRepository) CommissionUnlessPasswordMatches(
+	ctx context.Context, username string, password []byte,
+) error {
+	if err := repository.ready(); err != nil {
+		return err
+	}
+	connection, err := repository.database.SQL().Conn(ctx)
+	if err != nil {
+		return fmt.Errorf("reserve the commissioning connection: %w", err)
+	}
+	defer func() { _ = connection.Close() }()
+	if _, err := connection.ExecContext(ctx, "BEGIN IMMEDIATE"); err != nil {
+		return fmt.Errorf("begin the commissioning transaction: %w", err)
+	}
+	committed := false
+	defer func() {
+		if committed {
+			return
+		}
+		// The rollback runs even for a cancelled context, because this
+		// connection returns to the pool either way and must never carry an
+		// open transaction back to it.
+		_, _ = connection.ExecContext(context.WithoutCancel(ctx), "ROLLBACK")
+	}()
+
+	var verifier string
+	switch scanErr := connection.QueryRowContext(ctx,
+		"SELECT password_hash FROM users WHERE username = ?", username,
+	).Scan(&verifier); {
+	case scanErr == nil:
+		matches, verifyErr := auth.VerifyPassword(verifier, password)
+		if verifyErr == nil && matches {
+			return appliance.ErrPublishedCredentialPresent
+		}
+	case errors.Is(scanErr, sql.ErrNoRows):
+		// No identity under that name, so no published verifier to survive.
+	default:
+		return fmt.Errorf("read the published administrator verifier: %w", scanErr)
+	}
+
+	result, err := connection.ExecContext(ctx,
+		"UPDATE commissioning SET state = ? WHERE singleton = 1",
+		string(appliance.CommissioningCommissioned))
+	if err != nil {
+		return fmt.Errorf("record appliance commissioning state: %w", err)
+	}
+	changed, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("confirm appliance commissioning state: %w", err)
+	}
+	if changed != 1 {
+		return errors.New("no appliance commissioning state is recorded")
+	}
+	if _, err := connection.ExecContext(ctx, "COMMIT"); err != nil {
+		return fmt.Errorf("commit the commissioning transaction: %w", err)
+	}
+	committed = true
+	return nil
+}
+
 func (repository *CommissioningRepository) ResetNetworkCommissioning(ctx context.Context, access network.ManagementAccessRecord) (err error) {
 	return repository.resetNetworkCommissioning(ctx, access, nil, 0)
 }
