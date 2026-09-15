@@ -633,9 +633,7 @@ export const de: Catalogue = {
   'activity.col.outcome': 'Ergebnis',
   'activity.details': 'Details',
   'activity.operation': 'Alle Schritte des Vorgangs {id} anzeigen',
-  'activity.retained': '{count} Einträge der Kategorie {category} vorhanden.',
   'activity.gap': 'Einträge vor {time} wurden entfernt ({reason}).',
-  'activity.health.ok': 'Das Gerät zeichnet seine Aktivität auf.',
   'activity.health.degraded':
     'Das Gerät kann seine Aktivität nicht aufzeichnen: {failure}. Neue Änderungen werden abgelehnt, bis das behoben ist.',
   'activity.export.jsonl': 'Als JSONL exportieren',
@@ -646,8 +644,6 @@ export const de: Catalogue = {
   'activity.actor.anonymous': 'Anonym',
   'activity.actor.token': 'API-Token',
   'activity.actor.user': 'Benutzer',
-  'activity.subtitle':
-    'Jede Änderung und jedes Ereignis, das das Gerät aufgezeichnet hat, neueste zuerst.',
   'activity.filters': 'Filter',
   'activity.filter.action': 'Aktion',
   'activity.filter.more': 'Weitere Filter',

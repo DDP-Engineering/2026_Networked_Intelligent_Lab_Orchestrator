@@ -1,0 +1,47 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-f8c58c4c"
+
+title = "Offer Activity scope and filters as one wrapping line"
+
+status = "active"
+
+requirement = """
+Where the Activity filter panel is shown, the browser interface shall lay its
+category scope controls, its filter fields and its More filters disclosure out as
+one line that wraps within the available width, with no control holding a row of
+its own, while scope selection, the filter fields, the filters-in-effect summary,
+Apply filters and Clear filters go on behaving as they do today.
+"""
+
+verification = "A browser test at a wide viewport asserts that the scope controls, the six filter fields and the More filters disclosure share one row by comparing their vertical offsets, then narrows the viewport and asserts they wrap onto further rows without document overflow and with the More filters disclosure never alone on a row; a component test applies a field filter, opens More filters and clears the panel, asserting the queries the page sends are unchanged."
+
+affected_paths = [
+    "05_Software/nilo_gui/src/components/pages/ActivityPage.tsx",
+    "05_Software/nilo_gui/src/styles/shell.css",
+    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx",
+    "05_Software/nilo_gui/src/layout.test.ts",
+    "05_Software/nilo_gui/e2e/field-display.spec.ts",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx::puts the scope chips on the filter line on a wide display",
+    "05_Software/nilo_gui/src/layout.test.ts::wraps the activity filter line and stacks the head below 56rem",
+    "05_Software/nilo_gui/e2e/field-display.spec.ts::1366: the activity header and its filters are each one line",
+]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = "Each control on its own row costs a line of the first screen and buys nothing."
+
+created = 2026-09-15
+updated = 2026-09-15

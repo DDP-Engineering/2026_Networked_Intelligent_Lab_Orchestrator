@@ -70,7 +70,7 @@ export const ACTIVITY_SORT_FIELDS = [
 ] as const;
 export type ActivitySort = (typeof ACTIVITY_SORT_FIELDS)[number];
 export type ActivitySortOrder = 'asc' | 'desc';
-export type ActivityPageSize = 25 | 50 | 100 | 'all';
+export type ActivityPageSize = 10 | 25 | 50 | 100 | 'all';
 
 /** The filters a query may carry; empty values are not sent. */
 export interface ActivityFilter {

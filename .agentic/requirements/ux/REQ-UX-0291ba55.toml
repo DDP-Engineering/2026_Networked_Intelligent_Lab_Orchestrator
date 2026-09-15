@@ -1,0 +1,42 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-0291ba55"
+
+title = "Place the Activity retention control above the filters"
+
+status = "active"
+
+requirement = """
+Where an identity may manage activity retention, the browser interface shall
+present the retention control as a collapsed disclosure between the Activity
+header and the filters, and shall present it to no other identity.
+"""
+
+verification = "A component test renders the page for an identity that may manage retention and asserts the retention disclosure appears after the header and before the filter panel, collapsed, and that opening it and saving still reaches the save callback; the same test renders the page for an identity that may not manage retention and asserts the disclosure is absent."
+
+affected_paths = [
+    "05_Software/nilo_gui/src/components/pages/ActivityPage.tsx",
+    "05_Software/nilo_gui/src/styles/shell.css",
+    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx",
+    "05_Software/nilo_gui/e2e/field-display.spec.ts",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx::keeps retention as the only administration, above the filters",
+]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = "The one control that decides how long rows are kept should not sit past every row."
+
+created = 2026-09-15
+updated = 2026-09-15

@@ -5,6 +5,29 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-15
+
+### Added
+
+- The Activity listing offers 10 records a page and opens at that size,
+  alongside 25, 50, 100 and the whole selection.
+
+### Changed
+
+- The Activity page leads with its records. Its title and Export share one
+  header line, Export at the right edge, and the page carries no description
+  beneath it.
+- Above the Activity listing the appliance reports only what qualifies it: that
+  audit writes are failing, and that a retained window has had entries removed.
+  A healthy appliance with nothing purged says nothing there, in place of the
+  standing health sentence and the per-category retained counts.
+- Activity scope, the six filter fields and the More filters disclosure lay out
+  as one line that wraps, rather than each taking a row. Where a viewport
+  collapses the filter panel behind a disclosure, the scope controls stay
+  outside it, so All, Audit and Events remain one action away on a bench panel.
+- The administrator activity retention control sits between the header and the
+  filters, rather than below every row it governs.
+
 ## [0.5.0] - 2026-09-14
 
 ### Added

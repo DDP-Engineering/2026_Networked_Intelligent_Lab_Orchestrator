@@ -1917,29 +1917,20 @@ input[type='radio'] {
  * chips are read as scope rather than as one more filter, and the panel below
  * holds only what narrows the listing further.
  */
+/* One header line: the title, and the page's only action at its right edge. */
 .activity-head {
-  align-items: stretch;
-  flex-direction: column;
-  gap: var(--space-2);
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+}
+
+.activity-head .menu {
+  margin-left: auto;
 }
 
 /* Activity is a data workspace, so its scroll rail belongs at the right edge
    of the workspace rather than at the generic reading-width boundary. */
 .activity-page .page-body {
   max-width: none;
-}
-
-.activity-head-top {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-4);
-}
-
-.activity-head-text {
-  display: grid;
-  gap: var(--space-1);
-  min-width: 0;
 }
 
 /* The export control is a real button rather than the top row's quiet trigger:
@@ -1958,8 +1949,14 @@ input[type='radio'] {
 
 /* Category as chips: three targets of the control height that scroll rather
    than wrap, so the head never grows a second line on a field display. */
+/* `flex: none` for the reason `.activity-page .table-scroll` has it: where the
+   filter panel collapses, this row is a flex item of the scrolling page body,
+   and its own `overflow-x` suppresses the automatic minimum size that would
+   otherwise hold a flex item open. Left to shrink, it takes the column's whole
+   shrink and clips three 44px targets to a sliver. */
 .activity-chips {
   display: flex;
+  flex: none;
   align-items: center;
   gap: var(--space-2);
   overflow-x: auto;
@@ -1987,29 +1984,6 @@ input[type='radio'] {
   gap: var(--space-2);
 }
 
-.activity-banner-state {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin: 0;
-  color: var(--text-muted);
-  font-size: var(--text-label);
-}
-
-.activity-banner-retention {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1) var(--space-4);
-  margin: 0;
-  color: var(--text-muted);
-  font-size: var(--text-label);
-}
-
-.activity-banner-count {
-  white-space: nowrap;
-}
-
 .activity-banner-gap {
   margin: 0;
   color: var(--text-muted);
@@ -2021,10 +1995,30 @@ input[type='radio'] {
   font-weight: 600;
 }
 
+/* Scope, the six fields, More filters and the actions are one line that wraps
+   rather than a grid of rows: three rows of controls are three rows the first
+   record does not get. */
 .activity-filters {
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
   margin-top: 0;
+}
+
+.activity-filters .field {
+  flex: 1 1 12rem;
+}
+
+/* The disclosure sits on the line at its own width, and the three fields it
+   reveals join the same flow instead of forming a block below it. */
+.activity-filters-more {
+  flex: none;
+  min-height: var(--target-min);
+  align-self: flex-end;
+}
+
+.activity-filters-more-fields:not([hidden]) {
+  display: contents;
 }
 
 /* A date input's intrinsic width is wider than its track; without this the
@@ -2035,24 +2029,9 @@ input[type='radio'] {
   min-width: 0;
 }
 
-.activity-filters .form-actions,
-.activity-filters-more,
-.activity-filter-note {
-  grid-column: 1 / -1;
-}
-
-.activity-filters-more-fields {
-  display: grid;
-  gap: var(--space-3);
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-}
-
 .activity-filters .form-actions {
+  flex: 1 1 100%;
   align-items: center;
-}
-
-.activity-filters .form-actions .menu {
-  margin-left: auto;
 }
 
 .activity-filter-count {
@@ -2061,7 +2040,7 @@ input[type='radio'] {
   font-size: var(--text-label);
 }
 
-.activity-filter-note {
+.activity-export-note {
   margin: 0;
   color: var(--accent);
   font-size: var(--text-label);
@@ -2480,22 +2459,14 @@ input[type='radio'] {
   .help-panel {
     max-width: calc(100vw - 1rem);
   }
-  /* The head stacks rather than squeezing the export control against the
-     title, and every filter takes the full width it needs to be typed into. */
-  .activity-head-top {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-  .activity-filters,
-  .activity-filters-more-fields {
-    grid-template-columns: minmax(0, 1fr);
-  }
+  /* The head keeps its shape here: Export stays at the right edge of the title
+     line at every width, and wraps below the title rather than being pulled
+     against it when the two no longer fit. The filter line keeps wrapping on
+     its own basis too - two fields to a row at 800 pixels is still one wrapping
+     line, not a row each. */
   .activity-filters .form-actions {
     align-items: stretch;
     flex-direction: column;
-  }
-  .activity-filters .form-actions .menu {
-    margin-left: 0;
   }
   .activity-pagination {
     align-items: stretch;

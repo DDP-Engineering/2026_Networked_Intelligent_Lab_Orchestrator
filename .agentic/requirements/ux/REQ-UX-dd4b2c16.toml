@@ -1,0 +1,43 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-dd4b2c16"
+
+title = "Lead the Activity page with its records"
+
+status = "active"
+
+requirement = """
+While an identity that may read activity views the Activity page on a
+1024 by 600 display with its disclosures closed, the browser interface shall
+render the first record of the listing entirely within the initial viewport, so
+that reading the newest record requires no vertical scrolling.
+"""
+
+verification = "A browser test signs in as an administrator at 1024x600, opens Activity against a listing of several records with the filter and retention disclosures closed, and asserts that the bounding box of the first table row ends above the viewport bottom; the administrator case is the boundary, because it is the only one that also renders the retention disclosure above the filters."
+
+affected_paths = [
+    "05_Software/nilo_gui/src/components/pages/ActivityPage.tsx",
+    "05_Software/nilo_gui/src/styles/shell.css",
+    "05_Software/nilo_gui/src/components/activity/ActivityHealthBanner.tsx",
+    "05_Software/nilo_gui/e2e/field-display.spec.ts",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/e2e/field-display.spec.ts::1024x600: the activity listing reads as records and opens one in a dialog",
+]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = "The page exists to be read; its own furniture must not take the screen the records need."
+
+created = 2026-09-15
+updated = 2026-09-15

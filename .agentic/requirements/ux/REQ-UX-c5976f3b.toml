@@ -1,0 +1,49 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-c5976f3b"
+
+title = "Report only qualifying activity-recording conditions"
+
+status = "active"
+
+requirement = """
+Above the Activity listing, the browser interface shall report exactly those
+conditions that qualify what the listing can contain - that the appliance is not
+writing its audit history, naming the failure, and that the retained window of a
+category has had entries removed, naming the category, the instant and the reason -
+and shall report nothing there while neither condition holds.
+"""
+
+verification = "A component test renders the page with audit writes failing and asserts the notice names the reported failure; renders it with one truncated retained window and asserts the gap line names that category, its purge instant and its reason; and renders it with audit writes healthy and no truncated window and asserts no text stands between the header and the filters, including no per-category retained count."
+
+affected_paths = [
+    "05_Software/nilo_gui/src/components/activity/ActivityHealthBanner.tsx",
+    "05_Software/nilo_gui/src/components/pages/ActivityPage.tsx",
+    "05_Software/nilo_gui/src/styles/shell.css",
+    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx",
+    "05_Software/nilo_gui/src/i18n/en.ts",
+    "05_Software/nilo_gui/src/i18n/de.ts",
+    "05_Software/nilo_gui/src/i18n/ro.ts",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx::says nothing above the listing while recording is healthy",
+    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx::states a degraded audit persistence as a refusal condition",
+    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx::opens with the given filters, changes pages and discloses the gap",
+]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = "A healthy appliance saying so on every load is furniture; a degraded one must still be impossible to miss."
+
+created = 2026-09-15
+updated = 2026-09-15

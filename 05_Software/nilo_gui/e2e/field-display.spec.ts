@@ -397,17 +397,55 @@ for (const viewport of VIEWPORTS.filter((candidate) => candidate.field)) {
     ).toHaveAttribute('aria-pressed', 'true');
     await expectNoDocumentOverflow();
 
+    // REQ-UX-ba46f6d3: the scope row is a flex item of the scrolling page body
+    // here, so it is measured against what is actually on screen rather than
+    // against its own box. A row that shrank under the retention disclosure
+    // would still report 44px buttons while showing a sliver of each.
+    const scopeRow = await chips.evaluate((row) => {
+      type Element_ = typeof row;
+      const box = row.getBoundingClientRect();
+      const buttons = Array.from(
+        row.querySelectorAll('button') as unknown as ArrayLike<Element_>,
+      ).map((button) => {
+        const target = button.getBoundingClientRect();
+        return {
+          name: button.textContent?.trim() ?? '',
+          height: Math.round(target.height),
+          // What survives the row's own clipping: the part of the control the
+          // operator can see and put a finger on.
+          visible: Math.round(
+            Math.min(target.bottom, box.bottom) - Math.max(target.top, box.top),
+          ),
+        };
+      });
+      return { height: Math.round(box.height), buttons };
+    });
+    const scopeGeometry = JSON.stringify(scopeRow);
+    for (const button of scopeRow.buttons) {
+      expect(
+        button.visible,
+        `visible height of ${button.name} ${scopeGeometry}`,
+      ).toBeGreaterThanOrEqual(44);
+    }
+
     // Records first: the whole filter panel is a closed drawer here, and the
     // first record starts inside the viewport without scrolling.
     await expect(page.getByRole('form', { name: 'Filters' })).toBeHidden();
-    // The row, not its Details control: as a labelled card at 800 pixels the
-    // control is the last line, and the record has begun well above it.
+    // REQ-UX-dd4b2c16 at 1024x600: the whole first record, not merely its top
+    // edge, is on screen before anything is scrolled. At 800x480 the row is a
+    // labelled card several lines tall, so only its start is required there.
     const recordBox = await page
       .locator('.activity-table tbody tr')
       .first()
       .boundingBox();
     expect(recordBox, 'first record').not.toBeNull();
-    expect(recordBox?.y ?? Number.POSITIVE_INFINITY).toBeLessThan(viewport.height);
+    const recordEnd =
+      viewport.width >= 1024
+        ? (recordBox?.y ?? Number.POSITIVE_INFINITY) + (recordBox?.height ?? 0)
+        : (recordBox?.y ?? Number.POSITIVE_INFINITY);
+    expect(recordEnd, 'first record inside the viewport').toBeLessThanOrEqual(
+      viewport.height,
+    );
 
     // Opening the drawer, then the three less frequent filters behind their
     // own disclosure, must not push anything off the side of a 800-pixel panel.
@@ -432,7 +470,8 @@ for (const viewport of VIEWPORTS.filter((candidate) => candidate.field)) {
     await page.keyboard.press('Escape');
     await expect(dialog).toBeHidden();
 
-    // Retention is the only administration below the Activity log.
+    // REQ-UX-0291ba55: retention is the only administration on the page, and
+    // it is reached above the filters rather than past every row it governs.
     await expect(page.getByText('Temporary debug logging')).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Debug' })).toHaveCount(0);
     await expect(page.getByLabel('Debug retention (days)')).toHaveCount(0);
@@ -445,7 +484,105 @@ for (const viewport of VIEWPORTS.filter((candidate) => candidate.field)) {
   });
 }
 
+// The Activity header is one line at every width, Export at its right edge
+// (REQ-UX-3e01a5b6). This runs at all four viewports on purpose: a
+// narrow-viewport rule that drops the auto margin leaves Export sitting against
+// the title, and a check at only the two widest sizes would never see it.
+for (const viewport of VIEWPORTS) {
+  const size = `${viewport.width}x${viewport.height}`;
+  test(`${size}: the activity header keeps Export at its right edge`, async () => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await openActivity();
+
+    const header = page.locator('header.page-head');
+    const title = await header.getByRole('heading', { name: 'Activity' }).boundingBox();
+    const exported = await header.getByRole('button', { name: 'Export' }).boundingBox();
+    expect(title, 'page title').not.toBeNull();
+    expect(exported, 'export control').not.toBeNull();
+    expect(sharesRow(title, exported), 'export beside the title').toBe(true);
+    const headerBox = await header.boundingBox();
+    // Top right: nothing of the header stands to the right of Export.
+    expect(
+      (exported?.x ?? 0) + (exported?.width ?? 0),
+      'export at the right edge of the header',
+    ).toBeGreaterThan((headerBox?.x ?? 0) + (headerBox?.width ?? 0) - 64);
+    // The header carries no description: the tab already said what this is.
+    await expect(header.locator('p')).toHaveCount(0);
+    await expectNoDocumentOverflow();
+    if (viewport.field) await expectFieldTargets();
+  });
+}
+
+// Where the filter panel is shown inline, scope, the six fields and the More
+// filters disclosure are one wrapping line (REQ-UX-f8c58c4c). Only the two
+// widest viewports show that panel inline; 1366 is the width that proves the
+// line wraps instead of reverting to a row per control.
+for (const width of [1920, 1366] as const) {
+  test(`${width}: the activity filters are one wrapping line`, async () => {
+    await page.setViewportSize({ width, height: width === 1920 ? 1080 : 768 });
+    await openActivity();
+
+    const filters = page.getByRole('form', { name: 'Filters' });
+    await expect(filters).toBeVisible();
+
+    // Read the flex items themselves, in document order, and say which of them
+    // begin a line. A wrapped line restarts at the container's content edge, so
+    // the left edge is what identifies a line start - unlike vertical overlap,
+    // which a line of differently aligned controls does not produce even when
+    // every one of them is on it.
+    const line = await filters.evaluate((form) => {
+      type Element_ = typeof form;
+      const children = Array.from(form.children as unknown as ArrayLike<Element_>);
+      return children
+        .filter((element) => !element.className.includes('form-actions'))
+        .map((element) => {
+          const box = element.getBoundingClientRect();
+          return {
+            name: element.className.split(' ').pop() ?? element.tagName,
+            x: Math.round(box.x),
+            width: Math.round(box.width),
+            bottom: Math.round(box.bottom),
+          };
+        })
+        .filter((item) => item.width > 0);
+    });
+
+    const geometry = JSON.stringify(line);
+    // Scope, the six fields and the disclosure, and nothing else.
+    expect(line.length, `controls on the filter line ${geometry}`).toBe(8);
+    const edge = Math.min(...line.map((item) => item.x));
+    const starts = line
+      .map((item, index) => (Math.abs(item.x - edge) <= 2 ? index : -1))
+      .filter((index) => index >= 0);
+    // Every line carries at least two controls: none holds a row of its own,
+    // which is the whole of REQ-UX-f8c58c4c that survives a change of width.
+    for (const [ordinal, start] of starts.entries()) {
+      const end = starts[ordinal + 1] ?? line.length;
+      expect(
+        end - start,
+        `controls on line ${ordinal + 1} of ${geometry}`,
+      ).toBeGreaterThanOrEqual(2);
+    }
+    if (width === 1920) {
+      expect(starts.length, `one line at 1920 ${geometry}`).toBe(1);
+    }
+
+    await expectNoDocumentOverflow();
+    await expectReadableText();
+    await review(`${width}x${page.viewportSize()?.height}-light-activity-line`);
+  });
+}
+
 /* ---------- helpers ---------- */
+
+/** Whether two laid-out boxes overlap vertically, and so share a row. */
+function sharesRow(
+  left: { y: number; height: number } | null,
+  right: { y: number; height: number } | null,
+): boolean {
+  if (left === null || right === null) return false;
+  return left.y < right.y + right.height && right.y < left.y + left.height;
+}
 
 /**
  * Open Activity on a page that has just been reloaded.
