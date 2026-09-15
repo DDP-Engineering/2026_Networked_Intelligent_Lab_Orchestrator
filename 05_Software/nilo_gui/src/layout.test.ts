@@ -280,7 +280,10 @@ describe('field readability', () => {
   // REQ-UX-ff989933 for the audit listing: the head, the filter panel and the
   // rows all reflow, so a seven-inch panel reads the history down the page
   // rather than sideways off it.
-  it('stacks the activity head and its filters below 56rem', () => {
+  // REQ-UX-f8c58c4c adds the filter line: scope, the fields and More filters
+  // wrap as one line rather than taking a row each, and only the head stacks
+  // below 56rem.
+  it('wraps the activity filter line and stacks the head below 56rem', () => {
     // The chips scroll for the same reason the tab strip does: a head that
     // grew a second line would take the space the listing needs.
     expect(declarationsOf(shellCss, '.activity-chips')).toMatch(/overflow-x:\s*auto/);
@@ -290,6 +293,12 @@ describe('field readability', () => {
     expect(declarationsOf(shellCss, '.activity-chip')).toMatch(
       /min-height:\s*var\(--target-min\)/,
     );
+    // Where the filter panel collapses, the scope row is a flex item of the
+    // scrolling page body. Its own `overflow-x` suppresses the automatic
+    // minimum size a flex item would otherwise keep, so without this it absorbs
+    // the column's shrink and clips the 44px chips it holds - the same trap
+    // `.activity-page .table-scroll` is held out of below.
+    expect(declarationsOf(shellCss, '.activity-chips')).toMatch(/flex:\s*none/);
 
     // `.table-scroll` declares `min-height: 0`, so as a flex item of the
     // scrolling page body it would absorb the whole shrink and clip every row
@@ -298,11 +307,27 @@ describe('field readability', () => {
       /flex:\s*none/,
     );
 
-    const cards = mediaBlock(shellCss, '@media (width <= 56rem) {');
-    expect(cards).toMatch(/\.activity-head-top[^{]*\{[^}]*flex-direction:\s*column/);
-    expect(cards).toMatch(
-      /\.activity-filters,\s*\n?\s*\.activity-filters-more-fields[^{]*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)/,
+    // One wrapping line, not a grid of rows: the fields share a basis they can
+    // wrap on, and the disclosure keeps its own width on the same line.
+    const line = declarationsOf(shellCss, '.activity-filters');
+    expect(line).toMatch(/display:\s*flex/);
+    expect(line).toMatch(/flex-wrap:\s*wrap/);
+    expect(declarationsOf(shellCss, '.activity-filters .field')).toMatch(
+      /flex:\s*1 1 12rem/,
     );
+    expect(declarationsOf(shellCss, '.activity-filters-more')).toMatch(/flex:\s*none/);
+    expect(
+      declarationsOf(shellCss, '.activity-filters-more-fields:not([hidden])'),
+    ).toMatch(/display:\s*contents/);
+
+    // REQ-UX-3e01a5b6 asks for Export at the right of the title line at every
+    // width, so the auto margin that puts it there is declared once and no
+    // narrow-viewport block may take it back.
+    expect(declarationsOf(shellCss, '.activity-head .menu')).toMatch(
+      /margin-left:\s*auto/,
+    );
+    const cards = mediaBlock(shellCss, '@media (width <= 56rem) {');
+    expect(cards).not.toMatch(/\.activity-head[^{]*\{[^}]*margin-left/);
   });
 
   // REQ-UX-f30891b4: an outcome is never carried by colour alone, so the badge

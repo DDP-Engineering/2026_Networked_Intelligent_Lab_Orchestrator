@@ -632,9 +632,7 @@ export const ro: Catalogue = {
   'activity.col.outcome': 'Rezultat',
   'activity.details': 'Detalii',
   'activity.operation': 'Arată fiecare etapă a operațiunii {id}',
-  'activity.retained': '{count} intrări {category} păstrate.',
   'activity.gap': 'Intrările de dinainte de {time} au fost eliminate ({reason}).',
-  'activity.health.ok': 'Aparatul își înregistrează activitatea.',
   'activity.health.degraded':
     'Aparatul nu își poate înregistra activitatea: {failure}. Modificările noi sunt refuzate până se remediază.',
   'activity.export.jsonl': 'Exportă JSONL',
@@ -645,8 +643,6 @@ export const ro: Catalogue = {
   'activity.actor.anonymous': 'Anonim',
   'activity.actor.token': 'Token API',
   'activity.actor.user': 'Utilizator',
-  'activity.subtitle':
-    'Fiecare modificare și eveniment pe care aparatul le-a înregistrat, cele mai noi primele.',
   'activity.filters': 'Filtre',
   'activity.filter.action': 'Acțiune',
   'activity.filter.more': 'Mai multe filtre',

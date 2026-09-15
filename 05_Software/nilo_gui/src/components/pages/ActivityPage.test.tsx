@@ -109,7 +109,7 @@ describe('ActivityPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     expect(await screen.findByText('Confirmed')).toBeVisible();
-    expect(readActivity.mock.calls[1][0]).toMatchObject({ page: 2, limit: 25 });
+    expect(readActivity.mock.calls[1][0]).toMatchObject({ page: 2, limit: 10 });
     expect(screen.queryByText('Applied')).toBeNull();
     expect(screen.getAllByRole('row')).toHaveLength(2);
   });
@@ -587,6 +587,17 @@ describe('ActivityPage', () => {
     );
     await screen.findByText('Applied');
 
+    // REQ-UX-7781cc4e: ten records is the page the listing opens at, and the
+    // smallest the control offers.
+    expect(readActivity.mock.calls[0][0]).toMatchObject({ limit: 10 });
+    const sizes = screen.getByLabelText('Rows per page');
+    expect(sizes).toHaveValue('10');
+    expect(
+      within(sizes)
+        .getAllByRole('option')
+        .map((option) => option.textContent),
+    ).toEqual(['10', '25', '50', '100', 'All records']);
+
     fireEvent.click(screen.getByText('More filters'));
     fireEvent.change(screen.getByLabelText('Component'), {
       target: { value: 'network.*' },
@@ -649,9 +660,12 @@ describe('ActivityPage', () => {
     expect(await screen.findByText('No entries match these filters.')).toBeVisible();
   });
 
-  it('keeps retention as the only administration below the activity log', async () => {
+  // REQ-UX-0291ba55: retention is the one control that decides how long the
+  // rows are kept, so it sits above the filters rather than past every row -
+  // collapsed, and only for an identity that may manage it.
+  it('keeps retention as the only administration, above the filters', async () => {
     const saveRetention = vi.fn((settings) => Promise.resolve(settings));
-    renderInShell(
+    const { container } = renderInShell(
       <ActivityPage
         readActivity={() => Promise.resolve(page([]))}
         canExport={false}
@@ -668,6 +682,12 @@ describe('ActivityPage', () => {
     );
 
     expect(await screen.findByText('Activity retention')).toBeVisible();
+    const retention = container.querySelector('details.activity-retention');
+    const filters = screen.getByRole('form', { name: 'Filters' });
+    expect(retention).not.toBeNull();
+    expect(retention).not.toHaveAttribute('open');
+    const order = (retention as Element).compareDocumentPosition(filters);
+    expect(order & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.queryByText('Temporary debug logging')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Debug' })).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Debug retention (days)')).not.toBeInTheDocument();
@@ -683,6 +703,134 @@ describe('ActivityPage', () => {
       retentionDays: { audit: 30 },
     });
     expect(await screen.findByText('The policy was saved.')).toBeVisible();
+  });
+
+  // REQ-UX-3e01a5b6: the header is the title and, for an exporter, Export -
+  // and nothing else. The page is reached by its own tab; a sentence saying so
+  // costs a line of the first screen.
+  it('carries the title and Export on one header line, and no description', async () => {
+    const exported = renderInShell(
+      <ActivityPage
+        readActivity={() => Promise.resolve(page([event(1, 'applied')]))}
+        exportActivity={() => Promise.resolve('')}
+        canExport
+        canManageRetention={false}
+      />,
+      { theme: 'light', language: 'en' },
+    );
+    await screen.findByText('Applied');
+
+    const header = exported.container.querySelector('header.page-head');
+    expect(header).not.toBeNull();
+    const head = within(header as HTMLElement);
+    expect(head.getByRole('heading', { name: 'Activity' })).toBeVisible();
+    expect(head.getByRole('button', { name: 'Export' })).toBeVisible();
+    expect(header?.querySelectorAll('p')).toHaveLength(0);
+    expect(
+      screen.queryByText(
+        'Every change and event the appliance recorded, newest first.',
+      ),
+    ).toBeNull();
+    exported.unmount();
+
+    const plain = renderInShell(
+      <ActivityPage
+        readActivity={() => Promise.resolve(page([event(1, 'applied')]))}
+        canExport={false}
+        canManageRetention={false}
+      />,
+      { theme: 'light', language: 'en' },
+    );
+    await screen.findByText('Applied');
+    const bare = plain.container.querySelector('header.page-head');
+    expect(
+      within(bare as HTMLElement).getByRole('heading', { name: 'Activity' }),
+    ).toBeVisible();
+    expect(within(bare as HTMLElement).queryByRole('button')).toBeNull();
+  });
+
+  // REQ-UX-c5976f3b: the strip above the listing carries conditions only. A
+  // healthy appliance with nothing purged says nothing there at all.
+  it('says nothing above the listing while recording is healthy', async () => {
+    const { container } = renderInShell(
+      <ActivityPage
+        readActivity={() =>
+          Promise.resolve(
+            page([event(1, 'applied')], '', {
+              retainedWindow: {
+                audit: {
+                  oldest: new Date('2026-09-01T00:00:00Z'),
+                  newest: new Date('2026-09-04T10:00:00Z'),
+                  count: 1,
+                  truncated: false,
+                  purgedBefore: null,
+                  purgeReason: '',
+                },
+              },
+            }),
+          )
+        }
+        canExport={false}
+        canManageRetention={false}
+      />,
+      { theme: 'light', language: 'en' },
+    );
+    await screen.findByText('Applied');
+
+    expect(screen.queryByText(/is recording its activity/)).toBeNull();
+    expect(screen.queryByText(/entries retained/)).toBeNull();
+    expect(container.querySelector('.activity-banner')).toBeNull();
+  });
+
+  // REQ-UX-f8c58c4c: on a wide display scope, fields and More filters are one
+  // line, which means one container - the chips are part of the filter panel.
+  it('puts the scope chips on the filter line on a wide display', async () => {
+    installViewportClass('wide');
+    renderInShell(
+      <ActivityPage
+        readActivity={() => Promise.resolve(page([event(1, 'applied')]))}
+        canExport={false}
+        canManageRetention={false}
+      />,
+      { theme: 'light', language: 'en' },
+    );
+    await screen.findByText('Applied');
+
+    const filters = screen.getByRole('form', { name: 'Filters' });
+    const chips = screen.getByRole('group', { name: 'Category' });
+    expect(filters).toContainElement(chips);
+    expect(filters).toContainElement(screen.getByText('More filters'));
+    expect(filters).toContainElement(screen.getByLabelText('Actor'));
+  });
+
+  // REQ-UX-ba46f6d3: where the panel collapses, scope does not go with it.
+  // 1024x600 is the bench panel, and scope is the filter always in play.
+  it('keeps the scope chips outside the collapsed filter drawer', async () => {
+    installViewportClass('compact');
+    const readActivity = vi.fn<ReadActivity>(() =>
+      Promise.resolve(page([event(1, 'applied')])),
+    );
+    renderInShell(
+      <ActivityPage
+        readActivity={readActivity}
+        canExport={false}
+        canManageRetention={false}
+      />,
+      { theme: 'light', language: 'en' },
+    );
+    await screen.findByText('Applied');
+
+    const filters = screen.getByRole('form', { name: 'Filters' });
+    expect(filters).not.toBeVisible();
+    const chips = screen.getByRole('group', { name: 'Category' });
+    expect(chips).toBeVisible();
+    expect(filters).not.toContainElement(chips);
+
+    fireEvent.click(within(chips).getByRole('button', { name: 'Audit' }));
+    await waitFor(() =>
+      expect(readActivity.mock.calls.at(-1)?.[0]).toMatchObject({ category: 'audit' }),
+    );
+    expect(filters).not.toBeVisible();
   });
 
   it('reads the page head and the filter panel in German and in Romanian', async () => {

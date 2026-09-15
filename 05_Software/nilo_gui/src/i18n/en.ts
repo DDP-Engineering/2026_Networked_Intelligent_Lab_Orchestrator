@@ -633,9 +633,7 @@ export const en = {
   'activity.col.outcome': 'Outcome',
   'activity.details': 'Details',
   'activity.operation': 'Show every stage of operation {id}',
-  'activity.retained': '{count} {category} entries retained.',
   'activity.gap': 'Entries before {time} were removed ({reason}).',
-  'activity.health.ok': 'The appliance is recording its activity.',
   'activity.health.degraded':
     'The appliance cannot record its activity: {failure}. New changes are refused until this is fixed.',
   'activity.export.jsonl': 'Export JSONL',
@@ -646,7 +644,6 @@ export const en = {
   'activity.actor.anonymous': 'Anonymous',
   'activity.actor.token': 'API token',
   'activity.actor.user': 'User',
-  'activity.subtitle': 'Every change and event the appliance recorded, newest first.',
   'activity.filters': 'Filters',
   'activity.filter.action': 'Action',
   'activity.filter.more': 'More filters',

@@ -255,7 +255,7 @@ describe('the one compact top row', () => {
     await screen.findByRole('button', { name: 'Sign in' });
     expect(container.querySelector('.sim-badge')).toBeNull();
     expect(container.querySelector('.card-boundary')).toBeNull();
-    expect(screen.getByText('Version 0.5.0')).toBeVisible();
+    expect(screen.getByText('Version 0.6.0')).toBeVisible();
   });
   it('labels an appliance without simulation claims', async () => {
     const api = client();

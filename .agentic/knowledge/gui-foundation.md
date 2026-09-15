@@ -99,6 +99,20 @@ runtime status.
 
 - `REQ-UX-b75fbbc3` - associates page-scoped Activity with the title using the
   shared responsive header group, while preserving existing Activity context.
+- `REQ-UX-dd4b2c16` - keeps the whole first Activity record inside a 1024x600
+  viewport with the disclosures closed.
+- `REQ-UX-3e01a5b6` - the Activity header is the title and, for an exporter,
+  Export at its right, and no further descriptive text.
+- `REQ-UX-c5976f3b` - reports only the recording conditions that qualify the
+  Activity listing, and nothing while neither holds.
+- `REQ-UX-f8c58c4c` - lays Activity scope, filter fields and More filters out as
+  one wrapping line where the panel is shown.
+- `REQ-UX-ba46f6d3` - keeps Activity scope selection outside the filter
+  disclosure where the viewport collapses the panel.
+- `REQ-UX-0291ba55` - places the administrator Activity retention disclosure
+  between the header and the filters.
+- `REQ-UX-7781cc4e` - offers 10, 25, 50, 100 and all records a page and opens
+  Activity at 10.
 - `REQ-PLAT-e1a2a591` - pins direct and transitive dependencies with exact
   versions, integrity metadata, and a static Vite production build.
 - `REQ-TEST-031b1658` - includes frontend formatting, linting, tests, and build
@@ -238,6 +252,7 @@ runtime status.
 | Change requested | Start with | Focused verification |
 | --- | --- | --- |
 | Page-title Activity layout | `.page-title-actions` in shell.css; UsersPage, ApiTokensPage and NetworkPage headers | AuthenticationPage.test.tsx; field-display.spec.ts |
+| Activity page furniture: header, filter line, retention, page size | `pages/ActivityPage.tsx`; `.activity-head`, `.activity-filters` in shell.css | ActivityPage.test.tsx; layout.test.ts; field-display.spec.ts |
 | Contextual Activity navigation and permissions | AppShell.tsx `openActivity` | shell.test.tsx |
 | Networking inventory and managed changes | NetworkPage.tsx and network/ | NetworkPage.test.tsx; network.spec.ts |
 | Identity/token forms | authentication/ and AdministrationForms.tsx | AuthenticationPage.test.tsx; authentication.spec.ts |
@@ -508,10 +523,10 @@ The authenticated shell uses one SIM/LIVE badge, without a footer disclaimer. Ne
   `InterfaceSettingsDialog.tsx`: addressing form and, on a wireless adapter,
   scan and join with a password that is typed once and never displayed.
   `WireGuardPanel.tsx`: rename in the profile details.
-- `pages/ActivityPage.tsx`: filters as a responsive grid, server paging by
-  cursor, retained window and logging health, JSONL/CSV export, and the
-  diagnostics section (sessions with fixed scopes and durations, the retention
-  policy). `shell/pages.ts` places the `activity` core page below
+- `pages/ActivityPage.tsx`: scope, filters and the More filters disclosure on
+  one wrapping line, server paging by cursor, the recording conditions that
+  qualify the listing, JSONL/CSV export from the page header, and the
+  administrator retention policy above the filters. `shell/pages.ts` places the `activity` core page below
   Authentication, shown to an identity holding `activity.read`; `AppShell` keeps the filter a Network
   page link chose and remounts the page with it.
 - `pages/NetworkPage.tsx` reads `GET /api/v1/network/operations` on mount and
@@ -682,3 +697,27 @@ placeholder catalogue entries are gone, so no Settings destination exists to
 open; `Icon`'s `settings` glyph remains available in the glyph catalogue. The Plugins
 entry remains available through the managed instrument workspace added by
 TASK-f1f2d836.
+
+## Activity page furniture (2026-09-15, TASK-29673ddb)
+
+The Activity page is two lines of furniture and then records. `.activity-head`
+is one row: the page title, and the Export menu at its right edge
+(REQ-UX-3e01a5b6). `ActivityHealthBanner` renders only the conditions that
+qualify the listing - audit writes failing, and each retained window entries
+were removed from - and renders nothing at all while neither holds
+(REQ-UX-c5976f3b). The administrator retention disclosure sits between the
+header and the filters, collapsed (REQ-UX-0291ba55).
+
+`.activity-filters` is a wrapping flex line rather than a grid of rows: the six
+fields share a `1 1 12rem` basis, and More filters is an `aria-expanded` button
+whose three fields join the same flow through
+`.activity-filters-more-fields:not([hidden]) { display: contents }`
+(REQ-UX-f8c58c4c). The category chips are one element in one of two positions,
+decided by `useViewportClass`: inside the form and first on the line while the
+panel is inline, and above the closed drawer while the viewport collapses it,
+so a bench panel keeps scope selection one tap away (REQ-UX-ba46f6d3).
+
+The listing offers 10, 25, 50, 100 and all records a page and opens at 10
+(REQ-UX-7781cc4e); Bench Core accepts any limit up to its maximum, so the
+default is a client decision. Together these keep the whole first record inside
+a 1024x600 viewport before anything is scrolled (REQ-UX-dd4b2c16).

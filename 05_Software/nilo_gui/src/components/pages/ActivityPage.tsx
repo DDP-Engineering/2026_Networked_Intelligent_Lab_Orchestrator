@@ -68,10 +68,13 @@ const DEFAULT_ACTIVITY_QUERY: Pick<
 > = {
   sort: 'time',
   order: 'desc',
-  limit: 25,
+  limit: 10,
   page: 1,
   cursor: '',
 };
+
+/** The page sizes the listing offers, smallest first; `all` follows them. */
+const ACTIVITY_PAGE_SIZES = [10, 25, 50, 100] as const;
 
 interface ActivityPaginationProps {
   total: number;
@@ -114,10 +117,10 @@ function ActivityPagination({
           value={String(size)}
           onChange={(event) => {
             const value = event.target.value;
-            onSize(value === 'all' ? 'all' : (Number(value) as 25 | 50 | 100));
+            onSize(value === 'all' ? 'all' : (Number(value) as 10 | 25 | 50 | 100));
           }}
         >
-          {[25, 50, 100].map((value) => (
+          {ACTIVITY_PAGE_SIZES.map((value) => (
             <option key={value} value={value}>
               {value}
             </option>
@@ -178,12 +181,14 @@ function ActivityPagination({
  * it. Nothing here is inferred: every row is what
  * the appliance recorded, and the retained window says what it still holds.
  *
- * The page is organised around the records rather than around its controls. The
- * category is three chips beside the title because it is the one filter that is
- * always in play; the six filters an operator reaches for stay visible and the
- * three that are used once a month sit behind a disclosure. Retention is
- * administration of the log rather than the log itself, so it is collapsed
- * below the listing.
+ * The page is organised around the records rather than around its controls, and
+ * its furniture is two lines: the title with Export, and one wrapping line of
+ * scope, filters and the disclosure the three least used filters sit behind.
+ * Category is part of that line because it is the one filter always in play -
+ * except where the viewport collapses the panel, when scope stays outside the
+ * drawer so a bench panel keeps it a tap away. Retention is administration of
+ * the log rather than the log itself, so it stays collapsed, above the filters
+ * where an administrator reaches it without scrolling past the rows it governs.
  */
 export function ActivityPage({
   initialFilter = {},
@@ -392,6 +397,26 @@ export function ActivityPage({
       ? t('activity.filter.none')
       : t('activity.filter.active', { count: active });
 
+  const chips = (
+    <div
+      className="activity-chips"
+      role="group"
+      aria-label={t('activity.filter.category')}
+    >
+      {(['', ...ACTIVITY_CATEGORIES] as const).map((candidate) => (
+        <button
+          key={candidate === '' ? 'all' : candidate}
+          type="button"
+          className={`activity-chip ${category === candidate ? 'activity-chip-on' : ''}`}
+          aria-pressed={category === candidate}
+          onClick={() => selectCategory(candidate)}
+        >
+          {t(candidate === '' ? 'activity.category.all' : CATEGORY_KEYS[candidate])}
+        </button>
+      ))}
+    </div>
+  );
+
   const filters = (
     <form
       className="form activity-filters"
@@ -402,17 +427,29 @@ export function ActivityPage({
         if (collapsible) setFiltersOpen(false);
       }}
     >
+      {/* Scope leads the one filter line where the panel is shown inline; where
+          the viewport collapses the panel it stays outside, above the drawer. */}
+      {!collapsible && chips}
       {PRIMARY_FILTER_FIELDS.map((field) => filterField(field))}
-      <details
-        className="form-group activity-filters-more"
-        open={moreOpen}
-        onToggle={(event) => setMoreOpen(event.currentTarget.open)}
+      {/* A disclosure button rather than a details element: the three fields it
+          reveals join the same wrapping line as the six above, which an
+          expanding details box could only do by taking a row to itself. */}
+      <button
+        type="button"
+        className="button activity-filters-more"
+        aria-expanded={moreOpen}
+        aria-controls="activity-more-filters"
+        onClick={() => setMoreOpen(!moreOpen)}
       >
-        <summary>{t('activity.filter.more')}</summary>
-        <div className="activity-filters-more-fields">
-          {MORE_FILTER_FIELDS.map((field) => filterField(field))}
-        </div>
-      </details>
+        {t('activity.filter.more')}
+      </button>
+      <div
+        id="activity-more-filters"
+        className="activity-filters-more-fields"
+        hidden={!moreOpen}
+      >
+        {MORE_FILTER_FIELDS.map((field) => filterField(field))}
+      </div>
       <div className="form-actions">
         <button type="submit" className="button button-primary">
           {t('activity.apply')}
@@ -431,66 +468,121 @@ export function ActivityPage({
         <p className="activity-filter-count" role="status">
           {countText}
         </p>
-        {canExport && exportActivity !== undefined && (
-          <Menu label={t('activity.export')} triggerClass="activity-export">
-            {(close) => (
-              <>
-                <MenuAction
-                  onSelect={() => {
-                    close();
-                    void runExport('csv');
-                  }}
-                >
-                  {t('activity.export.csv')}
-                </MenuAction>
-                <MenuAction
-                  onSelect={() => {
-                    close();
-                    void runExport('jsonl');
-                  }}
-                >
-                  {t('activity.export.jsonl')}
-                </MenuAction>
-                <p className="menu-foot">{t('activity.export.scope')}</p>
-              </>
-            )}
-          </Menu>
-        )}
       </div>
-      {exportNote !== '' && (
-        <p className="activity-filter-note" role="status">
-          {exportNote}
-        </p>
-      )}
     </form>
   );
+
+  const exportMenu = canExport && exportActivity !== undefined && (
+    <Menu label={t('activity.export')} triggerClass="activity-export">
+      {(close) => (
+        <>
+          <MenuAction
+            onSelect={() => {
+              close();
+              void runExport('csv');
+            }}
+          >
+            {t('activity.export.csv')}
+          </MenuAction>
+          <MenuAction
+            onSelect={() => {
+              close();
+              void runExport('jsonl');
+            }}
+          >
+            {t('activity.export.jsonl')}
+          </MenuAction>
+          <p className="menu-foot">{t('activity.export.scope')}</p>
+        </>
+      )}
+    </Menu>
+  );
+
+  /**
+   * Retention is administration of the log rather than the log itself, so it
+   * stays a disclosure - but it belongs above the listing, where an
+   * administrator reaches it without scrolling past every row it governs.
+   */
+  const retention = canManageRetention &&
+    settings !== null &&
+    saveRetention !== undefined && (
+      <details className="form-group activity-retention">
+        <summary>{t('activity.retention')}</summary>
+        <section aria-label={t('activity.retention')}>
+          <h3>{t('activity.retention.title')}</h3>
+          <p className="page-foot">{t('activity.retention.intro')}</p>
+          <form
+            className="form activity-retention-form"
+            aria-label={t('activity.retention.title')}
+            onSubmit={(event) => {
+              event.preventDefault();
+              void save();
+            }}
+          >
+            {ACTIVITY_CATEGORIES.map((candidate) => (
+              <Fragment key={candidate}>
+                <div className="field">
+                  <label htmlFor={`retention-${candidate}`}>
+                    {t('activity.retention.days', {
+                      category: t(CATEGORY_KEYS[candidate]),
+                    })}
+                  </label>
+                  <input
+                    id={`retention-${candidate}`}
+                    inputMode="numeric"
+                    value={String(settings.retentionDays[candidate] ?? '')}
+                    onChange={(event) =>
+                      setSettings({
+                        ...settings,
+                        retentionDays: {
+                          ...settings.retentionDays,
+                          [candidate]: Number(event.target.value),
+                        },
+                      })
+                    }
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor={`quota-${candidate}`}>
+                    {t('activity.retention.quota', {
+                      category: t(CATEGORY_KEYS[candidate]),
+                    })}
+                  </label>
+                  <input
+                    id={`quota-${candidate}`}
+                    inputMode="numeric"
+                    value={String(
+                      Math.round((settings.quotaBytes[candidate] ?? 0) / 1048576),
+                    )}
+                    onChange={(event) =>
+                      setSettings({
+                        ...settings,
+                        quotaBytes: {
+                          ...settings.quotaBytes,
+                          [candidate]: Number(event.target.value) * 1048576,
+                        },
+                      })
+                    }
+                  />
+                </div>
+              </Fragment>
+            ))}
+            <div className="form-actions">
+              <button type="submit" className="button button-primary">
+                {t('activity.retention.save')}
+              </button>
+            </div>
+          </form>
+          {retentionNote !== '' && <p role="status">{retentionNote}</p>}
+        </section>
+      </details>
+    );
 
   return (
     <div className="page activity-page">
       <header className="page-head activity-head">
-        <div className="activity-head-top">
-          <div className="activity-head-text">
-            <h2>{t('activity.title')}</h2>
-            <p className="page-sub">{t('activity.subtitle')}</p>
-          </div>
-        </div>
-        <div
-          className="activity-chips"
-          role="group"
-          aria-label={t('activity.filter.category')}
-        >
-          {(['', ...ACTIVITY_CATEGORIES] as const).map((candidate) => (
-            <button
-              key={candidate === '' ? 'all' : candidate}
-              type="button"
-              className={`activity-chip ${category === candidate ? 'activity-chip-on' : ''}`}
-              aria-pressed={category === candidate}
-              onClick={() => selectCategory(candidate)}
-            >
-              {t(candidate === '' ? 'activity.category.all' : CATEGORY_KEYS[candidate])}
-            </button>
-          ))}
-        </div>
+        <h2>{t('activity.title')}</h2>
+        {exportMenu}
       </header>
       <div className="page-body">
         {page.state === 'read' && (
@@ -499,6 +591,16 @@ export function ActivityPage({
             retainedWindow={page.value.retainedWindow}
           />
         )}
+
+        {exportNote !== '' && (
+          <p className="activity-export-note" role="status">
+            {exportNote}
+          </p>
+        )}
+
+        {retention}
+
+        {collapsible && chips}
 
         {collapsible ? (
           <details
@@ -536,7 +638,7 @@ export function ActivityPage({
             <ActivityPagination
               total={page.value.total}
               page={filter.page ?? 1}
-              size={(filter.limit ?? 25) as ActivityPageSize}
+              size={(filter.limit ?? 10) as ActivityPageSize}
               onPage={(selected) => applyQuery({ ...filter, page: selected })}
               onSize={(size) => {
                 const next = { ...filter, limit: size, page: 1, cursor: '' };
@@ -545,79 +647,6 @@ export function ActivityPage({
               }}
             />
           </>
-        )}
-
-        {canManageRetention && settings !== null && saveRetention !== undefined && (
-          <details className="form-group activity-retention">
-            <summary>{t('activity.retention')}</summary>
-            <section aria-label={t('activity.retention')}>
-              <h3>{t('activity.retention.title')}</h3>
-              <p className="page-foot">{t('activity.retention.intro')}</p>
-              <form
-                className="form activity-retention-form"
-                aria-label={t('activity.retention.title')}
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  void save();
-                }}
-              >
-                {ACTIVITY_CATEGORIES.map((candidate) => (
-                  <Fragment key={candidate}>
-                    <div className="field">
-                      <label htmlFor={`retention-${candidate}`}>
-                        {t('activity.retention.days', {
-                          category: t(CATEGORY_KEYS[candidate]),
-                        })}
-                      </label>
-                      <input
-                        id={`retention-${candidate}`}
-                        inputMode="numeric"
-                        value={String(settings.retentionDays[candidate] ?? '')}
-                        onChange={(event) =>
-                          setSettings({
-                            ...settings,
-                            retentionDays: {
-                              ...settings.retentionDays,
-                              [candidate]: Number(event.target.value),
-                            },
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="field">
-                      <label htmlFor={`quota-${candidate}`}>
-                        {t('activity.retention.quota', {
-                          category: t(CATEGORY_KEYS[candidate]),
-                        })}
-                      </label>
-                      <input
-                        id={`quota-${candidate}`}
-                        inputMode="numeric"
-                        value={String(
-                          Math.round((settings.quotaBytes[candidate] ?? 0) / 1048576),
-                        )}
-                        onChange={(event) =>
-                          setSettings({
-                            ...settings,
-                            quotaBytes: {
-                              ...settings.quotaBytes,
-                              [candidate]: Number(event.target.value) * 1048576,
-                            },
-                          })
-                        }
-                      />
-                    </div>
-                  </Fragment>
-                ))}
-                <div className="form-actions">
-                  <button type="submit" className="button button-primary">
-                    {t('activity.retention.save')}
-                  </button>
-                </div>
-              </form>
-              {retentionNote !== '' && <p role="status">{retentionNote}</p>}
-            </section>
-          </details>
         )}
       </div>
     </div>
