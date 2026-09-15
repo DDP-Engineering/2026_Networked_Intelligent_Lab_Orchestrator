@@ -9,7 +9,7 @@ SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
 
 # TASK-29673ddb - Give the Activity page its screen back
 
-stage: deliver
+stage: done
 type: change
 path: full
 interaction: autopilot
@@ -26,8 +26,8 @@ source: Gitea issue dpasare/2026_Networked_Intelligent_Lab_Orchestrator#20
 - [x] validation evidence, diff, exclusions, and outcome presented
 - [x] delivery confirmed by the human
 - [x] journal and report included in the delivery commit
-- [ ] agreed outcome delivered, normally a PR
-- [ ] close-out committed after the outcome succeeded, or carried by the
+- [x] agreed outcome delivered, normally a PR
+- [x] close-out committed after the outcome succeeded, or carried by the
       delivery commit where nothing could fail after it
 
 ## Frame
@@ -747,6 +747,19 @@ behavior-and-layout change within one existing component.
   only. The commit itself is left for the human, per the repository's delivery
   convention.
 
+- 2026-09-15 done: delivered. The human committed the staged candidate as
+  1f6fabe on `ddp/nilo-activity-page-layout` and merged it into master as
+  d0c5c81, pull request #21, carrying all 31 files - 5517 insertions, 278
+  deletions - including this journal, its anchor and evolution records and the
+  seven requirements. `ddp-remote` runs the same tree: core and helper
+  5a0a1d70592f95e9311651acdf9cb65c60149e87095c490e14d16178c10017df and
+  5f32b2a64772451c92afeccfbcb8de060346c8e6ec4af8fc1394eb10d571d81f, interface
+  bundle index-B6XYEJ5h.js, all reporting 0.6.0, so the deployed appliance now
+  has the commit identity it lacked through the earlier deployments. Gitea issue
+  #20 has not been commented on or closed; that remains open for the human.
+  Stage set to done in the master checkout, which is where the journal lives now
+  that the task worktree has been removed.
+
 ## Rulings
 
 - RULING-001 | date=2026-09-15 | decision=Where the Activity filter panel is collapsed behind a disclosure the category scope controls stay outside it; the single scope-and-filters line applies where the filter panel is shown inline. | reason=1024x600 is the panel this change is for, and putting scope selection behind the filter drawer there would cost a step on the one filter always in play. | source=user | supersedes=none
@@ -756,39 +769,22 @@ behavior-and-layout change within one existing component.
 ## Handoff
 
 
-current: deliver
-status: waiting
-next: present the revalidated candidate and wait for the human's publication decision; no Git step is authorised
-must_read: .agentic/tasks/TASK-29673ddb.md; .agentic/steps/6_deliver.md
+current: done
+status: ready
+next: none; the change is merged as d0c5c81 and deployed to ddp-remote
+must_read: .agentic/tasks/TASK-29673ddb.md
 blockers: none
 
 ## Stage report
 
-stage: validate
+stage: deliver
 result: completed
-current: deliver
-changed: 10 files under 05_Software/nilo_gui; 7 new active requirements; TASK-29673ddb journal; gui-foundation.md
-evidence: python .agentic/aegis.py check --task TASK-29673ddb --strict --run - exit 0, run: test ok (369.9s), run: lint ok (7.8s), strict ok, errors=0, warnings=36, notes=2
-issues: review round 4 exceeds the configured bound of three, entered on two accepted human findings rather than self-directed retries; 36 pre-existing advisory warnings on other tasks; the build on ddp-remote is one revision behind this candidate and carries no commit identity
-next: human decides publication and whether to redeploy the corrected build to ddp-remote
-needs_user: yes
+current: done
+changed: 31 files committed as 1f6fabe and merged as d0c5c81 (pull request #21)
+evidence: python .agentic/aegis.py check --task TASK-29673ddb --strict --run - exit 0, run: test ok (336.9s), run: lint ok (7.8s), strict ok, errors=0, warnings=43, notes=2
+issues: review round 4 exceeded the configured bound of three, entered on two accepted human findings; Gitea issue #20 is still open and uncommented
+next: none for this task; issue #20 is the human's to close
+needs_user: no
 spec_compliance: approved
 implementation_quality: approved
 review_round: 4
-
-## Delivery report (2026-09-15)
-
-- stage: deliver; type: change; path: full; branch: ddp/nilo-activity-page-layout
-- requirements:
-  - REQ-UX-dd4b2c16 - Lead the Activity page with its records
-  - REQ-UX-3e01a5b6 - Give the Activity page one header line
-  - REQ-UX-c5976f3b - Report only qualifying activity-recording conditions
-  - REQ-UX-f8c58c4c - Offer Activity scope and filters as one wrapping line
-  - REQ-UX-ba46f6d3 - Keep Activity scope selection outside the filter disclosure
-  - REQ-UX-0291ba55 - Place the Activity retention control above the filters
-  - REQ-UX-7781cc4e - Open the Activity listing at ten records a page
-- deviations: none recorded
-- explicit review: enabled; spec_compliance=approved; implementation_quality=approved; review_round=4
-- diff vs task base 0dbdbec: 31 file(s) changed, 5490 line(s) added
-- checks: errors=0 warnings=43 notes=2
-- checklist: 0/6 done; open: validated candidate confirmed unchanged; otherwise returned to validate; validation evidence, diff, exclusions, and outcome presented; delivery confirmed by the human; journal and report included in the delivery commit; agreed outcome delivered, normally a PR; close-out committed after the outcome succeeded, or carried by the delivery commit where nothing could fail after it
