@@ -252,6 +252,74 @@ func TestCommissionedAnnouncerAcceptsTheApplianceUUIDv7Identity(t *testing.T) {
 	}
 }
 
+func TestApplianceAnnouncerPublishesVersionTwoServiceInProvisioning(t *testing.T) {
+	publisher := &recordingPublisher{}
+	announcer, err := NewApplianceMDNSAnnouncer(publisher, MDNSApplianceIdentity{
+		ApplianceID:  "0199a2d0-1234-7abc-8def-0123456789ab",
+		SerialName:   "nilo-p2rjmzdkf1",
+		FriendlyName: "bench-west",
+		Port:         8443,
+		State:        "provisioning",
+		Version:      "0.8.0",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := announcer.Announce(context.Background(), []string{"eth0", "wlan0"}); err != nil {
+		t.Fatal(err)
+	}
+	advertisement, ok := announcer.Announced()
+	if !ok || advertisement.HostName != "nilo-p2rjmzdkf1" || advertisement.Service == nil {
+		t.Fatalf("missing serial publication: %+v", advertisement)
+	}
+	wantTXT := []string{
+		"txtvers=2",
+		"id=0199a2d0-1234-7abc-8def-0123456789ab",
+		"serial=nilo-p2rjmzdkf1",
+		"name=bench-west",
+		"url=https://nilo-p2rjmzdkf1.local:8443/",
+		"path=/",
+		"state=provisioning",
+		"version=0.8.0",
+	}
+	if advertisement.Service.Instance != "NILO nilo-p2rjmzdkf1" || !slices.Equal(advertisement.Service.TXT, wantTXT) {
+		t.Fatalf("service = %+v, want TXT %v", advertisement.Service, wantTXT)
+	}
+	if len(advertisement.Aliases) != 2 || advertisement.Aliases[0].HostName != "nilo" ||
+		advertisement.Aliases[1].HostName != "bench-west" ||
+		!slices.Equal(advertisement.Aliases[0].Interfaces, []string{"eth0", "wlan0"}) ||
+		!slices.Equal(advertisement.Aliases[1].Interfaces, []string{"eth0", "wlan0"}) {
+		t.Fatalf("provisioning aliases = %+v", advertisement.Aliases)
+	}
+}
+
+func TestApplianceAnnouncerReplacesOnlyTheFriendlyAlias(t *testing.T) {
+	publisher := &recordingPublisher{}
+	announcer, err := NewApplianceMDNSAnnouncer(publisher, MDNSApplianceIdentity{
+		ApplianceID: "0199a2d0-1234-7abc-8def-0123456789ab", SerialName: "nilo-p2rjmzdkf1",
+		Port: 8443, State: "commissioned", Version: "0.8.0",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := announcer.Announce(context.Background(), []string{"eth0"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := announcer.SetFriendlyName("bench-east"); err != nil {
+		t.Fatal(err)
+	}
+	if err := announcer.Announce(context.Background(), []string{"eth0"}); err != nil {
+		t.Fatal(err)
+	}
+	advertisement, _ := announcer.Announced()
+	if len(advertisement.Aliases) != 1 || advertisement.Aliases[0].HostName != "bench-east" {
+		t.Fatalf("friendly aliases = %+v", advertisement.Aliases)
+	}
+	if advertisement.HostName != "nilo-p2rjmzdkf1" || advertisement.Service == nil || !slices.Contains(advertisement.Service.TXT, "name=bench-east") {
+		t.Fatalf("serial service was not preserved: %+v", advertisement)
+	}
+}
+
 func TestProvisioningAnnouncerUsesSharedRecoveryNameWithoutPermanentService(t *testing.T) {
 	t.Parallel()
 

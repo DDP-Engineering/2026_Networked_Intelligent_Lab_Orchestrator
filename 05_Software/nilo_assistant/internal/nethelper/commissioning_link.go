@@ -10,14 +10,22 @@ import (
 )
 
 type CommissioningProfileOwnership struct {
-	Version  int                          `json:"version"`
-	Profiles []CommissioningProfileRecord `json:"profiles"`
+	Version     int                                    `json:"version"`
+	Profiles    []CommissioningProfileRecord           `json:"profiles"`
+	AccessPoint *CommissioningAccessPointProfileRecord `json:"access_point,omitempty"`
 }
 
 type CommissioningProfileRecord struct {
 	AdapterID string `json:"adapter_id"`
 	Interface string `json:"interface"`
 	UUID      string `json:"uuid"`
+}
+
+type CommissioningAccessPointProfileRecord struct {
+	AdapterID string `json:"adapter_id"`
+	Interface string `json:"interface"`
+	UUID      string `json:"uuid"`
+	SSID      string `json:"ssid"`
 }
 
 type CommissioningProfileStore interface {
@@ -49,6 +57,14 @@ func validCommissioningProfileOwnership(record CommissioningProfileOwnership) bo
 			return false
 		}
 		adapters[adapterID], uuids[profile.UUID] = true, true
+	}
+	if profile := record.AccessPoint; profile != nil {
+		adapterID := strings.ToLower(strings.TrimSpace(profile.AdapterID))
+		if adapterID == "" || profile.AdapterID != adapterID || profile.Interface == "" ||
+			uuid.Validate(profile.UUID) != nil || !validPermanentSerialName(profile.SSID) ||
+			adapters[adapterID] || uuids[profile.UUID] {
+			return false
+		}
 	}
 	return true
 }

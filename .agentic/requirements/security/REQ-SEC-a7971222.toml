@@ -1,0 +1,43 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-SEC-a7971222"
+
+title = "Expose local appliance status only on loopback"
+
+status = "active"
+
+requirement = """
+Where an appliance-local display is supported, NILO shall serve an unauthenticated status page only from a separate loopback-bound listener, showing the permanent and optional friendly names, current management addresses and permanent-name QR code, with no route for that page on a wildcard, management, device-network, WireGuard or non-loopback listener.
+"""
+
+verification = "Automated listener and browser tests request the status page from IPv4 and IPv6 loopback without a session and observe the exact safe metadata/QR, then request the same path through every management and non-management listener and observe refusal; socket inspection proves loopback-only binds, and simulation/unsupported-display configuration creates no extra listener."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/httpapi/local_status.go",
+    "05_Software/nilo_assistant/internal/httpapi/local_status_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/listener.go",
+    "05_Software/nilo_assistant/internal/httpapi/server.go",
+    "05_Software/nilo_assistant/internal/config/config.go",
+    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/nilo_assistant/internal/appliance/label.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/httpapi/local_status_test.go::*",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "A person looking at an attached display can recover the address without turning status into an unauthenticated network endpoint."
+
+created = 2026-09-15
+updated = 2026-09-15

@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"net"
 	"net/http"
@@ -30,6 +31,27 @@ func TestIntegrationInventoryReturnsExactDeterministicSimulationEnvelope(t *test
 		if response.Body.String() != want {
 			t.Fatalf("attempt %d body = %s, want %s", attempt, response.Body.String(), want)
 		}
+	}
+}
+
+func TestServeAcceptsHelperBackedTLSCertificate(t *testing.T) {
+	options := ServeOptions{
+		Address: "127.0.0.1:0", Handler: http.NotFoundHandler(),
+		ShutdownTimeout: time.Second, TLSCertificate: &tls.Certificate{},
+	}
+	if err := validateServeTLS(options); err != nil {
+		t.Fatalf("helper-backed TLS certificate rejected: %v", err)
+	}
+	options.Certificate = "certificate.pem"
+	if err := validateServeTLS(options); err == nil {
+		t.Fatal("mixed file-backed and helper-backed TLS was accepted")
+	}
+	options = ServeOptions{
+		Address: "127.0.0.1:0", Handler: http.NotFoundHandler(), ShutdownTimeout: time.Second,
+		TLSCertificateProvider: func(*tls.ClientHelloInfo) (*tls.Certificate, error) { return &tls.Certificate{}, nil },
+	}
+	if err := validateServeTLS(options); err != nil {
+		t.Fatalf("dynamic helper-backed TLS provider rejected: %v", err)
 	}
 }
 

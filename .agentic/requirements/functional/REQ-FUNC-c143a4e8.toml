@@ -1,0 +1,41 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-c143a4e8"
+
+title = "Serve a read-only SSDP device description"
+
+status = "active"
+
+requirement = """
+When an SSDP client retrieves the advertised device-description URL through a management interface, Bench Core shall return an unauthenticated read-only UPnP root-device document containing the friendly-or-serial display name, model, public serial name, appliance UUID as UDN and HTTPS management presentation URL, with no control service, event service or state-changing link.
+"""
+
+verification = "An automated HTTP and SSDP integration test requests the description without credentials on each management link, validates the exact XML fields and UUID/URL agreement with the SSDP packet, follows the presentation URL to the HTTPS interface, and asserts excluded-interface requests are refused and the document contains no service/control/event elements or state-changing URL."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/httpapi/discovery.go",
+    "05_Software/nilo_assistant/internal/httpapi/discovery_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/server.go",
+    "05_Software/nilo_assistant/internal/network/ssdp.go",
+    "05_Software/nilo_assistant/internal/network/management_access.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/httpapi/discovery_test.go::*",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "The Windows shell needs descriptive metadata and an opening target, not UPnP control authority."
+
+created = 2026-09-15
+updated = 2026-09-15

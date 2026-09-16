@@ -32,9 +32,9 @@ affected_paths = [
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryCancelRestoresActiveLinkBeforeCommissioningReset",
-    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go::TestNetworkCommissioningResetClearsOnlyLifecycleManagementAndRecovery",
-    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::TestHardwareEventReplayAfterAcknowledgementFailureDoesNotRearmOrReset",
+    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go::*",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::*",
+    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::*",
 ]
 
 

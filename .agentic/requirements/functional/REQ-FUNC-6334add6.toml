@@ -9,15 +9,15 @@ schema = 1
 
 id = "REQ-FUNC-6334add6"
 
-title = "Advertise commissioned appliances through DNS-SD"
+title = "Advertise the permanent appliance service through DNS-SD"
 
 status = "active"
 
 requirement = """
-While an appliance is commissioned, NILO shall continuously advertise one uniquely named `_nilo._tcp.local` DNS-SD service on exactly its current commissioned management interfaces, with an SRV target for its configured TLS-covered system hostname and HTTPS port plus versioned TXT metadata containing its stable appliance UUID, configured system hostname, HTTPS scheme/path, and commissioned state; a responder collision that changes the effective hostname shall fail closed and retry rather than advertise an uncertified URL.
+While an appliance is serving management access, NILO shall continuously advertise one human-readable `_nilo._tcp.local` DNS-SD service on exactly its effective management interfaces, with the permanent TLS-covered serial name as its immutable SRV target and versioned allowlisted TXT metadata containing appliance UUID, public serial name, optional friendly name, HTTPS scheme/path, lifecycle state and version, while keeping responder collision or failure scoped to the affected publication and retrying rather than advertising a renamed or uncertified URL.
 """
 
-verification = "Automated announcer and helper tests publish two appliances with distinct UUIDs and hostnames, browse `_nilo._tcp.local`, and assert distinct `NILO <UUID>` instances, interface scope, SRV target/port, and the exact version-1 TXT keys; tests then change the management interface set and port, simulate helper/responder restart and hostname collision, and observe reassertion or fail-closed retry without advertising an uncertified collision name or either commissioned appliance claiming `nilo.local`."
+verification = "Automated announcer/helper tests publish two appliances in provisioning and commissioned states, browse `_nilo._tcp.local`, and assert distinct human-readable instances, exact management-interface scope, immutable serial-name SRV targets/ports and exact version-2 TXT keys with optional friendly name; tests change lifecycle, friendly name, management interfaces and port, then simulate helper/responder restart, per-link collision and stale groups and observe scoped reassertion/retry without a suffixed target, secret field or loss of an unaffected serial publication."
 
 affected_paths = [
     "05_Software/nilo_assistant/internal/network/mdns.go",
@@ -40,13 +40,10 @@ affected_paths = [
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/mdns_announcer_test.go::TestCommissionedAnnouncerPublishesStableServiceIdentityAndManagementURL",
-    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::TestLegacyPrivateListenerPermanentDiscoveryFollowsItsBoundInterface",
-    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::TestDiscoveryCertificateNamesAddTheSharedAliasOnlyForPiRecovery",
-    "05_Software/nilo_assistant/internal/nethelper/avahi_render_test.go::TestAvahiEffectiveHostRefusesAnUncertifiedCollisionName",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux_test.go::TestAvahiSystemPublishesResolvableCommissionedService",
-    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::TestLiveCommissioningWithdrawsSharedAliasBeforeAFailedPermanentReplacement",
-    "05_Software/nilo_assistant/internal/nethelper/avahi_linux_test.go::TestAvahiMissingGroupErrorsAreAlreadyWithdrawn",
+    "05_Software/nilo_assistant/internal/network/mdns_announcer_test.go::*",
+    "05_Software/nilo_assistant/internal/nethelper/avahi_render_test.go::*",
+    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go::*",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux_test.go::*",
 ]
 
 
@@ -56,4 +53,4 @@ priority = "high"   # low | normal | high
 rationale = "Commissioned appliances need standard, collision-resistant discovery without sharing the temporary `nilo.local` alias."
 
 created = 2026-09-13
-updated = 2026-09-14
+updated = 2026-09-15

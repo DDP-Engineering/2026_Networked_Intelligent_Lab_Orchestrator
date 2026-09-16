@@ -328,6 +328,22 @@ export const ro: Catalogue = {
   'about.unavailable':
     'Informațiile despre build nu sunt disponibile deoarece starea backendului nu a putut fi citită.',
 
+  'about.appliance': 'Identitatea aparatului',
+  'about.permanentName': 'Nume permanent',
+  'about.friendlyName': 'Nume prietenos',
+  'about.lifecycle': 'Ciclu de viață',
+  'about.managementUrl': 'URL de administrare',
+  'about.managementAddresses': 'Adrese de administrare',
+  'about.hardwareAddresses': 'Adrese hardware',
+  'about.openLabel': 'Deschide eticheta pentru tipărire',
+  'about.identify': 'Identifică aparatul',
+  'about.identify.active': 'Identificarea este activă până la {time}.',
+  'about.identify.unsupported': 'Identificarea nu este acceptată de acest hardware.',
+  'about.identify.failed': 'Identificarea nu a putut fi pornită.',
+  'about.friendly.save': 'Salvează numele prietenos',
+  'about.friendly.updated': 'Numele prietenos a fost actualizat.',
+  'about.friendly.failed': 'Numele prietenos nu a putut fi folosit.',
+
   'integration.identifier': 'Identificator',
   'integration.displayName': 'Nume afișat',
   'integration.state': 'Stare',

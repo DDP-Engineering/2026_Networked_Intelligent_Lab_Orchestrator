@@ -8,6 +8,7 @@ type HardwareRecoveryAction string
 
 const (
 	HardwareRecoveryNone               HardwareRecoveryAction = ""
+	HardwareRecoveryIdentify           HardwareRecoveryAction = "identify"
 	HardwareRecoveryArm                HardwareRecoveryAction = "arm_recovery"
 	HardwareRecoveryResetCommissioning HardwareRecoveryAction = "reset_commissioning"
 )
@@ -110,8 +111,10 @@ func ClassifyRecoveryButtonRelease(held time.Duration) HardwareRecoveryAction {
 		return HardwareRecoveryResetCommissioning
 	case held >= 3*time.Second:
 		return HardwareRecoveryArm
-	default:
+	case held < 50*time.Millisecond:
 		return HardwareRecoveryNone
+	default:
+		return HardwareRecoveryIdentify
 	}
 }
 
@@ -121,6 +124,7 @@ type HardwareIndicatorState string
 
 const (
 	HardwareIndicatorIdle         HardwareIndicatorState = "idle"
+	HardwareIndicatorIdentify     HardwareIndicatorState = "identify"
 	HardwareIndicatorArmed        HardwareIndicatorState = "armed"
 	HardwareIndicatorActive       HardwareIndicatorState = "active"
 	HardwareIndicatorResetPending HardwareIndicatorState = "reset_pending"
@@ -129,7 +133,7 @@ const (
 
 func (state HardwareIndicatorState) valid() bool {
 	switch state {
-	case HardwareIndicatorIdle, HardwareIndicatorArmed, HardwareIndicatorActive,
+	case HardwareIndicatorIdle, HardwareIndicatorIdentify, HardwareIndicatorArmed, HardwareIndicatorActive,
 		HardwareIndicatorResetPending, HardwareIndicatorFailed:
 		return true
 	default:
@@ -144,6 +148,11 @@ func RecoveryIndicatorOn(state HardwareIndicatorState, elapsed time.Duration) bo
 		elapsed = 0
 	}
 	switch state {
+	case HardwareIndicatorIdentify:
+		phase := elapsed % (2 * time.Second)
+		return phase < 200*time.Millisecond ||
+			phase >= 400*time.Millisecond && phase < 600*time.Millisecond ||
+			phase >= 800*time.Millisecond && phase < time.Second
 	case HardwareIndicatorArmed:
 		return elapsed%(time.Second) < 500*time.Millisecond
 	case HardwareIndicatorActive:

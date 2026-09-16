@@ -1,0 +1,50 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-144bf035"
+
+title = "Show appliance identity and a printable label in About"
+
+status = "active"
+
+requirement = """
+When a signed-in user opens About, the browser interface shall show the permanent and optional friendly appliance names, every current management address, the management URL and a printable label containing the permanent name, hardware addresses and a scannable QR code for the permanent-name HTTPS URL, while offering Identify with its supported or unsupported result.
+"""
+
+verification = "Automated API/component tests render About with multiple addresses, no friendly name, a friendly name and supported/unsupported indicator states; they assert the named facts, decode the QR to the exact serial HTTPS URL, verify Print and Identify accessibility/permission states at desktop and 800x480 layouts, and confirm device/WireGuard addresses and secret-shaped sentinels are absent."
+
+affected_paths = [
+    "05_Software/nilo_gui/src/components/pages/AboutPage.test.tsx",
+    "05_Software/nilo_gui/src/components/pages/SimplePages.tsx",
+    "05_Software/nilo_gui/src/api/client.ts",
+    "05_Software/nilo_gui/src/api/appliance.ts",
+    "05_Software/nilo_gui/src/api/appliance.test.ts",
+    "05_Software/nilo_gui/src/i18n/en.ts",
+    "05_Software/nilo_gui/src/i18n/de.ts",
+    "05_Software/nilo_gui/src/i18n/ro.ts",
+    "05_Software/nilo_gui/src/styles/shell.css",
+    "05_Software/nilo_gui/e2e/field-display.spec.ts",
+    "05_Software/nilo_assistant/internal/httpapi/appliance_identity.go",
+    "05_Software/nilo_assistant/internal/appliance/label.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/src/components/pages/AboutPage.test.tsx::*",
+    "05_Software/nilo_gui/src/api/appliance.test.ts::*",
+    "05_Software/nilo_gui/e2e/field-display.spec.ts::*",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "The authenticated interface is the reprint and physical-identification surface after workshop delivery."
+
+created = 2026-09-15
+updated = 2026-09-15

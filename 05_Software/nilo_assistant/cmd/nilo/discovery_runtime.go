@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/netip"
@@ -11,8 +12,92 @@ import (
 	"nilo.local/nilo/internal/app"
 	"nilo.local/nilo/internal/appliance"
 	"nilo.local/nilo/internal/httpapi"
+	"nilo.local/nilo/internal/nethelper"
 	"nilo.local/nilo/internal/network"
 )
+
+type runtimeFriendlyNamePublisher struct {
+	provisioning *network.MDNSAnnouncer
+	commissioned *network.MDNSAnnouncer
+	selected     func() *network.MDNSAnnouncer
+	interfaces   func(context.Context) ([]string, error)
+}
+
+func (publisher runtimeFriendlyNamePublisher) ReplaceFriendlyName(ctx context.Context, name string) error {
+	if err := publisher.provisioning.SetFriendlyName(name); err != nil {
+		return err
+	}
+	if err := publisher.commissioned.SetFriendlyName(name); err != nil {
+		return err
+	}
+	interfaces, err := publisher.interfaces(ctx)
+	if err != nil {
+		return err
+	}
+	selected := publisher.selected()
+	if selected == nil {
+		return errors.New("active appliance discovery announcer is unavailable")
+	}
+	return selected.Announce(ctx, interfaces)
+}
+
+func applianceDiscoveryMetadata(
+	helperIdentity nethelper.ApplianceIdentity,
+	stored appliance.Identity,
+	state, version string,
+	port int,
+	observed []network.Interface,
+	managementInterfaces []string,
+) (*httpapi.ApplianceMetadata, network.MDNSApplianceIdentity, error) {
+	identity := network.MDNSApplianceIdentity{
+		ApplianceID: stored.ID, SerialName: helperIdentity.SerialName,
+		FriendlyName: stored.FriendlyName, Port: uint16(port), State: state, Version: version,
+	}
+	if helperIdentity.Schema != 1 || port < 1 || port > 65535 {
+		return nil, identity, errors.New("valid helper identity and management port are required")
+	}
+	allowed := make(map[string]bool, len(managementInterfaces))
+	for _, name := range managementInterfaces {
+		allowed[name] = true
+	}
+	addresses := map[string]bool{}
+	macs := map[string]bool{}
+	for _, item := range observed {
+		if !allowed[item.Name] {
+			continue
+		}
+		if address, err := net.ParseMAC(item.AdapterID); err == nil && len(address) == 6 {
+			macs[address.String()] = true
+		}
+		for _, text := range append(append([]string(nil), item.IPv4...), item.IPv6...) {
+			prefix, err := netip.ParsePrefix(text)
+			if err == nil && !prefix.Addr().IsUnspecified() {
+				addresses[prefix.Addr().Unmap().String()] = true
+			}
+		}
+	}
+	metadata := &httpapi.ApplianceMetadata{
+		ID: stored.ID, SerialName: helperIdentity.SerialName, FriendlyName: stored.FriendlyName,
+		State: state, Version: version,
+		ManagementURL: fmt.Sprintf("https://%s.local:%d/", helperIdentity.SerialName, port),
+	}
+	for address := range addresses {
+		metadata.ManagementAddresses = append(metadata.ManagementAddresses, address)
+	}
+	for address := range macs {
+		metadata.ManagementMACs = append(metadata.ManagementMACs, address)
+	}
+	sort.Strings(metadata.ManagementAddresses)
+	sort.Strings(metadata.ManagementMACs)
+	if _, err := httpapi.NewDiscoveryDescriptionHandler(httpapi.DiscoveryDescription{
+		ApplianceID: metadata.ID, SerialName: metadata.SerialName,
+		FriendlyName: metadata.FriendlyName, PresentationURL: metadata.ManagementURL,
+		HardwareAddresses: metadata.ManagementMACs,
+	}); err != nil {
+		return nil, identity, err
+	}
+	return metadata, identity, nil
+}
 
 func requiredDiscoveryTLSNames(systemHostname string, includeRecoveryAlias bool) []string {
 	names := []string{systemHostname + ".local"}

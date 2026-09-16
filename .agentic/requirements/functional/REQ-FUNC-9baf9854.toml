@@ -1,0 +1,40 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-9baf9854"
+
+title = "Discover appliances from the command line"
+
+status = "active"
+
+requirement = """
+When `nilo discover` runs, the command shall browse `_nilo._tcp.local` and send SSDP searches on every eligible local interface for a bounded interval, merge observations by appliance UUID, and print each result's display name, permanent serial name, addresses, HTTPS URL, lifecycle state and version as a deterministic table or versioned JSON document.
+"""
+
+verification = "Automated cross-platform discovery tests inject multiple interfaces, duplicate mDNS/SSDP replies, one-protocol appliances, IPv4/IPv6 addresses, malformed/late packets and two UUIDs sharing an address; after the configured timeout they assert one sorted row/object per UUID with the exact schema, merged safe fields and no global-interface omission, while malformed and post-timeout input is ignored with bounded diagnostics."
+
+affected_paths = [
+    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/nilo_assistant/cmd/nilo/discover.go",
+    "05_Software/nilo_assistant/cmd/nilo/discover_test.go",
+    "05_Software/nilo_assistant/internal/discovery/model.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/cmd/nilo/discover_test.go::*",
+]
+
+
+spec = "specs/REQ-FUNC-9baf9854.md"
+
+priority = "high"   # low | normal | high
+rationale = "The CLI must begin from local observations instead of requiring the unknown URL it is meant to find."
+
+created = 2026-09-15
+updated = 2026-09-15

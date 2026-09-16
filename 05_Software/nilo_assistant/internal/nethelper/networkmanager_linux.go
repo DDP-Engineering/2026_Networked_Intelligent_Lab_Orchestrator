@@ -28,9 +28,27 @@ const deviceAPI = nm + ".Device"
 // NetworkManager uses the system bus exclusively. No shell or nmcli participates
 // in production operations, and saved connection settings are never rewritten.
 type NetworkManager struct {
-	bus                *dbus.Conn
-	mdnsGroup          dbus.ObjectPath
-	commissioningStore CommissioningProfileStore
+	bus                   *dbus.Conn
+	mdnsGroups            map[string]dbus.ObjectPath
+	commissioningStore    CommissioningProfileStore
+	applianceSerial       string
+	commissioningServices commissioningServiceDriver
+}
+
+func (n *NetworkManager) ConfigureCommissioningServices(services commissioningServiceDriver) error {
+	if services == nil {
+		return errors.New("commissioning services are required")
+	}
+	n.commissioningServices = services
+	return nil
+}
+
+func (n *NetworkManager) ConfigureApplianceSerial(serialName string) error {
+	if !validPermanentSerialName(serialName) {
+		return errors.New("valid permanent appliance name is required")
+	}
+	n.applianceSerial = serialName
+	return nil
 }
 
 func NewNetworkManager() (*NetworkManager, error) {
@@ -38,7 +56,7 @@ func NewNetworkManager() (*NetworkManager, error) {
 	if err != nil {
 		return nil, fmt.Errorf("system D-Bus unavailable: %w", err)
 	}
-	n := &NetworkManager{bus: bus}
+	n := &NetworkManager{bus: bus, mdnsGroups: map[string]dbus.ObjectPath{}}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if _, err = n.properties(ctx, nmPath, nm); err != nil {
@@ -183,6 +201,7 @@ func (n *NetworkManager) device(ctx context.Context, path dbus.ObjectPath) (Devi
 		}
 	}
 	sort.Strings(d.Available)
+	d.Interface.SavedConnections = append([]string(nil), d.Available...)
 	snapshots := map[string]any{}
 	for _, family := range []string{"4", "6"} {
 		ipPath := value[dbus.ObjectPath](props, "Ip"+family+"Config")

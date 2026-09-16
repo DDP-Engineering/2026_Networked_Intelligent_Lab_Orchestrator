@@ -14,10 +14,10 @@ title = "Classify Raspberry Pi recovery button presses"
 status = "active"
 
 requirement = """
-Where Raspberry Pi hardware recovery is enabled, the privileged helper shall debounce an active-low BCM GPIO17 input using its internal pull-up and classify the duration at release as no action below three seconds, temporary network recovery from three seconds up to but excluding ten seconds, and network commissioning reset at ten seconds or longer. Each recovery-duration release shall durably carry its release time and a valid snapshot of already-connected identified Ethernet adapters; a missing identity makes that snapshot invalid and causes core to refuse recovery safely. A GPIO read discontinuity shall invalidate the current gesture and require a fresh debounced press.
+Where Raspberry Pi hardware recovery is enabled, the privileged helper shall debounce an active-low BCM GPIO17 input using its internal pull-up and classify each stable release as appliance identification below three seconds, temporary network recovery from three seconds up to but excluding ten seconds, or network commissioning reset at ten seconds or longer; recovery-duration events carry their durable release time and a valid snapshot of already-connected identified Ethernet adapters, while a GPIO read discontinuity invalidates the gesture and requires a fresh debounced press from a released baseline.
 """
 
-verification = "Fake GPIO clock tests inject contact bounce, releases immediately below, exactly at, and immediately above the 3 s and 10 s boundaries, and a read discontinuity followed by a continuously held input; they observe one classified event only on a fresh stable press/release after a released baseline. An ARM64 build proves the Raspberry Pi implementation compiles without CGO, and a wired Pi observation checks the three physical durations when hardware is available."
+verification = "Fake GPIO clock tests inject contact bounce, stable releases immediately below, exactly at and immediately above the 3 s and 10 s boundaries, and a read discontinuity followed by a continuously held input; they observe exactly one identify/recovery/reset event at the stated boundary and no event until a fresh debounced press after a released baseline. Recovery events alone carry validated adapter snapshots. An ARM64 build proves CGO-free compilation and a wired Pi observation checks all three durations."
 
 affected_paths = [
     "05_Software/nilo_assistant/internal/nethelper/gpio_button.go",
@@ -34,15 +34,8 @@ affected_paths = [
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::TestClassifyRecoveryButtonReleaseBoundaries",
-    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::TestButtonDetectorEmitsOnceOnDebouncedRelease",
-    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::TestButtonDetectorReportsResetPendingOnlyWhileAStableLongPressIsHeld",
-    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::TestHardwareEventQueueRetainsUnacknowledgedReleaseAndMonotonicGenerationAcrossRestart",
-    "05_Software/nilo_assistant/internal/nethelper/gpio_linux_test.go::TestGPIOV2RequestMatchesLinuxABI",
-    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::TestRecoveryLinkSnapshotRejectsAnUnidentifiedConnectedEthernet",
-    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::TestHardwareEventQueueCoalescesRecoveryAndLetsResetSupersede",
-    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::TestButtonDetectorDiscontinuityCannotTurnAShortPressIntoReset",
-    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::TestButtonDetectorDiscontinuityRequiresAReleasedBaseline",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::*",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_linux_test.go::*",
 ]
 
 
@@ -52,4 +45,4 @@ priority = "high"   # low | normal | high
 rationale = "Classification on release makes the two destructive levels unambiguous and testable."
 
 created = 2026-09-13
-updated = 2026-09-14
+updated = 2026-09-15

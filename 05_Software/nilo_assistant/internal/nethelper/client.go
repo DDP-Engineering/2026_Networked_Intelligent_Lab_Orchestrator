@@ -77,6 +77,24 @@ func (c *Client) MDNSPublicationCurrent(ctx context.Context) (bool, error) {
 	return *response.MDNSCurrent, nil
 }
 
+func (c *Client) PublishSSDP(ctx context.Context, presence network.SSDPPresence) error {
+	_, err := c.call(ctx, Request{Op: "ssdp.publish", SSDP: &presence})
+	return err
+}
+
+func (c *Client) WithdrawSSDP(ctx context.Context) error {
+	_, err := c.call(ctx, Request{Op: "ssdp.withdraw"})
+	return err
+}
+
+func (c *Client) SSDPPublicationCurrent(ctx context.Context) (bool, error) {
+	response, err := c.call(ctx, Request{Op: "ssdp.status"})
+	if err != nil || response.SSDPCurrent == nil {
+		return false, err
+	}
+	return *response.SSDPCurrent, nil
+}
+
 // ActivateRecoveryLink asks the helper to perform its independent safety
 // checks and create one volatile link-local profile.
 func (c *Client) ActivateRecoveryLink(ctx context.Context, adapterID, interfaceName string, expiresAt time.Time) (string, error) {
@@ -127,6 +145,11 @@ func (c *Client) ReconcileCommissioningLinks(ctx context.Context, links []networ
 	return err
 }
 
+func (c *Client) ReconcileCommissioningAccessPoint(ctx context.Context, plan network.CommissioningAccessPoint) error {
+	_, err := c.call(ctx, Request{Op: "commissioning.ap.reconcile", CommissioningAccessPoint: &plan})
+	return err
+}
+
 var _ network.CommissioningLinkDriver = (*Client)(nil)
 
 func (c *Client) call(ctx context.Context, q Request) (Response, error) {
@@ -165,6 +188,48 @@ func (c *Client) call(ctx context.Context, q Request) (Response, error) {
 	return r, nil
 }
 func (c *Client) Source() network.Source { return c.source }
+
+// ApplianceIdentity reads the helper's public permanent identity projection.
+func (c *Client) ApplianceIdentity(ctx context.Context) (ApplianceIdentity, error) {
+	r, err := c.call(ctx, Request{Op: "appliance.identity.read"})
+	if err != nil {
+		return ApplianceIdentity{}, err
+	}
+	if r.ApplianceIdentity == nil {
+		return ApplianceIdentity{}, errors.New("helper omitted appliance identity")
+	}
+	return *r.ApplianceIdentity, nil
+}
+
+// TLSIdentity returns only the public certificate and generation token.
+func (c *Client) TLSIdentity(ctx context.Context) (TLSIdentityPublic, error) {
+	r, err := c.call(ctx, Request{Op: "tls.identity.read"})
+	if err != nil {
+		return TLSIdentityPublic{}, err
+	}
+	if r.TLSIdentity == nil {
+		return TLSIdentityPublic{}, errors.New("helper omitted TLS identity")
+	}
+	return *r.TLSIdentity, nil
+}
+
+// ActivateNames rotates the helper-held certificate before callers publish
+// the corresponding discovery names.
+func (c *Client) ActivateNames(ctx context.Context, names []string) error {
+	copyOfNames := append([]string(nil), names...)
+	_, err := c.call(ctx, Request{Op: "tls.identity.activate", TLSNames: &copyOfNames})
+	return err
+}
+
+// SignTLS delegates one supported TLS handshake digest to the helper.
+func (c *Client) SignTLS(ctx context.Context, generation string, digest []byte) ([]byte, error) {
+	r, err := c.call(ctx, Request{
+		Op: "tls.identity.sign", TLSGeneration: generation,
+		TLSDigest: append([]byte(nil), digest...), TLSHash: "sha256", TLSAlgorithm: "ecdsa-p256-sha256",
+	})
+	return r.TLSSignature, err
+}
+
 func (c *Client) Interfaces(ctx context.Context) ([]network.Interface, error) {
 	r, err := c.call(ctx, Request{Op: "interface.list"})
 	if err != nil {

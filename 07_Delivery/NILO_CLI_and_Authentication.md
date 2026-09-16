@@ -8,6 +8,19 @@ It describes the capabilities present in this release. Where a capability is
 deliberately absent, section 8 says so plainly rather than leaving you to
 discover it in production.
 
+## Find an appliance before its address is known
+
+`nilo discover` queries mDNS/DNS-SD and SSDP on each eligible local interface
+for a bounded interval and merges observations by appliance UUID. Add `--json`
+for schema-versioned output, or `--label <permanent-or-friendly-name>` to emit
+one selected printable SVG label to standard output. `nilo open <name>` opens
+the unique advertised HTTPS URL in the platform browser.
+
+Every remote command's `--server` accepts either its existing explicit URL or
+an exact permanent name / unique friendly name found by the same discovery
+boundary. Explicit URLs bypass discovery. Missing and ambiguous names send no
+request. Multicast is link-local; router or VLAN forwarding is not implied.
+
 ## Contents
 
 1. [Two decisions, not one](#1-two-decisions-not-one)

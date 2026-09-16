@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"sync"
 	"time"
 
 	"nilo.local/nilo/internal/audit"
@@ -94,7 +95,48 @@ type hardwareRecoveryRuntime struct {
 	commission  networkCommissioningResetter
 	management  *network.ManagementAccessService
 	audit       recoveryAuditWriter
+	identifyOps identifyOperationStore
 	applianceID string
+	identify    *network.IdentifyService
+	indicator   *runtimeIdentifyIndicator
+	reannounce  func(context.Context) error
+}
+
+type runtimeIdentifyIndicator struct {
+	mu       sync.Mutex
+	helper   hardwareRecoveryHelper
+	recovery nethelper.HardwareIndicatorState
+	identify bool
+}
+
+func newRuntimeIndicatorArbiter(helper hardwareRecoveryHelper) *runtimeIdentifyIndicator {
+	return &runtimeIdentifyIndicator{helper: helper, recovery: nethelper.HardwareIndicatorIdle}
+}
+
+func (indicator *runtimeIdentifyIndicator) SetIdentifyIndicator(ctx context.Context, enabled bool) error {
+	indicator.mu.Lock()
+	defer indicator.mu.Unlock()
+	indicator.identify = enabled
+	err := indicator.apply(ctx)
+	if errors.Is(err, nethelper.ErrDirectRecoveryUnsupported) {
+		return network.ErrIdentifyUnsupported
+	}
+	return err
+}
+
+func (indicator *runtimeIdentifyIndicator) SetRecoveryIndicator(ctx context.Context, state nethelper.HardwareIndicatorState) error {
+	indicator.mu.Lock()
+	defer indicator.mu.Unlock()
+	indicator.recovery = state
+	return indicator.apply(ctx)
+}
+
+func (indicator *runtimeIdentifyIndicator) apply(ctx context.Context) error {
+	state := indicator.recovery
+	if state == nethelper.HardwareIndicatorIdle && indicator.identify {
+		state = nethelper.HardwareIndicatorIdentify
+	}
+	return indicator.helper.SetRecoveryIndicator(ctx, state)
 }
 
 type hardwareRecoveryHelper interface {
@@ -112,6 +154,13 @@ type recoveryAuditWriter interface {
 	Record(context.Context, audit.Record) error
 }
 
+type identifyOperationStore interface {
+	Begin(context.Context, string, string, time.Time) (bool, error)
+	State(context.Context, string) (string, error)
+	MarkActed(context.Context, string, bool, string, audit.Event, time.Time) error
+	Flush(context.Context, string) error
+}
+
 func (runtime *hardwareRecoveryRuntime) Adopt(ctx context.Context) error {
 	record, err := runtime.service.Cancel(ctx)
 	if err != nil {
@@ -123,7 +172,7 @@ func (runtime *hardwareRecoveryRuntime) Adopt(ctx context.Context) error {
 func (runtime *hardwareRecoveryRuntime) Reconcile(ctx context.Context) error {
 	before, err := runtime.service.Reconcile(ctx)
 	if err != nil {
-		_ = runtime.helper.SetRecoveryIndicator(context.WithoutCancel(ctx), nethelper.HardwareIndicatorFailed)
+		_ = runtime.setHardwareIndicator(context.WithoutCancel(ctx), nethelper.HardwareIndicatorFailed)
 		return err
 	}
 	event, present, err := runtime.helper.ReadRecoveryEvent(ctx)
@@ -139,6 +188,72 @@ func (runtime *hardwareRecoveryRuntime) Reconcile(ctx context.Context) error {
 				return err
 			}
 			return runtime.setIndicator(ctx, before.State)
+		}
+		if event.Action == nethelper.HardwareRecoveryIdentify {
+			if runtime.identifyOps != nil {
+				created, err := runtime.identifyOps.Begin(ctx, event.ID, "button", event.ReleasedAt)
+				if err != nil {
+					return err
+				}
+				if !created {
+					state, err := runtime.identifyOps.State(ctx, event.ID)
+					if err != nil {
+						return err
+					}
+					if state == "acted" || state == "settled" {
+						if err := runtime.identifyOps.Flush(ctx, event.ID); err != nil {
+							return err
+						}
+						return runtime.helper.AcknowledgeRecoveryEvent(ctx, event.ID)
+					}
+				}
+			}
+			status := network.IdentifyUnsupported
+			outcome := audit.OutcomeApplied
+			if runtime.identify != nil {
+				result, identifyErr := runtime.identify.Identify(ctx)
+				if identifyErr != nil {
+					outcome = audit.OutcomeFailed
+				} else {
+					status = result.Status
+				}
+			}
+			reannouncement := "not_configured"
+			if runtime.reannounce != nil {
+				if err := runtime.reannounce(ctx); err != nil {
+					reannouncement = "failed"
+				} else {
+					reannouncement = "applied"
+				}
+			}
+			if runtime.audit != nil && runtime.identifyOps != nil {
+				completionContext, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				record := runtime.auditRecord("appliance.identify", outcome, map[string]any{
+					"source": "button", "status": status, "reannouncement": reannouncement,
+				})
+				record.OperationID = event.ID
+				composed, err := runtime.audit.Compose(record)
+				if err != nil {
+					return err
+				}
+				if err := runtime.identifyOps.MarkActed(completionContext, event.ID, status != network.IdentifyUnsupported, mapReannouncement(reannouncement), composed, event.ReleasedAt); err != nil {
+					return err
+				}
+				if err := runtime.identifyOps.Flush(completionContext, event.ID); err != nil {
+					return err
+				}
+			} else if runtime.audit != nil {
+				if err := runtime.record(ctx, "appliance.identify", outcome, map[string]any{
+					"source": "button", "status": status, "reannouncement": reannouncement,
+				}); err != nil {
+					return err
+				}
+			}
+			if err := runtime.helper.AcknowledgeRecoveryEvent(ctx, event.ID); err != nil {
+				return err
+			}
+			return nil
 		}
 		if runtime.management.Provisioning() {
 			if _, err := runtime.service.RefuseHardwareEvent(ctx, event.Generation, "appliance_is_provisioning"); err != nil {
@@ -158,17 +273,17 @@ func (runtime *hardwareRecoveryRuntime) Reconcile(ctx context.Context) error {
 				return err
 			}
 		case nethelper.HardwareRecoveryResetCommissioning:
-			if err := runtime.helper.SetRecoveryIndicator(ctx, nethelper.HardwareIndicatorResetPending); err != nil {
+			if err := runtime.setHardwareIndicator(ctx, nethelper.HardwareIndicatorResetPending); err != nil {
 				return err
 			}
 			if _, err := runtime.service.Cancel(ctx); err != nil {
-				_ = runtime.helper.SetRecoveryIndicator(context.WithoutCancel(ctx), nethelper.HardwareIndicatorFailed)
+				_ = runtime.setHardwareIndicator(context.WithoutCancel(ctx), nethelper.HardwareIndicatorFailed)
 				return err
 			}
 			preparation, err := runtime.management.PrepareNetworkCommissioningReset(ctx)
 			if err != nil {
 				_ = runtime.record(context.WithoutCancel(ctx), "network.commissioning_reset", audit.OutcomeFailed, map[string]any{"reason": "admission_preparation_failed"})
-				_ = runtime.helper.SetRecoveryIndicator(context.WithoutCancel(ctx), nethelper.HardwareIndicatorFailed)
+				_ = runtime.setHardwareIndicator(context.WithoutCancel(ctx), nethelper.HardwareIndicatorFailed)
 				return err
 			}
 			eventRecord, err := runtime.audit.Compose(audit.Record{
@@ -183,7 +298,7 @@ func (runtime *hardwareRecoveryRuntime) Reconcile(ctx context.Context) error {
 			if err := runtime.commission.ResetNetworkCommissioningAudited(ctx, preparation.Record(), eventRecord, event.Generation); err != nil {
 				rollbackErr := preparation.Rollback(context.WithoutCancel(ctx))
 				_ = runtime.record(context.WithoutCancel(ctx), "network.commissioning_reset", audit.OutcomeFailed, map[string]any{"reason": "persistence_failed"})
-				_ = runtime.helper.SetRecoveryIndicator(context.WithoutCancel(ctx), nethelper.HardwareIndicatorFailed)
+				_ = runtime.setHardwareIndicator(context.WithoutCancel(ctx), nethelper.HardwareIndicatorFailed)
 				return errors.Join(err, rollbackErr)
 			}
 			preparation.Commit()
@@ -197,10 +312,21 @@ func (runtime *hardwareRecoveryRuntime) Reconcile(ctx context.Context) error {
 	}
 	after, err := runtime.service.Reconcile(ctx)
 	if err != nil {
-		_ = runtime.helper.SetRecoveryIndicator(context.WithoutCancel(ctx), nethelper.HardwareIndicatorFailed)
+		_ = runtime.setHardwareIndicator(context.WithoutCancel(ctx), nethelper.HardwareIndicatorFailed)
 		return err
 	}
 	return runtime.setIndicator(ctx, after.State)
+}
+
+func mapReannouncement(value string) string {
+	switch value {
+	case "applied":
+		return "complete"
+	case "failed":
+		return "partial"
+	default:
+		return "unavailable"
+	}
 }
 
 func (runtime *hardwareRecoveryRuntime) setIndicator(ctx context.Context, state network.RecoveryState) error {
@@ -213,17 +339,28 @@ func (runtime *hardwareRecoveryRuntime) setIndicator(ctx context.Context, state 
 	case network.RecoveryFailed, network.RecoveryRestoring:
 		indicator = nethelper.HardwareIndicatorFailed
 	}
-	err := runtime.helper.SetRecoveryIndicator(ctx, indicator)
+	err := runtime.setHardwareIndicator(ctx, indicator)
 	if errors.Is(err, nethelper.ErrDirectRecoveryUnsupported) {
 		return nil
 	}
 	return err
 }
 
+func (runtime *hardwareRecoveryRuntime) setHardwareIndicator(ctx context.Context, state nethelper.HardwareIndicatorState) error {
+	if runtime.indicator != nil {
+		return runtime.indicator.SetRecoveryIndicator(ctx, state)
+	}
+	return runtime.helper.SetRecoveryIndicator(ctx, state)
+}
+
 func (runtime *hardwareRecoveryRuntime) record(ctx context.Context, action string, outcome audit.Outcome, details any) error {
-	return runtime.audit.Record(ctx, audit.Record{
+	return runtime.audit.Record(ctx, runtime.auditRecord(action, outcome, details))
+}
+
+func (runtime *hardwareRecoveryRuntime) auditRecord(action string, outcome audit.Outcome, details any) audit.Record {
+	return audit.Record{
 		Category: audit.CategoryAudit, Component: "network.recovery", Action: action,
 		SubjectType: "appliance", SubjectID: runtime.applianceID,
 		ActorKind: audit.ActorKindSystem, Outcome: outcome, Details: details,
-	})
+	}
 }

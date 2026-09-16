@@ -14,7 +14,31 @@ import (
 	"slices"
 	"testing"
 	"time"
+
+	"nilo.local/nilo/internal/appliance"
+	"nilo.local/nilo/internal/nethelper"
+	"nilo.local/nilo/internal/network"
 )
+
+func TestRuntimeDiscoveryMetadataUsesPermanentHelperNameAndManagementScope(t *testing.T) {
+	metadata, identity, err := applianceDiscoveryMetadata(
+		nethelper.ApplianceIdentity{Schema: 1, SerialName: "nilo-p2rjmzdkf1", SourceKind: "rpi-board"},
+		appliance.Identity{ID: "0199a2d0-1234-7abc-8def-0123456789ab", FriendlyName: "bench-west"},
+		"commissioned", "0.8.0", 8443, []network.Interface{
+			{Name: "eth0", AdapterID: "02:00:00:00:00:02", IPv4: []string{"192.168.1.42/24"}},
+			{Name: "wg0", AdapterID: "02:00:00:00:00:09", IPv4: []string{"10.0.0.2/24"}},
+		}, []string{"eth0"},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if identity.SerialName != "nilo-p2rjmzdkf1" || identity.FriendlyName != "bench-west" ||
+		metadata.ManagementURL != "https://nilo-p2rjmzdkf1.local:8443/" ||
+		!slices.Equal(metadata.ManagementAddresses, []string{"192.168.1.42"}) ||
+		!slices.Equal(metadata.ManagementMACs, []string{"02:00:00:00:00:02"}) {
+		t.Fatalf("metadata=%+v identity=%+v", metadata, identity)
+	}
+}
 
 // writeCertificate produces a self-signed leaf carrying exactly names, which is
 // what a shipped appliance certificate is: signed by nobody a browser trusts.

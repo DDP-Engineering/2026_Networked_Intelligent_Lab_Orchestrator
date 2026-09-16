@@ -331,6 +331,21 @@ export const en = {
     'PolyForm Noncommercial License 1.0.0. Commercial use requires a separate commercial licence.',
   'about.unavailable':
     'Build information is unavailable because the backend status could not be read.',
+  'about.appliance': 'Appliance identity',
+  'about.permanentName': 'Permanent name',
+  'about.friendlyName': 'Friendly name',
+  'about.lifecycle': 'Lifecycle',
+  'about.managementUrl': 'Management URL',
+  'about.managementAddresses': 'Management addresses',
+  'about.hardwareAddresses': 'Hardware addresses',
+  'about.openLabel': 'Open printable label',
+  'about.identify': 'Identify appliance',
+  'about.identify.active': 'Identify active until {time}.',
+  'about.identify.unsupported': 'Identify is not supported on this hardware.',
+  'about.identify.failed': 'Identify could not be started.',
+  'about.friendly.save': 'Save friendly name',
+  'about.friendly.updated': 'Friendly name updated.',
+  'about.friendly.failed': 'The friendly name could not be used.',
 
   // Integration page
   'integration.identifier': 'Identifier',

@@ -1,0 +1,42 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-17f9c447"
+
+title = "Print an appliance label from the command line"
+
+status = "active"
+
+requirement = """
+When `nilo discover --label` selects one discovered appliance, the command shall produce a printable label containing its permanent serial name, advertised hardware addresses and a QR code that decodes to its permanent-name HTTPS management URL, while refusing zero or multiple selections without producing a misleading label.
+"""
+
+verification = "Automated CLI artifact tests select by unique serial and friendly name, parse the produced document, decode its QR and assert exact label text/address normalization/HTTPS URL; empty, ambiguous, secret-bearing and malformed discovery records are refused before output, and the generated page renders within the documented workshop label dimensions."
+
+affected_paths = [
+    "05_Software/nilo_assistant/cmd/nilo/discover.go",
+    "05_Software/nilo_assistant/internal/discovery/model.go",
+    "05_Software/nilo_assistant/internal/appliance/label.go",
+    "05_Software/nilo_assistant/internal/appliance/label_test.go",
+    "05_Software/nilo_assistant/go.mod",
+    "05_Software/nilo_assistant/go.sum",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/appliance/label_test.go::*",
+]
+
+
+spec = "specs/REQ-FUNC-17f9c447.md"
+
+priority = "high"   # low | normal | high
+rationale = "The workshop needs a repeatable label artifact before the enclosure itself can help a user find the appliance."
+
+created = 2026-09-15
+updated = 2026-09-15

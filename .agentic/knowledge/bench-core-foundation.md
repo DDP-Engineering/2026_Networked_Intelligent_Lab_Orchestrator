@@ -78,8 +78,13 @@ before anything is opened or contacted. The root usage names every group.
 - The privileged helper publishes only process-owned Avahi D-Bus entries. It
   receives validated host/service/alias values and interface lists, never raw
   responder configuration, and does not replace daemon policy. Permanent
-  discovery advertises only the configured TLS-covered system hostname; an
-  Avahi collision suffix is refused rather than turned into an uncertified URL.
+  discovery uses the printed serial host and version-2 DNS-SD service; recovery
+  and friendly aliases are separate per-interface groups, so an alias collision
+  cannot withdraw the serial service. An exact Avahi global-host match reuses
+  its record; a preserved custom system hostname receives a no-reverse serial
+  alias. SSDP follows the same effective management interfaces through a
+  separate typed helper lifecycle, refreshes before expiry, jitters searches by
+  MX and rate-limits each interface/source pair.
 - Raspberry Pi button events are stored by the helper before exposure with the
   release time; recovery-duration events additionally carry the connected-link
   snapshot while reset events do not. Events are coalesced with reset precedence
@@ -93,7 +98,7 @@ before anything is opened or contacted. The root usage names every group.
   audit failure leaves the helper event available for a safe retry.
 - A GPIO read discontinuity cancels the gesture in progress and requires a
   stable released baseline before another press. Recovery-profile
-restoration proves the exact durable UUID, adapter/interface/MAC binding,
+  restoration proves the exact durable UUID, adapter/interface/MAC binding,
   volatile state and non-routing settings before deletion. NetworkManager's
   generated empty `proxy` section is part of the normalized owned profile;
   populated proxy settings or any other unexpected setting remain foreign.
@@ -108,14 +113,16 @@ restoration proves the exact durable UUID, adapter/interface/MAC binding,
   still matches the published password, and refused when that cannot be
   determined. The stored verifier is tested rather than a provenance marker, so
   the rule holds however the identity arose and whether or not it is disabled.
-- A name the appliance advertises that its certificate does not carry is
-  reported, never a reason to stop: an appliance that refused to start over a
-  certificate gap could not be reached or commissioned at all. A first-boot or
-  interface-managed listener records it in `TLSMissing` and reports it in the
-  interface; the operator-configured legacy bound listener composes no
-  management access service and reports it on its diagnostic output alone. A
-  certificate that cannot be read or parsed does stop the start. The appliance
-  never generates or replaces a certificate.
+- The root helper generates one P-256 appliance key, persists it outside Bench
+  Core, and exposes only the public certificate plus SHA-256 signing. Certificate
+  activation precedes local-name publication, and the server loads the current
+  public generation for each handshake. Bench Core limits helper signing to 32
+  concurrent calls with a five-second deadline. File-backed TLS remains an
+  explicit legacy/development mode and cannot be mixed with the helper identity.
+- Provisioning AP ownership persists the exact NetworkManager UUID, adapter,
+  interface and SSID, then compares the complete expected settings before reuse
+  or deletion. Captive services clear failed process state for retry, and AP
+  degradation does not stop Ethernet, discovery or recovery reconciliation.
 
 ## Key behaviors
 
@@ -324,7 +331,8 @@ exercises real signed installation, locks, offline errors and idempotence on the
 pinned Debian 13 and Ubuntu 24.04 disposable fixtures. The separate HTTPS process
 test exercises the already-installed path through a real unprivileged core.
 
-Appliance serving requires a built GUI and TLS certificate/key, forces secure
+Appliance serving requires a built GUI and either helper-backed TLS or an
+explicit certificate/key pair, forces secure
 session cookies, confines a legacy literal listener to a private address, and
 guards the provisioning wildcard listener by the derived interface allowlist.
 It labels the GUI with safe runtime metadata before authentication. Instrument inventory is empty. WireGuard

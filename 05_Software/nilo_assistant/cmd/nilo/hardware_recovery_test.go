@@ -173,6 +173,39 @@ func (hardware *runtimeHardware) SetRecoveryIndicator(_ context.Context, state n
 	return nil
 }
 
+func TestRuntimeIndicatorArbiterPreservesIdentifyAndRecoveryPrecedence(t *testing.T) {
+	hardware := &runtimeHardware{}
+	arbiter := newRuntimeIndicatorArbiter(hardware)
+	ctx := context.Background()
+	if err := arbiter.SetIdentifyIndicator(ctx, true); err != nil {
+		t.Fatal(err)
+	}
+	if err := arbiter.SetRecoveryIndicator(ctx, nethelper.HardwareIndicatorIdle); err != nil {
+		t.Fatal(err)
+	}
+	if got := hardware.indicators[len(hardware.indicators)-1]; got != nethelper.HardwareIndicatorIdentify {
+		t.Fatalf("maintenance cleared Identify: %v", hardware.indicators)
+	}
+	if err := arbiter.SetRecoveryIndicator(ctx, nethelper.HardwareIndicatorArmed); err != nil {
+		t.Fatal(err)
+	}
+	if got := hardware.indicators[len(hardware.indicators)-1]; got != nethelper.HardwareIndicatorArmed {
+		t.Fatalf("recovery did not take precedence: %v", hardware.indicators)
+	}
+	if err := arbiter.SetRecoveryIndicator(ctx, nethelper.HardwareIndicatorIdle); err != nil {
+		t.Fatal(err)
+	}
+	if got := hardware.indicators[len(hardware.indicators)-1]; got != nethelper.HardwareIndicatorIdentify {
+		t.Fatalf("Identify did not resume inside its deadline: %v", hardware.indicators)
+	}
+	if err := arbiter.SetIdentifyIndicator(ctx, false); err != nil {
+		t.Fatal(err)
+	}
+	if got := hardware.indicators[len(hardware.indicators)-1]; got != nethelper.HardwareIndicatorIdle {
+		t.Fatalf("expiry did not restore recovery state: %v", hardware.indicators)
+	}
+}
+
 type runtimeResetter struct {
 	called bool
 	access network.ManagementAccessRecord
@@ -203,6 +236,54 @@ type runtimePublisher struct {
 	advertisements []network.MDNSAdvertisement
 	withdrawals    int
 	publishErr     error
+}
+
+func TestShortButtonPressIdentifiesDuringProvisioningWithoutNetworkMutation(t *testing.T) {
+	ctx := context.Background()
+	now := time.Date(2026, 9, 15, 10, 0, 0, 0, time.UTC)
+	provider := &runtimeRecoveryProvider{}
+	management, err := network.NewManagementAccessService(ctx, network.ManagementAccessOptions{
+		Provider: provider, Store: &runtimeAccessStore{}, Firewall: &runtimeFirewall{},
+		Now: func() time.Time { return now }, Provisioning: true,
+		ProvisioningTLSNames: []string{"nilo-p2rjmzdkf1.local", "nilo.local"},
+		Commissioner:         runtimeCommissioner{}, PublishedCredential: changedPublishedCredential{},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	recovery, err := network.NewHardwareRecoveryService(network.HardwareRecoveryOptions{
+		Provider: provider, Driver: &runtimeRecoveryLinkDriver{}, Now: func() time.Time { return now },
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	hardware := &runtimeHardware{event: nethelper.HardwareRecoveryEvent{
+		ID: "gpio-00000000000000000001", Generation: 1, Action: nethelper.HardwareRecoveryIdentify,
+		ReleasedAt: now, SnapshotValid: true,
+	}}
+	identify, err := network.NewIdentifyService(network.IdentifyOptions{Indicator: newRuntimeIndicatorArbiter(hardware)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	reannounced := 0
+	auditWriter := &runtimeAudit{}
+	runtime := &hardwareRecoveryRuntime{
+		helper: hardware, service: recovery, management: management, identify: identify,
+		reannounce: func(context.Context) error { reannounced++; return nil },
+		audit:      auditWriter, applianceID: "appliance",
+	}
+	if err := runtime.Reconcile(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if hardware.acked != hardware.event.ID || reannounced != 1 || !management.Provisioning() {
+		t.Fatalf("ack=%q reannounced=%d provisioning=%t", hardware.acked, reannounced, management.Provisioning())
+	}
+	if len(hardware.indicators) == 0 || hardware.indicators[0] != nethelper.HardwareIndicatorIdentify {
+		t.Fatalf("indicator states = %v", hardware.indicators)
+	}
+	if len(auditWriter.records) != 1 || auditWriter.records[0].Action != "appliance.identify" {
+		t.Fatalf("audit records = %+v", auditWriter.records)
+	}
 }
 
 func (publisher *runtimePublisher) PublishMDNS(_ context.Context, advertisement network.MDNSAdvertisement) error {

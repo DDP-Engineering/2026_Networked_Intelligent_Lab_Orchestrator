@@ -49,8 +49,8 @@ one of three fixed roles - Administrator, Operator or Viewer.
   `nilo.local`, and serves management access on every eligible physical adapter.
   Commissioned appliances permanently advertise a unique `_nilo._tcp.local`
   service. A user signs in to a newly imaged appliance with the administrator
-  credential published with the image, over a shipped certificate that carries
-  both first-contact names and is signed by nobody a browser trusts; completing
+  credential published with the image, over a helper-generated certificate that
+  carries both first-contact names and is signed by nobody a browser trusts; completing
   commissioning is refused while that published password is still in place, so
   the credential cannot outlive first boot. The Raspberry Pi delivery may add a
   dual-duration GPIO button for a
@@ -64,8 +64,8 @@ one of three fixed roles - Administrator, Operator or Viewer.
 
 ## Supported operation
 
-- NILO runs as an appliance: an unprivileged HTTPS Bench Core started with
-  explicit TLS material, a built interface directory, an absolute data
+- NILO runs as an appliance: an unprivileged HTTPS Bench Core using the
+  helper-owned per-appliance signing key, a built interface directory, an absolute data
   directory and an explicit listener, beside the privileged Linux helper that
   owns networking and key material.
 - Appliance platforms are Linux ARM64, the first target and a Raspberry Pi 4,

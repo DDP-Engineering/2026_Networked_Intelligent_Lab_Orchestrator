@@ -3,6 +3,7 @@ package nethelper
 import (
 	"errors"
 	"regexp"
+	"sort"
 	"strings"
 
 	"nilo.local/nilo/internal/network"
@@ -18,10 +19,40 @@ type avahiServicePlan struct {
 }
 
 type avahiPlan struct {
-	HostFQDN   string
-	Interfaces []string
-	Aliases    []avahiAliasPlan
-	Service    *avahiServicePlan
+	Key           string
+	HostFQDN      string
+	UseGlobalHost bool
+	Interfaces    []string
+	Aliases       []avahiAliasPlan
+	Service       *avahiServicePlan
+}
+
+// avahiPublicationGroups gives each interface/purpose pair its own process-
+// owned EntryGroup. A collision or restart in one alias cannot withdraw the
+// permanent serial service on another group.
+func avahiPublicationGroups(advertisement network.MDNSAdvertisement) ([]avahiPlan, error) {
+	plan, err := avahiPublicationPlan(advertisement)
+	if err != nil {
+		return nil, err
+	}
+	groups := make([]avahiPlan, 0, len(plan.Interfaces)+len(plan.Aliases))
+	for _, interfaceName := range plan.Interfaces {
+		group := avahiPlan{
+			Key:      "serial/" + plan.HostFQDN + "/" + interfaceName,
+			HostFQDN: plan.HostFQDN, Interfaces: []string{interfaceName}, Service: plan.Service,
+		}
+		groups = append(groups, group)
+	}
+	for _, alias := range plan.Aliases {
+		for _, interfaceName := range alias.Interfaces {
+			groups = append(groups, avahiPlan{
+				Key:      "alias/" + alias.HostFQDN + "/" + interfaceName,
+				HostFQDN: alias.HostFQDN, Interfaces: []string{interfaceName},
+			})
+		}
+	}
+	sort.Slice(groups, func(i, j int) bool { return groups[i].Key < groups[j].Key })
+	return groups, nil
 }
 
 type avahiAliasPlan struct {
@@ -55,19 +86,21 @@ func avahiPublicationPlan(advertisement network.MDNSAdvertisement) (avahiPlan, e
 
 var avahiLocalFQDN = regexp.MustCompile(`^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.local$`)
 
-// applyAvahiEffectiveHost refuses collision renaming because a suffixed name
-// cannot be covered predictably by the appliance certificate. Operators must
-// commission a unique system hostname rather than publish an unusable URL.
+// applyAvahiEffectiveHost reuses Avahi's implicit address record when it is
+// already the requested serial name. A preserved administrator hostname stays
+// independent: NILO publishes the serial as an explicit AddAddress alias.
 func applyAvahiEffectiveHost(plan avahiPlan, effectiveFQDN string) (avahiPlan, error) {
-	if plan.Service == nil {
-		return plan, nil
-	}
 	effectiveFQDN = strings.TrimSpace(effectiveFQDN)
 	if !avahiLocalFQDN.MatchString(effectiveFQDN) {
 		return avahiPlan{}, errors.New("Avahi returned an invalid effective local hostname")
 	}
-	if !strings.EqualFold(effectiveFQDN, plan.HostFQDN) {
-		return avahiPlan{}, errors.New("Avahi renamed the appliance hostname after a collision; configure a unique hostname and certificate")
+	if strings.EqualFold(effectiveFQDN, plan.HostFQDN) {
+		plan.UseGlobalHost = true
+		if plan.Service != nil {
+			service := *plan.Service
+			service.HostFQDN = ""
+			plan.Service = &service
+		}
 	}
 	return plan, nil
 }

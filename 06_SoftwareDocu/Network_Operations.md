@@ -22,6 +22,12 @@ eligible adapter until it is commissioned; see First-boot provisioning below.
 
 ### Local discovery and Raspberry Pi recovery
 
+On first start the helper derives and persists the enclosure identity
+`nilo-xxxxxxxxxx` from a stable Pi or DMI source, falling back once to protected
+random state when neither source is usable. Raw source values never become
+public metadata. It replaces the system hostname only when that value exactly
+matches a configured image default; a customized hostname is left alone.
+
 During first boot, NILO prepares a volatile IPv4 link-local profile on every
 unassigned, role-safe physical Ethernet adapter. Exact ownership is recorded in
 the root-only helper inventory `commissioning-profiles.json` by stable adapter
@@ -29,29 +35,29 @@ identity, interface, and NetworkManager UUID; reconciliation removes only an
 inventoried profile whose complete settings still match. A foreign profile is
 never owned merely because its name uses a NILO prefix. The profiles use standard
 address conflict detection and never supply DHCP, DNS, a default route,
-forwarding, NAT, or router advertisements. `nilo.local` follows the interfaces
-that currently carry commissioning management access. A saved interface
+forwarding, NAT, or router advertisements. Both the permanent serial name and
+`nilo.local` follow the interfaces that currently carry commissioning
+management access. A saved interface
 profile, a device-network/PLC role, or existing usable addressing excludes an
 adapter; no physical port is designated as the setup port.
 
-After commissioning, the shared setup name is withdrawn and the appliance
-permanently advertises `_nilo._tcp.local` on its configured management
-interfaces. The instance name is `NILO <appliance-UUID>`. Version 1 TXT records
-contain only `txtvers`, `id`, `hostname`, `url`, `path`, and `state`; the SRV
-target and URL use the commissioned system hostname (`<hostname>.local`) and
-configured HTTPS port. That name must be unique on the local link and present
-in the TLS certificate. If Avahi reports a collision-resolved suffixed name,
-NILO fails the publication and retries instead of advertising an uncertified
-URL; resolve the hostname collision administratively. The UUID makes service
-instances unique, so multiple appliances coexist without all of them claiming
-`nilo.local`. NILO publishes
+In both lifecycle states the appliance advertises `_nilo._tcp.local` on its
+management interfaces. The instance is `NILO <serial-name>`; its version 2 TXT
+record carries the UUID, serial, optional friendly name, serial HTTPS URL,
+lifecycle state and project version, and its SRV target is always the permanent
+serial name. Commissioning withdraws only the shared `nilo.local` recovery
+alias. An administrator may add one independent lowercase friendly alias. NILO
+activates certificate coverage before publishing it and refuses a collision
+without removing the previous alias or permanent serial publication. The UUID
+makes observations mergeable across protocols. NILO publishes
 process-owned Avahi D-Bus entries; it does not replace
 `/etc/avahi/avahi-daemon.conf`.
 
-The optional Raspberry Pi delivery wiring gives the physical button two
-network-only actions, both performed on release:
+The optional Raspberry Pi delivery wiring gives the physical button three
+actions, all performed on release:
 
-- less than 3 seconds: no action;
+- less than 3 seconds: run the bounded Identify LED pattern and refresh the
+  current mDNS and SSDP presence;
 - 3 seconds to less than 10 seconds: arm or extend a 10-minute temporary
   direct-connect recovery window;
 - 10 seconds or longer: clear the commissioned lifecycle, explicit management
@@ -109,9 +115,29 @@ sudo sh 02_Tools/scripts/install-nethelper.sh \
 The installer validates Raspberry Pi hardware and `/dev/gpiochip0`. Omit the
 option on mini PCs, ordinary PCs, laptops, simulations, and other Ubuntu hosts;
 those systems use their normal console/display and reinstall procedures for
-recovery. Before enabling the Pi option, install a certificate that covers both
-the permanent `<system-hostname>.local` URL and temporary `nilo.local`; startup
-fails closed if either recovery discovery name is not covered.
+recovery. The helper generates one appliance-specific ECDSA key and certificate
+after the permanent identity exists. Bench Core receives the public certificate
+and a SHA-256-only signing boundary, never the private key. Active and newly
+requested local names are covered before publication; the previous certificate
+generation remains signable for a five-minute handshake drain.
+
+The helper also announces SSDP presence independently on each management
+interface and serves its safe device description through Bench Core. Removal or
+shutdown sends byebye; device, WireGuard, loopback and non-allowlisted links are
+silent. NILO-owned automatic DHCP client profiles send the permanent hostname
+and NILO vendor identity. Manual, link-local, AP, WireGuard and foreign profiles
+are unchanged.
+
+While provisioning, an otherwise unused physical Wi-Fi radio may host a
+volatile WPA2 access point named for the permanent appliance. A saved or active
+client profile or another protected adapter role excludes the radio. The fixed
+`192.168.247.0/24` service starts only when it overlaps no foreign host route;
+DHCP, wildcard captive DNS and HTTP redirect bind to the AP address only. The
+profile and services are removed at commissioning and reconciled again after a
+network commissioning reset. `dnsmasq` and `iproute2` are helper prerequisites.
+
+See [Find your NILO](Find_Your_NILO.md) for client-specific discovery and the
+`nilo discover`, `nilo open`, and printable-label commands.
 
 In the GUI, Network contains Overview, Device access, VPN profiles and
 Diagnostics. Overview starts with appliance status and continues directly with
@@ -226,8 +252,8 @@ nilo activity list --category audit --operation OPERATION_ID --server URL --toke
 nilo activity export --format csv --out activity.csv --server URL --token-file TOKEN_FILE
 ```
 
-To initialize interface-managed appliance access, use repeatable interface and
-certificate-identity options. This creates one server and one state directory;
+To initialize interface-managed appliance access, use repeatable interface
+options. This creates one server and one state directory;
 it must not be replaced by parallel `nilo serve` processes.
 
 ```sh
@@ -236,11 +262,7 @@ nilo serve --profile appliance \
   --management-interface wlan0 \
   --management-interface nilo0 \
   --management-port 8443 \
-  --management-tls-name ddp-remote.local \
-  --management-tls-name 10.205.148.11 \
   --gui-dir /opt/nilo/gui \
-  --tls-cert /etc/nilo/tls/server.crt \
-  --tls-key /etc/nilo/tls/server.key \
   --nethelper-socket /run/nilo/nethelper.sock
 ```
 
@@ -256,9 +278,9 @@ continue to use their literal `--bind` listener until an administrator
 deliberately initializes interface-managed access. A commissioned legacy
 private-address listener still publishes the permanent `_nilo._tcp.local`
 service on the Ethernet interface owning that literal address; a loopback
-listener remains undiscoverable. Its certificate must cover the commissioned
-`<system-hostname>.local` discovery target even when clients also use the
-literal listener address.
+listener remains undiscoverable. The helper-backed certificate covers the
+permanent serial `.local` discovery target; an explicit file-backed legacy
+certificate must carry that name itself.
 
 Interface names must be valid non-loopback Linux interface names. Empty selections
 and invalid or duplicate TLS identities are refused. Physical saved selections are unique by adapter
@@ -311,30 +333,24 @@ IP addresses are not deployment configuration.
    It installs the helper service and independent recovery timer. Device-network
    forwarding requires `nftables`; absent tooling is not working forwarding.
 4. Give the service account its writable `/var/lib/nilo` data directory and
-   restricted access to the TLS key. Keep the key and runtime state outside the
-   GUI directory. Trust the issuing CA on clients.
+   access to the helper socket. The helper alone owns the TLS private key under
+   `/var/lib/nilo-nethelper`; Bench Core receives only bounded signing service.
+   Keep runtime state outside the GUI directory. Trust the issuing CA on clients.
 5. Bootstrap the administrator once as the service account:
    `nilo admin bootstrap --data-dir /var/lib/nilo --username administrator`.
    The development-administrator convenience is simulation-only.
-6. Provision, without having NILO generate or replace it, a certificate whose
-   subject alternative names include every stable management identity and the
-   commissioned `<system-hostname>.local` discovery name. A Pi delivery with
-   hardware recovery enabled must also include `DNS:nilo.local`. For the field
-   profile this is at least `DNS:ddp-remote.local`, `DNS:nilo.local`, and
-   `IP:10.205.148.11`. NILO refuses startup when a required discovery name is
-   missing and warns for other configured identities. Trust the issuing CA on
-   clients.
-7. Initialize the appliance management listener and certificate paths:
+6. Start the installed helper once so it derives the printed permanent name and
+   generates the appliance-specific TLS key. The key remains under
+   `/var/lib/nilo-nethelper` and is not copied into the image, GUI, or Bench Core
+   state.
+7. Initialize the appliance management listener:
 
 ```sh
 nilo serve --profile appliance \
   --data-dir /var/lib/nilo \
   --management-interface wlan0 --management-interface nilo0 \
   --management-port 8443 \
-  --management-tls-name ddp-remote.local \
-  --management-tls-name 10.205.148.11 \
   --gui-dir /opt/nilo/gui \
-  --tls-cert /etc/nilo/tls/server.crt --tls-key /etc/nilo/tls/server.key \
   --nethelper-socket /run/nilo/nethelper.sock
 ```
 
@@ -498,27 +514,21 @@ password rule: nothing about shipping a known first credential relaxes what any
 later password has to satisfy.
 
 **Expect a certificate warning, and expect it as the first step.** Open
-`https://nilo.local:8443/` or `https://<system-hostname>.local:8443/`. The
+`https://nilo.local:8443/` or the printed permanent `.local` URL. The
 browser will object to the certificate, and that objection is part of the
 procedure rather than a fault:
 
 - No publicly trusted certificate can exist for these identities. `.local` is
   reserved for multicast DNS and no public authority will issue for a reserved
-  name or a private address, so the shipped certificate is signed by nobody the
-  browser already trusts.
-- The certificate carries both names the appliance advertises, so the objection
-  is to the signer alone and never to a name mismatch. An appliance whose
-  certificate is missing one of them still starts and still serves; it reports
-  the missing name in the interface as an actionable warning, and first contact
-  at that particular name shows a mismatch until the certificate is corrected.
-- **The shipped certificate's private key is in every image and is therefore not
-  secret.** Anyone holding an image can present it. The exposure is bounded to
-  appliances that have not been commissioned, on the network segment you are
-  on.
-- The certificate stays with the appliance for its working life. Commissioning
-  does not replace it: a replacement would be signed by nobody the browser has
-  seen either, so it would raise a second warning exactly when setup appears to
-  finish.
+  name or a private address, so the helper-generated certificate is signed by
+  nobody the browser already trusts.
+- The helper-generated certificate carries every currently advertised local
+  name, so the expected objection is to its self-signed issuer rather than a
+  name mismatch.
+- The image contains no appliance private key. Each helper generates a distinct
+  P-256 key after the printed identity is known and exposes only signing.
+- Friendly-name changes may rotate the public certificate. The browser may ask
+  for trust again; compare the permanent printed name before proceeding.
 
 ### Completing commissioning
 
@@ -554,18 +564,12 @@ the helper accepts a validated interface list, a port, and a validated host
 label, never firewall or responder syntax. No response, log or export carries a
 Wi-Fi password, a WireGuard key or any other secret.
 
-The listener certificate is read and checked, never generated or replaced. A
-name the certificate does not carry - an advertised discovery name or a
-configured management name - is reported rather than fatal: an appliance that
-refused to start over a certificate gap would be unreachable, which is worse
-than one that is reachable and says what is wrong. A first-boot or
-interface-managed listener carries the gap into the interface as an actionable
-warning. The legacy `--bind` listener is operator-configured and offers no
-management-access interface, so it reports the gap on its diagnostic output and
-in the journal instead. A certificate that cannot be read or parsed does stop
-the start in every mode, because there is then nothing to serve TLS from at
-all. Browsers warn about the signer
-either way, for the reasons set out under first contact above.
+The appliance listener uses the helper's current public certificate and sends
+each handshake signature back through the constrained helper protocol. Friendly
+and provisioning names are covered before they are published. The legacy
+file-backed pair remains available when both `--tls-cert` and `--tls-key` are
+provided, and cannot be combined with the helper-backed identity. Browsers warn
+about the signer for the reasons set out under first contact above.
 
 The published first credential does not weaken any of this either. It is one
 ordinary administrator identity, subject to the same roles, sessions, throttling

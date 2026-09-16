@@ -1,0 +1,46 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-SEC-f3d137bb"
+
+title = "Confine commissioning portal services to the access point"
+
+status = "active"
+
+requirement = """
+While the commissioning access point is active, the privileged helper shall provide its fixed-subnet DHCP, wildcard captive DNS and narrow portal redirect only to clients on that access-point interface, admit that interface through the unchanged management firewall layers, and refuse activation with a bounded unavailable reason if the subnet overlaps any current host route.
+"""
+
+verification = "The privileged network stage joins a client namespace to the AP, obtains only an address from the configured subnet, resolves arbitrary captive names only through the AP DNS, follows known portal probes to the HTTPS serial URL and reaches management through all three existing gates; host/uplink/device/WireGuard namespaces receive no DHCP, DNS or redirect response, and an injected overlapping route prevents all AP-side services without altering existing routes or profiles."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/nethelper/commissioning_services_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_commissioning_linux.go",
+    "05_Software/nilo_assistant/internal/network/management_access.go",
+    "05_Software/nilo_assistant/internal/httpapi/listener.go",
+    "02_Tools/scripts/install-nethelper.sh",
+    "02_Tools/scripts/build-appliance.sh",
+    "02_Tools/tests/network/run.sh",
+    "02_Tools/tests/network/Dockerfile",
+    "02_Tools/tests/appliance/inventory.json",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/nethelper/commissioning_services_test.go::*",
+    "05_Software/nilo_assistant/internal/network/commissioning_ap_test.go::*",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "The issue relaxes the no-DHCP-server rule only for one provisioning radio, so every service and route must remain confined there."
+
+created = 2026-09-15
+updated = 2026-09-15

@@ -13,6 +13,7 @@ import (
 
 	"github.com/godbus/dbus/v5"
 	"github.com/google/uuid"
+	"nilo.local/nilo/internal/appliance"
 	"nilo.local/nilo/internal/network"
 )
 
@@ -239,3 +240,162 @@ func hasConfiguredAddress(addresses []string) bool {
 }
 
 var _ CommissioningLinkDriver = (*NetworkManager)(nil)
+
+const commissioningAPConnectionPrefix = "nilo-commissioning-ap-"
+
+func commissioningAPConnectionID(adapterID string) string {
+	return commissioningAPConnectionPrefix + strings.ReplaceAll(strings.ToLower(adapterID), ":", "")
+}
+
+func (n *NetworkManager) ReconcileCommissioningAccessPoint(ctx context.Context, plan network.CommissioningAccessPoint) error {
+	if n.commissioningServices == nil {
+		return errors.New("commissioning access point services are unavailable")
+	}
+	if n.commissioningStore == nil {
+		return errors.New("commissioning access point ownership store is unavailable")
+	}
+	ownership, err := n.commissioningStore.LoadCommissioningProfiles()
+	if err != nil {
+		return fmt.Errorf("load commissioning access point ownership: %w", err)
+	}
+	if plan.RetainOwned && !plan.Enabled {
+		var retained bool
+		plan, retained = retainedCommissioningAccessPoint(plan, ownership)
+		if !retained {
+			return n.commissioningServices.Stop(ctx)
+		}
+	}
+	if plan.Enabled {
+		if err := n.commissioningServices.Check(plan); err != nil {
+			return err
+		}
+	} else if err := n.commissioningServices.Stop(ctx); err != nil {
+		return err
+	}
+	var paths []dbus.ObjectPath
+	if err := n.bus.Object(nm, settingsPath).CallWithContext(ctx, nm+".Settings.ListConnections", 0).Store(&paths); err != nil {
+		return sanitizedBusError("list access point profiles", err)
+	}
+	type foundProfile struct {
+		path     dbus.ObjectPath
+		settings map[string]map[string]dbus.Variant
+	}
+	connections := make(map[string]foundProfile, len(paths))
+	for _, path := range paths {
+		settings, err := n.settingsOf(ctx, path)
+		if err == nil {
+			connections[value[string](settings["connection"], "uuid")] = foundProfile{path: path, settings: settings}
+		}
+	}
+	record := ownership.AccessPoint
+	if record != nil {
+		connection, present := connections[record.UUID]
+		if present && !commissioningAPProfileOwned(connection.settings, *record) {
+			return ErrCommissioningLinkForeign
+		}
+		keep := plan.Enabled && strings.EqualFold(record.AdapterID, plan.AdapterID) &&
+			record.Interface == plan.Interface && record.SSID == plan.SerialName
+		if !keep {
+			if present {
+				if err := n.bus.Object(nm, connection.path).CallWithContext(ctx, connectionAPI+".Delete", 0).Err; err != nil {
+					return sanitizedBusError("remove stale commissioning access point", err)
+				}
+			}
+			ownership.AccessPoint = nil
+			if err := n.commissioningStore.SaveCommissioningProfiles(ownership); err != nil {
+				return fmt.Errorf("clear commissioning access point ownership: %w", err)
+			}
+			record = nil
+		}
+	}
+	if !plan.Enabled {
+		return nil
+	}
+	if record == nil {
+		record = &CommissioningAccessPointProfileRecord{
+			AdapterID: strings.ToLower(plan.AdapterID), Interface: plan.Interface,
+			UUID: uuid.NewString(), SSID: plan.SerialName,
+		}
+		ownership.AccessPoint = record
+		if err := n.commissioningStore.SaveCommissioningProfiles(ownership); err != nil {
+			return fmt.Errorf("save commissioning access point ownership: %w", err)
+		}
+	}
+	connectionUUID := record.UUID
+	path := dbus.ObjectPath("")
+	if selected, present := connections[record.UUID]; present {
+		path = selected.path
+		if !commissioningAPProfileMatches(selected.settings, plan, *record) {
+			return ErrCommissioningLinkForeign
+		}
+	} else {
+		settings, err := commissioningAPConnectionSettings(connectionUUID, plan)
+		if err != nil {
+			return err
+		}
+		var result map[string]dbus.Variant
+		if err := n.bus.Object(nm, settingsPath).CallWithContext(ctx, nm+".Settings.AddConnection2", 0, settings, uint32(addConnectionInMemory), map[string]dbus.Variant{}).Store(&path, &result); err != nil {
+			return sanitizedBusError("create commissioning access point", err)
+		}
+	}
+	devices, err := n.Devices(ctx)
+	if err != nil {
+		return err
+	}
+	for _, device := range devices {
+		if strings.EqualFold(device.Interface.AdapterID, plan.AdapterID) {
+			if device.Connection == connectionUUID && device.Interface.State == network.StateConnected {
+				return n.commissioningServices.Start(plan)
+			}
+			if err := n.activateOn(ctx, path, device, connectionUUID); err != nil {
+				return err
+			}
+			if err := n.commissioningServices.Start(plan); err != nil {
+				_ = n.bus.Object(nm, path).CallWithContext(context.WithoutCancel(ctx), connectionAPI+".Delete", 0).Err
+				return err
+			}
+			return nil
+		}
+	}
+	return errors.New("commissioning access point adapter disappeared")
+}
+
+func commissioningAPConnectionSettings(connectionUUID string, plan network.CommissioningAccessPoint) (map[string]map[string]dbus.Variant, error) {
+	mac, err := hardwareAddressBytes(plan.AdapterID)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]map[string]dbus.Variant{
+		"connection": {
+			"id": variant(commissioningAPConnectionID(plan.AdapterID)), "uuid": variant(connectionUUID), "type": variant("802-11-wireless"),
+			"interface-name": variant(plan.Interface), "autoconnect": variant(true), "autoconnect-priority": variant(int32(100)),
+		},
+		"802-11-wireless": {
+			"ssid": variant([]byte(plan.SerialName)), "mode": variant("ap"), "band": variant("bg"), "mac-address": variant(mac),
+		},
+		"802-11-wireless-security": {
+			"key-mgmt": variant("wpa-psk"), "psk": variant(appliance.PublishedAdministratorPassword), "psk-flags": variant(uint32(0)),
+		},
+		"ipv4": {
+			"method": variant("manual"), "address-data": variant([]map[string]dbus.Variant{{"address": variant("192.168.247.1"), "prefix": variant(uint32(24))}}),
+			"never-default": variant(true), "ignore-auto-routes": variant(true), "ignore-auto-dns": variant(true),
+		},
+		"ipv6": {"method": variant("disabled")},
+	}, nil
+}
+
+func commissioningAPProfileOwned(settings map[string]map[string]dbus.Variant, record CommissioningAccessPointProfileRecord) bool {
+	plan := network.CommissioningAccessPoint{
+		Enabled: true, SerialName: record.SSID, AdapterID: record.AdapterID,
+		Interface: record.Interface, Address: "192.168.247.1/24",
+	}
+	expected, err := commissioningAPConnectionSettings(record.UUID, plan)
+	return err == nil && normalizedRecoveryProfileEqual(settings, expected)
+}
+
+func commissioningAPProfileMatches(settings map[string]map[string]dbus.Variant, plan network.CommissioningAccessPoint, record CommissioningAccessPointProfileRecord) bool {
+	return record.SSID == plan.SerialName && strings.EqualFold(record.AdapterID, plan.AdapterID) &&
+		record.Interface == plan.Interface && commissioningAPProfileOwned(settings, record)
+}
+
+var _ network.CommissioningAccessPointDriver = (*NetworkManager)(nil)

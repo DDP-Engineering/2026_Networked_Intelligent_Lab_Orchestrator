@@ -105,7 +105,7 @@ func TestUpgradedDatabaseRecordsCommissionedCommissioningState(t *testing.T) {
 	}
 	// Everything up to and including 012_management_access, which is what an
 	// appliance running the previous release has.
-	previous := migrations[:len(migrations)-2]
+	previous := migrations[:12]
 	if previous[len(previous)-1].version != "012_management_access" {
 		t.Fatalf("migration before the commissioning one = %q, want 012_management_access",
 			previous[len(previous)-1].version)

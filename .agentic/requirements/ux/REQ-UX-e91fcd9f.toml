@@ -1,0 +1,38 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-e91fcd9f"
+
+title = "Guide users to find an appliance by situation"
+
+status = "active"
+
+requirement = """
+The operations, first-boot and delivery documentation shall provide one concise "Find your NILO" procedure ordered by same-network Windows, macOS or Linux, direct cable, no cable, routed lab and attached display, naming for each discovery channel the printed input, expected result, convergence bound, interface scope, routing limit, certificate warning and safe recovery step.
+"""
+
+verification = "Inspection: a reviewer follows each situation from a clean reader perspective and confirms it gives an actionable first step and fallback without requiring a previously known address, accurately limits multicast to the link and DHCP DNS to router policy, retains the signer warning, references the published first-boot credential only for provisioning, and agrees with recorded Windows/macOS/Ubuntu/phone/Pi acceptance observations."
+
+affected_paths = [
+    "06_SoftwareDocu/Network_Operations.md",
+    "06_SoftwareDocu/Find_Your_NILO.md",
+    "07_Delivery/NILO_First_Boot_Provisioning_Verification.md",
+    "07_Delivery/NILO_Discovery_Verification.md",
+]
+
+linked_tests = []
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "Multiple independent channels help only when a user can select the one their client and lab topology support."
+
+created = 2026-09-15
+updated = 2026-09-15

@@ -1,0 +1,42 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-bfa4d4e5"
+
+title = "Identify and reannounce on a short button press"
+
+status = "active"
+
+requirement = """
+When a commissioned or provisioning Raspberry Pi reports a short-button identification event and no higher-duration action is pending, NILO shall run the bounded Identify indicator and immediately reannounce its current mDNS and SSDP presence on their existing management-interface scopes without changing lifecycle, allowlists, addresses or saved profiles.
+"""
+
+verification = "Automated coordinator tests inject a durable short-button event in provisioning and commissioned states with mDNS/SSDP available, independently failing and unavailable; they observe one bounded indicator request, immediate reannouncement only through already selected interfaces, event acknowledgement and unchanged lifecycle/allowlist/profile state, while a pending recovery/reset event supersedes identification and partial announcement failure is bounded and audited without repeating network mutation."
+
+affected_paths = [
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery.go",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go",
+    "05_Software/nilo_assistant/internal/network/identify.go",
+    "05_Software/nilo_assistant/internal/network/mdns_announcer.go",
+    "05_Software/nilo_assistant/internal/network/ssdp.go",
+    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::*",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "The physical control must distinguish the enclosure and refresh both standard discovery channels without becoming another network-reset path."
+
+created = 2026-09-15
+updated = 2026-09-15

@@ -5,6 +5,18 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ## [Unreleased]
 
+### Added
+
+- Permanent printed appliance names, QR labels, management-scoped mDNS/SSDP
+  discovery, DHCP identity, and provisioning-only Wi-Fi discovery.
+- Authenticated About and Identify controls, loopback-only local status, and
+  cross-platform `nilo discover`, `nilo open`, and label output.
+
+### Changed
+
+- Appliance TLS keys are generated and retained by the privileged helper;
+  certificates rotate before friendly discovery names are published.
+
 ## [0.6.0] - 2026-09-15
 
 ### Added

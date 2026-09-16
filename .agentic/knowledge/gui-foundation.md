@@ -420,7 +420,12 @@ visible.
   `TabStrip`, `SideNav`, `NetworkSummary`, `Menu`, `Icon`, the page registry and
   the tab state.
 - `05_Software/nilo_gui/src/components/pages/` - `BenchPage`, `NetworkPage` and
-  the About, not-yet-available and integration pages.
+  the About, not-yet-available and integration pages. About reads the
+  authenticated appliance resource and presents permanent/friendly names,
+  management addresses, the printable label, friendly-name administration and
+  the permission-gated Identify action. Identify decodes the versioned
+  `supported` response and absolute `active_until` deadline; About controls and
+  management links retain 44-pixel targets at field-display sizes.
 - `05_Software/nilo_gui/src/components/SignInScreen.tsx` - the unauthenticated
   screen with both forms.
 - `05_Software/nilo_gui/src/components/AuthenticationPage.tsx`,

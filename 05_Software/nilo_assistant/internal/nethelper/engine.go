@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"regexp"
 	"sync"
 	"time"
@@ -65,14 +66,17 @@ type Driver interface {
 // Engine serializes privileged changes and refuses further writes until an
 // interrupted change is actually observed restored.
 type Engine struct {
-	mu       sync.Mutex
-	driver   Driver
-	store    Store
-	now      func() time.Time
-	record   *Record
-	disabled map[string]string
-	install  *installation
-	keystore *Keystore
+	mu          sync.Mutex
+	driver      Driver
+	store       Store
+	now         func() time.Time
+	record      *Record
+	disabled    map[string]string
+	install     *installation
+	keystore    *Keystore
+	identity    *ApplianceIdentity
+	tlsIdentity *TLSIdentityManager
+	ssdp        SSDPResponder
 	// forwarding is the durable device-network inventory, present when the
 	// store keeps one; inventory caches what it holds.
 	forwarding          ForwardingStore
@@ -85,6 +89,141 @@ type Engine struct {
 	recoverySteadyUntil time.Time
 	recoverySteadySeen  time.Time
 	recoveryWallSeen    time.Time
+}
+
+func (e *Engine) ConfigureSSDP(responder SSDPResponder) error {
+	if responder == nil {
+		return errors.New("SSDP responder is required")
+	}
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.ssdp = responder
+	return nil
+}
+
+func (e *Engine) PublishSSDP(ctx context.Context, presence network.SSDPPresence) error {
+	e.mu.Lock()
+	responder := e.ssdp
+	e.mu.Unlock()
+	if responder == nil {
+		return errors.New("SSDP responder is unavailable")
+	}
+	return responder.Publish(ctx, presence)
+}
+
+func (e *Engine) WithdrawSSDP(ctx context.Context) error {
+	e.mu.Lock()
+	responder := e.ssdp
+	e.mu.Unlock()
+	if responder == nil {
+		return errors.New("SSDP responder is unavailable")
+	}
+	return responder.Withdraw(ctx)
+}
+
+func (e *Engine) SSDPCurrent() bool {
+	e.mu.Lock()
+	responder := e.ssdp
+	e.mu.Unlock()
+	return responder != nil && responder.Current()
+}
+
+func (e *Engine) ReconcileCommissioningAccessPoint(ctx context.Context, plan network.CommissioningAccessPoint) error {
+	driver, ok := e.driver.(network.CommissioningAccessPointDriver)
+	if !ok {
+		return ErrCommissioningLinkUnsupported
+	}
+	if !plan.Enabled {
+		if plan.SerialName != "" || plan.AdapterID != "" || plan.Interface != "" || plan.Address != "" || plan.Port != 0 {
+			return errors.New("disabled commissioning access point must be empty")
+		}
+		return driver.ReconcileCommissioningAccessPoint(ctx, plan)
+	}
+	if !validPermanentSerialName(plan.SerialName) || plan.AdapterID == "" || !validID.MatchString(plan.Interface) || plan.Interface == "lo" || plan.Address != "192.168.247.1/24" || plan.Port == 0 {
+		return errors.New("invalid commissioning access point plan")
+	}
+	if address, err := net.ParseMAC(plan.AdapterID); err != nil || len(address) != 6 {
+		return errors.New("invalid commissioning access point adapter")
+	}
+	return driver.ReconcileCommissioningAccessPoint(ctx, plan)
+}
+
+// ConfigureTLSIdentity installs the helper-owned TLS key and certificate
+// manager. Only its public projection and constrained signing operation are
+// exposed through the protocol.
+func (e *Engine) ConfigureTLSIdentity(manager *TLSIdentityManager) error {
+	if manager == nil {
+		return errors.New("TLS identity manager is required")
+	}
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.tlsIdentity = manager
+	return nil
+}
+
+func (e *Engine) tlsIdentityManager() (*TLSIdentityManager, error) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if e.tlsIdentity == nil {
+		return nil, errors.New("TLS identity is unavailable")
+	}
+	return e.tlsIdentity, nil
+}
+
+func (e *Engine) ReadTLSIdentity() (TLSIdentityPublic, error) {
+	manager, err := e.tlsIdentityManager()
+	if err != nil {
+		return TLSIdentityPublic{}, err
+	}
+	return manager.PublicIdentity()
+}
+
+func (e *Engine) ActivateTLSNames(ctx context.Context, names []string) (TLSIdentityPublic, error) {
+	manager, err := e.tlsIdentityManager()
+	if err != nil {
+		return TLSIdentityPublic{}, err
+	}
+	if err := manager.ActivateNames(ctx, names); err != nil {
+		return TLSIdentityPublic{}, err
+	}
+	return manager.PublicIdentity()
+}
+
+func (e *Engine) SignTLS(generation string, digest []byte) ([]byte, error) {
+	manager, err := e.tlsIdentityManager()
+	if err != nil {
+		return nil, err
+	}
+	return manager.Sign(generation, digest)
+}
+
+// ConfigureApplianceIdentity installs the immutable public projection created
+// from the helper-owned identity record.
+func (e *Engine) ConfigureApplianceIdentity(identity ApplianceIdentity) error {
+	if identity.Schema != 1 || !validPermanentSerialName(identity.SerialName) {
+		return errors.New("valid appliance identity is required")
+	}
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	copy := identity
+	e.identity = &copy
+	if aware, ok := e.driver.(interface{ ConfigureApplianceSerial(string) error }); ok {
+		if err := aware.ConfigureApplianceSerial(identity.SerialName); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ApplianceIdentity returns only the public projection of the configured
+// helper identity.
+func (e *Engine) ApplianceIdentity() (ApplianceIdentity, error) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if e.identity == nil {
+		return ApplianceIdentity{}, errors.New("appliance identity is unavailable")
+	}
+	return *e.identity, nil
 }
 
 // ConfigurePower installs the fixed whole-appliance power implementation.

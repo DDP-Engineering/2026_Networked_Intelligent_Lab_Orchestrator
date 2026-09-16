@@ -28,12 +28,18 @@ const (
 
 // ServeOptions controls a loopback development or explicitly configured TLS server.
 type ServeOptions struct {
-	Certificate     string
-	Key             string
-	Address         string
-	Handler         http.Handler
-	ShutdownTimeout time.Duration
-	OnListening     func(net.Addr)
+	Certificate string
+	Key         string
+	// TLSCertificate is the appliance-only helper-backed certificate. It is
+	// mutually exclusive with the development file-backed pair.
+	TLSCertificate *tls.Certificate
+	// TLSCertificateProvider loads the helper's current public generation for
+	// each handshake so a friendly-name rotation takes effect without restart.
+	TLSCertificateProvider func(*tls.ClientHelloInfo) (*tls.Certificate, error)
+	Address                string
+	Handler                http.Handler
+	ShutdownTimeout        time.Duration
+	OnListening            func(net.Addr)
 	// ManagementGate makes a wildcard appliance listener safe by admitting
 	// only destination addresses currently carried by enabled interfaces.
 	ManagementGate ManagementConnectionGate
@@ -54,19 +60,41 @@ func Serve(ctx context.Context, options ServeOptions) error {
 	if options.Handler == nil {
 		return errors.New("HTTP handler is required")
 	}
+	if err := validateServeTLS(options); err != nil {
+		return err
+	}
 	if options.ShutdownTimeout <= 0 {
 		return errors.New("positive shutdown timeout is required")
 	}
 	if options.ManagementGate == nil {
-		if err := ValidateListener(options.Address, options.Certificate, options.Key); err != nil {
+		var err error
+		if options.TLSCertificate != nil || options.TLSCertificateProvider != nil {
+			err = validateListenerTopology(options.Address)
+		} else {
+			err = ValidateListener(options.Address, options.Certificate, options.Key)
+		}
+		if err != nil {
 			return err
 		}
-	} else if err := ValidateManagementListener(options.Address, options.Certificate, options.Key, options.ManagementGate); err != nil {
-		return err
+	} else {
+		var err error
+		if options.TLSCertificate != nil || options.TLSCertificateProvider != nil {
+			err = validateManagementListenerTopology(options.Address, options.ManagementGate)
+		} else {
+			err = ValidateManagementListener(options.Address, options.Certificate, options.Key, options.ManagementGate)
+		}
+		if err != nil {
+			return err
+		}
 	}
 
 	var tlsConfig *tls.Config
-	if options.Certificate != "" {
+	if options.TLSCertificate != nil {
+		certificate := *options.TLSCertificate
+		tlsConfig = &tls.Config{Certificates: []tls.Certificate{certificate}, MinVersion: tls.VersionTLS12}
+	} else if options.TLSCertificateProvider != nil {
+		tlsConfig = &tls.Config{GetCertificate: options.TLSCertificateProvider, MinVersion: tls.VersionTLS12}
+	} else if options.Certificate != "" {
 		certificate, err := tls.LoadX509KeyPair(options.Certificate, options.Key)
 		if err != nil {
 			return fmt.Errorf("load listener certificate: %w", err)
@@ -125,6 +153,20 @@ func Serve(ctx context.Context, options ServeOptions) error {
 		}
 		return nil
 	}
+}
+
+func validateServeTLS(options ServeOptions) error {
+	helperIdentities := 0
+	if options.TLSCertificate != nil {
+		helperIdentities++
+	}
+	if options.TLSCertificateProvider != nil {
+		helperIdentities++
+	}
+	if helperIdentities > 1 || helperIdentities == 1 && (options.Certificate != "" || options.Key != "") {
+		return errors.New("helper-backed and file-backed TLS identities are mutually exclusive")
+	}
+	return nil
 }
 
 type managementListener struct {
@@ -186,15 +228,19 @@ func LocalDestination(ctx context.Context) netip.Addr {
 
 // HandlerOptions contains the dependencies for the protected HTTP API.
 type HandlerOptions struct {
-	Bench            *bench.Manager
-	Identity         *identity.Service
-	Profile          string
-	Build            buildinfo.Info
-	Catalog          simulation.Catalog
-	Network          *network.Service
-	Operations       *network.OperationManager
-	ManagementAccess *network.ManagementAccessService
-	Power            power.Controller
+	Bench              *bench.Manager
+	Identity           *identity.Service
+	Profile            string
+	Build              buildinfo.Info
+	Catalog            simulation.Catalog
+	Network            *network.Service
+	Operations         *network.OperationManager
+	ManagementAccess   *network.ManagementAccessService
+	Power              power.Controller
+	Appliance          *ApplianceMetadata
+	Identify           *network.IdentifyService
+	IdentifyOperations identifyOperationStore
+	Naming             applianceNamingService
 	// MCP is the read-only Model Context Protocol endpoint, mounted at /mcp
 	// when one is configured. It is optional: a deployment that offers no MCP
 	// access simply has no route there.
@@ -233,6 +279,9 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 		return nil, errors.New("network operation manager is required")
 	}
 	if _, err := ParseCookieSecurity(string(options.CookieSecurity)); err != nil {
+		return nil, err
+	}
+	if _, err := validateApplianceMetadata(options.Appliance); err != nil {
 		return nil, err
 	}
 
@@ -374,6 +423,13 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 	protected.Handle("POST /api/v1/tokens/{id}/revoke", authorize(auth.PermissionTokensManageAll, handleRevokeToken(options.Identity)))
 	protected.Handle("DELETE /api/v1/tokens/{id}", authorize(auth.PermissionTokensManageAll, handleDeleteToken(options.Identity)))
 	protected.Handle("POST /api/v1/system/power", authorize(auth.PermissionSystemPowerManage, handlePower(options.Power, options.Audit)))
+	if options.Appliance != nil {
+		protected.Handle("GET /api/v1/appliance", authorize(auth.PermissionStatusRead, handleApplianceMetadata(options.Appliance)))
+		protected.Handle("GET /api/v1/appliance/label.svg", authorize(auth.PermissionStatusRead, handleApplianceLabel(options.Appliance)))
+		protected.Handle("POST /api/v1/appliance/identify", authorize(auth.PermissionNetworkManage, sessionOnly(handleIdentify(options.Identify, options.Audit, options.IdentifyOperations))))
+		protected.Handle("PUT /api/v1/appliance/friendly-name", authorize(auth.PermissionNetworkManage, handleFriendlyName(options.Naming, options.Appliance)))
+		protected.Handle("DELETE /api/v1/appliance/friendly-name", authorize(auth.PermissionNetworkManage, handleFriendlyName(options.Naming, options.Appliance)))
+	}
 	// Reading one's own session is identity, not authorization, so it carries
 	// no permission; logout is gated by the CSRF check in the middleware.
 	protected.HandleFunc("GET /api/v1/auth/session", handleCurrentSession)
@@ -381,6 +437,9 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 
 	root := http.NewServeMux()
 	root.HandleFunc("POST /api/v1/auth/login", handleLogin(options.Identity, options.CookieSecurity))
+	if options.Appliance != nil {
+		root.Handle("GET /.well-known/nilo-device.xml", handleCurrentDiscoveryDescription(options.Appliance))
+	}
 	// The MCP endpoint authenticates its own bearer tokens and never accepts a
 	// browser session, so it is mounted beside the protected tree rather than
 	// inside it: a cookie must not be able to reach it.

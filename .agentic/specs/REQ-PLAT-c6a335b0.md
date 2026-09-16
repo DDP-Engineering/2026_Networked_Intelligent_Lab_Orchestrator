@@ -10,14 +10,16 @@ Linux character-device interface and does not require CGO.
 
 Input transitions are debounced for 50 milliseconds. Duration is measured from
 the first stable pressed state to the stable released state. Action occurs once
-on release: below 3 seconds is no action; 3 seconds inclusive to below 10
-seconds is `recovery`; 10 seconds inclusive and above is
+on release: a stable press below 3 seconds is `identify`; 3 seconds inclusive
+to below 10 seconds is `recovery`; 10 seconds inclusive and above is
 `commissioning_reset`. Crossing 10 seconds while still held selects the
 reset-pending indication but does not execute reset before release.
 
 The LED patterns are:
 
 - idle: off;
+- identify: 200 ms on/200 ms off three times, then 800 ms off, repeated for a
+  total ten-second window;
 - recovery armed: 500 ms on, 500 ms off;
 - recovery active: continuously on;
 - reset pending: 125 ms on, 125 ms off;
@@ -54,8 +56,9 @@ request.
 
 ## Examples
 
-A stable 2.999-second press emits no action. A stable 3.000-second press emits
-recovery. A stable 10.000-second press shows reset-pending while held and emits
+A contact shorter than the debounce window emits no action. A stable
+2.999-second press emits identify. A stable 3.000-second press emits recovery.
+A stable 10.000-second press shows reset-pending while held and emits
 commissioning reset only after release. Contact bounce inside the 50 ms window
 emits nothing extra.
 
@@ -63,7 +66,8 @@ emits nothing extra.
 
 - Boundary and bounce tests use an injected clock and fake GPIO lines.
 - Linux ARM64 and x86_64 builds remain CGO-free; x86_64 starts without GPIO.
-- Each durable recovery state produces the exact pattern above.
+- Each identify/recovery state produces the exact pattern above with
+  reset-pending and failure taking precedence over Identify.
 - Installation documentation includes numbering, polarity, pull, resistor,
   permissions, and a warning to power down before wiring.
 - Available wired Pi testing records observations without presenting the

@@ -58,7 +58,7 @@ func newRecoveryEventQueue(store HardwareRecoveryEventStore) (*recoveryEventQueu
 		pending.ReleasedAt.IsZero() && len(pending.ConnectedAdapterIDs) == 0 && !pending.SnapshotValid
 	pendingValid := pending.ID != "" && pending.Generation != 0 && pending.Generation == record.Generation &&
 		!pending.ReleasedAt.IsZero() && validHardwareSnapshot(pending) &&
-		(pending.Action == HardwareRecoveryArm || pending.Action == HardwareRecoveryResetCommissioning)
+		(pending.Action == HardwareRecoveryIdentify || pending.Action == HardwareRecoveryArm || pending.Action == HardwareRecoveryResetCommissioning)
 	if record.Version != 1 || !pendingEmpty && !pendingValid {
 		return nil, errors.New("invalid hardware recovery event record")
 	}
@@ -73,7 +73,7 @@ func (queue *recoveryEventQueue) Publish(action HardwareRecoveryAction) error {
 // supersede recovery. A pending reset is never weakened by a later short press.
 func (queue *recoveryEventQueue) PublishEvent(event HardwareRecoveryEvent) error {
 	action := event.Action
-	if action != HardwareRecoveryArm && action != HardwareRecoveryResetCommissioning {
+	if action != HardwareRecoveryIdentify && action != HardwareRecoveryArm && action != HardwareRecoveryResetCommissioning {
 		return errors.New("invalid hardware recovery action")
 	}
 	if event.ReleasedAt.IsZero() || !validHardwareSnapshot(event) {
@@ -81,7 +81,7 @@ func (queue *recoveryEventQueue) PublishEvent(event HardwareRecoveryEvent) error
 	}
 	queue.mu.Lock()
 	defer queue.mu.Unlock()
-	if queue.record.Pending.Action == HardwareRecoveryResetCommissioning && action == HardwareRecoveryArm {
+	if hardwareActionPriority(action) < hardwareActionPriority(queue.record.Pending.Action) {
 		return nil
 	}
 	if queue.record.Generation >= math.MaxInt64 {
@@ -99,6 +99,19 @@ func (queue *recoveryEventQueue) PublishEvent(event HardwareRecoveryEvent) error
 	}
 	queue.record = next
 	return nil
+}
+
+func hardwareActionPriority(action HardwareRecoveryAction) int {
+	switch action {
+	case HardwareRecoveryIdentify:
+		return 1
+	case HardwareRecoveryArm:
+		return 2
+	case HardwareRecoveryResetCommissioning:
+		return 3
+	default:
+		return 0
+	}
 }
 
 func (queue *recoveryEventQueue) Read(context.Context) (HardwareRecoveryEvent, bool, error) {

@@ -1,0 +1,46 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-8d482c89"
+
+title = "Run a Wi-Fi commissioning access point"
+
+status = "active"
+
+requirement = """
+While the appliance is provisioning, NILO shall keep a WPA2 access point whose SSID is the permanent serial name and whose passphrase is the published first-boot password on each selected eligible wireless adapter that has no saved client profile or protected role, never attempt concurrent client use, tear the access point down on commissioning, and restore it after a network commissioning reset when eligibility still holds.
+"""
+
+verification = "Automated coordinator and disposable NetworkManager tests exercise provisioning, commissioning, reset and restart with eligible, saved-client, active-client, protected and absent radios; only the eligible unused radio receives the helper-owned WPA2 profile with exact SSID/passphrase, it stays up while Ethernet is usable, disappears on commissioning, returns on reset, and every foreign/saved profile compares unchanged after success and injected failure."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/commissioning_ap.go",
+    "05_Software/nilo_assistant/internal/network/commissioning_ap_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_commissioning_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/commissioning_link.go",
+    "05_Software/nilo_assistant/internal/nethelper/commissioning_ap_ownership_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
+    "05_Software/nilo_assistant/internal/network/management_access.go",
+    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "02_Tools/tests/network/run.sh",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/commissioning_ap_test.go::*",
+    "05_Software/nilo_assistant/internal/nethelper/commissioning_ap_ownership_test.go::*",
+]
+
+
+spec = "specs/REQ-FUNC-8d482c89.md"
+
+priority = "high"   # low | normal | high
+rationale = "A new appliance with no Ethernet path still needs a discoverable, encrypted first-contact network."
+
+created = 2026-09-15
+updated = 2026-09-15

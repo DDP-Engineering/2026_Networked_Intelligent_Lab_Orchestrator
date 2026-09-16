@@ -1,0 +1,48 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-SEC-7b9d9d6b"
+
+title = "Audit appliance identification"
+
+status = "active"
+
+requirement = """
+When appliance identification is requested from the interface or triggered by a short hardware-button press, NILO shall append a bounded attributable audit event for the source, supported/unsupported outcome and reannouncement outcome without recording credentials, key material, network secrets, raw discovery packets or unbounded helper errors.
+"""
+
+verification = "Automated Activity tests drive interface and button requests through accepted, unsupported, partial reannouncement and helper-failure outcomes, then inspect the persisted actor/source/result vocabulary; sentinel credentials, keys, packet bodies and injected helper text are absent from database rows, API/export output and logs, and a required audit-write failure remains durably retryable without repeating the indicator action."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/identify.go",
+    "05_Software/nilo_assistant/internal/network/identify_test.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/activity_repository.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/015_appliance_discovery.sql",
+    "05_Software/nilo_assistant/internal/store/sqlite/identify_operation_repository.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/identify_operation_repository_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/appliance_identity.go",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery.go",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/identify_test.go::*",
+    "05_Software/nilo_assistant/internal/store/sqlite/identify_operation_repository_test.go::*",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::*",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "A physical or remote identification action should be attributable without turning discovery traffic into sensitive retained data."
+
+created = 2026-09-15
+updated = 2026-09-15

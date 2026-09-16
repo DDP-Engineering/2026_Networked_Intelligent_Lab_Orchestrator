@@ -1,4 +1,7 @@
+import { useState, type FormEvent } from 'react';
+
 import { useTranslate } from '../../i18n/languages';
+import type { ApplianceMetadata, IdentifyResult } from '../../api/appliance';
 import type {
   BenchCoreIntegration,
   BenchCoreStatus,
@@ -9,6 +12,11 @@ import type { Resource } from '../../api/resource';
 export interface AboutPageProps {
   /** The reported backend status, or null when it could not be read. */
   status: BenchCoreStatus | null;
+  appliance?: ApplianceMetadata | null;
+  labelUrl?: string;
+  canIdentify?: boolean;
+  onIdentify?: () => Promise<IdentifyResult>;
+  onFriendlyName?: (name: string) => Promise<ApplianceMetadata>;
 }
 
 /**
@@ -18,8 +26,52 @@ export interface AboutPageProps {
  * than a placeholder. The names are translated and the values are not: a version
  * string and a protocol name are identifiers, not prose.
  */
-export function AboutPage({ status }: AboutPageProps) {
+export function AboutPage({
+  status,
+  appliance,
+  labelUrl,
+  canIdentify = false,
+  onIdentify,
+  onFriendlyName,
+}: AboutPageProps) {
   const t = useTranslate();
+  const [friendlyName, setFriendlyName] = useState(appliance?.friendlyName ?? '');
+  const [actionStatus, setActionStatus] = useState('');
+  const [working, setWorking] = useState(false);
+
+  const identify = async () => {
+    if (onIdentify === undefined) return;
+    setWorking(true);
+    try {
+      const result = await onIdentify();
+      setActionStatus(
+        result.supported
+          ? t('about.identify.active', {
+              time: new Date(result.activeUntil).toLocaleTimeString(),
+            })
+          : t('about.identify.unsupported'),
+      );
+    } catch {
+      setActionStatus(t('about.identify.failed'));
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const saveFriendlyName = async (event: FormEvent) => {
+    event.preventDefault();
+    if (onFriendlyName === undefined) return;
+    setWorking(true);
+    try {
+      const updated = await onFriendlyName(friendlyName);
+      setFriendlyName(updated.friendlyName);
+      setActionStatus(t('about.friendly.updated'));
+    } catch {
+      setActionStatus(t('about.friendly.failed'));
+    } finally {
+      setWorking(false);
+    }
+  };
 
   return (
     <div className="page">
@@ -64,6 +116,81 @@ export function AboutPage({ status }: AboutPageProps) {
               </tbody>
             </table>
           </div>
+        )}
+        {appliance !== undefined && appliance !== null && (
+          <section className="notice" aria-labelledby="appliance-identity-title">
+            <h3 id="appliance-identity-title">{t('about.appliance')}</h3>
+            <dl className="fact-grid">
+              <div className="fact">
+                <dt>{t('about.permanentName')}</dt>
+                <dd className="cell-mono">{appliance.serialName}</dd>
+              </div>
+              {appliance.friendlyName !== '' && (
+                <div className="fact">
+                  <dt>{t('about.friendlyName')}</dt>
+                  <dd className="cell-mono">{appliance.friendlyName}</dd>
+                </div>
+              )}
+              <div className="fact">
+                <dt>{t('about.lifecycle')}</dt>
+                <dd>{appliance.state}</dd>
+              </div>
+              <div className="fact">
+                <dt>{t('about.managementUrl')}</dt>
+                <dd>
+                  <a className="fact-link" href={appliance.managementUrl}>
+                    {appliance.managementUrl}
+                  </a>
+                </dd>
+              </div>
+              <div className="fact">
+                <dt>{t('about.managementAddresses')}</dt>
+                <dd className="cell-mono">
+                  {appliance.managementAddresses.join(', ')}
+                </dd>
+              </div>
+              <div className="fact">
+                <dt>{t('about.hardwareAddresses')}</dt>
+                <dd className="cell-mono">{appliance.managementMacs.join(', ')}</dd>
+              </div>
+            </dl>
+            <div className="form-actions">
+              {labelUrl !== undefined && (
+                <a className="button" href={labelUrl} target="_blank" rel="noreferrer">
+                  {t('about.openLabel')}
+                </a>
+              )}
+              {onIdentify !== undefined && (
+                <button
+                  type="button"
+                  className="button button-primary"
+                  disabled={!canIdentify || working}
+                  onClick={() => void identify()}
+                >
+                  {t('about.identify')}
+                </button>
+              )}
+            </div>
+            {onFriendlyName !== undefined && (
+              <form className="form" onSubmit={(event) => void saveFriendlyName(event)}>
+                <div className="field">
+                  <label htmlFor="friendly-name">{t('about.friendlyName')}</label>
+                  <input
+                    id="friendly-name"
+                    value={friendlyName}
+                    onChange={(event) => setFriendlyName(event.target.value)}
+                    pattern="[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?"
+                  />
+                </div>
+                <div className="form-actions">
+                  <button type="submit" className="button" disabled={working}>
+                    {t('about.friendly.save')}
+                  </button>
+                </div>
+              </form>
+            )}
+            {actionStatus !== '' && <p role="status">{actionStatus}</p>}
+          </section>
         )}
         <section className="notice">
           <h3>{t('about.licence')}</h3>

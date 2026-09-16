@@ -89,9 +89,13 @@ type remoteAdmin struct {
 	streams adminIO
 }
 
-func newRemoteAdmin(options adminOptions, streams adminIO) (*remoteAdmin, error) {
+func newRemoteAdmin(ctx context.Context, options adminOptions, streams adminIO) (*remoteAdmin, error) {
+	resolvedServer, err := resolveServerForRemoteCommand(ctx, options.server)
+	if err != nil {
+		return nil, err
+	}
 	client, err := apiclient.New(apiclient.Options{
-		BaseURL: options.server, TokenFile: options.tokenFile, CAFile: options.caFile, Timeout: 30 * time.Second,
+		BaseURL: resolvedServer, TokenFile: options.tokenFile, CAFile: options.caFile, Timeout: 30 * time.Second,
 	})
 	if err != nil {
 		return nil, err
@@ -200,7 +204,7 @@ func runRemoteAdminUser(
 		password = read
 	}
 
-	remote, err := newRemoteAdmin(options, streams)
+	remote, err := newRemoteAdmin(ctx, options, streams)
 	if err != nil {
 		fmt.Fprintln(streams.stderr, err)
 		return 1
@@ -257,7 +261,7 @@ func runRemoteAdminToken(
 		return 2
 	}
 
-	remote, err := newRemoteAdmin(options, streams)
+	remote, err := newRemoteAdmin(ctx, options, streams)
 	if err != nil {
 		fmt.Fprintln(streams.stderr, err)
 		return 1

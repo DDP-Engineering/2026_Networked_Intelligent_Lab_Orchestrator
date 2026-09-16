@@ -13,6 +13,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -30,9 +31,25 @@ type Identity struct {
 	ID       string
 	Name     string
 	Location string
+	// FriendlyName is the optional local DNS alias. It is distinct from Name,
+	// which remains a free-form operator label.
+	FriendlyName string
 	// CommissionedAt is when the identity was first created, which is the
 	// closest thing the appliance has to a birthday.
 	CommissionedAt time.Time
+}
+
+var friendlyNamePattern = regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$`)
+
+// ValidateFriendlyName accepts absence or one exact lowercase DNS label.
+func ValidateFriendlyName(value string) error {
+	if value == "" {
+		return nil
+	}
+	if !friendlyNamePattern.MatchString(value) || value == "nilo" || strings.HasPrefix(value, "_") {
+		return errors.New("friendly appliance name must be one lowercase DNS label")
+	}
+	return nil
 }
 
 // Validate refuses an identity that could not be used to attribute an event.
@@ -45,6 +62,9 @@ func (identity Identity) Validate() error {
 		return errors.New("appliance commissioning time must be UTC")
 	}
 	if err := validateLabel("name", identity.Name); err != nil {
+		return err
+	}
+	if err := ValidateFriendlyName(identity.FriendlyName); err != nil {
 		return err
 	}
 	return validateLabel("location", identity.Location)

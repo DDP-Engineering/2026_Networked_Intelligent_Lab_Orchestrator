@@ -717,6 +717,12 @@ input[type='radio'] {
   overflow-wrap: anywhere;
 }
 
+.fact-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+}
+
 /* ---------- tables ---------- */
 
 .table-scroll {

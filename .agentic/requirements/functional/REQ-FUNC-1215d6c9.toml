@@ -1,0 +1,41 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-1215d6c9"
+
+title = "Open a discovered appliance from the command line"
+
+status = "active"
+
+requirement = """
+When `nilo open <name>` uniquely discovers a matching permanent or friendly appliance name, the command shall open its advertised HTTPS management URL with the operating system's default browser, and otherwise refuse with a bounded not-found or ambiguous-name result without opening any URL.
+"""
+
+verification = "Automated Windows, macOS and Linux command tests inject the discovery result set and browser-launch boundary; an exact serial and unique friendly match each launch the advertised HTTPS URL once, while timeout, malformed URL, duplicate friendly name and multiple UUID matches return their stable errors and make zero launch calls."
+
+affected_paths = [
+    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/nilo_assistant/cmd/nilo/browser_windows.go",
+    "05_Software/nilo_assistant/cmd/nilo/browser_darwin.go",
+    "05_Software/nilo_assistant/cmd/nilo/browser_linux.go",
+    "05_Software/nilo_assistant/internal/discovery/model.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/cmd/nilo/discover_test.go::*",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "Finding an appliance should lead directly to the existing authenticated interface without copying an address."
+
+created = 2026-09-15
+updated = 2026-09-15

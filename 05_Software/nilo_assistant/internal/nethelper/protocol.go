@@ -2,10 +2,12 @@ package nethelper
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
+	"time"
+
 	"nilo.local/nilo/internal/network"
 	"nilo.local/nilo/internal/power"
-	"time"
 )
 
 // SecretPayload is the one type in this protocol that carries key material, and
@@ -55,15 +57,22 @@ type Request struct {
 	// MDNS is accepted only by mdns.publish. It carries a validated host label
 	// and interface names, never responder configuration syntax.
 	MDNS *network.MDNSAdvertisement `json:"mdns,omitempty"`
+	SSDP *network.SSDPPresence      `json:"ssdp,omitempty"`
 	// AdapterID and InterfaceName are accepted together only by recovery link
 	// activation. RecoveryRecordID is the opaque owned link returned by it.
-	AdapterID          string                       `json:"adapter_id,omitempty"`
-	InterfaceName      string                       `json:"interface_name,omitempty"`
-	RecoveryRecordID   string                       `json:"recovery_record_id,omitempty"`
-	RecoveryExpiresAt  time.Time                    `json:"recovery_expires_at,omitempty"`
-	HardwareEventID    string                       `json:"hardware_event_id,omitempty"`
-	Indicator          *HardwareIndicatorState      `json:"indicator,omitempty"`
-	CommissioningLinks *[]network.CommissioningLink `json:"commissioning_links,omitempty"`
+	AdapterID                string                            `json:"adapter_id,omitempty"`
+	InterfaceName            string                            `json:"interface_name,omitempty"`
+	RecoveryRecordID         string                            `json:"recovery_record_id,omitempty"`
+	RecoveryExpiresAt        time.Time                         `json:"recovery_expires_at,omitempty"`
+	HardwareEventID          string                            `json:"hardware_event_id,omitempty"`
+	Indicator                *HardwareIndicatorState           `json:"indicator,omitempty"`
+	CommissioningLinks       *[]network.CommissioningLink      `json:"commissioning_links,omitempty"`
+	CommissioningAccessPoint *network.CommissioningAccessPoint `json:"commissioning_access_point,omitempty"`
+	TLSNames                 *[]string                         `json:"tls_names,omitempty"`
+	TLSGeneration            string                            `json:"tls_generation,omitempty"`
+	TLSDigest                []byte                            `json:"tls_digest,omitempty"`
+	TLSHash                  string                            `json:"tls_hash,omitempty"`
+	TLSAlgorithm             string                            `json:"tls_algorithm,omitempty"`
 }
 
 // Response has no field that can hold key material, and must never gain one.
@@ -89,9 +98,13 @@ type Response struct {
 	// Plans is the installed device-network forwarding.
 	Plans []network.ForwardingPlan `json:"plans,omitempty"`
 	// RecoveryRecordID names only a helper-owned volatile recovery link.
-	RecoveryRecordID string                 `json:"recovery_record_id,omitempty"`
-	HardwareEvent    *HardwareRecoveryEvent `json:"hardware_event,omitempty"`
-	MDNSCurrent      *bool                  `json:"mdns_current,omitempty"`
+	RecoveryRecordID  string                 `json:"recovery_record_id,omitempty"`
+	HardwareEvent     *HardwareRecoveryEvent `json:"hardware_event,omitempty"`
+	MDNSCurrent       *bool                  `json:"mdns_current,omitempty"`
+	SSDPCurrent       *bool                  `json:"ssdp_current,omitempty"`
+	ApplianceIdentity *ApplianceIdentity     `json:"appliance_identity,omitempty"`
+	TLSIdentity       *TLSIdentityPublic     `json:"tls_identity,omitempty"`
+	TLSSignature      []byte                 `json:"tls_signature,omitempty"`
 }
 
 // secretOperations are the only operations that may name staged key material.
@@ -141,6 +154,9 @@ func dispatch(ctx context.Context, e *Engine, q Request) Response {
 	if q.MDNS != nil && q.Op != "mdns.publish" {
 		return Response{Error: "unexpected mDNS advertisement", Code: "invalid_request"}
 	}
+	if q.SSDP != nil && q.Op != "ssdp.publish" {
+		return Response{Error: "unexpected SSDP presence", Code: "invalid_request"}
+	}
 	if (q.AdapterID != "" || q.InterfaceName != "") && q.Op != "recovery.link.activate" {
 		return Response{Error: "unexpected recovery adapter identity", Code: "invalid_request"}
 	}
@@ -159,7 +175,48 @@ func dispatch(ctx context.Context, e *Engine, q Request) Response {
 	if q.CommissioningLinks != nil && q.Op != "commissioning.links.reconcile" {
 		return Response{Error: "unexpected commissioning links", Code: "invalid_request"}
 	}
+	if q.CommissioningAccessPoint != nil && q.Op != "commissioning.ap.reconcile" {
+		return Response{Error: "unexpected commissioning access point", Code: "invalid_request"}
+	}
+	if q.TLSNames != nil && q.Op != "tls.identity.activate" {
+		return Response{Error: "unexpected TLS names", Code: "invalid_request"}
+	}
+	if (q.TLSGeneration != "" || len(q.TLSDigest) != 0 || q.TLSHash != "" || q.TLSAlgorithm != "") && q.Op != "tls.identity.sign" {
+		return Response{Error: "unexpected TLS signing parameters", Code: "invalid_request"}
+	}
 	switch q.Op {
+	case "appliance.identity.read":
+		if q.ID != "" {
+			return Response{Error: "appliance identity read requires an empty envelope", Code: "invalid_request"}
+		}
+		var identity ApplianceIdentity
+		identity, err = e.ApplianceIdentity()
+		if err == nil {
+			r.ApplianceIdentity = &identity
+		}
+	case "tls.identity.read":
+		if q.ID != "" {
+			return Response{Error: "TLS identity read requires an empty envelope", Code: "invalid_request"}
+		}
+		var identity TLSIdentityPublic
+		identity, err = e.ReadTLSIdentity()
+		if err == nil {
+			r.TLSIdentity = &identity
+		}
+	case "tls.identity.activate":
+		if q.ID != "" || q.TLSNames == nil {
+			return Response{Error: "TLS identity activation requires a name set", Code: "invalid_request"}
+		}
+		var identity TLSIdentityPublic
+		identity, err = e.ActivateTLSNames(ctx, *q.TLSNames)
+		if err == nil {
+			r.TLSIdentity = &identity
+		}
+	case "tls.identity.sign":
+		if q.ID != "" || q.TLSGeneration == "" || len(q.TLSDigest) != sha256.Size || q.TLSHash != "sha256" || q.TLSAlgorithm != "ecdsa-p256-sha256" {
+			return Response{Error: "TLS signing requires the current P-256 generation and one SHA-256 digest", Code: "invalid_request"}
+		}
+		r.TLSSignature, err = e.SignTLS(q.TLSGeneration, q.TLSDigest)
 	case "management.access.apply":
 		if q.ID != "" || q.ManagementAccess == nil {
 			return Response{Error: "management access requires a configuration and nothing else", Code: "invalid_request"}
@@ -182,6 +239,22 @@ func dispatch(ctx context.Context, e *Engine, q Request) Response {
 		var current bool
 		current, err = e.MDNSPublicationCurrent(ctx)
 		r.MDNSCurrent = &current
+	case "ssdp.publish":
+		if q.ID != "" || q.SSDP == nil {
+			return Response{Error: "SSDP publication requires typed presence", Code: "invalid_request"}
+		}
+		err = e.PublishSSDP(ctx, *q.SSDP)
+	case "ssdp.withdraw":
+		if q.ID != "" || q.SSDP != nil {
+			return Response{Error: "SSDP withdrawal requires an empty envelope", Code: "invalid_request"}
+		}
+		err = e.WithdrawSSDP(ctx)
+	case "ssdp.status":
+		if q.ID != "" || q.SSDP != nil {
+			return Response{Error: "SSDP status requires an empty envelope", Code: "invalid_request"}
+		}
+		current := e.SSDPCurrent()
+		r.SSDPCurrent = &current
 	case "recovery.link.activate":
 		if q.ID != "" || q.AdapterID == "" || q.InterfaceName == "" || q.RecoveryRecordID != "" || q.RecoveryExpiresAt.IsZero() {
 			return Response{Error: "recovery activation requires one adapter identity and interface", Code: "invalid_request"}
@@ -222,6 +295,11 @@ func dispatch(ctx context.Context, e *Engine, q Request) Response {
 			return Response{Error: "commissioning reconciliation requires a typed link list", Code: "invalid_request"}
 		}
 		err = e.ReconcileCommissioningLinks(ctx, *q.CommissioningLinks)
+	case "commissioning.ap.reconcile":
+		if q.ID != "" || q.CommissioningAccessPoint == nil {
+			return Response{Error: "commissioning access point reconciliation requires one typed plan", Code: "invalid_request"}
+		}
+		err = e.ReconcileCommissioningAccessPoint(ctx, *q.CommissioningAccessPoint)
 	case "system.restart":
 		if !emptyPowerRequest(q) {
 			return Response{Error: "power operation requires an empty envelope", Code: "invalid_request"}

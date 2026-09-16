@@ -334,6 +334,23 @@ export const de: Catalogue = {
   'about.unavailable':
     'Build-Informationen sind nicht verfügbar, weil der Backend-Status nicht gelesen werden konnte.',
 
+  'about.appliance': 'Geräteidentität',
+  'about.permanentName': 'Dauerhafter Name',
+  'about.friendlyName': 'Anzeigename',
+  'about.lifecycle': 'Lebenszyklus',
+  'about.managementUrl': 'Verwaltungs-URL',
+  'about.managementAddresses': 'Verwaltungsadressen',
+  'about.hardwareAddresses': 'Hardwareadressen',
+  'about.openLabel': 'Druckbares Etikett öffnen',
+  'about.identify': 'Gerät identifizieren',
+  'about.identify.active': 'Identifizierung ist bis {time} aktiv.',
+  'about.identify.unsupported':
+    'Identifizierung wird auf dieser Hardware nicht unterstützt.',
+  'about.identify.failed': 'Identifizierung konnte nicht gestartet werden.',
+  'about.friendly.save': 'Anzeigename speichern',
+  'about.friendly.updated': 'Anzeigename wurde aktualisiert.',
+  'about.friendly.failed': 'Der Anzeigename konnte nicht verwendet werden.',
+
   'integration.identifier': 'Kennung',
   'integration.displayName': 'Anzeigename',
   'integration.state': 'Zustand',
