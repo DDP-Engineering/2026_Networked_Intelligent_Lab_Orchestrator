@@ -692,7 +692,7 @@ Chromium (nilo-browser namespace)
 
 
 current: done
-status: completed
+status: ready
 next: local delivery commit approved; do not push
 must_read: .agentic/steps/6_deliver.md, this journal, the approved candidate diff and strict job 11a65df9-dd0d-4cc8-8c83-c3912d77a814
 blockers: none; agent push remains prohibited by repository policy

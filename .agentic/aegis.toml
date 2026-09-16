@@ -107,7 +107,22 @@ close = []
 
 [check]
 secret_patterns_extra = []
-ignore = []
+
+# Paths excluded from every check finding. Kept deliberately short: an entry
+# here silences all findings on that path, not one kind, so each is a decision
+# rather than a convenience.
+#
+# These three carry password literals that the secret scan reports. They are
+# development credentials used to build a fixture or a mock backend, recycled
+# when the development phase ends, and never a credential of a running
+# appliance - the owner's decision, recorded here so the next reader knows the
+# scan was answered rather than muted by accident. Anything that ever holds a
+# real credential does not belong on this list.
+ignore = [
+    "05_Software/nilo_assistant/internal/auth/password_test.go",
+    "05_Software/nilo_assistant/internal/auth/password_policy_test.go",
+    "05_Software/nilo_gui/src/api/mock.ts",
+]
 # Warnings that fail `check --strict`. Each one here is an integrity failure
 # rather than a matter of taste, and each is at zero occurrences today, so
 # promoting it holds the line where it already stands instead of breaking the
