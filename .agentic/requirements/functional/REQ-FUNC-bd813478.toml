@@ -86,8 +86,7 @@ affected_paths = [
     "02_Tools/tests/network/Dockerfile",
     "02_Tools/tests/network/check.sh",
     "02_Tools/tests/network/run.sh",
-    "06_SoftwareDocu/Network_Service_Implementation_Status.md",
-    "06_SoftwareDocu/Live_Network_Development.md",
+    "06_SoftwareDocu/Network_Operations.md",
     "CHANGELOG.md",
 ]
 

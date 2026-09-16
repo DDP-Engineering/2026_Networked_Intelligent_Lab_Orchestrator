@@ -61,7 +61,6 @@ affected_paths = [
     "05_Software/nilo_assistant/cmd/nilo/main_test.go",
     "05_Software/nilo_assistant/README.md",
     "06_SoftwareDocu/Development_and_Simulation_Flow.md",
-    "00_Planning/Development_Simulation_Vertical_Slices.md",
     ".agentic/knowledge/bench-core-foundation.md",
 ]
 

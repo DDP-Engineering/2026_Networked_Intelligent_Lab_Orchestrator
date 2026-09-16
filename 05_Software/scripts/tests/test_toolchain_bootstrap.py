@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import subprocess
@@ -12,6 +13,7 @@ from pathlib import Path
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 TOOLS_ROOT = REPOSITORY_ROOT / "02_Tools"
 MANIFEST_PATH = TOOLS_ROOT / "toolchain.versions"
+GUI_PACKAGE_LOCK = REPOSITORY_ROOT / "05_Software" / "nilo_gui" / "package-lock.json"
 
 
 class ToolchainBootstrapTests(unittest.TestCase):
@@ -91,12 +93,26 @@ class ToolchainBootstrapTests(unittest.TestCase):
             "UV_LINUX_ARM64_SHA256": "e0e9d73f74e06a7dcd53910d5962146ab48f0af9c92cc8df33a37baa0121014d",
             "NODE_WINDOWS_AMD64_SHA256": "6cac9ffbca8f6a47091e4b5c772e0606049c3871cb67d900c0cedde630e545ba",
             "NODE_LINUX_AMD64_SHA256": "2f2c0da162318f0de47665410c7c8c2ed3d36c8f3105de4bbc61176c70a7cbf2",
-            "PLAYWRIGHT_LOCK_SHA256": "45bd096d55b05db121787ae48dcc1902d8915da024fb7e65448ce08c4fb6908f",
             "PLAYWRIGHT_BROWSER_CATALOG_SHA256": "f306eed529599b1eaf2f8a85db9de2b23e1a3fe36c2b66434b7c9434fb627a99",
         }
         for name, expected in expected_digests.items():
             self.assertEqual(values[name], expected)
             self.assertRegex(values[name], r"^[0-9a-f]{64}$")
+
+        # PLAYWRIGHT_LOCK_SHA256 is derived, not pinned. Every other digest here
+        # names a remote archive, where a literal is the only way to state which
+        # bytes were approved. This one is the digest of a file in this
+        # repository, which changes with any dependency or version change: a
+        # literal would be a fourth copy to hand-synchronise, and forgetting it
+        # fails the suite in a way that says nothing about the toolchain. What
+        # the manifest must be right about is that it agrees with the lockfile
+        # actually in the tree, and that is what is asserted.
+        self.assertEqual(
+            values["PLAYWRIGHT_LOCK_SHA256"],
+            hashlib.sha256(GUI_PACKAGE_LOCK.read_bytes()).hexdigest(),
+            "toolchain.versions does not record the digest of the GUI lockfile in this tree",
+        )
+        self.assertRegex(values["PLAYWRIGHT_LOCK_SHA256"], r"^[0-9a-f]{64}$")
 
         self.assertEqual(
             set(values),
@@ -110,6 +126,9 @@ class ToolchainBootstrapTests(unittest.TestCase):
                 "CHROMIUM_VERSION",
                 "CHROMIUM_REVISION",
                 *expected_digests,
+                # Derived above rather than pinned, but still a key the manifest
+                # must carry: the set is what proves nothing was added or lost.
+                "PLAYWRIGHT_LOCK_SHA256",
             },
         )
 

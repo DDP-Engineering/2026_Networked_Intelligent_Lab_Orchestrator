@@ -1,0 +1,50 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-DATA-757ca87b"
+
+title = "Persist the appliance password policy"
+
+status = "active"
+
+requirement = """
+Bench Core shall persist the appliance password policy - one minimum length and one independent requirement for each of lowercase letters, uppercase letters, digits and characters that are neither - in its database so that a restart applies the policy last recorded, and shall apply a minimum length of 12 bytes requiring no class where no policy has been recorded.
+"""
+
+verification = "A test changes the policy, closes the appliance, opens the same data directory again and asserts a read returns the changed policy and a password set afterwards is held to it; a second test opens a data directory that has never recorded a policy and asserts a read returns a minimum of 12 with no class required, and that a 12-byte password of one class is accepted there."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/015_password_policy.sql",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/016_password_policy_classes.sql",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/password_policy_repository.go",
+    "05_Software/nilo_assistant/internal/auth/password_policy.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/password_policy_repository_test.go",
+    "05_Software/nilo_assistant/internal/auth/password_policy_test.go",
+    "05_Software/nilo_assistant/internal/identity/password_policy_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/store/sqlite/password_policy_repository_test.go::TestPasswordPolicyDefaultsWhereNoneIsRecorded",
+    "05_Software/nilo_assistant/internal/store/sqlite/password_policy_repository_test.go::TestPasswordPolicySurvivesReopeningTheDataDirectory",
+    "05_Software/nilo_assistant/internal/store/sqlite/password_policy_repository_test.go::TestPasswordPolicyReplacesTheSingleRecordedRow",
+    "05_Software/nilo_assistant/internal/store/sqlite/password_policy_repository_test.go::TestPasswordPolicyUpgradeFromTheCountSchemaKeepsTheLength",
+    "05_Software/nilo_assistant/internal/store/sqlite/password_policy_repository_test.go::TestTheCountMigrationIsStillTheOneAppliancesRecorded",
+    "05_Software/nilo_assistant/internal/auth/password_policy_test.go::TestDefaultPasswordPolicyIsTheShippedRule",
+    "05_Software/nilo_assistant/internal/identity/password_policy_test.go::TestServiceStartsAtTheShippedPasswordPolicy",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "A policy that did not survive a restart would silently return the appliance to the shipped rule."        # why this behavior exists, if not obvious
+
+created = 2026-09-15
+updated = 2026-09-16

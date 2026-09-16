@@ -5,6 +5,42 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-16
+
+### Added
+
+- The appliance holds one password policy: a minimum length and four
+  independent requirements - a lowercase letter, an uppercase letter, a digit
+  and a special character - each of which a password must carry when it is set.
+  An administrator reads and changes it over
+  `GET`/`PUT /api/v1/password-policy`, with `nilo admin password-policy` and the
+  browser Authentication page as clients of that route. It is persisted,
+  survives a restart, and every applied change appends one Activity audit event
+  carrying the policy before and after and no credential.
+- The Authentication page presents the policy as a disclosure that starts
+  closed, with the minimum length and the four requirements as checkboxes on one
+  line. A refused change reports the appliance's own message and leaves the
+  stored policy shown.
+- `password.policy.manage`, an Administrator-only permission, separate from
+  identity administration: a token scoped to create identities cannot weaken the
+  rule those identities are held to.
+
+### Changed
+
+- The password rule is applied where a password is set and never where a stored
+  verifier is checked, so tightening the policy leaves every existing identity
+  able to sign in and holds it to the new policy the next time its password is
+  set. The fixed maximum of 1024 bytes stays on the verification path, where it
+  bounds the work an unauthenticated login attempt can ask the appliance to
+  perform.
+- An appliance that has recorded no policy applies a minimum of 12 bytes
+  requiring no character class, which is what every earlier release enforced, so
+  an upgrade changes no behavior until an administrator changes the policy. A
+  configured minimum may go no lower than the compiled floor of 8 bytes.
+- The Authentication identities page carries no standing paragraph describing
+  who is signed in or what the row actions do; that guidance stays in the
+  contextual help each control already offers.
+
 ## [0.6.0] - 2026-09-15
 
 ### Added

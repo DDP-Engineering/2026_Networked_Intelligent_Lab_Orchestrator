@@ -41,7 +41,7 @@ Refresh after work or decisions even if current has not changed.
 
 # TASK-a86b32ec — Authentication administration interface
 
-stage: deliver
+stage: done
 type: feature
 path: full
 requirements: REQ-FUNC-a6c14c23, REQ-FUNC-e0da3a06, REQ-FUNC-5ffce0e4, REQ-FUNC-5d80ae6c, REQ-FUNC-5fd2806f, REQ-FUNC-27c1db30, REQ-FUNC-1fac821d, REQ-FUNC-907003de, REQ-FUNC-795b54d0, REQ-FUNC-f50eb6d3, REQ-FUNC-71c3c908, REQ-FUNC-938c5f85, REQ-UX-c7a277c5, REQ-UX-c4a0c9e7, REQ-UX-ae7baff0, REQ-UX-e60cf375, REQ-UX-96852626, REQ-UX-38017d29, REQ-UX-b849ddb2, REQ-SEC-89034a8a, REQ-SEC-7595665c, REQ-SEC-66b84b2c, REQ-SEC-6e3ae992, REQ-TEST-68dcb172, REQ-SEC-49fe784b, REQ-SEC-8e89944b, REQ-SEC-ed66f6ed, REQ-UX-40473e43, REQ-UX-66636ac9, REQ-UX-0018c647, REQ-TEST-76b94249, REQ-TEST-0a4f49af
@@ -54,10 +54,10 @@ opened: 2026-09-02
 
 - [x] validated candidate confirmed unchanged; otherwise returned to validate
 - [x] validation evidence, diff, exclusions, and outcome presented
-- [ ] delivery confirmed by the human
-- [ ] journal and report included in the delivery commit
-- [ ] agreed outcome delivered, normally a PR
-- [ ] close-out committed after the outcome succeeded, or carried by the delivery commit where nothing could fail after it
+- [x] delivery confirmed by the human
+- [x] journal and report included in the delivery commit
+- [x] agreed outcome delivered, normally a PR
+- [x] close-out committed after the outcome succeeded, or carried by the delivery commit where nothing could fail after it
 
 ## Log
 
@@ -106,6 +106,8 @@ opened: 2026-09-02
 - 2026-09-02 validate: the browser suite really is inside that gate, on two pieces of evidence rather than an assumption - `05_Software/scripts/aegis_test.py` runs `test:ci`, then `build`, then `test:e2e` for the interface suite and fails the whole command rather than skipping when a prerequisite is missing, and earlier in this session `aegis.py test --impacted --base HEAD` printed that router invoking `npm.cmd run test:e2e` and all 12 browser tests passing.
 - 2026-09-02 validate: DEVIATION validate - seventeen accepted `check` warnings, none a defect: thirteen `secret-in-diff` hits are the word "password" beside a colon or equals sign in type annotations, parameter names, state bindings and format strings, with the only literals being the documented mock constant and fake fixture passwords; `outside-layout CHANGELOG.md` is how this repository has always been configured; and the two `unticked-deliver` hits belong to TASK-35b7b070 and TASK-f9dbdeef.
 - 2026-09-02 validate: updated `bench-core-foundation.md` and `gui-foundation.md` - both diagrams now describe code that exists and their "intended shape" lines are gone, and the Purpose, Public interface, Key behaviors and Files sections were rewritten where this task changed them. Three stale phrases naming the removed login screen were corrected in the GUI page.
+
+- 2026-09-16 deliver: closed retrospectively. The user confirms they reviewed this work and committed it, and the journal was simply never closed at the time; the delivery commit cf77de8 feat: add authentication administration and the redesign carries this journal, which is how the delivery is evidenced here. The stage and the deliver checklist are brought into line with what happened. The review verdicts are left as `disabled` because that is what they were: `[review] enabled` was false when this task ran, so the two-verdict protocol never applied to it, and recording `approved` would claim a review that was never performed. No stage report field describing the work itself is altered.
 
 ## Design
 
@@ -187,22 +189,22 @@ navigation, the administration page and the session-restoring path.
 
 ## Handoff
 
-current: deliver
-status: waiting
-next: Await the human decision on committing this validated, uncommitted and unstaged candidate.
-must_read: .agentic/tasks/TASK-a86b32ec.md, .agentic/steps/6_deliver.md, .agentic/specs/REQ-FUNC-5fd2806f.md
-blockers: The prompt forbids committing, staging, pushing and branching, so the delivery stage is deliberately not performed.
+current: done
+status: ready
+next: none - the work was delivered in cf77de8
+must_read: .agentic/tasks/TASK-a86b32ec.md
+blockers: none
 
 ## Stage report
 
-stage: validate
+stage: deliver
 result: completed
-current: deliver
+current: done
 changed: 37 files - 10 added, 26 modified, 1 removed. Bench Core: new internal/httpapi/administration.go with the seven handlers and their validation, the eight route registrations in server.go, handleListUsers moved out of identity.go, exported auth.MinPasswordBytes/MaxPasswordBytes, and identity.ErrExpiryNotInFuture. Interface: new api/csrf.ts, api/permissions.ts, components/SignInScreen.tsx, WorkspaceHeader.tsx, AuthenticationPage.tsx, AdministrationForms.tsx and Modal.tsx, with components/LoginScreen.tsx removed; api/contract.ts, api/client.ts, api/mock.ts, App.tsx, App.css, StatusPanel.tsx and InventoryPanel.tsx reworked. Tests: new internal/httpapi/administration_test.go and src/components/AuthenticationPage.test.tsx, new e2e/authentication.spec.ts, and updates to App.test.tsx, client.test.ts, contract.test.ts, mock.test.ts, environment.test.ts, layout.test.ts, e2e/topology.ts, e2e/bench-core.spec.ts and e2e/commands.test.ts. Records: 24 new requirements, 8 reconciled existing ones, the new spec REQ-FUNC-5fd2806f.md, the widened REQ-SEC-5d0cfe7e.md, both knowledge pages, and the CHANGELOG, TODO, vertical-slices, development-flow, delivery-reference and GUI README documents.
 evidence: check --task TASK-a86b32ec --strict --run exit 0 over the final tree with test ok 69.4s, lint ok 4.5s, strict ok, errors=0 warnings=17 notes=1; that gate runs the Go suite, both Python suites, the interface test:ci and build, and the browser test:e2e, which fails rather than skips on a missing prerequisite. go test ./... green across 20 packages, go vet and gofmt clean. npm test:ci 219 tests in 11 files, lint clean at --max-warnings 0, format:check clean, tsc -b exit 0. npm test:e2e 12 browser tests passed in 20.6s against real Bench Core instances under WSL2. test --impacted --base HEAD exit 0. CGO_ENABLED=0 cross-compile green for linux/arm64, linux/amd64 and windows/amd64. The administration routes recorded a reproducible 404/405 red before implementation; the interface layer did not, which is recorded as a deviation.
 issues: Seventeen accepted check warnings, all explained in the log and none a defect. Four deviations - the interface half was implemented before its component tests, the visual inspection used the accessibility tree and measured DOM geometry rather than a rendered screenshot, thirteen secret-in-diff hits are accepted as false positives, and CHANGELOG.md sits outside the configured layout globs. Token administration is administrator-only, so the tokens.*.self permissions still have no interface. There is still no audit-history route, no session browser, no token rotation and no durable login-attempt state. Settings, Plugins and About are deliberately absent rather than empty. The Slice 7 journal TASK-35b7b070 remains open at deliver, which is its owner's close-out.
-next: Human decides whether to commit; this task performs no commit, no staging and no push.
-needs_user: yes - the prompt reserves the delivery decision and forbids committing, staging and pushing.
+next: none - delivered in cf77de8
+needs_user: no
 spec_compliance: disabled
 implementation_quality: disabled
 review_round:

@@ -41,7 +41,7 @@ Refresh after work or decisions even if current has not changed.
 
 # TASK-f9dbdeef — Add cross-component browser verification
 
-stage: deliver
+stage: done
 type: feature
 path: full
 requirements: REQ-TEST-0a4f49af, REQ-TEST-0f02f4b8, REQ-TEST-7ff6a75d, REQ-TEST-3c4487d6, REQ-REL-f04744fa, REQ-REL-f0c8b07c, REQ-SEC-4884bc91, REQ-PLAT-38014f08, REQ-PLAT-59993b78, REQ-UX-f479d8b9
@@ -57,9 +57,9 @@ opened: 2026-09-01
       second time after the human's review found two flaws that sent it back
 - [x] delivery confirmed by the human
 - [x] journal and report included in the delivery commit
-- [ ] agreed outcome delivered — the human makes the commit themselves; this
+- [x] agreed outcome delivered — the human makes the commit themselves; this
       journal is staged with it
-- [ ] close-out committed after the outcome succeeded
+- [x] close-out committed after the outcome succeeded
 
 ## Log
 
@@ -131,6 +131,8 @@ opened: 2026-09-01
 - 2026-09-02 deliver: the delivery carries TASK-8a4ba5da's close-out edit under RULING-003; this journal's own close-out cannot be carried by the same commit, because the outcome - the human's commit and any push that follows - is not observable to me beforehand, so `stage: deliver` stands until it succeeds.
 - 2026-09-01 build: DEVIATION build - `python .agentic/aegis.py check` exits 0 with errors=0 warnings=1, the `outside-layout` warning for `CHANGELOG.md`. All 19 `stale-paths` warnings from specify have cleared. The remaining one is accepted rather than silenced: `aegis.toml`'s `[layout] docs` globs list `README.md` but not `CHANGELOG.md`, the entry was explicitly requested by the user, and the honest fix is one line of configuration outside this task's scope. The previous task accepted the same warning for the same reason.
 
+- 2026-09-16 deliver: closed retrospectively. The user confirms they reviewed this work and committed it, and the journal was simply never closed at the time; the delivery commit 34752a9 feat: add cross-component browser verification carries this journal, which is how the delivery is evidenced here. The stage and the deliver checklist are brought into line with what happened. The review verdicts are left as `disabled` because that is what they were: `[review] enabled` was false when this task ran, so the two-verdict protocol never applied to it, and recording `approved` would claim a review that was never performed. No stage report field describing the work itself is altered.
+
 ## Design
 
 Components: the browser GUI project `05_Software/nilo_gui` (new `playwright.config.ts`
@@ -196,22 +198,22 @@ Expected files - new: `05_Software/nilo_gui/playwright.config.ts`, `e2e/topology
 
 ## Handoff
 
-current: deliver
-status: waiting
-next: Re-present the candidate at the delivery checkpoint after the two review findings were fixed and re-proved; commit nothing before approval.
-must_read: .agentic/tasks/TASK-f9dbdeef.md, .agentic/steps/6_deliver.md, 05_Software/nilo_gui/e2e/topology.ts, 05_Software/nilo_gui/e2e/token-redaction.spec.ts
+current: done
+status: ready
+next: none - the work was delivered in 34752a9
+must_read: .agentic/tasks/TASK-f9dbdeef.md
 blockers: none
 
 ## Stage report
 
-stage: validate
+stage: deliver
 result: completed
-current: deliver
+current: done
 changed: 42 files against 0cb7732, excluding the untracked `00_Planning/TODO.md` - 20 modified tracked and 22 new. New: 7 files under `05_Software/nilo_gui/e2e/` (the harness `topology.ts`, the prerequisite checks `prerequisites.ts`, the browser specs `bench-core.spec.ts` and `token-redaction.spec.ts`, and three Vitest suites), `05_Software/nilo_gui/playwright.config.ts`, `02_Tools/bootstrap/bootstrap-browser.ps1`, 10 requirement files, and this journal with its anchor and evolution records. Modified: the GUI `package.json`, `package-lock.json`, `vite.config.ts`, `tsconfig.node.json`, `.prettierignore` and `README.md`; `02_Tools/env/with-tools.ps1`, `bootstrap/bootstrap-frontend.ps1`, `bootstrap/bootstrap-development.ps1` and `README.md`; `05_Software/scripts/aegis_test.py` and its two test suites; `.gitignore`, `00_Planning/Development_Simulation_Vertical_Slices.md`, `06_SoftwareDocu/Development_and_Simulation_Flow.md`, `CHANGELOG.md`, both knowledge pages, and TASK-8a4ba5da's close-out
 evidence: `npm run test:e2e` exit=0, 4 browser tests passed in 14.7s - two against a Bench Core the suite compiled and ran inside `Ubuntu-24.04`, two forced-failure redaction regressions; `npm run test:e2e:headed` exit=0; `npm run test:ci` exit=0 with 155 tests in 10 files, up from 113 in 7 at task start; `npm run build`, `format:check` and `lint` each exit=0; `go test ./...` exit=0 across 19 packages; `python -m unittest discover -s scripts/tests` exit=0 with 41 tests; `python scripts/aegis_test.py full` exit=0 and observed to run `npm.cmd run test:e2e` after `test:ci` and `build`; `.\02_Tools\env\with-tools.ps1 python .agentic/aegis.py check --task TASK-f9dbdeef --strict --run` exit=0 with `run: test ok` (59.5s), `run: lint ok` (4.0s), `strict: ok`, errors=0 warnings=1; `git diff --check` exit=0. After a passing run the WSL state root holds 0 entries, no `nilo serve` process remains, and no plaintext token exists anywhere in the tree
 issues: three deviations stand - the design note's expected-file list omitted `.prettierignore`; the accepted `outside-layout` warning for `CHANGELOG.md`, whose honest fix is one line in `aegis.toml` outside this task's scope; and the 45-byte `test-results/.last-run.json` a passing Playwright run writes after it finishes, now stated plainly in the interface README rather than described as nothing. The human's review of the first presentation found two implementation flaws, both confirmed by measurement and both fixed: a failing browser action could print the token, and a failed cleanup could still pass. Two requirements were amended because they were too weak to have caught either. No unresolved defect and no failing verification
-next: Re-present the candidate at the delivery checkpoint and wait for approval; commit nothing before it
-needs_user: yes - the delivery checkpoint is the one remaining stop, and the user asked to stop before the commit
+next: none - delivered in 34752a9
+needs_user: no
 spec_compliance: disabled
 implementation_quality: disabled
 review_round:

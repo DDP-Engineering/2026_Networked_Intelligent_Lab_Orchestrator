@@ -1,0 +1,48 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-SEC-fe469bac"
+
+title = "Refuse a password policy minimum below the absolute floor"
+
+status = "active"
+
+requirement = """
+If a proposed password policy carries a minimum length below the absolute floor of 8 bytes or above the fixed maximum of 1024 bytes, then Bench Core shall refuse the change with a message naming the bound and leave the stored policy exactly as it was.
+"""
+
+verification = "A test submits a policy with a minimum length of 7 and asserts the change is refused with a message naming the floor of 8, that a subsequent read returns the previous policy unchanged, and that a password set immediately afterwards is still held to that previous policy; a second test does the same for a minimum length of 1025."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/auth/password_policy.go",
+    "05_Software/nilo_assistant/internal/identity/service.go",
+    "05_Software/nilo_assistant/internal/httpapi/password_policy.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/016_password_policy_classes.sql",
+    "05_Software/nilo_assistant/internal/auth/password_policy_test.go",
+    "05_Software/nilo_assistant/internal/identity/password_policy_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/password_policy_test.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/password_policy_repository_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/auth/password_policy_test.go::TestPasswordPolicyValidateRefusesALengthOutsideItsBounds",
+    "05_Software/nilo_assistant/internal/auth/password_policy_test.go::TestPasswordPolicyValidateAcceptsEveryCombinationOfRequirements",
+    "05_Software/nilo_assistant/internal/identity/password_policy_test.go::TestSetPasswordPolicyRefusesAMinimumBelowTheFloor",
+    "05_Software/nilo_assistant/internal/httpapi/password_policy_test.go::TestPasswordPolicyRouteRefusesAMinimumBelowTheFloorNamingIt",
+    "05_Software/nilo_assistant/internal/store/sqlite/password_policy_repository_test.go::TestPasswordPolicyTableRefusesValuesOutsideItsBounds",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "A minimum an administrator can set to one character is not a policy."        # why this behavior exists, if not obvious
+
+created = 2026-09-15
+updated = 2026-09-16

@@ -64,7 +64,7 @@ affected_paths = [
     "05_Software/nilo_gui/src/styles/shell.css",
     "05_Software/nilo_gui/e2e/field-display.spec.ts",
     ".agentic/knowledge/gui-foundation.md",
-    "06_SoftwareDocu/Network_Service_Implementation_Status.md",
+    "06_SoftwareDocu/Network_Operations.md",
     "CHANGELOG.md",
 ]
 

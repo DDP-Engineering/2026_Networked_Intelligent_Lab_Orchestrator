@@ -1,0 +1,41 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-SEC-007c3be6"
+
+title = "Record every password policy change in the audit history"
+
+status = "active"
+
+requirement = """
+When a password policy change is applied, Bench Core shall append exactly one audit event to the Activity history naming the actor, the policy before the change and the policy after it, and carrying no password, verifier or other secret.
+"""
+
+verification = "A test changes the policy as an administrator, reads the Activity history, and asserts exactly one new audit event carrying the actor, the previous minimum and class count and the new ones; the recorded event is passed through the credential-redaction check and a refused change is asserted to append nothing."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/identity/service.go",
+    "05_Software/nilo_assistant/internal/httpapi/password_policy.go",
+    "05_Software/nilo_assistant/internal/identity/password_policy_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/password_policy_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/identity/password_policy_test.go::TestSetPasswordPolicyRecordsOneAuditEventAndFailsWithIt",
+    "05_Software/nilo_assistant/internal/httpapi/password_policy_test.go::TestPasswordPolicyChangeAppendsOneAuditEventCarryingNoSecret",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "A rule that decides credential strength must leave a record of who weakened or tightened it and when."        # why this behavior exists, if not obvious
+
+created = 2026-09-15
+updated = 2026-09-15

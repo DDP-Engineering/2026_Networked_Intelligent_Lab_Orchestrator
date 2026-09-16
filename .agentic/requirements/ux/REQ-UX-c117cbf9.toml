@@ -1,0 +1,42 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-c117cbf9"
+
+title = "Leave the Authentication pages without a standing explanatory paragraph"
+
+status = "active"
+
+requirement = """
+Where an administrator opens the Authentication identities page, the browser interface shall present the page title, its controls and the identity listing without a standing paragraph describing who is signed in or what the available actions do, keeping such guidance in the contextual help each control already carries.
+"""
+
+verification = "A component test renders the Authentication identities page as an administrator and asserts that neither the signed-in sentence nor the sentence describing disabling and permanent deletion appears anywhere on it, while the listing, its actions and their contextual help remain present. The identities note and the policy note are asserted absent from the English, German and Romanian catalogues; the signed-in sentence remains, because the API tokens page still carries it."
+
+affected_paths = [
+    "05_Software/nilo_gui/src/components/authentication/UsersPage.tsx",
+    "05_Software/nilo_gui/src/components/authentication/PasswordPolicyPanel.tsx",
+    "05_Software/nilo_gui/src/i18n/en.ts",
+    "05_Software/nilo_gui/src/i18n/de.ts",
+    "05_Software/nilo_gui/src/i18n/ro.ts",
+    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx",
+]
+
+linked_tests = [
+    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::Authentication identities page prose > carries no signed-in sentence and no paragraph about the actions",
+]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = "Standing prose above a listing is read once and then skipped, while it pushes the records it describes below the fold on a field display."        # why this behavior exists, if not obvious
+
+created = 2026-09-16
+updated = 2026-09-16
