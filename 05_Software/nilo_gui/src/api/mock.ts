@@ -280,9 +280,18 @@ class MockAdministration {
     quota_bytes: { audit: 268435456, event: 134217728 },
   };
   /** The appliance password policy, starting at what the appliance ships. */
-  passwordPolicy: { minimum_length: number; minimum_character_classes: number } = {
+  passwordPolicy: {
+    minimum_length: number;
+    require_lowercase: boolean;
+    require_uppercase: boolean;
+    require_digit: boolean;
+    require_special: boolean;
+  } = {
     minimum_length: 12,
-    minimum_character_classes: 0,
+    require_lowercase: false,
+    require_uppercase: false,
+    require_digit: false,
+    require_special: false,
   };
   /** The device-network draft a preview proposed, applied on acknowledgement. */
   pendingDrafts = new Map<
@@ -1581,36 +1590,36 @@ function refusePasswordAgainstPolicy(
   store: MockAdministration,
   password: string,
 ): TransportResponse | null {
-  const { minimum_length: length, minimum_character_classes: classes } =
-    store.passwordPolicy;
+  const policy = store.passwordPolicy;
   if (password.length > 1024) {
     return refusal(400, 'invalid_password', 'password must be at most 1024 bytes');
   }
-  if (password.length < length) {
+  if (password.length < policy.minimum_length) {
     return refusal(
       400,
       'invalid_password',
-      `password must be at least ${length} bytes`,
+      `password must be at least ${policy.minimum_length} bytes`,
     );
   }
-  if (classes > 0 && countCharacterClasses(password) < classes) {
+  // Each requirement names itself when it is missed, so the operator reads what
+  // to add rather than a number to reach.
+  const requirements: [boolean, RegExp, string][] = [
+    [policy.require_lowercase, /\p{Ll}/u, 'a lowercase letter'],
+    [policy.require_uppercase, /\p{Lu}/u, 'an uppercase letter'],
+    [policy.require_digit, /\p{Nd}/u, 'a digit'],
+    [policy.require_special, /[^\p{Ll}\p{Lu}\p{Nd}]/u, 'a special character'],
+  ];
+  const missing = requirements
+    .filter(([required, pattern]) => required && !pattern.test(password))
+    .map(([, , name]) => name);
+  if (missing.length > 0) {
     return refusal(
       400,
       'invalid_password',
-      `password must contain at least ${classes} of lowercase, uppercase, digit and other characters`,
+      `password must contain ${missing.join(', ')}`,
     );
   }
   return null;
-}
-
-function countCharacterClasses(password: string): number {
-  const present = {
-    lower: /\p{Ll}/u.test(password),
-    upper: /\p{Lu}/u.test(password),
-    digit: /\p{Nd}/u.test(password),
-    other: /[^\p{Ll}\p{Lu}\p{Nd}]/u.test(password),
-  };
-  return Object.values(present).filter(Boolean).length;
 }
 
 /** A replacement carries the whole policy: a partial one is refused, not merged. */
@@ -1619,12 +1628,20 @@ function replacePasswordPolicy(
   body: Record<string, unknown>,
 ): TransportResponse {
   const length = body.minimum_length;
-  const classes = body.minimum_character_classes;
-  if (!Number.isInteger(length) || !Number.isInteger(classes)) {
+  const flags = [
+    'require_lowercase',
+    'require_uppercase',
+    'require_digit',
+    'require_special',
+  ];
+  if (
+    !Number.isInteger(length) ||
+    flags.some((key) => typeof body[key] !== 'boolean')
+  ) {
     return refusal(
       400,
       'invalid_password_policy',
-      'the request body must carry both minimum_length and minimum_character_classes as whole numbers',
+      'the request body must carry minimum_length as a whole number and require_lowercase, require_uppercase, require_digit and require_special as true or false',
     );
   }
   if ((length as number) < 8 || (length as number) > 1024) {
@@ -1634,16 +1651,12 @@ function replacePasswordPolicy(
       'minimum length must be between 8 and 1024 bytes',
     );
   }
-  if ((classes as number) < 0 || (classes as number) > 4) {
-    return refusal(
-      400,
-      'invalid_password_policy',
-      'minimum character classes must be between 0 and 4',
-    );
-  }
   store.passwordPolicy = {
     minimum_length: length as number,
-    minimum_character_classes: classes as number,
+    require_lowercase: body.require_lowercase as boolean,
+    require_uppercase: body.require_uppercase as boolean,
+    require_digit: body.require_digit as boolean,
+    require_special: body.require_special as boolean,
   };
   return jsonResponse(200, store.passwordPolicy);
 }

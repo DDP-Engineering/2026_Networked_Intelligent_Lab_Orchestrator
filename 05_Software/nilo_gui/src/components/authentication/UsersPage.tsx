@@ -151,10 +151,6 @@ export function UsersPage({
             </button>
           )}
         </div>
-        <p className="page-sub">
-          {t('auth.signedInAs', { username: session.username, role: session.role })}{' '}
-          {t('auth.identitiesNote')}
-        </p>
       </header>
       <div className="page-body">
         {credential.kind === 'session' && credential.csrfToken === '' ? (

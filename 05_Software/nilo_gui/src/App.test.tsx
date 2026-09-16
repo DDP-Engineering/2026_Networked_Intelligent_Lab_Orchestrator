@@ -1,3 +1,4 @@
+import packageJson from '../package.json';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -12,6 +13,10 @@ import type {
   DeviceInventory,
   IntegrationInventory,
 } from './api/contract';
+
+// The interface reports the project version; a bump must not silently
+// break these assertions, so they read the same source the app does.
+const APP_VERSION: string = packageJson.version;
 
 const healthyStatus: BenchCoreStatus = {
   apiVersion: 'nilo.http/1',
@@ -147,7 +152,13 @@ function stubClient(overrides: Partial<BenchCoreClient> = {}): BenchCoreClient {
     getActivityRetention: () => Promise.reject(new Error('not part of this fixture')),
     setActivityRetention: () => Promise.reject(new Error('not part of this fixture')),
     getPasswordPolicy: () =>
-      Promise.resolve({ minimumLength: 12, minimumCharacterClasses: 0 }),
+      Promise.resolve({
+        minimumLength: 12,
+        requireLowercase: false,
+        requireUppercase: false,
+        requireDigit: false,
+        requireSpecial: false,
+      }),
     setPasswordPolicy: (_credential, policy) => Promise.resolve(policy),
     getStatus: () => Promise.resolve(healthyStatus),
     getIntegrations: () => Promise.resolve(readyIntegrations),
@@ -300,7 +311,7 @@ describe('sign-in screen', () => {
 
     await signInScreen();
     expect(screen.getByText('NILO')).toBeVisible();
-    expect(screen.getByText('Version 0.6.0')).toBeVisible();
+    expect(screen.getByText(`Version ${APP_VERSION}`)).toBeVisible();
     expect(document.querySelectorAll('form')).toHaveLength(1);
     expect(screen.getByLabelText('Username')).toBeVisible();
     expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password');
@@ -560,7 +571,7 @@ describe('connection states', () => {
     await signInScreen();
     expectSimulationIdentity();
     expect(screen.getByRole('heading', { name: /sign in to nilo/i })).toBeVisible();
-    expect(screen.getByText('Version 0.6.0')).toBeVisible();
+    expect(screen.getByText(`Version ${APP_VERSION}`)).toBeVisible();
   });
 });
 
@@ -768,7 +779,7 @@ describe('mock mode', () => {
     renderApp(stubClient(), 'mock');
 
     await signInScreen();
-    expect(screen.getByText('Version 0.6.0')).toBeVisible();
+    expect(screen.getByText(`Version ${APP_VERSION}`)).toBeVisible();
     expect(screen.queryByText(/contract mock/i)).toBeNull();
     expectSimulationIdentity();
   });

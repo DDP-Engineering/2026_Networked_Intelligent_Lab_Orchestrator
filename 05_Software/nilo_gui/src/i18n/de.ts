@@ -386,9 +386,6 @@ export const de: Catalogue = {
     'Wiederholen Sie den Tokennamen genau. Vorher wird nichts gesendet, damit ein Fehlklick nicht das falsche Token löscht.',
   'auth.roleMatrix':
     'Viewer: Inventar, Netzwerk und Status lesen. Operator: Viewer plus eigene Token. Administrator: gesamte Verwaltung, Aktivitäten, Diagnose, Netzwerk und VPN.',
-  'auth.signedInAs': 'Angemeldet als {username} ({role}).',
-  'auth.identitiesNote':
-    'Deaktivieren behält die Identität und verhindert die Anmeldung; das endgültige Löschen entfernt den Datensatz selbst und lässt sich nicht rückgängig machen.',
   'auth.csrfMissing':
     'Dieser Browser besitzt das mit der Sitzung ausgegebene CSRF-Token nicht mehr, daher lehnt Bench Core jede Änderung ab. Melden Sie sich ab und erneut an.',
   'auth.users': 'Benutzer',
@@ -399,16 +396,18 @@ export const de: Catalogue = {
   'auth.readFailed': '{resource} konnte nicht gelesen werden.',
   'auth.resource.identities': 'Identitätsliste',
   'auth.resource.passwordPolicy': 'Kennwortrichtlinie',
+  'auth.signedInAs': 'Angemeldet als {username} ({role}).',
   'auth.policyTitle': 'Kennwortrichtlinie',
-  'auth.policyNote':
-    'Die Regel, die dieses Gerät beim Setzen eines Kennworts anwendet. Beim Prüfen eines Kennworts wird sie nie angewendet, sodass eine Verschärfung keine bestehende Identität aussperrt.',
   'auth.policyMinimumLength': 'Mindestlänge in Bytes',
-  'auth.policyMinimumClasses':
-    'Mindestanzahl Zeichenklassen aus Kleinbuchstaben, Großbuchstaben, Ziffern und Sonstigen',
+  'auth.policyClasses': 'Ein Kennwort muss enthalten',
+  'auth.policyClass.lowercase': 'einen Kleinbuchstaben',
+  'auth.policyClass.uppercase': 'einen Großbuchstaben',
+  'auth.policyClass.digit': 'eine Ziffer',
+  'auth.policyClass.special': 'ein Sonderzeichen',
   'auth.help.policyMinimumLength':
     'Die geringste Byteanzahl eines neuen Kennworts. Einen Wert unterhalb seiner eigenen Untergrenze weist das Gerät zurück.',
-  'auth.help.policyMinimumClasses':
-    'Aus wie vielen der Klassen Kleinbuchstaben, Großbuchstaben, Ziffern und Sonstige ein neues Kennwort stammen muss. Null wendet keine Zusammensetzungsregel an.',
+  'auth.help.policyClasses':
+    'Wählen Sie jede Klasse aus, die ein neues Kennwort enthalten muss. Ohne Auswahl gilt keine Zusammensetzungsregel.',
   'auth.policySave': 'Richtlinie speichern',
   'auth.policySaved': 'Die Kennwortrichtlinie wurde ersetzt.',
   'auth.permission.passwordPolicyManage':

@@ -14,30 +14,28 @@ func TestDefaultPasswordPolicyIsTheShippedRule(t *testing.T) {
 	if policy.MinimumLength != 12 {
 		t.Fatalf("default minimum length = %d, want 12", policy.MinimumLength)
 	}
-	if policy.MinimumCharacterClasses != 0 {
-		t.Fatalf("default class requirement = %d, want 0", policy.MinimumCharacterClasses)
+	if policy.RequireLowercase || policy.RequireUppercase || policy.RequireDigit || policy.RequireSpecial {
+		t.Fatalf("the shipped default requires a character class: %#v", policy)
 	}
 	if err := policy.Validate(); err != nil {
 		t.Fatalf("the shipped default must be a valid policy: %v", err)
 	}
 }
 
-func TestPasswordPolicyValidateRefusesValuesOutsideItsBounds(t *testing.T) {
+func TestPasswordPolicyValidateRefusesALengthOutsideItsBounds(t *testing.T) {
 	cases := []struct {
 		name   string
-		policy auth.PasswordPolicy
+		length int
 		names  string
 	}{
-		{"below the floor", auth.PasswordPolicy{MinimumLength: 7}, "8"},
-		{"above the maximum", auth.PasswordPolicy{MinimumLength: 1025}, "1024"},
-		{"too many classes", auth.PasswordPolicy{MinimumLength: 12, MinimumCharacterClasses: 5}, "4"},
-		{"negative classes", auth.PasswordPolicy{MinimumLength: 12, MinimumCharacterClasses: -1}, "0"},
+		{"below the floor", 7, "8"},
+		{"above the maximum", 1025, "1024"},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
-			err := testCase.policy.Validate()
+			err := auth.PasswordPolicy{MinimumLength: testCase.length}.Validate()
 			if err == nil {
-				t.Fatal("Validate accepted a policy outside its bounds")
+				t.Fatal("Validate accepted a length outside its bounds")
 			}
 			if !errors.Is(err, auth.ErrPasswordPolicyInvalid) {
 				t.Fatalf("error %v is not ErrPasswordPolicyInvalid", err)
@@ -49,17 +47,23 @@ func TestPasswordPolicyValidateRefusesValuesOutsideItsBounds(t *testing.T) {
 	}
 }
 
-func TestPasswordPolicyValidateAcceptsTheFloorItself(t *testing.T) {
-	policy := auth.PasswordPolicy{MinimumLength: auth.PasswordPolicyFloorBytes, MinimumCharacterClasses: 4}
-	if err := policy.Validate(); err != nil {
-		t.Fatalf("a policy at the floor with every class must be valid: %v", err)
+// Every combination of requirements is a valid policy: a requirement is on or
+// off, so there is no range for Validate to police.
+func TestPasswordPolicyValidateAcceptsEveryCombinationOfRequirements(t *testing.T) {
+	for _, policy := range []auth.PasswordPolicy{
+		{MinimumLength: auth.PasswordPolicyFloorBytes},
+		{MinimumLength: 12, RequireLowercase: true},
+		{MinimumLength: 12, RequireLowercase: true, RequireUppercase: true, RequireDigit: true, RequireSpecial: true},
+	} {
+		if err := policy.Validate(); err != nil {
+			t.Fatalf("Validate refused %#v: %v", policy, err)
+		}
 	}
 }
 
 func TestPasswordPolicyCheckHoldsAPasswordToTheConfiguredLength(t *testing.T) {
 	policy := auth.PasswordPolicy{MinimumLength: 16}
-	short := bytes.Repeat([]byte{'a'}, 15)
-	err := policy.Check(short)
+	err := policy.Check(bytes.Repeat([]byte{'a'}, 15))
 	if err == nil {
 		t.Fatal("Check accepted a password one byte short of the minimum")
 	}
@@ -74,50 +78,90 @@ func TestPasswordPolicyCheckHoldsAPasswordToTheConfiguredLength(t *testing.T) {
 	}
 }
 
-func TestPasswordPolicyCheckCountsDistinctCharacterClasses(t *testing.T) {
-	policy := auth.PasswordPolicy{MinimumLength: 12, MinimumCharacterClasses: 3}
+// A requirement means what it says: this class must be present. It is not a
+// count, so requiring two named classes is not satisfied by any other two.
+func TestPasswordPolicyCheckRequiresEachTickedClass(t *testing.T) {
+	policy := auth.PasswordPolicy{MinimumLength: 12, RequireUppercase: true, RequireDigit: true}
 	cases := []struct {
 		name     string
 		password string
 		accepted bool
 	}{
-		{"one class", "passwordpassword", false},
-		{"two classes", "Passwordpassword", false},
-		{"three classes", "Password1234", true},
-		{"four classes", "Password-1234", true},
-		{"symbols count as other", "password-1234", true},
-		{"a non-letter rune outside ASCII counts as other", "passwordwort€1", true},
-		{"a lowercase rune outside ASCII stays lowercase", "passwordwortß1", false},
+		{"neither required class", "passwordpassword", false},
+		{"uppercase only", "Passwordpassword", false},
+		{"digit only", "password12345678", false},
+		{"both required classes", "Password1234", true},
+		{"both, plus classes not required", "Password-1234", true},
+		{"two classes, but not the required two", "password-1234", false},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
 			err := policy.Check([]byte(testCase.password))
-			if testCase.accepted && err != nil {
-				t.Fatalf("Check refused %q: %v", testCase.password, err)
+			if testCase.accepted {
+				if err != nil {
+					t.Fatalf("Check refused %q: %v", testCase.password, err)
+				}
+				return
 			}
-			if !testCase.accepted {
-				if err == nil {
-					t.Fatalf("Check accepted %q with too few classes", testCase.password)
-				}
-				if !errors.Is(err, auth.ErrPasswordRejected) {
-					t.Fatalf("error %v is not ErrPasswordRejected", err)
-				}
-				if !strings.Contains(err.Error(), "3") {
-					t.Fatalf("message %q does not name the required class count", err.Error())
-				}
+			if err == nil {
+				t.Fatalf("Check accepted %q", testCase.password)
+			}
+			if !errors.Is(err, auth.ErrPasswordRejected) {
+				t.Fatalf("error %v is not ErrPasswordRejected", err)
 			}
 		})
 	}
 }
 
-// The policy counts variety; it does not police encoding. A byte sequence that
-// is not valid UTF-8 contributes the "other" class rather than an error, so a
-// password pasted from an unknown encoding is refused for its length or its
-// variety and never for being unreadable.
-func TestPasswordPolicyCheckTreatsInvalidUTF8AsOtherRatherThanAnError(t *testing.T) {
-	policy := auth.PasswordPolicy{MinimumLength: 12, MinimumCharacterClasses: 2}
-	password := append([]byte("passwordpass"), 0xff, 0xfe)
-	if err := policy.Check(password); err != nil {
+// The refusal names every requirement the password misses, and only those, so
+// an administrator fixes the password once instead of one rule per attempt.
+func TestPasswordPolicyCheckNamesEveryUnmetRequirementAndNoOther(t *testing.T) {
+	policy := auth.PasswordPolicy{
+		MinimumLength: 12, RequireLowercase: true, RequireUppercase: true,
+		RequireDigit: true, RequireSpecial: true,
+	}
+	err := policy.Check([]byte("passwordpassword"))
+	if err == nil {
+		t.Fatal("Check accepted a password missing three required classes")
+	}
+	message := err.Error()
+	for _, named := range []string{"uppercase", "digit"} {
+		if !strings.Contains(message, named) {
+			t.Fatalf("message %q does not name the missing %s", message, named)
+		}
+	}
+	if !strings.Contains(message, "special") {
+		t.Fatalf("message %q does not name the missing special character", message)
+	}
+	if strings.Contains(message, "lowercase") {
+		t.Fatalf("message %q names lowercase, which the password carries", message)
+	}
+}
+
+func TestPasswordPolicyCheckClassifiesEveryRune(t *testing.T) {
+	cases := []struct {
+		name     string
+		policy   auth.PasswordPolicy
+		password string
+	}{
+		{"a symbol is special", auth.PasswordPolicy{MinimumLength: 12, RequireSpecial: true}, "passwordpass-"},
+		{"a space is special", auth.PasswordPolicy{MinimumLength: 12, RequireSpecial: true}, "password pass"},
+		{"a non-ASCII symbol is special", auth.PasswordPolicy{MinimumLength: 12, RequireSpecial: true}, "passwordpass€"},
+		{"a non-ASCII lowercase letter is lowercase", auth.PasswordPolicy{MinimumLength: 12, RequireLowercase: true}, "ßaaaaaaaaaaaa"},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			if err := testCase.policy.Check([]byte(testCase.password)); err != nil {
+				t.Fatalf("Check refused %q: %v", testCase.password, err)
+			}
+		})
+	}
+}
+
+// The policy describes composition; it does not police encoding.
+func TestPasswordPolicyCheckTreatsInvalidUTF8AsSpecialRatherThanAnError(t *testing.T) {
+	policy := auth.PasswordPolicy{MinimumLength: 12, RequireSpecial: true}
+	if err := policy.Check(append([]byte("passwordpass"), 0xff, 0xfe)); err != nil {
 		t.Fatalf("Check refused a password carrying invalid UTF-8: %v", err)
 	}
 }
@@ -133,9 +177,8 @@ func TestPasswordPolicyCheckKeepsTheMaximumWhateverThePolicySays(t *testing.T) {
 	}
 }
 
-// The policy never reports the password back, whatever it refuses.
 func TestPasswordPolicyCheckNeverRepeatsThePassword(t *testing.T) {
-	policy := auth.PasswordPolicy{MinimumLength: 24, MinimumCharacterClasses: 4}
+	policy := auth.PasswordPolicy{MinimumLength: 24, RequireDigit: true}
 	password := "supersecret-value"
 	err := policy.Check([]byte(password))
 	if err == nil {

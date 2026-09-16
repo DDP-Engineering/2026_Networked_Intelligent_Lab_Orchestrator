@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -915,13 +916,38 @@ func (service *Service) SetPasswordPolicyAs(ctx context.Context, actor Actor, po
 			}
 			return service.record(ctx, events, actor, "identity.password_policy.changed", "appliance", "password_policy",
 				map[string]string{
-					"minimum_length_before":            strconv.Itoa(before.MinimumLength),
-					"minimum_character_classes_before": strconv.Itoa(before.MinimumCharacterClasses),
-					"minimum_length_after":             strconv.Itoa(policy.MinimumLength),
-					"minimum_character_classes_after":  strconv.Itoa(policy.MinimumCharacterClasses),
+					"minimum_length_before":   strconv.Itoa(before.MinimumLength),
+					"required_classes_before": describeRequiredClasses(before),
+					"minimum_length_after":    strconv.Itoa(policy.MinimumLength),
+					"required_classes_after":  describeRequiredClasses(policy),
 				})
 		},
 	)
+}
+
+// describeRequiredClasses names the classes a policy requires, for the audit
+// record. It names them rather than counting them so the history says what the
+// rule actually was, and answers "none" rather than an empty string so a reader
+// can tell a policy requiring nothing from a field that was never written.
+func describeRequiredClasses(policy auth.PasswordPolicy) string {
+	var required []string
+	for _, class := range []struct {
+		on   bool
+		name string
+	}{
+		{policy.RequireLowercase, "lowercase"},
+		{policy.RequireUppercase, "uppercase"},
+		{policy.RequireDigit, "digit"},
+		{policy.RequireSpecial, "special"},
+	} {
+		if class.on {
+			required = append(required, class.name)
+		}
+	}
+	if len(required) == 0 {
+		return "none"
+	}
+	return strings.Join(required, ",")
 }
 
 // checkAgainstPasswordPolicy holds one password to the stored policy. It runs

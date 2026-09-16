@@ -33,7 +33,7 @@ func TestSetPasswordPolicyHoldsEveryLaterPasswordSetToIt(t *testing.T) {
 	fixture := newFixture(t)
 	administrator := fixture.bootstrap(t)
 
-	tightened := auth.PasswordPolicy{MinimumLength: 20, MinimumCharacterClasses: 3}
+	tightened := auth.PasswordPolicy{MinimumLength: 20, RequireUppercase: true, RequireDigit: true}
 	if err := fixture.service.SetPasswordPolicy(ctx, administrator, tightened); err != nil {
 		t.Fatalf("SetPasswordPolicy: %v", err)
 	}
@@ -50,9 +50,9 @@ func TestSetPasswordPolicyHoldsEveryLaterPasswordSetToIt(t *testing.T) {
 	}
 
 	if _, err := fixture.service.CreateUser(
-		ctx, administrator, "onlylowercaseandlength", auth.RoleOperator, []byte("passwordpasswordpassword"),
+		ctx, administrator, "missingclasses", auth.RoleOperator, []byte("passwordpasswordpassword"),
 	); !errors.Is(err, auth.ErrPasswordRejected) {
-		t.Fatalf("CreateUser with too few character classes = %v, want ErrPasswordRejected", err)
+		t.Fatalf("CreateUser missing both required classes = %v, want ErrPasswordRejected", err)
 	}
 
 	if _, err := fixture.service.CreateUser(
@@ -74,7 +74,7 @@ func TestResetPasswordIsHeldToTheConfiguredPolicy(t *testing.T) {
 		t.Fatalf("CreateUser: %v", err)
 	}
 
-	tightened := auth.PasswordPolicy{MinimumLength: 24, MinimumCharacterClasses: 0}
+	tightened := auth.PasswordPolicy{MinimumLength: 24}
 	if err := fixture.service.SetPasswordPolicy(ctx, administrator, tightened); err != nil {
 		t.Fatalf("SetPasswordPolicy: %v", err)
 	}
@@ -105,7 +105,7 @@ func TestTighteningThePolicyLeavesExistingIdentitiesAbleToSignIn(t *testing.T) {
 	}
 
 	if err := fixture.service.SetPasswordPolicy(
-		ctx, administrator, auth.PasswordPolicy{MinimumLength: 64, MinimumCharacterClasses: 4},
+		ctx, administrator, auth.PasswordPolicy{MinimumLength: 64, RequireLowercase: true, RequireUppercase: true, RequireDigit: true, RequireSpecial: true},
 	); err != nil {
 		t.Fatalf("SetPasswordPolicy: %v", err)
 	}
@@ -141,7 +141,7 @@ func TestThePublishedCredentialStillSignsInUnderATightenedPolicy(t *testing.T) {
 		t.Fatalf("Bootstrap with the published credential: %v", err)
 	}
 	if err := fixture.service.SetPasswordPolicy(
-		ctx, administrator, auth.PasswordPolicy{MinimumLength: 32, MinimumCharacterClasses: 4},
+		ctx, administrator, auth.PasswordPolicy{MinimumLength: 32, RequireLowercase: true, RequireUppercase: true, RequireDigit: true, RequireSpecial: true},
 	); err != nil {
 		t.Fatalf("SetPasswordPolicy: %v", err)
 	}
@@ -212,7 +212,7 @@ func TestSetPasswordPolicyRecordsOneAuditEventAndFailsWithIt(t *testing.T) {
 	const countPolicyEvents = "SELECT COUNT(*) FROM audit_events WHERE action = 'identity.password_policy.changed'"
 	before := fixture.countRows(t, countPolicyEvents)
 
-	tightened := auth.PasswordPolicy{MinimumLength: 16, MinimumCharacterClasses: 2}
+	tightened := auth.PasswordPolicy{MinimumLength: 16, RequireLowercase: true, RequireDigit: true}
 	if err := fixture.service.SetPasswordPolicy(ctx, administrator, tightened); err != nil {
 		t.Fatalf("SetPasswordPolicy: %v", err)
 	}

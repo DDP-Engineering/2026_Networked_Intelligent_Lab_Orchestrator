@@ -347,9 +347,6 @@ export const en = {
   'auth.title': 'Authentication',
   'auth.usersTitle': 'Authentication / Users',
   'auth.tokensTitle': 'Authentication / API tokens',
-  'auth.signedInAs': 'Signed in as {username} ({role}).',
-  'auth.identitiesNote':
-    'Disabling keeps the identity and stops it signing in; permanent deletion removes the record itself and cannot be undone.',
   'auth.tokensNote':
     'Tokens are credentials. Expiry or revocation prevents future use and keeps the record; permanent deletion removes the record itself.',
   'auth.viewActivity': 'View activity',
@@ -363,16 +360,18 @@ export const en = {
   'auth.readFailed': 'The {resource} could not be read.',
   'auth.resource.identities': 'identity listing',
   'auth.resource.passwordPolicy': 'password policy',
+  'auth.signedInAs': 'Signed in as {username} ({role}).',
   'auth.policyTitle': 'Password policy',
-  'auth.policyNote':
-    'The rule this appliance applies when a password is set. It is never applied when a password is checked, so tightening it leaves every existing identity able to sign in.',
   'auth.policyMinimumLength': 'Minimum length in bytes',
-  'auth.policyMinimumClasses':
-    'Minimum character classes, from lowercase, uppercase, digit and other',
+  'auth.policyClasses': 'A password must contain',
+  'auth.policyClass.lowercase': 'a lowercase letter',
+  'auth.policyClass.uppercase': 'an uppercase letter',
+  'auth.policyClass.digit': 'a digit',
+  'auth.policyClass.special': 'a special character',
   'auth.help.policyMinimumLength':
     'The fewest bytes a new password may be. The appliance refuses a value below its own floor.',
-  'auth.help.policyMinimumClasses':
-    'How many of lowercase, uppercase, digit and other a new password must draw from. Zero applies no composition rule.',
+  'auth.help.policyClasses':
+    'Tick every class a new password must contain. Nothing ticked applies no composition rule.',
   'auth.policySave': 'Save policy',
   'auth.policySaved': 'The password policy was replaced.',
   'auth.permission.passwordPolicyManage':

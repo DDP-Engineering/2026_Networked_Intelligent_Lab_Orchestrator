@@ -13,15 +13,27 @@ import (
 // rule that a replacement carries the whole policy.
 
 // passwordPolicyView is the one representation of the policy this API
-// serializes. Both fields are always present in both directions.
+// serializes. All five values are always present in both directions, and each
+// is a pointer so an absent value in a request is told from a false one.
 type passwordPolicyView struct {
-	MinimumLength           *int `json:"minimum_length"`
-	MinimumCharacterClasses *int `json:"minimum_character_classes"`
+	MinimumLength    *int  `json:"minimum_length"`
+	RequireLowercase *bool `json:"require_lowercase"`
+	RequireUppercase *bool `json:"require_uppercase"`
+	RequireDigit     *bool `json:"require_digit"`
+	RequireSpecial   *bool `json:"require_special"`
 }
 
 func policyViewOf(policy auth.PasswordPolicy) passwordPolicyView {
-	length, classes := policy.MinimumLength, policy.MinimumCharacterClasses
-	return passwordPolicyView{MinimumLength: &length, MinimumCharacterClasses: &classes}
+	length := policy.MinimumLength
+	lower, upper := policy.RequireLowercase, policy.RequireUppercase
+	digit, special := policy.RequireDigit, policy.RequireSpecial
+	return passwordPolicyView{
+		MinimumLength:    &length,
+		RequireLowercase: &lower,
+		RequireUppercase: &upper,
+		RequireDigit:     &digit,
+		RequireSpecial:   &special,
+	}
 }
 
 func handleReadPasswordPolicy(service *identity.Service) http.HandlerFunc {
@@ -49,13 +61,17 @@ func handleReplacePasswordPolicy(service *identity.Service) http.HandlerFunc {
 		if !decodeBody(response, request, &body, "invalid_password_policy", passwordPolicyShapeMessage) {
 			return
 		}
-		if body.MinimumLength == nil || body.MinimumCharacterClasses == nil {
+		if body.MinimumLength == nil || body.RequireLowercase == nil ||
+			body.RequireUppercase == nil || body.RequireDigit == nil || body.RequireSpecial == nil {
 			writeRefusal(response, http.StatusBadRequest, "invalid_password_policy", passwordPolicyShapeMessage)
 			return
 		}
 		policy := auth.PasswordPolicy{
-			MinimumLength:           *body.MinimumLength,
-			MinimumCharacterClasses: *body.MinimumCharacterClasses,
+			MinimumLength:    *body.MinimumLength,
+			RequireLowercase: *body.RequireLowercase,
+			RequireUppercase: *body.RequireUppercase,
+			RequireDigit:     *body.RequireDigit,
+			RequireSpecial:   *body.RequireSpecial,
 		}
 		if err := service.SetPasswordPolicyAs(request.Context(), actor, policy); err != nil {
 			writeAdministrationFailure(response, err)
@@ -65,4 +81,4 @@ func handleReplacePasswordPolicy(service *identity.Service) http.HandlerFunc {
 	}
 }
 
-const passwordPolicyShapeMessage = "the request body must carry both minimum_length and minimum_character_classes as whole numbers"
+const passwordPolicyShapeMessage = "the request body must carry minimum_length as a whole number and require_lowercase, require_uppercase, require_digit and require_special as true or false"

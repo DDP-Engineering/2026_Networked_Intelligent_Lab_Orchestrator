@@ -145,10 +145,11 @@ made. `--ca-file` pins the certificate authority of a private listener.
 - No command prints a password back, in any mode, on any stream.
 
 **The appliance password policy.** The appliance holds one policy: a minimum
-length in bytes, and a minimum count of distinct character classes drawn from
-lowercase letters, uppercase letters, digits and everything else. An appliance
-that has recorded no policy applies a minimum of 12 bytes with no class
-requirement, which is what NILO has always enforced.
+length in bytes, and four independent requirements - a lowercase letter, an
+uppercase letter, a digit, and a special character, meaning any character that
+is neither a letter nor a digit. Each requirement demands at least one such
+character. An appliance that has recorded no policy applies a minimum of 12
+bytes requiring no class, which is what NILO has always enforced.
 
 The policy governs a password being **set** - bootstrap, create, reset, on every
 interface - and is never consulted when a stored password is **checked**.
@@ -159,9 +160,11 @@ work an unauthenticated login attempt can ask the appliance to perform and
 applies on both paths whatever the policy says.
 
 A configured minimum may be set no lower than the absolute floor of **8 bytes**,
-which is compiled in, and no higher than the maximum; the class count runs from
-0 to 4. A value outside either range is refused with `invalid_password_policy`
-and a message naming the bound, and the stored policy is left as it was. Only
+which is compiled in, and no higher than the maximum. A value outside that range
+is refused with `invalid_password_policy` and a message naming the bound, and
+the stored policy is left as it was. The four requirements need no bounds: each
+is on or off, and a password missing any that are on is refused with a message
+naming every requirement it missed. Only
 `password.policy.manage`, which is administrator-only, may read or change the
 policy, and every applied change appends one Activity audit event carrying the
 policy before and after and no credential.
@@ -208,7 +211,7 @@ nilo admin token list          ...
 nilo admin token create        ... --owner U --name N [--scopes a,b] [--expires-in 720h]
 nilo admin token revoke        ... --id T
 nilo admin token delete        ... --id T [--confirm-delete]
-nilo admin password-policy     ... [--minimum-length N --minimum-classes N]
+nilo admin password-policy     ... [--minimum-length N --require lower,upper,digit,special|none]
 ```
 
 | Command | Request | On success |
@@ -224,7 +227,7 @@ nilo admin password-policy     ... [--minimum-length N --minimum-classes N]
 | `token revoke` | `POST /api/v1/tokens/{id}/revoke` | the re-read listing |
 | `token delete` | `DELETE /api/v1/tokens/{id}` | the re-read listing |
 | `password-policy` with no values | `GET /api/v1/password-policy` | the current policy |
-| `password-policy` with both values | `PUT /api/v1/password-policy` | the stored policy |
+| `password-policy` with a length and `--require` | `PUT /api/v1/password-policy` | the stored policy |
 
 A refusal exits `1` and prints the appliance's stable error code on standard
 error, for example `the appliance refused the request: last_administrator

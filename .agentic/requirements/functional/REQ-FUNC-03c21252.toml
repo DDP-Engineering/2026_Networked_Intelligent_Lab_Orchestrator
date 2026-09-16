@@ -14,10 +14,10 @@ title = "Read and replace the password policy from the command line"
 status = "active"
 
 requirement = """
-When an operator runs the appliance password-policy command against a NILO with a token file whose token holds the password-policy permission, the `nilo` command line shall print the current policy when no policy value is given and submit the complete policy when both values are given, reporting the appliance's refusal unchanged when it refuses.
+When an operator runs the appliance password-policy command against a NILO with a token file whose token holds the password-policy permission, the `nilo` command line shall print the current policy when no policy value is given and submit the complete policy when both the minimum length and the required classes are given, reporting the appliance's refusal unchanged when it refuses.
 """
 
-verification = "A command-line test runs the command against a test appliance with no policy values and asserts the printed policy matches the appliance's; it then runs it with a minimum length and a class count and asserts the appliance stores them, that giving only one of the two exits with usage and contacts nothing, and that a minimum below the floor prints the appliance's refusal naming the floor."
+verification = "A command-line test runs the command against a test appliance with no policy values and asserts the printed policy matches the appliance's; it then runs it with a minimum length and a class list and asserts the appliance stores exactly those, that giving only one of the two exits with usage and contacts nothing, that an unknown class name is refused before anything is contacted, and that a minimum below the floor prints the appliance's refusal naming the floor."
 
 affected_paths = [
     "05_Software/nilo_assistant/cmd/nilo/admin_password_policy.go",
@@ -30,6 +30,8 @@ linked_tests = [
     "05_Software/nilo_assistant/cmd/nilo/admin_password_policy_test.go::TestRemotePasswordPolicyReadsWithNoValuesGiven",
     "05_Software/nilo_assistant/cmd/nilo/admin_password_policy_test.go::TestRemotePasswordPolicySubmitsBothValues",
     "05_Software/nilo_assistant/cmd/nilo/admin_password_policy_test.go::TestRemotePasswordPolicyRefusesExactlyOneValue",
+    "05_Software/nilo_assistant/cmd/nilo/admin_password_policy_test.go::TestRemotePasswordPolicyRefusesAnUnknownClassName",
+    "05_Software/nilo_assistant/cmd/nilo/admin_password_policy_test.go::TestRemotePasswordPolicyClearsEveryRequirementWithNone",
     "05_Software/nilo_assistant/cmd/nilo/admin_password_policy_test.go::TestRemotePasswordPolicyReportsTheAppliancesRefusal",
     "05_Software/nilo_assistant/cmd/nilo/admin_password_policy_test.go::TestPasswordPolicyIsARemoteModeCommand",
     "05_Software/nilo_assistant/cmd/nilo/admin_password_policy_test.go::TestAdminUsageNamesThePasswordPolicyCommand",
@@ -42,4 +44,4 @@ priority = "normal"   # low | normal | high
 rationale = "Appliance administration has to be possible from the command line on a NILO with no browser in front of it."        # why this behavior exists, if not obvious
 
 created = 2026-09-15
-updated = 2026-09-15
+updated = 2026-09-16

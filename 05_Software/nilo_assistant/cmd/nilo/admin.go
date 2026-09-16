@@ -69,7 +69,7 @@ Local mode, on the appliance (write access to the data directory is the authorit
 Remote mode, over the authenticated API (the appliance authorizes the token on every request):
   nilo admin user list|create|set-role|enable|disable|reset-password|delete ... --server URL --token-file PATH
   nilo admin token list|create|revoke|delete ... --server URL --token-file PATH
-  nilo admin password-policy --server URL --token-file PATH [--minimum-length N --minimum-classes N]
+  nilo admin password-policy --server URL --token-file PATH [--minimum-length N --require lower,upper,digit,special|none]
   The same --username, --role, --owner, --name, --scopes, --expires-in and --id arguments apply;
   there is no --actor, because the appliance attributes the change to the token in use.
   Options: [--ca-file PATH] [--json] [--confirm-delete]

@@ -19,9 +19,11 @@ func (repository *IdentityRepository) LoadPasswordPolicy(ctx context.Context) (a
 		return auth.PasswordPolicy{}, err
 	}
 	var policy auth.PasswordPolicy
-	err := repository.execute().QueryRowContext(ctx,
-		"SELECT minimum_length, minimum_character_classes FROM password_policy WHERE singleton = 1",
-	).Scan(&policy.MinimumLength, &policy.MinimumCharacterClasses)
+	err := repository.execute().QueryRowContext(ctx, `
+		SELECT minimum_length, require_lowercase, require_uppercase, require_digit, require_special
+		FROM password_policy WHERE singleton = 1
+	`).Scan(&policy.MinimumLength, &policy.RequireLowercase, &policy.RequireUppercase,
+		&policy.RequireDigit, &policy.RequireSpecial)
 	if errors.Is(err, sql.ErrNoRows) {
 		return auth.DefaultPasswordPolicy(), nil
 	}
@@ -45,13 +47,19 @@ func (repository *IdentityRepository) SavePasswordPolicy(
 		return err
 	}
 	if _, err := repository.execute().ExecContext(ctx, `
-		INSERT INTO password_policy (singleton, minimum_length, minimum_character_classes, updated_at)
-		VALUES (1, ?, ?, ?)
+		INSERT INTO password_policy (
+			singleton, minimum_length,
+			require_lowercase, require_uppercase, require_digit, require_special, updated_at
+		) VALUES (1, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(singleton) DO UPDATE SET
 			minimum_length = excluded.minimum_length,
-			minimum_character_classes = excluded.minimum_character_classes,
+			require_lowercase = excluded.require_lowercase,
+			require_uppercase = excluded.require_uppercase,
+			require_digit = excluded.require_digit,
+			require_special = excluded.require_special,
 			updated_at = excluded.updated_at
-	`, policy.MinimumLength, policy.MinimumCharacterClasses, at.UTC().Format(time.RFC3339Nano)); err != nil {
+	`, policy.MinimumLength, policy.RequireLowercase, policy.RequireUppercase,
+		policy.RequireDigit, policy.RequireSpecial, at.UTC().Format(time.RFC3339Nano)); err != nil {
 		return fmt.Errorf("record the appliance password policy: %w", err)
 	}
 	return nil

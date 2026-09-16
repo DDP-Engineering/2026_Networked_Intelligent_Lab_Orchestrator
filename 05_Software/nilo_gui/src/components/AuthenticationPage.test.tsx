@@ -89,7 +89,13 @@ function stubClient(overrides: Partial<BenchCoreClient> = {}): BenchCoreClient {
     getActivityRetention: () => Promise.reject(new Error('not part of this fixture')),
     setActivityRetention: () => Promise.reject(new Error('not part of this fixture')),
     getPasswordPolicy: () =>
-      Promise.resolve({ minimumLength: 12, minimumCharacterClasses: 0 }),
+      Promise.resolve({
+        minimumLength: 12,
+        requireLowercase: false,
+        requireUppercase: false,
+        requireDigit: false,
+        requireSpecial: false,
+      }),
     setPasswordPolicy: (_credential, policy) => Promise.resolve(policy),
     getStatus: unexpected,
     getIntegrations: unexpected,
@@ -174,7 +180,14 @@ describe('page-scoped Activity placement', () => {
       });
       expect(screen.getAllByRole('button', { name: 'View activity' })).toHaveLength(1);
       expect(title.nextElementSibling).toBe(action);
-      expect(group?.nextElementSibling).toHaveClass('page-sub');
+      // The header group leads, and a supporting description follows it where
+      // the page still has one: the identities page carries none since
+      // REQ-UX-c117cbf9, while the tokens page still describes its records.
+      if (view === 'tokens') {
+        expect(group?.nextElementSibling).toHaveClass('page-sub');
+      } else {
+        expect(group?.nextElementSibling).toBeNull();
+      }
       fireEvent.click(action);
       expect(onOpenActivity).toHaveBeenCalledOnce();
       await screen.findByRole('region', {
@@ -972,21 +985,32 @@ describe('refusals', () => {
   });
 });
 
-// The policy panel appears for a session that may administer it, and submits
-// both values together. The rule stays on the appliance: a refusal is reported
-// as the appliance wrote it, and the shown policy returns to what is stored.
+// The policy panel is a disclosure that starts closed, and inside it the rule
+// is set by ticking the classes a password must carry.
 describe('appliance password policy', () => {
   const policySession: BenchCoreSession = {
     ...session,
     permissions: [...session.permissions, 'password.policy.manage'],
   };
 
-  function renderWithPolicy(client: BenchCoreClient, onSessionEnded = vi.fn()) {
+  const shipped = {
+    minimumLength: 12,
+    requireLowercase: false,
+    requireUppercase: false,
+    requireDigit: false,
+    requireSpecial: false,
+  };
+
+  function renderWithPolicy(
+    client: BenchCoreClient,
+    onSessionEnded = vi.fn(),
+    view: BenchCoreSession = policySession,
+  ) {
     return renderInShell(
       <AuthenticationPage
         client={client}
         credential={CREDENTIAL}
-        session={policySession}
+        session={view}
         view="users"
         onSessionEnded={onSessionEnded}
       />,
@@ -994,75 +1018,72 @@ describe('appliance password policy', () => {
     );
   }
 
-  // password.policy.manage is a permission of its own, so a credential that
-  // holds it without users.manage still administers the policy.
-  it('is editable for a session holding only the policy permission', async () => {
-    renderInShell(
-      <AuthenticationPage
-        client={stubClient()}
-        credential={CREDENTIAL}
-        session={{
-          ...session,
-          permissions: ['users.read', 'password.policy.manage'],
-        }}
-        view="users"
-        canManageUsers={false}
-        onSessionEnded={vi.fn()}
-      />,
-      { theme: 'light', language: 'en' },
-    );
-    const length = await screen.findByLabelText('Minimum length in bytes');
-    expect(length).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Save policy' })).toBeEnabled();
-  });
-
   it('is absent for a session without the permission', async () => {
     renderPage(stubClient());
     await screen.findByRole('region', { name: 'Users' });
-    expect(screen.queryByRole('region', { name: 'Password policy' })).toBeNull();
+    expect(screen.queryByText('Password policy')).toBeNull();
   });
 
-  it('shows the stored policy and submits both values together', async () => {
-    const setPasswordPolicy = vi.fn(
-      (
-        _credential: Credential,
-        policy: { minimumLength: number; minimumCharacterClasses: number },
-      ) => Promise.resolve(policy),
-    );
+  // It is not used every day, so the identity listing is what the page opens on.
+  it('starts collapsed, with the listing visible behind it', async () => {
+    renderWithPolicy(stubClient());
+    await screen.findByRole('region', { name: 'Users' });
+    const summary = screen.getByText('Password policy');
+    const disclosure = summary.closest('details');
+    expect(disclosure).not.toBeNull();
+    expect((disclosure as HTMLDetailsElement).open).toBe(false);
+    expect(screen.getByLabelText('Minimum length in bytes')).not.toBeVisible();
+  });
+
+  it('shows the stored policy once opened', async () => {
     renderWithPolicy(
       stubClient({
         getPasswordPolicy: () =>
-          Promise.resolve({ minimumLength: 12, minimumCharacterClasses: 0 }),
-        setPasswordPolicy,
+          Promise.resolve({ ...shipped, minimumLength: 16, requireDigit: true }),
       }),
     );
+    const summary = await screen.findByText('Password policy');
+    fireEvent.click(summary);
 
-    const length = await screen.findByLabelText('Minimum length in bytes');
-    const classes = screen.getByLabelText(
-      'Minimum character classes, from lowercase, uppercase, digit and other',
+    expect(await screen.findByLabelText('Minimum length in bytes')).toHaveValue(16);
+    expect(screen.getByLabelText('a digit')).toBeChecked();
+    expect(screen.getByLabelText('a lowercase letter')).not.toBeChecked();
+    expect(screen.getByLabelText('an uppercase letter')).not.toBeChecked();
+    expect(screen.getByLabelText('a special character')).not.toBeChecked();
+  });
+
+  // Ticking two boxes requires those two classes. It is not a count, so the
+  // client sends every requirement, on or off.
+  it('submits the whole policy when requirements are ticked', async () => {
+    const setPasswordPolicy = vi.fn((_credential: Credential, policy: typeof shipped) =>
+      Promise.resolve(policy),
     );
-    expect(length).toHaveValue(12);
-    expect(classes).toHaveValue(0);
+    renderWithPolicy(stubClient({ setPasswordPolicy }));
+    fireEvent.click(await screen.findByText('Password policy'));
 
-    fireEvent.change(length, { target: { value: '16' } });
-    fireEvent.change(classes, { target: { value: '3' } });
+    fireEvent.change(await screen.findByLabelText('Minimum length in bytes'), {
+      target: { value: '16' },
+    });
+    fireEvent.click(screen.getByLabelText('an uppercase letter'));
+    fireEvent.click(screen.getByLabelText('a digit'));
     fireEvent.click(screen.getByRole('button', { name: 'Save policy' }));
 
     await waitFor(() => {
       expect(setPasswordPolicy).toHaveBeenCalledWith(CREDENTIAL, {
         minimumLength: 16,
-        minimumCharacterClasses: 3,
+        requireLowercase: false,
+        requireUppercase: true,
+        requireDigit: true,
+        requireSpecial: false,
       });
     });
     await screen.findByText('The password policy was replaced.');
-    expect(screen.getByLabelText('Minimum length in bytes')).toHaveValue(16);
   });
 
   it("reports the appliance's refusal and keeps the stored policy shown", async () => {
     renderWithPolicy(
       stubClient({
-        getPasswordPolicy: () =>
-          Promise.resolve({ minimumLength: 12, minimumCharacterClasses: 0 }),
+        getPasswordPolicy: () => Promise.resolve(shipped),
         setPasswordPolicy: () =>
           Promise.reject(
             new BenchCoreError(
@@ -1073,12 +1094,40 @@ describe('appliance password policy', () => {
           ),
       }),
     );
-
-    const length = await screen.findByLabelText('Minimum length in bytes');
-    fireEvent.change(length, { target: { value: '7' } });
+    fireEvent.click(await screen.findByText('Password policy'));
+    fireEvent.change(await screen.findByLabelText('Minimum length in bytes'), {
+      target: { value: '7' },
+    });
     fireEvent.click(screen.getByRole('button', { name: 'Save policy' }));
 
     await screen.findByText('minimum length must be between 8 and 1024 bytes');
     expect(screen.getByLabelText('Minimum length in bytes')).toHaveValue(12);
+  });
+
+  // password.policy.manage is a permission of its own, so a credential that
+  // holds it without users.manage still administers the policy.
+  it('is editable for a session holding only the policy permission', async () => {
+    renderWithPolicy(stubClient(), vi.fn(), {
+      ...session,
+      permissions: ['users.read', 'password.policy.manage'],
+    });
+    fireEvent.click(await screen.findByText('Password policy'));
+    expect(await screen.findByLabelText('Minimum length in bytes')).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Save policy' })).toBeEnabled();
+  });
+});
+
+// The page carries no standing paragraph: the guidance lives in the contextual
+// help each control already offers.
+describe('Authentication identities page prose', () => {
+  it('carries no signed-in sentence and no paragraph about the actions', async () => {
+    renderPage(stubClient());
+    await screen.findByRole('region', { name: 'Users' });
+    expect(screen.queryByText(/Signed in as/)).toBeNull();
+    expect(
+      screen.queryByText(/permanent deletion removes the record itself/),
+    ).toBeNull();
+    expect(screen.queryByText(/Disabling keeps the identity/)).toBeNull();
+    expect(screen.getByRole('button', { name: 'New user' })).toBeInTheDocument();
   });
 });

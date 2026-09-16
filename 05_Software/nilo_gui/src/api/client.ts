@@ -759,7 +759,10 @@ export function createBenchCoreClient(
         method: 'PUT',
         body: {
           minimum_length: policy.minimumLength,
-          minimum_character_classes: policy.minimumCharacterClasses,
+          require_lowercase: policy.requireLowercase,
+          require_uppercase: policy.requireUppercase,
+          require_digit: policy.requireDigit,
+          require_special: policy.requireSpecial,
         },
         parse: parsePasswordPolicyBody,
       }),

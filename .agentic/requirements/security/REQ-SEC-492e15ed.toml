@@ -14,10 +14,10 @@ title = "Hold a password to the configured policy when it is set"
 status = "active"
 
 requirement = """
-When a password is set for an identity - created, bootstrapped or reset - through any interface, Bench Core shall refuse it unless it is at least the configured minimum length in bytes and contains at least the configured minimum count of distinct character classes, drawn from lowercase letters, uppercase letters, digits and every other character, and shall report which of the two it failed without repeating the password.
+When a password is set for an identity - created, bootstrapped or reset - through any interface, Bench Core shall refuse it unless it is at least the configured minimum length in bytes and carries at least one character of every class the policy requires, from lowercase letters, uppercase letters, digits and characters that are neither a letter nor a digit, and shall report every requirement it failed without repeating the password.
 """
 
-verification = "Tests configure a policy with a raised minimum length and a required class count, then set a password through the HTTP identity administration routes and through the local and remote command line: a password one byte short and a password of sufficient length carrying too few classes are each refused with the message naming the unmet part and no identity change, while a password meeting both is accepted and signs in."
+verification = "Tests configure a policy with a raised minimum length and two required classes, then set a password through the HTTP identity administration routes and through the local and remote command line: a password one byte short, and one of sufficient length missing a required class, are each refused with a message naming what is missing and no identity change, while a password meeting the length and every required class is accepted and signs in."
 
 affected_paths = [
     "05_Software/nilo_assistant/internal/auth/password_policy.go",
@@ -32,8 +32,10 @@ affected_paths = [
 
 linked_tests = [
     "05_Software/nilo_assistant/internal/auth/password_policy_test.go::TestPasswordPolicyCheckHoldsAPasswordToTheConfiguredLength",
-    "05_Software/nilo_assistant/internal/auth/password_policy_test.go::TestPasswordPolicyCheckCountsDistinctCharacterClasses",
-    "05_Software/nilo_assistant/internal/auth/password_policy_test.go::TestPasswordPolicyCheckTreatsInvalidUTF8AsOtherRatherThanAnError",
+    "05_Software/nilo_assistant/internal/auth/password_policy_test.go::TestPasswordPolicyCheckRequiresEachTickedClass",
+    "05_Software/nilo_assistant/internal/auth/password_policy_test.go::TestPasswordPolicyCheckNamesEveryUnmetRequirementAndNoOther",
+    "05_Software/nilo_assistant/internal/auth/password_policy_test.go::TestPasswordPolicyCheckClassifiesEveryRune",
+    "05_Software/nilo_assistant/internal/auth/password_policy_test.go::TestPasswordPolicyCheckTreatsInvalidUTF8AsSpecialRatherThanAnError",
     "05_Software/nilo_assistant/internal/auth/password_policy_test.go::TestPasswordPolicyCheckNeverRepeatsThePassword",
     "05_Software/nilo_assistant/internal/identity/password_policy_test.go::TestSetPasswordPolicyHoldsEveryLaterPasswordSetToIt",
     "05_Software/nilo_assistant/internal/identity/password_policy_test.go::TestResetPasswordIsHeldToTheConfiguredPolicy",
@@ -48,4 +50,4 @@ priority = "high"   # low | normal | high
 rationale = "A site whose policy needs a longer minimum or a composition rule cannot express either while the rule is compiled in."        # why this behavior exists, if not obvious
 
 created = 2026-09-15
-updated = 2026-09-15
+updated = 2026-09-16

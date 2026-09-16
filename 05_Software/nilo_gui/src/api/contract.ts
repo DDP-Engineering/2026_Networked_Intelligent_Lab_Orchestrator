@@ -134,30 +134,63 @@ export const PERMISSION_PASSWORD_POLICY_MANAGE: BenchCorePermission =
 export interface PasswordPolicy {
   /** Fewest bytes a password may be. */
   minimumLength: number;
-  /** Fewest distinct classes from lowercase, uppercase, digit and other. */
-  minimumCharacterClasses: number;
+  /** Each requirement demands at least one character of that class. */
+  requireLowercase: boolean;
+  requireUppercase: boolean;
+  requireDigit: boolean;
+  requireSpecial: boolean;
 }
 
-/** Validate a decoded password policy. Both values are always present. */
+/** The four requirements, in the order the interface presents them. */
+export const PASSWORD_POLICY_CLASSES = [
+  'requireLowercase',
+  'requireUppercase',
+  'requireDigit',
+  'requireSpecial',
+] as const;
+
+/** One of the four class requirements. */
+export type PasswordPolicyClass = (typeof PASSWORD_POLICY_CLASSES)[number];
+
+/** Validate a decoded password policy. All five values are always present. */
 export function parsePasswordPolicyBody(body: unknown): ParseResult<PasswordPolicy> {
   const envelope = readObject(body, 'password policy');
   if (!envelope.ok) {
     return envelope;
   }
   const minimumLength = envelope.value.minimum_length;
-  const minimumCharacterClasses = envelope.value.minimum_character_classes;
-  if (
-    typeof minimumLength !== 'number' ||
-    !Number.isInteger(minimumLength) ||
-    typeof minimumCharacterClasses !== 'number' ||
-    !Number.isInteger(minimumCharacterClasses)
-  ) {
+  if (typeof minimumLength !== 'number' || !Number.isInteger(minimumLength)) {
     return {
       ok: false,
-      violation: 'the password policy does not carry both whole-number values',
+      violation: 'the password policy does not carry a whole-number minimum length',
     };
   }
-  return { ok: true, value: { minimumLength, minimumCharacterClasses } };
+  const flags: Record<string, boolean> = {};
+  for (const [field, key] of [
+    ['require_lowercase', 'requireLowercase'],
+    ['require_uppercase', 'requireUppercase'],
+    ['require_digit', 'requireDigit'],
+    ['require_special', 'requireSpecial'],
+  ] as const) {
+    const value = envelope.value[field];
+    if (typeof value !== 'boolean') {
+      return {
+        ok: false,
+        violation: `the password policy does not carry ${field} as true or false`,
+      };
+    }
+    flags[key] = value;
+  }
+  return {
+    ok: true,
+    value: {
+      minimumLength,
+      requireLowercase: flags.requireLowercase,
+      requireUppercase: flags.requireUppercase,
+      requireDigit: flags.requireDigit,
+      requireSpecial: flags.requireSpecial,
+    },
+  };
 }
 
 /** Permission required to enable and disable interfaces. Administrators only. */

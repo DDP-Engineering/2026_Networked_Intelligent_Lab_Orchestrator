@@ -20,9 +20,13 @@ behaviors has to be one rule.
 The appliance holds exactly one password policy. It is two numbers:
 
 - `minimum_length` — the fewest bytes a password may be.
-- `minimum_character_classes` — the fewest distinct character classes a
-  password must contain, from lowercase letters, uppercase letters, digits,
-  and every other character.
+- four independent requirements, each on or off: `require_lowercase`,
+  `require_uppercase`, `require_digit`, `require_special`.
+
+Each requirement is what it says: a password must carry at least one character
+of that class. They are not a count. An administrator who ticks three boxes
+requires those three classes, not "any three of four" - which is the question
+the retired `minimum_character_classes` asked and nobody could answer.
 
 The policy governs setting a password and nothing else. It is consulted at
 bootstrap, identity creation and password reset, on every interface. It is
@@ -35,18 +39,18 @@ attempt can ask this appliance to perform, and it applies on the set path too.
 
 **Reading.** An actor holding `password.policy.manage` reads the current
 policy. An appliance that has never recorded one reads the shipped default:
-`minimum_length` 12, `minimum_character_classes` 0. That default is what every
+`minimum_length` 12 with all four requirements false. That default is what every
 appliance enforces today, so an upgrade changes no behavior until an
 administrator changes the policy.
 
 **Replacing.** An actor holding `password.policy.manage` submits a complete
-policy — both fields, always. A partial submission is refused rather than
-merged, so a client can never silently relax the half it did not send.
+policy — all five values, always. A partial submission is refused rather than
+merged, so a client can never silently relax the part it did not send.
 
 **Bounds on the policy itself.** `minimum_length` is accepted from the absolute
-floor of 8 up to the fixed maximum of 1024. `minimum_character_classes` is
-accepted from 0 to 4. A value outside either range is refused with a message
-naming the bound, and the stored policy is left exactly as it was.
+floor of 8 up to the fixed maximum of 1024. A value outside that range is
+refused with a message naming the bound, and the stored policy is left exactly
+as it was. The four requirements need no bounds of their own: each is on or off.
 
 The floor is compiled in and is not itself configurable. It sits below the
 shipped default of 12 deliberately: the default keeps an unconfigured appliance
@@ -66,8 +70,11 @@ message carries a password or a verifier.
 ```go
 // package auth
 type PasswordPolicy struct {
-    MinimumLength            int
-    MinimumCharacterClasses  int
+    MinimumLength    int
+    RequireLowercase bool
+    RequireUppercase bool
+    RequireDigit     bool
+    RequireSpecial   bool
 }
 
 const (
@@ -82,9 +89,11 @@ func (PasswordPolicy) Check(password []byte) error  // the set path
 ```
 
 A character class is decided per rune over the UTF-8 decoding of the password:
-`unicode.IsLower`, `unicode.IsUpper`, `unicode.IsDigit`, and otherwise "other".
-A byte sequence that is not valid UTF-8 contributes "other" and is not an error:
-the policy counts variety, it does not police encoding. Length stays a byte
+`unicode.IsLower`, `unicode.IsUpper`, `unicode.IsDigit`, and otherwise special.
+The classification stays total - special is "neither a letter nor a digit", so
+every rune belongs to exactly one class and any password can be judged. A byte
+sequence that is not valid UTF-8 contributes special and is not an error: the
+policy describes composition, it does not police encoding. Length stays a byte
 count, as the existing bounds are.
 
 `auth.validatePassword` is split into `validatePasswordLength`, which refuses
@@ -96,14 +105,20 @@ by `identity.Service`, which is the only layer that can read the stored policy.
 
 ```http
 GET /api/v1/password-policy
-200 {"minimum_length": 12, "minimum_character_classes": 0}
+200 {"minimum_length": 12, "require_lowercase": false, "require_uppercase": false,
+     "require_digit": false, "require_special": false}
 ```
 
 ```http
 PUT /api/v1/password-policy
-{"minimum_length": 16, "minimum_character_classes": 3}
-200 {"minimum_length": 16, "minimum_character_classes": 3}
+{"minimum_length": 16, "require_lowercase": true, "require_uppercase": true,
+ "require_digit": true, "require_special": false}
+200 (the same five values)
 ```
+
+All five values are always present in both directions. A body missing any of
+them is refused rather than merged, so a client can never silently relax the
+part it did not send.
 
 Both routes declare `auth.PermissionPasswordPolicyManage`
 (`password.policy.manage`) in the one route table in
@@ -116,9 +131,8 @@ already use:
 
 | Condition | Status | Code | Message |
 |---|---|---|---|
-| body is not the documented object | 400 | `invalid_password_policy` | the request body must be a JSON object of the documented shape |
+| body is not the documented object, or omits any of the five values | 400 | `invalid_password_policy` | the request body must carry minimum_length and all four require_ values |
 | `minimum_length` below 8 or above 1024 | 400 | `invalid_password_policy` | minimum length must be between 8 and 1024 bytes |
-| `minimum_character_classes` outside 0-4 | 400 | `invalid_password_policy` | minimum character classes must be between 0 and 4 |
 
 Refusals when a password is set, on the existing `invalid_password` code, with
 the message naming only the part that failed:
@@ -126,32 +140,47 @@ the message naming only the part that failed:
 | Condition | Message |
 |---|---|
 | shorter than the configured minimum | password must be at least N bytes |
-| too few distinct classes | password must contain at least N of lowercase, uppercase, digit and other characters |
+| missing required classes | password must contain a lowercase letter, a digit - only the unmet requirements, in a fixed order |
 | longer than the maximum | password must be at most 1024 bytes |
 
 ### Persistence
 
-Migration `015_password_policy.sql`, following the singleton convention of
-`013_commissioning.sql`:
+Migration `015_password_policy` created this table with the retired count.
+`016_password_policy_classes` reshapes it. **015 is never edited**: an appliance
+that has already applied it recorded its digest, and `applyMigrationSet`
+compares that digest on every open, so changing the file would stop such an
+appliance starting rather than upgrading it.
 
 ```sql
-CREATE TABLE password_policy (
-    singleton                 INTEGER PRIMARY KEY CHECK (singleton = 1),
-    minimum_length            INTEGER NOT NULL CHECK (minimum_length BETWEEN 8 AND 1024),
-    minimum_character_classes INTEGER NOT NULL CHECK (minimum_character_classes BETWEEN 0 AND 4),
-    updated_at                TEXT NOT NULL
+CREATE TABLE password_policy_next (
+    singleton         INTEGER PRIMARY KEY CHECK (singleton = 1),
+    minimum_length    INTEGER NOT NULL CHECK (minimum_length BETWEEN 8 AND 1024),
+    require_lowercase INTEGER NOT NULL CHECK (require_lowercase IN (0, 1)),
+    require_uppercase INTEGER NOT NULL CHECK (require_uppercase IN (0, 1)),
+    require_digit     INTEGER NOT NULL CHECK (require_digit IN (0, 1)),
+    require_special   INTEGER NOT NULL CHECK (require_special IN (0, 1)),
+    updated_at        TEXT    NOT NULL
 ) STRICT;
+
+INSERT INTO password_policy_next
+SELECT singleton, minimum_length, 0, 0, 0, 0, updated_at FROM password_policy;
+
+DROP TABLE password_policy;
+ALTER TABLE password_policy_next RENAME TO password_policy;
 ```
 
-No row is seeded. An absent row means the shipped default, the same way an
-absent Activity retention policy does, so an appliance upgraded from an earlier
-schema keeps behaving exactly as it did.
+A configured minimum length is carried across; the retired count is not
+converted, because no honest conversion exists - "three of four classes" names
+no particular three. An appliance that had set one keeps its length and starts
+again from no class required, which is the shipped behaviour. No row is seeded,
+so an absent row still means the shipped default.
 
 ### Command line
 
 ```
 nilo admin password-policy --server URL --token-file PATH
-    [--minimum-length N] [--minimum-classes N] [--ca-file PATH] [--json]
+    [--minimum-length N] [--require lower,upper,digit,special|none]
+    [--ca-file PATH] [--json]
 ```
 
 With neither value, it prints the current policy. With both, it submits them
@@ -170,25 +199,27 @@ the same against it. REQ-UX-5e428717 owns what the page shows.
 
 ## Examples
 
-- Default appliance, `GET` → `{"minimum_length": 12, "minimum_character_classes": 0}`.
-- `PUT {"minimum_length": 16, "minimum_character_classes": 3}` → 200, echoed
+- Default appliance, `GET` → minimum 12 with all four requirements false.
+- `PUT` minimum 16 with lowercase, uppercase and digit required → 200, echoed
   back. A following `POST /api/v1/users` with `"Passw0rd-1234"` (13 bytes) is
   refused 400 `invalid_password`, "password must be at least 16 bytes".
-- `PUT {"minimum_length": 7, "minimum_character_classes": 0}` → 400
-  `invalid_password_policy`, "minimum length must be between 8 and 1024 bytes";
-  a following `GET` still returns the previous policy.
-- `PUT {"minimum_length": 16}` → 400 `invalid_password_policy`, the documented
-  shape message; the stored policy is unchanged.
-- Policy `{"minimum_length": 12, "minimum_character_classes": 3}`;
-  `"passwordpassword"` (16 bytes, one class) is refused, "password must contain
-  at least 3 of lowercase, uppercase, digit and other characters";
-  `"Password1234"` (3 classes) is accepted.
+- `PUT` minimum 7 with nothing required → 400 `invalid_password_policy`,
+  "minimum length must be between 8 and 1024 bytes"; a following `GET` still
+  returns the previous policy.
+- `PUT {"minimum_length": 16}`, omitting the four requirements → 400
+  `invalid_password_policy`, the documented shape message; the stored policy is
+  unchanged.
+- Policy minimum 12 requiring uppercase and a digit: `"passwordpassword"` is
+  refused, "password must contain an uppercase letter, a digit";
+  `"Password1234"` is accepted. `"password1234"` is refused naming only the
+  uppercase letter, because that is the only requirement it misses.
 - An identity created with a 12-byte password, then policy raised to 24: that
   identity still signs in; a reset of its password to the same 12 bytes is
   refused.
-- `admin` / `admin_password` published with the image is 14 bytes of two
-  classes. It still signs in on an appliance whose policy has since been raised
-  to 24 and 4 classes, because sign-in never consults the policy.
+- `admin` / `admin_password` published with the image is 14 bytes carrying a
+  lowercase letter and a special character. It still signs in on an appliance
+  whose policy has since been raised to 24 with every class required, because
+  sign-in never consults the policy.
 - A 2000-byte password at `POST /api/v1/session` is refused before any key is
   derived, under every policy.
 
@@ -197,16 +228,18 @@ the same against it. REQ-UX-5e428717 owns what the page shows.
 - A read returns the stored policy, and the shipped default where none is
   stored; a complete replacement is stored, echoed and survives reopening the
   same data directory.
-- A partial body, a minimum below 8 or above 1024, and a class count outside
-  0-4 are each refused with the documented code and leave the stored policy
-  readable and unchanged.
+- A body omitting any of the five values, and a minimum below 8 or above 1024,
+  are each refused with the documented code and leave the stored policy readable
+  and unchanged.
+- An appliance carrying the 015 schema opens on 016 without losing a configured
+  minimum length, and starts from no class required.
 - An Operator session, a Viewer session, an unscoped token and an
   unauthenticated caller are each refused both the read and the replacement,
   with no policy value in the body.
 - With a tightened policy, a password set through `POST /api/v1/users`,
   `PUT /api/v1/users/{username}/password`, `nilo admin user create` and
-  `nilo admin user reset-password` is refused unless it meets both parts, and
-  the message names the part that failed.
+  `nilo admin user reset-password` is refused unless it meets the length and
+  every required class, and the message names each requirement it missed.
 - With the same tightened policy, every identity created beforehand still signs
   in, and a password longer than 1024 bytes is still refused before key
   derivation.
