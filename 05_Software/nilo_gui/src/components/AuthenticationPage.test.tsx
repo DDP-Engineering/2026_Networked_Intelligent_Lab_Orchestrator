@@ -88,6 +88,9 @@ function stubClient(overrides: Partial<BenchCoreClient> = {}): BenchCoreClient {
     exportActivity: () => Promise.reject(new Error('not part of this fixture')),
     getActivityRetention: () => Promise.reject(new Error('not part of this fixture')),
     setActivityRetention: () => Promise.reject(new Error('not part of this fixture')),
+    getPasswordPolicy: () =>
+      Promise.resolve({ minimumLength: 12, minimumCharacterClasses: 0 }),
+    setPasswordPolicy: (_credential, policy) => Promise.resolve(policy),
     getStatus: unexpected,
     getIntegrations: unexpected,
     getDevices: unexpected,
@@ -966,5 +969,116 @@ describe('refusals', () => {
 
     expect(await screen.findByText(/users\.manage is missing/i)).toBeVisible();
     expect(onSessionEnded).not.toHaveBeenCalled();
+  });
+});
+
+// The policy panel appears for a session that may administer it, and submits
+// both values together. The rule stays on the appliance: a refusal is reported
+// as the appliance wrote it, and the shown policy returns to what is stored.
+describe('appliance password policy', () => {
+  const policySession: BenchCoreSession = {
+    ...session,
+    permissions: [...session.permissions, 'password.policy.manage'],
+  };
+
+  function renderWithPolicy(client: BenchCoreClient, onSessionEnded = vi.fn()) {
+    return renderInShell(
+      <AuthenticationPage
+        client={client}
+        credential={CREDENTIAL}
+        session={policySession}
+        view="users"
+        onSessionEnded={onSessionEnded}
+      />,
+      { theme: 'light', language: 'en' },
+    );
+  }
+
+  // password.policy.manage is a permission of its own, so a credential that
+  // holds it without users.manage still administers the policy.
+  it('is editable for a session holding only the policy permission', async () => {
+    renderInShell(
+      <AuthenticationPage
+        client={stubClient()}
+        credential={CREDENTIAL}
+        session={{
+          ...session,
+          permissions: ['users.read', 'password.policy.manage'],
+        }}
+        view="users"
+        canManageUsers={false}
+        onSessionEnded={vi.fn()}
+      />,
+      { theme: 'light', language: 'en' },
+    );
+    const length = await screen.findByLabelText('Minimum length in bytes');
+    expect(length).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Save policy' })).toBeEnabled();
+  });
+
+  it('is absent for a session without the permission', async () => {
+    renderPage(stubClient());
+    await screen.findByRole('region', { name: 'Users' });
+    expect(screen.queryByRole('region', { name: 'Password policy' })).toBeNull();
+  });
+
+  it('shows the stored policy and submits both values together', async () => {
+    const setPasswordPolicy = vi.fn(
+      (
+        _credential: Credential,
+        policy: { minimumLength: number; minimumCharacterClasses: number },
+      ) => Promise.resolve(policy),
+    );
+    renderWithPolicy(
+      stubClient({
+        getPasswordPolicy: () =>
+          Promise.resolve({ minimumLength: 12, minimumCharacterClasses: 0 }),
+        setPasswordPolicy,
+      }),
+    );
+
+    const length = await screen.findByLabelText('Minimum length in bytes');
+    const classes = screen.getByLabelText(
+      'Minimum character classes, from lowercase, uppercase, digit and other',
+    );
+    expect(length).toHaveValue(12);
+    expect(classes).toHaveValue(0);
+
+    fireEvent.change(length, { target: { value: '16' } });
+    fireEvent.change(classes, { target: { value: '3' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save policy' }));
+
+    await waitFor(() => {
+      expect(setPasswordPolicy).toHaveBeenCalledWith(CREDENTIAL, {
+        minimumLength: 16,
+        minimumCharacterClasses: 3,
+      });
+    });
+    await screen.findByText('The password policy was replaced.');
+    expect(screen.getByLabelText('Minimum length in bytes')).toHaveValue(16);
+  });
+
+  it("reports the appliance's refusal and keeps the stored policy shown", async () => {
+    renderWithPolicy(
+      stubClient({
+        getPasswordPolicy: () =>
+          Promise.resolve({ minimumLength: 12, minimumCharacterClasses: 0 }),
+        setPasswordPolicy: () =>
+          Promise.reject(
+            new BenchCoreError(
+              'rejected',
+              'minimum length must be between 8 and 1024 bytes',
+              'invalid_password_policy',
+            ),
+          ),
+      }),
+    );
+
+    const length = await screen.findByLabelText('Minimum length in bytes');
+    fireEvent.change(length, { target: { value: '7' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save policy' }));
+
+    await screen.findByText('minimum length must be between 8 and 1024 bytes');
+    expect(screen.getByLabelText('Minimum length in bytes')).toHaveValue(12);
   });
 });

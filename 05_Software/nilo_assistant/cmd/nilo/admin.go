@@ -44,6 +44,8 @@ func runAdminCommand(ctx context.Context, arguments []string, streams adminIO) i
 		return runAdminUser(ctx, arguments[1:], streams)
 	case "token":
 		return runAdminToken(ctx, arguments[1:], streams)
+	case "password-policy":
+		return runAdminPasswordPolicy(ctx, arguments[1:], streams)
 	default:
 		fmt.Fprintln(streams.stderr, adminUsage)
 		return 2
@@ -67,9 +69,14 @@ Local mode, on the appliance (write access to the data directory is the authorit
 Remote mode, over the authenticated API (the appliance authorizes the token on every request):
   nilo admin user list|create|set-role|enable|disable|reset-password|delete ... --server URL --token-file PATH
   nilo admin token list|create|revoke|delete ... --server URL --token-file PATH
+  nilo admin password-policy --server URL --token-file PATH [--minimum-length N --minimum-classes N]
   The same --username, --role, --owner, --name, --scopes, --expires-in and --id arguments apply;
   there is no --actor, because the appliance attributes the change to the token in use.
   Options: [--ca-file PATH] [--json] [--confirm-delete]
+
+password-policy reads the appliance password policy with no values given, and
+replaces it when both are given; it is a remote-mode command, because the policy
+is the appliance's and the appliance applies it.
 
 A command uses exactly one mode: --data-dir, or --server together with --token-file.
 The token is read from that file and nowhere else, and passwords are read from

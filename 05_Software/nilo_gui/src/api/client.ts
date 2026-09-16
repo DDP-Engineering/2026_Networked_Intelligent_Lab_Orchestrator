@@ -59,6 +59,7 @@ import {
   CSRF_HEADER_NAME,
   DEVICES_PATH,
   IDENTITIES_PATH,
+  PASSWORD_POLICY_PATH,
   INTEGRATIONS_PATH,
   NETWORK_OPERATIONS_PATH,
   NETWORK_STATUS_PATH,
@@ -68,6 +69,8 @@ import {
   SIGN_OUT_PATH,
   STATUS_PATH,
   TOKENS_PATH,
+  parsePasswordPolicyBody,
+  type PasswordPolicy,
   identityPath,
   identityResourcePath,
   interfacePreviewPath,
@@ -329,6 +332,14 @@ export interface BenchCoreClient {
     credential: Credential,
     settings: ActivityRetentionSettings,
   ): Promise<ActivityRetentionSettings>;
+
+  /** The appliance's current password policy. */
+  getPasswordPolicy(credential: Credential): Promise<PasswordPolicy>;
+  /** Replace the whole policy; the appliance refuses a partial one. */
+  setPasswordPolicy(
+    credential: Credential,
+    policy: PasswordPolicy,
+  ): Promise<PasswordPolicy>;
 
   signIn(username: string, password: string): Promise<BenchCoreSession>;
   currentSession(credential: Credential): Promise<BenchCoreSession>;
@@ -733,6 +744,24 @@ export function createBenchCoreClient(
           quota_bytes: settings.quotaBytes,
         },
         parse: parseActivityRetentionSettingsBody,
+      }),
+
+    getPasswordPolicy: (credential) =>
+      exchange({
+        path: PASSWORD_POLICY_PATH,
+        credential,
+        parse: parsePasswordPolicyBody,
+      }),
+    setPasswordPolicy: (credential, policy) =>
+      exchange({
+        path: PASSWORD_POLICY_PATH,
+        credential,
+        method: 'PUT',
+        body: {
+          minimum_length: policy.minimumLength,
+          minimum_character_classes: policy.minimumCharacterClasses,
+        },
+        parse: parsePasswordPolicyBody,
       }),
 
     signIn: (username, password) =>

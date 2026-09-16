@@ -86,6 +86,13 @@ type Repository interface {
 	// names its owner, and losing it silently would lose that history.
 	CountAPITokensForUser(ctx context.Context, userID string) (int, error)
 
+	// LoadPasswordPolicy reads the appliance's one password policy, answering
+	// the shipped default where none has been recorded. SavePasswordPolicy
+	// replaces it, and joins the caller's administrative transaction when it is
+	// given a repository bound to one.
+	LoadPasswordPolicy(ctx context.Context) (auth.PasswordPolicy, error)
+	SavePasswordPolicy(ctx context.Context, policy auth.PasswordPolicy, at time.Time) error
+
 	// WithinAdministrativeTransaction runs one administrative change and the
 	// audit event it owes as a single database transaction, and gives the change
 	// the repositories bound to that transaction. Two guarantees follow: an
@@ -223,7 +230,7 @@ func NewService(options Options) (*Service, error) {
 // way to obtain administrative rights, so it closes permanently as soon as one
 // enabled administrator exists.
 func (service *Service) Bootstrap(ctx context.Context, username string, password []byte) (auth.User, error) {
-	prepared, err := service.prepareUser(username, auth.RoleAdministrator, password)
+	prepared, err := service.prepareUser(ctx, username, auth.RoleAdministrator, password)
 	if err != nil {
 		return auth.User{}, err
 	}
@@ -263,7 +270,7 @@ func (service *Service) CreateUser(
 func (service *Service) CreateUserAs(
 	ctx context.Context, actor Actor, username string, role auth.Role, password []byte,
 ) (auth.User, error) {
-	prepared, err := service.prepareUser(username, role, password)
+	prepared, err := service.prepareUser(ctx, username, role, password)
 	if err != nil {
 		return auth.User{}, err
 	}
@@ -388,6 +395,9 @@ func (service *Service) ResetPassword(ctx context.Context, actor auth.User, user
 func (service *Service) ResetPasswordAs(ctx context.Context, actor Actor, username string, password []byte) error {
 	normalized, err := auth.NormalizeUsername(username)
 	if err != nil {
+		return err
+	}
+	if err := service.checkAgainstPasswordPolicy(ctx, password); err != nil {
 		return err
 	}
 	verifier, err := auth.HashPassword(password, service.random)
@@ -866,15 +876,80 @@ func (actor Actor) MatchesCSRF(presented string) bool {
 	return subtle.ConstantTimeCompare(expected[:], candidate[:]) == 1
 }
 
+// PasswordPolicy reads the rule this appliance holds a password to when one is
+// set. It is deliberately unauthorized here: the route that exposes it declares
+// the permission, and every internal caller needs the policy to apply it.
+func (service *Service) PasswordPolicy(ctx context.Context) (auth.PasswordPolicy, error) {
+	return service.repository.LoadPasswordPolicy(ctx)
+}
+
+// SetPasswordPolicy replaces the appliance password policy on behalf of an
+// enabled administrator.
+func (service *Service) SetPasswordPolicy(ctx context.Context, actor auth.User, policy auth.PasswordPolicy) error {
+	return service.SetPasswordPolicyAs(ctx, UserActor(actor), policy)
+}
+
+// SetPasswordPolicyAs replaces the policy with request credential attribution.
+// The change and the audit event that records it are one transaction, so an
+// appliance that cannot write its history does not change its credential rule
+// either, and a policy the appliance will not hold never reaches the database.
+//
+// It does not touch a single stored verifier. Every identity that exists keeps
+// the password it has and meets the new policy the next time that password is
+// set.
+func (service *Service) SetPasswordPolicyAs(ctx context.Context, actor Actor, policy auth.PasswordPolicy) error {
+	if err := policy.Validate(); err != nil {
+		return err
+	}
+	return service.repository.WithinAdministrativeTransaction(
+		ctx, func(repository Repository, events audit.Repository) error {
+			if err := requireAdministrator(ctx, repository, actor.User); err != nil {
+				return err
+			}
+			before, err := repository.LoadPasswordPolicy(ctx)
+			if err != nil {
+				return err
+			}
+			if err := repository.SavePasswordPolicy(ctx, policy, service.now()); err != nil {
+				return err
+			}
+			return service.record(ctx, events, actor, "identity.password_policy.changed", "appliance", "password_policy",
+				map[string]string{
+					"minimum_length_before":            strconv.Itoa(before.MinimumLength),
+					"minimum_character_classes_before": strconv.Itoa(before.MinimumCharacterClasses),
+					"minimum_length_after":             strconv.Itoa(policy.MinimumLength),
+					"minimum_character_classes_after":  strconv.Itoa(policy.MinimumCharacterClasses),
+				})
+		},
+	)
+}
+
+// checkAgainstPasswordPolicy holds one password to the stored policy. It runs
+// before the deliberately slow hash and outside any transaction, so reading the
+// policy costs nothing a password set was not already paying and never holds
+// the database write lock.
+func (service *Service) checkAgainstPasswordPolicy(ctx context.Context, password []byte) error {
+	policy, err := service.repository.LoadPasswordPolicy(ctx)
+	if err != nil {
+		return err
+	}
+	return policy.Check(password)
+}
+
 // prepareUser builds one identity value outside any transaction, because
 // password hashing is deliberately slow and must not hold the database's write
 // lock while it runs.
-func (service *Service) prepareUser(username string, role auth.Role, password []byte) (auth.User, error) {
+func (service *Service) prepareUser(
+	ctx context.Context, username string, role auth.Role, password []byte,
+) (auth.User, error) {
 	normalized, err := auth.NormalizeUsername(username)
 	if err != nil {
 		return auth.User{}, err
 	}
 	if _, err := auth.ParseRole(string(role)); err != nil {
+		return auth.User{}, err
+	}
+	if err := service.checkAgainstPasswordPolicy(ctx, password); err != nil {
 		return auth.User{}, err
 	}
 	verifier, err := auth.HashPassword(password, service.random)

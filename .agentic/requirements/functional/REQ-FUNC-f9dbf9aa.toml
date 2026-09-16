@@ -1,0 +1,41 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-f9dbf9aa"
+
+title = "Read and replace the password policy over the authenticated HTTP interface"
+
+status = "active"
+
+requirement = """
+When an authenticated actor holding the password-policy permission reads the appliance password policy over the authenticated HTTP interface, Bench Core shall return the current minimum length and minimum distinct character-class count, and when such an actor submits a complete policy, Bench Core shall store it and return what it stored.
+"""
+
+verification = "An HTTP test drives the production handler over a real database as an administrator, reads the policy and asserts the shipped default, submits a policy with a different minimum length and class count, asserts the response reports exactly what was submitted, and asserts a second read returns the same values; a malformed body is asserted to be refused without changing the stored policy."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/httpapi/password_policy.go",
+    "05_Software/nilo_assistant/internal/httpapi/server.go",
+    "05_Software/nilo_assistant/internal/httpapi/administration.go",
+    "05_Software/nilo_assistant/internal/httpapi/password_policy_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/httpapi/password_policy_test.go::TestPasswordPolicyRouteServesTheShippedDefaultAndStoresAReplacement",
+    "05_Software/nilo_assistant/internal/httpapi/password_policy_test.go::TestPasswordPolicyRouteRefusesAnIncompleteOrMalformedBody",
+]
+
+
+spec = "specs/REQ-FUNC-f9dbf9aa.md"
+
+priority = "high"   # low | normal | high
+rationale = "The HTTP route is the one administration surface; the command line and the browser are both clients of it."        # why this behavior exists, if not obvious
+
+created = 2026-09-15
+updated = 2026-09-15

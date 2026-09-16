@@ -362,6 +362,21 @@ export const en = {
   'auth.reading': 'Reading the {resource}…',
   'auth.readFailed': 'The {resource} could not be read.',
   'auth.resource.identities': 'identity listing',
+  'auth.resource.passwordPolicy': 'password policy',
+  'auth.policyTitle': 'Password policy',
+  'auth.policyNote':
+    'The rule this appliance applies when a password is set. It is never applied when a password is checked, so tightening it leaves every existing identity able to sign in.',
+  'auth.policyMinimumLength': 'Minimum length in bytes',
+  'auth.policyMinimumClasses':
+    'Minimum character classes, from lowercase, uppercase, digit and other',
+  'auth.help.policyMinimumLength':
+    'The fewest bytes a new password may be. The appliance refuses a value below its own floor.',
+  'auth.help.policyMinimumClasses':
+    'How many of lowercase, uppercase, digit and other a new password must draw from. Zero applies no composition rule.',
+  'auth.policySave': 'Save policy',
+  'auth.policySaved': 'The password policy was replaced.',
+  'auth.permission.passwordPolicyManage':
+    'Your session does not include password.policy.manage.',
   'auth.resource.tokens': 'token listing',
   'auth.noIdentities': 'No identities exist yet.',
   'auth.noTokens': 'No API tokens exist yet.',

@@ -117,6 +117,9 @@ function client(session: BenchCoreSession = administrator): BenchCoreClient {
     exportActivity: () => Promise.reject(new Error('not part of this fixture')),
     getActivityRetention: () => Promise.reject(new Error('not part of this fixture')),
     setActivityRetention: () => Promise.reject(new Error('not part of this fixture')),
+    getPasswordPolicy: () =>
+      Promise.resolve({ minimumLength: 12, minimumCharacterClasses: 0 }),
+    setPasswordPolicy: (_credential, policy) => Promise.resolve(policy),
     getStatus: () => Promise.resolve(status),
     getIntegrations: () => Promise.resolve(integrations),
     getDevices: () => Promise.resolve(devices),

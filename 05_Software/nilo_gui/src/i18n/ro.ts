@@ -392,6 +392,20 @@ export const ro: Catalogue = {
   'auth.reading': 'Se citește {resource}…',
   'auth.readFailed': '{resource} nu a putut fi citit.',
   'auth.resource.identities': 'lista de identități',
+  'auth.resource.passwordPolicy': 'politica de parole',
+  'auth.policyTitle': 'Politica de parole',
+  'auth.policyNote':
+    'Regula pe care acest aparat o aplică atunci când o parolă este setată. Nu se aplică niciodată la verificarea unei parole, deci înăsprirea ei nu blochează nicio identitate existentă.',
+  'auth.policyMinimumLength': 'Lungime minimă în octeți',
+  'auth.policyMinimumClasses':
+    'Număr minim de clase de caractere, dintre litere mici, litere mari, cifre și altele',
+  'auth.help.policyMinimumLength':
+    'Numărul minim de octeți al unei parole noi. Aparatul refuză o valoare sub propriul său prag.',
+  'auth.help.policyMinimumClasses':
+    'Din câte dintre clasele litere mici, litere mari, cifre și altele trebuie să provină o parolă nouă. Zero nu aplică nicio regulă de compoziție.',
+  'auth.policySave': 'Salvează politica',
+  'auth.policySaved': 'Politica de parole a fost înlocuită.',
+  'auth.permission.passwordPolicyManage': 'Sesiunea nu include password.policy.manage.',
   'auth.resource.tokens': 'lista de tokenuri',
   'auth.noIdentities': 'Încă nu există identități.',
   'auth.noTokens': 'Încă nu există tokenuri API.',

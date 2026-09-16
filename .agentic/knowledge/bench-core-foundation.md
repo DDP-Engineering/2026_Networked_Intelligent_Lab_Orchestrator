@@ -34,6 +34,11 @@ separate operation acknowledgement, confirmation and rollback. `/mcp` offers
 three network read tools over the same service, plus eight bench tools when the integration manager is configured. WireGuard reads expose safe
 metadata only.
 
+`nilo admin password-policy` reads the appliance password policy with no values
+given and replaces it when both are given. It is remote mode only: the policy is
+the appliance's, and the appliance authorizes the token and applies the rule on
+every request.
+
 `nilo admin user|token` run in exactly one of two modes: local (`--data-dir`,
 write access is the authority, `--actor` is attribution, no deletion) or remote
 (`--server` with `--token-file`, an ordinary `internal/apiclient` client of the
@@ -55,7 +60,15 @@ before anything is opened or contacted. The root usage names every group.
   message carries a password, secret or verifier.
 - An identity change and its audit event commit in one `BEGIN IMMEDIATE`
   transaction; one enabled administrator always remains; a refused change
-  leaves the subject untouched.
+  leaves the subject untouched. A password policy change commits the same way.
+- The appliance holds one password policy - a minimum length and a minimum
+  count of distinct character classes - applied wherever a password is set and
+  never where a stored verifier is checked, so tightening it leaves every
+  existing identity able to sign in. A configured minimum may go no lower than
+  the compiled floor of 8 bytes and no higher than the fixed maximum of 1024;
+  an appliance with no recorded policy applies a minimum of 12 with no class
+  requirement. The maximum is not policy: it bounds the Argon2 work an
+  unauthenticated login attempt can ask for and holds on both paths.
 - Permanent deletion is explicit (typed confirmation or `--confirm-delete`),
   distinct from disable and revoke, and every attempt, applied or refused, is
   on record with labels that outlive the row.
@@ -415,6 +428,9 @@ The simulation catalog is deliberately dependency-free and cannot discover or co
 - `internal/network/persistence.go`, `internal/store/sqlite/network_operation_repository.go` - the durable record of a managed change, holding public metadata only and refusing a record whose parameters name a secret.
 - `internal/httpapi/network*.go`, `internal/mcp/`, `internal/apiclient/` - shared authenticated Network adapters.
 - `cmd/nilo/network*.go` - Network CLI with interactive or explicit acknowledgement; confirmation remains separate.
+- `internal/auth/password_policy.go` - the policy value, its own bounds, and the check one password is held to when it is set. Pure: it reads no database, which is what keeps the construction-time timing placeholder in `identity.NewService` out of its reach. `internal/auth/password.go` keeps only the maximum, on both the hashing and the verification path.
+- `internal/store/sqlite/password_policy_repository.go`, `migrations/015_password_policy.sql` - the singleton policy row and the table whose `CHECK` constraints mirror the Go bounds. No row is seeded: an absent row means the shipped default, so a database carried forward keeps behaving as it did.
+- `internal/httpapi/password_policy.go`, `cmd/nilo/admin_password_policy.go` - the administrator-only route pair and its command-line client. A replacement carries the whole policy; a partial one is refused rather than merged, in both.
 - `cmd/nilo/admin.go`, `cmd/nilo/admin_remote.go` - the administration commands: mode resolution and the local data-directory path in the first, the remote API client, readable renderings and the deletion confirmation in the second. `admin_remote_test.go` proves the requests against a recording stub; `admin_live_test.go` proves roles, scopes and credential state against a real `nilo serve` subprocess.
 
 - `05_Software/nilo_assistant/cmd/nilo/` - command entry point and CLI contract tests.

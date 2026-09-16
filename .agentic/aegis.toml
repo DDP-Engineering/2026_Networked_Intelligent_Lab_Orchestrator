@@ -3,6 +3,14 @@
 
 schema = 1
 
+[interaction]
+# Checkpoint mode stops after every completed stage and presents the choices;
+# autopilot flows between stages and still stops for publication approval.
+# A missing table, a missing key and an invalid value all resolve to false.
+# An explicit instruction for one task overrides this and is recorded in that
+# task's journal header, which is what survives a resume.
+autopilot = false
+
 [review]
 enabled = true
 max_fix_cycles = 2
@@ -13,8 +21,11 @@ test = "python scripts/aegis_test.py full"
 test_impacted = "python scripts/aegis_test.py impacted {tests}"  # {tests} = the focused regression set
 lint = "python scripts/aegis_test.py lint"
 workdir = "05_Software"
-# timeout = 0                           # seconds allowed per command; 0 or
-#                                       # absent means no limit at all
+timeout = 0   # seconds allowed per command; 0, negative, absent and
+              # unreadable all mean no limit, so the only way to get one is
+              # to ask for it. A limit low enough to cut a healthy suite
+              # short would report a failure that never happened.
+#
 # workdir = "app"                       # run commands here, not at the root
 #
 # Set `workdir` when your application lives below the repository root, and
@@ -29,10 +40,18 @@ workdir = "05_Software"
 # because a limit short enough to cut off a healthy suite would report a
 # failure that never happened. A stopped command is reported as proving
 # nothing - never as a failure.
-# test = 5400
-# lint = 120
+# A key must name a [commands] entry; anything else is reported. These are
+# the three this repository defines, each at the no-limit default.
+test = 0
+test_impacted = 0
+lint = 0
 
 [layout]
+# The branch every merge-base diff is taken against. Set explicitly so the
+# answer does not depend on what `origin/HEAD` happens to point at in one
+# clone, or on which of `master`/`main` exists locally in a fresh worktree.
+default_branch = "master"
+
 # Globs used by the traceability heuristics of `aegis check`.
 source = [
     "05_Software/integrations/sigrok/",
@@ -50,6 +69,7 @@ tests = [
     "05_Software/nilo_gui/src/**/*.test.tsx",
 ]
 docs = [
+    "VERSION",
     "CHANGELOG.md",
     ".gitignore",
     "README.md",
@@ -73,16 +93,37 @@ docs = [
 # Advisory like everything else: check reports an edit
 # outside the zone, it never stops one. The defaults are shown; uncomment
 # and change a line to widen or narrow one stage.
-# frame = []
-# specify = []
-# design = []
-# survey = []
-# components = ["tests"]
-# close = []
+frame = []
+specify = []
+design = []
+survey = []
+components = ["tests"]
+close = []
+#
+# build, validate and deliver are deliberately not listed. A stage absent from
+# this table may write anywhere; a stage listed with an empty list may write
+# only under `.agentic/`. Adding them here would newly constrain them, which
+# is the opposite of the default.
 
 [check]
 secret_patterns_extra = []
 ignore = []
-strict_promote = []
-# run = ["test", "lint"]   # restrict what `check --run` executes; without
-#                          # this, side-effect-looking names are skipped
+# Warnings that fail `check --strict`. Each one here is an integrity failure
+# rather than a matter of taste, and each is at zero occurrences today, so
+# promoting it holds the line where it already stands instead of breaking the
+# gate for work that is already in flight:
+#   config             aegis.toml itself is malformed or mistyped
+#   outside-layout     a changed file sits outside every declared [layout] glob
+#   ticket-ref         requirement prose names a ticket, which the
+#                      self-contained rule forbids
+# Deliberately not promoted: secret-in-diff, which fires on password literals
+# in test fixtures and the GUI mock backend. Promote it only together with an
+# [check] ignore entry for those paths, or it fails on fixtures rather than on
+# credentials.
+strict_promote = ["config", "outside-layout", "ticket-ref"]
+# Restricts what `check --run` executes. An empty list is the default and
+# means "no restriction", with one exception worth knowing: with no list, a
+# command whose *name* matches deploy|migrat|publish|release|push|upload is
+# skipped as side-effecting. Naming such a command here is the only way to
+# include it.
+run = []

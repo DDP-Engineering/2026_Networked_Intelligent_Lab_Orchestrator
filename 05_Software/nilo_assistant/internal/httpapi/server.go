@@ -369,6 +369,13 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 	protected.Handle("PUT /api/v1/users/{username}/enabled", authorize(auth.PermissionUsersManage, handleSetEnabled(options.Identity)))
 	protected.Handle("PUT /api/v1/users/{username}/password", authorize(auth.PermissionUsersManage, handleResetPassword(options.Identity)))
 	protected.Handle("DELETE /api/v1/users/{username}", authorize(auth.PermissionUsersManage, handleDeleteUser(options.Identity)))
+	// The appliance password policy, beside the identities it governs. It is
+	// administrator-only and separate from identity administration: the policy
+	// decides how weak a credential this appliance accepts.
+	protected.Handle("GET /api/v1/password-policy",
+		authorize(auth.PermissionPasswordPolicyManage, handleReadPasswordPolicy(options.Identity)))
+	protected.Handle("PUT /api/v1/password-policy",
+		authorize(auth.PermissionPasswordPolicyManage, handleReplacePasswordPolicy(options.Identity)))
 	protected.Handle("GET /api/v1/tokens", authorize(auth.PermissionTokensReadAll, handleListTokens(options.Identity)))
 	protected.Handle("POST /api/v1/tokens", authorize(auth.PermissionTokensManageAll, handleCreateToken(options.Identity)))
 	protected.Handle("POST /api/v1/tokens/{id}/revoke", authorize(auth.PermissionTokensManageAll, handleRevokeToken(options.Identity)))

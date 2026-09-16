@@ -5,10 +5,11 @@ import {
   type Credential,
   type NewIdentity,
 } from '../../api/client';
-import type {
-  BenchCoreIdentity,
-  BenchCoreRole,
-  BenchCoreSession,
+import {
+  PERMISSION_PASSWORD_POLICY_MANAGE,
+  type BenchCoreIdentity,
+  type BenchCoreRole,
+  type BenchCoreSession,
 } from '../../api/contract';
 import { useTranslate } from '../../i18n/languages';
 import {
@@ -22,6 +23,7 @@ import { Modal } from '../Modal';
 import { DetailsToggle, RowActions, type RowAction } from '../RowActions';
 import { WorkflowHelp } from '../help/WorkflowHelp';
 import { AdministrationPanel, type Listing } from './AdministrationPanel';
+import { PasswordPolicyPanel } from './PasswordPolicyPanel';
 
 type Dialog =
   | { kind: 'create' }
@@ -131,6 +133,12 @@ export function UsersPage({
     (identity) => identity.enabled && identity.role === 'administrator',
   ).length;
   const unavailable = t('auth.permission.usersManage');
+  // The policy is a separate permission from identity administration, so it is
+  // read from the session rather than borrowed from `canManage`: a credential
+  // scoped to one and not the other must not be told it lacks the other.
+  const canManagePasswordPolicy = session.permissions.includes(
+    PERMISSION_PASSWORD_POLICY_MANAGE,
+  );
 
   return (
     <div className="page authentication-page">
@@ -159,6 +167,14 @@ export function UsersPage({
             {notice}
           </p>
         )}
+        {canManagePasswordPolicy ? (
+          <PasswordPolicyPanel
+            client={client}
+            credential={credential}
+            canManage={canManagePasswordPolicy}
+            onSessionEnded={onSessionEnded}
+          />
+        ) : null}
         <AdministrationPanel
           id="identities"
           title={t('auth.users')}

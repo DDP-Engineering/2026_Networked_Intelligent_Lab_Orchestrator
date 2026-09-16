@@ -146,6 +146,9 @@ function stubClient(overrides: Partial<BenchCoreClient> = {}): BenchCoreClient {
     exportActivity: () => Promise.reject(new Error('not part of this fixture')),
     getActivityRetention: () => Promise.reject(new Error('not part of this fixture')),
     setActivityRetention: () => Promise.reject(new Error('not part of this fixture')),
+    getPasswordPolicy: () =>
+      Promise.resolve({ minimumLength: 12, minimumCharacterClasses: 0 }),
+    setPasswordPolicy: (_credential, policy) => Promise.resolve(policy),
     getStatus: () => Promise.resolve(healthyStatus),
     getIntegrations: () => Promise.resolve(readyIntegrations),
     getDevices: () => Promise.resolve(readyDevices),

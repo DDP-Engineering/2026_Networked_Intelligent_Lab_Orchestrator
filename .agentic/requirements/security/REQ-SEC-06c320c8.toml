@@ -1,0 +1,41 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-SEC-06c320c8"
+
+title = "Bound the work an unauthenticated password check can ask for"
+
+status = "active"
+
+requirement = """
+If a password presented for verification is longer than the fixed maximum of 1024 bytes, then Bench Core shall refuse it before deriving any Argon2 key, whatever the configured password policy says.
+"""
+
+verification = "A test presents a password longer than the maximum to the verification path and asserts it is refused with the bound named and no key derivation attempted, both under the shipped policy and under a policy whose configured minimum has been changed."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/auth/password.go",
+    "05_Software/nilo_assistant/internal/auth/password_policy.go",
+    "05_Software/nilo_assistant/internal/auth/password_test.go",
+    "05_Software/nilo_assistant/internal/auth/password_policy_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/auth/password_test.go::TestPasswordFunctionsRejectTheMaximumAndTheEmptyPassword",
+    "05_Software/nilo_assistant/internal/auth/password_policy_test.go::TestPasswordPolicyCheckKeepsTheMaximumWhateverThePolicySays",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "The maximum is not policy: it bounds the Argon2 work an unauthenticated login attempt can ask this appliance to perform."        # why this behavior exists, if not obvious
+
+created = 2026-09-15
+updated = 2026-09-15

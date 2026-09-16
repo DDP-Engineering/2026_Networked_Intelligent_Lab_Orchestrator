@@ -398,6 +398,21 @@ export const de: Catalogue = {
   'auth.reading': '{resource} wird gelesen…',
   'auth.readFailed': '{resource} konnte nicht gelesen werden.',
   'auth.resource.identities': 'Identitätsliste',
+  'auth.resource.passwordPolicy': 'Kennwortrichtlinie',
+  'auth.policyTitle': 'Kennwortrichtlinie',
+  'auth.policyNote':
+    'Die Regel, die dieses Gerät beim Setzen eines Kennworts anwendet. Beim Prüfen eines Kennworts wird sie nie angewendet, sodass eine Verschärfung keine bestehende Identität aussperrt.',
+  'auth.policyMinimumLength': 'Mindestlänge in Bytes',
+  'auth.policyMinimumClasses':
+    'Mindestanzahl Zeichenklassen aus Kleinbuchstaben, Großbuchstaben, Ziffern und Sonstigen',
+  'auth.help.policyMinimumLength':
+    'Die geringste Byteanzahl eines neuen Kennworts. Einen Wert unterhalb seiner eigenen Untergrenze weist das Gerät zurück.',
+  'auth.help.policyMinimumClasses':
+    'Aus wie vielen der Klassen Kleinbuchstaben, Großbuchstaben, Ziffern und Sonstige ein neues Kennwort stammen muss. Null wendet keine Zusammensetzungsregel an.',
+  'auth.policySave': 'Richtlinie speichern',
+  'auth.policySaved': 'Die Kennwortrichtlinie wurde ersetzt.',
+  'auth.permission.passwordPolicyManage':
+    'Ihre Sitzung enthält password.policy.manage nicht.',
   'auth.resource.tokens': 'Token-Liste',
   'auth.noIdentities': 'Es existieren noch keine Identitäten.',
   'auth.noTokens': 'Es existieren noch keine API-Token.',
