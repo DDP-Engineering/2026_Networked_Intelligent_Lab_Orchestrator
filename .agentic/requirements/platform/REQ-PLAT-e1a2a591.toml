@@ -60,7 +60,6 @@ affected_paths = [
     "05_Software/nilo_gui/",
     "05_Software/README.md",
     "06_SoftwareDocu/Development_and_Simulation_Flow.md",
-    "00_Planning/Development_Simulation_Vertical_Slices.md",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
