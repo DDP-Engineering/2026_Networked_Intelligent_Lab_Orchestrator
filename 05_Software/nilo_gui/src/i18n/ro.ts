@@ -380,9 +380,6 @@ export const ro: Catalogue = {
     'Repetați exact numele tokenului. Nimic nu este trimis până când nu se potrivește, astfel încât un clic greșit să nu șteargă tokenul nepotrivit.',
   'auth.roleMatrix':
     'Viewer: citește inventarul, Rețeaua și starea. Operator: Viewer plus tokenuri proprii. Administrator: toată administrarea, Activitatea, diagnosticarea, Rețeaua și VPN.',
-  'auth.signedInAs': 'Autentificat ca {username} ({role}).',
-  'auth.identitiesNote':
-    'Dezactivarea păstrează identitatea și îi oprește autentificarea; ștergerea definitivă elimină chiar înregistrarea și nu poate fi anulată.',
   'auth.csrfMissing':
     'Acest browser nu mai deține tokenul anti-falsificare emis odată cu sesiunea, deci Bench Core va refuza orice modificare. Deconectați-vă și autentificați-vă din nou.',
   'auth.users': 'Utilizatori',
@@ -392,6 +389,22 @@ export const ro: Catalogue = {
   'auth.reading': 'Se citește {resource}…',
   'auth.readFailed': '{resource} nu a putut fi citit.',
   'auth.resource.identities': 'lista de identități',
+  'auth.resource.passwordPolicy': 'politica de parole',
+  'auth.signedInAs': 'Autentificat ca {username} ({role}).',
+  'auth.policyTitle': 'Politica de parole',
+  'auth.policyMinimumLength': 'Lungime minimă în octeți',
+  'auth.policyClasses': 'O parolă trebuie să conțină',
+  'auth.policyClass.lowercase': 'o literă mică',
+  'auth.policyClass.uppercase': 'o literă mare',
+  'auth.policyClass.digit': 'o cifră',
+  'auth.policyClass.special': 'un caracter special',
+  'auth.help.policyMinimumLength':
+    'Numărul minim de octeți al unei parole noi. Aparatul refuză o valoare sub propriul său prag.',
+  'auth.help.policyClasses':
+    'Bifați fiecare clasă pe care o parolă nouă trebuie să o conțină. Fără bifă nu se aplică nicio regulă de compoziție.',
+  'auth.policySave': 'Salvează politica',
+  'auth.policySaved': 'Politica de parole a fost înlocuită.',
+  'auth.permission.passwordPolicyManage': 'Sesiunea nu include password.policy.manage.',
   'auth.resource.tokens': 'lista de tokenuri',
   'auth.noIdentities': 'Încă nu există identități.',
   'auth.noTokens': 'Încă nu există tokenuri API.',

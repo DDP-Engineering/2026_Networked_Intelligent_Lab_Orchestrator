@@ -58,6 +58,7 @@ editor, and no policy language: the table below is built into NILO.
 | `users.manage` | Create identities, change roles, disable, enable, reset passwords, delete permanently | no | no | yes |
 | `tokens.read.all` | List every identity's API tokens | no | no | yes |
 | `tokens.manage.all` | Revoke or permanently delete any identity's API token | no | no | yes |
+| `password.policy.manage` | Read and change the appliance password policy | no | no | yes |
 
 The set covers the functionality this release exposes. Hardware operations,
 firmware flashing, MCP access and artifact retrieval receive their permissions
@@ -139,8 +140,34 @@ made. `--ca-file` pins the certificate authority of a private listener.
 
 - Passwords are read from **standard input**, never from a command argument,
   in both modes. `user create` and `user reset-password` read the password
-  twice and refuse a mismatch; the appliance enforces the minimum of 12 bytes.
+  twice and refuse a mismatch; the appliance holds the password to its
+  configured password policy, described below.
 - No command prints a password back, in any mode, on any stream.
+
+**The appliance password policy.** The appliance holds one policy: a minimum
+length in bytes, and four independent requirements - a lowercase letter, an
+uppercase letter, a digit, and a special character, meaning any character that
+is neither a letter nor a digit. Each requirement demands at least one such
+character. An appliance that has recorded no policy applies a minimum of 12
+bytes requiring no class, which is what NILO has always enforced.
+
+The policy governs a password being **set** - bootstrap, create, reset, on every
+interface - and is never consulted when a stored password is **checked**.
+Tightening it therefore locks nobody out: an identity created under an earlier
+policy keeps signing in and meets the new policy the next time its password is
+set. The fixed maximum of 1024 bytes is not part of the policy; it bounds the
+work an unauthenticated login attempt can ask the appliance to perform and
+applies on both paths whatever the policy says.
+
+A configured minimum may be set no lower than the absolute floor of **8 bytes**,
+which is compiled in, and no higher than the maximum. A value outside that range
+is refused with `invalid_password_policy` and a message naming the bound, and
+the stored policy is left as it was. The four requirements need no bounds: each
+is on or off, and a password missing any that are on is refused with a message
+naming every requirement it missed. Only
+`password.policy.manage`, which is administrator-only, may read or change the
+policy, and every applied change appends one Activity audit event carrying the
+policy before and after and no credential.
 - Data goes to standard output; prompts, confirmations, warnings and errors go
   to standard error. Local output is JSON. Remote output is readable by
   default and, with `--json`, the appliance's own document and nothing else on
@@ -184,6 +211,7 @@ nilo admin token list          ...
 nilo admin token create        ... --owner U --name N [--scopes a,b] [--expires-in 720h]
 nilo admin token revoke        ... --id T
 nilo admin token delete        ... --id T [--confirm-delete]
+nilo admin password-policy     ... [--minimum-length N --require lower,upper,digit,special|none]
 ```
 
 | Command | Request | On success |
@@ -198,6 +226,8 @@ nilo admin token delete        ... --id T [--confirm-delete]
 | `token create` | `POST /api/v1/tokens` | the token and, once, its secret |
 | `token revoke` | `POST /api/v1/tokens/{id}/revoke` | the re-read listing |
 | `token delete` | `DELETE /api/v1/tokens/{id}` | the re-read listing |
+| `password-policy` with no values | `GET /api/v1/password-policy` | the current policy |
+| `password-policy` with a length and `--require` | `PUT /api/v1/password-policy` | the stored policy |
 
 A refusal exits `1` and prints the appliance's stable error code on standard
 error, for example `the appliance refused the request: last_administrator
@@ -433,6 +463,8 @@ the password you just set.
 | `POST /api/v1/tokens` | session or bearer | `tokens.manage.all` |
 | `POST /api/v1/tokens/{id}/revoke` | session or bearer | `tokens.manage.all` |
 | `DELETE /api/v1/tokens/{id}` | session or bearer | `tokens.manage.all` |
+| `GET /api/v1/password-policy` | session or bearer | `password.policy.manage` |
+| `PUT /api/v1/password-policy` | session or bearer | `password.policy.manage` |
 | `GET /api/v1/network/management-access` | session or bearer | `network.manage` |
 | `PUT /api/v1/network/management-access` | session or bearer | `network.manage` |
 | `POST /api/v1/network/management-access/confirm` | session or bearer | `network.manage` |
@@ -450,7 +482,8 @@ A refusal that the caller can act on carries a stable code and a fixed message,
 for example `{"error":"invalid_role","message":"role must be one of
 administrator, operator or viewer"}`. The codes are `invalid_request`,
 `invalid_username`, `invalid_password`, `invalid_role`, `invalid_name`,
-`invalid_scope`, `invalid_expiry`, `invalid_enabled`, `user_not_found`,
+`invalid_scope`, `invalid_expiry`, `invalid_enabled`, `invalid_password_policy`,
+`user_not_found`,
 `token_not_found`, `username_taken`, `last_administrator` and
 `user_has_tokens`. Anything NILO did not expect is `500` with `internal_error`
 and no message: a message built from an internal error would hand a caller the

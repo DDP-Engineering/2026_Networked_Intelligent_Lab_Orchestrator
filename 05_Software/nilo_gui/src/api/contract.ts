@@ -46,6 +46,9 @@ export const IDENTITIES_PATH = '/api/v1/users';
 /** Path of the API token administration collection. */
 export const TOKENS_PATH = '/api/v1/tokens';
 
+/** Path of the appliance password policy. */
+export const PASSWORD_POLICY_PATH = '/api/v1/password-policy';
+
 /** Path of the authenticated network status resource. */
 export const NETWORK_STATUS_PATH = '/api/v1/network/status';
 
@@ -89,6 +92,7 @@ export const BENCH_CORE_TOKEN_SCOPES = [
   'activity.read',
   'activity.export',
   'activity.retention.manage',
+  'password.policy.manage',
 ] as const;
 
 /** Every fixed permission, including session-only appliance power control. */
@@ -118,6 +122,76 @@ export const PERMISSION_ACTIVITY_EXPORT: BenchCorePermission = 'activity.export'
 export const PERMISSION_ACTIVITY_RETENTION_MANAGE: BenchCorePermission =
   'activity.retention.manage';
 export const PERMISSION_NETWORK_READ: BenchCorePermission = 'network.read';
+
+/** Permission required to read and change the appliance password policy. Administrators only. */
+export const PERMISSION_PASSWORD_POLICY_MANAGE: BenchCorePermission =
+  'password.policy.manage';
+
+/**
+ * The appliance's one rule for a password being set. It is never applied when a
+ * password is checked, so tightening it locks nobody out.
+ */
+export interface PasswordPolicy {
+  /** Fewest bytes a password may be. */
+  minimumLength: number;
+  /** Each requirement demands at least one character of that class. */
+  requireLowercase: boolean;
+  requireUppercase: boolean;
+  requireDigit: boolean;
+  requireSpecial: boolean;
+}
+
+/** The four requirements, in the order the interface presents them. */
+export const PASSWORD_POLICY_CLASSES = [
+  'requireLowercase',
+  'requireUppercase',
+  'requireDigit',
+  'requireSpecial',
+] as const;
+
+/** One of the four class requirements. */
+export type PasswordPolicyClass = (typeof PASSWORD_POLICY_CLASSES)[number];
+
+/** Validate a decoded password policy. All five values are always present. */
+export function parsePasswordPolicyBody(body: unknown): ParseResult<PasswordPolicy> {
+  const envelope = readObject(body, 'password policy');
+  if (!envelope.ok) {
+    return envelope;
+  }
+  const minimumLength = envelope.value.minimum_length;
+  if (typeof minimumLength !== 'number' || !Number.isInteger(minimumLength)) {
+    return {
+      ok: false,
+      violation: 'the password policy does not carry a whole-number minimum length',
+    };
+  }
+  const flags: Record<string, boolean> = {};
+  for (const [field, key] of [
+    ['require_lowercase', 'requireLowercase'],
+    ['require_uppercase', 'requireUppercase'],
+    ['require_digit', 'requireDigit'],
+    ['require_special', 'requireSpecial'],
+  ] as const) {
+    const value = envelope.value[field];
+    if (typeof value !== 'boolean') {
+      return {
+        ok: false,
+        violation: `the password policy does not carry ${field} as true or false`,
+      };
+    }
+    flags[key] = value;
+  }
+  return {
+    ok: true,
+    value: {
+      minimumLength,
+      requireLowercase: flags.requireLowercase,
+      requireUppercase: flags.requireUppercase,
+      requireDigit: flags.requireDigit,
+      requireSpecial: flags.requireSpecial,
+    },
+  };
+}
 
 /** Permission required to enable and disable interfaces. Administrators only. */
 export const PERMISSION_NETWORK_MANAGE: BenchCorePermission = 'network.manage';

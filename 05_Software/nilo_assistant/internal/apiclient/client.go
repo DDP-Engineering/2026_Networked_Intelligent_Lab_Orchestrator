@@ -26,17 +26,26 @@ import (
 // anything larger is a mistake or an attempt to exhaust the caller.
 const maxResponseBytes = 4 << 20
 
-// Error is a request the server refused, carrying its stable code.
+// Error is a request the server refused, carrying its stable code and the
+// readable message that came with it. The code is what a script branches on;
+// the message is what the appliance wants the operator to read, and repeating
+// it here is what keeps a rule the appliance owns from being restated by every
+// client that reports it refused.
 type Error struct {
-	Status int
-	Code   string
+	Status  int
+	Code    string
+	Message string
 }
 
 func (err *Error) Error() string {
-	if err.Code == "" {
-		return fmt.Sprintf("the appliance refused the request (HTTP %d)", err.Status)
+	refusal := fmt.Sprintf("the appliance refused the request (HTTP %d)", err.Status)
+	if err.Code != "" {
+		refusal = fmt.Sprintf("the appliance refused the request: %s (HTTP %d)", err.Code, err.Status)
 	}
-	return fmt.Sprintf("the appliance refused the request: %s (HTTP %d)", err.Code, err.Status)
+	if err.Message == "" {
+		return refusal
+	}
+	return refusal + ": " + err.Message
 }
 
 // Options configure one client.
@@ -138,20 +147,23 @@ func (client *Client) Do(ctx context.Context, method, path string, body any) ([]
 		return nil, fmt.Errorf("read the response: %w", err)
 	}
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return nil, &Error{Status: response.StatusCode, Code: errorCodeOf(document)}
+		code, message := refusalOf(document)
+		return nil, &Error{Status: response.StatusCode, Code: code, Message: message}
 	}
 	return document, nil
 }
 
-// errorCodeOf reads the stable code from a refusal, if it carries one.
-func errorCodeOf(document []byte) string {
+// refusalOf reads the stable code and the readable message from a refusal, if
+// it carries them.
+func refusalOf(document []byte) (string, string) {
 	var refusal struct {
-		Error string `json:"error"`
+		Error   string `json:"error"`
+		Message string `json:"message"`
 	}
 	if err := json.Unmarshal(document, &refusal); err != nil {
-		return ""
+		return "", ""
 	}
-	return refusal.Error
+	return refusal.Error, refusal.Message
 }
 
 // Stream performs one GET and hands back the response body unread, for a
@@ -170,7 +182,8 @@ func (client *Client) Stream(ctx context.Context, path string) (io.ReadCloser, e
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
 		defer func() { _ = response.Body.Close() }()
 		document, _ := io.ReadAll(io.LimitReader(response.Body, maxResponseBytes))
-		return nil, &Error{Status: response.StatusCode, Code: errorCodeOf(document)}
+		code, message := refusalOf(document)
+		return nil, &Error{Status: response.StatusCode, Code: code, Message: message}
 	}
 	return response.Body, nil
 }

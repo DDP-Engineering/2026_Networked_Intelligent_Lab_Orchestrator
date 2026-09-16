@@ -43,6 +43,7 @@ func TestRolePermissionsMatchTheFixedMatrix(t *testing.T) {
 				PermissionInventoryRead,
 				PermissionNetworkManage,
 				PermissionNetworkRead,
+				PermissionPasswordPolicyManage,
 				PermissionStatusRead,
 				PermissionSystemPowerManage,
 				PermissionTokensManageAll,
@@ -78,8 +79,8 @@ func TestNoRoleHoldsAPermissionOutsideTheDefinedSet(t *testing.T) {
 	for _, permission := range AllPermissions() {
 		defined[permission] = true
 	}
-	if len(defined) != 20 {
-		t.Fatalf("AllPermissions() has %d entries, want the 20 defined permissions", len(defined))
+	if len(defined) != 21 {
+		t.Fatalf("AllPermissions() has %d entries, want the 21 defined permissions", len(defined))
 	}
 	for _, role := range []Role{RoleViewer, RoleOperator, RoleAdministrator} {
 		for _, permission := range role.Permissions() {
@@ -205,6 +206,7 @@ func TestActivityPermissionsBelongToAdministratorsOnly(t *testing.T) {
 		PermissionActivityRead,
 		PermissionActivityExport,
 		PermissionActivityRetentionManage,
+		PermissionPasswordPolicyManage,
 	} {
 		if !RoleAdministrator.Has(permission) {
 			t.Fatalf("Administrator does not hold %s", permission)

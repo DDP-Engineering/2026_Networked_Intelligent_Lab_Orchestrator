@@ -1,3 +1,4 @@
+import packageJson from '../../../package.json';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -17,6 +18,10 @@ import {
   renderInShell,
   restoreMatchMedia,
 } from '../../test/render';
+
+// The interface reports the project version; a bump must not silently
+// break these assertions, so they read the same source the app does.
+const APP_VERSION: string = packageJson.version;
 
 const status: BenchCoreStatus = {
   apiVersion: 'nilo.http/1',
@@ -117,6 +122,15 @@ function client(session: BenchCoreSession = administrator): BenchCoreClient {
     exportActivity: () => Promise.reject(new Error('not part of this fixture')),
     getActivityRetention: () => Promise.reject(new Error('not part of this fixture')),
     setActivityRetention: () => Promise.reject(new Error('not part of this fixture')),
+    getPasswordPolicy: () =>
+      Promise.resolve({
+        minimumLength: 12,
+        requireLowercase: false,
+        requireUppercase: false,
+        requireDigit: false,
+        requireSpecial: false,
+      }),
+    setPasswordPolicy: (_credential, policy) => Promise.resolve(policy),
     getStatus: () => Promise.resolve(status),
     getIntegrations: () => Promise.resolve(integrations),
     getDevices: () => Promise.resolve(devices),
@@ -255,7 +269,7 @@ describe('the one compact top row', () => {
     await screen.findByRole('button', { name: 'Sign in' });
     expect(container.querySelector('.sim-badge')).toBeNull();
     expect(container.querySelector('.card-boundary')).toBeNull();
-    expect(screen.getByText('Version 0.6.0')).toBeVisible();
+    expect(screen.getByText(`Version ${APP_VERSION}`)).toBeVisible();
   });
   it('labels an appliance without simulation claims', async () => {
     const api = client();

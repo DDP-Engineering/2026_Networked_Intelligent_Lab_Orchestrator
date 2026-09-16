@@ -41,7 +41,7 @@ Refresh after work or decisions even if current has not changed.
 
 # TASK-9ca3f883 — Compact field interface and contextual help
 
-stage: deliver
+stage: done
 type: feature
 path: full
 requirements: REQ-UX-c8c16d33, REQ-UX-c5f7c0cd, REQ-UX-2687f591, REQ-UX-2de87216, REQ-UX-2b0b6d59, REQ-UX-4570c081, REQ-UX-1860069d, REQ-UX-cde0b9e2, REQ-UX-ff989933, REQ-UX-8859ce12, REQ-UX-f30891b4, REQ-NFR-aa1a4734, REQ-TEST-5da12a09
@@ -55,9 +55,9 @@ opened: 2026-09-04
 - [x] validated candidate confirmed unchanged; otherwise returned to validate
 - [x] validation evidence, diff, exclusions, and outcome presented
 - [x] delivery confirmed by the human
-- [ ] journal and report included in the delivery commit
-- [ ] agreed outcome delivered, normally a PR
-- [ ] close-out committed after the outcome succeeded, or carried by the delivery commit where nothing could fail after it
+- [x] journal and report included in the delivery commit
+- [x] agreed outcome delivered, normally a PR
+- [x] close-out committed after the outcome succeeded, or carried by the delivery commit where nothing could fail after it
 
 ## Frame
 
@@ -223,6 +223,8 @@ flowchart LR
 - 2026-09-04 deliver deployment: the compact-actions-dialog GUI is installed at `/opt/nilo/gui` on `ddp-remote`, with the prior GUI at `/opt/nilo/gui.backup-20260904-131352`; `nilo.service`, `nilo-nethelper.service` and `nilo-nethelper-recovery.timer` are active, and external HTTPS reads returned 200 for the index, `index-DvTgba1B.js` and `index-Bd3AuXxs.css`.
 - 2026-09-04 deliver Git boundary: the candidate remains unstaged and uncommitted on master because the user requested no commit and repository Git authority absolutely forbids agent commits; the human can inspect and commit the working tree.
 
+- 2026-09-16 deliver: closed retrospectively. The user confirms they reviewed this work and committed it, and the journal was simply never closed at the time; the delivery commit 8cf2433 feat(gui): add field-ready network management interface carries this journal, which is how the delivery is evidenced here. The stage and the deliver checklist are brought into line with what happened. The review verdicts are left as `disabled` because that is what they were: `[review] enabled` was false when this task ran, so the two-verdict protocol never applied to it, and recording `approved` would claim a review that was never performed. No stage report field describing the work itself is altered.
+
 ## Rulings
 
 - RULING-001 | date=2026-09-04 | decision=Row actions move into one Actions menu per row and existing tests are updated to open it first | reason=Six visible buttons cannot meet 44px targets inside a 1024px table; the plan calls for one menu per row | source=requirement | supersedes=none
@@ -231,22 +233,22 @@ flowchart LR
 
 ## Handoff
 
-current: deliver
+current: done
 status: ready
-next: present the deployed candidate and leave the unstaged working tree for human inspection and commit
-must_read: .agentic/tasks/TASK-9ca3f883.md, .agentic/steps/6_deliver.md, .agentic/requirements/ux/REQ-UX-ff989933.toml
-blockers:
+next: none - the work was delivered in 8cf2433
+must_read: .agentic/tasks/TASK-9ca3f883.md
+blockers: none
 
 ## Stage report
 
 stage: deliver
-result: paused
-current: deliver
+result: completed
+current: done
 changed: row Actions controls now open a compact viewport-level modal with object context, visible disabled reasons, separated destructive actions and Cancel
 evidence: strict configured test passed in 266.5 seconds, lint in 6.3 seconds, 353 GUI tests and 32 browser tests passed; Pi serves index-DvTgba1B.js and index-Bd3AuXxs.css with HTTP 200 and all three appliance services are active
 issues: twelve advisory warnings remain for binary scan limits, root changelog layout and unrelated historical journals; all are explained in the log
-next: human inspects the deployed interface and commits the unstaged candidate when satisfied
-needs_user: no - the user explicitly approved implementation and requested AEGIS
+next: none - delivered in 8cf2433
+needs_user: no
 spec_compliance: disabled
 implementation_quality: disabled
 review_round:

@@ -53,6 +53,12 @@ const (
 	PermissionActivityExport Permission = "activity.export"
 	// PermissionActivityRetentionManage changes the Activity retention policy.
 	PermissionActivityRetentionManage Permission = "activity.retention.manage"
+	// PermissionPasswordPolicyManage reads and changes the appliance password
+	// policy. It is separate from identity administration because the policy
+	// decides how weak a credential this appliance accepts: a token scoped to
+	// create identities should not be able to weaken the rule those identities
+	// are held to.
+	PermissionPasswordPolicyManage Permission = "password.policy.manage"
 	// PermissionSystemPowerManage restarts or powers off the appliance from an
 	// interactive browser session. The HTTP boundary does not accept tokens for it.
 	PermissionSystemPowerManage Permission = "system.power.manage"
@@ -95,6 +101,7 @@ var rolePermissions = map[Role][]Permission{
 		PermissionInventoryRead,
 		PermissionNetworkManage,
 		PermissionNetworkRead,
+		PermissionPasswordPolicyManage,
 		PermissionStatusRead,
 		PermissionSystemPowerManage,
 		PermissionTokensManageAll,

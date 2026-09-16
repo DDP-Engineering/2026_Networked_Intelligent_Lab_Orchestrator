@@ -117,6 +117,14 @@ runtime status.
   versions, integrity metadata, and a static Vite production build.
 - `REQ-TEST-031b1658` - includes frontend formatting, linting, tests, and build
   in the Windows repository gates.
+- `REQ-UX-5e428717` - offers the appliance password policy on the Authentication
+  page, for a session holding `password.policy.manage`, as a disclosure that
+  starts closed; inside it the minimum length and four class checkboxes share one
+  wrapping line. The bounds stay the appliance's: a refusal is shown as the
+  appliance wrote it and the shown policy returns to what is stored.
+- `REQ-UX-c117cbf9` - the Authentication identities page carries no standing
+  paragraph about the signed-in actor or the row actions; that guidance stays in
+  each control's contextual help. The API tokens page keeps its own description.
 - `REQ-UX-188a4860` - keeps one persistent runtime badge after authentication.
 - `REQ-FUNC-8a5491d8` - requests the versioned status resource with the entered
   bearer token and returns the reported profile, status, simulation flag, and
@@ -256,6 +264,7 @@ runtime status.
 | Contextual Activity navigation and permissions | AppShell.tsx `openActivity` | shell.test.tsx |
 | Networking inventory and managed changes | NetworkPage.tsx and network/ | NetworkPage.test.tsx; network.spec.ts |
 | Identity/token forms | authentication/ and AdministrationForms.tsx | AuthenticationPage.test.tsx; authentication.spec.ts |
+| Appliance password policy | authentication/PasswordPolicyPanel.tsx; `.admin-policy*` in shell.css; `getPasswordPolicy`/`setPasswordPolicy` in api/client.ts | AuthenticationPage.test.tsx |
 
 ## Architecture
 
@@ -427,7 +436,11 @@ visible.
   `src/components/authentication/`, `AdministrationForms.tsx` and `Modal.tsx` -
   the fetch-free view dispatcher, focused Users and API tokens resource owners,
   shared dialog bodies for every change, and the focused dialog itself with its
-  focus handling and Escape dismissal.
+  focus handling and Escape dismissal. `authentication/PasswordPolicyPanel.tsx`
+  sits on the Users view for a session that may administer the policy, as a
+  closed `<details>` following the Activity retention disclosure; its number
+  field carries no min or max, because the bounds belong to the appliance and a
+  browser restating them would drift from it.
 - `05_Software/nilo_gui/src/App.css` and `src/index.css` - single-viewport
   layout, the inventory scroll compartment, and the CSS custom properties every
   colour is expressed through.

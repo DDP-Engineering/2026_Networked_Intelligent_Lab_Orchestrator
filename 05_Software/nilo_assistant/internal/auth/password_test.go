@@ -62,8 +62,12 @@ func TestHashPasswordUsesDistinctSalts(t *testing.T) {
 	}
 }
 
-func TestPasswordFunctionsRejectOutOfBoundsByteLengths(t *testing.T) {
-	for _, password := range [][]byte{bytes.Repeat([]byte{'a'}, 11), bytes.Repeat([]byte{'a'}, 1025)} {
+// The maximum is what bounds the Argon2 work an unauthenticated login attempt
+// can ask this appliance to perform, so it holds on both paths whatever the
+// configured password policy says. An empty password is refused with it,
+// because a verifier over nothing is not a credential.
+func TestPasswordFunctionsRejectTheMaximumAndTheEmptyPassword(t *testing.T) {
+	for _, password := range [][]byte{nil, {}, bytes.Repeat([]byte{'a'}, 1025)} {
 		if _, err := auth.HashPassword(password, bytes.NewReader(bytes.Repeat([]byte{0x7a}, 16))); err == nil {
 			t.Fatalf("HashPassword accepted %d-byte password", len(password))
 		}
@@ -73,10 +77,29 @@ func TestPasswordFunctionsRejectOutOfBoundsByteLengths(t *testing.T) {
 	if err != nil {
 		t.Fatalf("HashPassword fixture: %v", err)
 	}
-	for _, password := range [][]byte{bytes.Repeat([]byte{'a'}, 11), bytes.Repeat([]byte{'a'}, 1025)} {
+	for _, password := range [][]byte{nil, {}, bytes.Repeat([]byte{'a'}, 1025)} {
 		if _, err := auth.VerifyPassword(encoded, password); err == nil {
 			t.Fatalf("VerifyPassword accepted %d-byte password", len(password))
 		}
+	}
+}
+
+// Tightening the appliance's password policy must never lock out an identity
+// that already exists, so no minimum length lives on the verification path at
+// all: a stored verifier is checked against whatever password was set under
+// whatever policy was current then.
+func TestVerifyPasswordAppliesNoMinimumLength(t *testing.T) {
+	short := []byte("short-pass")
+	encoded, err := auth.HashPassword(short, bytes.NewReader(bytes.Repeat([]byte{0x7a}, 16)))
+	if err != nil {
+		t.Fatalf("HashPassword fixture: %v", err)
+	}
+	matched, err := auth.VerifyPassword(encoded, short)
+	if err != nil {
+		t.Fatalf("VerifyPassword refused a password shorter than any shipped minimum: %v", err)
+	}
+	if !matched {
+		t.Fatal("VerifyPassword did not match the password its verifier was built from")
 	}
 }
 

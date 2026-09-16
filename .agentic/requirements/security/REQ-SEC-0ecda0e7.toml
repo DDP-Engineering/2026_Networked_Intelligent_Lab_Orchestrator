@@ -38,7 +38,7 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-Where administrator password authentication is configured, Bench Core shall store only a versioned Argon2id PHC verifier generated with a random salt and bounded password input.
+Where administrator password authentication is configured, Bench Core shall store only a versioned Argon2id PHC verifier generated with a random salt and password input bounded by a fixed maximum length.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -49,7 +49,7 @@ Where administrator password authentication is configured, Bench Core shall stor
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "Authentication tests verify correct and incorrect passwords, distinct salts for the same password, PHC parameter parsing, and rejection of passwords outside the documented byte bounds."
+verification = "Authentication tests verify correct and incorrect passwords, distinct salts for the same password, PHC parameter parsing, and rejection of a password longer than the documented maximum on both the hashing and the verification path."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
@@ -64,7 +64,7 @@ linked_tests = [
     "05_Software/nilo_assistant/internal/auth/password_test.go::TestHashPasswordRoundTripsAndDoesNotMutateCallerBuffer",
     "05_Software/nilo_assistant/internal/auth/password_test.go::TestVerifyPasswordRejectsWrongPassword",
     "05_Software/nilo_assistant/internal/auth/password_test.go::TestHashPasswordUsesDistinctSalts",
-    "05_Software/nilo_assistant/internal/auth/password_test.go::TestPasswordFunctionsRejectOutOfBoundsByteLengths",
+    "05_Software/nilo_assistant/internal/auth/password_test.go::TestPasswordFunctionsRejectTheMaximumAndTheEmptyPassword",
     "05_Software/nilo_assistant/internal/auth/password_test.go::TestVerifyPasswordRejectsMalformedAndUnsupportedPHCInputs",
     "05_Software/nilo_assistant/internal/auth/password_test.go::TestVerifyPasswordRejectsOversizedPHCInputBeforeParsing",
     "05_Software/nilo_assistant/internal/auth/password_test.go::TestVerifyPasswordRejectsOversizedPHCComponentsBeforeDecode",
@@ -79,4 +79,4 @@ priority = "high"   # low | normal | high
 rationale = "Recoverable administrator passwords would turn an appliance database disclosure into credential disclosure."        # why this behavior exists, if not obvious
 
 created = 2026-08-30
-updated = 2026-08-30
+updated = 2026-09-15
