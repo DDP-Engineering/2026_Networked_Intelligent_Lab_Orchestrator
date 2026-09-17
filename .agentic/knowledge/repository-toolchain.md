@@ -55,6 +55,10 @@ validates Ubuntu 24.04 WSL2 on Windows x86-64, while
 use one shared Docker/Podman verifier and image-setup helper, consume only local
 multipart archive content unless the developer explicitly selects the same
 pinned network rebuild, and share the complete consumed dependency closure.
+The Windows registration name is independent of the Ubuntu release label. The
+repository gate automatically selects the sole development distribution,
+ignores Docker Desktop's utility distributions, and honors
+`NILO_WSL_DISTRIBUTION` when more than one development distribution is present.
 Ordinary container
 commands run with networking disabled, no engine socket, dropped capabilities,
 the caller UID/GID, a generation-scoped cache volume seeded from a read-only

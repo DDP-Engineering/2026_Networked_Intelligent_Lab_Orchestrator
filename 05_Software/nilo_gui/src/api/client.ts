@@ -110,6 +110,13 @@ import {
   type StatisticsPeriod,
   type TokenInventory,
 } from './contract';
+import {
+  APPLIANCE_PATH,
+  parseApplianceMetadata,
+  parseIdentifyResult,
+  type ApplianceMetadata,
+  type IdentifyResult,
+} from './appliance';
 
 /** The subset of a fetch response this client depends on. */
 export interface TransportResponse {
@@ -241,6 +248,13 @@ export interface BenchCoreClient {
   getStatus(credential: Credential): Promise<BenchCoreStatus>;
   getIntegrations(credential: Credential): Promise<IntegrationInventory>;
   getDevices(credential: Credential): Promise<DeviceInventory>;
+
+  getAppliance?(credential: Credential): Promise<ApplianceMetadata>;
+  setApplianceFriendlyName?(
+    credential: Credential,
+    friendlyName: string,
+  ): Promise<ApplianceMetadata>;
+  identifyAppliance?(credential: Credential): Promise<IdentifyResult>;
 
   getNetworkStatus(credential: Credential): Promise<NetworkStatus>;
   getManagementAccess(credential: Credential): Promise<ManagementAccessStatus>;
@@ -557,6 +571,25 @@ export function createBenchCoreClient(
       exchange({ path: INTEGRATIONS_PATH, credential, parse: parseIntegrationsBody }),
     getDevices: (credential) =>
       exchange({ path: DEVICES_PATH, credential, parse: parseDevicesBody }),
+
+    getAppliance: (credential) =>
+      exchange({ path: APPLIANCE_PATH, credential, parse: parseApplianceMetadata }),
+    setApplianceFriendlyName: (credential, friendlyName) =>
+      exchange({
+        path: `${APPLIANCE_PATH}/friendly-name`,
+        credential,
+        method: 'PUT',
+        body: { friendly_name: friendlyName },
+        parse: parseApplianceMetadata,
+      }),
+    identifyAppliance: (credential) =>
+      exchange({
+        path: `${APPLIANCE_PATH}/identify`,
+        credential,
+        method: 'POST',
+        body: {},
+        parse: parseIdentifyResult,
+      }),
 
     getNetworkStatus: (credential) =>
       exchange({

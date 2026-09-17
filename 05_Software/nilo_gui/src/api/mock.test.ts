@@ -97,11 +97,19 @@ describe('Bench Core mock transport', () => {
       'profile',
       'simulation',
       'status',
+      'system',
     ]);
     expect(Object.keys(MOCK_HEALTHY_STATUS_BODY.build).sort()).toEqual([
       'integration_protocol',
       'name',
       'version',
+    ]);
+    expect(Object.keys(MOCK_HEALTHY_STATUS_BODY.system ?? {}).sort()).toEqual([
+      'architecture',
+      'kernel_version',
+      'operating_system',
+      'storage_free_bytes',
+      'storage_total_bytes',
     ]);
     expect(Object.keys(MOCK_HEALTHY_INTEGRATIONS_BODY).sort()).toEqual([
       'api_version',

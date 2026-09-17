@@ -104,6 +104,28 @@ func ipv4Settings(settings network.InterfaceSettings) map[string]dbus.Variant {
 	return ipv4
 }
 
+func applyDHCPIdentity(settings map[string]map[string]dbus.Variant, serialName string) error {
+	if serialName == "" {
+		return nil
+	}
+	properties, err := dhcpIdentityProperties(
+		serialName, value[string](settings["ipv4"], "method"), value[string](settings["ipv6"], "method"),
+	)
+	if err != nil {
+		return err
+	}
+	if properties.IPv4Hostname != "" {
+		settings["ipv4"]["dhcp-send-hostname"] = variant(true)
+		settings["ipv4"]["dhcp-hostname"] = variant(properties.IPv4Hostname)
+		settings["ipv4"]["dhcp-vendor-class-identifier"] = variant(properties.IPv4Vendor)
+	}
+	if properties.IPv6Hostname != "" {
+		settings["ipv6"]["dhcp-send-hostname"] = variant(true)
+		settings["ipv6"]["dhcp-hostname"] = variant(properties.IPv6Hostname)
+	}
+	return nil
+}
+
 // writeConnection updates NILO's profile for the adapter or creates it, and
 // returns its path and identity.
 func (n *NetworkManager) writeConnection(ctx context.Context, adapterID string, build func(existing map[string]map[string]dbus.Variant, connectionUUID string) (map[string]map[string]dbus.Variant, error)) (dbus.ObjectPath, string, error) {
@@ -190,6 +212,9 @@ func (n *NetworkManager) ApplySettings(ctx context.Context, device Device, setti
 				result["802-11-wireless-security"] = security
 			}
 			result["connection"]["autoconnect"] = variant(value[bool](existing["connection"], "autoconnect"))
+		}
+		if err := applyDHCPIdentity(result, n.applianceSerial); err != nil {
+			return nil, err
 		}
 		return result, nil
 	})
@@ -296,6 +321,9 @@ func (n *NetworkManager) JoinWiFi(ctx context.Context, device Device, join netwo
 			result["802-11-wireless-security"] = map[string]dbus.Variant{"key-mgmt": variant("wpa-psk"), "psk": variant(password), "psk-flags": variant(uint32(0))}
 		case network.WiFiWPA3Personal:
 			result["802-11-wireless-security"] = map[string]dbus.Variant{"key-mgmt": variant("sae"), "psk": variant(password), "psk-flags": variant(uint32(0))}
+		}
+		if err := applyDHCPIdentity(result, n.applianceSerial); err != nil {
+			return nil, err
 		}
 		return result, nil
 	})

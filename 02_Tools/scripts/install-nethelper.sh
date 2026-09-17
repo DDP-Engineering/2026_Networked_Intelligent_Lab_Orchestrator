@@ -25,6 +25,7 @@ service_gid=$(id -g "$service_user")
 # forward without it rather than falling back to anything else.
 command -v nft >/dev/null 2>&1 || echo 'warning: nft is not installed; device networks stay saved but unsupported until nftables is installed' >&2
 command -v avahi-daemon >/dev/null 2>&1 || { echo 'avahi-daemon is required for NILO discovery' >&2; exit 1; }
+command -v dnsmasq >/dev/null 2>&1 || { echo 'dnsmasq is required for NILO commissioning Wi-Fi' >&2; exit 1; }
 install -d -o root -g root -m 0755 /usr/local/libexec
 install -o root -g root -m 0755 "$binary" /usr/local/libexec/nilo-nethelper
 install -d -o root -g root -m 0700 /var/lib/nilo-nethelper
@@ -40,7 +41,7 @@ User=root
 Group=$service_gid
 RuntimeDirectory=nilo
 RuntimeDirectoryMode=0750
-ExecStart=/usr/local/libexec/nilo-nethelper --allow-uid $service_uid --socket-gid $service_gid$hardware_option
+ExecStart=/usr/local/libexec/nilo-nethelper --allow-uid $service_uid --socket-gid $service_gid --image-default-hostname nilo-image --image-default-hostname nilo-appliance$hardware_option
 Restart=on-failure
 RestartSec=3
 UMask=0077

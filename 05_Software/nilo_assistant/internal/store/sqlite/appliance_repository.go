@@ -107,12 +107,46 @@ func (repository *ApplianceRepository) SetLabels(
 	return stored, nil
 }
 
+// SetFriendlyName changes only the optional local DNS alias.
+func (repository *ApplianceRepository) SetFriendlyName(ctx context.Context, friendlyName string) (appliance.Identity, error) {
+	if err := repository.ready(); err != nil {
+		return appliance.Identity{}, err
+	}
+	if err := appliance.ValidateFriendlyName(friendlyName); err != nil {
+		return appliance.Identity{}, err
+	}
+	transaction, err := repository.database.SQL().BeginTx(ctx, nil)
+	if err != nil {
+		return appliance.Identity{}, fmt.Errorf("begin friendly-name transaction: %w", err)
+	}
+	defer transaction.Rollback()
+	result, err := transaction.ExecContext(ctx, "UPDATE appliance_identity SET friendly_name = ? WHERE id = 1", friendlyName)
+	if err != nil {
+		return appliance.Identity{}, fmt.Errorf("update friendly appliance name: %w", err)
+	}
+	changed, err := result.RowsAffected()
+	if err != nil {
+		return appliance.Identity{}, fmt.Errorf("count friendly-name update: %w", err)
+	}
+	if changed == 0 {
+		return appliance.Identity{}, errors.New("this appliance has no identity to name yet")
+	}
+	stored, err := readIdentity(ctx, transaction)
+	if err != nil {
+		return appliance.Identity{}, err
+	}
+	if err := transaction.Commit(); err != nil {
+		return appliance.Identity{}, fmt.Errorf("commit friendly appliance name: %w", err)
+	}
+	return stored, nil
+}
+
 func readIdentity(ctx context.Context, execute statements) (appliance.Identity, error) {
 	var identity appliance.Identity
 	var commissioned string
 	err := execute.QueryRowContext(ctx, `
-		SELECT appliance_id, name, location, commissioned_at FROM appliance_identity WHERE id = 1
-	`).Scan(&identity.ID, &identity.Name, &identity.Location, &commissioned)
+		SELECT appliance_id, name, location, friendly_name, commissioned_at FROM appliance_identity WHERE id = 1
+	`).Scan(&identity.ID, &identity.Name, &identity.Location, &identity.FriendlyName, &commissioned)
 	if errors.Is(err, sql.ErrNoRows) {
 		return appliance.Identity{}, errors.New("this appliance has no stored identity")
 	}

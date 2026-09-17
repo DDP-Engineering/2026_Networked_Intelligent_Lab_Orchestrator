@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"regexp"
 	"slices"
+	"sort"
 	"strings"
 
 	"github.com/google/uuid"
@@ -17,6 +18,41 @@ var mdnsHostName = regexp.MustCompile(`^[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9
 
 // ErrMDNSRejected is every refusal of a proposed advertisement.
 var ErrMDNSRejected = errors.New("mDNS advertisement rejected")
+
+// ErrMDNSCollision reports that Avahi refused one explicit local name because
+// another host already owns it on the link.
+var ErrMDNSCollision = errors.New("mDNS name collision")
+
+const maxMDNSCollisionInterfaces = 16
+
+// MDNSCollisionError carries only the bounded public interface names on which
+// an explicit alias collided. It unwraps to ErrMDNSCollision across helper and
+// application boundaries.
+type MDNSCollisionError struct {
+	Interfaces []string
+}
+
+func (err *MDNSCollisionError) Error() string { return ErrMDNSCollision.Error() }
+func (err *MDNSCollisionError) Unwrap() error { return ErrMDNSCollision }
+
+// NewMDNSCollisionError removes unsafe, loopback and duplicate names before
+// exposing collision scope to an administrator.
+func NewMDNSCollisionError(interfaces []string) *MDNSCollisionError {
+	seen := make(map[string]bool, len(interfaces))
+	bounded := make([]string, 0, len(interfaces))
+	for _, name := range interfaces {
+		if name == "lo" || !managementInterfaceName.MatchString(name) || seen[name] {
+			continue
+		}
+		seen[name] = true
+		bounded = append(bounded, name)
+	}
+	sort.Strings(bounded)
+	if len(bounded) > maxMDNSCollisionInterfaces {
+		bounded = bounded[:maxMDNSCollisionInterfaces]
+	}
+	return &MDNSCollisionError{Interfaces: bounded}
+}
 
 // MDNSAdvertisement is what the appliance asks to be discoverable as while it
 // is being commissioned: one name, on a named set of interfaces.
@@ -104,6 +140,9 @@ func validateMDNSService(hostName string, service MDNSService) error {
 	if service.Port == 0 {
 		return fmt.Errorf("%w: service port is required", ErrMDNSRejected)
 	}
+	if len(service.TXT) > 0 && service.TXT[0] == "txtvers=2" {
+		return validateMDNSServiceV2(hostName, service)
+	}
 	prefix := "NILO "
 	id := strings.TrimPrefix(service.Instance, prefix)
 	parsedIdentity, identityErr := uuid.Parse(id)
@@ -126,6 +165,48 @@ func validateMDNSService(hostName string, service MDNSService) error {
 		return fmt.Errorf("%w: invalid management URL", ErrMDNSRejected)
 	}
 	return nil
+}
+
+func validateMDNSServiceV2(hostName string, service MDNSService) error {
+	if !validPermanentMDNSSerial(hostName) || service.Instance != "NILO "+hostName {
+		return fmt.Errorf("%w: invalid permanent service identity", ErrMDNSRejected)
+	}
+	if len(service.TXT) < 7 || len(service.TXT) > 8 || service.TXT[0] != "txtvers=2" {
+		return fmt.Errorf("%w: service TXT fields are not the version-2 allowlist", ErrMDNSRejected)
+	}
+	id := strings.TrimPrefix(service.TXT[1], "id=")
+	parsedID, err := uuid.Parse(id)
+	if err != nil || parsedID.String() != id || service.TXT[1] != "id="+id || service.TXT[2] != "serial="+hostName {
+		return fmt.Errorf("%w: invalid version-2 identity", ErrMDNSRejected)
+	}
+	index := 3
+	if strings.HasPrefix(service.TXT[index], "name=") {
+		name := strings.TrimPrefix(service.TXT[index], "name=")
+		if !mdnsHostName.MatchString(name) {
+			return fmt.Errorf("%w: invalid friendly name", ErrMDNSRejected)
+		}
+		index++
+	}
+	wantURL := fmt.Sprintf("url=https://%s.local:%d/", hostName, service.Port)
+	if len(service.TXT) != index+4 || service.TXT[index] != wantURL || service.TXT[index+1] != "path=/" ||
+		(service.TXT[index+2] != "state=provisioning" && service.TXT[index+2] != "state=commissioned") ||
+		!strings.HasPrefix(service.TXT[index+3], "version=") || !publicVersion.MatchString(strings.TrimPrefix(service.TXT[index+3], "version=")) {
+		return fmt.Errorf("%w: service TXT fields are not the version-2 allowlist", ErrMDNSRejected)
+	}
+	return nil
+}
+
+func validPermanentMDNSSerial(value string) bool {
+	const alphabet = "0123456789abcdefghjkmnpqrstvwxyz"
+	if len(value) != 15 || !strings.HasPrefix(value, "nilo-") {
+		return false
+	}
+	for _, character := range value[5:] {
+		if !strings.ContainsRune(alphabet, character) {
+			return false
+		}
+	}
+	return true
 }
 
 // LocalName is the name the advertisement publishes.

@@ -5,6 +5,33 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ## [Unreleased]
 
+### Changed
+
+- About now leads with appliance controls and permanent identity, groups its
+  software, system and management facts, keeps the scroll rail at the workspace
+  edge, and shows hardware addresses only on the embedded printable label.
+- The user guide now explains permanent, friendly and setup names and local
+  discovery in plain language before presenting technical details.
+
+### Fixed
+
+- Printable appliance labels use a larger 27 mm QR code and a readable browser
+  preview while preserving the exact 62 by 29 mm print size.
+
+## [0.8.0] - 2026-09-17
+
+### Added
+
+- Permanent printed appliance names, QR labels, management-scoped mDNS/SSDP
+  discovery, DHCP identity, and provisioning-only Wi-Fi discovery.
+- Authenticated About and Identify controls, loopback-only local status, and
+  cross-platform `nilo discover`, `nilo open`, and label output.
+
+### Changed
+
+- Appliance TLS keys are generated and retained by the privileged helper;
+  certificates rotate before friendly discovery names are published.
+
 ## [0.7.0] - 2026-09-16
 
 ### Added

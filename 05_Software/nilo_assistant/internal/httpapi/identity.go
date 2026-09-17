@@ -107,6 +107,17 @@ func authorize(permission auth.Permission, next http.HandlerFunc) http.Handler {
 	})
 }
 
+func sessionOnly(next http.HandlerFunc) http.HandlerFunc {
+	return func(response http.ResponseWriter, request *http.Request) {
+		actor, ok := actorFrom(request.Context())
+		if !ok || actor.Credential != identity.CredentialSession {
+			writeForbidden(response)
+			return
+		}
+		next(response, request)
+	}
+}
+
 type loginRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`

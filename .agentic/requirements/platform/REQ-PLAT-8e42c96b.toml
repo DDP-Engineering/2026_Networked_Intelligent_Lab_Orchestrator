@@ -1,0 +1,42 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-PLAT-8e42c96b"
+
+title = "Set the system hostname only from a known image default"
+
+status = "active"
+
+requirement = """
+When the recorded permanent appliance name is first installed, the privileged helper shall replace the operating-system hostname only if its current value matches an explicitly configured image-default hostname, while preserving every administrator-selected hostname and never changing the hostname during a network commissioning reset.
+"""
+
+verification = "Automated helper and installer tests supply each configured image default, a custom hostname, an empty value and a repeated initialization; they observe one checked hostname change only for a known default, no shell or arbitrary hostname input, custom and already-personalized values byte-for-byte unchanged, and no hostname write during commissioning reset."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/nethelper/hostname_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
+    "05_Software/nilo_assistant/internal/nethelper/engine.go",
+    "05_Software/nilo_assistant/cmd/nilo-nethelper/serve_linux.go",
+    "02_Tools/scripts/install-nethelper.sh",
+    "02_Tools/scripts/build-appliance.sh",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/nethelper/hostname_test.go::*",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "A generic image should become identifiable automatically without overwriting a hostname an administrator already owns."
+
+created = 2026-09-15
+updated = 2026-09-15

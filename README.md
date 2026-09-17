@@ -138,6 +138,7 @@ and backend.
 
 | Guide | Purpose |
 |---|---|
+| [Find your NILO](06_SoftwareDocu/Find_Your_NILO.md) | Plain-language appliance names and ways to find NILO on common networks |
 | [Development and simulation](06_SoftwareDocu/Development_and_Simulation_Flow.md) | Daily workflow, environments and verification levels |
 | [Repository tools](02_Tools/README.md) | Bootstrap, pinned toolchains, build and diagnostic commands |
 | [CLI and authentication](07_Delivery/NILO_CLI_and_Authentication.md) | Command-line access, identities, roles and tokens |

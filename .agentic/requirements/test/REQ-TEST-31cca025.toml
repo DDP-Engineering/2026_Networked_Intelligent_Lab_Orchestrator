@@ -1,0 +1,50 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-TEST-31cca025"
+
+title = "Verify appliance discovery on real network and hardware paths"
+
+status = "active"
+
+requirement = """
+The repository verification shall exercise appliance identity, certificate custody, mDNS, SSDP, DHCP identity, commissioning access point, Identify, CLI discovery/open/label and local/About status through focused unit tests, the isolated privileged network stage, the real appliance-browser stage and recorded Raspberry Pi hardware checks, including measured convergence times for each externally discovered or withdrawn presence.
+"""
+
+verification = "Run the focused Go/GUI suites, `02_Tools/tests/network/check.sh`, `02_Tools/tests/appliance/check.sh`, the repository strict gate and the documented Pi/Windows/macOS/Ubuntu/phone matrix; all automated commands exit zero, host network before/after evidence matches, and the delivery record contains observed timestamps for serial mDNS, SSDP appearance/byebye, DHCP lease/DNS, AP/captive portal, button reannouncement and CLI discovery rather than inferred bounds."
+
+affected_paths = [
+    "02_Tools/tests/network/run.sh",
+    "02_Tools/tests/network/check.sh",
+    "02_Tools/tests/network/Dockerfile",
+    "02_Tools/tests/appliance/run.sh",
+    "02_Tools/tests/appliance/check.sh",
+    "02_Tools/tests/appliance/inventory.json",
+    "05_Software/nilo_gui/e2e/topology.ts",
+    "05_Software/nilo_gui/e2e/network.spec.ts",
+    "05_Software/scripts/aegis_test.py",
+    "07_Delivery/NILO_Discovery_Verification.md",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/discovery/client_test.go::*",
+    "05_Software/nilo_assistant/internal/httpapi/appliance_identity_test.go::*",
+    "05_Software/nilo_assistant/internal/nethelper/commissioning_services_test.go::*",
+    "05_Software/nilo_assistant/internal/network/ssdp_test.go::*",
+    "05_Software/nilo_gui/src/components/pages/AboutPage.test.tsx::*",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "Discovery and GPIO behavior depend on real multicast, routing, NetworkManager, browser and hardware boundaries that unit tests cannot prove alone."
+
+created = 2026-09-15
+updated = 2026-09-15

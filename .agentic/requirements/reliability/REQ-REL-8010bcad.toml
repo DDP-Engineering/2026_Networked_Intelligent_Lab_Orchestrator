@@ -1,0 +1,44 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-REL-8010bcad"
+
+title = "Keep advertised names covered during certificate rotation"
+
+status = "active"
+
+requirement = """
+Whenever the set of advertised serial, recovery or friendly local names changes, NILO shall activate a valid helper-held certificate covering every name before publishing it, retain continuous coverage for names still advertised during replacement and restart recovery, and keep the last covered publication intact if certificate preparation fails.
+"""
+
+verification = "An automated state-machine test adds, replaces and removes a friendly name, enters and leaves provisioning, restarts after each transaction boundary and injects generation, activation and publication failures; at every observable step a TLS handshake for each advertised name finds that name in the active SAN set, while failed preparation leaves the prior certificate/publications working and unadvertised stale aliases are eventually withdrawn."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/appliance/naming.go",
+    "05_Software/nilo_assistant/internal/network/mdns_announcer.go",
+    "05_Software/nilo_assistant/internal/nethelper/tls_identity.go",
+    "05_Software/nilo_assistant/internal/nethelper/avahi_linux.go",
+    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/nilo_assistant/cmd/nilo/discovery_runtime.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/appliance/naming_test.go::*",
+    "05_Software/nilo_assistant/internal/nethelper/tls_identity_test.go::*",
+    "05_Software/nilo_assistant/internal/network/mdns_announcer_test.go::*",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "A discoverable name that intermittently fails certificate-name validation is not a usable recovery path."
+
+created = 2026-09-15
+updated = 2026-09-15

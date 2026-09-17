@@ -126,9 +126,9 @@ runtime status.
   paragraph about the signed-in actor or the row actions; that guidance stays in
   each control's contextual help. The API tokens page keeps its own description.
 - `REQ-UX-188a4860` - keeps one persistent runtime badge after authentication.
-- `REQ-FUNC-8a5491d8` - requests the versioned status resource with the entered
-  bearer token and returns the reported profile, status, simulation flag, and
-  build identity as typed values.
+- `REQ-FUNC-8a5491d8` - requests the versioned authenticated status resource
+  and returns build identity plus the optional bounded Linux, architecture and
+  NILO-data-filesystem capacity snapshot as typed values.
 - `REQ-FUNC-3d412917` - separates a rejected token, an unreachable backend, and
   a response outside the supported contract into three distinct causes.
 - `REQ-SEC-ed66f6ed` - holds the bearer token in volatile application memory
@@ -252,6 +252,11 @@ runtime status.
   reported it, and says so plainly where it did not.
 - `REQ-DATA-1a14a1dc` - persists exactly the theme and the language, and nothing
   that authenticates.
+- `REQ-UX-144bf035` - About places permanent identity beside its title and the
+  friendly-name/Identify controls first, then groups software/API/protocol,
+  Linux/kernel/architecture/storage and management facts into three accessible
+  regions. Its scroll rail stays at the workspace edge, and hardware addresses
+  appear only inside the exact printable label embedded beside the facts.
 - `REQ-TEST-842f1943` - proves the shell, a theme and a language across a real
   reload in the appliance-stage browser.
 
@@ -263,6 +268,7 @@ runtime status.
 | Activity page furniture: header, filter line, retention, page size | `pages/ActivityPage.tsx`; `.activity-head`, `.activity-filters` in shell.css | ActivityPage.test.tsx; layout.test.ts; field-display.spec.ts |
 | Contextual Activity navigation and permissions | AppShell.tsx `openActivity` | shell.test.tsx |
 | Networking inventory and managed changes | NetworkPage.tsx and network/ | NetworkPage.test.tsx; network.spec.ts |
+| Appliance identity, system facts, embedded label, friendly name and Identify | SimplePages.tsx `AboutPage`; api/appliance.ts; api/contract.ts status parser | AboutPage.test.tsx; api/client.test.ts; api/appliance.test.ts; field-display.spec.ts |
 | Identity/token forms | authentication/ and AdministrationForms.tsx | AuthenticationPage.test.tsx; authentication.spec.ts |
 | Appliance password policy | authentication/PasswordPolicyPanel.tsx; `.admin-policy*` in shell.css; `getPasswordPolicy`/`setPasswordPolicy` in api/client.ts | AuthenticationPage.test.tsx |
 
@@ -429,7 +435,12 @@ visible.
   `TabStrip`, `SideNav`, `NetworkSummary`, `Menu`, `Icon`, the page registry and
   the tab state.
 - `05_Software/nilo_gui/src/components/pages/` - `BenchPage`, `NetworkPage` and
-  the About, not-yet-available and integration pages.
+  the About, not-yet-available and integration pages. About reads the
+  authenticated appliance resource and presents permanent/friendly names,
+  management addresses, the printable label, friendly-name administration and
+  the permission-gated Identify action. Identify decodes the versioned
+  `supported` response and absolute `active_until` deadline; About controls and
+  management links retain 44-pixel targets at field-display sizes.
 - `05_Software/nilo_gui/src/components/SignInScreen.tsx` - the unauthenticated
   screen with both forms.
 - `05_Software/nilo_gui/src/components/AuthenticationPage.tsx`,

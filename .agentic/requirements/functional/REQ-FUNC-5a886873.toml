@@ -1,0 +1,45 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-5a886873"
+
+title = "Announce management presence through SSDP"
+
+status = "active"
+
+requirement = """
+While an interface carries effective management access, NILO shall announce one UPnP root-device presence for the appliance over SSDP on that interface, answer `M-SEARCH` requests for `ssdp:all` and `upnp:rootdevice`, send `alive` on admission and bounded refresh, send `byebye` on withdrawal or shutdown, and expose no presence on any other interface.
+"""
+
+verification = "Automated responder tests use two management links plus device, WireGuard, loopback and non-allowlisted links; they observe interface-bound multicast/unicast packets with stable UUID USNs, matching search responses, refresh without duplication, byebye on removal/shutdown and no packet on excluded links. The isolated appliance stage then measures Windows 11 appearance and disappearance within 60 seconds."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/ssdp.go",
+    "05_Software/nilo_assistant/internal/network/ssdp_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/ssdp_responder.go",
+    "05_Software/nilo_assistant/internal/nethelper/ssdp_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
+    "05_Software/nilo_assistant/internal/network/management_access.go",
+    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "02_Tools/tests/network/run.sh",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/ssdp_test.go::*",
+    "05_Software/nilo_assistant/internal/nethelper/ssdp_test.go::*",
+]
+
+
+spec = "specs/REQ-FUNC-5a886873.md"
+
+priority = "high"   # low | normal | high
+rationale = "Windows does not browse DNS-SD in its Network view, so a separately scoped standard presence is required."
+
+created = 2026-09-15
+updated = 2026-09-16

@@ -16,12 +16,14 @@ import {
   PERMISSION_SYSTEM_POWER_MANAGE,
   PERMISSION_VPN_MANAGE,
   PERMISSION_VPN_INSTALL,
+  resourceUrl,
 } from '../../api/contract';
 import type { PowerAction } from '../../api/contract';
 import type { ActivityFilter } from '../../api/activity';
 import type { DeviceNetworkChange } from '../../api/devicenetworks';
 import type { InterfaceSettingsDraft, WiFiJoinDraft } from '../../api/settings';
 import type { WireGuardStatus, WireGuardChange } from '../../api/wireguard';
+import { APPLIANCE_PATH, type ApplianceMetadata } from '../../api/appliance';
 import type { Resource } from '../../api/resource';
 import {
   mayManageTokens,
@@ -101,6 +103,7 @@ export function AppShell({
   const [networkStatus, setNetworkStatus] = useState<NetworkStatus | null>(null);
   const [wireGuard, setWireGuard] = useState<WireGuardStatus | null>(null);
   const [benchCoreReachable, setBenchCoreReachable] = useState(true);
+  const [appliance, setAppliance] = useState<ApplianceMetadata | null>(null);
   useEffect(() => {
     let abandoned = false;
     const refresh = async () => {
@@ -121,6 +124,24 @@ export function AppShell({
       clearInterval(timer);
     };
   }, [client, credential]);
+  useEffect(() => {
+    if (status.profile !== 'appliance' || client.getAppliance === undefined) {
+      return;
+    }
+    let abandoned = false;
+    void client.getAppliance(credential).then(
+      (value) => {
+        if (!abandoned) setAppliance(value);
+      },
+      () => {
+        if (!abandoned) setAppliance(null);
+      },
+    );
+    return () => {
+      abandoned = true;
+    };
+  }, [client, credential, status.profile]);
+  const currentAppliance = status.profile === 'appliance' ? appliance : null;
 
   // Memoised because a fresh empty array on every render would rebuild the
   // navigation, and with it the tab list, on every render too. An unreadable
@@ -443,7 +464,32 @@ export function AppShell({
       );
     }
     if (page.id === 'about') {
-      return <AboutPage status={status} />;
+      return (
+        <AboutPage
+          key={currentAppliance?.serialName ?? 'about'}
+          status={status}
+          appliance={currentAppliance}
+          labelUrl={resourceUrl(client.baseUrl, `${APPLIANCE_PATH}/label.svg`)}
+          canIdentify={canManageInterfaces}
+          onIdentify={
+            client.identifyAppliance === undefined
+              ? undefined
+              : () => client.identifyAppliance!(credential)
+          }
+          onFriendlyName={
+            client.setApplianceFriendlyName === undefined || !canManageInterfaces
+              ? undefined
+              : async (name) => {
+                  const updated = await client.setApplianceFriendlyName!(
+                    credential,
+                    name,
+                  );
+                  setAppliance(updated);
+                  return updated;
+                }
+          }
+        />
+      );
     }
     if (page.id === 'plugins' || page.id === integrationPageId('sigrok')) {
       return (

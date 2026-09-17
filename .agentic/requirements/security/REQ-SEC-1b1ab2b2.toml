@@ -1,0 +1,87 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-SEC-1b1ab2b2"
+
+title = "Keep discovery metadata free of secrets"
+
+status = "active"
+
+requirement = """
+The appliance shall keep credentials, password verifiers, private and preshared keys, Wi-Fi passphrases, tokens and raw hardware serials out of mDNS TXT, SSDP packets and descriptions, DHCP options, captive responses, discovery/label CLI output, appliance status/About data, logs, audit records, diagnostics and exports, including every failure path.
+"""
+
+verification = "A sentinel-secret integration test seeds a distinct marker in every named secret/source class, drives successful and failing mDNS, SSDP, DHCP, AP, Identify, status, About, discover/open and label paths, and byte-searches captured packets, HTTP bodies, CLI artifacts, database rows, logs, diagnostics and exports; no marker appears while the public serial name, UUID, addresses and version remain observable."
+
+affected_paths = [
+	"05_Software/nilo_assistant/cmd/nilo/activity.go",
+	"05_Software/nilo_assistant/cmd/nilo/admin_remote.go",
+	"05_Software/nilo_assistant/cmd/nilo/bench.go",
+	"05_Software/nilo_assistant/cmd/nilo/network.go",
+	"05_Software/nilo_assistant/cmd/nilo/network_vpn.go",
+	"05_Software/nilo_assistant/internal/network/mdns.go",
+	"05_Software/nilo_assistant/internal/network/ssdp.go",
+	"05_Software/nilo_assistant/internal/nethelper/protocol.go",
+	"05_Software/nilo_assistant/internal/nethelper/commissioning_ap_test.go",
+	"05_Software/nilo_assistant/internal/nethelper/commissioning_services.go",
+	"05_Software/nilo_assistant/internal/nethelper/commissioning_services_test.go",
+	"05_Software/nilo_assistant/internal/nethelper/dhcp_identity.go",
+	"05_Software/nilo_assistant/internal/nethelper/dhcp_identity_test.go",
+	"05_Software/nilo_assistant/internal/nethelper/hostname.go",
+	"05_Software/nilo_assistant/internal/nethelper/hostname_test.go",
+	"05_Software/nilo_assistant/internal/nethelper/ssdp_responder.go",
+	"05_Software/nilo_assistant/internal/nethelper/ssdp_test.go",
+	"05_Software/nilo_assistant/internal/nethelper/tls_signer.go",
+	"05_Software/nilo_assistant/internal/nethelper/tls_signer_test.go",
+	"05_Software/nilo_assistant/internal/httpapi/discovery.go",
+	"05_Software/nilo_assistant/internal/httpapi/appliance_identity.go",
+	"05_Software/nilo_assistant/internal/httpapi/appliance_identity_test.go",
+	"05_Software/nilo_assistant/cmd/nilo/hardware_recovery.go",
+	"05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go",
+	"05_Software/nilo_assistant/internal/store/sqlite/identify_operation_repository.go",
+	"05_Software/nilo_assistant/internal/store/sqlite/identify_operation_repository_test.go",
+	"05_Software/nilo_assistant/internal/store/sqlite/migrations/015_appliance_discovery.sql",
+	"05_Software/nilo_assistant/internal/httpapi/local_status.go",
+	"05_Software/nilo_assistant/internal/httpapi/server_test.go",
+	"05_Software/nilo_assistant/internal/discovery/client.go",
+	"05_Software/nilo_assistant/internal/discovery/client_test.go",
+	"05_Software/nilo_assistant/internal/discovery/model.go",
+	"05_Software/nilo_assistant/internal/discovery/model_test.go",
+	"05_Software/nilo_assistant/internal/store/sqlite/appliance_repository_test.go",
+	"05_Software/nilo_assistant/internal/store/sqlite/db_test.go",
+	"05_Software/nilo_assistant/cmd/nilo/discover.go",
+	"05_Software/nilo_gui/src/api/appliance.ts",
+	"05_Software/nilo_gui/src/components/shell/AppShell.tsx",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/nethelper/commissioning_ap_test.go::*",
+    "05_Software/nilo_assistant/internal/nethelper/commissioning_services_test.go::*",
+    "05_Software/nilo_assistant/internal/nethelper/dhcp_identity_test.go::*",
+    "05_Software/nilo_assistant/internal/nethelper/hostname_test.go::*",
+    "05_Software/nilo_assistant/internal/nethelper/ssdp_test.go::*",
+    "05_Software/nilo_assistant/internal/nethelper/tls_signer_test.go::*",
+    "05_Software/nilo_assistant/internal/httpapi/server_test.go::*",
+    "05_Software/nilo_assistant/internal/httpapi/appliance_identity_test.go::*",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::*",
+    "05_Software/nilo_assistant/internal/store/sqlite/identify_operation_repository_test.go::*",
+    "05_Software/nilo_assistant/internal/discovery/client_test.go::*",
+    "05_Software/nilo_assistant/internal/discovery/model_test.go::*",
+    "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository_test.go::*",
+    "05_Software/nilo_assistant/internal/store/sqlite/db_test.go::*",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "The discovery channels are intentionally unauthenticated broadcasts or local views and therefore must expose only public appliance identity."
+
+created = 2026-09-15
+updated = 2026-09-16

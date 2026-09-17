@@ -34,6 +34,21 @@ var ErrPrivateListenerNeedsTLS = errors.New("a private listener requires a certi
 // non-nil interface gate are both present. This explicit contract replaces the
 // literal-private-address contract used by legacy --bind mode.
 func ValidateManagementListener(address, certificate, key string, gate ManagementConnectionGate) error {
+	if err := validateManagementListenerTopology(address, gate); err != nil {
+		return err
+	}
+	if certificate == "" || key == "" {
+		return ErrPrivateListenerNeedsTLS
+	}
+	for name, path := range map[string]string{"certificate": certificate, "key": key} {
+		if _, err := os.Stat(path); err != nil {
+			return fmt.Errorf("read the %s: %w", name, err)
+		}
+	}
+	return nil
+}
+
+func validateManagementListenerTopology(address string, gate ManagementConnectionGate) error {
 	host, port, err := net.SplitHostPort(strings.TrimSpace(address))
 	if err != nil || port == "" {
 		return errors.New("management listener must be a wildcard host and explicit port")
@@ -45,13 +60,20 @@ func ValidateManagementListener(address, certificate, key string, gate Managemen
 	if gate == nil {
 		return errors.New("wildcard management listener requires an interface gate")
 	}
-	if certificate == "" || key == "" {
-		return ErrPrivateListenerNeedsTLS
+	return nil
+}
+
+func validateListenerTopology(address string) error {
+	if err := ValidateSimulationBind(address); err == nil {
+		return nil
 	}
-	for name, path := range map[string]string{"certificate": certificate, "key": key} {
-		if _, err := os.Stat(path); err != nil {
-			return fmt.Errorf("read the %s: %w", name, err)
-		}
+	host, port, err := net.SplitHostPort(strings.TrimSpace(address))
+	if err != nil || port == "" {
+		return errors.New("private listener address must name a host and port")
+	}
+	ip := net.ParseIP(host)
+	if ip == nil || !ip.IsPrivate() && !ip.IsLinkLocalUnicast() {
+		return errors.New("private listener host must be a literal private address")
 	}
 	return nil
 }

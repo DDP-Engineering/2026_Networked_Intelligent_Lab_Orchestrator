@@ -9,15 +9,15 @@ schema = 1
 
 id = "REQ-SEC-d0d3d4c4"
 
-title = "Disclose the published first credential and shipped key exposure"
+title = "Disclose the published first credential and per-appliance certificate behavior"
 
 status = "active"
 
 requirement = """
-The deployment and security documentation shall state that the appliance image carries a published administrator credential and a certificate whose private key is present in every image and is therefore not secret, that first contact shows a certificate warning about the signer, that the exposure of each is bounded to an appliance that has not completed commissioning on the reader's own network segment, and that completing commissioning ends the credential exposure.
+The deployment and security documentation shall state that the generic appliance image carries the published first administrator credential but no appliance TLS private key, that first boot creates a non-exportable helper-held per-appliance key and certificate, that first contact still shows the documented warning about the signer rather than a name mismatch, that the credential exposure is limited to a provisioning appliance on the reader's reachable management segment, and that completing commissioning ends that credential exposure without weakening key custody.
 """
 
-verification = "Inspection: a reviewer reads the deployment and security documentation and confirms it names the published user name and password, the shared certificate private key, the certificate warning a user will see at first contact, the bounded exposure of each, and that commissioning is what ends the credential exposure; the reviewer confirms the first-contact procedure names the warning in the same place as the address to visit, so a reader meets it as a step rather than as a fault."
+verification = "Inspection: a reviewer reads the deployment and security documentation and confirms it names the published user/password, states that the image contains no appliance private key, explains helper-held per-appliance generation and non-exportability, places the unchanged signer warning beside the first-contact URL, bounds the credential to provisioning management reachability, and says commissioning ends the credential exposure while the private key remains protected."
 
 affected_paths = [
     "06_SoftwareDocu/Network_Operations.md",
@@ -33,4 +33,4 @@ priority = "high"
 rationale = "A published credential and a shared private key are acceptable only when the people deploying the appliance know they exist, how far they reach, and when they stop mattering; discovering them later is the failure this prevents."
 
 created = 2026-09-14
-updated = 2026-09-14
+updated = 2026-09-15

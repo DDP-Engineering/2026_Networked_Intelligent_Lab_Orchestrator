@@ -38,7 +38,7 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-When the browser GUI is given a bearer token, its Bench Core client shall request the versioned status resource of the configured base URL with that token as an HTTP bearer credential and return the reported profile, status, simulation flag, and build identity as typed values.
+When the browser GUI is given a credential, its Bench Core client shall request the versioned authenticated status resource and return the reported profile, status, simulation flag, build identity and, when supplied, the bounded operating-system, architecture and NILO-data-filesystem capacity facts as typed values.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -49,13 +49,19 @@ When the browser GUI is given a bearer token, its Bench Core client shall reques
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "A unit test drives the client with a recording stub transport and asserts the issued request targets the configured base URL's versioned status path, carries an `Authorization: Bearer` header holding the supplied token, and that the returned value exposes the profile, status, simulation flag, and build version taken from a contract-shaped response body."
+verification = "Unit tests drive the client with a recording stub transport, assert the issued request targets the versioned status path with the supplied credential, and verify that a contract-shaped response exposes build and bounded system/storage values while malformed or unsafe byte counts are refused. A backend route test verifies the matching authenticated JSON envelope."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
     "05_Software/nilo_gui/src/api/contract.ts",
     "05_Software/nilo_gui/src/api/client.ts",
     "05_Software/nilo_gui/src/api/client.test.ts",
+    "05_Software/nilo_assistant/internal/httpapi/server.go",
+    "05_Software/nilo_assistant/internal/httpapi/server_test.go",
+    "05_Software/nilo_assistant/internal/systeminfo/info.go",
+    "05_Software/nilo_assistant/internal/systeminfo/info_linux.go",
+    "05_Software/nilo_assistant/internal/systeminfo/info_other.go",
+    "05_Software/nilo_assistant/internal/systeminfo/info_test.go",
     "05_Software/nilo_gui/README.md",
     "06_SoftwareDocu/Development_and_Simulation_Flow.md",
     ".agentic/knowledge/gui-foundation.md",
@@ -65,6 +71,8 @@ affected_paths = [
 # these select the impacted regression set.
 linked_tests = [
     "05_Software/nilo_gui/src/api/client.test.ts",
+    "05_Software/nilo_assistant/internal/httpapi/server_test.go::TestStatusReturnsVersionedSimulationBuildInformation",
+    "05_Software/nilo_assistant/internal/systeminfo/info_test.go::*",
 ]
 
 # --- optional below this line ---
@@ -76,4 +84,4 @@ priority = "high"   # low | normal | high
 rationale = "The GUI must consume the backend through one typed contract boundary rather than ad-hoc fetch calls scattered through components."
 
 created = 2026-09-01
-updated = 2026-09-01
+updated = 2026-09-17

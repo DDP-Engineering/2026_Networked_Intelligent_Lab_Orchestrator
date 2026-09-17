@@ -27,8 +27,8 @@ affected_paths = [
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/nethelper/avahi_render_test.go::TestAvahiPublicationPlanCarriesScopedAliasAndPermanentService",
-    "05_Software/nilo_assistant/internal/nethelper/engine_test.go::TestHelperAcceptsAnAdvertisementOnlyForLocalNamePublication",
+    "05_Software/nilo_assistant/internal/nethelper/avahi_render_test.go::*",
+    "05_Software/nilo_assistant/internal/nethelper/engine_test.go::*",
 ]
 
 

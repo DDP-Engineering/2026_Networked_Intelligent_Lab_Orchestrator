@@ -3,7 +3,10 @@ package network
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
+
+	"github.com/google/uuid"
 )
 
 // MDNSPublisher is implemented by the privileged helper. The unprivileged
@@ -33,6 +36,60 @@ type MDNSAnnouncer struct {
 	announced         bool
 	lastError         error
 	recoveryInterface string
+	provisioningAlias bool
+	friendlyName      string
+}
+
+// MDNSApplianceIdentity is the closed public identity carried by the permanent
+// DNS-SD advertisement.
+type MDNSApplianceIdentity struct {
+	ApplianceID  string
+	SerialName   string
+	FriendlyName string
+	Port         uint16
+	State        string
+	Version      string
+}
+
+// NewApplianceMDNSAnnouncer publishes the permanent serial service in both
+// lifecycle states and adds the shared recovery alias only while provisioning.
+func NewApplianceMDNSAnnouncer(publisher MDNSPublisher, identity MDNSApplianceIdentity) (*MDNSAnnouncer, error) {
+	if publisher == nil {
+		return nil, nil
+	}
+	if identity.State != "provisioning" && identity.State != "commissioned" {
+		return nil, fmt.Errorf("%w: invalid lifecycle state", ErrMDNSRejected)
+	}
+	if !validPermanentMDNSSerial(identity.SerialName) ||
+		(identity.FriendlyName != "" && !mdnsHostName.MatchString(identity.FriendlyName)) ||
+		!publicVersion.MatchString(identity.Version) {
+		return nil, fmt.Errorf("%w: invalid appliance discovery identity", ErrMDNSRejected)
+	}
+	parsedID, err := uuid.Parse(identity.ApplianceID)
+	if err != nil || parsedID.String() != identity.ApplianceID {
+		return nil, fmt.Errorf("%w: invalid appliance UUID", ErrMDNSRejected)
+	}
+	txt := []string{"txtvers=2", "id=" + identity.ApplianceID, "serial=" + identity.SerialName}
+	if identity.FriendlyName != "" {
+		txt = append(txt, "name="+identity.FriendlyName)
+	}
+	txt = append(txt,
+		fmt.Sprintf("url=https://%s.local:%d/", identity.SerialName, identity.Port),
+		"path=/", "state="+identity.State, "version="+identity.Version,
+	)
+	service := &MDNSService{
+		Type: "_nilo._tcp", Domain: "local", Instance: "NILO " + identity.SerialName,
+		Port: identity.Port, TXT: txt,
+	}
+	template := MDNSAdvertisement{HostName: identity.SerialName, Service: service, Interfaces: []string{"validate"}}
+	if err := template.Validate(); err != nil {
+		return nil, err
+	}
+	template.Interfaces = nil
+	return &MDNSAnnouncer{
+		publisher: publisher, template: template, provisioningAlias: identity.State == "provisioning",
+		friendlyName: identity.FriendlyName,
+	}, nil
 }
 
 // NewMDNSAnnouncer returns nil when there is nothing to publish through, so a
@@ -86,13 +143,19 @@ func (announcer *MDNSAnnouncer) Announce(ctx context.Context, interfaces []strin
 	if announcer == nil {
 		return nil
 	}
-	wanted := announcer.template
 	announcer.mu.Lock()
+	wanted := announcer.template
 	recoveryInterface := announcer.recoveryInterface
+	friendlyName := announcer.friendlyName
 	announcer.mu.Unlock()
 	wanted.Interfaces = append([]string(nil), interfaces...)
-	if recoveryInterface != "" {
-		wanted.Aliases = []MDNSAlias{{HostName: "nilo", Interfaces: []string{recoveryInterface}}}
+	if announcer.provisioningAlias && len(wanted.Interfaces) > 0 {
+		wanted.Aliases = append(wanted.Aliases, MDNSAlias{HostName: "nilo", Interfaces: append([]string(nil), wanted.Interfaces...)})
+	} else if recoveryInterface != "" {
+		wanted.Aliases = append(wanted.Aliases, MDNSAlias{HostName: "nilo", Interfaces: []string{recoveryInterface}})
+	}
+	if friendlyName != "" && len(wanted.Interfaces) > 0 {
+		wanted.Aliases = append(wanted.Aliases, MDNSAlias{HostName: friendlyName, Interfaces: append([]string(nil), wanted.Interfaces...)})
 	}
 	if len(wanted.Interfaces) == 0 && len(wanted.Aliases) == 0 {
 		announcer.mu.Lock()
@@ -158,6 +221,43 @@ func (announcer *MDNSAnnouncer) Announce(ctx context.Context, interfaces []strin
 		return err
 	}
 	announcer.published, announcer.announced = wanted, true
+	return nil
+}
+
+// SetFriendlyName updates the optional alias and its public DNS-SD label. The
+// permanent serial host and service target never change.
+func (announcer *MDNSAnnouncer) SetFriendlyName(name string) error {
+	if announcer == nil {
+		return nil
+	}
+	if name != "" && (!mdnsHostName.MatchString(name) || name == "nilo" || name == announcer.template.HostName) {
+		return fmt.Errorf("%w: invalid friendly alias", ErrMDNSRejected)
+	}
+	announcer.mu.Lock()
+	defer announcer.mu.Unlock()
+	if announcer.template.Service == nil {
+		return fmt.Errorf("%w: friendly aliases require an appliance service", ErrMDNSRejected)
+	}
+	txt := make([]string, 0, len(announcer.template.Service.TXT)+1)
+	for _, item := range announcer.template.Service.TXT {
+		if !strings.HasPrefix(item, "name=") {
+			txt = append(txt, item)
+		}
+	}
+	if name != "" {
+		insertAt := 3
+		if insertAt > len(txt) {
+			insertAt = len(txt)
+		}
+		txt = append(txt, "")
+		copy(txt[insertAt+1:], txt[insertAt:])
+		txt[insertAt] = "name=" + name
+	}
+	service := *announcer.template.Service
+	service.TXT = txt
+	announcer.template.Service = &service
+	announcer.friendlyName = name
+	announcer.announced = false
 	return nil
 }
 

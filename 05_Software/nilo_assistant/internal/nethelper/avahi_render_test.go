@@ -36,7 +36,31 @@ func TestAvahiPublicationPlanCarriesScopedAliasAndPermanentService(t *testing.T)
 	}
 }
 
-func TestAvahiEffectiveHostRefusesAnUncertifiedCollisionName(t *testing.T) {
+func TestAvahiPublicationGroupsIsolateEveryInterfaceAndPurpose(t *testing.T) {
+	wanted := advertisement()
+	wanted.Service = &network.MDNSService{
+		Type: "_nilo._tcp", Domain: "local", Instance: "NILO 7e799b52-624f-4cc8-9be6-213a3525a726", Port: 8443,
+		TXT: []string{"txtvers=1", "id=7e799b52-624f-4cc8-9be6-213a3525a726", "hostname=ddp-remote", "url=https://ddp-remote.local:8443/", "path=/", "state=commissioned"},
+	}
+	wanted.Aliases = []network.MDNSAlias{{HostName: "nilo", Interfaces: []string{"enp1s0"}}}
+	groups, err := avahiPublicationGroups(wanted)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"alias/nilo.local/enp1s0", "serial/ddp-remote.local/enp1s0", "serial/ddp-remote.local/wlp2s0"}
+	keys := make([]string, 0, len(groups))
+	for _, group := range groups {
+		keys = append(keys, group.Key)
+		if len(group.Interfaces) != 1 {
+			t.Fatalf("group %s spans interfaces %v", group.Key, group.Interfaces)
+		}
+	}
+	if !slices.Equal(keys, want) {
+		t.Fatalf("group keys = %v, want %v", keys, want)
+	}
+}
+
+func TestAvahiSerialPublicationDoesNotDependOnTheGlobalHostname(t *testing.T) {
 	plan, err := avahiPublicationPlan(network.MDNSAdvertisement{
 		HostName: "ddp-remote", Interfaces: []string{"enp1s0"},
 		Service: &network.MDNSService{
@@ -47,8 +71,25 @@ func TestAvahiEffectiveHostRefusesAnUncertifiedCollisionName(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err = applyAvahiEffectiveHost(plan, "ddp-remote-2.local"); err == nil {
-		t.Fatal("an unpredictable collision-renamed hostname was advertised as a TLS URL")
+	if got, err := applyAvahiEffectiveHost(plan, "administrator-host.local"); err != nil || got.HostFQDN != "ddp-remote.local" || got.UseGlobalHost {
+		t.Fatalf("explicit serial publication was coupled to global hostname: %+v, %v", got, err)
+	}
+}
+
+func TestAvahiSerialPublicationReusesAnExactGlobalHostRecord(t *testing.T) {
+	plan, err := avahiPublicationPlan(network.MDNSAdvertisement{
+		HostName: "ddp-remote", Interfaces: []string{"enp1s0"},
+		Service: &network.MDNSService{
+			Type: "_nilo._tcp", Domain: "local", Instance: "NILO 7e799b52-624f-4cc8-9be6-213a3525a726", Port: 8443,
+			TXT: []string{"txtvers=1", "id=7e799b52-624f-4cc8-9be6-213a3525a726", "hostname=ddp-remote", "url=https://ddp-remote.local:8443/", "path=/", "state=commissioned"},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := applyAvahiEffectiveHost(plan, "ddp-remote.local")
+	if err != nil || !got.UseGlobalHost || got.Service == nil || got.Service.HostFQDN != "" {
+		t.Fatalf("exact global host plan = %+v, %v", got, err)
 	}
 }
 
