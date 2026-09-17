@@ -100,6 +100,13 @@ export const MOCK_HEALTHY_STATUS_BODY: StatusResponseBody = {
     version: '0.1.0',
     integration_protocol: 'nilo.integration/1',
   },
+  system: {
+    operating_system: 'Simulated Linux appliance',
+    kernel_version: 'simulation',
+    architecture: 'arm64',
+    storage_free_bytes: 24 * 1024 ** 3,
+    storage_total_bytes: 32 * 1024 ** 3,
+  },
 };
 
 /** The ready integration inventory, as the simulation catalog defines it. */

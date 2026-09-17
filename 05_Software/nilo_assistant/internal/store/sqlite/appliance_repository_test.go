@@ -182,6 +182,40 @@ func TestApplianceLabelsChangeWithoutChangingIdentity(t *testing.T) {
 	}
 }
 
+func TestFriendlyApplianceNameIsDistinctAndPersists(t *testing.T) {
+	ctx := context.Background()
+	database := openTemporaryDatabase(t)
+	repository := NewApplianceRepository(database)
+	original, err := repository.Ensure(ctx, appliance.Identity{
+		ID: "0199a2d0-1234-7abc-8def-0123456789ab", Name: "operator label",
+		CommissionedAt: time.Date(2026, 9, 15, 8, 0, 0, 0, time.UTC),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	updated, err := repository.SetFriendlyName(ctx, "bench-west")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if updated.ID != original.ID || updated.Name != "operator label" || updated.FriendlyName != "bench-west" {
+		t.Fatalf("friendly update changed identity or label: before=%+v after=%+v", original, updated)
+	}
+	reloaded, err := repository.Ensure(ctx, appliance.Identity{
+		ID:             "0199a2d0-1234-7abc-8def-0123456789ac",
+		CommissionedAt: time.Date(2026, 9, 16, 8, 0, 0, 0, time.UTC),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if reloaded.FriendlyName != "bench-west" {
+		t.Fatalf("friendly name did not persist: %+v", reloaded)
+	}
+	cleared, err := repository.SetFriendlyName(ctx, "")
+	if err != nil || cleared.FriendlyName != "" || cleared.Name != "operator label" {
+		t.Fatalf("clear friendly name = %+v, %v", cleared, err)
+	}
+}
+
 // TestAuditEnvelopeRoundTripsAndLeavesOlderRowsReadable covers
 // REQ-DATA-91e7ab46: the envelope is stored and read back whole, and a row
 // written before the envelope existed keeps its original meaning.

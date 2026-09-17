@@ -55,8 +55,14 @@ a populated cache. WSL installation or conversion happens only with an explicit
 Reproducible container boundary:
 
 ```powershell
-.\02_Tools\bootstrap\bootstrap-build-environment.ps1 -Distribution Ubuntu-24.04
+.\02_Tools\bootstrap\bootstrap-build-environment.ps1 -Distribution Ubuntu
 ```
+
+`-Distribution` names the WSL registration, not its release label; use the name
+reported by `wsl.exe --list --quiet` (for example, `Ubuntu` may contain Ubuntu
+24.04). Repository validation ignores Docker Desktop's utility distributions
+when it selects the sole development distribution. Set `NILO_WSL_DISTRIBUTION`
+when more than one development distribution is installed.
 
 ```sh
 ./02_Tools/bootstrap/bootstrap-build-environment.sh
@@ -72,9 +78,12 @@ explicitly requested host change.
 
 ## Configuration and services
 
-- `nilo serve --profile appliance` takes an absolute `--data-dir` and an
-  explicit `--bind`, requires `--tls-cert`, `--tls-key` and `--gui-dir`, forces
-  secure session cookies, and refuses a public or wildcard listener.
+- `nilo serve --profile appliance` takes an absolute `--data-dir`, requires a
+  built `--gui-dir`, and uses either the helper-backed appliance certificate or
+  an explicit `--tls-cert`/`--tls-key` pair. Interface-managed mode uses the
+  wildcard listener only behind its destination gate; legacy `--bind` remains
+  literal and private. `--local-status-bind` accepts only a literal loopback
+  address.
 - Further `serve` options name installed resources:
   `--nethelper-socket` (`/run/nilo/nethelper.sock`), `--integration-bundles`
   (`/opt/nilo/integration-bundles`) and `--sigrok-cli` (`/usr/bin/sigrok-cli`).
@@ -143,14 +152,13 @@ binary and the service account:
 sudo sh 02_Tools/scripts/install-nethelper.sh /path/to/nilo-nethelper nilo
 ```
 
-Start Bench Core as that service account, with the target's own address and
-certificate paths:
+Start Bench Core as that service account. The normal appliance path reads the
+helper-backed identity and needs no private-key path:
 
 ```sh
 nilo serve --profile appliance \
   --data-dir /var/lib/nilo --bind <private-address>:8443 \
   --gui-dir /opt/nilo/gui \
-  --tls-cert /etc/nilo/tls/server.crt --tls-key /etc/nilo/tls/server.key \
   --nethelper-socket /run/nilo/nethelper.sock
 ```
 

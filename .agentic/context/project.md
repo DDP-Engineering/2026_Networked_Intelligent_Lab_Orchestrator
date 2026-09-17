@@ -49,12 +49,20 @@ one of three fixed roles - Administrator, Operator or Viewer.
   managed WireGuard profiles and routed device networks, each through preview,
   acknowledgement and a confirmation window with automatic restore.
 - **First-boot commissioning.** A clean installation records a commissioning
-  lifecycle state, prepares safe Ethernet links with IPv4LL, answers
-  `nilo.local`, and serves management access on every eligible physical adapter.
-  Commissioned appliances permanently advertise a unique `_nilo._tcp.local`
-  service. A user signs in to a newly imaged appliance with the administrator
-  credential published with the image, over a shipped certificate that carries
-  both first-contact names and is signed by nobody a browser trusts; completing
+  lifecycle state, derives one reset-stable printed `nilo-<short-id>` identity,
+  prepares safe Ethernet links with IPv4LL and an owned Wi-Fi access point,
+  answers its permanent name plus `nilo.local`, and serves management access on
+  every eligible physical adapter. Commissioned appliances advertise the
+  permanent DNS-SD service and interface-scoped SSDP presence; clients can
+  discover/open them by serial or collision-checked friendly name and print an
+  exact management-URL QR label. Authenticated About keeps the permanent
+  identity and controls prominent, groups software/API/protocol, Linux/kernel/
+  architecture/storage and management facts, and embeds the label as its only
+  hardware-address presentation without exposing host paths. A
+  user signs in to a newly imaged appliance
+  with the administrator credential published with the image, over a
+  helper-generated certificate that carries both first-contact names and is
+  signed by nobody a browser trusts; completing
   commissioning is refused while that published password is still in place, so
   the credential cannot outlive first boot. The Raspberry Pi delivery may add a
   dual-duration GPIO button for a
@@ -68,8 +76,8 @@ one of three fixed roles - Administrator, Operator or Viewer.
 
 ## Supported operation
 
-- NILO runs as an appliance: an unprivileged HTTPS Bench Core started with
-  explicit TLS material, a built interface directory, an absolute data
+- NILO runs as an appliance: an unprivileged HTTPS Bench Core using the
+  helper-owned per-appliance signing key, a built interface directory, an absolute data
   directory and an explicit listener, beside the privileged Linux helper that
   owns networking and key material.
 - Appliance platforms are Linux ARM64, the first target and a Raspberry Pi 4,
@@ -155,6 +163,8 @@ one of three fixed roles - Administrator, Operator or Viewer.
 - `05_Software/README.md` - software directory map and how the parts relate.
 - `06_SoftwareDocu/Development_and_Simulation_Flow.md` - development topology,
   daily workflow and verification levels.
+- `06_SoftwareDocu/Find_Your_NILO.md` - plain-language appliance naming and
+  discovery choices for common client and network situations.
 - `06_SoftwareDocu/Network_Operations.md` - network workflow, recovery and
   appliance preparation.
 - `06_SoftwareDocu/Sigrok_Integration.md` - current instrument lifecycle,

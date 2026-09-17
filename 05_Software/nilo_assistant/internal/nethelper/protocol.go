@@ -2,10 +2,12 @@ package nethelper
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
+	"time"
+
 	"nilo.local/nilo/internal/network"
 	"nilo.local/nilo/internal/power"
-	"time"
 )
 
 // SecretPayload is the one type in this protocol that carries key material, and
@@ -55,15 +57,23 @@ type Request struct {
 	// MDNS is accepted only by mdns.publish. It carries a validated host label
 	// and interface names, never responder configuration syntax.
 	MDNS *network.MDNSAdvertisement `json:"mdns,omitempty"`
+	SSDP *network.SSDPPresence      `json:"ssdp,omitempty"`
 	// AdapterID and InterfaceName are accepted together only by recovery link
 	// activation. RecoveryRecordID is the opaque owned link returned by it.
-	AdapterID          string                       `json:"adapter_id,omitempty"`
-	InterfaceName      string                       `json:"interface_name,omitempty"`
-	RecoveryRecordID   string                       `json:"recovery_record_id,omitempty"`
-	RecoveryExpiresAt  time.Time                    `json:"recovery_expires_at,omitempty"`
-	HardwareEventID    string                       `json:"hardware_event_id,omitempty"`
-	Indicator          *HardwareIndicatorState      `json:"indicator,omitempty"`
-	CommissioningLinks *[]network.CommissioningLink `json:"commissioning_links,omitempty"`
+	AdapterID                string                            `json:"adapter_id,omitempty"`
+	InterfaceName            string                            `json:"interface_name,omitempty"`
+	RecoveryRecordID         string                            `json:"recovery_record_id,omitempty"`
+	RecoveryExpiresAt        time.Time                         `json:"recovery_expires_at,omitempty"`
+	HardwareEventID          string                            `json:"hardware_event_id,omitempty"`
+	Indicator                *HardwareIndicatorState           `json:"indicator,omitempty"`
+	CommissioningLinks       *[]network.CommissioningLink      `json:"commissioning_links,omitempty"`
+	CommissioningAccessPoint *network.CommissioningAccessPoint `json:"commissioning_access_point,omitempty"`
+	IdentifyAction           *network.IdentifyActionRequest    `json:"identify_action,omitempty"`
+	TLSNames                 *[]string                         `json:"tls_names,omitempty"`
+	TLSGeneration            string                            `json:"tls_generation,omitempty"`
+	TLSDigest                []byte                            `json:"tls_digest,omitempty"`
+	TLSHash                  string                            `json:"tls_hash,omitempty"`
+	TLSAlgorithm             string                            `json:"tls_algorithm,omitempty"`
 }
 
 // Response has no field that can hold key material, and must never gain one.
@@ -89,9 +99,15 @@ type Response struct {
 	// Plans is the installed device-network forwarding.
 	Plans []network.ForwardingPlan `json:"plans,omitempty"`
 	// RecoveryRecordID names only a helper-owned volatile recovery link.
-	RecoveryRecordID string                 `json:"recovery_record_id,omitempty"`
-	HardwareEvent    *HardwareRecoveryEvent `json:"hardware_event,omitempty"`
-	MDNSCurrent      *bool                  `json:"mdns_current,omitempty"`
+	RecoveryRecordID        string                        `json:"recovery_record_id,omitempty"`
+	HardwareEvent           *HardwareRecoveryEvent        `json:"hardware_event,omitempty"`
+	MDNSCurrent             *bool                         `json:"mdns_current,omitempty"`
+	MDNSCollisionInterfaces []string                      `json:"mdns_collision_interfaces,omitempty"`
+	SSDPCurrent             *bool                         `json:"ssdp_current,omitempty"`
+	ApplianceIdentity       *ApplianceIdentity            `json:"appliance_identity,omitempty"`
+	TLSIdentity             *TLSIdentityPublic            `json:"tls_identity,omitempty"`
+	TLSSignature            []byte                        `json:"tls_signature,omitempty"`
+	IdentifyAction          *network.IdentifyActionResult `json:"identify_action,omitempty"`
 }
 
 // secretOperations are the only operations that may name staged key material.
@@ -141,6 +157,9 @@ func dispatch(ctx context.Context, e *Engine, q Request) Response {
 	if q.MDNS != nil && q.Op != "mdns.publish" {
 		return Response{Error: "unexpected mDNS advertisement", Code: "invalid_request"}
 	}
+	if q.SSDP != nil && q.Op != "ssdp.publish" {
+		return Response{Error: "unexpected SSDP presence", Code: "invalid_request"}
+	}
 	if (q.AdapterID != "" || q.InterfaceName != "") && q.Op != "recovery.link.activate" {
 		return Response{Error: "unexpected recovery adapter identity", Code: "invalid_request"}
 	}
@@ -159,7 +178,51 @@ func dispatch(ctx context.Context, e *Engine, q Request) Response {
 	if q.CommissioningLinks != nil && q.Op != "commissioning.links.reconcile" {
 		return Response{Error: "unexpected commissioning links", Code: "invalid_request"}
 	}
+	if q.CommissioningAccessPoint != nil && q.Op != "commissioning.ap.reconcile" {
+		return Response{Error: "unexpected commissioning access point", Code: "invalid_request"}
+	}
+	if q.IdentifyAction != nil && q.Op != "identify.execute" {
+		return Response{Error: "unexpected identify action", Code: "invalid_request"}
+	}
+	if q.TLSNames != nil && q.Op != "tls.identity.activate" {
+		return Response{Error: "unexpected TLS names", Code: "invalid_request"}
+	}
+	if (q.TLSGeneration != "" || len(q.TLSDigest) != 0 || q.TLSHash != "" || q.TLSAlgorithm != "") && q.Op != "tls.identity.sign" {
+		return Response{Error: "unexpected TLS signing parameters", Code: "invalid_request"}
+	}
 	switch q.Op {
+	case "appliance.identity.read":
+		if q.ID != "" {
+			return Response{Error: "appliance identity read requires an empty envelope", Code: "invalid_request"}
+		}
+		var identity ApplianceIdentity
+		identity, err = e.ApplianceIdentity()
+		if err == nil {
+			r.ApplianceIdentity = &identity
+		}
+	case "tls.identity.read":
+		if q.ID != "" {
+			return Response{Error: "TLS identity read requires an empty envelope", Code: "invalid_request"}
+		}
+		var identity TLSIdentityPublic
+		identity, err = e.ReadTLSIdentity()
+		if err == nil {
+			r.TLSIdentity = &identity
+		}
+	case "tls.identity.activate":
+		if q.ID != "" || q.TLSNames == nil {
+			return Response{Error: "TLS identity activation requires a name set", Code: "invalid_request"}
+		}
+		var identity TLSIdentityPublic
+		identity, err = e.ActivateTLSNames(ctx, *q.TLSNames)
+		if err == nil {
+			r.TLSIdentity = &identity
+		}
+	case "tls.identity.sign":
+		if q.ID != "" || q.TLSGeneration == "" || len(q.TLSDigest) != sha256.Size || q.TLSHash != "sha256" || q.TLSAlgorithm != "ecdsa-p256-sha256" {
+			return Response{Error: "TLS signing requires the current P-256 generation and one SHA-256 digest", Code: "invalid_request"}
+		}
+		r.TLSSignature, err = e.SignTLS(q.TLSGeneration, q.TLSDigest)
 	case "management.access.apply":
 		if q.ID != "" || q.ManagementAccess == nil {
 			return Response{Error: "management access requires a configuration and nothing else", Code: "invalid_request"}
@@ -182,6 +245,22 @@ func dispatch(ctx context.Context, e *Engine, q Request) Response {
 		var current bool
 		current, err = e.MDNSPublicationCurrent(ctx)
 		r.MDNSCurrent = &current
+	case "ssdp.publish":
+		if q.ID != "" || q.SSDP == nil {
+			return Response{Error: "SSDP publication requires typed presence", Code: "invalid_request"}
+		}
+		err = e.PublishSSDP(ctx, *q.SSDP)
+	case "ssdp.withdraw":
+		if q.ID != "" || q.SSDP != nil {
+			return Response{Error: "SSDP withdrawal requires an empty envelope", Code: "invalid_request"}
+		}
+		err = e.WithdrawSSDP(ctx)
+	case "ssdp.status":
+		if q.ID != "" || q.SSDP != nil {
+			return Response{Error: "SSDP status requires an empty envelope", Code: "invalid_request"}
+		}
+		current := e.SSDPCurrent()
+		r.SSDPCurrent = &current
 	case "recovery.link.activate":
 		if q.ID != "" || q.AdapterID == "" || q.InterfaceName == "" || q.RecoveryRecordID != "" || q.RecoveryExpiresAt.IsZero() {
 			return Response{Error: "recovery activation requires one adapter identity and interface", Code: "invalid_request"}
@@ -217,11 +296,30 @@ func dispatch(ctx context.Context, e *Engine, q Request) Response {
 			return Response{Error: "hardware indicator requires one bounded state", Code: "invalid_request"}
 		}
 		err = e.SetRecoveryIndicator(ctx, *q.Indicator)
+	case "identify.execute":
+		if q.ID != "" || q.IdentifyAction == nil || q.Indicator != nil || q.HardwareEventID != "" {
+			return Response{Error: "Identify execution requires one typed action", Code: "invalid_request"}
+		}
+		var result network.IdentifyActionResult
+		result, err = e.ExecuteIdentifyAction(ctx, *q.IdentifyAction)
+		if err == nil {
+			r.IdentifyAction = &result
+		}
+	case "identify.ack":
+		if q.ID == "" || q.IdentifyAction != nil || q.Indicator != nil || q.HardwareEventID != "" {
+			return Response{Error: "Identify acknowledgement requires one operation identity", Code: "invalid_request"}
+		}
+		err = e.AcknowledgeIdentifyAction(ctx, q.ID)
 	case "commissioning.links.reconcile":
 		if q.ID != "" || q.CommissioningLinks == nil {
 			return Response{Error: "commissioning reconciliation requires a typed link list", Code: "invalid_request"}
 		}
 		err = e.ReconcileCommissioningLinks(ctx, *q.CommissioningLinks)
+	case "commissioning.ap.reconcile":
+		if q.ID != "" || q.CommissioningAccessPoint == nil {
+			return Response{Error: "commissioning access point reconciliation requires one typed plan", Code: "invalid_request"}
+		}
+		err = e.ReconcileCommissioningAccessPoint(ctx, *q.CommissioningAccessPoint)
 	case "system.restart":
 		if !emptyPowerRequest(q) {
 			return Response{Error: "power operation requires an empty envelope", Code: "invalid_request"}
@@ -345,6 +443,10 @@ func dispatch(ctx context.Context, e *Engine, q Request) Response {
 		// while adding the bounded error envelope.
 		r.Error = err.Error()
 		r.Code = "helper_failure"
+		var collision *network.MDNSCollisionError
+		if errors.As(err, &collision) {
+			r.MDNSCollisionInterfaces = append([]string(nil), collision.Interfaces...)
+		}
 		for code, candidate := range knownErrors {
 			if errors.Is(err, candidate) {
 				r.Code = code
@@ -362,4 +464,4 @@ func emptyPowerRequest(q Request) bool {
 	// Hardware fields are checked separately by their only operations.
 }
 
-var knownErrors = map[string]error{"preview_stale": network.ErrPreviewStale, "not_controllable": network.ErrNotControllable, "unsupported": network.ErrUnsupported, "connection_required": network.ErrConnectionRequired, "busy": network.ErrChangeInProgress, "recovery_unavailable": network.ErrRecoveryUnavailable, "operation_not_found": network.ErrOperationNotFound, "not_awaiting_confirmation": network.ErrNotAwaitingConfirm, "external_profile": network.ErrExternalProfile, "profile_active": network.ErrProfileActive, "secrets_not_found": ErrSecretsNotFound, "interface_settings_rejected": network.ErrInterfaceSettingsRejected, "forwarding_foreign": ErrForwardingForeign, "forwarding_unsupported": ErrForwardingUnsupported, "management_access_foreign": ErrManagementAccessForeign, "management_access_unsupported": ErrManagementAccessUnsupported, "mdns_foreign": ErrMDNSForeign, "mdns_unsupported": ErrMDNSUnsupported, "direct_recovery_unavailable": ErrDirectRecoveryUnsupported, "commissioning_links_unavailable": ErrCommissioningLinkUnsupported, "power_unavailable": power.ErrUnavailable}
+var knownErrors = map[string]error{"preview_stale": network.ErrPreviewStale, "not_controllable": network.ErrNotControllable, "unsupported": network.ErrUnsupported, "connection_required": network.ErrConnectionRequired, "busy": network.ErrChangeInProgress, "recovery_unavailable": network.ErrRecoveryUnavailable, "operation_not_found": network.ErrOperationNotFound, "not_awaiting_confirmation": network.ErrNotAwaitingConfirm, "external_profile": network.ErrExternalProfile, "profile_active": network.ErrProfileActive, "secrets_not_found": ErrSecretsNotFound, "interface_settings_rejected": network.ErrInterfaceSettingsRejected, "forwarding_foreign": ErrForwardingForeign, "forwarding_unsupported": ErrForwardingUnsupported, "management_access_foreign": ErrManagementAccessForeign, "management_access_unsupported": ErrManagementAccessUnsupported, "mdns_foreign": ErrMDNSForeign, "mdns_unsupported": ErrMDNSUnsupported, "mdns_collision": network.ErrMDNSCollision, "direct_recovery_unavailable": ErrDirectRecoveryUnsupported, "commissioning_links_unavailable": ErrCommissioningLinkUnsupported, "power_unavailable": power.ErrUnavailable}

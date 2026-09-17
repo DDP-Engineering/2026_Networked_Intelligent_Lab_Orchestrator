@@ -57,7 +57,7 @@ func runAdminPasswordPolicy(ctx context.Context, arguments []string, streams adm
 		return 2
 	}
 
-	remote, err := newRemoteAdmin(options, streams)
+	remote, err := newRemoteAdmin(ctx, options, streams)
 	if err != nil {
 		fmt.Fprintln(streams.stderr, err)
 		return 1

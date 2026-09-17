@@ -1,0 +1,44 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-DATA-605c381f"
+
+title = "Derive a permanent printable appliance name"
+
+status = "active"
+
+requirement = """
+When no appliance-name record exists, the privileged helper shall derive and persist one public name of the form `nilo-<10-character-id>` from the first usable Raspberry Pi board serial, DMI product serial, or a new cryptographically random 128-bit fallback, using the versioned algorithm in the linked specification, and thereafter return the same name across restarts and network commissioning resets without exposing the source serial.
+"""
+
+verification = "Automated helper tests initialize empty state with Pi, DMI, absent, malformed and changing source fixtures; they assert the exact version-1 names, deterministic hardware-derived results, one persisted fallback, mode-restricted state, unchanged results across restart and commissioning reset, distinct names for distinct inputs, and absence of each raw source value from public responses and logs."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/nethelper/appliance_identity.go",
+    "05_Software/nilo_assistant/internal/nethelper/appliance_identity_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/store.go",
+    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
+    "05_Software/nilo_assistant/internal/nethelper/client.go",
+    "05_Software/nilo_assistant/internal/appliance/identity.go",
+    "02_Tools/scripts/install-nethelper.sh",
+    "02_Tools/scripts/build-appliance.sh",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/nethelper/appliance_identity_test.go::*",
+]
+
+
+spec = "specs/REQ-DATA-605c381f.md"
+
+priority = "high"   # low | normal | high
+rationale = "A name printed on the enclosure must be reproducible, reset-safe and safe to disclose without turning a hardware serial into a public identifier."
+
+created = 2026-09-15
+updated = 2026-09-15

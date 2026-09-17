@@ -58,8 +58,9 @@ appliance and Raspberry Pi development appliance described below were updated.
   loss and begins serving as soon as an allowed interface returns.
 - Existing literal `--bind` deployments are unchanged until interface mode is
   deliberately initialized.
-- Production certificates are read and checked, never silently generated or
-  replaced. Missing configured DNS/IP SANs produce an actionable warning.
+- The current appliance path uses the helper-generated non-exportable key and
+  dynamically served public certificate. Explicit file-backed deployments
+  retain their existing certificate checks and diagnostics.
 
 ## Automated evidence
 

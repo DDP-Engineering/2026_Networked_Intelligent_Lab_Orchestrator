@@ -3,7 +3,7 @@
 ## Routing
 
 Select this page for the Go Bench Core under `05_Software/nilo_assistant/`:
-the `nilo` command line (`serve`, `admin` in local and remote mode, `network`,
+the `nilo` command line (`serve`, `discover`, `open`, `admin` in local and remote mode, `network`,
 `activity`, `diagnostics`), the authenticated `/api/v1` HTTP routes and their
 permissions, identities, sessions, API tokens and their audit events, network
 operations, the simulation catalog, and the SQLite repositories. Start at
@@ -50,6 +50,13 @@ before anything is opened or contacted. The root usage names every group.
 
 `cmd/nilo` provides version reporting, the `serve-foundation-check` composition smoke command, development token issuance, the `nilo admin` local and remote administration commands, the `network`, `activity` and `diagnostics` API clients, and explicit simulation/appliance servers. Protected HTTP contracts provide login, logout, the current session, status, deterministic integration and device inventory for the selected simulation scenario, the identity listing, and the identity and token administration routes the browser Authentication page drives. Internal consumers compose the foundation with `app.Open` and authorize through `app.IdentityService()`, submit work through `operation.Service`, resolve policy through `policy.Resolver`, and use the narrow repository interfaces owned by the domain packages. Only a starting server composes with `app.New`, which is `app.Open` followed by startup reconciliation; every other command opens the appliance without touching the operations recorded in it.
 
+`nilo discover` merges validated mDNS and SSDP records by appliance UUID and
+emits a stable table, JSON record or printable label; `nilo open` and remote
+commands resolve only a uniquely discovered serial or friendly name. The
+appliance routes expose authenticated public identity/About facts, label,
+friendly-name mutation and session-only Identify, while a separate literal
+loopback listener exposes only local status and the same printable label.
+
 ## Invariants
 
 - Every protected route declares its permission in `server.go` or `bench.go`; the command
@@ -94,8 +101,28 @@ before anything is opened or contacted. The root usage names every group.
 - The privileged helper publishes only process-owned Avahi D-Bus entries. It
   receives validated host/service/alias values and interface lists, never raw
   responder configuration, and does not replace daemon policy. Permanent
-  discovery advertises only the configured TLS-covered system hostname; an
-  Avahi collision suffix is refused rather than turned into an uncertified URL.
+  discovery uses the printed serial host and version-2 DNS-SD service; recovery
+  and friendly aliases are separate per-interface groups, so an alias collision
+  cannot withdraw the serial service. An exact Avahi global-host match reuses
+  its record; a preserved custom system hostname receives a no-reverse serial
+  alias. SSDP follows the same effective management interfaces through a
+  separate typed helper lifecycle, refreshes before expiry, republishes when
+  helper state is lost even if desired state is unchanged, jitters searches by
+  MX, bounds pending replies globally and rate-limits each interface/source
+  pair. Helper status remains current only while every receive loop is alive and
+  each published IPv4 address is still assigned to its interface.
+- A friendly-name collision returns only the validated candidate and a sorted,
+  deduplicated, interface-validated list capped at 16 entries. The helper wire
+  preserves that typed scope, the HTTP boundary sanitizes it again, and failed
+  publication leaves the permanent serial and previous friendly name usable.
+- Every label QR uses the exact advertised permanent-name HTTPS URL, including
+  a non-default management port, and refuses another host, credentials, query,
+  fragment or invalid port. The shared SVG renders a 27 mm QR within a fixed
+  62 by 29 mm print footprint and uses a larger pixel preview on screens.
+- Authenticated status reports the project build plus a bounded host snapshot:
+  Linux release, kernel, architecture, and free/total bytes for the filesystem
+  containing NILO data. It exposes no filesystem path, mount inventory,
+  hostname, process list or other general-purpose host inspection surface.
 - Raspberry Pi button events are stored by the helper before exposure with the
   release time; recovery-duration events additionally carry the connected-link
   snapshot while reset events do not. Events are coalesced with reset precedence
@@ -109,7 +136,7 @@ before anything is opened or contacted. The root usage names every group.
   audit failure leaves the helper event available for a safe retry.
 - A GPIO read discontinuity cancels the gesture in progress and requires a
   stable released baseline before another press. Recovery-profile
-restoration proves the exact durable UUID, adapter/interface/MAC binding,
+  restoration proves the exact durable UUID, adapter/interface/MAC binding,
   volatile state and non-routing settings before deletion. NetworkManager's
   generated empty `proxy` section is part of the normalized owned profile;
   populated proxy settings or any other unexpected setting remain foreign.
@@ -124,14 +151,44 @@ restoration proves the exact durable UUID, adapter/interface/MAC binding,
   still matches the published password, and refused when that cannot be
   determined. The stored verifier is tested rather than a provenance marker, so
   the rule holds however the identity arose and whether or not it is disabled.
-- A name the appliance advertises that its certificate does not carry is
-  reported, never a reason to stop: an appliance that refused to start over a
-  certificate gap could not be reached or commissioned at all. A first-boot or
-  interface-managed listener records it in `TLSMissing` and reports it in the
-  interface; the operator-configured legacy bound listener composes no
-  management access service and reports it on its diagnostic output alone. A
-  certificate that cannot be read or parsed does stop the start. The appliance
-  never generates or replaces a certificate.
+- The root helper generates one P-256 appliance key, persists it outside Bench
+  Core, and exposes only the public certificate plus SHA-256 signing. Certificate
+  activation precedes local-name publication, and the server loads the current
+  public generation for each handshake. Bench Core limits helper signing to 32
+  concurrent calls with a five-second deadline. File-backed TLS remains an
+  explicit legacy/development mode and cannot be mixed with the helper identity.
+- Provisioning AP ownership persists the exact NetworkManager UUID, adapter,
+  interface and SSID, then compares the complete expected settings before reuse
+  or deletion. Periodic maintenance and restart retain it only while the radio
+  still has no foreign saved or active client profile, conflicting settings or
+  protected role; Core supplies the currently eligible adapters and the helper
+  independently matches the durable UUID before activation. Captive services
+  clear failed process state for retry, and AP degradation does not stop
+  Ethernet, discovery or recovery reconciliation.
+- Identify indication never masks recovery or reset indication. Its durable
+  Core operation reserves a replayable requested audit event before crossing
+  the privileged boundary. The helper persists the typed operation-ID intent,
+  gives that token to each idempotent indicator/mDNS/SSDP sub-effect, checkpoints
+  each exact sub-result, and durably stores their combined result before
+  returning it. The helper retains completed receipts without eviction until
+  Core durably records the outcome and explicitly acknowledges the operation.
+  A crash before helper invocation resumes the intent once; sub-effect receipt
+  failure, a Core result-write, acknowledgement, append, restart or
+  client-cancellation failure reuses the same token or receipt and never starts
+  another logical physical action or discovery refresh. Helper requests more
+  than thirty seconds into the future are refused. The Pi hardware token keeps
+  its original absolute deadline as the idempotent result, remains durable when
+  Core acknowledges while the pattern is still active, and is removed only
+  after that interval expires; helper restart therefore neither truncates nor
+  extends the indicator. Physical expiry is derived before token cleanup, so a
+  transient cleanup-store failure retains retry evidence without extending the
+  LED pattern or poisoning later GPIO input. The same cleanup is best effort at
+  Pi construction: an already-expired token cannot abort GPIO/helper startup,
+  and the running indicator loop retries its retained cleanup evidence. Runtime
+  reconciliation restores a durable non-idle recovery indication and normal
+  mDNS/SSDP publication before it resumes pending button Identify work, so
+  recovery/reset keeps precedence and interrupted reannouncement markers settle
+  from current publication rather than a false unavailable snapshot.
 
 ## Key behaviors
 
@@ -158,7 +215,12 @@ restoration proves the exact durable UUID, adapter/interface/MAC binding,
 - `REQ-FUNC-9a19ad36` - accepts link-local as a wired adapter's IPv4 method so direct commissioning needs no DHCP server and no guessed address.
 - `REQ-FUNC-554b9bbd` - answers the appliance's local name on exactly the interfaces carrying management access and renews it as they change.
 - `REQ-SEC-83deb5c6` - takes a validated advertisement rather than responder configuration, manages only configuration it wrote, and reports an appliance it cannot publish on.
-- `REQ-FUNC-6334add6` - permanently advertises one stable `_nilo._tcp.local` instance per commissioned appliance with identity, configured hostname and usable HTTPS URL, withdrawing the shared alias before replacement.
+- `REQ-FUNC-6334add6` - continuously advertises one stable `_nilo._tcp.local` instance in both lifecycle states with the permanent serial as its SRV/HTTPS target, while provisioning and recovery aliases remain independent.
+- `REQ-DATA-605c381f`, `REQ-FUNC-5a886873` and `REQ-SEC-1b1ab2b2` - derive one reset-stable printed appliance name and publish bounded, management-interface-scoped mDNS and SSDP presence without secret-bearing responder input.
+- `REQ-FUNC-74521b89` and `REQ-REL-8010bcad` - change an optional friendly alias only after certificate preparation, preserve the permanent serial through collision/rollback, and report bounded public collision scope.
+- `REQ-FUNC-8d482c89` and `REQ-SEC-f3d137bb` - retain the exact helper-owned provisioning AP on an otherwise unused eligible radio while confining its DHCP, DNS and captive services to that interface.
+- `REQ-FUNC-60826fdb`, `REQ-SEC-7b9d9d6b` and `REQ-PLAT-c6a335b0` - provide bounded session-only Identify and short-button Identify with recovery/reset precedence and durable action/audit handoff.
+- `REQ-FUNC-9baf9854`, `REQ-FUNC-1215d6c9`, `REQ-FUNC-5fa824aa` and `REQ-FUNC-17f9c447` - merge independent discovery records safely, resolve only a unique appliance name, and render the exact advertised serial HTTPS URL in the printable label.
 - `REQ-FUNC-d2d75f06` - gives every role-safe first-boot Ethernet adapter an exactly inventoried, volatile, non-routing IPv4LL commissioning profile without inferring ownership from its name.
 - `REQ-FUNC-2b5bfab7`, `REQ-FUNC-4249d837` and `REQ-SEC-281ef5e4` - arm a bounded post-transition recovery window, select only the first doubly verified unassigned Ethernet adapter, and exactly restore its temporary effects.
 - `REQ-PLAT-c6a335b0`, `REQ-UX-8062385f` and `REQ-PLAT-ca44573d` - confine the BCM17/BCM27 button and indication path to explicitly enabled Raspberry Pi deliveries.
@@ -220,6 +282,14 @@ flowchart TD
     publishedcred["appliance.PublishedCredential"]
     hwrecovery["network.HardwareRecoveryService"]
     mdns["network.MDNSAnnouncer"]
+    ssdp["network.SSDPAnnouncer"]
+    naming["appliance.NamingService"]
+    discoverycli(["nilo discover / open"])
+    discovery["internal/discovery client"]
+    multicast(["mDNS and SSDP multicast"])
+    appliancehttp(["/api/v1/appliance and loopback status"])
+    commissioningap["network.CommissioningAccessPoint"]
+    identify["network.IdentifyService"]
     operations["network.OperationManager"]
     provider["network.Provider: simulation or helper client"]
     changer["network.ConnectivityChanger: simulation or helper client"]
@@ -295,6 +365,16 @@ flowchart TD
     hwrecovery --> helper
     hwrecovery --> networkrecovery
     mdns --> helper
+    ssdp --> helper
+    mdns --> multicast
+    ssdp --> multicast
+    naming --> mdns
+    appliancehttp --> naming
+    appliancehttp --> identify
+    identify --> helper
+    discoverycli --> discovery
+    discovery --> multicast
+    commissioningap --> helper
     operations --> changer
     operations --> provider
     sampler --> network
@@ -340,7 +420,8 @@ exercises real signed installation, locks, offline errors and idempotence on the
 pinned Debian 13 and Ubuntu 24.04 disposable fixtures. The separate HTTPS process
 test exercises the already-installed path through a real unprivileged core.
 
-Appliance serving requires a built GUI and TLS certificate/key, forces secure
+Appliance serving requires a built GUI and either helper-backed TLS or an
+explicit certificate/key pair, forces secure
 session cookies, confines a legacy literal listener to a private address, and
 guards the provisioning wildcard listener by the derived interface allowlist.
 It labels the GUI with safe runtime metadata before authentication. Instrument inventory is empty. WireGuard
@@ -417,6 +498,13 @@ The simulation catalog is deliberately dependency-free and cannot discover or co
 - `internal/httpapi/commissioning.go` - the administrator-only route, mapping each refusal onto a conflict rather than a service failure.
 - `internal/network/mdns.go`, `mdns_announcer.go` - validated provisioning aliases and commissioned DNS-SD records, plus restart-aware reconciliation against the helper's actual publication.
 - `internal/nethelper/avahi_plan.go`, `mdns.go`, `avahi_linux.go` - the typed publication plan, privileged operation, and Linux Avahi D-Bus entry-group implementation; no daemon configuration file is replaced.
+- `internal/network/ssdp.go`, `internal/nethelper/ssdp_responder.go` - the scoped SSDP lifecycle, lease refresh, randomized and rate-bounded search response policy, global pending-response cap and withdrawal cancellation.
+- `internal/appliance/{identity,naming,label}.go` - stable public appliance identity, rollback-safe friendly naming with bounded collision detail, and the shared exact-URL printable SVG/QR artifact.
+- `internal/httpapi/appliance_identity.go`, `local_status.go`, `discovery.go` - authenticated About/name/Identify/label routes, loopback-only public status and the read-only SSDP description.
+- `internal/systeminfo/`, `internal/httpapi/server.go`, `cmd/nilo/main.go` - the bounded authenticated Linux/storage snapshot and its status-route composition.
+- `internal/discovery/`, `cmd/nilo/discover.go`, `cmd/nilo/browser_*.go` - cross-platform mDNS/SSDP collection, UUID merge, unique name resolution, stable CLI output and OS browser launch.
+- `internal/network/commissioning_ap.go`, `internal/nethelper/commissioning_ap_plan.go`, `networkmanager_commissioning_linux.go`, `commissioning_services_linux.go` - exact AP ownership/retention and interface-confined DHCP, DNS and captive redirect planning.
+- `internal/network/identify.go`, `internal/nethelper/identify_action.go`, `cmd/nilo/hardware_recovery.go`, `internal/store/sqlite/identify_operation_repository.go` - bounded indicator control, recovery precedence, helper-owned operation-ID result receipts and the durable requested/result/audited handoff.
 - `internal/network/commissioning_link.go`, `internal/nethelper/networkmanager_commissioning_linux.go` - role-safe first-boot IPv4LL intent and the exact owned volatile NetworkManager profile lifecycle.
 - `internal/network/hardware_recovery.go`, `cmd/nilo/hardware_recovery.go` - durable arm/link/expiry/reset coordination and live runtime composition.
 - `internal/nethelper/direct_recovery.go`, `networkmanager_recovery_linux.go`, `recovery_hardware.go`, `gpio_*.go` - exact temporary-link ownership/restoration and durable Pi button/indicator behavior.
@@ -670,19 +758,22 @@ wireless adapter. The allowlist needs no special case: it admits every address a
 enabled interface reports, so a 169.254 address is already a usable management
 path.
 
-## First-boot local-name discovery (2026-09-12, TASK-878ab570)
+## Local-name discovery
 
-While an appliance is being commissioned it answers one local name on exactly
-the interfaces carrying management access, so an installer can type one URL and
-reach it from whichever network they are on. `network.MDNSAdvertisement` is a
-validated host/service/alias object and an interface list before it leaves the
+The permanent printed serial name answers and carries the version-2
+`_nilo._tcp.local` service on exactly the interfaces carrying management
+access, during both provisioning and commissioned operation. Its SRV target and
+HTTPS URL always use that immutable serial host. Provisioning independently
+adds the scoped `nilo.local` recovery alias; commissioning withdraws that alias
+without withdrawing the serial service. A temporary recovery overlay can add
+`nilo.local` back only on the selected recovery interface, and a friendly name
+is another independent address alias rather than a service target.
+
+`network.MDNSAdvertisement` validates the serial host, closed service and TXT
+allowlist, independent aliases and interface lists before they leave the
 unprivileged process. Invalid labels, loopback or duplicate interfaces, unknown
-service fields, and configuration separators are refused. During provisioning
-the object contains only the scoped `nilo.local` alias; after commissioning it
-contains only one `_nilo._tcp.local` service with stable appliance UUID,
-configured hostname and current HTTPS URL. A temporary recovery overlay adds
-`nilo.local` only on the selected recovery interface without widening the
-permanent service.
+service fields, URL/name disagreements and configuration separators are
+refused.
 
 `network.MDNSAnnouncer` compares desired publication with both its local cache
 and `mdns.status` from the helper. An unchanged healthy entry group is left
@@ -692,13 +783,15 @@ reconcile. An empty provisioning interface set withdraws the alias. Discovery
 failure is reported and retried while address reachability remains available.
 
 The privileged helper accepts only the typed `mdns.publish` and `mdns.status`
-operations and owns one entry group on its Avahi D-Bus connection. It publishes
-the current addresses of the requested interface indexes and never rewrites
-daemon configuration or another publisher's group. The configured system
-hostname is the permanent service target; if Avahi reports a collision-renamed
-effective host, publication fails closed so NILO never advertises a URL outside
-the installed certificate. A helper with no reachable responder reports the
-publication unavailable rather than appearing to succeed.
+operations. It owns one Avahi D-Bus entry group per interface and purpose, with
+permanent serial groups committed before optional alias groups, so an alias
+collision or reset cannot withdraw the serial service. Each group publishes the
+current addresses of its requested interface and never rewrites daemon
+configuration or another publisher's group. When Avahi's effective global host
+already equals the serial, the group reuses it; a preserved custom system host
+instead receives the explicit no-reverse serial address and the serial remains
+the SRV target. A helper with no reachable responder reports the publication
+unavailable rather than appearing to succeed.
 
 ## Completing commissioning (2026-09-12, TASK-bd56e123)
 

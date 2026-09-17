@@ -1,0 +1,51 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-74521b89"
+
+title = "Manage a collision-safe friendly appliance name"
+
+status = "active"
+
+requirement = """
+When an authorized administrator sets or clears a friendly appliance name, NILO shall atomically validate one lowercase local DNS label, reserve it without disturbing the permanent serial name, prepare certificate coverage before advertisement, persist and publish the new alias only if it is collision-free on every selected management link, and otherwise return a bounded conflict with the previous friendly and serial names still usable.
+"""
+
+verification = "Automated service, API and Avahi tests start with a working serial name, set, replace and clear a friendly label, and observe authorization/CSRF enforcement, certificate-before-advertisement ordering, persistence and both names resolving; invalid, duplicate and injected link-collision cases return the typed conflict and leave the prior certificate, friendly alias, serial publication and durable record consistent across restart."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/appliance/naming.go",
+    "05_Software/nilo_assistant/internal/appliance/naming_test.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/015_appliance_discovery.sql",
+    "05_Software/nilo_assistant/internal/httpapi/appliance_identity.go",
+    "05_Software/nilo_assistant/internal/httpapi/appliance_identity_test.go",
+    "05_Software/nilo_assistant/cmd/nilo/discovery_runtime.go",
+    "05_Software/nilo_assistant/internal/network/mdns.go",
+    "05_Software/nilo_assistant/internal/network/mdns_announcer.go",
+    "05_Software/nilo_assistant/internal/nethelper/avahi_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/avahi_plan.go",
+    "05_Software/nilo_assistant/internal/nethelper/client.go",
+    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/appliance/naming_test.go::*",
+    "05_Software/nilo_assistant/internal/httpapi/appliance_identity_test.go::*",
+]
+
+
+spec = "specs/REQ-FUNC-74521b89.md"
+
+priority = "high"   # low | normal | high
+rationale = "A readable lab alias is useful only if collision or partial failure can never remove the permanent printed route back to the appliance."
+
+created = 2026-09-15
+updated = 2026-09-16

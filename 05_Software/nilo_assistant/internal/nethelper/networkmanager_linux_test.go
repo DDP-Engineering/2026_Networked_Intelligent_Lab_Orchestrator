@@ -93,6 +93,41 @@ func TestAvahiSystemPublishesResolvableCommissionedService(t *testing.T) {
 	}
 }
 
+func TestAvahiSystemPublishesSerialBesideCustomGlobalHostname(t *testing.T) {
+	if os.Getenv("NILO_NETWORK_SYSTEM") != "1" {
+		t.Skip("requires isolated NetworkManager test container")
+	}
+	if _, err := os.Stat("/.dockerenv"); err != nil {
+		t.Fatal("system test requires disposable container")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	driver, err := NewNetworkManager()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer driver.Close()
+	wanted := network.MDNSAdvertisement{
+		HostName: "nilo-p2rjmzdkf1", Interfaces: []string{"eth0"},
+		Service: &network.MDNSService{
+			Type: "_nilo._tcp", Domain: "local",
+			Instance: "NILO nilo-p2rjmzdkf1", Port: 8443,
+			TXT: []string{
+				"txtvers=2", "id=0199a2d0-1234-7abc-8def-0123456789ab",
+				"serial=nilo-p2rjmzdkf1", "url=https://nilo-p2rjmzdkf1.local:8443/",
+				"path=/", "state=commissioned", "version=0.6.0",
+			},
+		},
+	}
+	if err := driver.ReplaceMDNS(ctx, wanted); err != nil {
+		t.Fatal(err)
+	}
+	output, err := exec.CommandContext(ctx, "avahi-resolve-host-name", "nilo-p2rjmzdkf1.local").CombinedOutput()
+	if err != nil || !strings.Contains(string(output), "192.0.2.2") {
+		t.Fatalf("resolve serial alias beside global hostname: %v\n%s", err, output)
+	}
+}
+
 func TestInterfaceCountersTolerateDevicesWithoutSysfsStatistics(t *testing.T) {
 	counters, err := readInterfaceCounters(filepath.Join(t.TempDir(), "missing-device"), "nm-p2p-dev-wlan0")
 	if err != nil {

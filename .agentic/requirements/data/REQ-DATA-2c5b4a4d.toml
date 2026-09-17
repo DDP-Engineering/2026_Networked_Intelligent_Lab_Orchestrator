@@ -28,7 +28,7 @@ affected_paths = [
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go::TestNetworkCommissioningResetClearsOnlyLifecycleManagementAndRecovery",
+    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go::*",
 ]
 
 

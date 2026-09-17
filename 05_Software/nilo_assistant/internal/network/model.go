@@ -63,6 +63,9 @@ type Interface struct {
 	// Settings reports the saved configuration bound to this adapter, when one
 	// exists. Nil means nothing is saved for it.
 	Settings *SettingsState
+	// SavedConnections lists NetworkManager profiles eligible for this device,
+	// including foreign profiles NILO must not displace for commissioning.
+	SavedConnections []string
 
 	State State
 	IPv4  []string

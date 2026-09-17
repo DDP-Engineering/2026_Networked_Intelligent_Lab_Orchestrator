@@ -26,8 +26,8 @@ affected_paths = [
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/management_provisioning_test.go::TestCommissionedAllowlistDoesNotAdmitANewlyAttachedAdapter",
-    "05_Software/nilo_assistant/internal/network/management_provisioning_test.go::TestProvisioningRefusesAnExplicitAllowlistChange",
+    "05_Software/nilo_assistant/internal/network/management_provisioning_test.go::*",
+    "05_Software/nilo_assistant/internal/network/management_access_test.go::*",
 ]
 
 

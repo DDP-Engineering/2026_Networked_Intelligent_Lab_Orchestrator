@@ -1,0 +1,46 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-SEC-618f47b2"
+
+title = "Keep appliance TLS private keys inside the helper"
+
+status = "active"
+
+requirement = """
+The privileged helper shall generate each appliance's TLS private key in its root-owned keystore, expose only its public certificate and a constrained local signing operation to Bench Core, and provide no protocol, response, diagnostic, log, export or file permission through which the private key can leave that boundary.
+"""
+
+verification = "Automated protocol and TLS handshake tests initialize an empty keystore, serve HTTPS through a helper-backed signer, reject unsupported hashes, algorithms, callers and malformed signing requests, and inspect every response/log/export plus filesystem modes with a sentinel key marker; no private-key bytes are readable by the Bench Core account or serializable through the helper protocol, including failure paths."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/nethelper/keystore.go",
+    "05_Software/nilo_assistant/internal/nethelper/tls_identity.go",
+    "05_Software/nilo_assistant/internal/nethelper/tls_identity_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
+    "05_Software/nilo_assistant/internal/nethelper/client.go",
+    "05_Software/nilo_assistant/internal/httpapi/server.go",
+    "05_Software/nilo_assistant/internal/httpapi/tls_test.go",
+    "05_Software/nilo_assistant/cmd/nilo-nethelper/serve_linux.go",
+    "02_Tools/scripts/install-nethelper.sh",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/nethelper/tls_identity_test.go::*",
+    "05_Software/nilo_assistant/internal/httpapi/tls_test.go::*",
+]
+
+
+spec = "specs/REQ-SEC-618f47b2.md"
+
+priority = "high"   # low | normal | high
+rationale = "Per-appliance TLS removes a shared-image private key only if the unprivileged server cannot copy the replacement key."
+
+created = 2026-09-15
+updated = 2026-09-15

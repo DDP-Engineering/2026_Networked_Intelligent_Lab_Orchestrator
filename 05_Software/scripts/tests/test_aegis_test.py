@@ -55,8 +55,9 @@ class AegisTestRouterTests(unittest.TestCase):
                 patch.object(
                     module,
                     "_run",
-                    side_effect=lambda command, cwd: commands.append((command, cwd))
-                    or 0,
+                    side_effect=lambda command, cwd: (
+                        commands.append((command, cwd)) or 0
+                    ),
                 ),
             ):
                 self.assertEqual(module._run_full(root), 0)
@@ -158,7 +159,7 @@ class AegisTestRouterTests(unittest.TestCase):
     ) -> None:
         module = self._load_router()
         discovered = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="Ubuntu-24.04\n", stderr=""
+            args=[], returncode=0, stdout="Ubuntu-24.04\ndocker-desktop\n", stderr=""
         )
         translated = subprocess.CompletedProcess(
             args=[], returncode=0, stdout="/mnt/c/work/NILO\n", stderr=""

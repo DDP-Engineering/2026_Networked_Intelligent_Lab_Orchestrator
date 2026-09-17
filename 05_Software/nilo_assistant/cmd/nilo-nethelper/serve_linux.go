@@ -55,8 +55,48 @@ func serve(ctx context.Context, o options) error {
 		return err
 	}
 	defer driver.Close()
+	commissioningServices, err := nethelper.NewCommissioningServices()
+	if err != nil {
+		return err
+	}
+	if err = driver.ConfigureCommissioningServices(commissioningServices); err != nil {
+		return err
+	}
 	engine, err := nethelper.NewEngine(driver, store, time.Now)
 	if err != nil {
+		return err
+	}
+	identity, err := nethelper.EnsureApplianceIdentity(store, nethelper.ApplianceIdentitySources{})
+	if err != nil {
+		return err
+	}
+	if err = engine.ConfigureApplianceIdentity(identity); err != nil {
+		return err
+	}
+	if _, err = nethelper.PersonalizeSystemHostname(o.imageDefaultHostnames, identity.SerialName); err != nil {
+		return err
+	}
+	tlsDirectory := filepath.Join(o.state, "tls")
+	if err = os.MkdirAll(tlsDirectory, 0700); err != nil {
+		return err
+	}
+	if err = os.Chmod(tlsDirectory, 0700); err != nil {
+		return err
+	}
+	if err = privateDirectory(tlsDirectory, 0700); err != nil {
+		return err
+	}
+	tlsIdentity, err := nethelper.NewTLSIdentityManager(tlsDirectory, time.Now)
+	if err != nil {
+		return err
+	}
+	if err = tlsIdentity.ActivateNames(ctx, []string{identity.SerialName, "nilo"}); err != nil {
+		return err
+	}
+	if err = engine.ConfigureTLSIdentity(tlsIdentity); err != nil {
+		return err
+	}
+	if err = engine.ConfigureSSDP(nethelper.NewSSDPResponder()); err != nil {
 		return err
 	}
 	powerController, err := nethelper.NewLoginManager()

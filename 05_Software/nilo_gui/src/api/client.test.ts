@@ -18,6 +18,13 @@ const healthyBody = {
     version: '0.1.0',
     integration_protocol: 'nilo.integration/1',
   },
+  system: {
+    operating_system: 'Debian GNU/Linux 13 (trixie)',
+    kernel_version: '6.12.47+rpt-rpi-v8',
+    architecture: 'arm64',
+    storage_free_bytes: 5 * 1024 ** 3,
+    storage_total_bytes: 16 * 1024 ** 3,
+  },
 };
 
 const integrationsBody = {
@@ -136,6 +143,13 @@ describe('Bench Core status client', () => {
         name: 'nilo',
         version: '0.1.0',
         integrationProtocol: 'nilo.integration/1',
+      },
+      system: {
+        operatingSystem: 'Debian GNU/Linux 13 (trixie)',
+        kernelVersion: '6.12.47+rpt-rpi-v8',
+        architecture: 'arm64',
+        storageFreeBytes: 5 * 1024 ** 3,
+        storageTotalBytes: 16 * 1024 ** 3,
       },
     });
   });

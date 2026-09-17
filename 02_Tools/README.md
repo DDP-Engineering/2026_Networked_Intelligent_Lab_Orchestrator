@@ -63,8 +63,13 @@ What the checks do and do not prove:
 Obtain the Git checkout and its LFS content yourself, then run:
 
 ```powershell
-.\02_Tools\bootstrap\bootstrap-build-environment.ps1 -Distribution Ubuntu-24.04
+.\02_Tools\bootstrap\bootstrap-build-environment.ps1 -Distribution Ubuntu
 ```
+
+The value of `-Distribution` is the WSL registration name reported by
+`wsl.exe --list --quiet`, not the Ubuntu release label. For example, a
+registration named `Ubuntu` can contain Ubuntu 24.04. Docker Desktop's utility
+distributions are not development distributions.
 
 On native Ubuntu 24.04 x86-64, use the POSIX entry point instead:
 
@@ -120,7 +125,7 @@ suite pass. The live `current.json` records that observed transition for the
 current local generation; external acceptance remains separate and still uses:
 
 ```powershell
-.\02_Tools\bootstrap\bootstrap-build-environment.ps1 -Distribution Ubuntu-24.04 -InstallEngine -Engine docker -EngineArchivePath .\02_Tools\archives\wsl-host-bootstrap -RebuildFromPinnedInputs
+.\02_Tools\bootstrap\bootstrap-build-environment.ps1 -Distribution Ubuntu -InstallEngine -Engine docker -EngineArchivePath .\02_Tools\archives\wsl-host-bootstrap -RebuildFromPinnedInputs
 ```
 
 ```sh
@@ -369,9 +374,11 @@ The acceptance browser gate runs only in the appliance verification stage:
 ```
 
 From Windows, the repository gate invokes that script through the prepared WSL2
-distribution. It selects the only installed distribution automatically; when
-several are installed, set `NILO_WSL_DISTRIBUTION` to the same distribution
-prepared by `bootstrap-development.ps1 -Distribution <name>`. The
+distribution. It selects the only installed development distribution
+automatically and ignores Docker Desktop's utility distributions; when several
+development distributions are installed, set `NILO_WSL_DISTRIBUTION` to the
+same distribution prepared by
+`bootstrap-development.ps1 -Distribution <name>`. The
 stage image pins Node.js and Playwright from `toolchain.versions`, restores the
 GUI's exact lockfile, and installs Chromium. It then builds the production GUI
 and serves it from Bench Core's appliance-profile HTTPS origin. Chromium enters

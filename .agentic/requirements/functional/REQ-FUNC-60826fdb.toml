@@ -1,0 +1,71 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-60826fdb"
+
+title = "Identify an appliance from the interface"
+
+status = "active"
+
+requirement = """
+When an authorized signed-in user requests appliance identification, NILO shall trigger a distinct bounded indicator pattern on supported Raspberry Pi hardware and return its absolute expiry, while generic hardware returns a successful typed `unsupported` result without emulating an indicator or changing networking.
+"""
+
+verification = "Automated API, coordinator and fake-GPIO tests submit one authorized request, an unauthorized request, repeated requests, a far-future deadline and a generic-hardware request; they observe CSRF/permission enforcement, one operation-ID-idempotent bounded pattern with deterministic extension/coalescing, refusal of a deadline beyond the 30-second maximum, restoration of the prior LED state at expiry, no network mutation, and a typed unsupported response without GPIO access on generic hardware. Durable Pi-token tests restart before and after Core acknowledgement, retain the active absolute expiry, preserve that original deadline on a delayed receipt retry, and remove the acknowledged token only after the physical interval ends. A cleanup-store failure during expiry or startup cannot delay physical expiry, abort GPIO startup or poison input; retained retry evidence is removed by a later cleanup. Runtime restart tests restore Armed/Active/Failed recovery indication before a pending Identify can run."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/network/identify.go",
+    "05_Software/nilo_assistant/internal/network/identify_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/recovery_hardware.go",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_linux_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/identify_action.go",
+    "05_Software/nilo_assistant/internal/nethelper/identify_action_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/client.go",
+    "05_Software/nilo_assistant/internal/nethelper/engine.go",
+    "05_Software/nilo_assistant/internal/nethelper/engine_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/store.go",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_button.go",
+    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery.go",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/appliance_identity.go",
+    "05_Software/nilo_assistant/internal/httpapi/identity.go",
+    "05_Software/nilo_assistant/internal/httpapi/appliance_identity_test.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/identify_operation_repository.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/identify_operation_repository_test.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/015_appliance_discovery.sql",
+    "05_Software/nilo_gui/src/api/appliance.ts",
+    "05_Software/nilo_gui/src/api/appliance.test.ts",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/network/identify_test.go::*",
+    "05_Software/nilo_assistant/internal/nethelper/identify_action_test.go::TestIdentifyActionRejectsUnboundedFutureDeadline",
+    "05_Software/nilo_assistant/internal/nethelper/identify_action_test.go::TestIdentifyActionExpiredRetryUsesDurableIndicatorDeadline",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::TestHardwareEventQueueRetainsIdentifyTokenUntilAcknowledged",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::TestHardwareEventQueueExpiredRetryPreservesOriginalDeadline",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_linux_test.go::TestPiIdentifyIndicatorSurvivesAcknowledgedRestartAndExpires",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_linux_test.go::TestPiIdentifyExpiryRestoresStateWhenCleanupPersistenceFails",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_linux_test.go::TestPiStartupContinuesWhenExpiredTokenCleanupPersistenceFails",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::TestPendingIdentifyCannotMaskRestoredRecoveryIndicator",
+    "05_Software/nilo_assistant/internal/httpapi/appliance_identity_test.go::*",
+    "05_Software/nilo_assistant/internal/store/sqlite/identify_operation_repository_test.go::*",
+    "05_Software/nilo_gui/src/api/appliance.test.ts::*",
+]
+
+
+spec = "specs/REQ-FUNC-60826fdb.md"
+
+priority = "high"   # low | normal | high
+rationale = "Discovery names distinguish records; a bounded physical signal distinguishes the enclosure answering them."
+
+created = 2026-09-15
+updated = 2026-09-17

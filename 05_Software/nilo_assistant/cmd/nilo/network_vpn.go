@@ -141,7 +141,12 @@ func networkMutate(ctx context.Context, options networkOptions, streams networkI
 		fmt.Fprintln(streams.stderr, "--server and --token-file are both required")
 		return 2
 	}
-	client, err := apiclient.New(apiclient.Options{BaseURL: options.server, TokenFile: options.tokenFile, CAFile: options.caFile, Timeout: 30 * time.Second})
+	resolvedServer, err := resolveServerForRemoteCommand(ctx, options.server)
+	if err != nil {
+		fmt.Fprintln(streams.stderr, discoveryErrorCode(err))
+		return 1
+	}
+	client, err := apiclient.New(apiclient.Options{BaseURL: resolvedServer, TokenFile: options.tokenFile, CAFile: options.caFile, Timeout: 30 * time.Second})
 	if err != nil {
 		fmt.Fprintln(streams.stderr, err)
 		return 1

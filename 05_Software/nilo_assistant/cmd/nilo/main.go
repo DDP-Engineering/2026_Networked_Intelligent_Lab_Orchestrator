@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
+	"hash/crc32"
 	"net"
 	"net/netip"
 	"os"
@@ -18,13 +20,17 @@ import (
 	"github.com/google/uuid"
 	"nilo.local/nilo/internal/activity"
 	"nilo.local/nilo/internal/app"
+	"nilo.local/nilo/internal/appliance"
+	"nilo.local/nilo/internal/audit"
 	"nilo.local/nilo/internal/buildinfo"
+	"nilo.local/nilo/internal/discovery"
 	"nilo.local/nilo/internal/httpapi"
 	"nilo.local/nilo/internal/mcp"
 	"nilo.local/nilo/internal/nethelper"
 	"nilo.local/nilo/internal/network"
 	"nilo.local/nilo/internal/power"
 	"nilo.local/nilo/internal/simulation"
+	"nilo.local/nilo/internal/systeminfo"
 )
 
 func main() {
@@ -40,6 +46,12 @@ func run(ctx context.Context, arguments []string) int {
 			return 1
 		}
 		return 0
+	}
+	if len(arguments) > 0 && arguments[0] == "discover" {
+		return runDiscoverCommand(ctx, arguments[1:], commandIO{stdout: os.Stdout, stderr: os.Stderr}, discovery.Discover)
+	}
+	if len(arguments) > 0 && arguments[0] == "open" {
+		return runOpenCommand(ctx, arguments[1:], commandIO{stdout: os.Stdout, stderr: os.Stderr}, discovery.Discover, defaultBrowserLauncher)
 	}
 	if len(arguments) == 3 && arguments[0] == "serve-foundation-check" && arguments[1] == "--data-dir" {
 		application, err := app.New(context.Background(), app.Options{
@@ -135,6 +147,7 @@ func runServe(ctx context.Context, arguments []string) int {
 	backend := flags.String("sigrok-cli", "/usr/bin/sigrok-cli", "trusted sigrok CLI executable")
 	helperSocket := flags.String("nethelper-socket", "/run/nilo/nethelper.sock", "installed Linux helper socket")
 	guiDir := flags.String("gui-dir", "", "built GUI directory served on the API origin")
+	localStatusBind := flags.String("local-status-bind", "", "optional literal loopback listener for appliance-local status")
 	tlsCert := flags.String("tls-cert", "", "listener PEM certificate")
 	tlsKey := flags.String("tls-key", "", "listener PEM private key")
 	developmentAdministrator := flags.Bool(
@@ -170,6 +183,16 @@ func runServe(ctx context.Context, arguments []string) int {
 	if *profile == "simulation" && managementMode {
 		fmt.Fprintln(os.Stderr, "simulation requires a literal loopback --bind and does not accept management interfaces")
 		return 2
+	}
+	if *localStatusBind != "" {
+		if *profile != "appliance" {
+			fmt.Fprintln(os.Stderr, "--local-status-bind is available only for the appliance profile")
+			return 2
+		}
+		if err := httpapi.ValidateLocalStatusBind(*localStatusBind); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 2
+		}
 	}
 	if len(managementInterfaces) > 0 && *managementPort == 0 {
 		*managementPort = 8443
@@ -223,13 +246,13 @@ func runServe(ctx context.Context, arguments []string) int {
 			fmt.Fprintln(os.Stderr, "development administrator is allowed only with the simulation profile")
 			return 2
 		}
-		if *tlsCert == "" || *tlsKey == "" || *guiDir == "" {
-			fmt.Fprintln(os.Stderr, "appliance requires --tls-cert, --tls-key and --gui-dir")
+		if *guiDir == "" || (*tlsCert == "") != (*tlsKey == "") {
+			fmt.Fprintln(os.Stderr, "appliance requires --gui-dir and either both or neither of --tls-cert and --tls-key")
 			return 2
 		}
 		cookieSecurity = httpapi.CookieHTTPSDeployment
 	}
-	if mode == listenerBind {
+	if mode == listenerBind && (*profile != "appliance" || *tlsCert != "") {
 		if err := httpapi.ValidateListener(listenerAddress, *tlsCert, *tlsKey); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			return 2
@@ -241,8 +264,10 @@ func runServe(ctx context.Context, arguments []string) int {
 		return 1
 	}
 	var powerController power.Controller = power.Unavailable{}
+	var applianceHelper *nethelper.Client
 	if *profile == "appliance" {
-		powerController = nethelper.NewClient(*helperSocket, "")
+		applianceHelper = nethelper.NewClient(*helperSocket, "")
+		powerController = applianceHelper
 	}
 
 	application, err := app.New(ctx, app.Options{
@@ -331,16 +356,40 @@ func runServe(ctx context.Context, arguments []string) int {
 	var mdnsAnnouncer *network.MDNSAnnouncer
 	var provisioningAnnouncer *network.MDNSAnnouncer
 	var commissionedAnnouncer *network.MDNSAnnouncer
+	var ssdpAnnouncer *network.SSDPAnnouncer
 	var mdnsInterfaces func(context.Context) ([]string, error)
 	systemHostname := ""
+	var helperIdentity nethelper.ApplianceIdentity
+	var runtimeTLSCertificateProvider func(*tls.ClientHelloInfo) (*tls.Certificate, error)
+	var applianceMetadata *httpapi.ApplianceMetadata
 	hardwareRecoveryEnabled := false
 	if *profile == "appliance" {
-		systemHostname, err = os.Hostname()
-		if err != nil || strings.TrimSpace(systemHostname) == "" {
-			fmt.Fprintln(os.Stderr, "appliance discovery requires the system host name")
+		helperIdentity, err = applianceHelper.ApplianceIdentity(ctx)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "read permanent appliance identity:", err)
 			return 1
 		}
-		_, _, hardwareErr := nethelper.NewClient(*helperSocket, "").ReadRecoveryEvent(ctx)
+		systemHostname = helperIdentity.SerialName
+		tlsNames := []string{systemHostname, "nilo"}
+		if friendly := application.ApplianceRuntime().Identity.FriendlyName; friendly != "" {
+			tlsNames = append(tlsNames, friendly)
+		}
+		if err = applianceHelper.ActivateNames(ctx, tlsNames); err != nil {
+			fmt.Fprintln(os.Stderr, "activate appliance certificate names:", err)
+			return 1
+		}
+		if *tlsCert == "" {
+			_, certificateErr := nethelper.NewRemoteTLSCertificate(ctx, applianceHelper)
+			if certificateErr != nil {
+				fmt.Fprintln(os.Stderr, "open helper-backed appliance certificate:", certificateErr)
+				return 1
+			}
+			runtimeTLSCertificateProvider = func(*tls.ClientHelloInfo) (*tls.Certificate, error) {
+				certificate, err := nethelper.NewRemoteTLSCertificate(context.Background(), applianceHelper)
+				return &certificate, err
+			}
+		}
+		_, _, hardwareErr := applianceHelper.ReadRecoveryEvent(ctx)
 		switch {
 		case hardwareErr == nil:
 			hardwareRecoveryEnabled = true
@@ -387,6 +436,7 @@ func runServe(ctx context.Context, arguments []string) int {
 		return 1
 	}
 	var commissioningLinks *network.CommissioningLinkService
+	var commissioningAP *network.CommissioningAccessPointService
 	if *profile == "appliance" {
 		commissioningLinks, err = network.NewCommissioningLinkService(
 			provider, nethelper.NewClient(*helperSocket, ""), roleCoordinator,
@@ -399,6 +449,20 @@ func runServe(ctx context.Context, arguments []string) int {
 			fmt.Fprintln(os.Stderr, "prepare commissioning Ethernet links:", err)
 			return 1
 		}
+		accessPointPort := *managementPort
+		if accessPointPort == 0 {
+			accessPointPort = network.ProvisioningPort
+		}
+		commissioningAP, err = network.NewCommissioningAccessPointService(network.CommissioningAccessPointOptions{
+			Provider: provider, Driver: applianceHelper, Roles: roleCoordinator, SerialName: systemHostname, Port: uint16(accessPointPort),
+		})
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 1
+		}
+		if err := commissioningAP.Reconcile(ctx, application.Commissioning() == "provisioning"); err != nil {
+			fmt.Fprintln(os.Stderr, "commissioning Wi-Fi access point unavailable:", err)
+		}
 	}
 	if mode == listenerProvisioning {
 		provisioningTLSNames := requiredDiscoveryTLSNames(systemHostname, true)
@@ -406,10 +470,14 @@ func runServe(ctx context.Context, arguments []string) int {
 		// A missing first-contact name is a misprepared image, not a reason to
 		// leave the appliance unreachable: first boot serves on what it has and
 		// carries the gap into the interface, where an administrator can see it.
-		missing, certificateErr := missingDiscoveryNames(*tlsCert, systemHostname, true)
-		if certificateErr != nil {
-			fmt.Fprintln(os.Stderr, certificateErr)
-			return 1
+		var missing []string
+		if *tlsCert != "" {
+			var certificateErr error
+			missing, certificateErr = missingDiscoveryNames(*tlsCert, systemHostname, true)
+			if certificateErr != nil {
+				fmt.Fprintln(os.Stderr, certificateErr)
+				return 1
+			}
 		}
 		for _, name := range missing {
 			fmt.Fprintf(os.Stderr,
@@ -433,10 +501,6 @@ func runServe(ctx context.Context, arguments []string) int {
 		}); ok {
 			configured.UseManagementAccessPolicy(managementAccess)
 		}
-		// The appliance answers to one name while it is being commissioned, on
-		// whichever interfaces are currently carrying management access, so the
-		// same URL keeps working as adapters come and go.
-		provisioningAnnouncer = network.NewProvisioningMDNSAnnouncer(nethelper.NewClient(*helperSocket, ""))
 		mdnsInterfaces = func(context.Context) ([]string, error) {
 			return managementAccess.ConfiguredInterfaces(), nil
 		}
@@ -466,22 +530,26 @@ func runServe(ctx context.Context, arguments []string) int {
 			}
 			managementTLSNames = append(managementTLSNames[:0], record.Configuration.TLSNames...)
 		}
-		missing, certificateErr := httpapi.ValidateCertificateNames(*tlsCert, managementTLSNames)
-		if certificateErr != nil {
-			fmt.Fprintln(os.Stderr, certificateErr)
-			return 2
-		}
-		discoveryMissing, certificateErr := missingDiscoveryNames(*tlsCert, systemHostname, hardwareRecoveryEnabled)
-		if certificateErr != nil {
-			fmt.Fprintln(os.Stderr, certificateErr)
-			return 2
+		var missing []string
+		if *tlsCert != "" {
+			var certificateErr error
+			missing, certificateErr = httpapi.ValidateCertificateNames(*tlsCert, managementTLSNames)
+			if certificateErr != nil {
+				fmt.Fprintln(os.Stderr, certificateErr)
+				return 2
+			}
+			discoveryMissing, discoveryErr := missingDiscoveryNames(*tlsCert, systemHostname, hardwareRecoveryEnabled)
+			if discoveryErr != nil {
+				fmt.Fprintln(os.Stderr, discoveryErr)
+				return 2
+			}
+			missing = mergeMissingNames(missing, discoveryMissing)
 		}
 		// The same reasoning as first boot: a commissioned appliance that will
 		// not start cannot be administered back into shape either. The two lists
 		// overlap by design - the appliance's own host name is normally both a
 		// configured management name and an advertised discovery name - so they
 		// are merged rather than concatenated.
-		missing = mergeMissingNames(missing, discoveryMissing)
 		for _, name := range missing {
 			fmt.Fprintf(os.Stderr, "WARNING: listener certificate is missing SAN %q; renew the configured certificate before using that URL\n", name)
 		}
@@ -531,10 +599,27 @@ func runServe(ctx context.Context, arguments []string) int {
 		discoveryPort = network.ProvisioningPort
 	}
 	if *profile == "appliance" {
-		commissionedAnnouncer, err = network.NewCommissionedMDNSAnnouncer(
-			nethelper.NewClient(*helperSocket, ""), systemHostname,
-			application.ApplianceRuntime().Identity.ID, uint16(discoveryPort),
-		)
+		version := buildinfo.Current().Version
+		storedIdentity := application.ApplianceRuntime().Identity
+		provisioningAnnouncer, err = network.NewApplianceMDNSAnnouncer(applianceHelper, network.MDNSApplianceIdentity{
+			ApplianceID: storedIdentity.ID, SerialName: systemHostname, FriendlyName: storedIdentity.FriendlyName,
+			Port: uint16(discoveryPort), State: "provisioning", Version: version,
+		})
+		if err == nil {
+			commissionedAnnouncer, err = network.NewApplianceMDNSAnnouncer(applianceHelper, network.MDNSApplianceIdentity{
+				ApplianceID: storedIdentity.ID, SerialName: systemHostname, FriendlyName: storedIdentity.FriendlyName,
+				Port: uint16(discoveryPort), State: "commissioned", Version: version,
+			})
+		}
+		bootID := crc32.ChecksumIEEE([]byte(application.ApplianceRuntime().BootID))
+		if bootID == 0 {
+			bootID = 1
+		}
+		if err == nil {
+			ssdpAnnouncer, err = network.NewSSDPAnnouncer(applianceHelper, network.SSDPPresence{
+				ApplianceID: storedIdentity.ID, Version: version, Port: uint16(discoveryPort), BootID: bootID, ConfigID: 1,
+			})
+		}
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			return 1
@@ -547,6 +632,9 @@ func runServe(ctx context.Context, arguments []string) int {
 		if err := reconcileApplianceDiscovery(ctx, managementAccess, &mdnsAnnouncer, provisioningAnnouncer, commissionedAnnouncer); err != nil {
 			fmt.Fprintln(os.Stderr, "appliance discovery is not being answered yet:", err)
 		}
+		if err := ssdpAnnouncer.Announce(ctx, managementAccess.ConfiguredInterfaces()); err != nil {
+			fmt.Fprintln(os.Stderr, "appliance SSDP presence is not being answered yet:", err)
+		}
 	} else if *profile == "appliance" && mode == listenerBind {
 		host, _, _ := net.SplitHostPort(listenerAddress)
 		address, _ := netip.ParseAddr(host)
@@ -555,10 +643,14 @@ func runServe(ctx context.Context, arguments []string) int {
 			// reports a certificate gap exactly as the other two do rather than
 			// refusing to start: an appliance nobody can reach cannot be
 			// corrected either.
-			legacyMissing, certificateErr := missingDiscoveryNames(*tlsCert, systemHostname, false)
-			if certificateErr != nil {
-				fmt.Fprintln(os.Stderr, certificateErr)
-				return 2
+			var legacyMissing []string
+			if *tlsCert != "" {
+				var certificateErr error
+				legacyMissing, certificateErr = missingDiscoveryNames(*tlsCert, systemHostname, false)
+				if certificateErr != nil {
+					fmt.Fprintln(os.Stderr, certificateErr)
+					return 2
+				}
 			}
 			for _, name := range legacyMissing {
 				fmt.Fprintf(os.Stderr,
@@ -572,10 +664,77 @@ func runServe(ctx context.Context, arguments []string) int {
 			if discoveryErr == nil {
 				discoveryErr = commissionedAnnouncer.Announce(ctx, interfaces)
 			}
+			if discoveryErr == nil {
+				discoveryErr = ssdpAnnouncer.Announce(ctx, interfaces)
+			}
 			if discoveryErr != nil {
 				fmt.Fprintln(os.Stderr, "appliance discovery is not being answered yet:", discoveryErr)
 			}
 		}
+	}
+	var identifyService *network.IdentifyService
+	var identifyAction network.IdentifyActionExecutor
+	var identifyIndicator *runtimeIdentifyIndicator
+	identifyOperations := application.IdentifyOperationRepository()
+	if *profile == "appliance" {
+		var indicator network.IdentifyIndicator
+		if hardwareRecoveryEnabled {
+			identifyIndicator = newRuntimeIndicatorArbiter(applianceHelper)
+			indicator = identifyIndicator
+		}
+		identifyService, err = network.NewIdentifyService(network.IdentifyOptions{Indicator: indicator})
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			return 1
+		}
+		identifyAction = identifyService
+		if applianceHelper != nil {
+			identifyAction = applianceHelper
+		}
+		pendingIdentify, pendingErr := identifyOperations.Pending(ctx)
+		if pendingErr != nil {
+			fmt.Fprintln(os.Stderr, "list pending Identify actions:", pendingErr)
+			return 1
+		}
+		for _, pending := range pendingIdentify {
+			if pending.State == "reserved" {
+				result, executeErr := identifyAction.ExecuteIdentifyAction(ctx, network.IdentifyActionRequest{
+					OperationID: pending.ID, Source: network.IdentifySource(pending.Source), ActiveUntil: pending.ActiveUntil,
+				})
+				if executeErr != nil {
+					fmt.Fprintln(os.Stderr, "resume pending Identify action:", executeErr)
+					return 1
+				}
+				outcome := audit.OutcomeApplied
+				status := string(result.Status)
+				if result.Status != network.IdentifyAccepted && result.Status != network.IdentifyUnsupported {
+					outcome = audit.OutcomeFailed
+					status = "failed"
+				}
+				if err := identifyOperations.RecordOutcome(ctx, pending.ID, result.Supported,
+					result.Reannouncement, status, outcome, time.Now().UTC()); err != nil {
+					fmt.Fprintln(os.Stderr, "record resumed Identify result:", err)
+					return 1
+				}
+			}
+			if err := identifyAction.AcknowledgeIdentifyAction(ctx, pending.ID); err != nil {
+				fmt.Fprintln(os.Stderr, "acknowledge resumed Identify result:", err)
+				return 1
+			}
+			if pending.State != "acted" {
+				if err := identifyOperations.MarkActed(ctx, pending.ID, time.Now().UTC()); err != nil {
+					fmt.Fprintln(os.Stderr, "finalize resumed Identify audit:", err)
+					return 1
+				}
+			}
+			if err := identifyOperations.Flush(ctx, pending.ID); err != nil {
+				fmt.Fprintln(os.Stderr, "flush resumed Identify audit:", err)
+				return 1
+			}
+		}
+	} else if err := identifyOperations.FlushPending(ctx); err != nil {
+		fmt.Fprintln(os.Stderr, "replay pending Identify audit:", err)
+		return 1
 	}
 	var recoveryRuntime *hardwareRecoveryRuntime
 	if hardwareRecoveryEnabled && managementAccess != nil && commissionedAnnouncer != nil {
@@ -596,7 +755,20 @@ func runServe(ctx context.Context, arguments []string) int {
 		recoveryRuntime = &hardwareRecoveryRuntime{
 			helper: helper, service: recoveryService, driver: driver,
 			commission: application.CommissioningRepository(), management: managementAccess, audit: application.AuditWriter(),
-			applianceID: application.ApplianceRuntime().Identity.ID,
+			identifyOps: identifyOperations,
+			applianceID: application.ApplianceRuntime().Identity.ID, identify: identifyService, identifyAction: identifyAction,
+			indicator: identifyIndicator,
+			reannounce: func(ctx context.Context) error {
+				if mdnsAnnouncer == nil {
+					return nil
+				}
+				interfaces := managementAccess.ConfiguredInterfaces()
+				mdnsAnnouncer.Invalidate()
+				mdnsErr := mdnsAnnouncer.Announce(ctx, interfaces)
+				ssdpAnnouncer.Invalidate()
+				ssdpErr := ssdpAnnouncer.Announce(ctx, interfaces)
+				return errors.Join(mdnsErr, ssdpErr)
+			},
 		}
 		if err := recoveryRuntime.Adopt(ctx); err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -634,29 +806,43 @@ func runServe(ctx context.Context, arguments []string) int {
 		reconcileDeviceNetworks = reconciler.ReconcileDeviceNetworks
 	}
 	var reconcileManagementAccess func(context.Context) error
+	var refreshApplianceMetadata func(context.Context) error
 	if managementAccess != nil {
 		// The published local name follows whatever is actually carrying
 		// management access, so it is renewed as part of reconciling the
 		// allowlist rather than beside it. The announcer republishes only on a
 		// change.
 		reconcileManagementAccess = func(ctx context.Context) error {
+			var accessPointStep func(context.Context) error
+			if commissioningAP != nil {
+				accessPointStep = func(ctx context.Context) error {
+					return commissioningAP.Reconcile(ctx, managementAccess.Provisioning())
+				}
+			}
+			var commissioningLinkStep func(context.Context) error
 			if commissioningLinks != nil {
-				if err := commissioningLinks.Reconcile(ctx, managementAccess.Provisioning()); err != nil {
-					return err
+				commissioningLinkStep = func(ctx context.Context) error {
+					return commissioningLinks.Reconcile(ctx, managementAccess.Provisioning())
 				}
 			}
-			if err := managementAccess.Reconcile(ctx); err != nil {
-				return err
+			var discoveryStep func(context.Context) error
+			if mdnsInterfaces != nil {
+				discoveryStep = func(ctx context.Context) error {
+					return reconcileApplianceDiscovery(ctx, managementAccess, &mdnsAnnouncer, provisioningAnnouncer, commissionedAnnouncer)
+				}
 			}
+			var recoveryStep func(context.Context) error
 			if recoveryRuntime != nil {
-				if err := recoveryRuntime.Reconcile(ctx); err != nil {
-					return err
-				}
+				recoveryStep = recoveryRuntime.Reconcile
 			}
-			if mdnsInterfaces == nil {
-				return nil
-			}
-			return reconcileApplianceDiscovery(ctx, managementAccess, &mdnsAnnouncer, provisioningAnnouncer, commissionedAnnouncer)
+			return reconcileApplianceManagementRuntime(
+				ctx, accessPointStep, commissioningLinkStep, managementAccess.Reconcile,
+				refreshApplianceMetadata, discoveryStep,
+				func(ctx context.Context) error {
+					return ssdpAnnouncer.Announce(ctx, managementAccess.ConfiguredInterfaces())
+				},
+				recoveryStep,
+			)
 		}
 	} else if commissionedAnnouncer != nil && mdnsInterfaces != nil {
 		reconcileManagementAccess = func(ctx context.Context) error {
@@ -664,7 +850,15 @@ func runServe(ctx context.Context, arguments []string) int {
 			if err != nil {
 				return err
 			}
-			return commissionedAnnouncer.Announce(ctx, interfaces)
+			if err := commissionedAnnouncer.Announce(ctx, interfaces); err != nil {
+				return err
+			}
+			if refreshApplianceMetadata != nil {
+				if err := refreshApplianceMetadata(ctx); err != nil {
+					return err
+				}
+			}
+			return ssdpAnnouncer.Announce(ctx, interfaces)
 		}
 	}
 	reconcileRuntime := func(ctx context.Context) error {
@@ -697,6 +891,9 @@ func runServe(ctx context.Context, arguments []string) int {
 		})
 	}()
 	defer func() { stopMaintenance(); <-maintenanceDone }()
+	if ssdpAnnouncer != nil {
+		defer func() { _ = ssdpAnnouncer.Withdraw(context.Background()) }()
+	}
 	benchService, err := application.StartBench(*bundleDir, *backend, *profile == "simulation")
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -710,12 +907,96 @@ func runServe(ctx context.Context, arguments []string) int {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
 	}
+	if *profile == "appliance" {
+		observed, metadataErr := provider.Interfaces(ctx)
+		if metadataErr != nil {
+			fmt.Fprintln(os.Stderr, "read appliance discovery addresses:", metadataErr)
+			return 1
+		}
+		interfaces := []string{}
+		if managementAccess != nil {
+			interfaces = managementAccess.ConfiguredInterfaces()
+		} else if mdnsInterfaces != nil {
+			interfaces, metadataErr = mdnsInterfaces(ctx)
+			if metadataErr != nil {
+				fmt.Fprintln(os.Stderr, "read appliance discovery interfaces:", metadataErr)
+				return 1
+			}
+		}
+		state := string(application.Commissioning())
+		applianceMetadata, _, metadataErr = applianceDiscoveryMetadata(
+			helperIdentity, application.ApplianceRuntime().Identity, state,
+			buildinfo.Current().Version, discoveryPort, observed, interfaces,
+		)
+		if metadataErr != nil {
+			fmt.Fprintln(os.Stderr, "compose appliance discovery metadata:", metadataErr)
+			return 1
+		}
+		refreshApplianceMetadata = func(ctx context.Context) error {
+			observed, err := provider.Interfaces(ctx)
+			if err != nil {
+				return fmt.Errorf("refresh appliance discovery addresses: %w", err)
+			}
+			interfaces := []string{}
+			if managementAccess != nil {
+				interfaces = managementAccess.ConfiguredInterfaces()
+			} else if mdnsInterfaces != nil {
+				interfaces, err = mdnsInterfaces(ctx)
+				if err != nil {
+					return err
+				}
+			}
+			next, _, err := applianceDiscoveryMetadata(
+				helperIdentity, application.ApplianceRuntime().Identity, string(application.Commissioning()),
+				buildinfo.Current().Version, discoveryPort, observed, interfaces,
+			)
+			if err != nil {
+				return err
+			}
+			applianceMetadata.UpdateRuntime(next.State, next.ManagementAddresses, next.ManagementMACs)
+			return nil
+		}
+	}
+	var namingService *appliance.NamingService
+	if *profile == "appliance" {
+		friendlyInterfaces := func(ctx context.Context) ([]string, error) {
+			if managementAccess != nil {
+				return managementAccess.ConfiguredInterfaces(), nil
+			}
+			if mdnsInterfaces != nil {
+				return mdnsInterfaces(ctx)
+			}
+			return nil, errors.New("management discovery interfaces are unavailable")
+		}
+		publisher := runtimeFriendlyNamePublisher{
+			provisioning: provisioningAnnouncer, commissioned: commissionedAnnouncer,
+			interfaces: friendlyInterfaces,
+			selected: func() *network.MDNSAnnouncer {
+				if managementAccess != nil && managementAccess.Provisioning() {
+					return provisioningAnnouncer
+				}
+				return commissionedAnnouncer
+			},
+		}
+		namingService, err = appliance.NewNamingService(
+			helperIdentity.SerialName, application.ApplianceRuntime().Identity.FriendlyName,
+			application.ApplianceRepository(), applianceHelper, publisher,
+		)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "compose appliance naming:", err)
+			return 1
+		}
+	}
+	systemProbe := systeminfo.New(*dataDir)
 	handler, err := httpapi.NewHandler(httpapi.HandlerOptions{
 		Identity: application.IdentityService(), Profile: *profile, Build: buildinfo.Current(),
-		Catalog: catalog, Network: networkService, Operations: operations, Bench: benchService,
+		SystemInformation: systemProbe.Snapshot,
+		Catalog:           catalog, Network: networkService, Operations: operations, Bench: benchService,
 		MCP: mcpHandler, CookieSecurity: cookieSecurity,
 		Activity: activityService, Audit: application.AuditWriter(), Power: powerController,
 		ManagementAccess: managementAccess,
+		Appliance:        applianceMetadata, Identify: identifyAction,
+		IdentifyOperations: identifyOperations, Naming: namingService,
 	})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -728,16 +1009,43 @@ func runServe(ctx context.Context, arguments []string) int {
 			return 1
 		}
 	}
+	var localStatusDone <-chan error
+	var stopLocalStatus context.CancelFunc
+	if *localStatusBind != "" {
+		localHandler, localErr := httpapi.NewLocalStatusHandler(applianceMetadata)
+		if localErr != nil {
+			fmt.Fprintln(os.Stderr, "compose local appliance status:", localErr)
+			return 1
+		}
+		result := make(chan error, 1)
+		listening := make(chan struct{})
+		localCtx, cancelLocal := context.WithCancel(ctx)
+		stopLocalStatus = cancelLocal
+		go func() {
+			result <- httpapi.Serve(localCtx, httpapi.ServeOptions{
+				Address: *localStatusBind, Handler: localHandler, ShutdownTimeout: 5 * time.Second,
+				OnListening: func(net.Addr) { close(listening) },
+			})
+		}()
+		select {
+		case <-listening:
+			localStatusDone = result
+		case localErr := <-result:
+			fmt.Fprintln(os.Stderr, "serve local appliance status:", localErr)
+			return 1
+		}
+	}
 	var managementGate httpapi.ManagementConnectionGate
 	if managementAccess != nil {
 		managementGate = managementAccess
 	}
 	err = httpapi.Serve(ctx, httpapi.ServeOptions{
 		Certificate: *tlsCert, Key: *tlsKey,
-		Address:         listenerAddress,
-		Handler:         handler,
-		ManagementGate:  managementGate,
-		ShutdownTimeout: 5 * time.Second,
+		TLSCertificateProvider: runtimeTLSCertificateProvider,
+		Address:                listenerAddress,
+		Handler:                handler,
+		ManagementGate:         managementGate,
+		ShutdownTimeout:        5 * time.Second,
 		OnListening: func(address net.Addr) {
 			interfaces := []string{}
 			addresses := []string{}
@@ -764,6 +1072,13 @@ func runServe(ctx context.Context, arguments []string) int {
 			}{Status: "listening", Address: address.String(), Profile: *profile, Interfaces: interfaces, Addresses: addresses})
 		},
 	})
+	if localStatusDone != nil {
+		stopLocalStatus()
+		if localErr := <-localStatusDone; localErr != nil {
+			fmt.Fprintln(os.Stderr, "serve local appliance status:", localErr)
+			return 1
+		}
+	}
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
@@ -793,11 +1108,45 @@ func reconcileNetworkRuntime(
 	return nil
 }
 
+// reconcileApplianceManagementRuntime restores current discovery publication
+// before replaying pending button Identify work. A helper-only restart can
+// therefore settle write-ahead reannouncement markers from the real startup
+// publication instead of recording a false unavailable result.
+func reconcileApplianceManagementRuntime(
+	ctx context.Context,
+	accessPoint func(context.Context) error,
+	commissioningLinks func(context.Context) error,
+	management func(context.Context) error,
+	metadata func(context.Context) error,
+	mdns func(context.Context) error,
+	ssdp func(context.Context) error,
+	pendingIdentify func(context.Context) error,
+) error {
+	var accessPointErr error
+	if accessPoint != nil {
+		accessPointErr = accessPoint(ctx)
+	}
+	for _, step := range []func(context.Context) error{commissioningLinks, management, metadata, mdns, ssdp} {
+		if step != nil {
+			if err := step(ctx); err != nil {
+				return errors.Join(accessPointErr, err)
+			}
+		}
+	}
+	if pendingIdentify == nil {
+		return accessPointErr
+	}
+	return errors.Join(accessPointErr, pendingIdentify(ctx))
+}
+
 // rootUsage names every command group, so an operator at the console can find
 // them all from one place; each group prints its own usage when run alone.
 const rootUsage = `usage: nilo <command> [options]
 
   nilo version                                 build information as JSON
+  nilo discover [--timeout DURATION] [--json]  find local appliances
+  nilo discover --label NAME                   write one printable SVG label
+  nilo open NAME                               open one uniquely discovered appliance
   nilo serve --profile simulation --data-dir D --bind LOOPBACK
   nilo serve --profile appliance --data-dir D --bind PRIVATE_ADDR
   nilo serve --profile appliance --data-dir D --management-port PORT
@@ -805,6 +1154,7 @@ const rootUsage = `usage: nilo <command> [options]
              [--management-reconfigure]
              [--scenario healthy|unavailable] [--session-cookies development-localhost|https]
              [--gui-dir DIR --tls-cert PEM --tls-key PEM --nethelper-socket PATH]
+             [--local-status-bind LOOPBACK]
   nilo serve-foundation-check --data-dir D     open and reconcile the data directory once
   nilo development issue-token --data-dir D    issue a development bearer token
   nilo admin ...                               identities and API tokens: locally with --data-dir,
@@ -815,7 +1165,7 @@ const rootUsage = `usage: nilo <command> [options]
   nilo activity ...                            audit and event history: list and export
 
 Run a command group without arguments for its own usage. The remote groups
-(admin, network, activity, plugin, bench) take --server URL and --token-file PATH;
+(admin, network, activity, plugin, bench) take --server URL_OR_NAME and --token-file PATH;
 the token is read from that file and never from an argument.`
 
 func writeUsage() {

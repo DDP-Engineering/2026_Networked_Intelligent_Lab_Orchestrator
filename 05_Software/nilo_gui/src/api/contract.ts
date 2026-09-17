@@ -275,6 +275,15 @@ export interface BenchCoreBuild {
   integrationProtocol: string;
 }
 
+/** Non-sensitive operating-system and NILO-data-filesystem facts. */
+export interface BenchCoreSystem {
+  operatingSystem: string;
+  kernelVersion: string;
+  architecture: string;
+  storageFreeBytes: number;
+  storageTotalBytes: number;
+}
+
 /** Authenticated status as reported by Bench Core. */
 export interface BenchCoreStatus {
   apiVersion: string;
@@ -282,6 +291,7 @@ export interface BenchCoreStatus {
   profile: string;
   simulation: boolean;
   build: BenchCoreBuild;
+  system?: BenchCoreSystem;
 }
 
 /** One integration the simulation backend offers. */
@@ -328,6 +338,13 @@ export interface StatusResponseBody {
     name: string;
     version: string;
     integration_protocol: string;
+  };
+  system?: {
+    operating_system: string;
+    kernel_version: string;
+    architecture: string;
+    storage_free_bytes: number;
+    storage_total_bytes: number;
   };
 }
 
@@ -455,6 +472,60 @@ export function parseStatusBody(body: unknown): ParseResult<BenchCoreStatus> {
     return protocol;
   }
 
+  let system: BenchCoreSystem | undefined;
+  if (candidate.system !== undefined) {
+    const value = readObject(candidate.system, 'status response system');
+    if (!value.ok) return value;
+    const operatingSystem = readString(
+      value.value,
+      'operating_system',
+      'status response system',
+    );
+    if (!operatingSystem.ok) return operatingSystem;
+    const kernelVersion = readString(
+      value.value,
+      'kernel_version',
+      'status response system',
+    );
+    if (!kernelVersion.ok) return kernelVersion;
+    const architecture = readString(
+      value.value,
+      'architecture',
+      'status response system',
+    );
+    if (!architecture.ok) return architecture;
+    const storageFreeBytes = readNumber(
+      value.value,
+      'storage_free_bytes',
+      'status response system',
+    );
+    if (!storageFreeBytes.ok) return storageFreeBytes;
+    const storageTotalBytes = readNumber(
+      value.value,
+      'storage_total_bytes',
+      'status response system',
+    );
+    if (!storageTotalBytes.ok) return storageTotalBytes;
+    if (
+      !Number.isSafeInteger(storageFreeBytes.value) ||
+      storageFreeBytes.value < 0 ||
+      !Number.isSafeInteger(storageTotalBytes.value) ||
+      storageTotalBytes.value < storageFreeBytes.value
+    ) {
+      return {
+        ok: false,
+        violation: 'the status response system has invalid storage byte counts',
+      };
+    }
+    system = {
+      operatingSystem: operatingSystem.value,
+      kernelVersion: kernelVersion.value,
+      architecture: architecture.value,
+      storageFreeBytes: storageFreeBytes.value,
+      storageTotalBytes: storageTotalBytes.value,
+    };
+  }
+
   return {
     ok: true,
     value: {
@@ -467,6 +538,7 @@ export function parseStatusBody(body: unknown): ParseResult<BenchCoreStatus> {
         version: version.value,
         integrationProtocol: protocol.value,
       },
+      ...(system === undefined ? {} : { system }),
     },
   };
 }

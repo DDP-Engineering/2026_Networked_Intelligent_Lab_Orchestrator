@@ -84,6 +84,12 @@ describe('single-viewport layout', () => {
     expect(body).not.toMatch(/linear-gradient|radial-gradient|background-image/);
   });
 
+  it('places the About scroll rail at the workspace edge', () => {
+    expect(declarationsOf(shellCss, '.about-page .page-body')).toMatch(
+      /max-width:\s*none/,
+    );
+  });
+
   it('lays the shell out as one grid with a compact header row', () => {
     const shell = declarationsOf(shellCss, '.shell');
 

@@ -35,17 +35,14 @@ credential was modified. No hardware appliance was changed by this candidate.
   held to the ordinary password rule. The exposure is bounded to an appliance
   that has not been commissioned, on the network segment the user is on, and it
   ends at commissioning by construction rather than by procedure.
-- The image carries one certificate covering both identities a user is told to
-  visit at first boot, `<system-hostname>.local` and `nilo.local`. **Its private
-  key is present in every image and is therefore not secret**; anyone holding an
-  image can present it, bounded the same way as the credential above. **First
-  contact shows a certificate warning**, because no publicly trusted certificate
-  can exist for a reserved `.local` name, and that warning is documented as the
-  expected first step of setup rather than engineered away. A certificate missing a
-  name the appliance advertises does not stop it: the appliance serves, records
-  the gap and reports it in the interface, so a misprepared image is a visible
-  defect rather than an appliance nobody can reach. The certificate
-  stays for the appliance's working life; commissioning does not replace it.
+- The image carries no appliance TLS private key. On first boot the root helper
+  generates a distinct ECDSA key after deriving the permanent printed name and
+  never exports it; Bench Core receives the public certificate and a constrained
+  signing operation. Certificate generations cover the permanent, provisioning
+  and optional friendly local names before those names are published. **First
+  contact still shows a certificate warning**, because no publicly trusted
+  certificate can exist for a reserved `.local` name. The user checks the
+  printed permanent name before proceeding.
 
 - A clean installation records the lifecycle state `provisioning`; an
   installation carried forward from an earlier release records `commissioned`.
@@ -91,8 +88,9 @@ credential was modified. No hardware appliance was changed by this candidate.
   the application handler. TLS, authentication, authorization, CSRF, cookies and
   same-origin handling are unchanged. The unprivileged process gains no
   network-administration capability. No response, log or export carries a secret.
-- Production certificates are read and checked, never generated or replaced. A
-  missing advertised local name produces an actionable warning.
+- The helper generates and rotates the appliance certificate while retaining
+  its private key outside Bench Core. File-backed certificates remain an
+  explicit legacy/development option and are checked before use.
 
 ## Automated evidence
 
@@ -184,13 +182,11 @@ GPIO17/GPIO27 acquisition because no physical button/LED circuit was installed.
   foreign same-prefix profile remains byte-for-byte unchanged. There is no
   setup-port designation.
 - Commissioning changes discovery live: the shared `nilo.local` alias is
-  withdrawn and the unique `NILO <UUID>._nilo._tcp.local` service is published
-  on commissioned management interfaces. An unchanged desired service is
+  withdrawn while the unique `NILO <serial>._nilo._tcp.local` service remains
+  published on commissioned management interfaces. An unchanged desired service is
   reasserted if the helper or Avahi loses its process-owned entry group.
-- Permanent discovery always advertises the configured
-  `<system-hostname>.local` URL. That hostname must be unique and covered by the
-  TLS certificate. A collision-resolved Avahi suffix is refused rather than
-  advertised as an uncertified URL.
+- Permanent discovery always advertises the printed serial `.local` URL. The
+  helper certificate covers it; collision-resolved Avahi suffixes are refused.
 - The Pi-only 3-to-under-10-second action arms or extends a ten-minute window;
   only a subsequent safe link transition can activate one recovery interface.
   The temporary profile has IPv4LL only, no DHCP server, DNS, default route,

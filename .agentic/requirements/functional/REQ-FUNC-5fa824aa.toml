@@ -1,0 +1,38 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-5fa824aa"
+
+title = "Resolve discovered appliance names for remote commands"
+
+status = "active"
+
+requirement = """
+When a remote CLI command receives a non-URL `--server` value, the CLI shall resolve one matching discovered permanent or friendly appliance name to its advertised HTTPS URL before connecting, while preserving existing explicit-URL behavior and refusing a missing or ambiguous discovered name without selecting an arbitrary appliance.
+"""
+
+verification = "Automated command-group tests pass an explicit URL, unique serial, unique friendly name, absent name and ambiguous friendly name through the shared server resolver; the URL bypasses discovery unchanged, unique names select the expected UUID/HTTPS endpoint, and missing/ambiguous cases issue no remote request and return stable errors across every remote command group."
+
+affected_paths = [
+    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/nilo_assistant/internal/discovery/model.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/cmd/nilo/discover_test.go::*",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "Discovery is useful to automation only when the existing remote commands can consume its stable human name safely."
+
+created = 2026-09-15
+updated = 2026-09-15

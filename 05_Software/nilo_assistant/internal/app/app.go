@@ -171,6 +171,24 @@ func (application *App) ApplianceRuntime() appliance.Runtime {
 	return application.applianceRuntime
 }
 
+// ApplianceRepository returns the permanent appliance identity store. The
+// repository exposes no delete or identity replacement operation.
+func (application *App) ApplianceRepository() *sqlite.ApplianceRepository {
+	if application == nil || application.database == nil {
+		return nil
+	}
+	return sqlite.NewApplianceRepository(application.database)
+}
+
+// IdentifyOperationRepository returns the durable action/audit handoff used by
+// both button and interface Identify requests.
+func (application *App) IdentifyOperationRepository() *sqlite.IdentifyOperationRepository {
+	if application == nil || application.database == nil {
+		return nil
+	}
+	return sqlite.NewIdentifyOperationRepository(application.database)
+}
+
 // CommissioningRepository is the durable lifecycle record, for the one caller
 // that completes commissioning.
 func (application *App) CommissioningRepository() *sqlite.CommissioningRepository {

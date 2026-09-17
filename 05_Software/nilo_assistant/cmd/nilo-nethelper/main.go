@@ -12,9 +12,18 @@ import (
 )
 
 type options struct {
-	socket, state       string
-	uid, gid            int
-	raspberryPiRecovery bool
+	socket, state         string
+	uid, gid              int
+	raspberryPiRecovery   bool
+	imageDefaultHostnames stringListFlag
+}
+
+type stringListFlag []string
+
+func (values *stringListFlag) String() string { return fmt.Sprint([]string(*values)) }
+func (values *stringListFlag) Set(value string) error {
+	*values = append(*values, value)
+	return nil
 }
 
 func main() {
@@ -48,6 +57,7 @@ func main() {
 	flag.IntVar(&o.uid, "allow-uid", -1, "non-root Bench Core service UID")
 	flag.IntVar(&o.gid, "socket-gid", -1, "Bench Core service group")
 	flag.BoolVar(&o.raspberryPiRecovery, "raspberry-pi-recovery", false, "enable BCM17 recovery button and BCM27 status LED")
+	flag.Var(&o.imageDefaultHostnames, "image-default-hostname", "generic image hostname eligible for one-time personalization (repeatable)")
 	flag.Parse()
 	if flag.NArg() != 0 || o.uid <= 0 || o.gid < 0 {
 		fmt.Fprintln(os.Stderr, "explicit non-root --allow-uid and --socket-gid required")

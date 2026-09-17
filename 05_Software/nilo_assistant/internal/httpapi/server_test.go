@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"net"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 	"nilo.local/nilo/internal/buildinfo"
 	"nilo.local/nilo/internal/network"
 	"nilo.local/nilo/internal/simulation"
+	"nilo.local/nilo/internal/systeminfo"
 )
 
 func TestIntegrationInventoryReturnsExactDeterministicSimulationEnvelope(t *testing.T) {
@@ -30,6 +32,27 @@ func TestIntegrationInventoryReturnsExactDeterministicSimulationEnvelope(t *test
 		if response.Body.String() != want {
 			t.Fatalf("attempt %d body = %s, want %s", attempt, response.Body.String(), want)
 		}
+	}
+}
+
+func TestServeAcceptsHelperBackedTLSCertificate(t *testing.T) {
+	options := ServeOptions{
+		Address: "127.0.0.1:0", Handler: http.NotFoundHandler(),
+		ShutdownTimeout: time.Second, TLSCertificate: &tls.Certificate{},
+	}
+	if err := validateServeTLS(options); err != nil {
+		t.Fatalf("helper-backed TLS certificate rejected: %v", err)
+	}
+	options.Certificate = "certificate.pem"
+	if err := validateServeTLS(options); err == nil {
+		t.Fatal("mixed file-backed and helper-backed TLS was accepted")
+	}
+	options = ServeOptions{
+		Address: "127.0.0.1:0", Handler: http.NotFoundHandler(), ShutdownTimeout: time.Second,
+		TLSCertificateProvider: func(*tls.ClientHelloInfo) (*tls.Certificate, error) { return &tls.Certificate{}, nil },
+	}
+	if err := validateServeTLS(options); err != nil {
+		t.Fatalf("dynamic helper-backed TLS provider rejected: %v", err)
 	}
 }
 
@@ -119,6 +142,12 @@ func TestStatusReturnsVersionedSimulationBuildInformation(t *testing.T) {
 		Build: buildinfo.Info{
 			Name: "nilo", Version: "test-version", IntegrationProtocol: "nilo.integration/1",
 		},
+		SystemInformation: func() systeminfo.Info {
+			return systeminfo.Info{
+				OperatingSystem: "Test Linux 1", KernelVersion: "6.12.0-test",
+				Architecture: "arm64", StorageFreeBytes: 5 << 30, StorageTotalBytes: 16 << 30,
+			}
+		},
 	})
 	if err != nil {
 		t.Fatalf("NewHandler: %v", err)
@@ -136,11 +165,12 @@ func TestStatusReturnsVersionedSimulationBuildInformation(t *testing.T) {
 		t.Fatalf("Content-Type = %q, want application/json", response.Header().Get("Content-Type"))
 	}
 	var status struct {
-		APIVersion string         `json:"api_version"`
-		Status     string         `json:"status"`
-		Profile    string         `json:"profile"`
-		Simulation bool           `json:"simulation"`
-		Build      buildinfo.Info `json:"build"`
+		APIVersion string          `json:"api_version"`
+		Status     string          `json:"status"`
+		Profile    string          `json:"profile"`
+		Simulation bool            `json:"simulation"`
+		Build      buildinfo.Info  `json:"build"`
+		System     systeminfo.Info `json:"system"`
 	}
 	if err := json.Unmarshal(response.Body.Bytes(), &status); err != nil {
 		t.Fatalf("decode status response: %v", err)
@@ -150,6 +180,11 @@ func TestStatusReturnsVersionedSimulationBuildInformation(t *testing.T) {
 	}
 	if status.Build.Name != "nilo" || status.Build.Version != "test-version" || status.Build.IntegrationProtocol != "nilo.integration/1" {
 		t.Fatalf("unexpected build response: %#v", status.Build)
+	}
+	if status.System.OperatingSystem != "Test Linux 1" || status.System.KernelVersion != "6.12.0-test" ||
+		status.System.Architecture != "arm64" || status.System.StorageFreeBytes != 5<<30 ||
+		status.System.StorageTotalBytes != 16<<30 {
+		t.Fatalf("unexpected system response: %#v", status.System)
 	}
 }
 

@@ -35,10 +35,8 @@ affected_paths = [
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/commissioning_link_test.go::TestProvisioningArmsEverySafeUnconfiguredEthernetForLinkLocal",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_recovery_linux_test.go::TestCommissioningConnectionAutoStartsButNeverRoutesOrResolves",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_recovery_linux_test.go::TestCommissioningReconcileNeverDeletesAForeignSamePrefixProfile",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_recovery_linux_test.go::TestCommissioningReconcileCreatesAndRemovesAnInventoriedVolatileProfile",
+    "05_Software/nilo_assistant/internal/network/commissioning_link_test.go::*",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_recovery_linux_test.go::*",
 ]
 
 
