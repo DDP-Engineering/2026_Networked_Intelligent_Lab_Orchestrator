@@ -14,6 +14,7 @@ import (
 	"nilo.local/nilo/internal/buildinfo"
 	"nilo.local/nilo/internal/network"
 	"nilo.local/nilo/internal/simulation"
+	"nilo.local/nilo/internal/systeminfo"
 )
 
 func TestIntegrationInventoryReturnsExactDeterministicSimulationEnvelope(t *testing.T) {
@@ -141,6 +142,12 @@ func TestStatusReturnsVersionedSimulationBuildInformation(t *testing.T) {
 		Build: buildinfo.Info{
 			Name: "nilo", Version: "test-version", IntegrationProtocol: "nilo.integration/1",
 		},
+		SystemInformation: func() systeminfo.Info {
+			return systeminfo.Info{
+				OperatingSystem: "Test Linux 1", KernelVersion: "6.12.0-test",
+				Architecture: "arm64", StorageFreeBytes: 5 << 30, StorageTotalBytes: 16 << 30,
+			}
+		},
 	})
 	if err != nil {
 		t.Fatalf("NewHandler: %v", err)
@@ -158,11 +165,12 @@ func TestStatusReturnsVersionedSimulationBuildInformation(t *testing.T) {
 		t.Fatalf("Content-Type = %q, want application/json", response.Header().Get("Content-Type"))
 	}
 	var status struct {
-		APIVersion string         `json:"api_version"`
-		Status     string         `json:"status"`
-		Profile    string         `json:"profile"`
-		Simulation bool           `json:"simulation"`
-		Build      buildinfo.Info `json:"build"`
+		APIVersion string          `json:"api_version"`
+		Status     string          `json:"status"`
+		Profile    string          `json:"profile"`
+		Simulation bool            `json:"simulation"`
+		Build      buildinfo.Info  `json:"build"`
+		System     systeminfo.Info `json:"system"`
 	}
 	if err := json.Unmarshal(response.Body.Bytes(), &status); err != nil {
 		t.Fatalf("decode status response: %v", err)
@@ -172,6 +180,11 @@ func TestStatusReturnsVersionedSimulationBuildInformation(t *testing.T) {
 	}
 	if status.Build.Name != "nilo" || status.Build.Version != "test-version" || status.Build.IntegrationProtocol != "nilo.integration/1" {
 		t.Fatalf("unexpected build response: %#v", status.Build)
+	}
+	if status.System.OperatingSystem != "Test Linux 1" || status.System.KernelVersion != "6.12.0-test" ||
+		status.System.Architecture != "arm64" || status.System.StorageFreeBytes != 5<<30 ||
+		status.System.StorageTotalBytes != 16<<30 {
+		t.Fatalf("unexpected system response: %#v", status.System)
 	}
 }
 

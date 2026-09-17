@@ -362,11 +362,11 @@ The administrator-only management selector on **Network > Overview** lists
 detected names, type, link state and current addresses below the compact status.
 Enable `wlan0` and `nilo0`; leave `eth0` disabled. The panel identifies the
 current browser path, requires explicit confirmation before removing it, and
-offers keep/restore actions while a configuration is pending. It presents
-`https://ddp-remote.local:8443` for local Wi-Fi and
-`https://10.205.148.11:8443` for WireGuard. `.local` discovery works only on the
-local network. The numeric Wi-Fi DHCP address is deliberately shown only as
-current telemetry, not as a durable URL.
+offers keep/restore actions while a configuration is pending. The permanent
+`https://nilo-<short-id>.local:8443/` URL is the appliance identity and the
+address to print or retain. `.local` discovery works only on the local network;
+addresses observed on Wi-Fi or WireGuard are current transport telemetry, not
+additional appliance names or durable URLs.
 
 The Overview header owns View activity, safe repurposing help and interface
 refresh. Management read progress, failure, state and localized recovery outcome
@@ -590,13 +590,15 @@ removal of old reports. Reconcile existing test/journal evidence before scheduli
   and recovery of the active management path, persistence across a full reboot,
   and no NILO management exposure on a commissioned device-facing network.
 - Dual-path Raspberry Pi acceptance: Wi-Fi DHCP renewal and reconnect,
-  `nilo0` returning as `10.205.148.11`, access through both stable URLs,
-  refusal on the PLC-facing `eth0`, unchanged PLC communication, and a full
-  appliance reboot.
+  `nilo0` returning with its configured address, access through the permanent
+  NILO URL from the local network and through the current routed address from
+  the remote peer, refusal on the PLC-facing `eth0`, unchanged PLC
+  communication, and a full appliance reboot.
 - Stable-role Raspberry Pi early signal: retain DDP Wi-Fi and `nilo0` as
   management paths, use the USB Ethernet adapter only on an isolated device
   segment, exercise accepted/refused assignments, replug and restart, and
-  confirm `https://10.205.148.11:8443/` remains reachable.
+  confirm the current routed management address remains reachable without
+  treating that address as an appliance identity.
 - PLC register-map validation and vendor download using an authorized tool.
 - Real-backend Activity browser coverage, connection selection when an adapter
   has no remembered connection, and usability on the physical seven-inch panel.

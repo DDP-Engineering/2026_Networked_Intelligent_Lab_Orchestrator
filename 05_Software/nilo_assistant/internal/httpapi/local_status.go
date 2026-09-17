@@ -58,7 +58,7 @@ func NewLocalStatusHandler(metadata *ApplianceMetadata) (http.Handler, error) {
 	mux.HandleFunc("GET /label.svg", func(response http.ResponseWriter, _ *http.Request) {
 		snapshot := metadata.snapshot()
 		label, err := appliance.RenderLabelSVG(appliance.Label{
-			SerialName: snapshot.SerialName, HardwareAddresses: snapshot.ManagementMACs,
+			SerialName: snapshot.SerialName, ManagementURL: snapshot.ManagementURL, HardwareAddresses: snapshot.ManagementMACs,
 		})
 		if err != nil {
 			writeError(response, http.StatusServiceUnavailable, "appliance_label_unavailable", "")

@@ -45,6 +45,7 @@ func TestCommissioningAccessPointSelectsOneUnusedUnprotectedRadio(t *testing.T) 
 }
 
 func TestCommissioningAccessPointRetainsOwnedRadioAcrossMaintenanceAndRestart(t *testing.T) {
+	const ownedConnectionUUID = "0199a2d0-1234-7abc-8def-0123456789ab"
 	provider := &commissioningAPProvider{interfaces: []Interface{{
 		Name: "wlan1", AdapterID: "02:00:00:00:00:03", Kind: KindWiFi, Physical: true,
 	}}}
@@ -60,11 +61,12 @@ func TestCommissioningAccessPointRetainsOwnedRadioAcrossMaintenanceAndRestart(t 
 	}
 	provider.interfaces[0].State = StateConnected
 	provider.interfaces[0].SSID = "nilo-p2rjmzdkf1"
-	provider.interfaces[0].SavedConnections = []string{"helper-owned-uuid"}
+	provider.interfaces[0].SavedConnections = []string{ownedConnectionUUID}
 	if err := service.Reconcile(context.Background(), true); err != nil {
 		t.Fatal(err)
 	}
-	if len(driver.plans) != 2 || !driver.plans[1].Enabled || driver.plans[1].AdapterID != "02:00:00:00:00:03" {
+	if len(driver.plans) != 2 || !driver.plans[1].RetainOwned ||
+		len(driver.plans[1].EligibleAdapterIDs) != 1 || driver.plans[1].EligibleAdapterIDs[0] != "02:00:00:00:00:03" {
 		t.Fatalf("maintenance plans = %+v", driver.plans)
 	}
 
@@ -78,8 +80,66 @@ func TestCommissioningAccessPointRetainsOwnedRadioAcrossMaintenanceAndRestart(t 
 	if err := restarted.Reconcile(context.Background(), true); err != nil {
 		t.Fatal(err)
 	}
-	if len(restartedDriver.plans) != 1 || !restartedDriver.plans[0].RetainOwned {
+	if len(restartedDriver.plans) != 1 || !restartedDriver.plans[0].RetainOwned ||
+		len(restartedDriver.plans[0].EligibleAdapterIDs) != 1 ||
+		restartedDriver.plans[0].EligibleAdapterIDs[0] != "02:00:00:00:00:03" {
 		t.Fatalf("restart plan = %+v", restartedDriver.plans)
+	}
+}
+
+func TestCommissioningAccessPointStopsWhenOwnedRadioBecomesIneligible(t *testing.T) {
+	const ownedConnectionUUID = "0199a2d0-1234-7abc-8def-0123456789ab"
+	tests := []struct {
+		name   string
+		mutate func(*commissioningAPProvider, *[]AdapterRoleClaim)
+	}{
+		{
+			name: "foreign saved profile",
+			mutate: func(provider *commissioningAPProvider, _ *[]AdapterRoleClaim) {
+				provider.interfaces[0].SavedConnections = []string{
+					ownedConnectionUUID, "0199a2d0-1234-7abc-8def-0123456789ac",
+				}
+			},
+		},
+		{
+			name: "protected role",
+			mutate: func(_ *commissioningAPProvider, claims *[]AdapterRoleClaim) {
+				*claims = []AdapterRoleClaim{{
+					AdapterID: "02:00:00:00:00:03", Interface: "wlan1", Role: AdapterRoleDevice,
+				}}
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			provider := &commissioningAPProvider{interfaces: []Interface{{
+				Name: "wlan1", AdapterID: "02:00:00:00:00:03", Kind: KindWiFi, Physical: true,
+			}}}
+			driver := &commissioningAPDriver{}
+			claims := []AdapterRoleClaim{}
+			roles := NewAdapterRoleCoordinator()
+			roles.RegisterClaimSource(func() []AdapterRoleClaim { return claims })
+			service, err := NewCommissioningAccessPointService(CommissioningAccessPointOptions{
+				Provider: provider, Driver: driver, Roles: roles, SerialName: "nilo-p2rjmzdkf1", Port: 8443,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := service.Reconcile(context.Background(), true); err != nil {
+				t.Fatal(err)
+			}
+			provider.interfaces[0].State = StateConnected
+			provider.interfaces[0].SSID = "nilo-p2rjmzdkf1"
+			provider.interfaces[0].SavedConnections = []string{ownedConnectionUUID}
+			test.mutate(provider, &claims)
+			if err := service.Reconcile(context.Background(), true); err != nil {
+				t.Fatal(err)
+			}
+			last := driver.plans[len(driver.plans)-1]
+			if last.Enabled || last.RetainOwned {
+				t.Fatalf("ineligible owned AP was retained: plan=%+v", last)
+			}
+		})
 	}
 }
 

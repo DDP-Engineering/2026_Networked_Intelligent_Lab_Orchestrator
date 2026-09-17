@@ -79,16 +79,27 @@ type Engine struct {
 	ssdp        SSDPResponder
 	// forwarding is the durable device-network inventory, present when the
 	// store keeps one; inventory caches what it holds.
-	forwarding          ForwardingStore
-	inventory           *ForwardingInventory
-	power               power.Controller
-	hardware            RecoveryHardware
-	directRecoveryStore DirectRecoveryStore
-	directRecovery      *DirectRecoveryRecord
-	steadyNow           func() time.Time
-	recoverySteadyUntil time.Time
-	recoverySteadySeen  time.Time
-	recoveryWallSeen    time.Time
+	forwarding           ForwardingStore
+	inventory            *ForwardingInventory
+	power                power.Controller
+	hardware             RecoveryHardware
+	directRecoveryStore  DirectRecoveryStore
+	directRecovery       *DirectRecoveryRecord
+	steadyNow            func() time.Time
+	recoverySteadyUntil  time.Time
+	recoverySteadySeen   time.Time
+	recoveryWallSeen     time.Time
+	identifyStore        IdentifyActionStore
+	identifyActions      IdentifyActionLedger
+	identifyMDNSAttempts map[string]bool
+	identifySSDPAttempts map[string]bool
+	recoveryIndicator    HardwareIndicatorState
+	identifyUntil        time.Time
+	identifyTimer        *time.Timer
+	mdnsAdvertisement    network.MDNSAdvertisement
+	mdnsPublished        bool
+	ssdpPresence         network.SSDPPresence
+	ssdpPublished        bool
 }
 
 func (e *Engine) ConfigureSSDP(responder SSDPResponder) error {
@@ -103,22 +114,32 @@ func (e *Engine) ConfigureSSDP(responder SSDPResponder) error {
 
 func (e *Engine) PublishSSDP(ctx context.Context, presence network.SSDPPresence) error {
 	e.mu.Lock()
+	defer e.mu.Unlock()
 	responder := e.ssdp
-	e.mu.Unlock()
 	if responder == nil {
 		return errors.New("SSDP responder is unavailable")
 	}
-	return responder.Publish(ctx, presence)
+	if err := responder.Publish(ctx, presence); err != nil {
+		return err
+	}
+	e.ssdpPresence = presence
+	e.ssdpPublished = true
+	return nil
 }
 
 func (e *Engine) WithdrawSSDP(ctx context.Context) error {
 	e.mu.Lock()
+	defer e.mu.Unlock()
 	responder := e.ssdp
-	e.mu.Unlock()
 	if responder == nil {
 		return errors.New("SSDP responder is unavailable")
 	}
-	return responder.Withdraw(ctx)
+	if err := responder.Withdraw(ctx); err != nil {
+		return err
+	}
+	e.ssdpPresence = network.SSDPPresence{}
+	e.ssdpPublished = false
+	return nil
 }
 
 func (e *Engine) SSDPCurrent() bool {
@@ -133,8 +154,17 @@ func (e *Engine) ReconcileCommissioningAccessPoint(ctx context.Context, plan net
 	if !ok {
 		return ErrCommissioningLinkUnsupported
 	}
+	if !validCommissioningAPRetention(plan) {
+		return errors.New("invalid commissioning access point retention plan")
+	}
 	if !plan.Enabled {
-		if plan.SerialName != "" || plan.AdapterID != "" || plan.Interface != "" || plan.Address != "" || plan.Port != 0 {
+		if plan.RetainOwned {
+			if plan.AdapterID != "" || plan.Interface != "" {
+				return errors.New("retained commissioning access point cannot select a fallback")
+			}
+			return driver.ReconcileCommissioningAccessPoint(ctx, plan)
+		}
+		if plan.SerialName != "" || plan.AdapterID != "" || plan.Interface != "" || plan.Address != "" || plan.Port != 0 || len(plan.EligibleAdapterIDs) != 0 {
 			return errors.New("disabled commissioning access point must be empty")
 		}
 		return driver.ReconcileCommissioningAccessPoint(ctx, plan)
@@ -145,7 +175,29 @@ func (e *Engine) ReconcileCommissioningAccessPoint(ctx context.Context, plan net
 	if address, err := net.ParseMAC(plan.AdapterID); err != nil || len(address) != 6 {
 		return errors.New("invalid commissioning access point adapter")
 	}
+	if plan.RetainOwned && !eligibleCommissioningAPAdapter(plan.EligibleAdapterIDs, plan.AdapterID) {
+		return errors.New("commissioning access point fallback is not eligible")
+	}
 	return driver.ReconcileCommissioningAccessPoint(ctx, plan)
+}
+
+func validCommissioningAPRetention(plan network.CommissioningAccessPoint) bool {
+	if !plan.RetainOwned {
+		return len(plan.EligibleAdapterIDs) == 0
+	}
+	if !validPermanentSerialName(plan.SerialName) || plan.Address != "192.168.247.1/24" || plan.Port == 0 ||
+		len(plan.EligibleAdapterIDs) == 0 || len(plan.EligibleAdapterIDs) > 128 {
+		return false
+	}
+	seen := make(map[string]bool, len(plan.EligibleAdapterIDs))
+	for _, candidate := range plan.EligibleAdapterIDs {
+		address, err := net.ParseMAC(candidate)
+		if err != nil || len(address) != 6 || seen[address.String()] {
+			return false
+		}
+		seen[address.String()] = true
+	}
+	return true
 }
 
 // ConfigureTLSIdentity installs the helper-owned TLS key and certificate
@@ -271,6 +323,7 @@ func newEngineWithClocks(d Driver, s Store, now, steadyNow func() time.Time) (*E
 	}
 	forwarding, _ := s.(ForwardingStore)
 	directRecoveryStore, _ := s.(DirectRecoveryStore)
+	identifyStore, _ := s.(IdentifyActionStore)
 	if r != nil && (r.Version != 1 || !validID.MatchString(r.ID) || !knownPhase(r.Phase)) {
 		return nil, errors.New("invalid recovery record")
 	}
@@ -284,9 +337,25 @@ func newEngineWithClocks(d Driver, s Store, now, steadyNow func() time.Time) (*E
 			return nil, errors.New("invalid direct recovery record")
 		}
 	}
+	var identifyActions IdentifyActionLedger
+	if identifyStore != nil {
+		identifyActions, err = identifyStore.LoadIdentifyActions()
+		if err != nil {
+			return nil, fmt.Errorf("read identify actions: %w", err)
+		}
+		if err := validateIdentifyActionLedger(identifyActions); err != nil {
+			return nil, err
+		}
+		if identifyActions.Version == 0 {
+			identifyActions.Version = 1
+		}
+	}
 	e := &Engine{
 		driver: d, store: s, now: now, record: r, disabled: map[string]string{}, forwarding: forwarding,
 		directRecoveryStore: directRecoveryStore, directRecovery: directRecovery, steadyNow: steadyNow,
+		identifyStore: identifyStore, identifyActions: identifyActions,
+		identifyMDNSAttempts: map[string]bool{}, identifySSDPAttempts: map[string]bool{},
+		recoveryIndicator: HardwareIndicatorIdle,
 	}
 	if directRecovery != nil && directRecovery.Phase == "active" {
 		e.trackDirectRecoveryDeadline(now().UTC(), directRecovery.Deadline)

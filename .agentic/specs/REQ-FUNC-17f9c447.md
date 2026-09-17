@@ -9,8 +9,9 @@ error. Table output is suppressed, and `--label` is incompatible with `--json`.
 
 The label is a 62 mm by 29 mm black-on-white vector document containing the
 permanent serial name, normalized management-interface MAC addresses and a QR
-code for `https://<serial>.local/`. Friendly name and current IP addresses may
-change and therefore do not appear in the permanent artifact.
+code for the exact advertised permanent-name HTTPS management URL, including a
+non-default management port. Friendly name and current IP addresses may change
+and therefore do not appear in the permanent artifact.
 
 Zero matches, ambiguous matches, incomplete records and invalid public fields
 return non-zero before any standard-output byte is written. The command does

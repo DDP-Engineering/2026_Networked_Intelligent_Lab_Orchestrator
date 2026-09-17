@@ -86,7 +86,7 @@ func (services *linuxCommissioningServices) Check(plan network.CommissioningAcce
 func (services *linuxCommissioningServices) Start(plan network.CommissioningAccessPoint) error {
 	services.mu.Lock()
 	defer services.mu.Unlock()
-	if services.process != nil && services.plan == plan {
+	if services.process != nil && sameCommissioningAPServicePlan(services.plan, plan) {
 		return nil
 	}
 	services.stopLocked()
@@ -132,6 +132,12 @@ func (services *linuxCommissioningServices) Start(plan network.CommissioningAcce
 	}()
 	go func() { _ = server.Serve(listener) }()
 	return nil
+}
+
+func sameCommissioningAPServicePlan(first, second network.CommissioningAccessPoint) bool {
+	return first.Enabled == second.Enabled && first.SerialName == second.SerialName &&
+		strings.EqualFold(first.AdapterID, second.AdapterID) && first.Interface == second.Interface &&
+		first.Address == second.Address && first.Port == second.Port
 }
 
 func (services *linuxCommissioningServices) Stop(ctx context.Context) error {

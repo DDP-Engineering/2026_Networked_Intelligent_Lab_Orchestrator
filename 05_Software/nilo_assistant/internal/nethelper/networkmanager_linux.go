@@ -30,6 +30,7 @@ const deviceAPI = nm + ".Device"
 type NetworkManager struct {
 	bus                   *dbus.Conn
 	mdnsGroups            map[string]dbus.ObjectPath
+	mdnsReannouncements   map[string]bool
 	commissioningStore    CommissioningProfileStore
 	applianceSerial       string
 	commissioningServices commissioningServiceDriver
@@ -56,7 +57,9 @@ func NewNetworkManager() (*NetworkManager, error) {
 	if err != nil {
 		return nil, fmt.Errorf("system D-Bus unavailable: %w", err)
 	}
-	n := &NetworkManager{bus: bus, mdnsGroups: map[string]dbus.ObjectPath{}}
+	n := &NetworkManager{
+		bus: bus, mdnsGroups: map[string]dbus.ObjectPath{}, mdnsReannouncements: map[string]bool{},
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if _, err = n.properties(ctx, nmPath, nm); err != nil {

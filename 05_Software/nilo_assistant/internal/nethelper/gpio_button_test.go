@@ -2,6 +2,7 @@ package nethelper
 
 import (
 	"context"
+	"errors"
 	"math"
 	"reflect"
 	"testing"
@@ -10,13 +11,20 @@ import (
 	"nilo.local/nilo/internal/network"
 )
 
-type memoryHardwareEventStore struct{ record HardwareRecoveryEventRecord }
+type memoryHardwareEventStore struct {
+	record    HardwareRecoveryEventRecord
+	failSaves int
+}
 
 func (store *memoryHardwareEventStore) LoadHardwareRecoveryEvent() (HardwareRecoveryEventRecord, error) {
 	return store.record, nil
 }
 
 func (store *memoryHardwareEventStore) SaveHardwareRecoveryEvent(record HardwareRecoveryEventRecord) error {
+	if store.failSaves > 0 {
+		store.failSaves--
+		return errors.New("injected hardware event save failure")
+	}
 	store.record = record
 	return nil
 }
@@ -203,6 +211,66 @@ func TestHardwareEventQueueRetainsUnacknowledgedReleaseAndMonotonicGenerationAcr
 	second, present, err := again.Read(context.Background())
 	if err != nil || !present || second.Generation <= first.Generation {
 		t.Fatalf("second=%+v present=%t err=%v, want generation after %+v", second, present, err, first)
+	}
+}
+
+func TestHardwareEventQueueRetainsIdentifyTokenUntilAcknowledged(t *testing.T) {
+	store := &memoryHardwareEventStore{}
+	queue, err := newRecoveryEventQueue(store)
+	if err != nil {
+		t.Fatal(err)
+	}
+	deadline := time.Now().UTC().Add(10 * time.Second)
+	actual, created, err := queue.SetIdentifyOperation("identify-operation-1", deadline)
+	if err != nil || !created || !actual.Equal(deadline) {
+		t.Fatalf("first token actual=%s created=%t err=%v", actual, created, err)
+	}
+	restarted, err := newRecoveryEventQueue(store)
+	if err != nil {
+		t.Fatal(err)
+	}
+	actual, created, err = restarted.SetIdentifyOperation("identify-operation-1", deadline)
+	if err != nil || created || !actual.Equal(deadline) {
+		t.Fatalf("replayed token actual=%s created=%t err=%v", actual, created, err)
+	}
+	if !restarted.ActiveIdentifyDeadline(time.Now()).Equal(deadline) {
+		t.Fatalf("active deadline = %s, want %s", restarted.ActiveIdentifyDeadline(time.Now()), deadline)
+	}
+	acknowledgedAt := deadline.Add(-time.Second)
+	if err := restarted.AcknowledgeIdentifyOperation("identify-operation-1", acknowledgedAt); err != nil {
+		t.Fatal(err)
+	}
+	if len(store.record.IdentifyOperations) != 1 || !store.record.IdentifyOperations[0].Acknowledged {
+		t.Fatalf("active acknowledged token was not retained through expiry: %+v", store.record.IdentifyOperations)
+	}
+	restartedAgain, err := newRecoveryEventQueue(store)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !restartedAgain.ActiveIdentifyDeadline(acknowledgedAt).Equal(deadline) {
+		t.Fatalf("acknowledged active deadline was lost across restart: %+v", store.record.IdentifyOperations)
+	}
+	if err := restartedAgain.ExpireIdentifyOperations(deadline.Add(time.Millisecond)); err != nil {
+		t.Fatal(err)
+	}
+	if len(store.record.IdentifyOperations) != 0 {
+		t.Fatalf("acknowledged expired token retained: %+v", store.record.IdentifyOperations)
+	}
+}
+
+func TestHardwareEventQueueExpiredRetryPreservesOriginalDeadline(t *testing.T) {
+	store := &memoryHardwareEventStore{}
+	queue, err := newRecoveryEventQueue(store)
+	if err != nil {
+		t.Fatal(err)
+	}
+	deadline := time.Date(2026, 9, 17, 8, 0, 10, 0, time.UTC)
+	if _, _, err := queue.SetIdentifyOperation("identify-operation-expired", deadline); err != nil {
+		t.Fatal(err)
+	}
+	actual, created, err := queue.SetIdentifyOperation("identify-operation-expired", deadline.Add(10*time.Second))
+	if err != nil || created || !actual.Equal(deadline) {
+		t.Fatalf("retry actual=%s created=%t err=%v, want original deadline %s", actual, created, err, deadline)
 	}
 }
 

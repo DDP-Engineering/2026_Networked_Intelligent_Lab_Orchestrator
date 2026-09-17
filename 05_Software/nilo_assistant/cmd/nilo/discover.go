@@ -48,7 +48,9 @@ func runDiscoverCommand(ctx context.Context, arguments []string, streams command
 			fmt.Fprintln(streams.stderr, discoveryErrorCode(err))
 			return 1
 		}
-		artifact, err := appliance.RenderLabelSVG(appliance.Label{SerialName: selected.Serial, HardwareAddresses: selected.HardwareAddresses})
+		artifact, err := appliance.RenderLabelSVG(appliance.Label{
+			SerialName: selected.Serial, ManagementURL: selected.URL, HardwareAddresses: selected.HardwareAddresses,
+		})
 		if err != nil {
 			fmt.Fprintln(streams.stderr, "label_unavailable")
 			return 1

@@ -21,6 +21,7 @@ import (
 	"nilo.local/nilo/internal/activity"
 	"nilo.local/nilo/internal/app"
 	"nilo.local/nilo/internal/appliance"
+	"nilo.local/nilo/internal/audit"
 	"nilo.local/nilo/internal/buildinfo"
 	"nilo.local/nilo/internal/discovery"
 	"nilo.local/nilo/internal/httpapi"
@@ -29,6 +30,7 @@ import (
 	"nilo.local/nilo/internal/network"
 	"nilo.local/nilo/internal/power"
 	"nilo.local/nilo/internal/simulation"
+	"nilo.local/nilo/internal/systeminfo"
 )
 
 func main() {
@@ -671,12 +673,9 @@ func runServe(ctx context.Context, arguments []string) int {
 		}
 	}
 	var identifyService *network.IdentifyService
+	var identifyAction network.IdentifyActionExecutor
 	var identifyIndicator *runtimeIdentifyIndicator
 	identifyOperations := application.IdentifyOperationRepository()
-	if err := identifyOperations.FlushPending(ctx); err != nil {
-		fmt.Fprintln(os.Stderr, "replay pending Identify audit:", err)
-		return 1
-	}
 	if *profile == "appliance" {
 		var indicator network.IdentifyIndicator
 		if hardwareRecoveryEnabled {
@@ -688,6 +687,54 @@ func runServe(ctx context.Context, arguments []string) int {
 			fmt.Fprintln(os.Stderr, err)
 			return 1
 		}
+		identifyAction = identifyService
+		if applianceHelper != nil {
+			identifyAction = applianceHelper
+		}
+		pendingIdentify, pendingErr := identifyOperations.Pending(ctx)
+		if pendingErr != nil {
+			fmt.Fprintln(os.Stderr, "list pending Identify actions:", pendingErr)
+			return 1
+		}
+		for _, pending := range pendingIdentify {
+			if pending.State == "reserved" {
+				result, executeErr := identifyAction.ExecuteIdentifyAction(ctx, network.IdentifyActionRequest{
+					OperationID: pending.ID, Source: network.IdentifySource(pending.Source), ActiveUntil: pending.ActiveUntil,
+				})
+				if executeErr != nil {
+					fmt.Fprintln(os.Stderr, "resume pending Identify action:", executeErr)
+					return 1
+				}
+				outcome := audit.OutcomeApplied
+				status := string(result.Status)
+				if result.Status != network.IdentifyAccepted && result.Status != network.IdentifyUnsupported {
+					outcome = audit.OutcomeFailed
+					status = "failed"
+				}
+				if err := identifyOperations.RecordOutcome(ctx, pending.ID, result.Supported,
+					result.Reannouncement, status, outcome, time.Now().UTC()); err != nil {
+					fmt.Fprintln(os.Stderr, "record resumed Identify result:", err)
+					return 1
+				}
+			}
+			if err := identifyAction.AcknowledgeIdentifyAction(ctx, pending.ID); err != nil {
+				fmt.Fprintln(os.Stderr, "acknowledge resumed Identify result:", err)
+				return 1
+			}
+			if pending.State != "acted" {
+				if err := identifyOperations.MarkActed(ctx, pending.ID, time.Now().UTC()); err != nil {
+					fmt.Fprintln(os.Stderr, "finalize resumed Identify audit:", err)
+					return 1
+				}
+			}
+			if err := identifyOperations.Flush(ctx, pending.ID); err != nil {
+				fmt.Fprintln(os.Stderr, "flush resumed Identify audit:", err)
+				return 1
+			}
+		}
+	} else if err := identifyOperations.FlushPending(ctx); err != nil {
+		fmt.Fprintln(os.Stderr, "replay pending Identify audit:", err)
+		return 1
 	}
 	var recoveryRuntime *hardwareRecoveryRuntime
 	if hardwareRecoveryEnabled && managementAccess != nil && commissionedAnnouncer != nil {
@@ -709,7 +756,7 @@ func runServe(ctx context.Context, arguments []string) int {
 			helper: helper, service: recoveryService, driver: driver,
 			commission: application.CommissioningRepository(), management: managementAccess, audit: application.AuditWriter(),
 			identifyOps: identifyOperations,
-			applianceID: application.ApplianceRuntime().Identity.ID, identify: identifyService,
+			applianceID: application.ApplianceRuntime().Identity.ID, identify: identifyService, identifyAction: identifyAction,
 			indicator: identifyIndicator,
 			reannounce: func(ctx context.Context) error {
 				if mdnsAnnouncer == nil {
@@ -766,35 +813,36 @@ func runServe(ctx context.Context, arguments []string) int {
 		// allowlist rather than beside it. The announcer republishes only on a
 		// change.
 		reconcileManagementAccess = func(ctx context.Context) error {
-			var accessPointErr error
+			var accessPointStep func(context.Context) error
 			if commissioningAP != nil {
-				accessPointErr = commissioningAP.Reconcile(ctx, managementAccess.Provisioning())
+				accessPointStep = func(ctx context.Context) error {
+					return commissioningAP.Reconcile(ctx, managementAccess.Provisioning())
+				}
 			}
+			var commissioningLinkStep func(context.Context) error
 			if commissioningLinks != nil {
-				if err := commissioningLinks.Reconcile(ctx, managementAccess.Provisioning()); err != nil {
-					return err
+				commissioningLinkStep = func(ctx context.Context) error {
+					return commissioningLinks.Reconcile(ctx, managementAccess.Provisioning())
 				}
 			}
-			if err := managementAccess.Reconcile(ctx); err != nil {
-				return err
+			var discoveryStep func(context.Context) error
+			if mdnsInterfaces != nil {
+				discoveryStep = func(ctx context.Context) error {
+					return reconcileApplianceDiscovery(ctx, managementAccess, &mdnsAnnouncer, provisioningAnnouncer, commissionedAnnouncer)
+				}
 			}
+			var recoveryStep func(context.Context) error
 			if recoveryRuntime != nil {
-				if err := recoveryRuntime.Reconcile(ctx); err != nil {
-					return err
-				}
+				recoveryStep = recoveryRuntime.Reconcile
 			}
-			if refreshApplianceMetadata != nil {
-				if err := refreshApplianceMetadata(ctx); err != nil {
-					return err
-				}
-			}
-			if mdnsInterfaces == nil {
-				return accessPointErr
-			}
-			if err := reconcileApplianceDiscovery(ctx, managementAccess, &mdnsAnnouncer, provisioningAnnouncer, commissionedAnnouncer); err != nil {
-				return err
-			}
-			return errors.Join(accessPointErr, ssdpAnnouncer.Announce(ctx, managementAccess.ConfiguredInterfaces()))
+			return reconcileApplianceManagementRuntime(
+				ctx, accessPointStep, commissioningLinkStep, managementAccess.Reconcile,
+				refreshApplianceMetadata, discoveryStep,
+				func(ctx context.Context) error {
+					return ssdpAnnouncer.Announce(ctx, managementAccess.ConfiguredInterfaces())
+				},
+				recoveryStep,
+			)
 		}
 	} else if commissionedAnnouncer != nil && mdnsInterfaces != nil {
 		reconcileManagementAccess = func(ctx context.Context) error {
@@ -939,13 +987,15 @@ func runServe(ctx context.Context, arguments []string) int {
 			return 1
 		}
 	}
+	systemProbe := systeminfo.New(*dataDir)
 	handler, err := httpapi.NewHandler(httpapi.HandlerOptions{
 		Identity: application.IdentityService(), Profile: *profile, Build: buildinfo.Current(),
-		Catalog: catalog, Network: networkService, Operations: operations, Bench: benchService,
+		SystemInformation: systemProbe.Snapshot,
+		Catalog:           catalog, Network: networkService, Operations: operations, Bench: benchService,
 		MCP: mcpHandler, CookieSecurity: cookieSecurity,
 		Activity: activityService, Audit: application.AuditWriter(), Power: powerController,
 		ManagementAccess: managementAccess,
-		Appliance:        applianceMetadata, Identify: identifyService,
+		Appliance:        applianceMetadata, Identify: identifyAction,
 		IdentifyOperations: identifyOperations, Naming: namingService,
 	})
 	if err != nil {
@@ -1056,6 +1106,37 @@ func reconcileNetworkRuntime(
 		}
 	}
 	return nil
+}
+
+// reconcileApplianceManagementRuntime restores current discovery publication
+// before replaying pending button Identify work. A helper-only restart can
+// therefore settle write-ahead reannouncement markers from the real startup
+// publication instead of recording a false unavailable result.
+func reconcileApplianceManagementRuntime(
+	ctx context.Context,
+	accessPoint func(context.Context) error,
+	commissioningLinks func(context.Context) error,
+	management func(context.Context) error,
+	metadata func(context.Context) error,
+	mdns func(context.Context) error,
+	ssdp func(context.Context) error,
+	pendingIdentify func(context.Context) error,
+) error {
+	var accessPointErr error
+	if accessPoint != nil {
+		accessPointErr = accessPoint(ctx)
+	}
+	for _, step := range []func(context.Context) error{commissioningLinks, management, metadata, mdns, ssdp} {
+		if step != nil {
+			if err := step(ctx); err != nil {
+				return errors.Join(accessPointErr, err)
+			}
+		}
+	}
+	if pendingIdentify == nil {
+		return accessPointErr
+	}
+	return errors.Join(accessPointErr, pendingIdentify(ctx))
 }
 
 // rootUsage names every command group, so an operator at the console can find

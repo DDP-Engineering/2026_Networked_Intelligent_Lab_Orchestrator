@@ -23,8 +23,13 @@ affected_paths = [
     "05_Software/nilo_assistant/internal/network/commissioning_ap.go",
     "05_Software/nilo_assistant/internal/network/commissioning_ap_test.go",
     "05_Software/nilo_assistant/internal/nethelper/networkmanager_commissioning_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/engine.go",
+    "05_Software/nilo_assistant/internal/nethelper/commissioning_ap_plan.go",
+    "05_Software/nilo_assistant/internal/nethelper/commissioning_ap_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/commissioning_services_linux.go",
     "05_Software/nilo_assistant/internal/nethelper/commissioning_link.go",
     "05_Software/nilo_assistant/internal/nethelper/commissioning_ap_ownership_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_commissioning_ap_linux_test.go",
     "05_Software/nilo_assistant/internal/nethelper/protocol.go",
     "05_Software/nilo_assistant/internal/network/management_access.go",
     "05_Software/nilo_assistant/cmd/nilo/main.go",
@@ -33,7 +38,9 @@ affected_paths = [
 
 linked_tests = [
     "05_Software/nilo_assistant/internal/network/commissioning_ap_test.go::*",
+    "05_Software/nilo_assistant/internal/nethelper/commissioning_ap_test.go::*",
     "05_Software/nilo_assistant/internal/nethelper/commissioning_ap_ownership_test.go::*",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_commissioning_ap_linux_test.go::*",
 ]
 
 
@@ -43,4 +50,4 @@ priority = "high"   # low | normal | high
 rationale = "A new appliance with no Ethernet path still needs a discoverable, encrypted first-contact network."
 
 created = 2026-09-15
-updated = 2026-09-15
+updated = 2026-09-16

@@ -14,6 +14,23 @@ import (
 	"nilo.local/nilo/internal/network"
 )
 
+func (n *NetworkManager) ReannounceMDNS(
+	ctx context.Context, operationID string, advertisement network.MDNSAdvertisement,
+) error {
+	if n.mdnsReannouncements[operationID] {
+		return nil
+	}
+	if err := n.ReplaceMDNS(ctx, advertisement); err != nil {
+		return err
+	}
+	n.mdnsReannouncements[operationID] = true
+	return nil
+}
+
+func (n *NetworkManager) AcknowledgeMDNSReannouncement(operationID string) {
+	delete(n.mdnsReannouncements, operationID)
+}
+
 const (
 	avahiService                 = "org.freedesktop.Avahi"
 	avahiServerAPI               = avahiService + ".Server"
@@ -130,6 +147,9 @@ func (n *NetworkManager) replaceAvahiGroup(ctx context.Context, server dbus.BusO
 	}
 	if err := waitForAvahiGroup(ctx, entry); err != nil {
 		_ = entry.Call(avahiGroupAPI+".Reset", 0).Err
+		if errors.Is(err, network.ErrMDNSCollision) {
+			err = network.NewMDNSCollisionError([]string{interfaceName})
+		}
 		return "", fmt.Errorf("establish Avahi entry group: %w", err)
 	}
 	return group, nil

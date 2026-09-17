@@ -37,6 +37,8 @@ continues. A search on a device-network bridge receives no response.
 ## Acceptance
 
 - Packet tests settle headers, CRLF framing, UUID, jitter and rate limits.
+- Source-rate state and delayed-response work remain globally bounded across
+  all active management-interface sockets.
 - Membership/alive/refresh/byebye track management changes and shutdown.
 - Excluded-interface captures contain no NILO SSDP packet.
 - Windows appearance/open/disappearance is measured within 60 seconds.

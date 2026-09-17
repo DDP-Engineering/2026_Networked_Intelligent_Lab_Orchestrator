@@ -71,3 +71,27 @@ func TestRuntimeReconciliationStopsBeforeUnsafeDownstreamWork(t *testing.T) {
 		})
 	}
 }
+
+func TestApplianceRuntimeRestoresDiscoveryBeforePendingIdentify(t *testing.T) {
+	t.Parallel()
+	calls := make([]string, 0, 6)
+	step := func(name string) func(context.Context) error {
+		return func(context.Context) error {
+			calls = append(calls, name)
+			return nil
+		}
+	}
+
+	err := reconcileApplianceManagementRuntime(
+		context.Background(),
+		step("access-point"), step("commissioning-links"), step("management"),
+		step("metadata"), step("mdns"), step("ssdp"), step("pending-identify"),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"access-point", "commissioning-links", "management", "metadata", "mdns", "ssdp", "pending-identify"}
+	if !reflect.DeepEqual(calls, want) {
+		t.Fatalf("calls = %v, want helper-restart publication before pending Identify recovery %v", calls, want)
+	}
+}

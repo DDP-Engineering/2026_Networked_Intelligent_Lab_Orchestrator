@@ -41,6 +41,8 @@ func (e *Engine) WithdrawMDNS(ctx context.Context) error {
 	if err := driver.WithdrawMDNS(ctx); err != nil {
 		return fmt.Errorf("withdraw local name: %w", err)
 	}
+	e.mdnsAdvertisement = network.MDNSAdvertisement{}
+	e.mdnsPublished = false
 	return nil
 }
 
@@ -68,5 +70,7 @@ func (e *Engine) PublishMDNS(ctx context.Context, advertisement network.MDNSAdve
 	if err := driver.ReplaceMDNS(ctx, advertisement); err != nil {
 		return fmt.Errorf("publish local name: %w", err)
 	}
+	e.mdnsAdvertisement = advertisement
+	e.mdnsPublished = true
 	return nil
 }

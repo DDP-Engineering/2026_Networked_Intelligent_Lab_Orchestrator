@@ -250,9 +250,13 @@ Before relying on a checkout for build or acceptance, prepare the locked OCI
 environment from already-acquired local Git/LFS content:
 
 ```powershell
-.\02_Tools\bootstrap\bootstrap-build-environment.ps1 -Distribution Ubuntu-24.04
+.\02_Tools\bootstrap\bootstrap-build-environment.ps1 -Distribution Ubuntu
 .\02_Tools\env\with-build-environment.ps1 test
 ```
+
+`-Distribution` uses the WSL registration name shown by
+`wsl.exe --list --quiet`, not the Ubuntu release label. A registration named
+`Ubuntu` can therefore be the supported Ubuntu 24.04 environment.
 
 On native Ubuntu 24.04 x86-64, the equivalent direct path is:
 
@@ -931,8 +935,9 @@ the GUI component tests and production build. The stage rebuilds the interface
 inside its image and runs the browser against the production appliance profile,
 so this is repository-gated evidence rather than a manual observation. A
 missing prerequisite fails the gate and names its remedy; it is never skipped
-and then presented as proof. The gate selects the only installed WSL
-distribution automatically. If the host has several, set
+and then presented as proof. The gate selects the only installed development
+WSL distribution automatically and ignores Docker Desktop's utility
+distributions. If the host has several development distributions, set
 `NILO_WSL_DISTRIBUTION` to the distribution prepared with
 `bootstrap-development.ps1 -Distribution <name>`.
 

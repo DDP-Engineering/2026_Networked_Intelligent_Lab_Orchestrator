@@ -17,19 +17,43 @@ requirement = """
 When a commissioned or provisioning Raspberry Pi reports a short-button identification event and no higher-duration action is pending, NILO shall run the bounded Identify indicator and immediately reannounce its current mDNS and SSDP presence on their existing management-interface scopes without changing lifecycle, allowlists, addresses or saved profiles.
 """
 
-verification = "Automated coordinator tests inject a durable short-button event in provisioning and commissioned states with mDNS/SSDP available, independently failing and unavailable; they observe one bounded indicator request, immediate reannouncement only through already selected interfaces, event acknowledgement and unchanged lifecycle/allowlist/profile state, while a pending recovery/reset event supersedes identification and partial announcement failure is bounded and audited without repeating network mutation."
+verification = "Automated coordinator tests inject a durable short-button event in provisioning and commissioned states with mDNS/SSDP available, independently failing and unavailable; they observe one bounded indicator request, immediate reannouncement only through already selected interfaces, event acknowledgement and unchanged lifecycle/allowlist/profile state, while a pending recovery/reset event supersedes identification. Crash before helper invocation resumes the operation once. Each external sub-effect receives the stable operation token and checkpoints its result; post-effect receipt-save failure retries idempotently. The helper retains the exact completed receipt until Core durably records the outcome and explicitly acknowledges it, so Core write failure and restart never repeat the indicator or network mutation. A helper-only restart test follows the real runtime sequence and proves normal mDNS and SSDP publication is restored before pending button Identify recovery settles write-ahead reannouncement results; Armed, Active and Failed recovery indication is restored before that replay and remains higher priority."
 
 affected_paths = [
     "05_Software/nilo_assistant/cmd/nilo/hardware_recovery.go",
     "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go",
+    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/nilo_assistant/cmd/nilo/network_runtime_test.go",
     "05_Software/nilo_assistant/internal/network/identify.go",
     "05_Software/nilo_assistant/internal/network/mdns_announcer.go",
     "05_Software/nilo_assistant/internal/network/ssdp.go",
     "05_Software/nilo_assistant/internal/nethelper/protocol.go",
+    "05_Software/nilo_assistant/internal/nethelper/client.go",
+    "05_Software/nilo_assistant/internal/nethelper/engine.go",
+    "05_Software/nilo_assistant/internal/nethelper/engine_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/avahi_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/ssdp_responder.go",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_linux.go",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_linux_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/identify_action.go",
+    "05_Software/nilo_assistant/internal/nethelper/identify_action_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/mdns.go",
+    "05_Software/nilo_assistant/internal/nethelper/recovery_hardware.go",
+    "05_Software/nilo_assistant/internal/nethelper/store.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/identify_operation_repository.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/identify_operation_repository_test.go",
+    "05_Software/nilo_assistant/internal/store/sqlite/migrations/015_appliance_discovery.sql",
 ]
 
 linked_tests = [
     "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::*",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::TestPendingIdentifyCannotMaskRestoredRecoveryIndicator",
+    "05_Software/nilo_assistant/cmd/nilo/network_runtime_test.go::TestApplianceRuntimeRestoresDiscoveryBeforePendingIdentify",
+    "05_Software/nilo_assistant/internal/nethelper/identify_action_test.go::*",
+    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::TestHardwareEventQueueRetainsIdentifyTokenUntilAcknowledged",
+    "05_Software/nilo_assistant/internal/store/sqlite/identify_operation_repository_test.go::*",
 ]
 
 
@@ -39,4 +63,4 @@ priority = "high"   # low | normal | high
 rationale = "The physical control must distinguish the enclosure and refresh both standard discovery channels without becoming another network-reset path."
 
 created = 2026-09-15
-updated = 2026-09-15
+updated = 2026-09-17

@@ -168,9 +168,11 @@ func TestDirectRecoveryProtocolCarriesOnlyTypedAdapterIdentity(t *testing.T) {
 }
 
 type fakeRecoveryHardware struct {
-	event     HardwareRecoveryEvent
-	indicator HardwareIndicatorState
-	acked     string
+	event          HardwareRecoveryEvent
+	indicator      HardwareIndicatorState
+	acked          string
+	indicatorCalls int
+	identifyOps    map[string]time.Time
 }
 
 func (hardware *fakeRecoveryHardware) ReadRecoveryEvent(context.Context) (HardwareRecoveryEvent, bool, error) {
@@ -183,7 +185,32 @@ func (hardware *fakeRecoveryHardware) AcknowledgeRecoveryEvent(_ context.Context
 }
 
 func (hardware *fakeRecoveryHardware) SetRecoveryIndicator(_ context.Context, state HardwareIndicatorState) error {
+	hardware.indicatorCalls++
 	hardware.indicator = state
+	return nil
+}
+
+func (hardware *fakeRecoveryHardware) SetIdentifyIndicator(
+	_ context.Context, operationID string, activeUntil time.Time, recoveryState HardwareIndicatorState,
+) (time.Time, error) {
+	if hardware.identifyOps == nil {
+		hardware.identifyOps = make(map[string]time.Time)
+	}
+	if existing, ok := hardware.identifyOps[operationID]; ok {
+		return existing, nil
+	}
+	hardware.identifyOps[operationID] = activeUntil
+	hardware.indicatorCalls++
+	if recoveryState == "" || recoveryState == HardwareIndicatorIdle {
+		hardware.indicator = HardwareIndicatorIdentify
+	} else {
+		hardware.indicator = recoveryState
+	}
+	return activeUntil, nil
+}
+
+func (hardware *fakeRecoveryHardware) AcknowledgeIdentifyIndicator(_ context.Context, operationID string) error {
+	delete(hardware.identifyOps, operationID)
 	return nil
 }
 

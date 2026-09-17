@@ -68,3 +68,32 @@ func TestIdentifyServiceIsBoundedCoalescedAndTypedWhenUnsupported(t *testing.T) 
 		t.Fatalf("unbounded helper failure escaped: %v", err)
 	}
 }
+
+func TestIdentifyServiceOperationReceiptIsIdempotentUntilAcknowledged(t *testing.T) {
+	now := time.Date(2026, 9, 16, 18, 4, 0, 0, time.UTC)
+	indicator := &identifyIndicator{}
+	service, err := NewIdentifyService(IdentifyOptions{Indicator: indicator, Now: func() time.Time { return now }})
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := IdentifyActionRequest{
+		OperationID: "identify-operation-1", Source: IdentifySourceInterface, ActiveUntil: now.Add(10 * time.Second),
+	}
+	first, err := service.ExecuteIdentifyAction(context.Background(), request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := service.ExecuteIdentifyAction(context.Background(), request)
+	if err != nil || second != first || len(indicator.states) != 1 {
+		t.Fatalf("first=%+v second=%+v states=%v err=%v", first, second, indicator.states, err)
+	}
+	if err := service.AcknowledgeIdentifyAction(context.Background(), request.OperationID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.ExecuteIdentifyAction(context.Background(), request); err != nil {
+		t.Fatal(err)
+	}
+	if len(indicator.states) != 2 {
+		t.Fatalf("acknowledged operation remained cached: %v", indicator.states)
+	}
+}

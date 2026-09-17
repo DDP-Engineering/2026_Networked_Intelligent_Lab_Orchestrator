@@ -19,6 +19,11 @@ IGNORED_PARTS = {
     "node_modules",
 }
 
+IGNORED_WSL_DISTRIBUTIONS = {
+    "docker-desktop",
+    "docker-desktop-data",
+}
+
 
 def discover_suites(root: Path) -> list[tuple[str, Path]]:
     """Return every Go module and Python project below the software root."""
@@ -217,7 +222,7 @@ def _select_wsl_distribution() -> tuple[str | None, int]:
     distributions = [
         line.strip()
         for line in discovered.stdout.replace("\x00", "").splitlines()
-        if line.strip()
+        if line.strip() and line.strip().casefold() not in IGNORED_WSL_DISTRIBUTIONS
     ]
     requested = os.environ.get("NILO_WSL_DISTRIBUTION", "").strip()
     if requested:

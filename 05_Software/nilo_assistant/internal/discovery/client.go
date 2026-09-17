@@ -12,6 +12,7 @@ import (
 	"net/netip"
 	"net/url"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -360,6 +361,9 @@ func parseMDNSPacket(packet []byte, interfaceName string) []Observation {
 		if !ok || values["txtvers"] != "2" || values["path"] != "/" || port == 0 {
 			continue
 		}
+		if !validMDNSDestination(values["serial"], target, values["url"], port) {
+			continue
+		}
 		observation := Observation{
 			Source: SourceMDNS, ID: values["id"], Serial: values["serial"], FriendlyName: values["name"],
 			State: values["state"], Version: values["version"], URL: values["url"],
@@ -371,6 +375,20 @@ func parseMDNSPacket(packet []byte, interfaceName string) []Observation {
 		}
 	}
 	return result
+}
+
+func validMDNSDestination(serial, target, rawURL string, port uint16) bool {
+	if !validSerial(serial) || !strings.EqualFold(target, serial+".local") {
+		return false
+	}
+	parsed, err := url.Parse(rawURL)
+	if err != nil || parsed.Scheme != "https" || parsed.User != nil ||
+		!strings.EqualFold(parsed.Hostname(), serial+".local") || parsed.Port() != strconv.Itoa(int(port)) ||
+		parsed.Path != "/" || parsed.RawPath != "" || parsed.RawQuery != "" || parsed.Fragment != "" ||
+		parsed.Opaque != "" || parsed.ForceQuery {
+		return false
+	}
+	return true
 }
 
 func decodeDNSName(packet []byte, offset, depth int) (string, int, bool) {

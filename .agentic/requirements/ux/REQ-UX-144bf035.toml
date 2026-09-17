@@ -14,15 +14,18 @@ title = "Show appliance identity and a printable label in About"
 status = "active"
 
 requirement = """
-When a signed-in user opens About, the browser interface shall show the permanent and optional friendly appliance names, every current management address, the management URL and a printable label containing the permanent name, hardware addresses and a scannable QR code for the permanent-name HTTPS URL, while offering Identify with its supported or unsupported result.
+When a signed-in user opens About, the browser interface shall lead with friendly-name and Identify controls, show the permanent identity beside the page title, and present distinct Software, System and Management groups without a table. Software shall group the software, API and integration-protocol versions; System shall group the Linux release, kernel, architecture and storage capacity; Management shall group the lifecycle, runtime profile, management URL and management addresses. The page scroll rail shall sit at the workspace edge, and an embedded printable label shall be the page's only hardware-address presentation while containing the permanent name, hardware addresses and a scannable QR code for the permanent-name HTTPS URL.
 """
 
-verification = "Automated API/component tests render About with multiple addresses, no friendly name, a friendly name and supported/unsupported indicator states; they assert the named facts, decode the QR to the exact serial HTTPS URL, verify Print and Identify accessibility/permission states at desktop and 800x480 layouts, and confirm device/WireGuard addresses and secret-shaped sentinels are absent."
+verification = "Automated API/component tests render About with system/storage facts, multiple addresses, no friendly name, a friendly name and supported/unsupported indicator states; they assert the accessible Software/System/Management grouping, workspace-edge scroll rail, table-free control order, absence of a duplicate hardware-address fact, embedded label, and Identify accessibility/permission states. Label tests decode the QR to the exact serial HTTPS URL, viewport coverage includes desktop and 800x480, and cross-surface tests confirm device/WireGuard addresses, host paths and secret-shaped sentinels are absent."
 
 affected_paths = [
     "05_Software/nilo_gui/src/components/pages/AboutPage.test.tsx",
     "05_Software/nilo_gui/src/components/pages/SimplePages.tsx",
+    "05_Software/nilo_gui/src/layout.test.ts",
     "05_Software/nilo_gui/src/api/client.ts",
+    "05_Software/nilo_gui/src/api/client.test.ts",
+    "05_Software/nilo_gui/src/api/contract.ts",
     "05_Software/nilo_gui/src/api/appliance.ts",
     "05_Software/nilo_gui/src/api/appliance.test.ts",
     "05_Software/nilo_gui/src/i18n/en.ts",
@@ -31,13 +34,25 @@ affected_paths = [
     "05_Software/nilo_gui/src/styles/shell.css",
     "05_Software/nilo_gui/e2e/field-display.spec.ts",
     "05_Software/nilo_assistant/internal/httpapi/appliance_identity.go",
+    "05_Software/nilo_assistant/internal/httpapi/server.go",
+    "05_Software/nilo_assistant/internal/httpapi/server_test.go",
+    "05_Software/nilo_assistant/internal/systeminfo/info.go",
+    "05_Software/nilo_assistant/internal/systeminfo/info_linux.go",
+    "05_Software/nilo_assistant/internal/systeminfo/info_other.go",
+    "05_Software/nilo_assistant/internal/systeminfo/info_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/local_status.go",
     "05_Software/nilo_assistant/internal/appliance/label.go",
+    "05_Software/nilo_assistant/internal/appliance/label_test.go",
 ]
 
 linked_tests = [
     "05_Software/nilo_gui/src/components/pages/AboutPage.test.tsx::*",
     "05_Software/nilo_gui/src/api/appliance.test.ts::*",
+    "05_Software/nilo_gui/src/api/client.test.ts::*",
     "05_Software/nilo_gui/e2e/field-display.spec.ts::*",
+    "05_Software/nilo_assistant/internal/appliance/label_test.go::*",
+    "05_Software/nilo_assistant/internal/httpapi/server_test.go::TestStatusReturnsVersionedSimulationBuildInformation",
+    "05_Software/nilo_assistant/internal/systeminfo/info_test.go::*",
 ]
 
 
@@ -47,4 +62,4 @@ priority = "high"   # low | normal | high
 rationale = "The authenticated interface is the reprint and physical-identification surface after workshop delivery."
 
 created = 2026-09-15
-updated = 2026-09-15
+updated = 2026-09-17

@@ -23,11 +23,14 @@ affected_paths = [
     "05_Software/nilo_assistant/cmd/nilo/main.go",
     "05_Software/nilo_assistant/cmd/nilo/discover.go",
     "05_Software/nilo_assistant/cmd/nilo/discover_test.go",
+    "05_Software/nilo_assistant/internal/discovery/client.go",
+    "05_Software/nilo_assistant/internal/discovery/client_test.go",
     "05_Software/nilo_assistant/internal/discovery/model.go",
 ]
 
 linked_tests = [
     "05_Software/nilo_assistant/cmd/nilo/discover_test.go::*",
+    "05_Software/nilo_assistant/internal/discovery/client_test.go::*",
 ]
 
 
@@ -37,4 +40,4 @@ priority = "high"   # low | normal | high
 rationale = "The CLI must begin from local observations instead of requiring the unknown URL it is meant to find."
 
 created = 2026-09-15
-updated = 2026-09-15
+updated = 2026-09-16

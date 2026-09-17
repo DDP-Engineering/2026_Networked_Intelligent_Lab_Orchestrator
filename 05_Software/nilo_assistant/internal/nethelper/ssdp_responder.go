@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"nilo.local/nilo/internal/network"
@@ -28,19 +29,26 @@ type SSDPResponder interface {
 }
 
 type udpSSDPResponder struct {
-	mu       sync.Mutex
-	presence network.SSDPPresence
-	sockets  []*ssdpSocket
+	mu              sync.Mutex
+	presence        network.SSDPPresence
+	sockets         []*ssdpSocket
+	reannouncements map[string]bool
 }
 
 type ssdpSocket struct {
-	connection    *net.UDPConn
-	interfaceName string
-	address       string
-	presence      network.SSDPPresence
-	done          chan struct{}
-	policy        *ssdpResponsePolicy
-	pending       chan struct{}
+	connection     *net.UDPConn
+	interfaceName  string
+	address        string
+	presence       network.SSDPPresence
+	done           chan struct{}
+	budget         *ssdpResponseBudget
+	alive          atomic.Bool
+	addressCurrent func() bool
+}
+
+type ssdpResponseBudget struct {
+	policy  *ssdpResponsePolicy
+	pending chan struct{}
 }
 
 type ssdpResponsePolicy struct {
@@ -51,6 +59,12 @@ type ssdpResponsePolicy struct {
 
 func newSSDPResponsePolicy(interval time.Duration) *ssdpResponsePolicy {
 	return &ssdpResponsePolicy{interval: interval, last: map[string]time.Time{}}
+}
+
+func newSSDPResponseBudget() *ssdpResponseBudget {
+	return &ssdpResponseBudget{
+		policy: newSSDPResponsePolicy(time.Second), pending: make(chan struct{}, ssdpPendingResponses),
+	}
 }
 
 func (policy *ssdpResponsePolicy) Allow(interfaceName string, remote *net.UDPAddr, now time.Time) bool {
@@ -108,6 +122,33 @@ func ssdpSearchDelay(mx int, source io.Reader) (time.Duration, error) {
 
 func NewSSDPResponder() SSDPResponder { return &udpSSDPResponder{} }
 
+func (responder *udpSSDPResponder) Reannounce(
+	ctx context.Context, operationID string, presence network.SSDPPresence,
+) error {
+	responder.mu.Lock()
+	if responder.reannouncements != nil && responder.reannouncements[operationID] {
+		responder.mu.Unlock()
+		return nil
+	}
+	responder.mu.Unlock()
+	if err := responder.Publish(ctx, presence); err != nil {
+		return err
+	}
+	responder.mu.Lock()
+	if responder.reannouncements == nil {
+		responder.reannouncements = make(map[string]bool)
+	}
+	responder.reannouncements[operationID] = true
+	responder.mu.Unlock()
+	return nil
+}
+
+func (responder *udpSSDPResponder) AcknowledgeReannouncement(operationID string) {
+	responder.mu.Lock()
+	delete(responder.reannouncements, operationID)
+	responder.mu.Unlock()
+}
+
 func (responder *udpSSDPResponder) Publish(ctx context.Context, requested network.SSDPPresence) error {
 	presence, err := network.NewSSDPPresence(requested)
 	if err != nil {
@@ -118,6 +159,7 @@ func (responder *udpSSDPResponder) Publish(ctx context.Context, requested networ
 	if err := responder.withdrawLocked(); err != nil {
 		return err
 	}
+	budget := newSSDPResponseBudget()
 	for _, interfaceName := range presence.Interfaces {
 		link, err := net.InterfaceByName(interfaceName)
 		if err != nil {
@@ -138,9 +180,12 @@ func (responder *udpSSDPResponder) Publish(ctx context.Context, requested networ
 			_ = connection.SetReadBuffer(64 << 10)
 			socket := &ssdpSocket{
 				connection: connection, interfaceName: interfaceName, address: ip.String(), presence: presence,
-				done: make(chan struct{}), policy: newSSDPResponsePolicy(time.Second),
-				pending: make(chan struct{}, ssdpPendingResponses),
+				done: make(chan struct{}), budget: budget,
 			}
+			socket.addressCurrent = func() bool {
+				return interfaceHasIPv4Address(interfaceName, ip.String())
+			}
+			socket.alive.Store(true)
 			responder.sockets = append(responder.sockets, socket)
 			go socket.run()
 			go socket.refresh()
@@ -150,14 +195,16 @@ func (responder *udpSSDPResponder) Publish(ctx context.Context, requested networ
 			break
 		}
 	}
-	if len(responder.sockets) == 0 {
-		return errors.New("SSDP has no IPv4 management address")
+	if !ssdpPublicationComplete(presence.Interfaces, responder.sockets) {
+		_ = responder.withdrawLocked()
+		return errors.New("SSDP requires an IPv4 address on every management interface")
 	}
 	responder.presence = presence
 	return nil
 }
 
 func (socket *ssdpSocket) run() {
+	defer socket.alive.Store(false)
 	buffer := make([]byte, 8192)
 	for {
 		count, remote, err := socket.connection.ReadFromUDP(buffer)
@@ -165,7 +212,7 @@ func (socket *ssdpSocket) run() {
 			return
 		}
 		mx, valid := ssdpSearchMX(buffer[:count])
-		if !valid || !socket.policy.Allow(socket.interfaceName, remote, time.Now()) {
+		if !valid || !socket.budget.policy.Allow(socket.interfaceName, remote, time.Now()) {
 			continue
 		}
 		delay, err := ssdpSearchDelay(mx, rand.Reader)
@@ -198,7 +245,7 @@ func (socket *ssdpSocket) reserveResponse() bool {
 	default:
 	}
 	select {
-	case socket.pending <- struct{}{}:
+	case socket.budget.pending <- struct{}{}:
 		return true
 	default:
 		return false
@@ -207,7 +254,7 @@ func (socket *ssdpSocket) reserveResponse() bool {
 
 func (socket *ssdpSocket) releaseResponse() {
 	select {
-	case <-socket.pending:
+	case <-socket.budget.pending:
 	default:
 	}
 }
@@ -286,5 +333,53 @@ func (responder *udpSSDPResponder) withdrawLocked() error {
 func (responder *udpSSDPResponder) Current() bool {
 	responder.mu.Lock()
 	defer responder.mu.Unlock()
-	return len(responder.sockets) > 0
+	if !ssdpPublicationComplete(responder.presence.Interfaces, responder.sockets) {
+		return false
+	}
+	for _, socket := range responder.sockets {
+		if socket == nil || !socket.alive.Load() || socket.addressCurrent == nil || !socket.addressCurrent() {
+			return false
+		}
+	}
+	return true
+}
+
+func ssdpPublicationComplete(interfaces []string, sockets []*ssdpSocket) bool {
+	if len(interfaces) == 0 || len(sockets) != len(interfaces) {
+		return false
+	}
+	published := make(map[string]struct{}, len(sockets))
+	for _, socket := range sockets {
+		if socket == nil || socket.interfaceName == "" {
+			return false
+		}
+		published[socket.interfaceName] = struct{}{}
+	}
+	if len(published) != len(interfaces) {
+		return false
+	}
+	for _, interfaceName := range interfaces {
+		if _, present := published[interfaceName]; !present {
+			return false
+		}
+	}
+	return true
+}
+
+func interfaceHasIPv4Address(interfaceName, address string) bool {
+	link, err := net.InterfaceByName(interfaceName)
+	if err != nil {
+		return false
+	}
+	addresses, err := link.Addrs()
+	if err != nil {
+		return false
+	}
+	for _, raw := range addresses {
+		ip, _, parseErr := net.ParseCIDR(raw.String())
+		if parseErr == nil && ip.To4() != nil && ip.String() == address {
+			return true
+		}
+	}
+	return false
 }

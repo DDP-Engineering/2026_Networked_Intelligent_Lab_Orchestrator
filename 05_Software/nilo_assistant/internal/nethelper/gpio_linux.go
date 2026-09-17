@@ -99,10 +99,12 @@ type PiRecoveryHardware struct {
 	snapshotter interface {
 		Devices(context.Context) ([]Device, error)
 	}
-	indicator    HardwareIndicatorState
-	indicatorAt  time.Time
-	resetPending bool
-	ioErr        error
+	indicator     HardwareIndicatorState
+	indicatorAt   time.Time
+	recoveryState HardwareIndicatorState
+	identifyUntil time.Time
+	resetPending  bool
+	ioErr         error
 }
 
 // NewPiRecoveryHardware opens GPIO v2 lines only when called by explicit Pi
@@ -136,15 +138,28 @@ func NewPiRecoveryHardware(
 		return nil, fmt.Errorf("request BCM27 recovery LED: %w", err)
 	}
 	ctx, cancel := context.WithCancel(parent)
+	now := time.Now()
+	identifyUntil := restorePiIdentifyDeadline(events, now)
 	hardware := &PiRecoveryHardware{
 		buttonFD: buttonFD, ledFD: ledFD, cancel: cancel,
 		detector: NewRecoveryButtonDetector(50 * time.Millisecond), events: events, snapshotter: snapshotter, indicator: HardwareIndicatorIdle,
-		indicatorAt: time.Now(),
+		indicatorAt: now, recoveryState: HardwareIndicatorIdle, identifyUntil: identifyUntil,
+	}
+	if identifyUntil.After(now) {
+		hardware.indicator = HardwareIndicatorIdentify
 	}
 	hardware.done.Add(2)
 	go hardware.sampleButton(ctx)
 	go hardware.driveIndicator(ctx)
 	return hardware, nil
+}
+
+func restorePiIdentifyDeadline(events *recoveryEventQueue, now time.Time) time.Time {
+	// An expired token never remains physically active. Cleanup persistence is
+	// best effort during startup because the running indicator loop retries it;
+	// a transient store error must not take GPIO recovery input offline.
+	_ = events.ExpireIdentifyOperations(now)
+	return events.ActiveIdentifyDeadline(now)
 }
 
 func (hardware *PiRecoveryHardware) sampleButton(ctx context.Context) {
@@ -202,8 +217,12 @@ func (hardware *PiRecoveryHardware) driveIndicator(ctx context.Context) {
 			_ = hardware.writeLED(false)
 			return
 		case at := <-ticker.C:
+			// Cleanup persistence is retried on every tick, but it must not
+			// poison GPIO input or delay the physical absolute expiry.
+			_ = hardware.refreshIdentifyIndicator(at)
 			hardware.mu.Lock()
-			state, started := hardware.indicator, hardware.indicatorAt
+			state := hardware.indicator
+			started := hardware.indicatorAt
 			if hardware.resetPending {
 				state = HardwareIndicatorResetPending
 			}
@@ -213,6 +232,22 @@ func (hardware *PiRecoveryHardware) driveIndicator(ctx context.Context) {
 			}
 		}
 	}
+}
+
+func (hardware *PiRecoveryHardware) refreshIdentifyIndicator(at time.Time) error {
+	activeUntil := hardware.events.ActiveIdentifyDeadline(at)
+	hardware.mu.Lock()
+	hardware.identifyUntil = activeUntil
+	state := hardware.recoveryState
+	if (state == "" || state == HardwareIndicatorIdle) && activeUntil.After(at) {
+		state = HardwareIndicatorIdentify
+	}
+	if state != hardware.indicator {
+		hardware.indicator = state
+		hardware.indicatorAt = at
+	}
+	hardware.mu.Unlock()
+	return hardware.events.ExpireIdentifyOperations(at)
 }
 
 func (hardware *PiRecoveryHardware) writeLED(on bool) error {
@@ -249,11 +284,57 @@ func (hardware *PiRecoveryHardware) SetRecoveryIndicator(_ context.Context, stat
 		return errors.New("invalid recovery indicator state")
 	}
 	hardware.mu.Lock()
-	hardware.indicator = state
+	hardware.recoveryState = state
+	if state == HardwareIndicatorIdle && hardware.identifyUntil.After(time.Now()) {
+		hardware.indicator = HardwareIndicatorIdentify
+	} else {
+		hardware.indicator = state
+	}
 	hardware.indicatorAt = time.Now()
 	err := hardware.ioErr
 	hardware.mu.Unlock()
 	return err
+}
+
+func (hardware *PiRecoveryHardware) SetIdentifyIndicator(
+	_ context.Context, operationID string, activeUntil time.Time, recoveryState HardwareIndicatorState,
+) (time.Time, error) {
+	hardware.mu.Lock()
+	ioErr := hardware.ioErr
+	hardware.mu.Unlock()
+	if ioErr != nil {
+		return time.Time{}, ioErr
+	}
+	actualUntil, created, err := hardware.events.SetIdentifyOperation(operationID, activeUntil)
+	if err != nil {
+		return actualUntil, err
+	}
+	now := time.Now()
+	hardware.mu.Lock()
+	hardware.identifyUntil = hardware.events.ActiveIdentifyDeadline(now)
+	if recoveryState == "" {
+		recoveryState = HardwareIndicatorIdle
+	}
+	hardware.recoveryState = recoveryState
+	if recoveryState == HardwareIndicatorIdle && hardware.identifyUntil.After(now) {
+		hardware.indicator = HardwareIndicatorIdentify
+	} else {
+		hardware.indicator = recoveryState
+	}
+	if created {
+		hardware.indicatorAt = now
+	}
+	hardware.mu.Unlock()
+	return actualUntil, nil
+}
+
+func (hardware *PiRecoveryHardware) AcknowledgeIdentifyIndicator(_ context.Context, operationID string) error {
+	now := time.Now()
+	acknowledgeErr := hardware.events.AcknowledgeIdentifyOperation(operationID, now)
+	// Refresh from the absolute deadline even when acknowledgement persistence
+	// fails; durable settlement can retry without extending the physical effect.
+	refreshErr := hardware.refreshIdentifyIndicator(now)
+	return errors.Join(acknowledgeErr, refreshErr)
 }
 
 func (hardware *PiRecoveryHardware) setIOError(err error) {

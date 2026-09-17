@@ -38,7 +38,15 @@ func (publisher runtimeFriendlyNamePublisher) ReplaceFriendlyName(ctx context.Co
 	if selected == nil {
 		return errors.New("active appliance discovery announcer is unavailable")
 	}
-	return selected.Announce(ctx, interfaces)
+	err = selected.Announce(ctx, interfaces)
+	if err != nil && errors.Is(err, network.ErrMDNSCollision) {
+		var collision *network.MDNSCollisionError
+		if errors.As(err, &collision) && len(collision.Interfaces) != 0 {
+			return collision
+		}
+		return network.NewMDNSCollisionError(interfaces)
+	}
+	return err
 }
 
 func applianceDiscoveryMetadata(

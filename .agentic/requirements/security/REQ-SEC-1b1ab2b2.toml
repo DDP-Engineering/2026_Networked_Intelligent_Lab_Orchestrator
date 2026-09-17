@@ -41,6 +41,12 @@ affected_paths = [
 	"05_Software/nilo_assistant/internal/nethelper/tls_signer_test.go",
 	"05_Software/nilo_assistant/internal/httpapi/discovery.go",
 	"05_Software/nilo_assistant/internal/httpapi/appliance_identity.go",
+	"05_Software/nilo_assistant/internal/httpapi/appliance_identity_test.go",
+	"05_Software/nilo_assistant/cmd/nilo/hardware_recovery.go",
+	"05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go",
+	"05_Software/nilo_assistant/internal/store/sqlite/identify_operation_repository.go",
+	"05_Software/nilo_assistant/internal/store/sqlite/identify_operation_repository_test.go",
+	"05_Software/nilo_assistant/internal/store/sqlite/migrations/015_appliance_discovery.sql",
 	"05_Software/nilo_assistant/internal/httpapi/local_status.go",
 	"05_Software/nilo_assistant/internal/httpapi/server_test.go",
 	"05_Software/nilo_assistant/internal/discovery/client.go",
@@ -62,6 +68,9 @@ linked_tests = [
     "05_Software/nilo_assistant/internal/nethelper/ssdp_test.go::*",
     "05_Software/nilo_assistant/internal/nethelper/tls_signer_test.go::*",
     "05_Software/nilo_assistant/internal/httpapi/server_test.go::*",
+    "05_Software/nilo_assistant/internal/httpapi/appliance_identity_test.go::*",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::*",
+    "05_Software/nilo_assistant/internal/store/sqlite/identify_operation_repository_test.go::*",
     "05_Software/nilo_assistant/internal/discovery/client_test.go::*",
     "05_Software/nilo_assistant/internal/discovery/model_test.go::*",
     "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository_test.go::*",
@@ -75,4 +84,4 @@ priority = "high"   # low | normal | high
 rationale = "The discovery channels are intentionally unauthenticated broadcasts or local views and therefore must expose only public appliance identity."
 
 created = 2026-09-15
-updated = 2026-09-15
+updated = 2026-09-16

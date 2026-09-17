@@ -19,6 +19,7 @@ import (
 	"nilo.local/nilo/internal/network"
 	"nilo.local/nilo/internal/power"
 	"nilo.local/nilo/internal/simulation"
+	"nilo.local/nilo/internal/systeminfo"
 )
 
 const (
@@ -232,13 +233,14 @@ type HandlerOptions struct {
 	Identity           *identity.Service
 	Profile            string
 	Build              buildinfo.Info
+	SystemInformation  func() systeminfo.Info
 	Catalog            simulation.Catalog
 	Network            *network.Service
 	Operations         *network.OperationManager
 	ManagementAccess   *network.ManagementAccessService
 	Power              power.Controller
 	Appliance          *ApplianceMetadata
-	Identify           *network.IdentifyService
+	Identify           network.IdentifyActionExecutor
 	IdentifyOperations identifyOperationStore
 	Naming             applianceNamingService
 	// MCP is the read-only Model Context Protocol endpoint, mounted at /mcp
@@ -293,12 +295,18 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 	protected := http.NewServeMux()
 	registerBench(protected, options.Bench, guard)
 	protected.Handle("GET /api/v1/status", authorize(auth.PermissionStatusRead, func(response http.ResponseWriter, _ *http.Request) {
+		var system *systeminfo.Info
+		if options.SystemInformation != nil {
+			value := options.SystemInformation()
+			system = &value
+		}
 		writeJSON(response, http.StatusOK, statusResponse{
 			APIVersion: apiVersion,
 			Status:     "healthy",
 			Profile:    options.Profile,
 			Simulation: options.Profile == simulationProfile,
 			Build:      options.Build,
+			System:     system,
 		})
 	}))
 	protected.Handle("GET /api/v1/integrations", authorize(auth.PermissionInventoryRead, func(response http.ResponseWriter, request *http.Request) {
@@ -470,9 +478,10 @@ type deviceListResponse struct {
 }
 
 type statusResponse struct {
-	APIVersion string         `json:"api_version"`
-	Status     string         `json:"status"`
-	Profile    string         `json:"profile"`
-	Simulation bool           `json:"simulation"`
-	Build      buildinfo.Info `json:"build"`
+	APIVersion string           `json:"api_version"`
+	Status     string           `json:"status"`
+	Profile    string           `json:"profile"`
+	Simulation bool             `json:"simulation"`
+	Build      buildinfo.Info   `json:"build"`
+	System     *systeminfo.Info `json:"system,omitempty"`
 }

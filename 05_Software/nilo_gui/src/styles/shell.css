@@ -723,6 +723,182 @@ input[type='radio'] {
   min-height: var(--target-min);
 }
 
+/* ---------- About ---------- */
+
+/* The About dashboard is an operational workspace, so its own scroll rail
+   belongs at the workspace edge rather than the generic reading-width edge. */
+.about-page .page-body {
+  max-width: none;
+}
+
+.about-head {
+  justify-content: space-between;
+}
+
+.about-permanent-identity {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+  margin-left: auto;
+}
+
+.about-permanent-identity span {
+  color: var(--text-muted);
+  font-size: var(--text-label);
+}
+
+.about-permanent-identity strong {
+  color: var(--text-strong);
+  font-size: var(--text-body);
+  overflow-wrap: anywhere;
+}
+
+.about-controls {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--control-radius);
+  background: var(--surface-raised);
+}
+
+.about-friendly-form {
+  display: flex;
+  align-items: end;
+  flex: 1 1 34rem;
+  gap: var(--space-2);
+  min-width: 16rem;
+}
+
+.about-friendly-form .field {
+  flex: 1 1 auto;
+}
+
+.about-controls > p {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--text);
+  font-size: var(--text-label);
+}
+
+.about-identify {
+  flex: 0 0 auto;
+}
+
+.about-dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(19rem, 0.58fr);
+  align-items: start;
+  gap: var(--space-4);
+}
+
+.about-card {
+  min-width: 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--control-radius);
+  background: var(--surface-raised);
+}
+
+.about-card > h3 {
+  margin-bottom: var(--space-2);
+}
+
+.about-groups {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.about-group {
+  min-width: 0;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border);
+}
+
+.about-group h4 {
+  margin: 0 0 var(--space-2);
+  color: var(--text-strong);
+  font-size: var(--text-label);
+  font-weight: 600;
+  line-height: var(--line-label);
+}
+
+.about-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.about-facts-software {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.about-fact {
+  min-width: 0;
+}
+
+.about-fact-wide {
+  grid-column: 1 / -1;
+}
+
+.about-fact dt {
+  color: var(--text-muted);
+  font-size: var(--text-label);
+}
+
+.about-fact dd {
+  margin: var(--space-1) 0 0;
+  color: var(--text-strong);
+  font-size: var(--text-body);
+  overflow-wrap: anywhere;
+}
+
+.about-addresses {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.about-addresses li + li {
+  margin-top: var(--space-1);
+}
+
+.about-label-card {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.about-label-link {
+  display: block;
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--control-radius);
+  background: white;
+}
+
+.about-label-link:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.about-label-link img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 62 / 29;
+  object-fit: contain;
+}
+
+.about-label-card p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-label);
+}
+
 /* ---------- tables ---------- */
 
 .table-scroll {
@@ -2379,6 +2555,12 @@ input[type='radio'] {
   .admin-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+  .about-dashboard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .about-label-card {
+    max-width: 40rem;
+  }
 }
 
 /* ---------- constrained viewport: navigation drawer ---------- */
@@ -2406,6 +2588,9 @@ input[type='radio'] {
   }
   .page-head {
     padding-inline: var(--space-3);
+  }
+  .about-friendly-form {
+    flex-basis: 100%;
   }
 }
 
@@ -2459,6 +2644,22 @@ input[type='radio'] {
   }
   .shell-brand {
     padding-inline: var(--space-1);
+  }
+  .about-permanent-identity {
+    align-items: flex-end;
+    flex-direction: column;
+    gap: 0;
+  }
+  .about-friendly-form {
+    align-items: stretch;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .about-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .about-fact {
+    grid-column: 1;
   }
 }
 

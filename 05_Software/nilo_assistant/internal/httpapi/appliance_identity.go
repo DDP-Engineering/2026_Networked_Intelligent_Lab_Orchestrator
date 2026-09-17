@@ -69,7 +69,8 @@ func (metadata *ApplianceMetadata) UpdateRuntime(state string, addresses, hardwa
 }
 
 type applianceIdentifyService interface {
-	Identify(context.Context) (network.IdentifyResult, error)
+	ExecuteIdentifyAction(context.Context, network.IdentifyActionRequest) (network.IdentifyActionResult, error)
+	AcknowledgeIdentifyAction(context.Context, string) error
 }
 
 type applianceNamingService interface {
@@ -77,8 +78,10 @@ type applianceNamingService interface {
 }
 
 type identifyOperationStore interface {
-	Begin(context.Context, string, string, time.Time) (bool, error)
-	MarkActed(context.Context, string, bool, string, audit.Event, time.Time) error
+	Begin(context.Context, string, string, time.Time, time.Time) (bool, error)
+	Reserve(context.Context, string, audit.Event, time.Time) error
+	RecordOutcome(context.Context, string, bool, string, string, audit.Outcome, time.Time) error
+	MarkActed(context.Context, string, time.Time) error
 	Flush(context.Context, string) error
 }
 
@@ -100,7 +103,9 @@ func handleApplianceMetadata(metadata *ApplianceMetadata) http.HandlerFunc {
 func handleApplianceLabel(metadata *ApplianceMetadata) http.HandlerFunc {
 	return func(response http.ResponseWriter, _ *http.Request) {
 		snapshot := metadata.snapshot()
-		label, err := appliance.RenderLabelSVG(appliance.Label{SerialName: snapshot.SerialName, HardwareAddresses: snapshot.ManagementMACs})
+		label, err := appliance.RenderLabelSVG(appliance.Label{
+			SerialName: snapshot.SerialName, ManagementURL: snapshot.ManagementURL, HardwareAddresses: snapshot.ManagementMACs,
+		})
 		if err != nil {
 			writeError(response, http.StatusServiceUnavailable, "appliance_label_unavailable", "")
 			return
@@ -139,15 +144,32 @@ func handleIdentify(service applianceIdentifyService, journal AuditJournal, oper
 		}
 		record.ActorKind, record.ActorID = actorIdentity(actor)
 		composer, durable := journal.(identifyAuditComposer)
-		var operationID string
+		generated, err := domain.NewRequestID()
+		if err != nil {
+			writeError(response, http.StatusInternalServerError, "identify_audit_failed", "")
+			return
+		}
+		operationID := generated.String()
+		action := network.IdentifyActionRequest{
+			OperationID: operationID, Source: network.IdentifySourceInterface,
+			ActiveUntil: time.Now().UTC().Add(10 * time.Second),
+		}
 		if operations != nil && durable {
-			generated, err := domain.NewRequestID()
-			if err != nil {
+			if _, err := operations.Begin(request.Context(), operationID, "interface", action.ActiveUntil, time.Now().UTC()); err != nil {
 				writeError(response, http.StatusInternalServerError, "identify_audit_failed", "")
 				return
 			}
-			operationID = generated.String()
-			if _, err := operations.Begin(request.Context(), operationID, "interface", time.Now().UTC()); err != nil {
+			completionContext, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			record.OperationID = operationID
+			record.Details = map[string]string{
+				"source": "interface", "status": "requested", "reannouncement": "not_requested",
+			}
+			reserved, composeErr := composer.Compose(record)
+			if composeErr == nil {
+				composeErr = operations.Reserve(completionContext, operationID, reserved, time.Now().UTC())
+			}
+			cancel()
+			if composeErr != nil {
 				writeError(response, http.StatusInternalServerError, "identify_audit_failed", "")
 				return
 			}
@@ -155,25 +177,30 @@ func handleIdentify(service applianceIdentifyService, journal AuditJournal, oper
 			writeError(response, http.StatusInternalServerError, "identify_audit_failed", "")
 			return
 		}
-		result, err := service.Identify(request.Context())
-		if operationID != "" {
+		result, err := service.ExecuteIdentifyAction(request.Context(), action)
+		if err != nil {
+			writeError(response, http.StatusInternalServerError, "identify_audit_failed", "")
+			return
+		}
+		if operations != nil && durable {
 			completionContext, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
-			record.OperationID = operationID
-			record.Outcome = audit.OutcomeApplied
-			if err != nil {
-				record.Outcome = audit.OutcomeFailed
+			outcome := audit.OutcomeApplied
+			status := string(result.Status)
+			if result.Status == network.IdentifyFailed {
+				outcome = audit.OutcomeFailed
 			}
-			record.Details = map[string]string{
-				"source": "interface", "status": string(result.Status), "reannouncement": "not_requested",
+			if persistErr := markIdentifyActed(completionContext, service, operations, operationID,
+				result.Supported, network.IdentifyReannouncementNotRequested, status, outcome, time.Now().UTC()); persistErr != nil {
+				writeError(response, http.StatusInternalServerError, "identify_audit_failed", "")
+				return
 			}
-			event, composeErr := composer.Compose(record)
-			if composeErr != nil || operations.MarkActed(completionContext, operationID, result.Status != network.IdentifyUnsupported, "not_requested", event, time.Now().UTC()) != nil || operations.Flush(completionContext, operationID) != nil {
+			if operations.Flush(completionContext, operationID) != nil {
 				writeError(response, http.StatusInternalServerError, "identify_audit_failed", "")
 				return
 			}
 		}
-		if err != nil {
+		if result.Status == network.IdentifyFailed {
 			writeError(response, http.StatusServiceUnavailable, "identify_unavailable", "")
 			return
 		}
@@ -191,6 +218,32 @@ func handleIdentify(service applianceIdentifyService, journal AuditJournal, oper
 			ActiveUntil time.Time `json:"active_until"`
 		}{APIVersion: apiVersion, Supported: true, ActiveUntil: result.ActiveUntil})
 	}
+}
+
+func markIdentifyActed(
+	ctx context.Context, service applianceIdentifyService, operations identifyOperationStore, operationID string, supported bool,
+	reannouncement, status string, outcome audit.Outcome, now time.Time,
+) error {
+	var err error
+	for attempt := 0; attempt < 3; attempt++ {
+		err = operations.RecordOutcome(ctx, operationID, supported, reannouncement, status, outcome, now)
+		if err == nil || ctx.Err() != nil {
+			break
+		}
+	}
+	if err != nil {
+		return err
+	}
+	if err := service.AcknowledgeIdentifyAction(ctx, operationID); err != nil {
+		return err
+	}
+	for attempt := 0; attempt < 3; attempt++ {
+		err = operations.MarkActed(ctx, operationID, now)
+		if err == nil || ctx.Err() != nil {
+			return err
+		}
+	}
+	return err
 }
 
 func handleFriendlyName(service applianceNamingService, metadata *ApplianceMetadata) http.HandlerFunc {
@@ -217,11 +270,21 @@ func handleFriendlyName(service applianceNamingService, metadata *ApplianceMetad
 		}
 		identity, err := service.SetFriendlyName(request.Context(), body.FriendlyName)
 		if err != nil {
+			var conflict *appliance.FriendlyNameConflictError
 			switch {
 			case errors.Is(err, appliance.ErrInvalidFriendlyName):
 				writeError(response, http.StatusBadRequest, "invalid_friendly_name", "")
+			case errors.As(err, &conflict):
+				publicConflict := appliance.NewFriendlyNameConflictError(body.FriendlyName, conflict.Interfaces)
+				writeJSON(response, http.StatusConflict, struct {
+					Error   string                               `json:"error"`
+					Details *appliance.FriendlyNameConflictError `json:"details"`
+				}{Error: "friendly_name_conflict", Details: publicConflict})
 			case errors.Is(err, appliance.ErrFriendlyNameConflict):
-				writeError(response, http.StatusConflict, "friendly_name_conflict", "")
+				writeJSON(response, http.StatusConflict, struct {
+					Error   string                               `json:"error"`
+					Details *appliance.FriendlyNameConflictError `json:"details"`
+				}{Error: "friendly_name_conflict", Details: appliance.NewFriendlyNameConflictError(body.FriendlyName, nil)})
 			default:
 				writeError(response, http.StatusServiceUnavailable, "friendly_name_unavailable", "")
 			}

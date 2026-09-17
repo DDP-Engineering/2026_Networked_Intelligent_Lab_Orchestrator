@@ -54,6 +54,12 @@ func (*runtimeRecoveryLinkDriver) ExtendRecoveryLink(context.Context, string, ti
 }
 func (*runtimeRecoveryLinkDriver) RestoreRecoveryLink(context.Context, string) error { return nil }
 
+type failingRestoreRuntimeRecoveryLinkDriver struct{ runtimeRecoveryLinkDriver }
+
+func (*failingRestoreRuntimeRecoveryLinkDriver) RestoreRecoveryLink(context.Context, string) error {
+	return errors.New("injected restore failure")
+}
+
 type trackingRuntimeRecoveryLinkDriver struct{ restored []string }
 
 func (*trackingRuntimeRecoveryLinkDriver) ActivateRecoveryLink(context.Context, string, string, time.Time) (string, error) {
@@ -219,16 +225,143 @@ func (resetter *runtimeResetter) ResetNetworkCommissioningAudited(
 }
 
 type runtimeAudit struct {
-	records    []audit.Record
-	failAction string
+	records     []audit.Record
+	failAction  string
+	failCompose bool
 }
 
-func (*runtimeAudit) Compose(audit.Record) (audit.Event, error) { return audit.Event{}, nil }
+func (writer *runtimeAudit) Compose(audit.Record) (audit.Event, error) {
+	if writer.failCompose {
+		writer.failCompose = false
+		return audit.Event{}, errors.New("injected compose failure")
+	}
+	return audit.Event{}, nil
+}
 func (writer *runtimeAudit) Record(_ context.Context, record audit.Record) error {
 	if writer.failAction == record.Action {
 		return errors.New("injected audit failure")
 	}
 	writer.records = append(writer.records, record)
+	return nil
+}
+
+type runtimeIdentifyOperations struct {
+	state             string
+	beginCalls        int
+	reserveCalls      int
+	markCalls         int
+	outcomeCalls      int
+	failOutcome       bool
+	failOutcomeAlways bool
+	flushCalls        int
+	failMark          bool
+	failFlush         bool
+	supported         bool
+	reannouncement    string
+	status            string
+	outcome           audit.Outcome
+}
+
+func (operations *runtimeIdentifyOperations) Begin(context.Context, string, string, time.Time, time.Time) (bool, error) {
+	operations.beginCalls++
+	if operations.state != "" {
+		return false, nil
+	}
+	operations.state = "pending"
+	return true, nil
+}
+
+func (operations *runtimeIdentifyOperations) State(context.Context, string) (string, error) {
+	return operations.state, nil
+}
+
+func (operations *runtimeIdentifyOperations) Reserve(context.Context, string, audit.Event, time.Time) error {
+	operations.reserveCalls++
+	if operations.state != "pending" {
+		return errors.New("identify operation is not pending")
+	}
+	operations.state = "reserved"
+	return nil
+}
+
+func (operations *runtimeIdentifyOperations) MarkActed(
+	context.Context, string, time.Time,
+) error {
+	operations.markCalls++
+	if operations.failMark {
+		operations.failMark = false
+		return errors.New("injected identify acted-state failure")
+	}
+	if operations.state != "performed" && operations.state != "acted" {
+		return errors.New("identify operation outcome is not recorded")
+	}
+	operations.state = "acted"
+	return nil
+}
+
+func (operations *runtimeIdentifyOperations) RecordOutcome(
+	_ context.Context, _ string, supported bool, reannouncement, status string, outcome audit.Outcome, _ time.Time,
+) error {
+	operations.outcomeCalls++
+	if operations.failOutcomeAlways {
+		return errors.New("injected persistent identify outcome persistence failure")
+	}
+	if operations.failOutcome {
+		operations.failOutcome = false
+		return errors.New("injected identify outcome persistence failure")
+	}
+	if operations.state != "reserved" && operations.state != "performed" {
+		return errors.New("identify operation is not reserved")
+	}
+	operations.supported = supported
+	operations.reannouncement = reannouncement
+	operations.status = status
+	operations.outcome = outcome
+	operations.state = "performed"
+	return nil
+}
+
+type runtimeIdentifyActionExecutor struct {
+	calls    int
+	acks     int
+	receipts map[string]network.IdentifyActionResult
+	result   *network.IdentifyActionResult
+}
+
+func (executor *runtimeIdentifyActionExecutor) ExecuteIdentifyAction(
+	_ context.Context, request network.IdentifyActionRequest,
+) (network.IdentifyActionResult, error) {
+	if result, ok := executor.receipts[request.OperationID]; ok {
+		return result, nil
+	}
+	executor.calls++
+	result := network.IdentifyActionResult{
+		Supported: true, Status: network.IdentifyAccepted, ActiveUntil: request.ActiveUntil,
+		Reannouncement: network.IdentifyReannouncementComplete,
+	}
+	if executor.result != nil {
+		result = *executor.result
+	}
+	if executor.receipts == nil {
+		executor.receipts = make(map[string]network.IdentifyActionResult)
+	}
+	executor.receipts[request.OperationID] = result
+	return result, nil
+}
+
+func (executor *runtimeIdentifyActionExecutor) AcknowledgeIdentifyAction(_ context.Context, operationID string) error {
+	executor.acks++
+	delete(executor.receipts, operationID)
+	return nil
+}
+
+func (operations *runtimeIdentifyOperations) Flush(context.Context, string) error {
+	operations.flushCalls++
+	if operations.failFlush {
+		operations.failFlush = false
+		return errors.New("injected identify audit flush failure")
+	}
+	operations.state = "settled"
 	return nil
 }
 
@@ -283,6 +416,364 @@ func TestShortButtonPressIdentifiesDuringProvisioningWithoutNetworkMutation(t *t
 	}
 	if len(auditWriter.records) != 1 || auditWriter.records[0].Action != "appliance.identify" {
 		t.Fatalf("audit records = %+v", auditWriter.records)
+	}
+}
+
+func TestPendingIdentifyCannotMaskRestoredRecoveryIndicator(t *testing.T) {
+	now := time.Date(2026, 9, 17, 9, 0, 0, 0, time.UTC)
+	for _, testCase := range []struct {
+		name      string
+		record    network.RecoveryRecord
+		driver    network.HardwareRecoveryDriver
+		want      nethelper.HardwareIndicatorState
+		wantError bool
+	}{
+		{
+			name: "armed", want: nethelper.HardwareIndicatorArmed,
+			record: network.RecoveryRecord{Version: 1, State: network.RecoveryArmed, ArmedAt: now.Add(-time.Minute), ExpiresAt: now.Add(9 * time.Minute), UpdatedAt: now.Add(-time.Minute)},
+			driver: &runtimeRecoveryLinkDriver{},
+		},
+		{
+			name: "active", want: nethelper.HardwareIndicatorActive,
+			record: network.RecoveryRecord{Version: 1, State: network.RecoveryActive, ArmedAt: now.Add(-time.Minute), ExpiresAt: now.Add(9 * time.Minute), UpdatedAt: now.Add(-time.Minute), AdapterID: "adapter", Interface: "eth1", HelperRecordID: "helper-record"},
+			driver: &runtimeRecoveryLinkDriver{},
+		},
+		{
+			name: "failed", want: nethelper.HardwareIndicatorFailed, wantError: true,
+			record: network.RecoveryRecord{Version: 1, State: network.RecoveryFailed, ArmedAt: now.Add(-time.Minute), ExpiresAt: now.Add(9 * time.Minute), UpdatedAt: now.Add(-time.Minute), AdapterID: "adapter", Interface: "eth1", HelperRecordID: "helper-record"},
+			driver: &failingRestoreRuntimeRecoveryLinkDriver{},
+		},
+	} {
+		t.Run(testCase.name, func(t *testing.T) {
+			service, err := network.NewHardwareRecoveryService(network.HardwareRecoveryOptions{
+				Provider: &runtimeRecoveryProvider{}, Driver: testCase.driver,
+				Store: &runtimeRecoveryStore{record: testCase.record}, Now: func() time.Time { return now },
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			hardware := &runtimeHardware{event: nethelper.HardwareRecoveryEvent{
+				ID: "gpio-00000000000000000051", Generation: 51, Action: nethelper.HardwareRecoveryIdentify,
+				ReleasedAt: now, SnapshotValid: true,
+			}}
+			indicator := newRuntimeIndicatorArbiter(hardware)
+			identify, err := network.NewIdentifyService(network.IdentifyOptions{Indicator: indicator})
+			if err != nil {
+				t.Fatal(err)
+			}
+			runtime := &hardwareRecoveryRuntime{helper: hardware, service: service, identify: identify, indicator: indicator}
+			err = runtime.Reconcile(context.Background())
+			if testCase.wantError {
+				if err == nil {
+					t.Fatal("failed recovery restoration unexpectedly permitted pending Identify")
+				}
+			} else if err != nil {
+				t.Fatal(err)
+			}
+			if len(hardware.indicators) == 0 || hardware.indicators[len(hardware.indicators)-1] != testCase.want {
+				t.Fatalf("indicator states=%v want final %q", hardware.indicators, testCase.want)
+			}
+			for _, state := range hardware.indicators {
+				if state == nethelper.HardwareIndicatorIdentify {
+					t.Fatalf("pending Identify masked %q recovery state: %v", testCase.want, hardware.indicators)
+				}
+			}
+		})
+	}
+}
+
+func TestShortButtonIdentifyRetriesAuditWithoutRepeatingPhysicalAction(t *testing.T) {
+	ctx := context.Background()
+	now := time.Date(2026, 9, 15, 10, 0, 0, 0, time.UTC)
+	provider := &runtimeRecoveryProvider{}
+	management, err := network.NewManagementAccessService(ctx, network.ManagementAccessOptions{
+		Provider: provider, Store: &runtimeAccessStore{}, Firewall: &runtimeFirewall{},
+		Now: func() time.Time { return now }, Provisioning: true,
+		ProvisioningTLSNames: []string{"nilo-p2rjmzdkf1.local", "nilo.local"},
+		Commissioner:         runtimeCommissioner{}, PublishedCredential: changedPublishedCredential{},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	recovery, err := network.NewHardwareRecoveryService(network.HardwareRecoveryOptions{
+		Provider: provider, Driver: &runtimeRecoveryLinkDriver{}, Now: func() time.Time { return now },
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	hardware := &runtimeHardware{event: nethelper.HardwareRecoveryEvent{
+		ID: "gpio-00000000000000000002", Generation: 2, Action: nethelper.HardwareRecoveryIdentify,
+		ReleasedAt: now, SnapshotValid: true,
+	}}
+	identify, err := network.NewIdentifyService(network.IdentifyOptions{Indicator: newRuntimeIndicatorArbiter(hardware)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	operations := &runtimeIdentifyOperations{failFlush: true}
+	reannounced := 0
+	runtime := &hardwareRecoveryRuntime{
+		helper: hardware, service: recovery, management: management, identify: identify,
+		reannounce:  func(context.Context) error { reannounced++; return nil },
+		audit:       &runtimeAudit{},
+		identifyOps: operations,
+		applianceID: "appliance",
+	}
+	if err := runtime.Reconcile(ctx); err == nil {
+		t.Fatal("first audit flush unexpectedly succeeded")
+	}
+	if operations.state != "acted" || hardware.acked != "" || reannounced != 1 || len(hardware.indicators) != 1 {
+		t.Fatalf("after failed flush state=%q ack=%q reannounced=%d indicators=%v", operations.state, hardware.acked, reannounced, hardware.indicators)
+	}
+	if err := runtime.Reconcile(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if operations.state != "settled" || operations.markCalls != 1 || operations.flushCalls != 2 ||
+		hardware.acked != hardware.event.ID || reannounced != 1 || len(hardware.indicators) != 1 {
+		t.Fatalf("after retry state=%q mark=%d flush=%d ack=%q reannounced=%d indicators=%v",
+			operations.state, operations.markCalls, operations.flushCalls, hardware.acked, reannounced, hardware.indicators)
+	}
+}
+
+func TestShortButtonIdentifyPersistentOutcomeFailureRecoversWithoutRepeatingPhysicalAction(t *testing.T) {
+	ctx := context.Background()
+	now := time.Date(2026, 9, 16, 14, 0, 0, 0, time.UTC)
+	provider := &runtimeRecoveryProvider{}
+	management, err := network.NewManagementAccessService(ctx, network.ManagementAccessOptions{
+		Provider: provider, Store: &runtimeAccessStore{}, Firewall: &runtimeFirewall{},
+		Now: func() time.Time { return now }, Provisioning: true,
+		ProvisioningTLSNames: []string{"nilo-p2rjmzdkf1.local", "nilo.local"},
+		Commissioner:         runtimeCommissioner{}, PublishedCredential: changedPublishedCredential{},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	recovery, err := network.NewHardwareRecoveryService(network.HardwareRecoveryOptions{
+		Provider: provider, Driver: &runtimeRecoveryLinkDriver{}, Now: func() time.Time { return now },
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	hardware := &runtimeHardware{event: nethelper.HardwareRecoveryEvent{
+		ID: "gpio-00000000000000000004", Generation: 4, Action: nethelper.HardwareRecoveryIdentify,
+		ReleasedAt: now, SnapshotValid: true,
+	}}
+	identify, err := network.NewIdentifyService(network.IdentifyOptions{Indicator: newRuntimeIndicatorArbiter(hardware)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	operations := &runtimeIdentifyOperations{failOutcomeAlways: true}
+	executor := &runtimeIdentifyActionExecutor{}
+	runtime := &hardwareRecoveryRuntime{
+		helper: hardware, service: recovery, management: management, identify: identify,
+		audit: &runtimeAudit{}, identifyOps: operations, identifyAction: executor, applianceID: "appliance",
+	}
+	if err := runtime.Reconcile(ctx); err == nil {
+		t.Fatal("persistent outcome failure unexpectedly succeeded")
+	}
+	if operations.state != "reserved" || operations.outcomeCalls != 3 || executor.calls != 1 {
+		t.Fatalf("after persistent failure state=%q outcomes=%d action calls=%d",
+			operations.state, operations.outcomeCalls, executor.calls)
+	}
+	operations.failOutcomeAlways = false
+	if err := runtime.Reconcile(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if operations.state != "settled" || hardware.acked != hardware.event.ID || executor.calls != 1 {
+		t.Fatalf("after recovery state=%q ack=%q action calls=%d",
+			operations.state, hardware.acked, executor.calls)
+	}
+}
+
+func TestShortButtonIdentifyCrashBeforeExternalInvocationExecutesOnceWithExactAuditResult(t *testing.T) {
+	ctx := context.Background()
+	now := time.Date(2026, 9, 16, 15, 2, 0, 0, time.UTC)
+	provider := &runtimeRecoveryProvider{}
+	management, err := network.NewManagementAccessService(ctx, network.ManagementAccessOptions{
+		Provider: provider, Store: &runtimeAccessStore{}, Firewall: &runtimeFirewall{},
+		Now: func() time.Time { return now }, Provisioning: true,
+		ProvisioningTLSNames: []string{"nilo-p2rjmzdkf1.local", "nilo.local"},
+		Commissioner:         runtimeCommissioner{}, PublishedCredential: changedPublishedCredential{},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	recovery, err := network.NewHardwareRecoveryService(network.HardwareRecoveryOptions{
+		Provider: provider, Driver: &runtimeRecoveryLinkDriver{}, Now: func() time.Time { return now },
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	hardware := &runtimeHardware{event: nethelper.HardwareRecoveryEvent{
+		ID: "gpio-00000000000000000005", Generation: 5, Action: nethelper.HardwareRecoveryIdentify,
+		ReleasedAt: now, SnapshotValid: true,
+	}}
+	operations := &runtimeIdentifyOperations{state: "reserved"}
+	executor := &runtimeIdentifyActionExecutor{}
+	runtime := &hardwareRecoveryRuntime{
+		helper: hardware, service: recovery, management: management,
+		audit: &runtimeAudit{}, identifyOps: operations, identifyAction: executor, applianceID: "appliance",
+	}
+	if err := runtime.Reconcile(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if executor.calls != 1 || operations.state != "settled" || !operations.supported ||
+		operations.reannouncement != "complete" || operations.status != "accepted" || operations.outcome != audit.OutcomeApplied {
+		t.Fatalf("calls=%d state=%q result=%t/%s/%s/%s", executor.calls, operations.state,
+			operations.supported, operations.reannouncement, operations.status, operations.outcome)
+	}
+}
+
+func TestShortButtonIdentifyCrashAfterExternalSuccessReturnsExactReceiptWithoutReplay(t *testing.T) {
+	ctx := context.Background()
+	now := time.Date(2026, 9, 16, 15, 3, 0, 0, time.UTC)
+	provider := &runtimeRecoveryProvider{}
+	management, err := network.NewManagementAccessService(ctx, network.ManagementAccessOptions{
+		Provider: provider, Store: &runtimeAccessStore{}, Firewall: &runtimeFirewall{},
+		Now: func() time.Time { return now }, Provisioning: true,
+		ProvisioningTLSNames: []string{"nilo-p2rjmzdkf1.local", "nilo.local"},
+		Commissioner:         runtimeCommissioner{}, PublishedCredential: changedPublishedCredential{},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	recovery, err := network.NewHardwareRecoveryService(network.HardwareRecoveryOptions{
+		Provider: provider, Driver: &runtimeRecoveryLinkDriver{}, Now: func() time.Time { return now },
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	hardware := &runtimeHardware{event: nethelper.HardwareRecoveryEvent{
+		ID: "gpio-00000000000000000006", Generation: 6, Action: nethelper.HardwareRecoveryIdentify,
+		ReleasedAt: now, SnapshotValid: true,
+	}}
+	operations := &runtimeIdentifyOperations{failOutcomeAlways: true}
+	executor := &runtimeIdentifyActionExecutor{}
+	runtime := &hardwareRecoveryRuntime{
+		helper: hardware, service: recovery, management: management,
+		audit: &runtimeAudit{}, identifyOps: operations, identifyAction: executor, applianceID: "appliance",
+	}
+	if err := runtime.Reconcile(ctx); err == nil {
+		t.Fatal("persistent Core outcome failure unexpectedly succeeded")
+	}
+	operations.failOutcomeAlways = false
+	if err := runtime.Reconcile(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if executor.calls != 1 || operations.state != "settled" || !operations.supported ||
+		operations.reannouncement != "complete" || operations.status != "accepted" || operations.outcome != audit.OutcomeApplied {
+		t.Fatalf("calls=%d state=%q result=%t/%s/%s/%s", executor.calls, operations.state,
+			operations.supported, operations.reannouncement, operations.status, operations.outcome)
+	}
+}
+
+func TestShortButtonIdentifyPersistsExactFailedReceipt(t *testing.T) {
+	ctx := context.Background()
+	now := time.Date(2026, 9, 16, 18, 3, 0, 0, time.UTC)
+	provider := &runtimeRecoveryProvider{}
+	management, err := network.NewManagementAccessService(ctx, network.ManagementAccessOptions{
+		Provider: provider, Store: &runtimeAccessStore{}, Firewall: &runtimeFirewall{},
+		Now: func() time.Time { return now }, Provisioning: true,
+		ProvisioningTLSNames: []string{"nilo-p2rjmzdkf1.local", "nilo.local"},
+		Commissioner:         runtimeCommissioner{}, PublishedCredential: changedPublishedCredential{},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	recovery, err := network.NewHardwareRecoveryService(network.HardwareRecoveryOptions{
+		Provider: provider, Driver: &runtimeRecoveryLinkDriver{}, Now: func() time.Time { return now },
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	hardware := &runtimeHardware{event: nethelper.HardwareRecoveryEvent{
+		ID: "gpio-00000000000000000007", Generation: 7, Action: nethelper.HardwareRecoveryIdentify,
+		ReleasedAt: now, SnapshotValid: true,
+	}}
+	operations := &runtimeIdentifyOperations{}
+	executor := &runtimeIdentifyActionExecutor{result: &network.IdentifyActionResult{
+		Supported: false, Status: network.IdentifyFailed,
+		Reannouncement: network.IdentifyReannouncementPartial,
+	}}
+	runtime := &hardwareRecoveryRuntime{
+		helper: hardware, service: recovery, management: management,
+		audit: &runtimeAudit{}, identifyOps: operations, identifyAction: executor, applianceID: "appliance",
+	}
+	if err := runtime.Reconcile(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if operations.supported || operations.status != "failed" || operations.outcome != audit.OutcomeFailed ||
+		operations.reannouncement != network.IdentifyReannouncementPartial {
+		t.Fatalf("stored result=%t/%s/%s/%s", operations.supported, operations.status,
+			operations.outcome, operations.reannouncement)
+	}
+}
+
+func TestShortButtonIdentifyPreOutboxFailuresDoNotRepeatPhysicalAction(t *testing.T) {
+	tests := []struct {
+		name             string
+		audit            *runtimeAudit
+		operations       *runtimeIdentifyOperations
+		firstShouldError bool
+	}{
+		{name: "compose", audit: &runtimeAudit{failCompose: true}, operations: &runtimeIdentifyOperations{}, firstShouldError: true},
+		{name: "record outcome", audit: &runtimeAudit{}, operations: &runtimeIdentifyOperations{failOutcome: true}},
+		{name: "mark acted", audit: &runtimeAudit{}, operations: &runtimeIdentifyOperations{failMark: true}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			ctx := context.Background()
+			now := time.Date(2026, 9, 16, 10, 0, 0, 0, time.UTC)
+			provider := &runtimeRecoveryProvider{}
+			management, err := network.NewManagementAccessService(ctx, network.ManagementAccessOptions{
+				Provider: provider, Store: &runtimeAccessStore{}, Firewall: &runtimeFirewall{},
+				Now: func() time.Time { return now }, Provisioning: true,
+				ProvisioningTLSNames: []string{"nilo-p2rjmzdkf1.local", "nilo.local"},
+				Commissioner:         runtimeCommissioner{}, PublishedCredential: changedPublishedCredential{},
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			recovery, err := network.NewHardwareRecoveryService(network.HardwareRecoveryOptions{
+				Provider: provider, Driver: &runtimeRecoveryLinkDriver{}, Now: func() time.Time { return now },
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			hardware := &runtimeHardware{event: nethelper.HardwareRecoveryEvent{
+				ID: "gpio-00000000000000000003", Generation: 3, Action: nethelper.HardwareRecoveryIdentify,
+				ReleasedAt: now, SnapshotValid: true,
+			}}
+			identify, err := network.NewIdentifyService(network.IdentifyOptions{Indicator: newRuntimeIndicatorArbiter(hardware)})
+			if err != nil {
+				t.Fatal(err)
+			}
+			reannounced := 0
+			runtime := &hardwareRecoveryRuntime{
+				helper: hardware, service: recovery, management: management, identify: identify,
+				reannounce: func(context.Context) error { reannounced++; return nil },
+				audit:      test.audit, identifyOps: test.operations, applianceID: "appliance",
+			}
+			firstErr := runtime.Reconcile(ctx)
+			if test.firstShouldError {
+				if firstErr == nil {
+					t.Fatal("first outbox failure unexpectedly succeeded")
+				}
+				if err := runtime.Reconcile(ctx); err != nil {
+					t.Fatal(err)
+				}
+			} else if firstErr != nil {
+				t.Fatal(firstErr)
+			}
+			if reannounced != 1 || len(hardware.indicators) != 1 || hardware.acked != hardware.event.ID {
+				t.Fatalf("reannounced=%d indicators=%v ack=%q state=%q", reannounced, hardware.indicators, hardware.acked, test.operations.state)
+			}
+			if test.name == "mark acted" && test.operations.markCalls != 2 {
+				t.Fatalf("transient outcome persistence attempts = %d, want 2", test.operations.markCalls)
+			}
+			if test.name == "record outcome" && test.operations.outcomeCalls != 2 {
+				t.Fatalf("transient physical outcome writes = %d, want 2", test.operations.outcomeCalls)
+			}
+		})
 	}
 }
 

@@ -39,4 +39,4 @@ priority = "high"   # low | normal | high
 rationale = "The workshop needs a repeatable label artifact before the enclosure itself can help a user find the appliance."
 
 created = 2026-09-15
-updated = 2026-09-15
+updated = 2026-09-16

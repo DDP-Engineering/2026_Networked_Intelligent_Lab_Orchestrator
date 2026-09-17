@@ -23,6 +23,8 @@ affected_paths = [
     "05_Software/nilo_assistant/internal/network/mdns.go",
     "05_Software/nilo_assistant/internal/network/mdns_announcer.go",
     "05_Software/nilo_assistant/internal/network/mdns_announcer_test.go",
+    "05_Software/nilo_assistant/internal/discovery/client.go",
+    "05_Software/nilo_assistant/internal/discovery/client_test.go",
     "05_Software/nilo_assistant/internal/nethelper/avahi_linux.go",
     "05_Software/nilo_assistant/internal/nethelper/avahi_render_test.go",
     "05_Software/nilo_assistant/internal/nethelper/protocol.go",
@@ -41,6 +43,7 @@ affected_paths = [
 
 linked_tests = [
     "05_Software/nilo_assistant/internal/network/mdns_announcer_test.go::*",
+    "05_Software/nilo_assistant/internal/discovery/client_test.go::*",
     "05_Software/nilo_assistant/internal/nethelper/avahi_render_test.go::*",
     "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go::*",
     "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux_test.go::*",
@@ -53,4 +56,4 @@ priority = "high"   # low | normal | high
 rationale = "Commissioned appliances need standard, collision-resistant discovery without sharing the temporary `nilo.local` alias."
 
 created = 2026-09-13
-updated = 2026-09-15
+updated = 2026-09-16

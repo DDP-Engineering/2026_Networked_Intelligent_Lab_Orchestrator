@@ -17,7 +17,7 @@ requirement = """
 Where Raspberry Pi hardware recovery is enabled, the privileged helper shall debounce an active-low BCM GPIO17 input using its internal pull-up and classify each stable release as appliance identification below three seconds, temporary network recovery from three seconds up to but excluding ten seconds, or network commissioning reset at ten seconds or longer; recovery-duration events carry their durable release time and a valid snapshot of already-connected identified Ethernet adapters, while a GPIO read discontinuity invalidates the gesture and requires a fresh debounced press from a released baseline.
 """
 
-verification = "Fake GPIO clock tests inject contact bounce, stable releases immediately below, exactly at and immediately above the 3 s and 10 s boundaries, and a read discontinuity followed by a continuously held input; they observe exactly one identify/recovery/reset event at the stated boundary and no event until a fresh debounced press after a released baseline. Recovery events alone carry validated adapter snapshots. An ARM64 build proves CGO-free compilation and a wired Pi observation checks all three durations."
+verification = "Fake GPIO clock tests inject contact bounce, stable releases immediately below, exactly at and immediately above the 3 s and 10 s boundaries, and a read discontinuity followed by a continuously held input; they observe exactly one identify/recovery/reset event at the stated boundary and no event until a fresh debounced press after a released baseline. Recovery events alone carry validated adapter snapshots. Runtime restart tests prove Armed, Active and Failed indication takes precedence over a pending Identify, including expiry and constructor cleanup-store failures without aborting startup or poisoning later recovery/reset input. An ARM64 build proves CGO-free compilation and a wired Pi observation checks all three durations."
 
 affected_paths = [
     "05_Software/nilo_assistant/internal/nethelper/gpio_button.go",
@@ -27,6 +27,8 @@ affected_paths = [
     "05_Software/nilo_assistant/internal/nethelper/gpio_linux_test.go",
     "05_Software/nilo_assistant/internal/nethelper/protocol.go",
     "05_Software/nilo_assistant/cmd/nilo-nethelper/main.go",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery.go",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go",
     "02_Tools/scripts/install-nethelper.sh",
     "05_Software/nilo_assistant/cmd/nilo-nethelper/serve_linux.go",
     "06_SoftwareDocu/Local_Hardware_Access.md",
@@ -36,6 +38,7 @@ affected_paths = [
 linked_tests = [
     "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::*",
     "05_Software/nilo_assistant/internal/nethelper/gpio_linux_test.go::*",
+    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::TestPendingIdentifyCannotMaskRestoredRecoveryIndicator",
 ]
 
 
@@ -45,4 +48,4 @@ priority = "high"   # low | normal | high
 rationale = "Classification on release makes the two destructive levels unambiguous and testable."
 
 created = 2026-09-13
-updated = 2026-09-15
+updated = 2026-09-17

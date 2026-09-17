@@ -42,20 +42,59 @@ func TestSSDPResponsePolicyRefreshesJittersAndRateBounds(t *testing.T) {
 	}
 }
 
-func TestSSDPSocketBoundsPendingResponsesAndStopsThemOnWithdrawal(t *testing.T) {
-	socket := &ssdpSocket{done: make(chan struct{}), pending: make(chan struct{}, ssdpPendingResponses)}
+func TestSSDPSocketBoundsPendingResponsesGloballyAndStopsThemOnWithdrawal(t *testing.T) {
+	budget := newSSDPResponseBudget()
+	first := &ssdpSocket{done: make(chan struct{}), budget: budget}
+	second := &ssdpSocket{done: make(chan struct{}), budget: budget}
 	for index := 0; index < ssdpPendingResponses; index++ {
-		if !socket.reserveResponse() {
+		if !first.reserveResponse() {
 			t.Fatalf("pending response %d was unexpectedly refused", index)
 		}
 	}
-	if socket.reserveResponse() {
-		t.Fatal("pending response cap was exceeded")
+	if second.reserveResponse() {
+		t.Fatal("second interface multiplied the responder-wide pending response cap")
 	}
-	close(socket.done)
-	socket.releaseResponse()
-	if socket.reserveResponse() {
+	first.releaseResponse()
+	if !second.reserveResponse() {
+		t.Fatal("released responder-wide capacity was not reusable by another interface")
+	}
+	close(first.done)
+	first.releaseResponse()
+	if first.reserveResponse() {
 		t.Fatal("withdrawn socket accepted new delayed work")
+	}
+}
+
+func TestSSDPCurrentRequiresLiveReceiveLoopAndCurrentAddress(t *testing.T) {
+	socket := &ssdpSocket{interfaceName: "eth0", addressCurrent: func() bool { return true }}
+	socket.alive.Store(true)
+	responder := &udpSSDPResponder{
+		presence: network.SSDPPresence{Interfaces: []string{"eth0"}},
+		sockets:  []*ssdpSocket{socket},
+	}
+	if !responder.Current() {
+		t.Fatal("live socket with its published address was not current")
+	}
+	socket.alive.Store(false)
+	if responder.Current() {
+		t.Fatal("stopped SSDP receive loop remained current")
+	}
+	socket.alive.Store(true)
+	socket.addressCurrent = func() bool { return false }
+	if responder.Current() {
+		t.Fatal("socket with a replaced interface address remained current")
+	}
+}
+
+func TestSSDPCurrentRequiresEveryRequestedInterface(t *testing.T) {
+	socket := &ssdpSocket{interfaceName: "eth0", addressCurrent: func() bool { return true }}
+	socket.alive.Store(true)
+	responder := &udpSSDPResponder{
+		presence: network.SSDPPresence{Interfaces: []string{"eth0", "wlan0"}},
+		sockets:  []*ssdpSocket{socket},
+	}
+	if responder.Current() {
+		t.Fatal("partial SSDP publication remained current")
 	}
 }
 

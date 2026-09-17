@@ -55,8 +55,14 @@ a populated cache. WSL installation or conversion happens only with an explicit
 Reproducible container boundary:
 
 ```powershell
-.\02_Tools\bootstrap\bootstrap-build-environment.ps1 -Distribution Ubuntu-24.04
+.\02_Tools\bootstrap\bootstrap-build-environment.ps1 -Distribution Ubuntu
 ```
+
+`-Distribution` names the WSL registration, not its release label; use the name
+reported by `wsl.exe --list --quiet` (for example, `Ubuntu` may contain Ubuntu
+24.04). Repository validation ignores Docker Desktop's utility distributions
+when it selects the sole development distribution. Set `NILO_WSL_DISTRIBUTION`
+when more than one development distribution is installed.
 
 ```sh
 ./02_Tools/bootstrap/bootstrap-build-environment.sh

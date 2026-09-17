@@ -15,6 +15,28 @@ var (
 	ErrFriendlyNameUnavailable = errors.New("friendly appliance name service unavailable")
 )
 
+// FriendlyNameConflictError is the complete public 409 detail. Candidate and
+// interface names are already validated and bounded before this value is built.
+type FriendlyNameConflictError struct {
+	Candidate  string   `json:"candidate"`
+	Interfaces []string `json:"interfaces"`
+}
+
+func (err *FriendlyNameConflictError) Error() string { return ErrFriendlyNameConflict.Error() }
+func (err *FriendlyNameConflictError) Unwrap() error { return ErrFriendlyNameConflict }
+
+// NewFriendlyNameConflictError constructs the public error at a trust boundary,
+// retaining only a valid requested alias and the collision error's safe scope.
+func NewFriendlyNameConflictError(candidate string, interfaces []string) *FriendlyNameConflictError {
+	if ValidateFriendlyName(candidate) != nil {
+		candidate = ""
+	}
+	return &FriendlyNameConflictError{
+		Candidate:  candidate,
+		Interfaces: network.NewMDNSCollisionError(interfaces).Interfaces,
+	}
+}
+
 // FriendlyNameRepository persists only the optional discovery alias.
 type FriendlyNameRepository interface {
 	SetFriendlyName(context.Context, string) (Identity, error)
@@ -85,11 +107,16 @@ func (service *NamingService) SetFriendlyName(ctx context.Context, candidate str
 			rollback := context.WithoutCancel(ctx)
 			publishErr := service.publisher.ReplaceFriendlyName(rollback, previous)
 			certificateErr := service.certificates.ActivateNames(rollback, service.certificateNames(previous))
-			kind := ErrFriendlyNameUnavailable
 			if errors.Is(err, network.ErrMDNSCollision) {
-				kind = ErrFriendlyNameConflict
+				var collision *network.MDNSCollisionError
+				interfaces := []string{}
+				if errors.As(err, &collision) {
+					interfaces = append(interfaces, collision.Interfaces...)
+				}
+				conflict := NewFriendlyNameConflictError(candidate, interfaces)
+				return Identity{}, errors.Join(conflict, publishErr, certificateErr)
 			}
-			return Identity{}, errors.Join(fmt.Errorf("%w: publish candidate", kind), publishErr, certificateErr)
+			return Identity{}, errors.Join(fmt.Errorf("%w: publish candidate", ErrFriendlyNameUnavailable), publishErr, certificateErr)
 		}
 	}
 	identity, err := service.repository.SetFriendlyName(ctx, candidate)

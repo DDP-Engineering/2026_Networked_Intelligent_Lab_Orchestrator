@@ -138,6 +138,26 @@ func (c *Client) SetRecoveryIndicator(ctx context.Context, state HardwareIndicat
 	return err
 }
 
+func (c *Client) ExecuteIdentifyAction(
+	ctx context.Context, request network.IdentifyActionRequest,
+) (network.IdentifyActionResult, error) {
+	response, err := c.call(ctx, Request{Op: "identify.execute", IdentifyAction: &request})
+	if err != nil {
+		return network.IdentifyActionResult{}, err
+	}
+	if response.IdentifyAction == nil {
+		return network.IdentifyActionResult{}, errors.New("helper returned no Identify action result")
+	}
+	return *response.IdentifyAction, nil
+}
+
+func (c *Client) AcknowledgeIdentifyAction(ctx context.Context, operationID string) error {
+	_, err := c.call(ctx, Request{Op: "identify.ack", ID: operationID})
+	return err
+}
+
+var _ network.IdentifyActionExecutor = (*Client)(nil)
+
 func (c *Client) ReconcileCommissioningLinks(ctx context.Context, links []network.CommissioningLink) error {
 	copyOfLinks := make([]network.CommissioningLink, len(links))
 	copy(copyOfLinks, links)
@@ -180,6 +200,9 @@ func (c *Client) call(ctx context.Context, q Request) (Response, error) {
 		return r, err
 	}
 	if r.Error != "" {
+		if r.Code == "mdns_collision" {
+			return r, network.NewMDNSCollisionError(r.MDNSCollisionInterfaces)
+		}
 		if known := knownErrors[r.Code]; known != nil {
 			return r, fmt.Errorf("%w: %s", known, r.Error)
 		}

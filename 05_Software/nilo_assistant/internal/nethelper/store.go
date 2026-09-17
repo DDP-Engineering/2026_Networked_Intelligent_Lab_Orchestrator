@@ -79,6 +79,22 @@ func (s *FileStore) SaveInstall(r InstallRecord) error {
 	return s.save("install.json", r)
 }
 
+func (s *FileStore) LoadIdentifyActions() (IdentifyActionLedger, error) {
+	var ledger IdentifyActionLedger
+	found, err := s.load("identify-actions.json", &ledger)
+	if !found || err != nil {
+		return ledger, err
+	}
+	return ledger, validateIdentifyActionLedger(ledger)
+}
+
+func (s *FileStore) SaveIdentifyActions(ledger IdentifyActionLedger) error {
+	if err := validateIdentifyActionLedger(ledger); err != nil {
+		return err
+	}
+	return s.save("identify-actions.json", ledger)
+}
+
 func (s *FileStore) loadApplianceIdentity() (applianceIdentityRecord, bool, error) {
 	var record applianceIdentityRecord
 	found, err := s.load(applianceIdentityFileName, &record)

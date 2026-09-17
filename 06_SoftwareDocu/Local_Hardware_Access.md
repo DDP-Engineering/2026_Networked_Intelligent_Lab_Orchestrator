@@ -35,7 +35,9 @@ not move.
 
 | Property | Value |
 |---|---|
-| Multicast DNS hostname | `ddp-remote.local` |
+| NILO permanent identity | `nilo-n0hzmysj9v` |
+| NILO permanent local URL | `https://nilo-n0hzmysj9v.local:8443/` |
+| Bench SSH hostname | `ddp-remote.local` (inherited OS transport name, not a NILO identity) |
 | Wired hardware address | `dc:a6:32:77:3a:c4` |
 | Wireless hardware address | `dc:a6:32:77:3a:c5` |
 | Operating system | Debian 13 (trixie), 64-bit |
@@ -44,9 +46,9 @@ not move.
 | Login account | `dpasare` |
 | Authentication | Obtain through the approved out-of-band channel |
 
-Both interfaces are usually connected at once, so the device answers on two
-addresses simultaneously and both resolve to the same hostname. Prefer the wired
-interface for anything long-running.
+The bench SSH hostname may resolve on a directly attached local network. Use the
+permanent NILO name for the application and the recorded hardware addresses to
+distinguish the board when SSH name resolution is unavailable.
 
 `dc:a6:32` is the Raspberry Pi Trading Ltd hardware address prefix, which places
 the board in the Raspberry Pi 4 generation. The two addresses differ only in the
@@ -257,57 +259,36 @@ up — and the tunnel is the only route to this board from outside its local
 networks. Anything that restarted NILO on a data directory without that
 selection would have stranded the board until somebody reached it physically.
 
-### 2.8 First-boot provisioning check (2026-09-13)
+### 2.8 Current NILO deployment
 
-The 2026-09-13 check initially deployed NILO 0.3.1. The board now runs NILO
-0.4.0 from `/var/lib/nilo` with `nilo.service` and `nilo-nethelper.service`
-active. Nothing from the first-boot check is left on it.
+The board runs NILO 0.8.0 from `/var/lib/nilo`. `nilo.service`,
+`nilo-nethelper.service` and the independent recovery timer are active and
+enabled. The core service uses the helper-managed TLS identity and has no
+file-backed certificate or private-key argument. Its served certificate covers
+`nilo-n0hzmysj9v.local` and the provisioning-only `nilo.local`; the helper's
+private key remains root-owned and unreadable by the Core service account.
 
-The check ran a candidate against a throwaway data directory and then upgraded
-the real installation. Both halves were observed on this board:
+The persisted management allowlist is `wlan0` and `nilo0`. The DDP Wi-Fi and
+NILO-owned WireGuard profiles remain installed, while `eth0` remains the
+device-side adapter at `192.168.0.1/24`. The enabled ILC151 forwarding plan maps
+the exposed `10.71.1.0/24` range to the physical `192.168.0.0/24` segment and
+permits its configured local and WireGuard sources. The current nftables table
+contains that plan.
 
-- A fresh data directory started with no listener option at all, derived its
-  management allowlist as `eth0`, `eth1`, `wlan0`, and recorded `provisioning`.
-  `nilo0` was excluded, because a WireGuard device is not an eligible management
-  path, and the helper's nftables table dropped port 8443 there - the tunnel
-  became unreachable for management while that instance ran, which is the
-  intended behavior rather than a fault.
-- The allowlist bound to stable adapter identities `dc:a6:32:77:3a:c4`,
-  `dc:a6:32:77:3a:c5` and `fc:e9:98:e0:01:d7`, and the same allowlist returned
-  after a restart.
-- `nilo-nethelper` published `ddp-remote.local` through avahi on those
-  interfaces, and the name resolved to the `wlan0` address.
-- Upgrading the real `/var/lib/nilo` to the same build recorded `commissioned`,
-  left all three identities and the `{nilo0, wlan0}` allowlist untouched, and
-  returned the appliance exactly as it was. An existing installation is not
-  drawn into first-boot provisioning.
+The 2026-09-17 helper-TLS service update preserved every NetworkManager profile
+byte-for-byte and preserved the serialized ILC151 forwarding plan byte-for-byte.
+The WireGuard interface remained active with a current handshake, and the GUI
+returned HTTP 200 through that path while the protected status route returned
+HTTP 401. The PLC at `192.168.0.130` did not answer ICMP or TCP 504 during this
+check; that is an availability observation, not evidence that its preserved
+NILO configuration changed.
 
-Repeating it needs a throwaway data directory, `--gui-dir` pointing at a build
-that carries the first-boot panel, and the stock `/etc/avahi/avahi-daemon.conf`
-moved aside so `nilo-nethelper` can own one. A fresh data directory holds no
-identities, so `nilo admin bootstrap --data-dir <dir> --username <name>` creates
-the first administrator before the workflow can be used; `admin user create`
-needs an existing administrator as its actor and refuses on an empty database.
-
-Reaching the interface during such a run means using an eligible network. The
-tunnel is excluded by design, `ddp-remote.local` resolves only where multicast
-DNS is carried, and the listener certificate names `ddp-remote.local`,
-`10.205.148.11` and `192.168.1.103` - so any other address warns in a browser.
-
-NILO 0.4.0 was deployed on 2026-09-14 over the DDP network without changing
-the existing state, administrator data, TLS material or NetworkManager
-profiles. The appliance answered HTTPS with HTTP 200 at
-`https://10.44.118.42:8443/`; an unauthenticated protected status request
-returned HTTP 401. Permanent DNS-SD discovery advertised `_nilo._tcp` on
-`wlan0` as `ddp-remote.local:8443`, with appliance identity
-`01a06e44-9b79-70b2-8923-1264db5d2ca5` and the commissioned management URL.
-The root-only rollback archive is
-`/var/backups/nilo/pre-0.4.0-20260914-132831/files-and-state.tar`, with SHA-256
-`ed22252e87912253e24c1b18a2221259978731308a8fb9b3ae150e25c6199cb3`.
-The optional GPIO recovery path was not enabled because the button and LED
-circuit is not wired on this board. Temporary direct-connect recovery therefore
-remains unavailable until the documented hardware is fitted and acceptance
-tested; permanent discovery is active independently.
+The root-only rollback directory is
+`/var/backups/nilo/pre-helper-tls-0.8.0-20260917T114203Z`. It contains the prior
+service unit and a configuration/state archive whose SHA-256 is
+`7f8a23ffc494f4665228b26b779c1e27fa4aea4186509397af7f3c7109e24c3`.
+The optional GPIO recovery path remains disabled until the BCM17 button and
+BCM27 LED circuit is physically confirmed.
 
 ### 2.9 Power-control checks
 

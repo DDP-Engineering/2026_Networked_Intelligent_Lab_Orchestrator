@@ -54,6 +54,51 @@ func dnsRecord(name string, kind uint16, data []byte) []byte {
 	return append(append(result, fields...), data...)
 }
 
+func mdnsServicePacket(serial, target, managementURL string, port uint16) []byte {
+	instance := "NILO " + serial + "._nilo._tcp.local"
+	txt := []byte{}
+	for _, value := range []string{
+		"txtvers=2", "id=0199a2d0-1234-7abc-8def-0123456789ab", "serial=" + serial,
+		"url=" + managementURL, "path=/", "state=commissioned", "version=0.8.0",
+	} {
+		txt = append(txt, byte(len(value)))
+		txt = append(txt, value...)
+	}
+	srv := make([]byte, 6)
+	binary.BigEndian.PutUint16(srv[4:6], port)
+	srv = append(srv, dnsName(target)...)
+	header := make([]byte, 12)
+	binary.BigEndian.PutUint16(header[2:4], 0x8400)
+	binary.BigEndian.PutUint16(header[6:8], 4)
+	packet := append([]byte(nil), header...)
+	packet = append(packet, dnsRecord("_nilo._tcp.local", 12, dnsName(instance))...)
+	packet = append(packet, dnsRecord(instance, 33, srv)...)
+	packet = append(packet, dnsRecord(instance, 16, txt)...)
+	return append(packet, dnsRecord(target, 1, []byte{192, 168, 1, 42})...)
+}
+
+func TestParseMDNSRejectsDestinationDisagreement(t *testing.T) {
+	serial := "nilo-p2rjmzdkf1"
+	tests := []struct {
+		name   string
+		target string
+		url    string
+		port   uint16
+	}{
+		{name: "SRV target", target: "attacker.local", url: "https://nilo-p2rjmzdkf1.local:8443/", port: 8443},
+		{name: "TXT host", target: "nilo-p2rjmzdkf1.local", url: "https://attacker.local:8443/", port: 8443},
+		{name: "TXT port", target: "nilo-p2rjmzdkf1.local", url: "https://nilo-p2rjmzdkf1.local:9443/", port: 8443},
+		{name: "TXT path", target: "nilo-p2rjmzdkf1.local", url: "https://nilo-p2rjmzdkf1.local:8443/admin", port: 8443},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if observations := parseMDNSPacket(mdnsServicePacket(serial, test.target, test.url, test.port), "eth0"); len(observations) != 0 {
+				t.Fatalf("destination disagreement accepted: %+v", observations)
+			}
+		})
+	}
+}
+
 func TestParseMDNSAndSSDPObservations(t *testing.T) {
 	instance := "NILO nilo-p2rjmzdkf1._nilo._tcp.local"
 	txt := []byte{}

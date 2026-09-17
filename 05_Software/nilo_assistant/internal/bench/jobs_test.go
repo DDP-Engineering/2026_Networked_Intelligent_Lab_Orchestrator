@@ -234,7 +234,9 @@ func TestApprovalDeadlineQueueBoundAndDisable(t *testing.T) {
 	}
 	awaitJob(t, m, a, pending.ID, "incomplete")
 	for i := 0; i < QueueLimit; i++ {
-		if _, err = m.Submit(ctx, a, submission(fmt.Sprintf("queued-%03d", i))); err != nil {
+		queued := submission(fmt.Sprintf("queued-%03d", i))
+		queued.TimeoutSeconds = 300
+		if _, err = m.Submit(ctx, a, queued); err != nil {
 			t.Fatal(err)
 		}
 	}

@@ -68,6 +68,7 @@ type Request struct {
 	Indicator                *HardwareIndicatorState           `json:"indicator,omitempty"`
 	CommissioningLinks       *[]network.CommissioningLink      `json:"commissioning_links,omitempty"`
 	CommissioningAccessPoint *network.CommissioningAccessPoint `json:"commissioning_access_point,omitempty"`
+	IdentifyAction           *network.IdentifyActionRequest    `json:"identify_action,omitempty"`
 	TLSNames                 *[]string                         `json:"tls_names,omitempty"`
 	TLSGeneration            string                            `json:"tls_generation,omitempty"`
 	TLSDigest                []byte                            `json:"tls_digest,omitempty"`
@@ -98,13 +99,15 @@ type Response struct {
 	// Plans is the installed device-network forwarding.
 	Plans []network.ForwardingPlan `json:"plans,omitempty"`
 	// RecoveryRecordID names only a helper-owned volatile recovery link.
-	RecoveryRecordID  string                 `json:"recovery_record_id,omitempty"`
-	HardwareEvent     *HardwareRecoveryEvent `json:"hardware_event,omitempty"`
-	MDNSCurrent       *bool                  `json:"mdns_current,omitempty"`
-	SSDPCurrent       *bool                  `json:"ssdp_current,omitempty"`
-	ApplianceIdentity *ApplianceIdentity     `json:"appliance_identity,omitempty"`
-	TLSIdentity       *TLSIdentityPublic     `json:"tls_identity,omitempty"`
-	TLSSignature      []byte                 `json:"tls_signature,omitempty"`
+	RecoveryRecordID        string                        `json:"recovery_record_id,omitempty"`
+	HardwareEvent           *HardwareRecoveryEvent        `json:"hardware_event,omitempty"`
+	MDNSCurrent             *bool                         `json:"mdns_current,omitempty"`
+	MDNSCollisionInterfaces []string                      `json:"mdns_collision_interfaces,omitempty"`
+	SSDPCurrent             *bool                         `json:"ssdp_current,omitempty"`
+	ApplianceIdentity       *ApplianceIdentity            `json:"appliance_identity,omitempty"`
+	TLSIdentity             *TLSIdentityPublic            `json:"tls_identity,omitempty"`
+	TLSSignature            []byte                        `json:"tls_signature,omitempty"`
+	IdentifyAction          *network.IdentifyActionResult `json:"identify_action,omitempty"`
 }
 
 // secretOperations are the only operations that may name staged key material.
@@ -177,6 +180,9 @@ func dispatch(ctx context.Context, e *Engine, q Request) Response {
 	}
 	if q.CommissioningAccessPoint != nil && q.Op != "commissioning.ap.reconcile" {
 		return Response{Error: "unexpected commissioning access point", Code: "invalid_request"}
+	}
+	if q.IdentifyAction != nil && q.Op != "identify.execute" {
+		return Response{Error: "unexpected identify action", Code: "invalid_request"}
 	}
 	if q.TLSNames != nil && q.Op != "tls.identity.activate" {
 		return Response{Error: "unexpected TLS names", Code: "invalid_request"}
@@ -290,6 +296,20 @@ func dispatch(ctx context.Context, e *Engine, q Request) Response {
 			return Response{Error: "hardware indicator requires one bounded state", Code: "invalid_request"}
 		}
 		err = e.SetRecoveryIndicator(ctx, *q.Indicator)
+	case "identify.execute":
+		if q.ID != "" || q.IdentifyAction == nil || q.Indicator != nil || q.HardwareEventID != "" {
+			return Response{Error: "Identify execution requires one typed action", Code: "invalid_request"}
+		}
+		var result network.IdentifyActionResult
+		result, err = e.ExecuteIdentifyAction(ctx, *q.IdentifyAction)
+		if err == nil {
+			r.IdentifyAction = &result
+		}
+	case "identify.ack":
+		if q.ID == "" || q.IdentifyAction != nil || q.Indicator != nil || q.HardwareEventID != "" {
+			return Response{Error: "Identify acknowledgement requires one operation identity", Code: "invalid_request"}
+		}
+		err = e.AcknowledgeIdentifyAction(ctx, q.ID)
 	case "commissioning.links.reconcile":
 		if q.ID != "" || q.CommissioningLinks == nil {
 			return Response{Error: "commissioning reconciliation requires a typed link list", Code: "invalid_request"}
@@ -423,6 +443,10 @@ func dispatch(ctx context.Context, e *Engine, q Request) Response {
 		// while adding the bounded error envelope.
 		r.Error = err.Error()
 		r.Code = "helper_failure"
+		var collision *network.MDNSCollisionError
+		if errors.As(err, &collision) {
+			r.MDNSCollisionInterfaces = append([]string(nil), collision.Interfaces...)
+		}
 		for code, candidate := range knownErrors {
 			if errors.Is(err, candidate) {
 				r.Code = code
@@ -440,4 +464,4 @@ func emptyPowerRequest(q Request) bool {
 	// Hardware fields are checked separately by their only operations.
 }
 
-var knownErrors = map[string]error{"preview_stale": network.ErrPreviewStale, "not_controllable": network.ErrNotControllable, "unsupported": network.ErrUnsupported, "connection_required": network.ErrConnectionRequired, "busy": network.ErrChangeInProgress, "recovery_unavailable": network.ErrRecoveryUnavailable, "operation_not_found": network.ErrOperationNotFound, "not_awaiting_confirmation": network.ErrNotAwaitingConfirm, "external_profile": network.ErrExternalProfile, "profile_active": network.ErrProfileActive, "secrets_not_found": ErrSecretsNotFound, "interface_settings_rejected": network.ErrInterfaceSettingsRejected, "forwarding_foreign": ErrForwardingForeign, "forwarding_unsupported": ErrForwardingUnsupported, "management_access_foreign": ErrManagementAccessForeign, "management_access_unsupported": ErrManagementAccessUnsupported, "mdns_foreign": ErrMDNSForeign, "mdns_unsupported": ErrMDNSUnsupported, "direct_recovery_unavailable": ErrDirectRecoveryUnsupported, "commissioning_links_unavailable": ErrCommissioningLinkUnsupported, "power_unavailable": power.ErrUnavailable}
+var knownErrors = map[string]error{"preview_stale": network.ErrPreviewStale, "not_controllable": network.ErrNotControllable, "unsupported": network.ErrUnsupported, "connection_required": network.ErrConnectionRequired, "busy": network.ErrChangeInProgress, "recovery_unavailable": network.ErrRecoveryUnavailable, "operation_not_found": network.ErrOperationNotFound, "not_awaiting_confirmation": network.ErrNotAwaitingConfirm, "external_profile": network.ErrExternalProfile, "profile_active": network.ErrProfileActive, "secrets_not_found": ErrSecretsNotFound, "interface_settings_rejected": network.ErrInterfaceSettingsRejected, "forwarding_foreign": ErrForwardingForeign, "forwarding_unsupported": ErrForwardingUnsupported, "management_access_foreign": ErrManagementAccessForeign, "management_access_unsupported": ErrManagementAccessUnsupported, "mdns_foreign": ErrMDNSForeign, "mdns_unsupported": ErrMDNSUnsupported, "mdns_collision": network.ErrMDNSCollision, "direct_recovery_unavailable": ErrDirectRecoveryUnsupported, "commissioning_links_unavailable": ErrCommissioningLinkUnsupported, "power_unavailable": power.ErrUnavailable}

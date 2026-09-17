@@ -348,7 +348,7 @@
     {
       "name": "playwright-lock",
       "version": "1.62.1",
-      "sha256": "3497765e17bfc3ae2c15f29757bd1468ba9bb55ac4596f85fda6d507bafc0298",
+      "sha256": "4423550e864e20422e295ab7d1f5bacb18f2846d3266c382bab78d3e6f2bd988",
       "source": "05_Software/nilo_gui/package-lock.json",
       "license": "Apache-2.0 and dependency notices"
     },

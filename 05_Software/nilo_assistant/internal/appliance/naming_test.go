@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"nilo.local/nilo/internal/network"
 )
 
 type namingRepository struct {
@@ -117,5 +119,39 @@ func TestNamingServiceRollsBackDurableChangeWhenFinalCertificateCleanupFails(t *
 	wantTail := []string{"publish:bench-old", "persist:bench-old", "certificate:nilo-p2rjmzdkf1,nilo,bench-old"}
 	if len(events) < len(wantTail) || !reflect.DeepEqual(events[len(events)-len(wantTail):], wantTail) {
 		t.Fatalf("rollback events = %v, want suffix %v", events, wantTail)
+	}
+}
+
+func TestNamingServiceReportsBoundedFriendlyNameCollisionDetails(t *testing.T) {
+	events := []string{}
+	repository := &namingRepository{events: &events, identity: Identity{
+		ID: "0199a2d0-1234-7abc-8def-0123456789ab", FriendlyName: "bench-old", CommissionedAt: time.Now().UTC(),
+	}}
+	interfaces := []string{
+		"wlan9", "eth2", "wlan9", "invalid/interface", "lo", "eth1", "eth0", "eth3", "eth4", "eth5",
+		"eth6", "eth7", "eth8", "eth9", "eth10", "eth11", "eth12", "eth13", "eth14", "eth15", "eth16",
+	}
+	service, err := NewNamingService(
+		"nilo-p2rjmzdkf1", "bench-old", repository, namingCertificates{&events},
+		namingPublisher{events: &events, err: network.NewMDNSCollisionError(interfaces)},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = service.SetFriendlyName(context.Background(), "bench-west")
+	var conflict *FriendlyNameConflictError
+	if !errors.As(err, &conflict) || !errors.Is(err, ErrFriendlyNameConflict) {
+		t.Fatalf("collision error = %T %v", err, err)
+	}
+	if conflict.Candidate != "bench-west" {
+		t.Fatalf("candidate = %q", conflict.Candidate)
+	}
+	if len(conflict.Interfaces) == 0 || len(conflict.Interfaces) > 16 || !reflect.DeepEqual(conflict.Interfaces[:3], []string{"eth0", "eth1", "eth10"}) {
+		t.Fatalf("bounded collision interfaces = %v", conflict.Interfaces)
+	}
+	for _, value := range conflict.Interfaces {
+		if value == "lo" || strings.Contains(value, "/") {
+			t.Fatalf("unsafe collision interface escaped: %q", value)
+		}
 	}
 }

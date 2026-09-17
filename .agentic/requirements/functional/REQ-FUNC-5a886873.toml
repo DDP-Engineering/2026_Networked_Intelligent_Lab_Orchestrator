@@ -22,6 +22,8 @@ verification = "Automated responder tests use two management links plus device, 
 affected_paths = [
     "05_Software/nilo_assistant/internal/network/ssdp.go",
     "05_Software/nilo_assistant/internal/network/ssdp_test.go",
+    "05_Software/nilo_assistant/internal/nethelper/ssdp_responder.go",
+    "05_Software/nilo_assistant/internal/nethelper/ssdp_test.go",
     "05_Software/nilo_assistant/internal/nethelper/protocol.go",
     "05_Software/nilo_assistant/internal/network/management_access.go",
     "05_Software/nilo_assistant/cmd/nilo/main.go",
@@ -30,6 +32,7 @@ affected_paths = [
 
 linked_tests = [
     "05_Software/nilo_assistant/internal/network/ssdp_test.go::*",
+    "05_Software/nilo_assistant/internal/nethelper/ssdp_test.go::*",
 ]
 
 
@@ -39,4 +42,4 @@ priority = "high"   # low | normal | high
 rationale = "Windows does not browse DNS-SD in its Network view, so a separately scoped standard presence is required."
 
 created = 2026-09-15
-updated = 2026-09-15
+updated = 2026-09-16

@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"regexp"
 	"slices"
+	"sort"
 	"strings"
 
 	"github.com/google/uuid"
@@ -21,6 +22,37 @@ var ErrMDNSRejected = errors.New("mDNS advertisement rejected")
 // ErrMDNSCollision reports that Avahi refused one explicit local name because
 // another host already owns it on the link.
 var ErrMDNSCollision = errors.New("mDNS name collision")
+
+const maxMDNSCollisionInterfaces = 16
+
+// MDNSCollisionError carries only the bounded public interface names on which
+// an explicit alias collided. It unwraps to ErrMDNSCollision across helper and
+// application boundaries.
+type MDNSCollisionError struct {
+	Interfaces []string
+}
+
+func (err *MDNSCollisionError) Error() string { return ErrMDNSCollision.Error() }
+func (err *MDNSCollisionError) Unwrap() error { return ErrMDNSCollision }
+
+// NewMDNSCollisionError removes unsafe, loopback and duplicate names before
+// exposing collision scope to an administrator.
+func NewMDNSCollisionError(interfaces []string) *MDNSCollisionError {
+	seen := make(map[string]bool, len(interfaces))
+	bounded := make([]string, 0, len(interfaces))
+	for _, name := range interfaces {
+		if name == "lo" || !managementInterfaceName.MatchString(name) || seen[name] {
+			continue
+		}
+		seen[name] = true
+		bounded = append(bounded, name)
+	}
+	sort.Strings(bounded)
+	if len(bounded) > maxMDNSCollisionInterfaces {
+		bounded = bounded[:maxMDNSCollisionInterfaces]
+	}
+	return &MDNSCollisionError{Interfaces: bounded}
+}
 
 // MDNSAdvertisement is what the appliance asks to be discoverable as while it
 // is being commissioned: one name, on a named set of interfaces.

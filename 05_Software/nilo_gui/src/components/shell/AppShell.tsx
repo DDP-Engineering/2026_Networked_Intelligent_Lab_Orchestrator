@@ -466,6 +466,7 @@ export function AppShell({
     if (page.id === 'about') {
       return (
         <AboutPage
+          key={currentAppliance?.serialName ?? 'about'}
           status={status}
           appliance={currentAppliance}
           labelUrl={resourceUrl(client.baseUrl, `${APPLIANCE_PATH}/label.svg`)}
