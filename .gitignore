@@ -37,3 +37,7 @@ __pycache__/
 
 # Local reference capture; it is not part of the product source or delivery.
 /09_Others/Preview.mp4
+# AEGIS:BEGIN (managed by .agentic/aegis.py init)
+.agentic/tasks/*.anchor.json
+.agentic/tasks/*.evolution.json
+# AEGIS:END

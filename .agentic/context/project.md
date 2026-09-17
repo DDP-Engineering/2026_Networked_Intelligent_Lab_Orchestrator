@@ -130,6 +130,20 @@ one of three fixed roles - Administrator, Operator or Viewer.
 - One project-level Semantic Version lives in `VERSION`, mirrored by
   `internal/buildinfo` and `nilo_gui/package.json`.
 - The project is licensed under PolyForm Noncommercial 1.0.0.
+- **One package per delivery target, integrations included.** NILO ships as
+  one software: a release package for the Raspberry Pi and one for the Ubuntu
+  mini PC each contain Bench Core, the browser interface, the helper and every
+  integration at its current state with all their dependencies, and install
+  without internet access. Integrations are functionality of NILO developed
+  and released with it, not separately released products; on the appliance
+  they remain explicit to install and enable. The Raspberry Pi delivery
+  additionally provides a directly writable card image. Each target is produced
+  by its own packaging script, self-sufficient from the repository after a
+  one-time verified fetch of external inputs.
+- **A minimum release and everything newer.** Delivery targets are not bound
+  to one Ubuntu or Raspberry Pi OS release: each declares a minimum supported
+  release and supports every newer one. The decisions are recorded in
+  `07_Delivery/README.md`.
 
 ## Implementation orientation
 
@@ -169,6 +183,7 @@ one of three fixed roles - Administrator, Operator or Viewer.
   appliance preparation.
 - `06_SoftwareDocu/Sigrok_Integration.md` - current instrument lifecycle,
   limits, shared interfaces and bundle deployment.
+- `07_Delivery/README.md` - packaging and deployment decisions.
 - `07_Delivery/NILO_CLI_and_Authentication.md` - command line, roles,
   permissions, sessions and tokens.
 - `00_Planning/` - product direction and planned work, including the waveform
