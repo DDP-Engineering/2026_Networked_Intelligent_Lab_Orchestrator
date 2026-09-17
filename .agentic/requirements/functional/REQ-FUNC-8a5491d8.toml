@@ -58,7 +58,6 @@ affected_paths = [
     "05_Software/nilo_gui/src/api/client.test.ts",
     "05_Software/nilo_gui/README.md",
     "06_SoftwareDocu/Development_and_Simulation_Flow.md",
-    "00_Planning/Development_Simulation_Vertical_Slices.md",
     ".agentic/knowledge/gui-foundation.md",
 ]
 

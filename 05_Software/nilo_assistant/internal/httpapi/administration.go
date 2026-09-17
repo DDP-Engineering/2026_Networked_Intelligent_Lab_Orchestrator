@@ -390,8 +390,14 @@ func readRole(response http.ResponseWriter, value string) (auth.Role, bool) {
 	return role, true
 }
 
+// readPassword refuses only what the boundary itself must refuse: an empty
+// password, and one longer than the fixed maximum, which is what lets an
+// oversized body be rejected before the deliberately slow hash runs. How long a
+// password must be is the appliance's configured policy, applied by the
+// identity service that can read it, and its refusal arrives here as a typed
+// error. Repeating the rule in both places is what made it unconfigurable.
 func readPassword(response http.ResponseWriter, value string) bool {
-	if len(value) < auth.MinPasswordBytes || len(value) > auth.MaxPasswordBytes {
+	if len(value) == 0 || len(value) > auth.MaxPasswordBytes {
 		writeRefusal(response, http.StatusBadRequest, "invalid_password", passwordMessage())
 		return false
 	}
@@ -441,7 +447,7 @@ const (
 )
 
 func passwordMessage() string {
-	return fmt.Sprintf("password must be between %d and %d bytes", auth.MinPasswordBytes, auth.MaxPasswordBytes)
+	return fmt.Sprintf("password must be between 1 and %d bytes", auth.MaxPasswordBytes)
 }
 
 // writeAdministrationFailure maps the identity service's typed failures onto
@@ -466,6 +472,12 @@ func writeAdministrationFailure(response http.ResponseWriter, err error) {
 			"the last enabled administrator must remain an enabled administrator")
 	case errors.Is(err, identity.ErrExpiryNotInFuture):
 		writeRefusal(response, http.StatusBadRequest, "invalid_expiry", expiryMessage)
+	case errors.Is(err, auth.ErrPasswordRejected):
+		// The configured policy refused the password. Its message names the part
+		// that failed and never repeats the password, so it travels as it is.
+		writeRefusal(response, http.StatusBadRequest, "invalid_password", policyMessageOf(err))
+	case errors.Is(err, auth.ErrPasswordPolicyInvalid):
+		writeRefusal(response, http.StatusBadRequest, "invalid_password_policy", policyMessageOf(err))
 	case errors.Is(err, identity.ErrNotAdministrator):
 		// The route's permission check already passed, so this means the actor
 		// lost its administrator role between authentication and the change.
@@ -489,4 +501,19 @@ func writeRefusal(response http.ResponseWriter, status int, code, message string
 
 func writeInternalError(response http.ResponseWriter) {
 	writeError(response, http.StatusInternalServerError, "internal_error", "")
+}
+
+// policyMessageOf takes the readable half of a policy refusal. The sentinel
+// prefix names the kind of refusal for the code above; what a caller needs is
+// the bound it missed.
+//
+// It strips exactly the two sentinels it knows, rather than everything up to
+// the first colon: a refusal that ever carries an additional wrapped cause must
+// reach the client whole or not at all, never with its first clause cut off.
+func policyMessageOf(err error) string {
+	message := err.Error()
+	for _, sentinel := range []error{auth.ErrPasswordRejected, auth.ErrPasswordPolicyInvalid} {
+		message = strings.TrimPrefix(message, sentinel.Error()+": ")
+	}
+	return message
 }

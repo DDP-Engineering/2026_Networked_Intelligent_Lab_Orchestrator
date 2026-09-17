@@ -19,7 +19,7 @@ Evidence for Raspberry Pi, physical adapter, real Modbus server and vendor engin
 verification = "Inspection: read the task journal and the implementation status document and confirm every hardware acceptance case is either an observation naming the device and tool used, or an explicit unverified entry."
 
 affected_paths = [
-    "06_SoftwareDocu/Network_Service_Implementation_Status.md",
+    "06_SoftwareDocu/Development_and_Simulation_Flow.md",
 ]
 
 linked_tests = []

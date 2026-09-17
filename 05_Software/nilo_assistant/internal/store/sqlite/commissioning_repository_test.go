@@ -104,12 +104,10 @@ func TestUpgradedDatabaseRecordsCommissionedCommissioningState(t *testing.T) {
 		t.Fatalf("configure: %v", err)
 	}
 	// Everything up to and including 012_management_access, which is what an
-	// appliance running the previous release has.
-	previous := migrations[:12]
-	if previous[len(previous)-1].version != "012_management_access" {
-		t.Fatalf("migration before the commissioning one = %q, want 012_management_access",
-			previous[len(previous)-1].version)
-	}
+	// appliance running the release before commissioning has. The slice is taken
+	// by name rather than by offset, so a migration added after this one does not
+	// silently change which schema this test upgrades from.
+	previous := migrationsUpToAndIncluding(t, "012_management_access")
 	if err := applyMigrationSet(ctx, earlier, previous); err != nil {
 		t.Fatalf("apply the earlier schema: %v", err)
 	}
@@ -408,4 +406,17 @@ func TestCommissionUnlessPasswordMatchesAllowsAnAppliesWithNoPublishedIdentity(t
 	if state != appliance.CommissioningCommissioned {
 		t.Fatalf("lifecycle state = %q, want commissioned", state)
 	}
+}
+
+// migrationsUpToAndIncluding returns the migration set as it stood when version
+// was the newest one.
+func migrationsUpToAndIncluding(t *testing.T, version string) []migration {
+	t.Helper()
+	for index, candidate := range migrations {
+		if candidate.version == version {
+			return migrations[:index+1]
+		}
+	}
+	t.Fatalf("no migration named %q", version)
+	return nil
 }

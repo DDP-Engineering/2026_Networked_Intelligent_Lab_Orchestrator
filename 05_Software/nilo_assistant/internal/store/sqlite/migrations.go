@@ -57,7 +57,13 @@ var commissioningMigration string
 //go:embed migrations/014_network_recovery.sql
 var networkRecoveryMigration string
 
-//go:embed migrations/015_appliance_discovery.sql
+//go:embed migrations/015_password_policy.sql
+var passwordPolicyMigration string
+
+//go:embed migrations/016_password_policy_classes.sql
+var passwordPolicyClassesMigration string
+
+//go:embed migrations/017_appliance_discovery.sql
 var applianceDiscoveryMigration string
 
 var migrations = []migration{
@@ -75,7 +81,9 @@ var migrations = []migration{
 	{version: "012_management_access", sql: managementAccessMigration},
 	{version: "013_commissioning", sql: commissioningMigration},
 	{version: "014_network_recovery", sql: networkRecoveryMigration},
-	{version: "015_appliance_discovery", sql: applianceDiscoveryMigration},
+	{version: "015_password_policy", sql: passwordPolicyMigration},
+	{version: "016_password_policy_classes", sql: passwordPolicyClassesMigration},
+	{version: "017_appliance_discovery", sql: applianceDiscoveryMigration},
 }
 
 func applyMigrations(ctx context.Context, database *sql.DB) error {

@@ -403,9 +403,6 @@ export const de: Catalogue = {
     'Wiederholen Sie den Tokennamen genau. Vorher wird nichts gesendet, damit ein Fehlklick nicht das falsche Token löscht.',
   'auth.roleMatrix':
     'Viewer: Inventar, Netzwerk und Status lesen. Operator: Viewer plus eigene Token. Administrator: gesamte Verwaltung, Aktivitäten, Diagnose, Netzwerk und VPN.',
-  'auth.signedInAs': 'Angemeldet als {username} ({role}).',
-  'auth.identitiesNote':
-    'Deaktivieren behält die Identität und verhindert die Anmeldung; das endgültige Löschen entfernt den Datensatz selbst und lässt sich nicht rückgängig machen.',
   'auth.csrfMissing':
     'Dieser Browser besitzt das mit der Sitzung ausgegebene CSRF-Token nicht mehr, daher lehnt Bench Core jede Änderung ab. Melden Sie sich ab und erneut an.',
   'auth.users': 'Benutzer',
@@ -415,6 +412,23 @@ export const de: Catalogue = {
   'auth.reading': '{resource} wird gelesen…',
   'auth.readFailed': '{resource} konnte nicht gelesen werden.',
   'auth.resource.identities': 'Identitätsliste',
+  'auth.resource.passwordPolicy': 'Kennwortrichtlinie',
+  'auth.signedInAs': 'Angemeldet als {username} ({role}).',
+  'auth.policyTitle': 'Kennwortrichtlinie',
+  'auth.policyMinimumLength': 'Mindestlänge in Bytes',
+  'auth.policyClasses': 'Ein Kennwort muss enthalten',
+  'auth.policyClass.lowercase': 'einen Kleinbuchstaben',
+  'auth.policyClass.uppercase': 'einen Großbuchstaben',
+  'auth.policyClass.digit': 'eine Ziffer',
+  'auth.policyClass.special': 'ein Sonderzeichen',
+  'auth.help.policyMinimumLength':
+    'Die geringste Byteanzahl eines neuen Kennworts. Einen Wert unterhalb seiner eigenen Untergrenze weist das Gerät zurück.',
+  'auth.help.policyClasses':
+    'Wählen Sie jede Klasse aus, die ein neues Kennwort enthalten muss. Ohne Auswahl gilt keine Zusammensetzungsregel.',
+  'auth.policySave': 'Richtlinie speichern',
+  'auth.policySaved': 'Die Kennwortrichtlinie wurde ersetzt.',
+  'auth.permission.passwordPolicyManage':
+    'Ihre Sitzung enthält password.policy.manage nicht.',
   'auth.resource.tokens': 'Token-Liste',
   'auth.noIdentities': 'Es existieren noch keine Identitäten.',
   'auth.noTokens': 'Es existieren noch keine API-Token.',

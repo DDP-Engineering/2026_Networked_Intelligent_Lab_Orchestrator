@@ -30,7 +30,11 @@ one of three fixed roles - Administrator, Operator or Viewer.
 - **Identity and access control.** Argon2id password verifiers, expiring
   `HttpOnly` browser sessions with a CSRF token, and named API tokens whose
   scopes are intersected with the owner's current role. The three roles map to
-  a compiled-in permission set; there is no custom-role editor.
+  a compiled-in permission set; there is no custom-role editor. One persisted
+  appliance password policy - a minimum length and a minimum count of distinct
+  character classes, above a compiled floor - governs every password being set,
+  on the HTTP routes, the command line and the browser, and is never consulted
+  when a stored verifier is checked.
 - **Policy and approvals.** Ask, Auto and Full Access resolution over an
   integration's declared operation policy, immutable policy snapshots, and
   approvals bound to one canonical request digest.

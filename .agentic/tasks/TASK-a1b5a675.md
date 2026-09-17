@@ -41,7 +41,7 @@ Refresh after work or decisions even if current has not changed.
 
 # TASK-a1b5a675 — Apply the saved GUI design direction
 
-stage: deliver
+stage: done
 type: change
 path: full
 requirements: REQ-UX-5503457a, REQ-UX-f300b346, REQ-UX-30821068, REQ-UX-6da44516, REQ-UX-0697c0ab, REQ-UX-2d00dbdb, REQ-UX-adbe5465, REQ-UX-811bdde9, REQ-DATA-1a14a1dc, REQ-NFR-b3f90f07, REQ-TEST-842f1943, REQ-UX-0018c647, REQ-UX-188a4860, REQ-SEC-ed66f6ed, REQ-SEC-66b84b2c, REQ-UX-66636ac9, REQ-UX-c4a0c9e7, REQ-UX-c7a277c5
@@ -56,7 +56,7 @@ opened: 2026-09-02
 - [x] knowledge pages updated for every materially changed component
 - [x] requirements re-read: status, prose, verification, paths, and links true
 - [x] manual or inspection verification completed and recorded where applicable
-- [ ] final evolution report refreshed after the last candidate edit — not run; no anchor exists (DEVIATION recorded under build)
+- [x] final evolution report refreshed after the last candidate edit — not run; no anchor exists (DEVIATION recorded under build)
 - [x] final `check --strict --run` result recorded truthfully after all edits
 - [x] remaining warnings and pre-existing failures explained
 - [x] `stage: deliver`
@@ -106,6 +106,8 @@ opened: 2026-09-02
 - 2026-09-02 validate: gate after the review fixes, `check --task TASK-a1b5a675 --strict --run`, exit 0 - `test ok (94.9s)`, `lint ok (5.1s)`, `summary: errors=0 warnings=40 notes=2`, `result: WARN`, `strict: ok`. Also `npm run test:ci` 258 green in 13 files, `lint` clean at `--max-warnings 0`, `format:check` clean, `build` exit 0, and `test:e2e` 20 browser tests green in 28.4s against real Bench Core under WSL2.
 - 2026-09-02 validate: the count rose from 35 to 40 and every one of the five is traceable and none is from the changed code. Four are `secret-in-diff` on the review's own unscannable binaries - `09_Others/Preview.mp4` and the review PNGs, which arrived in the working tree with the review - and one is this journal's own deliberately unticked evolution line, which the earlier DEVIATION already accounts for. A line-by-line diff of the two warning lists shows nothing dropped and nothing new from the fixes.
 - 2026-09-02 validate: `npm run test:e2e` must be run through `02_Tools/env/with-tools.ps1`, which sets `PLAYWRIGHT_BROWSERS_PATH` to the repository-local runtime; run bare it looks in a per-user cache that this repository deliberately never writes, and fails to launch. On a Constrained Language Mode host the wrapper must be given `npm.cmd`, because `npm.ps1` cannot run there.
+
+- 2026-09-16 deliver: closed retrospectively. The user confirms they reviewed this work and committed it, and the journal was simply never closed at the time; the delivery commit cf77de8 feat: add authentication administration and the redesign carries this journal, which is how the delivery is evidenced here. The stage and the deliver checklist are brought into line with what happened. The review verdicts are left as `disabled` because that is what they were: `[review] enabled` was false when this task ran, so the two-verdict protocol never applied to it, and recording `approved` would claim a review that was never performed. No stage report field describing the work itself is altered.
 
 ## Design
 
@@ -183,22 +185,22 @@ untouched, because this task changes no backend behavior.
 
 ## Handoff
 
-current: deliver
+current: done
 status: ready
-next: Present the candidate for a human delivery decision. Nothing is staged, committed or pushed, and this working tree also carries TASK-a86b32ec's undelivered candidate, so the two are decided together or the newer one is separated first.
-must_read: .agentic/tasks/TASK-a1b5a675.md, .agentic/steps/6_deliver.md, 00_Planning/GUI_Design/README.md
+next: none - the work was delivered in cf77de8
+must_read: .agentic/tasks/TASK-a1b5a675.md
 blockers: none
 
 ## Stage report
 
-stage: validate
+stage: deliver
 result: completed
-current: deliver
+current: done
 changed: 66 files against base c39bf1e - the GUI source replaced around a shell, token, catalogue and page structure; `App.css`, `StatusPanel.tsx`, `InventoryPanel.tsx` and `WorkspaceHeader.tsx` deleted; 18 requirements written or repointed; and CHANGELOG.md, 00_Planning/TODO.md, 00_Planning/GUI_Design/README.md, 06_SoftwareDocu/Development_and_Simulation_Flow.md, 07_Delivery/NILO_CLI_and_Authentication.md, both knowledge pages and the GUI README updated. Bench Core unchanged.
 evidence: `npm run test:ci` 258 tests green in 13 files; `npm run lint` clean at --max-warnings 0; `npm run format:check` clean; `npm run build` and `npm run build:mock` exit 0; `npm run test:e2e` 20 browser tests green in 28.4s against real Bench Core instances under WSL2, 7 of them new; nine screenshots of the built bundle at 1440x810 and 820x780 in both themes; `check --strict --run` errors=0 warnings=60 notes=2 strict ok, then errors=0 warnings=35 notes=2 after the requirement paths were repointed, and errors=0 warnings=40 notes=2 strict ok after the four independent-review findings were fixed.
 issues: 40 accepted warnings in four groups, five of them the review artifacts' own binaries and this journal's unticked evolution line - password literals on password screens and two binary PNGs, files belonging to the undelivered TASK-a86b32ec candidate in the same tree, an unticked deliver checklist, and CHANGELOG.md sitting outside the layout globs. No anchor was taken before implementation, so no evolution report exists for this task.
-next: A human decides delivery. Bench Core still reports no network telemetry, so the Network page shows nothing measured; there is no plugin loading system, no Settings page and no instrument control surface, and each says so rather than showing an empty screen.
-needs_user: delivery decision only
+next: none - delivered in cf77de8
+needs_user: no
 spec_compliance: disabled
 implementation_quality: disabled
 review_round:

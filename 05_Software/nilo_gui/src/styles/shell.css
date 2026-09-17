@@ -1533,6 +1533,75 @@ input[type='radio'] {
   color: var(--state-warn);
   font-weight: 600;
 }
+.admin-policy {
+  margin-top: var(--space-2);
+}
+
+.admin-policy section {
+  padding-top: var(--space-2);
+}
+
+.admin-policy-form {
+  display: grid;
+  gap: var(--space-3);
+  padding: 0 var(--space-3) var(--space-3);
+}
+
+/* The length and the four requirements are one line that wraps rather than two
+   stacked blocks: they are one rule, and on a field display the wrap keeps
+   every control reachable without scrolling the panel. */
+.admin-policy-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-3) var(--space-4);
+}
+
+.admin-policy-line .field {
+  min-width: 12rem;
+}
+
+.admin-policy-classes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.admin-policy-classes legend {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0;
+  color: var(--text-strong);
+  font-size: var(--text-dense);
+  font-weight: 600;
+}
+
+/* Each requirement is its own target: the label wraps the checkbox so the whole
+   phrase is clickable and stays at least the minimum target height. */
+.admin-policy-classes label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--target-min);
+  white-space: nowrap;
+}
+
+.admin-policy-classes input[type='checkbox'] {
+  width: 22px;
+  height: 22px;
+}
+
+.admin-policy-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
 .admin-list {
   min-height: 0;
   overflow: visible;

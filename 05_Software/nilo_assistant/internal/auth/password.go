@@ -13,10 +13,11 @@ import (
 )
 
 const (
-	// MinPasswordBytes and MaxPasswordBytes bound an acceptable password. They
-	// are exported so an interface can refuse a password with a useful message
-	// before the slow hash runs, without inventing its own limits.
-	MinPasswordBytes = 12
+	// MaxPasswordBytes bounds an acceptable password. It is not policy: it is
+	// what bounds the Argon2 work an unauthenticated login attempt can ask this
+	// appliance to perform, so it holds on the verification path too and no
+	// configured policy relaxes it. How long a password must be is
+	// PasswordPolicy, applied where a password is set.
 	MaxPasswordBytes = 1024
 
 	argon2Version = 19
@@ -50,7 +51,7 @@ var defaultArgon2Params = Argon2Params{
 
 // HashPassword returns a versioned Argon2id PHC verifier for password.
 func HashPassword(password []byte, random io.Reader) (string, error) {
-	if err := validatePassword(password); err != nil {
+	if err := validatePasswordLength(password); err != nil {
 		return "", err
 	}
 	if random == nil {
@@ -75,7 +76,7 @@ func HashPassword(password []byte, random io.Reader) (string, error) {
 
 // VerifyPassword checks password against a supported Argon2id PHC verifier.
 func VerifyPassword(encoded string, password []byte) (bool, error) {
-	if err := validatePassword(password); err != nil {
+	if err := validatePasswordLength(password); err != nil {
 		return false, err
 	}
 	params, salt, expected, err := parsePasswordPHC(encoded)
@@ -86,9 +87,16 @@ func VerifyPassword(encoded string, password []byte) (bool, error) {
 	return subtle.ConstantTimeCompare(actual, expected) == 1, nil
 }
 
-func validatePassword(password []byte) error {
-	if len(password) < MinPasswordBytes || len(password) > MaxPasswordBytes {
-		return fmt.Errorf("password must be between %d and %d bytes", MinPasswordBytes, MaxPasswordBytes)
+// validatePasswordLength is the bound both paths keep. It carries no minimum
+// length: the configured minimum is applied where a password is set, by the
+// identity service that can read the stored policy, and applying it here would
+// lock every existing identity out of an appliance whose policy was tightened.
+func validatePasswordLength(password []byte) error {
+	if len(password) == 0 {
+		return errors.New("password must not be empty")
+	}
+	if len(password) > MaxPasswordBytes {
+		return fmt.Errorf("password must be at most %d bytes", MaxPasswordBytes)
 	}
 	return nil
 }

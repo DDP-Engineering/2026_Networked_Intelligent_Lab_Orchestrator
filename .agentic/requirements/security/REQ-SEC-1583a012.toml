@@ -1,0 +1,46 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-SEC-1583a012"
+
+title = "Keep the password policy off the verification path"
+
+status = "active"
+
+requirement = """
+While a stored password verifier is being checked, Bench Core shall not apply the configured password policy, so that an identity whose password was set under an earlier policy continues to sign in after the policy is tightened and meets the current policy only the next time its password is set.
+"""
+
+verification = "A test creates an identity under the shipped policy, raises the configured minimum length and class count past what that password satisfies, and asserts the identity still signs in and still reads a protected route; a further test asserts that setting a new password for that same identity is now refused."
+
+affected_paths = [
+    "05_Software/nilo_assistant/internal/auth/password.go",
+    "05_Software/nilo_assistant/internal/identity/service.go",
+    "05_Software/nilo_assistant/internal/auth/password_test.go",
+    "05_Software/nilo_assistant/internal/identity/password_policy_test.go",
+    "05_Software/nilo_assistant/internal/httpapi/password_policy_test.go",
+    "05_Software/nilo_assistant/cmd/nilo/admin_password_policy_test.go",
+]
+
+linked_tests = [
+    "05_Software/nilo_assistant/internal/auth/password_test.go::TestVerifyPasswordAppliesNoMinimumLength",
+    "05_Software/nilo_assistant/internal/identity/password_policy_test.go::TestTighteningThePolicyLeavesExistingIdentitiesAbleToSignIn",
+    "05_Software/nilo_assistant/internal/identity/password_policy_test.go::TestThePublishedCredentialStillSignsInUnderATightenedPolicy",
+    "05_Software/nilo_assistant/internal/httpapi/password_policy_test.go::TestSignInSurvivesATightenedPasswordPolicy",
+    "05_Software/nilo_assistant/cmd/nilo/admin_password_policy_test.go::TestATightenedPolicyLeavesTheBootstrappedAdministratorUsable",
+]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = "Applying a tightened policy on the verification path would lock out every identity that already exists, including the appliance's only administrator, with no way back in."        # why this behavior exists, if not obvious
+
+created = 2026-09-15
+updated = 2026-09-15

@@ -5,6 +5,7 @@ import {
   CSRF_HEADER_NAME,
   DEVICES_PATH,
   IDENTITIES_PATH,
+  PASSWORD_POLICY_PATH,
   INTEGRATIONS_PATH,
   NETWORK_STATISTICS_PATH,
   NETWORK_STATUS_PATH,
@@ -277,6 +278,20 @@ class MockAdministration {
   } = {
     retention_days: { audit: 90, event: 14 },
     quota_bytes: { audit: 268435456, event: 134217728 },
+  };
+  /** The appliance password policy, starting at what the appliance ships. */
+  passwordPolicy: {
+    minimum_length: number;
+    require_lowercase: boolean;
+    require_uppercase: boolean;
+    require_digit: boolean;
+    require_special: boolean;
+  } = {
+    minimum_length: 12,
+    require_lowercase: false,
+    require_uppercase: false,
+    require_digit: false,
+    require_special: false,
   };
   /** The device-network draft a preview proposed, applied on acknowledgement. */
   pendingDrafts = new Map<
@@ -1408,6 +1423,16 @@ function administer(
   if (path === IDENTITIES_PATH && request.method === 'POST') {
     return gated(actor, 'users.manage', () => createIdentity(store, body));
   }
+  if (path === PASSWORD_POLICY_PATH && request.method === 'GET') {
+    return gated(actor, 'password.policy.manage', () =>
+      jsonResponse(200, store.passwordPolicy),
+    );
+  }
+  if (path === PASSWORD_POLICY_PATH && request.method === 'PUT') {
+    return gated(actor, 'password.policy.manage', () =>
+      replacePasswordPolicy(store, body),
+    );
+  }
   if (path === TOKENS_PATH && request.method === 'GET') {
     return gated(actor, 'tokens.read.all', () =>
       jsonResponse(200, {
@@ -1487,8 +1512,9 @@ function createIdentity(
       'role must be one of administrator, operator or viewer',
     );
   }
-  if (password.length < 12) {
-    return refusal(400, 'invalid_password', 'password must be at least 12 bytes');
+  const refused = refusePasswordAgainstPolicy(store, password);
+  if (refused !== null) {
+    return refused;
   }
   if (store.find(username) !== undefined) {
     return refusal(
@@ -1548,11 +1574,91 @@ function changeIdentity(
     return emptyResponse(204);
   }
   const password = String(body.password ?? '');
-  if (password.length < 12) {
-    return refusal(400, 'invalid_password', 'password must be at least 12 bytes');
+  const refused = refusePasswordAgainstPolicy(store, password);
+  if (refused !== null) {
+    return refused;
   }
   identity.password = password;
   return emptyResponse(204);
+}
+
+/**
+ * The policy governs a password being set and never one being checked, so the
+ * mock applies it here and never in sign-in, exactly as the appliance does.
+ */
+function refusePasswordAgainstPolicy(
+  store: MockAdministration,
+  password: string,
+): TransportResponse | null {
+  const policy = store.passwordPolicy;
+  if (password.length > 1024) {
+    return refusal(400, 'invalid_password', 'password must be at most 1024 bytes');
+  }
+  if (password.length < policy.minimum_length) {
+    return refusal(
+      400,
+      'invalid_password',
+      `password must be at least ${policy.minimum_length} bytes`,
+    );
+  }
+  // Each requirement names itself when it is missed, so the operator reads what
+  // to add rather than a number to reach.
+  const requirements: [boolean, RegExp, string][] = [
+    [policy.require_lowercase, /\p{Ll}/u, 'a lowercase letter'],
+    [policy.require_uppercase, /\p{Lu}/u, 'an uppercase letter'],
+    [policy.require_digit, /\p{Nd}/u, 'a digit'],
+    [policy.require_special, /[^\p{Ll}\p{Lu}\p{Nd}]/u, 'a special character'],
+  ];
+  const missing = requirements
+    .filter(([required, pattern]) => required && !pattern.test(password))
+    .map(([, , name]) => name);
+  if (missing.length > 0) {
+    return refusal(
+      400,
+      'invalid_password',
+      `password must contain ${missing.join(', ')}`,
+    );
+  }
+  return null;
+}
+
+/** A replacement carries the whole policy: a partial one is refused, not merged. */
+function replacePasswordPolicy(
+  store: MockAdministration,
+  body: Record<string, unknown>,
+): TransportResponse {
+  const length = body.minimum_length;
+  const flags = [
+    'require_lowercase',
+    'require_uppercase',
+    'require_digit',
+    'require_special',
+  ];
+  if (
+    !Number.isInteger(length) ||
+    flags.some((key) => typeof body[key] !== 'boolean')
+  ) {
+    return refusal(
+      400,
+      'invalid_password_policy',
+      'the request body must carry minimum_length as a whole number and require_lowercase, require_uppercase, require_digit and require_special as true or false',
+    );
+  }
+  if ((length as number) < 8 || (length as number) > 1024) {
+    return refusal(
+      400,
+      'invalid_password_policy',
+      'minimum length must be between 8 and 1024 bytes',
+    );
+  }
+  store.passwordPolicy = {
+    minimum_length: length as number,
+    require_lowercase: body.require_lowercase as boolean,
+    require_uppercase: body.require_uppercase as boolean,
+    require_digit: body.require_digit as boolean,
+    require_special: body.require_special as boolean,
+  };
+  return jsonResponse(200, store.passwordPolicy);
 }
 
 function createToken(

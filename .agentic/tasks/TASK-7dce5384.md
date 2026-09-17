@@ -94,13 +94,13 @@ Behavior inventory: authorized page render -> group shortcut with title -> visib
 ## Rulings
 
 - RULING-001 | date=2026-09-12 | decision=AEGIS autopilot through validation and GUI Pi deployment on master; no commit or push | reason=Explicit current and earlier user instructions | source=user | supersedes=none
-- RULING-002 | date=2026-09-12 | decision=Close this task and create its local commit; no push | reason=User explicitly requested "ok, close task. Commit." after validation limitation and deployment were reported | source=user | supersedes=RULING-001 local commit restriction only
+- RULING-002 | date=2026-09-12 | decision=Close this task and create its local commit; no push. This supersedes RULING-001 only in its local-commit restriction; the no-push part of RULING-001 stands | reason=User explicitly requested "ok, close task. Commit." after validation limitation and deployment were reported | source=user | supersedes=RULING-001
 
 ## Handoff
 
 
 current: done
-status: complete
+status: ready
 next: None for this task; earlier uncommitted work and the repository checksum limitation remain separate.
 must_read: .agentic/tasks/TASK-7dce5384.md; .agentic/steps/6_deliver.md; .agentic/requirements/ux/REQ-UX-b75fbbc3.toml
 blockers: None for authorized local delivery; repository-wide checksum failure remains a recorded validation limitation.
