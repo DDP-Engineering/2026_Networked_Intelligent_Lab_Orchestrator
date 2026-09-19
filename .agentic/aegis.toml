@@ -13,7 +13,7 @@ autopilot = false
 
 [review]
 enabled = true
-max_fix_cycles = 2
+max_fix_cycles = 5
 
 [commands]
 # `aegis test` runs `test`; `aegis check --run` runs every entry here.

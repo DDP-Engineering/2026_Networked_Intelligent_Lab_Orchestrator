@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-SEC-dd110b06"
+
+title = "Keep package preparation offline"
+
+status = "active"
+
+requirement = """
+When offline package preparation is invoked, the tooling shall proceed only on Linux with a complete verified cache, loopback as the sole network interface, and no default route, and shall fail before writing output when any isolation condition is absent.
+"""
+
+verification = "Invoke preparation with injected Linux network observations and a complete fixture cache and observe a receipt; then present a non-Linux platform, non-loopback interface, default route, or cache defect and confirm preparation fails before output, while call instrumentation shows the preparation path has no fetch operation. Execute the actual OCI package action with a complete fixture and confirm the engine receives network-none plus a read-only cache mount and the receipt records only loopback with no default routes."
+
+affected_paths = ["02_Tools/packaging/package_inputs.py", "02_Tools/packaging/build/prepare-offline.sh", "02_Tools/env/with-build-environment.ps1", "02_Tools/env/with-build-environment.sh", "02_Tools/packaging/README.md", "02_Tools/README.md", "02_Tools/tests/packaging/Dockerfile", "02_Tools/tests/packaging/check.sh", "05_Software/scripts/tests/test_packaging_inputs.py"]
+
+linked_tests = ["05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_prepare_requires_linux_loopback_only_and_preserves_prior_output", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_ipv6_reject_route_does_not_imply_connectivity", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_cli_and_wrappers_keep_fetch_and_offline_paths_separate", "02_Tools/tests/packaging/check.sh"]
+
+
+spec = "specs/REQ-SEC-dd110b06.md"
+
+priority = "normal"   # low | normal | high
+rationale = "The offline build boundary is meaningful only when isolation and cache closure are both checked before output."
+
+created = 2026-09-18
+updated = 2026-09-19

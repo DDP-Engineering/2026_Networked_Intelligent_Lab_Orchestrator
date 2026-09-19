@@ -4,6 +4,23 @@
 verification, deployment, and diagnostic tooling beside the project without
 requiring a global installation or mixing tools into product source.
 
+## Offline delivery input foundation
+
+`packaging/` defines the exact Ubuntu 24.04 amd64 and Raspberry Pi OS/Debian 13
+arm64 targets. Its connected fetch commands require version and licence
+provenance and validate HTTPS origins, sizes, and SHA-256 digests into the
+ignored `cache/packaging/` content-addressed cache.
+Verification opens no URL. The `package <target>` build-environment action
+mounts that cache read-only into the existing network-none OCI boundary and
+produces a deterministic preparation receipt under
+`cache/containers/outputs/packaging/`.
+
+The checked-in packaging lock is intentionally incomplete, so these commands
+currently prove fail-closed orchestration rather than create a release
+artifact. See `packaging/README.md` for commands, exit behavior, and the exact
+boundary. Raspberry Pi and mini-PC physical acceptance remains separate and
+cannot be inferred from this environment.
+
 ## Reproducible OCI build environment
 
 The required build and repository-test boundary is one Linux amd64 OCI image.

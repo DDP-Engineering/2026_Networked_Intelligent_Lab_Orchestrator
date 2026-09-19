@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-REL-f4a90899"
+
+title = "Reject incomplete packaging caches"
+
+status = "active"
+
+requirement = """
+Before packaging preparation begins, the tooling shall accept a selected target's cache only when its lock is declared complete and every selected or shared input has valid metadata and an exact size-and-digest-matching cache object, otherwise report all detected defects without producing a preparation receipt.
+"""
+
+verification = "Verify a complete fixture cache and observe a stable sorted inventory. Independently exercise configuration failures for an incomplete lock, duplicate identity, unknown target, unsafe metadata, and undeclared target reference. Jointly introduce every inspectable object failure—missing, size mismatch, digest mismatch, and a non-regular or symlinked cache object—and confirm all selected-object defects are reported without producing a receipt."
+
+affected_paths = ["02_Tools/packaging/package_inputs.py", "02_Tools/packaging/config/inputs.lock.json", "02_Tools/packaging/verify/verify-cache.ps1", "02_Tools/packaging/verify/verify-cache.sh", "02_Tools/packaging/README.md", "05_Software/scripts/tests/test_packaging_inputs.py"]
+
+linked_tests = ["05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_verify_cache_reports_all_object_defects", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_verify_cache_rejects_fifo_without_blocking", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_verify_cache_rejects_symlinked_cache_objects", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_prepare_uses_one_configuration_snapshot", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_checked_in_lock_is_explicitly_incomplete", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_cli_and_wrappers_keep_fetch_and_offline_paths_separate"]
+
+
+spec = "specs/REQ-REL-f4a90899.md"
+
+priority = "normal"   # low | normal | high
+rationale = "A partially populated cache must never be mistaken for a self-contained release input closure."
+
+created = 2026-09-18
+updated = 2026-09-19

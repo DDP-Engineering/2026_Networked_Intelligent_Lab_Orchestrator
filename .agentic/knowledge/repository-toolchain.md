@@ -8,6 +8,8 @@ product behavior: `02_Tools/` in full - the pinned runtimes under the ignored
 the `env/` child-process wrappers, the `doctor*` readiness checks, the locked
 OCI build environment under `containers/build/` with
 `env/with-build-environment.*`, the container test runs under `tests/`, and
+the exact-target packaging input boundary under `packaging/`, including its
+connected fetch, ignored digest cache, offline preparation receipt, and
 `05_Software/scripts/aegis_test.py`, which routes the repository gate.
 
 Start at `02_Tools/toolchain.versions` for a pinned version, `02_Tools/env/`
@@ -30,8 +32,11 @@ Downloaded runtimes and caches remain ignored so they can be populated online
 or carried in an offline development kit without bloating source history.
 
 The component owns how verification environments are materialized and entered.
+It also owns how release inputs cross from an explicit connected acquisition
+phase into a verified, read-only cache used by network-isolated preparation.
 It does not own Bench Core network behavior, GUI behavior, integration behavior,
-release publication, or hardware acceptance results.
+final release artifact construction, publication, or hardware acceptance
+results.
 
 ## Public interface
 
@@ -66,6 +71,17 @@ cache embedded in the image, and explicit source and output mounts. The
 checked-in `current.json` remains a pending-generation
 record until the real image, archive, replica readback, and external acceptance
 evidence have actually been produced.
+
+Release engineers select one exact target from
+`02_Tools/packaging/config/targets.json`. The fetch wrappers enter the pinned
+repository Python environment and materialize only complete-lock HTTPS inputs
+with declared version and licence provenance under the ignored
+content-addressed cache. Cache verification never opens a URL.
+`with-build-environment.* package <target>` mounts that cache read-only
+into the existing network-none container and writes a deterministic preparation
+receipt; the receipt leaves physical target checks at `not_run`. The checked-in
+lock remains incomplete until both OS dependency closures and the Raspberry Pi
+base image are pinned, so production preparation currently refuses to run.
 
 Two container runs sit outside that locked boundary because they need
 capabilities it drops. `02_Tools/tests/network/check.sh` runs the privileged
@@ -134,6 +150,22 @@ replacements without an explicit override.
   invocation, and host network state compares equal before and after.
 - Checked-out source is mounted read-only; generated dependencies, build output,
   runtime state and caches remain outside tracked source.
+- Packaging cache objects enter only through complete-lock HTTPS acquisition
+  with declared version/licence provenance and exact size and SHA-256
+  verification, and offline preparation sees that cache through a read-only
+  mount.
+- Packaging target IDs map to exactly one canonical OS identity, release,
+  architecture, artifact set, and physical-acceptance checklist. Cache
+  verification rejects symlinks and non-regular objects; on Linux it traverses
+  digest-derived paths with non-following descriptor operations and opens the
+  final object non-blocking so a FIFO cannot stall verification.
+- Preparation parses and verifies one captured target/lock snapshot and hashes
+  those same lock bytes into the receipt, so configuration replacement cannot
+  mix evidence from different documents.
+- Offline preparation requires a Linux namespace with loopback as its sole
+  interface and no usable IPv4 or IPv6 default route. Kernel-generated reject
+  routes on loopback do not imply connectivity; the receipt never infers
+  physical target acceptance.
 
 ## Change map
 
@@ -147,6 +179,14 @@ replacements without an explicit override.
   prerequisite contracts synchronized.
 - Change repository routing in `05_Software/scripts/aegis_test.py`; its unit
   tests prove native and Windows/WSL invocation and failure propagation.
+- Change target, lock, cache, or receipt contracts in
+  `02_Tools/packaging/package_inputs.py` and `config/`, then update
+  `05_Software/scripts/tests/test_packaging_inputs.py` and the packaging README
+  together.
+- Change the packaging cache mount or preparation entry in
+  `02_Tools/env/with-build-environment.*` and
+  `02_Tools/packaging/build/prepare-offline.sh`; retain network-none,
+  read-only-source/cache, and output-only write boundaries.
 
 ## Key behaviors
 
@@ -208,6 +248,16 @@ replacements without an explicit override.
 - `REQ-TEST-74c72bbe` and `REQ-TEST-5c90b63f` - expose native, cross, browser,
   appliance, and all ten acceptance outcomes without inferring missing proof.
 - `REQ-UX-dc08eeab` - names defective LFS content and all three recovery paths.
+- `REQ-PLAT-da89bf3b` - resolves only exact Ubuntu 24.04 amd64 and Raspberry Pi
+  OS/Debian 13 arm64 delivery targets.
+- `REQ-SEC-628657e1` - atomically caches only version/licence-declared,
+  size-and-digest-verified HTTPS packaging inputs selected by a complete lock.
+- `REQ-REL-f4a90899` - rejects incomplete or corrupt target cache closures and
+  reports every inspectable object defect.
+- `REQ-SEC-dd110b06` - prepares packaging inputs only in an observed
+  network-isolated Linux namespace.
+- `REQ-TEST-c442102f` - keeps unavailable physical target acceptance explicitly
+  `not_run` in deterministic preparation receipts.
 
 ## Architecture
 
@@ -272,6 +322,19 @@ flowchart TD
     network_manager --> appliance_core
     browser_namespace --> appliance_core
     static_assets --> appliance_core
+    packaging_targets[("exact target registry")]
+    packaging_lock[("packaging input lock")]
+    connected_fetch(["connected verified fetch"])
+    packaging_cache[("ignored digest cache")]
+    package_action(["network-none package preparation"])
+    preparation_receipt[("deterministic input receipt")]
+    packaging_targets --> connected_fetch
+    packaging_lock --> connected_fetch
+    connected_fetch --> packaging_cache
+    packaging_targets --> package_action
+    packaging_lock --> package_action
+    packaging_cache --> package_action
+    package_action --> preparation_receipt
 ```
 
 The scripts modify environment variables only in their child process. The
@@ -327,7 +390,17 @@ only durable state, and they live on the WSL Linux filesystem.
   `bootstrap-build-environment.sh` - Windows/WSL2 and native-Ubuntu host gates
   over shared engine verification and local restore or explicit rebuild logic.
 - `02_Tools/env/with-build-environment.ps1` and its Linux helper - digest-
-  checked, network-disabled build, test, shell, and command entry points.
+  checked, network-disabled build, test, package-preparation, shell, and command
+  entry points.
+- `02_Tools/packaging/` - exact target registry, explicitly complete/incomplete
+  input lock, connected acquisition wrappers, cache verifier, offline
+  preparation entry point, and operator documentation.
+- `05_Software/scripts/tests/test_packaging_inputs.py` - target, lock, fetch,
+  cache, isolation, receipt, and wrapper contract tests with no external
+  network or hardware dependency.
+- `02_Tools/tests/packaging/` - complete-fixture OCI execution of the actual
+  package action, including network-none, read-only cache, and receipt checks;
+  its temporary image and volume use unique names and are removed after use.
 - `02_Tools/scripts/build_environment.py` and adjacent shell scripts - lock and
   manifest validation, streaming multipart archive operations, build/export/
   restore verification, metadata collection, and replica preflight.

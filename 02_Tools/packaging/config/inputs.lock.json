@@ -1,0 +1,9 @@
+{
+  "complete": false,
+  "incomplete_reasons": [
+    "rpi-debian13-arm64 requires the exact Raspberry Pi OS base-image digest and complete arm64 OS dependency closure",
+    "ubuntu-24.04-amd64 requires the complete amd64 OS dependency closure"
+  ],
+  "inputs": [],
+  "schema": 1
+}

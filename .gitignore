@@ -1,6 +1,7 @@
 # Downloaded repository-local runtime tools are reproducible from 02_Tools.
 /02_Tools/runtime/
 /02_Tools/cache/
+/release/
 /02_Tools/archives/**/.staging/
 /02_Tools/archives/**/*.join
 /02_Tools/archives/**/*.tmp

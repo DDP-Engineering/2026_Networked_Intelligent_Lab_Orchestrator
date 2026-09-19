@@ -184,6 +184,22 @@ The container runs with no network, no privileges, no engine socket and the
 checkout mounted read-only; declared artifacts are published to the ignored
 `02_Tools/cache/containers/outputs`.
 
+Packaging has a separate connected acquisition step followed by the same
+network-none boundary. The checked-in input lock is intentionally incomplete,
+so these commands refuse production preparation until its reasons are resolved:
+
+```powershell
+.\02_Tools\packaging\fetch\fetch-all.ps1 ubuntu-24.04-amd64
+.\02_Tools\packaging\verify\verify-cache.ps1 ubuntu-24.04-amd64
+.\02_Tools\env\with-build-environment.ps1 package ubuntu-24.04-amd64
+```
+
+The equivalent POSIX entry points live under `02_Tools/packaging/{fetch,verify}`
+and `02_Tools/env/with-build-environment.sh`. A successful package-preparation
+action writes a deterministic receipt below
+`02_Tools/cache/containers/outputs/packaging/`; it does not yet build a release
+artifact and never records physical hardware acceptance as passed.
+
 ## Verification
 
 `.agentic/aegis.toml` declares the command keys, with `workdir = 05_Software`:

@@ -140,10 +140,11 @@ one of three fixed roles - Administrator, Operator or Viewer.
   additionally provides a directly writable card image. Each target is produced
   by its own packaging script, self-sufficient from the repository after a
   one-time verified fetch of external inputs.
-- **A minimum release and everything newer.** Delivery targets are not bound
-  to one Ubuntu or Raspberry Pi OS release: each declares a minimum supported
-  release and supports every newer one. The decisions are recorded in
-  `07_Delivery/README.md`.
+- **A finite tested release matrix.** The initial delivery targets are Ubuntu
+  24.04 LTS on amd64 and Raspberry Pi OS based on Debian 13 on arm64. Each exact
+  target owns its offline dependency pool and acceptance result; a newer OS
+  release becomes supported only through a separate target, pool, and
+  acceptance run. The decisions are recorded in `07_Delivery/README.md`.
 
 ## Implementation orientation
 

@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-TEST-c442102f"
+
+title = "Report unavailable hardware acceptance honestly"
+
+status = "active"
+
+requirement = """
+When packaging preparation records evidence without executing on the selected physical target, the receipt shall mark Raspberry Pi or Ubuntu mini-PC hardware acceptance as `not_run` with the required physical checks named and shall never represent cross-build or static validation as hardware acceptance.
+"""
+
+verification = "Prepare each target from a complete fixture cache without hardware execution and inspect the deterministic receipt for `not_run`, the target-specific required checks, and the absence of any passed hardware status; reject caller-supplied evidence fields that attempt to promote the status."
+
+affected_paths = ["02_Tools/packaging/package_inputs.py", "02_Tools/packaging/config/targets.json", "02_Tools/packaging/README.md", "00_Planning/Packaging_and_Delivery_Plan.md", "05_Software/scripts/tests/test_packaging_inputs.py"]
+
+linked_tests = ["05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_shipped_target_registry_is_exact", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_target_registry_rejects_ambiguous_or_inconsistent_metadata", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_prepare_receipts_never_infer_hardware_acceptance", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_cli_and_wrappers_keep_fetch_and_offline_paths_separate"]
+
+
+spec = "specs/REQ-TEST-c442102f.md"
+
+priority = "normal"   # low | normal | high
+rationale = "Unavailable hardware is a release limitation, not evidence that can be inferred from emulation or cross-compilation."
+
+created = 2026-09-18
+updated = 2026-09-19

@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "targets": [
+    {
+      "architecture": "arm64",
+      "artifacts": [
+        "deb",
+        "img.xz",
+        "run"
+      ],
+      "hardware_acceptance": [
+        "administrator-credentials",
+        "boot-reboot",
+        "filesystem-expansion",
+        "gpio-recovery-disabled",
+        "gpio-recovery-wired",
+        "image-flash-boot",
+        "integrations",
+        "network",
+        "power-cycle",
+        "services-gui",
+        "unique-identity"
+      ],
+      "id": "rpi-debian13-arm64",
+      "os": {
+        "family": "debian",
+        "id": "raspbian",
+        "version_id": "13"
+      }
+    },
+    {
+      "architecture": "amd64",
+      "artifacts": [
+        "deb",
+        "run"
+      ],
+      "hardware_acceptance": [
+        "boot-reboot",
+        "integrations",
+        "network",
+        "services-gui",
+        "usb-device-access"
+      ],
+      "id": "ubuntu-24.04-amd64",
+      "os": {
+        "family": "debian",
+        "id": "ubuntu",
+        "version_id": "24.04"
+      }
+    }
+  ]
+}

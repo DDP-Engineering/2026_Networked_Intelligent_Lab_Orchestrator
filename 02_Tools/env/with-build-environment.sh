@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-usage() { printf '%s\n' "usage: $0 [--engine docker|podman] [--image REFERENCE] test|build|shell|run [COMMAND ...]" >&2; exit 2; }
+usage() { printf '%s\n' "usage: $0 [--engine docker|podman] [--image REFERENCE] test|build|package|shell|run [ARGUMENTS ...]" >&2; exit 2; }
 engine=${NILO_OCI_ENGINE:-docker}
 image_override=
 while :; do
@@ -46,6 +46,14 @@ printf '%s\n' "NILO build environment generation=$generation image digest=$actua
 case "$action" in
     test) command="./02_Tools/tests/build-environment/verify-offline.sh" ;;
     build) command="./02_Tools/tests/build-environment/build-all.sh" ;;
+    package)
+        [ "$#" -eq 1 ] || usage
+        target=$1
+        case "$target" in ''|*[!a-z0-9.-]*) usage ;; esac
+        package_cache="$repo_root/02_Tools/cache/packaging"
+        mkdir -p "$package_cache"
+        command="sh ./02_Tools/packaging/build/prepare-offline.sh $target /outputs/packaging/$target/preparation.json /packaging-cache"
+        ;;
     shell) command="exec bash" ;;
     run) [ "$#" -gt 0 ] || usage; command="$*" ;;
     *) usage ;;
@@ -61,8 +69,11 @@ set -- run --rm --network none --cap-drop all --security-opt no-new-privileges \
     -v "$repo_root/.git:/work/git-dir:ro" -e GIT_OPTIONAL_LOCKS=0 \
     --mount "type=volume,source=$cache_volume,target=/work/runtime-cache" \
     -v "$output_root:/outputs:rw" -e NILO_OUTPUT_DIR=/outputs \
-    -e NILO_ISOLATED_SOURCE=/work/source -w /work \
-    --entrypoint sh "$reference" -c '
+    -e NILO_ISOLATED_SOURCE=/work/source -w /work
+if [ "$action" = package ]; then
+    set -- "$@" -v "$package_cache:/packaging-cache:ro"
+fi
+set -- "$@" --entrypoint sh "$reference" -c '
 set -eu
 marker="/work/runtime-cache/.nilo-seed-$2"
 if [ ! -f "$marker" ]; then

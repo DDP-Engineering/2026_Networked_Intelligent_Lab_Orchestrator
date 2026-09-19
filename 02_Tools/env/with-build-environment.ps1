@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Position = 0, Mandatory = $true)]
-    [ValidateSet('test', 'build', 'shell', 'run')][string]$Action,
+    [ValidateSet('test', 'build', 'package', 'shell', 'run')][string]$Action,
     [Parameter(ValueFromRemainingArguments = $true)][string[]]$Command,
     [string]$Distribution = 'Ubuntu-24.04',
     [ValidateSet('docker', 'podman')][string]$Engine = 'docker',

@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-PLAT-da89bf3b"
+
+title = "Select an exact delivery target"
+
+status = "active"
+
+requirement = """
+When a release engineer selects a delivery target, the packaging tooling shall resolve only a declared exact operating-system release and architecture definition for Ubuntu 24.04 LTS on amd64 or Raspberry Pi OS based on Debian 13 on arm64 and reject unknown, duplicate, or internally inconsistent target metadata before resolving external inputs.
+"""
+
+verification = "Load the shipped target registry, select each supported target, and assert its exact OS and architecture metadata; then supply unknown IDs, duplicate IDs, unsupported architectures, malformed OS releases, and inconsistent artifact declarations and observe a named validation error before lock processing."
+
+affected_paths = ["02_Tools/packaging/config/targets.json", "02_Tools/packaging/package_inputs.py", "02_Tools/packaging/README.md", "07_Delivery/README.md", ".agentic/context/project.md", "05_Software/scripts/tests/test_packaging_inputs.py"]
+
+linked_tests = ["05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_shipped_target_registry_is_exact", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_target_registry_rejects_ambiguous_or_inconsistent_metadata", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_list_targets_cli_is_canonical_and_rejects_unknown_target"]
+
+
+spec = "specs/REQ-PLAT-da89bf3b.md"
+
+priority = "normal"   # low | normal | high
+rationale = "An offline dependency closure is valid only for the exact OS release and architecture against which it was resolved."
+
+created = 2026-09-18
+updated = 2026-09-19

@@ -17,16 +17,22 @@ documentation that accompanies the application.
 
 ## Packaging and deployment decisions
 
-These decisions govern how NILO is packaged and installed. The packaging
-scripts that implement them are not written yet; the current
-`02_Tools/scripts/build-appliance.sh` and the optional bundle switch below
-predate them.
+These decisions govern how NILO is packaged and installed. The verified fetch,
+cache, exact-target, and offline-preparation foundation lives under
+`02_Tools/packaging/`. Its checked-in input lock remains explicitly incomplete,
+so final `.deb`, `.run`, and `.img.xz` builders are not available yet. The
+current `02_Tools/scripts/build-appliance.sh` and the optional bundle switch
+below predate the release packaging flow.
 
-- **Separate scripts per target.** The Raspberry Pi delivery and the Ubuntu
-  mini PC delivery are produced by separate packaging scripts. Each script is
-  self-sufficient from the repository: anything it needs from outside is
-  fetched and verified once when the script is created, and a later run needs
-  no network.
+- **Exact target definitions.** The initial targets are
+  `ubuntu-24.04-amd64` for Ubuntu 24.04 LTS and
+  `rpi-debian13-arm64` for Raspberry Pi OS based on Debian 13. Each target owns
+  its OS dependency closure and acceptance result.
+- **Connected fetch, offline build.** An explicit connected command fetches
+  only lock-declared HTTPS inputs and verifies their sizes and SHA-256 digests
+  into the ignored content-addressed cache. Later cache verification opens no
+  URL. Package preparation verifies the cache again inside the network-none
+  build environment.
 - **One package, everything included.** A NILO release is one package per
   target that contains Bench Core, the browser interface, the privileged helper
   and every integration at its current state. NILO is one software;
@@ -40,13 +46,15 @@ predate them.
   Raspberry Pi delivery is a complete image that is written directly to a card
   with an external tool such as Rufus. The writing tool is outside NILO's
   scope.
-- **A minimum release, and everything newer.** NILO is not bound to one Ubuntu
-  release or one Raspberry Pi OS release. Each target declares a minimum
-  supported release and supports every newer release. The baseline named
-  elsewhere in this documentation is Ubuntu 24.04 LTS and Raspberry Pi OS based
-  on Debian 13; the packaging work confirms or revises it. A package therefore
-  relies on the distribution's own packages for system dependencies and refuses
-  only a release below the minimum; it never pins one release.
+- **A finite tested release matrix.** A newer distribution release is not
+  implicitly supported because an offline dependency pool may not be compatible
+  with it. Adding an OS release requires a new exact target, dependency pool,
+  and acceptance run.
+- **Hardware evidence remains physical.** Cross-builds, emulation, cache
+  verification, and static checks do not prove that an image boots, networking
+  works, GPIO recovery is correctly wired, or an instrument is accessible.
+  Preparation receipts keep those checks at `not_run` until separate physical
+  target evidence exists.
 
 ## Optional integration bundles
 

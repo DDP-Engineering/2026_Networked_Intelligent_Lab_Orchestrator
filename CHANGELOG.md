@@ -5,6 +5,12 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ## [Unreleased]
 
+### Added
+
+- Exact Ubuntu amd64 and Raspberry Pi arm64 packaging targets, verified
+  connected input acquisition, fail-closed cache checks, and network-isolated
+  preparation receipts establish the offline delivery foundation.
+
 ### Changed
 
 - About now leads with appliance controls and permanent identity, groups its
@@ -15,6 +21,9 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Fixed
 
+- Packaging input verification now rejects linked or non-regular cache objects
+  without blocking on FIFOs, enforces exact target metadata and acceptance
+  checks, and binds receipts to one lock snapshot.
 - Printable appliance labels use a larger 27 mm QR code and a readable browser
   preview while preserving the exact 62 by 29 mm print size.
 
