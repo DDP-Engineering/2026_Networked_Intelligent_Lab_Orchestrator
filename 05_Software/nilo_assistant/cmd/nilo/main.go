@@ -113,6 +113,12 @@ func run(ctx context.Context, arguments []string) int {
 	if len(arguments) > 0 && arguments[0] == "admin" {
 		return runAdminCommand(ctx, arguments[1:], adminIO{stdin: os.Stdin, stdout: os.Stdout, stderr: os.Stderr, interactive: networkTerminal()})
 	}
+	if len(arguments) > 0 && arguments[0] == "seed-admin" {
+		return runSeedAdmin(ctx, arguments[1:], adminIO{stdin: os.Stdin, stdout: os.Stdout, stderr: os.Stderr})
+	}
+	if len(arguments) > 0 && arguments[0] == "maintenance" {
+		return runMaintenanceCommand(ctx, arguments[1:], adminIO{stdin: os.Stdin, stdout: os.Stdout, stderr: os.Stderr})
+	}
 	if len(arguments) > 0 && arguments[0] == "network" {
 		return runNetworkCommand(ctx, arguments[1:], networkIO{stdout: os.Stdout, stderr: os.Stderr, stdin: os.Stdin, interactive: networkTerminal()})
 	}
@@ -1157,6 +1163,9 @@ const rootUsage = `usage: nilo <command> [options]
              [--local-status-bind LOOPBACK]
   nilo serve-foundation-check --data-dir D     open and reconcile the data directory once
   nilo development issue-token --data-dir D    issue a development bearer token
+  nilo seed-admin --data-dir D --username U --password-file P
+                                               seed the first administrator from a protected file
+  nilo maintenance ...                         inventory, snapshot, restore, remove or purge local state
   nilo admin ...                               identities and API tokens: locally with --data-dir,
                                                or remotely with --server URL --token-file PATH
   nilo network ...                             appliance network state and previewed changes

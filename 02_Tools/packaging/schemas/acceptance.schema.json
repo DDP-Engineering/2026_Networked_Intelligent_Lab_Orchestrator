@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "checks": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "check": {"type": "string"},
+          "kind": {"enum": ["software", "physical"]},
+          "status": {"enum": ["passed", "failed", "not_run"]},
+          "target": {"enum": ["rpi-debian13-arm64", "ubuntu-24.04-amd64"]}
+        },
+        "required": ["check", "kind", "status", "target"],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "schema": {"const": 1}
+  },
+  "required": ["checks", "schema"],
+  "type": "object"
+}

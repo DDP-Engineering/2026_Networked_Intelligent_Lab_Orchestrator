@@ -1,0 +1,18 @@
+[Unit]
+Description=NILO interrupted-upgrade recovery
+Before=nilo.service
+ConditionPathExistsGlob=/var/lib/nilo/transactions/*/transaction.json
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStart=/usr/libexec/nilo/nilo-installer-recover
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/etc /usr /var/lib/nilo /var/lib/dpkg /var/lib/apt /var/log/nilo /run/nilo /var/cache/apt
+
+[Install]
+WantedBy=multi-user.target

@@ -9,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -24,16 +26,169 @@ import (
 )
 
 type controlledRunner struct {
-	mu      sync.Mutex
-	calls   int
-	active  int
-	maximum int
-	started chan struct{}
-	release chan struct{}
+	mu          sync.Mutex
+	calls       int
+	active      int
+	maximum     int
+	describeErr error
+	started     chan struct{}
+	release     chan struct{}
 }
 
 func (r *controlledRunner) Describe(context.Context, string) (protocol.DescribeResult, error) {
-	return protocol.DescribeResult{}, nil
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return protocol.DescribeResult{}, r.describeErr
+}
+
+func rewriteCatalogVersion(t *testing.T, manager *Manager, version string) {
+	t.Helper()
+	root := filepath.Join(manager.options.BundleDir, "sigrok")
+	manifestPath := filepath.Join(root, "manifest.json")
+	var descriptor map[string]any
+	encoded, err := os.ReadFile(manifestPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(encoded, &descriptor); err != nil {
+		t.Fatal(err)
+	}
+	packageDescriptor := descriptor["package"].(map[string]any)
+	packageDescriptor["version"] = version
+	encoded, err = json.Marshal(descriptor)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(manifestPath, encoded, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	indexPath := filepath.Join(root, "files.sha256.json")
+	var files map[string]string
+	index, err := os.ReadFile(indexPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(index, &files); err != nil {
+		t.Fatal(err)
+	}
+	files["manifest.json"] = fmt.Sprintf("%x", sha256.Sum256(encoded))
+	index, err = json.Marshal(files)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(indexPath, index, 0o600); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func rewriteCatalogStateSchema(t *testing.T, manager *Manager, schema int, migrations []map[string]any) {
+	t.Helper()
+	root := filepath.Join(manager.options.BundleDir, "sigrok")
+	manifestPath := filepath.Join(root, "manifest.json")
+	var descriptor map[string]any
+	encoded, err := os.ReadFile(manifestPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(encoded, &descriptor); err != nil {
+		t.Fatal(err)
+	}
+	descriptor["state_schema"] = schema
+	descriptor["state_migrations"] = migrations
+	encoded, err = json.Marshal(descriptor)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(manifestPath, encoded, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	indexPath := filepath.Join(root, "files.sha256.json")
+	var files map[string]string
+	index, err := os.ReadFile(indexPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(index, &files); err != nil {
+		t.Fatal(err)
+	}
+	files["manifest.json"] = fmt.Sprintf("%x", sha256.Sum256(encoded))
+	index, err = json.Marshal(files)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(indexPath, index, 0o600); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestIntegrationUpgradePreservesStateRefusesBusyAndRollsBackFailedHealth(t *testing.T) {
+	manager, actor, runner := testManager(t, "auto")
+	rewriteCatalogVersion(t, manager, "2.0.0")
+	upgraded, err := manager.Lifecycle(context.Background(), actor, "sigrok", "upgrade", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if upgraded.Version != "2.0.0" || !upgraded.Enabled || upgraded.Mode != "auto" {
+		t.Fatalf("upgraded plugin = %+v", upgraded)
+	}
+
+	job, err := manager.Submit(context.Background(), actor, submission("upgrade-busy"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	awaitJob(t, manager, actor, job.ID, "running")
+	busyContext, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+	if _, err := manager.Lifecycle(busyContext, actor, "sigrok", "upgrade", ""); !errors.Is(err, ErrBusy) {
+		t.Fatalf("busy upgrade = %v", err)
+	}
+	runner.release <- struct{}{}
+	awaitJob(t, manager, actor, job.ID, "completed")
+
+	rewriteCatalogVersion(t, manager, "3.0.0")
+	runner.mu.Lock()
+	runner.describeErr = errors.New("new runtime health failure")
+	runner.mu.Unlock()
+	if _, err := manager.Lifecycle(context.Background(), actor, "sigrok", "upgrade", ""); !errors.Is(err, ErrUnavailable) {
+		t.Fatalf("failed-health upgrade = %v", err)
+	}
+	runner.mu.Lock()
+	runner.describeErr = nil
+	runner.mu.Unlock()
+	plugins, err := manager.ListPlugins(context.Background(), actor)
+	if err != nil || len(plugins) != 1 || plugins[0].Version != "2.0.0" || !plugins[0].Enabled {
+		t.Fatalf("rolled-back plugin = %+v, %v", plugins, err)
+	}
+
+	rewriteCatalogVersion(t, manager, "4.0.0")
+	rewriteCatalogStateSchema(t, manager, 2, nil)
+	if _, err := manager.Lifecycle(context.Background(), actor, "sigrok", "upgrade", ""); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("missing state migration upgrade = %v", err)
+	}
+	var stateSchema int
+	var devicesJSON string
+	if err := manager.db().QueryRow(`SELECT state_schema,devices_json FROM bench_plugins WHERE id='sigrok'`).Scan(&stateSchema, &devicesJSON); err != nil {
+		t.Fatal(err)
+	}
+	if stateSchema != 1 || !strings.Contains(devicesJSON, "atk-dl16-1.3") {
+		t.Fatalf("rolled-back integration state schema=%d devices=%s", stateSchema, devicesJSON)
+	}
+	rows, err := manager.db().Query(`SELECT action FROM audit_events WHERE subject_id='sigrok' AND action LIKE 'plugin.upgrade_%' ORDER BY sequence`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rows.Close()
+	actions := []string{}
+	for rows.Next() {
+		var action string
+		if err := rows.Scan(&action); err != nil {
+			t.Fatal(err)
+		}
+		actions = append(actions, action)
+	}
+	if !slices.Contains(actions, "plugin.upgrade_succeeded") || !slices.Contains(actions, "plugin.upgrade_rolled_back") {
+		t.Fatalf("upgrade audit actions = %v", actions)
+	}
 }
 func (r *controlledRunner) Cancel(context.Context, string, domain.RequestID) error { return nil }
 func (r *controlledRunner) Shutdown(context.Context) error                         { return nil }

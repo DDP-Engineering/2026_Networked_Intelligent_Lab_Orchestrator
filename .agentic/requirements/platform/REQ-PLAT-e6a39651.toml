@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-PLAT-e6a39651"
+
+title = "Build sanitized Raspberry Pi appliance images"
+
+status = "active"
+
+requirement = """
+When the Raspberry Pi target is built from its pinned verified base image, the image builder shall install the offline NILO payload without starting services, configure first-boot filesystem and identity regeneration with NetworkManager and recovery GPIO disabled by default, remove build-specific identity and transient state, and emit a checked compressed image only after complete unmount and structural verification.
+"""
+
+verification = "Build a small partitioned fixture image and inspect package files, enabled units, first-boot configuration, sanitation, NetworkManager ownership and disabled GPIO/SSH defaults; simulate service start, stale machine identity, insufficient space, mount/unmount failure and checksum corruption and confirm no accepted compressed image is emitted. Physical boot remains a separately reported `not_run` check."
+
+affected_paths = ["02_Tools/packaging/image/", "02_Tools/packaging/build/build-pi-image.sh", "02_Tools/packaging/verify/verify-image.sh", "02_Tools/packaging/release_builder.py", "05_Software/scripts/tests/test_release_packaging.py"]
+
+linked_tests = ["05_Software/scripts/tests/test_release_packaging.py::RaspberryPiImageTests.test_image_builder_delegates_only_validated_inputs_and_keeps_hardware_not_run", "05_Software/scripts/tests/test_release_packaging.py::RaspberryPiImageTests.test_image_builder_refuses_non_pi_targets_and_symlinked_inputs"]
+
+
+spec = "specs/REQ-PLAT-e6a39651.md"
+
+priority = "high"   # low | normal | high
+rationale = "Cloned appliance images must acquire unique identity and explicit hardware consent only on the target."
+
+created = 2026-09-19
+updated = 2026-09-19

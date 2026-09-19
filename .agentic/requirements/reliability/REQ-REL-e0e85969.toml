@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-REL-e0e85969"
+
+title = "Roll back a failed offline installation"
+
+status = "active"
+
+requirement = """
+If an offline installation fails after mutation begins, then the installer shall restore the exact previous package set and matching validated state snapshot, report the retained recovery evidence, and leave services stopped with a precise recovery instruction whenever automatic restoration cannot be proven complete.
+"""
+
+verification = "Inject failures at dependency installation, Debian package installation, application/integration migration, service start and health verification and compare prior package/state digests after rollback; interrupt each transaction marker and verify deterministic resume or a stopped recoverable state with no false success."
+
+affected_paths = ["02_Tools/packaging/release_builder.py", "02_Tools/packaging/debian/nilo-installer-recover", "05_Software/nilo_assistant/internal/maintenance/", "05_Software/scripts/tests/test_release_packaging.py", "02_Tools/tests/packaging/"]
+
+linked_tests = ["05_Software/scripts/tests/test_release_packaging.py::OfflineInstallerTests.test_offline_installer_is_self_verifying_and_deterministic"]
+
+
+spec = "specs/REQ-REL-e0e85969.md"
+
+priority = "high"   # low | normal | high
+rationale = "A failed upgrade must not pair a new schema with old binaries or leave an apparently healthy partial transaction."
+
+created = 2026-09-19
+updated = 2026-09-19

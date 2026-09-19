@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-SEC-de8b193c"
+
+title = "Seed the first administrator from a protected file"
+
+status = "active"
+
+requirement = """
+When the local first-boot seeding command receives an administrator username and root-readable password file for an empty identity store, NILO shall consume the password without exposing it, atomically create the administrator through the authoritative identity service, invalidate the credential source after success, and behave idempotently only when the requested administrator already exists.
+"""
+
+verification = "Run the seeding command against an empty data directory through an injected protected file and observe one administrator plus deletion of the source; repeat for the same state, a different existing identity, weak password, unreadable or linked file, failed transaction and concurrent invocation, asserting secret-free output and the correct unchanged or rolled-back state."
+
+affected_paths = ["05_Software/nilo_assistant/cmd/nilo/main.go", "05_Software/nilo_assistant/cmd/nilo/seed_admin.go", "05_Software/nilo_assistant/cmd/nilo/seed_admin_test.go", "05_Software/nilo_assistant/internal/identity/service.go", "05_Software/nilo_assistant/internal/store/sqlite/"]
+
+linked_tests = ["05_Software/nilo_assistant/cmd/nilo/seed_admin_test.go::TestSeedAdministratorConsumesAProtectedPasswordFile", "05_Software/nilo_assistant/cmd/nilo/seed_admin_test.go::TestSeedAdministratorRefusesUnsafeOrAlreadyConsumedInputs", "05_Software/nilo_assistant/cmd/nilo/seed_admin_test.go::TestSeedAdministratorRefusesASymlinkedPasswordFile"]
+
+
+spec = "specs/REQ-SEC-de8b193c.md"
+
+priority = "high"   # low | normal | high
+rationale = "A package must create the first production administrator without embedding or exposing a reusable development credential."
+
+created = 2026-09-19
+updated = 2026-09-19

@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-SEC-a14ea155"
+
+title = "Exclude secrets and development fixtures from releases"
+
+status = "active"
+
+requirement = """
+Before a release artifact is accepted, the release verifier shall reject any payload containing a credential, signing key, `.git` or editor metadata, build-host absolute path, simulation-only fixture, test-only integration runtime, cache, staging residue or undeclared executable input.
+"""
+
+verification = "Scan complete fixture payloads and observe an empty forbidden-content report; independently inject development credentials, fake integration files, repository metadata, Windows and Linux host paths, cache/staging names and an undeclared executable and confirm each artifact is rejected without printing secret contents."
+
+affected_paths = ["02_Tools/packaging/release_builder.py", "02_Tools/packaging/verify/verify-release.sh", "02_Tools/packaging/config/forbidden-release-content.json", "05_Software/scripts/tests/test_release_packaging.py"]
+
+linked_tests = ["05_Software/scripts/tests/test_release_packaging.py::DeterministicPayloadTests.test_release_scanner_names_forbidden_production_content", "05_Software/scripts/tests/test_release_packaging.py::DeterministicPayloadTests.test_payload_refuses_links_special_files_and_mutable_state"]
+
+
+spec = "specs/REQ-SEC-a14ea155.md"
+
+priority = "high"   # low | normal | high
+rationale = "Release payloads cross the development-to-production boundary and must not carry host state or reusable secrets."
+
+created = 2026-09-19
+updated = 2026-09-19

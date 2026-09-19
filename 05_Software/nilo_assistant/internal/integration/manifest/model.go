@@ -83,17 +83,27 @@ type HealthCheck struct {
 	Timeout string `json:"timeout"`
 }
 
+// StateMigration declares one deterministic, Core-owned package-state step.
+// Integration bundles never supply migration executables.
+type StateMigration struct {
+	From int    `json:"from"`
+	To   int    `json:"to"`
+	Kind string `json:"kind"`
+}
+
 // Manifest is the validated, package-root-confined integration contract.
 type Manifest struct {
-	Package                Package       `json:"package"`
-	Protocol               string        `json:"protocol"`
-	Platforms              []Platform    `json:"platforms"`
-	Runner                 Runner        `json:"runner"`
-	AppConfigurationSchema string        `json:"app_configuration_schema"`
-	Operations             []Operation   `json:"operations"`
-	Cancellation           Cancellation  `json:"cancellation"`
-	Events                 []Event       `json:"events"`
-	Artifacts              []Artifact    `json:"artifacts"`
-	HealthChecks           []HealthCheck `json:"health_checks"`
-	ContractFixtures       []string      `json:"contract_fixtures"`
+	Package                Package          `json:"package"`
+	Protocol               string           `json:"protocol"`
+	Platforms              []Platform       `json:"platforms"`
+	Runner                 Runner           `json:"runner"`
+	AppConfigurationSchema string           `json:"app_configuration_schema"`
+	Operations             []Operation      `json:"operations"`
+	Cancellation           Cancellation     `json:"cancellation"`
+	Events                 []Event          `json:"events"`
+	Artifacts              []Artifact       `json:"artifacts"`
+	HealthChecks           []HealthCheck    `json:"health_checks"`
+	ContractFixtures       []string         `json:"contract_fixtures"`
+	StateSchema            int              `json:"state_schema,omitempty"`
+	StateMigrations        []StateMigration `json:"state_migrations,omitempty"`
 }

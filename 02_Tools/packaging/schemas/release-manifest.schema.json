@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifacts": {"items": {"$ref": "#/$defs/file"}, "type": "array"},
+    "checksum_file": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {"const": "SHA256SUMS"},
+        "sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"}
+      },
+      "required": ["path", "sha256"],
+      "type": "object"
+    },
+    "distribution": {"type": "object"},
+    "files": {"items": {"$ref": "#/$defs/file"}, "type": "array"},
+    "schema": {"const": 1},
+    "source_date_epoch": {"minimum": 0, "type": "integer"},
+    "version": {"pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+", "type": "string"}
+  },
+  "required": ["artifacts", "checksum_file", "distribution", "files", "schema", "source_date_epoch", "version"],
+  "type": "object",
+  "$defs": {
+    "file": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {"type": "string"},
+        "sha256": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+        "size": {"minimum": 1, "type": "integer"},
+        "target": {"type": "string"}
+      },
+      "required": ["path", "sha256", "size", "target"],
+      "type": "object"
+    }
+  }
+}

@@ -6,13 +6,46 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"golang.org/x/sys/unix"
 	"nilo.local/nilo/internal/nethelper"
 )
+
+func inheritedUnixListener() (*net.UnixListener, bool, error) {
+	listenPID := os.Getenv("LISTEN_PID")
+	listenFDs := os.Getenv("LISTEN_FDS")
+	if listenPID == "" && listenFDs == "" {
+		return nil, false, nil
+	}
+	pid, pidErr := strconv.Atoi(listenPID)
+	count, countErr := strconv.Atoi(listenFDs)
+	if pidErr != nil || countErr != nil || pid != os.Getpid() || count != 1 {
+		return nil, true, errors.New("systemd socket activation requires exactly one listener for this process")
+	}
+	file := os.NewFile(uintptr(3), "nilo-nethelper.socket")
+	if file == nil {
+		return nil, true, errors.New("systemd socket activation descriptor is unavailable")
+	}
+	listener, err := net.FileListener(file)
+	_ = file.Close()
+	if err != nil {
+		return nil, true, fmt.Errorf("adopt systemd socket: %w", err)
+	}
+	unixListener, ok := listener.(*net.UnixListener)
+	if !ok {
+		_ = listener.Close()
+		return nil, true, errors.New("systemd supplied a non-Unix listener")
+	}
+	_ = os.Unsetenv("LISTEN_PID")
+	_ = os.Unsetenv("LISTEN_FDS")
+	_ = os.Unsetenv("LISTEN_FDNAMES")
+	return unixListener, true, nil
+}
 
 func privateDirectory(path string, mode os.FileMode) error {
 	if !filepath.IsAbs(path) {
@@ -161,9 +194,15 @@ func serve(ctx context.Context, o options) error {
 	if err = engine.ConfigureInstaller(installer, store); err != nil {
 		return err
 	}
-	listener, err := nethelper.ListenUnix(o.socket, o.gid)
+	listener, inherited, err := inheritedUnixListener()
 	if err != nil {
 		return err
+	}
+	if !inherited {
+		listener, err = nethelper.ListenUnix(o.socket, o.gid)
+		if err != nil {
+			return err
+		}
 	}
 	defer listener.Close()
 	timerCtx, stop := context.WithCancel(ctx)

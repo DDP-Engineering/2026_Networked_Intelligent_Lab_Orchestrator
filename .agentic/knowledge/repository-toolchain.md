@@ -8,8 +8,9 @@ product behavior: `02_Tools/` in full - the pinned runtimes under the ignored
 the `env/` child-process wrappers, the `doctor*` readiness checks, the locked
 OCI build environment under `containers/build/` with
 `env/with-build-environment.*`, the container test runs under `tests/`, and
-the exact-target packaging input boundary under `packaging/`, including its
-connected fetch, ignored digest cache, offline preparation receipt, and
+the exact-target packaging boundary under `packaging/`, including connected
+resolution/fetch, the ignored digest cache, offline preparation, deterministic
+artifact builders, release evidence and verifiers, and
 `05_Software/scripts/aegis_test.py`, which routes the repository gate.
 
 Start at `02_Tools/toolchain.versions` for a pinned version, `02_Tools/env/`
@@ -33,10 +34,11 @@ or carried in an offline development kit without bloating source history.
 
 The component owns how verification environments are materialized and entered.
 It also owns how release inputs cross from an explicit connected acquisition
-phase into a verified, read-only cache used by network-isolated preparation.
-It does not own Bench Core network behavior, GUI behavior, integration behavior,
-final release artifact construction, publication, or hardware acceptance
-results.
+phase into a verified, read-only cache, and how explicit staged product inputs
+become deterministic target payloads, Debian packages, offline installers,
+Raspberry Pi images and closed release evidence without network access. It does
+not own Bench Core network behavior, GUI behavior, integration behavior,
+publication, signing-key custody, or physical hardware acceptance results.
 
 ## Public interface
 
@@ -82,6 +84,15 @@ into the existing network-none container and writes a deterministic preparation
 receipt; the receipt leaves physical target checks at `not_run`. The checked-in
 lock remains incomplete until both OS dependency closures and the Raspberry Pi
 base image are pinned, so production preparation currently refuses to run.
+
+`packaging/fetch/resolve-inputs.*` resolves reviewed declarations once during
+the connected phase, stores only digest-verified bytes and writes a proposal
+whose required classes must be complete before adoption. Offline shell entry
+points under `packaging/build/` then stage and build canonical payloads, `.deb`
+packages, target-specific self-extracting installers and the Pi image from
+explicit local inputs. `build-release.sh` accepts only the exact five-artifact
+matrix and closes checksums, SPDX SBOM, notices, provenance and acceptance
+evidence; `verify/` recomputes the closure and rejects undeclared files.
 
 Two container runs sit outside that locked boundary because they need
 capabilities it drops. `02_Tools/tests/network/check.sh` runs the privileged
@@ -166,6 +177,15 @@ replacements without an explicit override.
   interface and no usable IPv4 or IPv6 default route. Kernel-generated reject
   routes on loopback do not imply connectivity; the receipt never infers
   physical target acceptance.
+- Release payloads contain regular files and directories only, normalize
+  ownership and timestamps, exclude mutable state and forbidden development
+  content, and are byte-reproducible for identical staged input and epoch.
+- Installers verify their own embedded archive before extraction, accept only
+  declared regular files, use local-only package operations, and retain a
+  durable recovery journal until package, state and health verification commit.
+- A release directory contains exactly the declared target artifacts and
+  evidence. Physical target rows stay `not_run` unless separately observed on
+  the named hardware; unsigned candidates cannot be marked public.
 
 ## Change map
 
@@ -187,6 +207,10 @@ replacements without an explicit override.
   `02_Tools/env/with-build-environment.*` and
   `02_Tools/packaging/build/prepare-offline.sh`; retain network-none,
   read-only-source/cache, and output-only write boundaries.
+- Change payload, Debian, installer, image or release formats in
+  `02_Tools/packaging/release_builder.py` and their shell entry points, then
+  update `05_Software/scripts/tests/test_release_packaging.py`, schemas and the
+  packaging README together.
 
 ## Key behaviors
 
@@ -258,6 +282,18 @@ replacements without an explicit override.
   network-isolated Linux namespace.
 - `REQ-TEST-c442102f` - keeps unavailable physical target acceptance explicitly
   `not_run` in deterministic preparation receipts.
+- `REQ-PLAT-4af865a9` - resolves every required release-input class into a
+  reviewable digest lock and cache proposal during the connected phase.
+- `REQ-NFR-2dc6dc61` and `REQ-SEC-a14ea155` - build canonical reproducible
+  payloads and exclude mutable, secret, development and unsafe content.
+- `REQ-PLAT-c98ee5fa` - builds policy-safe Debian packages for both exact
+  targets with hardened units and idempotent lifecycle scripts.
+- `REQ-SEC-936214c0` and `REQ-REL-e0e85969` - create self-verifying offline
+  installers with local-only preflight, durable phases and bounded rollback.
+- `REQ-PLAT-e6a39651` - constructs a sanitized Raspberry Pi card image from a
+  verified base, arm64 package, local pool and protected first-boot credential.
+- `REQ-DATA-0b4ecb84`, `REQ-TEST-6274da69` - close every artifact into
+  checksums, SBOM, notices, provenance and honest acceptance evidence.
 
 ## Architecture
 
@@ -329,12 +365,28 @@ flowchart TD
     package_action(["network-none package preparation"])
     preparation_receipt[("deterministic input receipt")]
     packaging_targets --> connected_fetch
+    declarations[("reviewed release input declarations")] --> connected_fetch
     packaging_lock --> connected_fetch
     connected_fetch --> packaging_cache
     packaging_targets --> package_action
     packaging_lock --> package_action
     packaging_cache --> package_action
     package_action --> preparation_receipt
+    staged_product[("staged binaries, GUI and integration bundles")]
+    artifact_builder(["offline artifact builder"])
+    payload[("canonical target payload")]
+    deb[("target Debian package")]
+    installer[("self-extracting offline installer")]
+    pi_image[("Raspberry Pi image")]
+    release_evidence[("checksums, SBOM, notices, provenance, acceptance")]
+    packaging_cache --> artifact_builder
+    staged_product --> artifact_builder
+    artifact_builder --> payload
+    payload --> deb
+    deb --> installer
+    deb --> pi_image
+    installer --> release_evidence
+    pi_image --> release_evidence
 ```
 
 The scripts modify environment variables only in their child process. The
@@ -393,11 +445,16 @@ only durable state, and they live on the WSL Linux filesystem.
   checked, network-disabled build, test, package-preparation, shell, and command
   entry points.
 - `02_Tools/packaging/` - exact target registry, explicitly complete/incomplete
-  input lock, connected acquisition wrappers, cache verifier, offline
-  preparation entry point, and operator documentation.
+  input lock, connected declaration resolver and acquisition wrappers, cache
+  verifier, offline preparation, artifact build/verification entry points,
+  Debian unit/recovery assets, Pi image mutator, evidence schemas and operator
+  documentation; `release_builder.py` is the canonical archive/evidence engine.
 - `05_Software/scripts/tests/test_packaging_inputs.py` - target, lock, fetch,
   cache, isolation, receipt, and wrapper contract tests with no external
   network or hardware dependency.
+- `05_Software/scripts/tests/test_release_packaging.py` - deterministic payload,
+  Debian, installer, image, release-closure, production-runtime and entrypoint
+  tests, including POSIX-only traversal and special-file defenses under Linux.
 - `02_Tools/tests/packaging/` - complete-fixture OCI execution of the actual
   package action, including network-none, read-only cache, and receipt checks;
   its temporary image and volume use unique names and are removed after use.

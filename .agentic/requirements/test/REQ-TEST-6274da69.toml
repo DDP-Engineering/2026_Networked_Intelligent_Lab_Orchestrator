@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-TEST-6274da69"
+
+title = "Verify every release artifact without network access"
+
+status = "active"
+
+requirement = """
+When release verification runs for a target, the verification system shall exercise artifact structure and supported install, reinstall, removal, failure-injected upgrade and rollback paths with external networking unavailable, and shall record each hardware-independent result separately from physical checks that remain `not_run` until executed on the named target.
+"""
+
+verification = "Run the release gate over complete fixture artifacts in network-none target containers or documented emulation and inspect the result matrix for every lifecycle stage; introduce an external route attempt and failures at each transaction boundary and confirm the gate fails without promoting Raspberry Pi boot/GPIO or mini-PC USB checks."
+
+affected_paths = ["02_Tools/tests/packaging/", "02_Tools/packaging/verify/", "02_Tools/packaging/release_builder.py", "05_Software/scripts/tests/test_release_packaging.py", "07_Delivery/"]
+
+linked_tests = ["05_Software/scripts/tests/test_release_packaging.py::ReleaseEvidenceTests.test_release_evidence_closes_every_artifact_and_keeps_physical_checks_not_run"]
+
+
+spec = "specs/REQ-TEST-6274da69.md"
+
+priority = "high"   # low | normal | high
+rationale = "An artifact existing on disk is not evidence that it installs, rolls back or runs offline on its exact target."
+
+created = 2026-09-19
+updated = 2026-09-19

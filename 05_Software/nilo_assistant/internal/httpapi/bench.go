@@ -62,7 +62,7 @@ func registerBench(mux *http.ServeMux, manager *bench.Manager, guard accessGuard
 		}
 		writeJSON(w, 200, map[string]any{"plugins": plugins})
 	})
-	for _, action := range []string{"install", "enable", "disable", "restart", "uninstall"} {
+	for _, action := range []string{"install", "upgrade", "enable", "disable", "restart", "uninstall"} {
 		register("POST /api/v1/plugins/{id}/"+action, auth.PermissionPluginsManage, func(w http.ResponseWriter, r *http.Request) {
 			var input struct {
 				Mode string `json:"mode"`

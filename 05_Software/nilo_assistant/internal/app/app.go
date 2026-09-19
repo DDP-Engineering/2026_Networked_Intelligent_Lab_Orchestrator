@@ -19,6 +19,7 @@ import (
 	"nilo.local/nilo/internal/config"
 	"nilo.local/nilo/internal/domain"
 	"nilo.local/nilo/internal/identity"
+	"nilo.local/nilo/internal/maintenance"
 	"nilo.local/nilo/internal/session"
 	"nilo.local/nilo/internal/store/sqlite"
 )
@@ -116,6 +117,10 @@ func Open(ctx context.Context, options Options) (*App, error) {
 	if err != nil {
 		_ = database.Close()
 		return nil, err
+	}
+	if err := maintenance.EnsureOwnership(configuration.DataDir, applianceRuntime.Identity.ID); err != nil {
+		_ = database.Close()
+		return nil, fmt.Errorf("bind application data ownership: %w", err)
 	}
 	// Read immediately after provisioning, so the ordering the seeding rule
 	// depends on stays visible in one place: sqlite.Open applied the migration

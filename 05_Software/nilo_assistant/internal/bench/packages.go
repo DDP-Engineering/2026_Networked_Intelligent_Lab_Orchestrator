@@ -57,6 +57,7 @@ func verifyPackage(root string) (string, error) {
 		return "", ErrInvalid
 	}
 	total := int64(0)
+	runtimeBytes := int64(0)
 	for name, want := range files {
 		path, err := config.ResolveWithin(root, name)
 		if err != nil {
@@ -67,7 +68,10 @@ func verifyPackage(root string) (string, error) {
 			return "", ErrInvalid
 		}
 		total += info.Size()
-		if total > 128<<20 {
+		if strings.HasPrefix(name, "runtime/") {
+			runtimeBytes += info.Size()
+		}
+		if total > 1<<30 {
 			return "", ErrInvalid
 		}
 		file, err := os.Open(path)
@@ -103,6 +107,24 @@ func verifyPackage(root string) (string, error) {
 	})
 	if err != nil {
 		return "", err
+	}
+	if runtimeBytes == 0 {
+		if total > 128<<20 {
+			return "", ErrInvalid
+		}
+	} else {
+		var limits struct {
+			Architecture   string `json:"architecture"`
+			Backend        string `json:"backend"`
+			MeasuredBytes  int64  `json:"measured_bytes"`
+			MaximumBytes   int64  `json:"maximum_bytes"`
+			ProjectVersion string `json:"project_version"`
+			SelfContained  bool   `json:"self_contained"`
+		}
+		raw, readErr := os.ReadFile(filepath.Join(root, "runtime.json"))
+		if readErr != nil || decodeStrict(raw, &limits) != nil || !limits.SelfContained || limits.MeasuredBytes != runtimeBytes || limits.MaximumBytes < (runtimeBytes*120+99)/100 || limits.MaximumBytes > 1<<30 {
+			return "", ErrInvalid
+		}
 	}
 	hash := sha256.Sum256(index)
 	return hex.EncodeToString(hash[:]), nil
@@ -213,7 +235,12 @@ func (m *Manager) process(p Plugin) (supervisor.Supervisor, error) {
 	}
 	args := append([]string(nil), descriptor.Runner.Arguments...)
 	if p.ID == "sigrok" {
-		args = append(args, "--backend", m.options.Backend)
+		backend := m.options.Backend
+		bundledBackend := filepath.Join(root, "runtime", "bin", "sigrok-cli")
+		if info, statErr := os.Stat(bundledBackend); statErr == nil && info.Mode().IsRegular() {
+			backend = bundledBackend
+		}
+		args = append(args, "--backend", backend)
 		if m.options.Simulation {
 			args = append(args, "--simulation")
 		}
@@ -232,6 +259,187 @@ func (m *Manager) health(ctx context.Context, p Plugin) error {
 	defer cancel()
 	_, err = runner.Describe(ctx, p.ID)
 	return err
+}
+
+func (m *Manager) waitPluginIdle(ctx context.Context, id string, maximum time.Duration) error {
+	deadline := time.NewTimer(maximum)
+	defer deadline.Stop()
+	ticker := time.NewTicker(50 * time.Millisecond)
+	defer ticker.Stop()
+	for {
+		var count int
+		err := m.db().QueryRowContext(ctx, `SELECT count(*) FROM bench_jobs j JOIN sessions s ON s.id=j.session_id WHERE j.plugin_id=? AND s.state IN ('queued','running','pending_approval')`, id).Scan(&count)
+		if err != nil {
+			if ctx.Err() != nil {
+				return ErrBusy
+			}
+			return err
+		}
+		if count == 0 {
+			return nil
+		}
+		select {
+		case <-ctx.Done():
+			return ErrBusy
+		case <-deadline.C:
+			return ErrBusy
+		case <-ticker.C:
+		}
+	}
+}
+
+func rollbackPackageSwitch(target, backupRoot string) error {
+	failed := filepath.Join(backupRoot, "failed-upgrade")
+	previous := filepath.Join(backupRoot, "previous")
+	if err := os.Rename(target, failed); err != nil {
+		return err
+	}
+	if err := os.Rename(previous, target); err != nil {
+		_ = os.Rename(failed, target)
+		return err
+	}
+	return os.RemoveAll(failed)
+}
+
+func migratePackageState(currentSchema int, candidate manifest.Manifest, state []byte) ([]byte, error) {
+	if currentSchema < 1 || candidate.StateSchema < currentSchema {
+		return nil, ErrInvalid
+	}
+	var document any
+	if err := json.Unmarshal(state, &document); err != nil {
+		return nil, ErrInvalid
+	}
+	for currentSchema < candidate.StateSchema {
+		found := false
+		for _, migration := range candidate.StateMigrations {
+			if migration.From == currentSchema && migration.Kind == "preserve-json" {
+				currentSchema = migration.To
+				found = true
+				break
+			}
+		}
+		if !found || currentSchema > candidate.StateSchema {
+			return nil, ErrInvalid
+		}
+	}
+	encoded, err := json.Marshal(document)
+	if err != nil {
+		return nil, ErrInvalid
+	}
+	return encoded, nil
+}
+
+func (m *Manager) recordUpgradeRollback(ctx context.Context, actor identity.Actor, current Plugin, targetVersion, reason string) error {
+	return m.record(ctx, actor, "plugin.upgrade_rolled_back", current.ID, map[string]string{
+		"from": current.Version, "reason": reason, "to": targetVersion,
+	})
+}
+
+func (m *Manager) upgradePlugin(ctx context.Context, actor identity.Actor, current Plugin) error {
+	if m.options.BundleDir == "" {
+		return ErrUnavailable
+	}
+	if err := m.waitPluginIdle(ctx, current.ID, time.Minute); err != nil {
+		return err
+	}
+	source, err := config.ResolveWithin(m.options.BundleDir, current.ID)
+	if err != nil {
+		return err
+	}
+	digest, err := verifyPackage(source)
+	if err != nil {
+		return err
+	}
+	descriptor, err := manifest.Load(source)
+	if err != nil || descriptor.Package.ID != current.ID {
+		return errors.Join(ErrInvalid, err)
+	}
+	if digest == current.Digest {
+		return nil
+	}
+	target, err := m.packageRoot(current.ID)
+	if err != nil {
+		return err
+	}
+	currentDescriptor, err := manifest.Load(target)
+	if err != nil {
+		return errors.Join(ErrInvalid, err)
+	}
+	stage, err := os.MkdirTemp(filepath.Dir(target), ".upgrade-")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(stage)
+	if err := os.CopyFS(stage, os.DirFS(source)); err != nil {
+		return err
+	}
+	if err := os.Chmod(filepath.Join(stage, "runner"), 0o700); err != nil {
+		return err
+	}
+	if stagedDigest, err := verifyPackage(stage); err != nil || stagedDigest != digest {
+		return errors.Join(ErrInvalid, err)
+	}
+	if err := m.record(ctx, actor, "plugin.upgrade_requested", current.ID, map[string]string{"from": current.Version, "to": descriptor.Package.Version}); err != nil {
+		return err
+	}
+	var priorDigest string
+	var priorStateSchema int
+	var priorState []byte
+	if err := m.db().QueryRowContext(ctx,
+		`SELECT digest,state_schema,devices_json FROM bench_plugins WHERE id=?`, current.ID,
+	).Scan(&priorDigest, &priorStateSchema, &priorState); err != nil {
+		_ = m.recordUpgradeRollback(ctx, actor, current, descriptor.Package.Version, "state-snapshot")
+		return err
+	}
+	if priorStateSchema != currentDescriptor.StateSchema {
+		rollbackErr := m.recordUpgradeRollback(ctx, actor, current, descriptor.Package.Version, "state-schema-mismatch")
+		return errors.Join(ErrInvalid, rollbackErr)
+	}
+	migratedState, err := migratePackageState(priorStateSchema, descriptor, priorState)
+	if err != nil {
+		rollbackErr := m.recordUpgradeRollback(ctx, actor, current, descriptor.Package.Version, "migration")
+		return errors.Join(err, rollbackErr)
+	}
+	backupRoot, err := os.MkdirTemp(filepath.Dir(target), ".rollback-")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(backupRoot)
+	if err := os.Rename(target, filepath.Join(backupRoot, "previous")); err != nil {
+		rollbackErr := m.recordUpgradeRollback(ctx, actor, current, descriptor.Package.Version, "activate-backup")
+		return errors.Join(err, rollbackErr)
+	}
+	if err := os.Rename(stage, target); err != nil {
+		restoreErr := os.Rename(filepath.Join(backupRoot, "previous"), target)
+		rollbackErr := m.recordUpgradeRollback(ctx, actor, current, descriptor.Package.Version, "activate-candidate")
+		return errors.Join(err, restoreErr, rollbackErr)
+	}
+	candidate := current
+	candidate.Digest = digest
+	if err := m.health(ctx, candidate); err != nil {
+		m.report(err)
+		restoreErr := rollbackPackageSwitch(target, backupRoot)
+		rollbackErr := m.recordUpgradeRollback(ctx, actor, current, descriptor.Package.Version, "health")
+		return errors.Join(ErrUnavailable, restoreErr, rollbackErr)
+	}
+	if _, err := m.db().ExecContext(ctx,
+		`UPDATE bench_plugins SET digest=?,state_schema=?,devices_json=?,last_error='' WHERE id=?`,
+		digest, descriptor.StateSchema, migratedState, current.ID,
+	); err != nil {
+		restoreErr := rollbackPackageSwitch(target, backupRoot)
+		rollbackErr := m.recordUpgradeRollback(ctx, actor, current, descriptor.Package.Version, "state-commit")
+		return errors.Join(err, restoreErr, rollbackErr)
+	}
+	if err := m.record(ctx, actor, "plugin.upgrade_succeeded", current.ID, map[string]string{"from": current.Version, "to": descriptor.Package.Version}); err != nil {
+		_, stateErr := m.db().ExecContext(ctx,
+			`UPDATE bench_plugins SET digest=?,state_schema=?,devices_json=? WHERE id=?`,
+			priorDigest, priorStateSchema, priorState, current.ID,
+		)
+		restoreErr := rollbackPackageSwitch(target, backupRoot)
+		rollbackErr := m.recordUpgradeRollback(ctx, actor, current, descriptor.Package.Version, "success-audit")
+		return errors.Join(err, stateErr, restoreErr, rollbackErr)
+	}
+	return nil
 }
 
 // Lifecycle serializes admission against installation and enablement changes.
@@ -303,7 +511,7 @@ func (m *Manager) Lifecycle(ctx context.Context, actor identity.Actor, id, actio
 		if err != nil {
 			return p, err
 		}
-		_, err = m.db().ExecContext(ctx, `INSERT INTO bench_plugins(id,instance_id,installed,enabled,mode,digest) VALUES(?,?,1,0,'ask',?) ON CONFLICT(id) DO UPDATE SET installed=1,enabled=0,digest=excluded.digest,last_error=''`, id, instance.String(), digest)
+		_, err = m.db().ExecContext(ctx, `INSERT INTO bench_plugins(id,instance_id,installed,enabled,mode,digest,state_schema) VALUES(?,?,1,0,'ask',?,?) ON CONFLICT(id) DO UPDATE SET installed=1,enabled=0,digest=excluded.digest,state_schema=excluded.state_schema,last_error=''`, id, instance.String(), digest, descriptor.StateSchema)
 		if err != nil {
 			os.RemoveAll(target)
 			return p, err
@@ -340,6 +548,8 @@ func (m *Manager) Lifecycle(ctx context.Context, actor identity.Actor, id, actio
 			if err == nil {
 				err = m.settleQueued(ctx, id, "cancelled", "integration_disabled")
 			}
+		case "upgrade":
+			err = m.upgradePlugin(ctx, actor, p)
 		case "restart", "uninstall":
 			var count int
 			err = m.db().QueryRowContext(ctx, `SELECT count(*) FROM bench_jobs j JOIN sessions s ON s.id=j.session_id WHERE j.plugin_id=? AND s.state IN ('queued','running','pending_approval')`, id).Scan(&count)

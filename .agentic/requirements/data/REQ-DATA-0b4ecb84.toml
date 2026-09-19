@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-DATA-0b4ecb84"
+
+title = "Emit complete release evidence"
+
+status = "active"
+
+requirement = """
+When a candidate release is assembled, the release tooling shall emit a canonical artifact index, external SHA-256 file, input and build provenance, SPDX SBOM, third-party notices and source-obligation inventory that trace every target deliverable to the project version, source identity, exact target, complete input lock and recorded verification status.
+"""
+
+verification = "Assemble a fixture release and validate each metadata schema and cross-reference against artifact bytes, VERSION, target and lock; remove or mismatch an artifact, dependency, licence, source obligation, source identity or verification record and confirm release verification fails with the missing relationship named."
+
+affected_paths = ["02_Tools/packaging/release_builder.py", "02_Tools/packaging/build/build-release.sh", "02_Tools/packaging/verify/verify-release.sh", "02_Tools/packaging/schemas/", "07_Delivery/", "05_Software/scripts/tests/test_release_packaging.py"]
+
+linked_tests = ["05_Software/scripts/tests/test_release_packaging.py::ReleaseEvidenceTests.test_release_evidence_closes_every_artifact_and_keeps_physical_checks_not_run", "05_Software/scripts/tests/test_release_packaging.py::ReleaseEvidenceTests.test_release_evidence_refuses_an_incomplete_lock"]
+
+
+spec = "specs/REQ-DATA-0b4ecb84.md"
+
+priority = "normal"   # low | normal | high
+rationale = "A reviewer needs one machine-readable chain from immutable inputs to each offline artifact and its acceptance limitations."
+
+created = 2026-09-19
+updated = 2026-09-19

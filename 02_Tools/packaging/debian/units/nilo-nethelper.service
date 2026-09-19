@@ -1,0 +1,22 @@
+[Unit]
+Description=NILO privileged network helper
+Before=nilo.service
+Requires=nilo-nethelper.socket
+After=nilo-nethelper.socket NetworkManager.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+EnvironmentFile=/etc/nilo/nethelper.env
+ExecStart=/usr/libexec/nilo/nilo-nethelper --socket /run/nilo/nethelper.sock --allow-uid ${NILO_CALLER_UID} --socket-gid ${NILO_CALLER_GID} --image-default-hostname nilo-image --image-default-hostname nilo-appliance
+Restart=on-failure
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/etc /run/nilo /usr /var/cache/apt /var/lib/apt /var/lib/dpkg /var/lib/nilo-nethelper /var/lib/systemd /var/log
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+
+[Install]
+WantedBy=multi-user.target

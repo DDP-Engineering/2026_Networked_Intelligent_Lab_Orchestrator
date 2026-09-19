@@ -150,8 +150,9 @@ one of three fixed roles - Administrator, Operator or Viewer.
 
 - `05_Software/nilo_assistant/` - Go module `nilo.local/nilo`, built without
   CGO. `cmd/nilo/main.go` is the command surface (`version`, `serve`,
-  `serve-foundation-check`, `development issue-token`, `admin`, `network`,
-  `plugin`, `bench`, `activity`); `cmd/nilo-nethelper/` is the privileged Linux
+  `serve-foundation-check`, `development issue-token`, `admin`, `seed-admin`,
+  `maintenance`, `network`, `plugin`, `bench`, `activity`);
+  `cmd/nilo-nethelper/` is the privileged Linux
   helper. `internal/httpapi/server.go` holds the one route table where every
   route declares its permission, with `internal/httpapi/bench.go` beside it.
   `internal/identity/service.go` owns identity rules, `internal/auth/role.go`

@@ -1,0 +1,19 @@
+[Unit]
+Description=Seed the first NILO administrator from a protected file
+Before=nilo.service
+ConditionPathExists=/var/lib/nilo/first-admin.password
+
+[Service]
+Type=oneshot
+User=nilo
+Group=nilo
+EnvironmentFile=-/etc/nilo/firstboot.env
+ExecStart=/usr/bin/nilo seed-admin --data-dir /var/lib/nilo --username ${NILO_FIRST_ADMIN_USERNAME} --password-file /var/lib/nilo/first-admin.password
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/nilo
+
+[Install]
+WantedBy=multi-user.target

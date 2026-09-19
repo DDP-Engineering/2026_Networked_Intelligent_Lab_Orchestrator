@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-ce587dc2"
+
+title = "Inventory and remove NILO-owned appliance state"
+
+status = "active"
+
+requirement = """
+When a local administrator requests software removal or purge, NILO shall inventory resources by durable NILO ownership records, stop owned processes and remove only the resources selected by the requested preservation mode, refusing destructive or sole-management-path cleanup without the required local confirmation.
+"""
+
+verification = "Populate fixture package state, durable application state and both NILO-owned and similarly named foreign network resources; run preserve-state removal and confirmed purge and compare the resulting inventory, then simulate a sole management path, absent ownership metadata and partial helper failure and confirm fail-closed reporting without deleting foreign resources."
+
+affected_paths = ["05_Software/nilo_assistant/cmd/nilo/main.go", "05_Software/nilo_assistant/cmd/nilo/maintenance.go", "05_Software/nilo_assistant/cmd/nilo/maintenance_test.go", "05_Software/nilo_assistant/internal/maintenance/", "02_Tools/packaging/debian/"]
+
+linked_tests = ["05_Software/nilo_assistant/cmd/nilo/maintenance_test.go::TestMaintenanceInventoryRemoveAndConfirmedPurge"]
+
+
+spec = "specs/REQ-FUNC-ce587dc2.md"
+
+priority = "high"   # low | normal | high
+rationale = "Package removal must not guess ownership or disconnect a remotely managed appliance irreversibly."
+
+created = 2026-09-19
+updated = 2026-09-19

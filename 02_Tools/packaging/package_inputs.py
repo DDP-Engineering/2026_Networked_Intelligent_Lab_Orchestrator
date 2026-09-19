@@ -24,11 +24,14 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import io
+import lzma
 import os
 import re
 import stat
 import sys
 import tempfile
+import tarfile
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
@@ -93,10 +96,33 @@ TARGET_FIELDS = frozenset(
 OS_FIELDS = frozenset({"id", "family", "version_id"})
 LOCK_FIELDS = frozenset({"schema", "complete", "incomplete_reasons", "inputs"})
 INPUT_FIELDS = frozenset(
-    {"name", "scope", "url", "version", "license", "sha256", "size"}
+    {
+        "architecture", "artifact_type", "license", "name", "provenance",
+        "redistribution", "scope", "sha256", "size", "url", "version",
+    }
 )
+DECLARED_INPUT_FIELDS = frozenset(
+    {
+        "architecture", "artifact_type", "license", "name", "provenance",
+        "redistribution", "scope", "url", "version",
+    }
+)
+INPUT_ARTIFACT_TYPES = {
+    "base-image": "raspberry-pi-image-xz",
+    "go-module-cache": "go-module-cache-tar",
+    "gui-npm-cache": "npm-cache-tar",
+    "os-package-pool": "debian-pool-tar",
+    "sigrok-runtime": "sigrok-runtime-tar",
+    "source-offers": "source-offers-tar",
+}
+REQUIRED_RELEASE_INPUTS = {
+    "shared": ("go-module-cache", "gui-npm-cache", "source-offers"),
+    "rpi-debian13-arm64": ("base-image", "os-package-pool", "sigrok-runtime"),
+    "ubuntu-24.04-amd64": ("os-package-pool", "sigrok-runtime"),
+}
 DOWNLOAD_CHUNK_SIZE = 1024 * 1024
 DOWNLOAD_TIMEOUT_SECONDS = 60
+MAXIMUM_RESOLVED_INPUT_BYTES = 16 * 1024 * 1024 * 1024
 IPV6_ROUTE_REJECT_FLAG = 0x0200
 
 
@@ -184,9 +210,13 @@ class LockedInput:
 
     name: str
     scope: str
+    architecture: str
+    artifact_type: str
     url: str
     version: str
     license: str
+    provenance: str
+    redistribution: str
     sha256: str
     size: int
 
@@ -215,8 +245,12 @@ class VerifiedInput:
 
     name: str
     scope: str
+    architecture: str
+    artifact_type: str
     version: str
     license: str
+    provenance: str
+    redistribution: str
     sha256: str
     size: int
     cache_object: str
@@ -224,9 +258,13 @@ class VerifiedInput:
     def to_dict(self) -> dict[str, Any]:
         """@brief Return the canonical receipt representation."""
         return {
+            "architecture": self.architecture,
+            "artifact_type": self.artifact_type,
             "cache_object": self.cache_object,
             "license": self.license,
             "name": self.name,
+            "provenance": self.provenance,
+            "redistribution": self.redistribution,
             "scope": self.scope,
             "sha256": self.sha256,
             "size": self.size,
@@ -443,10 +481,22 @@ def _parse_locked_input(
     if scope not in known_scopes:
         raise PackagingError(f"{context}.scope names unknown target: {scope}")
     url = _validate_https_url(record["url"], f"{context}.url")
+    artifact_type = _require_nonempty_string(record["artifact_type"], f"{context}.artifact_type")
+    expected_artifact_type = INPUT_ARTIFACT_TYPES.get(name)
+    if expected_artifact_type is not None and artifact_type != expected_artifact_type:
+        raise PackagingError(f"{context}.artifact_type does not match input class {name}")
+    architecture = _require_nonempty_string(record["architecture"], f"{context}.architecture")
+    expected_architecture = "all" if scope == "shared" else registry.require(scope).architecture
+    if architecture != expected_architecture:
+        raise PackagingError(f"{context}.architecture must be {expected_architecture}")
     version = _require_nonempty_string(record["version"], f"{context}.version")
     license_name = _require_nonempty_string(
         record["license"], f"{context}.license"
     )
+    provenance = _validate_https_url(record["provenance"], f"{context}.provenance")
+    redistribution = _require_nonempty_string(record["redistribution"], f"{context}.redistribution")
+    if redistribution != "permitted":
+        raise PackagingError(f"{context}.redistribution must be explicitly permitted")
     sha256 = _require_nonempty_string(record["sha256"], f"{context}.sha256")
     if SHA256_PATTERN.fullmatch(sha256) is None:
         raise PackagingError(f"{context}.sha256 must be 64 lowercase hex characters")
@@ -456,9 +506,13 @@ def _parse_locked_input(
     return LockedInput(
         name=name,
         scope=scope,
+        architecture=architecture,
+        artifact_type=artifact_type,
         url=url,
         version=version,
         license=license_name,
+        provenance=provenance,
+        redistribution=redistribution,
         sha256=sha256,
         size=size,
     )
@@ -710,11 +764,20 @@ def _verify_object(
         )
     if messages:
         raise CacheObjectError("content", messages)
+    if item.name in INPUT_ARTIFACT_TYPES:
+        try:
+            _validate_resolved_artifact(path, item)
+        except PackagingError as error:
+            raise CacheObjectError("content", error.messages) from error
     return VerifiedInput(
         name=item.name,
         scope=item.scope,
+        architecture=item.architecture,
+        artifact_type=item.artifact_type,
         version=item.version,
         license=item.license,
+        provenance=item.provenance,
+        redistribution=item.redistribution,
         sha256=item.sha256,
         size=item.size,
         cache_object=path.relative_to(cache_root).as_posix(),
@@ -752,6 +815,107 @@ def _download_input(
             f"{item.name}: download SHA-256 mismatch: "
             f"expected {item.sha256}, got {actual_digest}"
         )
+
+
+def _deb_control_from_bytes(contents: bytes, context: str) -> dict[str, str]:
+    if not contents.startswith(b"!<arch>\n"):
+        raise PackagingError(f"{context}: Debian package is not an ar archive")
+    offset = 8
+    members: dict[str, bytes] = {}
+    while offset < len(contents):
+        header = contents[offset : offset + 60]
+        if len(header) != 60 or header[58:] != b"`\n":
+            raise PackagingError(f"{context}: Debian package has an invalid ar header")
+        try:
+            name = header[:16].decode("ascii").rstrip().rstrip("/")
+            size = int(header[48:58].decode("ascii").strip())
+        except (UnicodeDecodeError, ValueError) as error:
+            raise PackagingError(f"{context}: Debian package metadata is invalid") from error
+        offset += 60
+        if size < 0 or offset + size > len(contents) or name in members:
+            raise PackagingError(f"{context}: Debian package member is invalid")
+        members[name] = contents[offset : offset + size]
+        offset += size + size % 2
+    control_name = next((name for name in members if name.startswith("control.tar.")), "")
+    if members.get("debian-binary") != b"2.0\n" or not control_name:
+        raise PackagingError(f"{context}: Debian package control archive is missing")
+    try:
+        with tarfile.open(fileobj=io.BytesIO(members[control_name]), mode="r:*") as archive:
+            control_member = next(
+                (member for member in archive.getmembers() if member.name in {"control", "./control"}),
+                None,
+            )
+            stream = archive.extractfile(control_member) if control_member is not None else None
+            if stream is None:
+                raise PackagingError(f"{context}: Debian control file is missing")
+            text = stream.read().decode("utf-8")
+    except (tarfile.TarError, UnicodeDecodeError) as error:
+        raise PackagingError(f"{context}: Debian control archive is invalid") from error
+    fields: dict[str, str] = {}
+    for line in text.splitlines():
+        if not line or line.startswith(" "):
+            continue
+        key, separator, value = line.partition(":")
+        if not separator:
+            raise PackagingError(f"{context}: Debian control file is invalid")
+        fields[key] = value.strip()
+    return fields
+
+
+def _validated_tar_members(path: Path, context: str) -> dict[str, tarfile.TarInfo]:
+    try:
+        with tarfile.open(path, mode="r:*") as archive:
+            members = archive.getmembers()
+    except (OSError, tarfile.TarError) as error:
+        raise PackagingError(f"{context}: expected a readable tar archive") from error
+    if not members:
+        raise PackagingError(f"{context}: archive must not be empty")
+    observed: dict[str, tarfile.TarInfo] = {}
+    for member in members:
+        normalized = member.name.removeprefix("./")
+        parts = tuple(part for part in normalized.split("/") if part)
+        if not parts or normalized.startswith("/") or ".." in parts:
+            raise PackagingError(f"{context}: archive contains an unsafe path")
+        if not (member.isfile() or member.isdir()) or normalized in observed:
+            raise PackagingError(f"{context}: archive contains a link, special file, or duplicate")
+        observed[normalized] = member
+    return observed
+
+
+def _validate_resolved_artifact(path: Path, item: LockedInput) -> None:
+    """Validate that a connected resolution produced its reviewed artifact class."""
+    if item.artifact_type == "raspberry-pi-image-xz":
+        try:
+            with lzma.open(path, "rb") as image:
+                header = image.read(512)
+        except (OSError, lzma.LZMAError) as error:
+            raise PackagingError(f"{item.name}: base image is not a valid xz stream") from error
+        if len(header) != 512 or header[510:512] != b"\x55\xaa":
+            raise PackagingError(f"{item.name}: base image lacks an MBR signature")
+        return
+
+    members = _validated_tar_members(path, item.name)
+    if item.artifact_type == "debian-pool-tar":
+        package_names = sorted(name for name, member in members.items() if member.isfile())
+        if not package_names or any(not name.endswith(".deb") for name in package_names):
+            raise PackagingError(f"{item.name}: Debian pool must contain only .deb files")
+        with tarfile.open(path, mode="r:*") as archive:
+            for name in package_names:
+                stream = archive.extractfile(members[name])
+                if stream is None:
+                    raise PackagingError(f"{item.name}: cannot read {name}")
+                control = _deb_control_from_bytes(stream.read(), f"{item.name}/{name}")
+                if control.get("Architecture") not in {item.architecture, "all"}:
+                    raise PackagingError(f"{item.name}/{name}: architecture mismatch")
+                if not control.get("Package") or not control.get("Version"):
+                    raise PackagingError(f"{item.name}/{name}: package identity is incomplete")
+    elif item.artifact_type == "sigrok-runtime-tar":
+        required = {"runtime-manifest.json", "THIRD_PARTY_NOTICES.txt", "bin/python3", "bin/sigrok-cli"}
+        if not required.issubset(members):
+            raise PackagingError(f"{item.name}: Sigrok runtime inventory is incomplete")
+    elif item.artifact_type == "source-offers-tar":
+        if not any(name.endswith(("SOURCE_OFFER.txt", ".tar.gz", ".tar.xz", ".zip")) for name in members):
+            raise PackagingError(f"{item.name}: source-offer archive contains no source offer")
 
 
 def _has_ipv4_default_route(path: Path) -> bool:
@@ -972,6 +1136,155 @@ def cache_object_path(cache_root: Path, sha256: str) -> Path:
     return cache_root / "objects" / "sha256" / sha256[:2] / sha256
 
 
+def resolve_inputs(
+    targets_path: Path,
+    declarations_path: Path,
+    cache_root: Path,
+    proposal_path: Path,
+    *,
+    opener: Callable[..., Any] = urllib.request.urlopen,
+) -> dict[str, Any]:
+    """Resolve declared connected sources into an immutable lock proposal.
+
+    A proposal becomes complete only when every reviewed input class for both
+    exact targets is present. The proposal is intentionally separate from the
+    adopted lock so a release engineer can review the observed digests first.
+    """
+    _, registry = _load_targets_snapshot(targets_path)
+    document = _require_object(
+        _decode_json(_read_bytes(declarations_path), declarations_path),
+        "release input declarations",
+    )
+    _check_fields(
+        document,
+        frozenset({"schema", "sources"}),
+        "release input declarations",
+    )
+    if type(document["schema"]) is not int or document["schema"] != 1:
+        raise PackagingError("release input declarations schema must be integer 1")
+    if not isinstance(document["sources"], list):
+        raise PackagingError("release input declarations sources must be an array")
+
+    known_scopes = {"shared", *(target.id for target in registry.targets)}
+    parsed: list[dict[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    for index, value in enumerate(document["sources"]):
+        context = f"sources[{index}]"
+        source = _require_object(value, context)
+        _check_fields(source, DECLARED_INPUT_FIELDS, context)
+        name = _require_nonempty_string(source["name"], f"{context}.name")
+        if INPUT_NAME_PATTERN.fullmatch(name) is None:
+            raise PackagingError(f"{context}.name has unsafe input metadata")
+        scope = _require_nonempty_string(source["scope"], f"{context}.scope")
+        if scope not in known_scopes:
+            raise PackagingError(f"{context}.scope names unknown target: {scope}")
+        if name not in REQUIRED_RELEASE_INPUTS[scope]:
+            raise PackagingError(f"{context}.name is not a required input class for {scope}: {name}")
+        key = (scope, name)
+        if key in seen:
+            raise PackagingError(f"release input declarations contain duplicate {scope}/{name}")
+        seen.add(key)
+        artifact_type = _require_nonempty_string(source["artifact_type"], f"{context}.artifact_type")
+        if artifact_type != INPUT_ARTIFACT_TYPES[name]:
+            raise PackagingError(f"{context}.artifact_type does not match input class {name}")
+        architecture = _require_nonempty_string(source["architecture"], f"{context}.architecture")
+        expected_architecture = "all" if scope == "shared" else registry.require(scope).architecture
+        if architecture != expected_architecture:
+            raise PackagingError(f"{context}.architecture must be {expected_architecture}")
+        redistribution = _require_nonempty_string(source["redistribution"], f"{context}.redistribution")
+        if redistribution != "permitted":
+            raise PackagingError(f"{context}.redistribution must be explicitly permitted")
+        parsed.append(
+            {
+                "architecture": architecture,
+                "artifact_type": artifact_type,
+                "license": _require_nonempty_string(source["license"], f"{context}.license"),
+                "name": name,
+                "provenance": _validate_https_url(source["provenance"], f"{context}.provenance"),
+                "redistribution": redistribution,
+                "scope": scope,
+                "url": _validate_https_url(source["url"], f"{context}.url"),
+                "version": _require_nonempty_string(source["version"], f"{context}.version"),
+            }
+        )
+    if parsed != sorted(parsed, key=lambda item: (item["scope"], item["name"])):
+        raise PackagingError("release input declarations must be sorted by scope and name")
+
+    staging_root = cache_root / ".staging"
+    staging_root.mkdir(parents=True, exist_ok=True)
+    locked: list[dict[str, Any]] = []
+    for source in parsed:
+        request = urllib.request.Request(
+            source["url"], headers={"User-Agent": "NILO-packaging-resolver/1"}
+        )
+        try:
+            response_context = opener(request, timeout=DOWNLOAD_TIMEOUT_SECONDS)
+        except (OSError, ValueError) as error:
+            raise PackagingError(f"{source['name']}: resolution download failed: {error}") from error
+        temporary_path: Path | None = None
+        try:
+            handle, temporary_name = tempfile.mkstemp(
+                prefix=f"resolve-{source['scope']}-{source['name']}.",
+                suffix=".part",
+                dir=staging_root,
+            )
+            temporary_path = Path(temporary_name)
+            digest = hashlib.sha256()
+            size = 0
+            with os.fdopen(handle, "wb") as output, response_context as response:
+                _validate_https_url(response.geturl(), f"{source['name']} final URL")
+                while chunk := response.read(DOWNLOAD_CHUNK_SIZE):
+                    size += len(chunk)
+                    if size > MAXIMUM_RESOLVED_INPUT_BYTES:
+                        raise PackagingError(f"{source['name']}: resolved input exceeds 16 GiB")
+                    digest.update(chunk)
+                    output.write(chunk)
+                output.flush()
+                os.fsync(output.fileno())
+            if size == 0:
+                raise PackagingError(f"{source['name']}: resolved input is empty")
+            sha256 = digest.hexdigest()
+            candidate = LockedInput(
+                name=source["name"], scope=source["scope"],
+                architecture=source["architecture"], artifact_type=source["artifact_type"],
+                url=source["url"], version=source["version"], license=source["license"],
+                provenance=source["provenance"], redistribution=source["redistribution"],
+                sha256=sha256, size=size,
+            )
+            _validate_resolved_artifact(temporary_path, candidate)
+            final_path = cache_object_path(cache_root, sha256)
+            final_path.parent.mkdir(parents=True, exist_ok=True)
+            if final_path.exists():
+                _verify_object(cache_root, candidate)
+                temporary_path.unlink()
+                temporary_path = None
+            else:
+                os.replace(temporary_path, final_path)
+                temporary_path = None
+            locked.append({**source, "sha256": sha256, "size": size})
+        finally:
+            if temporary_path is not None:
+                temporary_path.unlink(missing_ok=True)
+
+    incomplete_reasons = [
+        f"{scope} is missing required input class {name}"
+        for scope, names in sorted(REQUIRED_RELEASE_INPUTS.items())
+        for name in names
+        if (scope, name) not in seen
+    ]
+    proposal = {
+        "complete": not incomplete_reasons,
+        "incomplete_reasons": incomplete_reasons,
+        "inputs": locked,
+        "schema": 1,
+    }
+    _write_json_atomically(proposal_path, proposal)
+    # Parse our own output before returning it so the proposal cannot diverge
+    # from the strict lock format consumed by fetch and offline verification.
+    _load_lock_snapshot(proposal_path, registry, require_complete=False)
+    return proposal
+
+
 def fetch_inputs(
     targets_path: Path,
     lock_path: Path,
@@ -1177,6 +1490,13 @@ def build_parser() -> argparse.ArgumentParser:
     fetch_parser.add_argument("--lock", required=True, type=Path)
     fetch_parser.add_argument("--cache", required=True, type=Path)
     fetch_parser.add_argument("--target", required=True)
+    resolve_parser = subparsers.add_parser(
+        "resolve", help="download declared mutable sources and write a lock proposal"
+    )
+    resolve_parser.add_argument("--targets", required=True, type=Path)
+    resolve_parser.add_argument("--declarations", required=True, type=Path)
+    resolve_parser.add_argument("--cache", required=True, type=Path)
+    resolve_parser.add_argument("--proposal", required=True, type=Path)
     verify_parser = subparsers.add_parser(
         "verify-cache", help="verify one target's complete packaging cache"
     )
@@ -1226,6 +1546,15 @@ def main(argv: Sequence[str] | None = None) -> int:
                     }
                 )
             )
+            return 0
+        if arguments.command == "resolve":
+            proposal = resolve_inputs(
+                arguments.targets,
+                arguments.declarations,
+                arguments.cache,
+                arguments.proposal,
+            )
+            sys.stdout.write(_canonical_json(proposal))
             return 0
         if arguments.command == "prepare":
             receipt = prepare_inputs(

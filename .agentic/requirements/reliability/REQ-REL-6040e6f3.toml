@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-REL-6040e6f3"
+
+title = "Create and restore consistent upgrade snapshots"
+
+status = "active"
+
+requirement = """
+Before an upgrade mutates packages or state, the maintenance tooling shall quiesce NILO, checkpoint and integrity-check SQLite, create and fsync a digest-manifested snapshot of the defined irreplaceable state with preserved metadata, and restore only a snapshot whose application and schema versions match the package being recovered.
+"""
+
+verification = "Create representative identity, configuration, integration and audit state, invoke snapshot and restore around a fixture upgrade and compare database integrity, digests, ownership and modes; exercise active jobs, insufficient space, checksum damage, version mismatch and interrupted staging and confirm no partial snapshot is accepted or mismatched state started."
+
+affected_paths = ["05_Software/nilo_assistant/cmd/nilo/maintenance.go", "05_Software/nilo_assistant/cmd/nilo/maintenance_test.go", "05_Software/nilo_assistant/internal/maintenance/", "02_Tools/packaging/release_builder.py", "02_Tools/packaging/debian/nilo-installer-recover"]
+
+linked_tests = ["05_Software/nilo_assistant/cmd/nilo/maintenance_test.go::TestMaintenanceSnapshotAndRestoreVerifyApplicationState"]
+
+
+spec = "specs/REQ-REL-6040e6f3.md"
+
+priority = "high"   # low | normal | high
+rationale = "Package rollback is safe only when the recovered state belongs to the recovered schema and package version."
+
+created = 2026-09-19
+updated = 2026-09-19

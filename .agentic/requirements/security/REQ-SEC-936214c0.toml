@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-SEC-936214c0"
+
+title = "Install from a safe offline self-extracting artifact"
+
+status = "active"
+
+requirement = """
+When a supported target's self-extracting installer runs as root, it shall extract only a manifest-verified regular-file payload into a private temporary directory, pass target and local-only package-transaction preflight before mutation, and install the embedded dependency pool and NILO package without enabling unrequested hardware or integrations or opening a network path.
+"""
+
+verification = "Run a complete fixture installer in an isolated matching target namespace and observe manifest verification plus local-pool installation; exercise wrong OS/architecture, non-root execution, traversal, escaping link, special file, digest damage, NetworkManager/capability/space failure and an APT network/removal proposal and confirm refusal before package or state mutation."
+
+affected_paths = ["02_Tools/packaging/build/build-offline-installer.sh", "02_Tools/packaging/verify/verify-installer.sh", "02_Tools/packaging/release_builder.py", "02_Tools/packaging/debian/nilo-installer-recover", "05_Software/scripts/tests/test_release_packaging.py"]
+
+linked_tests = ["05_Software/scripts/tests/test_release_packaging.py::OfflineInstallerTests.test_offline_installer_is_self_verifying_and_deterministic", "05_Software/scripts/tests/test_release_packaging.py::OfflineInstallerTests.test_offline_installer_refuses_mismatched_or_unsafe_inputs"]
+
+
+spec = "specs/REQ-SEC-936214c0.md"
+
+priority = "high"   # low | normal | high
+rationale = "A root installer is an archive parser and package transaction boundary whose failure must precede host mutation."
+
+created = 2026-09-19
+updated = 2026-09-19

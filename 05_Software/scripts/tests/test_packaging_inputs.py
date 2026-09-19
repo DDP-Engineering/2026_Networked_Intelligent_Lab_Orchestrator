@@ -24,6 +24,8 @@ import json
 import os
 import subprocess
 import sys
+import tarfile
+import lzma
 import tempfile
 import unittest
 from pathlib import Path
@@ -116,8 +118,21 @@ def lock_document(
         else ["dependency closures are not locked"],
         "inputs": [
             {
+                "architecture": "all" if scope == "shared" else (
+                    "arm64" if scope == "rpi-debian13-arm64" else "amd64"
+                ),
+                "artifact_type": {
+                    "base-image": "raspberry-pi-image-xz",
+                    "go-module-cache": "go-module-cache-tar",
+                    "gui-npm-cache": "npm-cache-tar",
+                    "os-package-pool": "debian-pool-tar",
+                    "sigrok-runtime": "sigrok-runtime-tar",
+                    "source-offers": "source-offers-tar",
+                }.get(name, "test-fixture"),
                 "license": "MIT",
                 "name": name,
+                "provenance": f"https://packages.example.invalid/{name}/provenance",
+                "redistribution": "permitted",
                 "scope": scope,
                 "url": f"https://packages.example.invalid/{name}",
                 "version": "1.0.0",
@@ -127,6 +142,65 @@ def lock_document(
             for name, scope, payload in sorted(payloads, key=lambda item: item[:2])
         ],
     }
+
+
+def tar_payload(files: dict[str, bytes]) -> bytes:
+    output = io.BytesIO()
+    with tarfile.open(fileobj=output, mode="w:xz") as archive:
+        for name, contents in sorted(files.items()):
+            member = tarfile.TarInfo(name)
+            member.size = len(contents)
+            member.mode = 0o644
+            member.mtime = 1
+            archive.addfile(member, io.BytesIO(contents))
+    return output.getvalue()
+
+
+def ar_member(name: str, contents: bytes) -> bytes:
+    header = b"".join(
+        [
+            (name + "/").encode("ascii").ljust(16),
+            b"1".ljust(12), b"0".ljust(6), b"0".ljust(6),
+            b"100644".ljust(8), str(len(contents)).encode("ascii").ljust(10), b"`\n",
+        ]
+    )
+    return header + contents + (b"\n" if len(contents) % 2 else b"")
+
+
+def deb_payload(architecture: str) -> bytes:
+    control = (
+        f"Package: fixture-dependency\nVersion: 1.0\nArchitecture: {architecture}\n"
+        "Description: resolver fixture\n"
+    ).encode()
+    control_archive = tar_payload({"./control": control})
+    data_archive = tar_payload({"./usr/share/fixture": b"fixture"})
+    return (
+        b"!<arch>\n"
+        + ar_member("debian-binary", b"2.0\n")
+        + ar_member("control.tar.xz", control_archive)
+        + ar_member("data.tar.xz", data_archive)
+    )
+
+
+def resolved_payload(name: str, architecture: str) -> bytes:
+    if name == "base-image":
+        image = bytearray(512)
+        image[510:512] = b"\x55\xaa"
+        return lzma.compress(bytes(image))
+    if name == "os-package-pool":
+        return tar_payload({f"fixture_1.0_{architecture}.deb": deb_payload(architecture)})
+    if name == "sigrok-runtime":
+        return tar_payload(
+            {
+                "THIRD_PARTY_NOTICES.txt": b"fixture notices",
+                "bin/python3": b"fixture Python",
+                "bin/sigrok-cli": b"fixture sigrok",
+                "runtime-manifest.json": b"{}\n",
+            }
+        )
+    if name == "source-offers":
+        return tar_payload({"SOURCE_OFFER.txt": b"fixture source offer"})
+    return tar_payload({"cache/fixture": f"{name}-fixture".encode()})
 
 
 class FakeResponse(io.BytesIO):
@@ -955,6 +1029,104 @@ class PackagingInputTests(unittest.TestCase):
             ),
             2,
         )
+
+    def test_connected_resolver_creates_a_complete_reviewable_lock_and_cache(self) -> None:
+        module = load_packaging_module()
+        sources = []
+        payloads = {}
+        for scope, names in sorted(module.REQUIRED_RELEASE_INPUTS.items()):
+            for name in sorted(names):
+                architecture = "all" if scope == "shared" else (
+                    "arm64" if scope == "rpi-debian13-arm64" else "amd64"
+                )
+                payload = resolved_payload(name, architecture)
+                url = f"https://inputs.example.invalid/{scope}/{name}"
+                payloads[url] = payload
+                sources.append(
+                    {
+                        "architecture": architecture,
+                        "artifact_type": module.INPUT_ARTIFACT_TYPES[name],
+                        "license": "MIT",
+                        "name": name,
+                        "provenance": f"https://provenance.example.invalid/{scope}/{name}",
+                        "redistribution": "permitted",
+                        "scope": scope,
+                        "url": url,
+                        "version": "fixture-1",
+                    }
+                )
+        sources.sort(key=lambda item: (item["scope"], item["name"]))
+
+        def opener(request, timeout=0):
+            return FakeResponse(payloads[request.full_url], request.full_url)
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            declarations = root / "release-inputs.json"
+            proposal = root / "inputs.lock.proposal.json"
+            cache = root / "cache"
+            write_json(declarations, {"schema": 1, "sources": sources})
+            resolved = module.resolve_inputs(
+                TARGETS_PATH,
+                declarations,
+                cache,
+                proposal,
+                opener=opener,
+            )
+            self.assertTrue(resolved["complete"])
+            self.assertEqual(resolved["incomplete_reasons"], [])
+            self.assertEqual(resolved, json.loads(proposal.read_text(encoding="utf-8")))
+            registry = module.load_targets(TARGETS_PATH)
+            lock = module.load_lock(proposal, registry, require_complete=True)
+            for item in lock.inputs:
+                path = module.cache_object_path(cache, item.sha256)
+                self.assertEqual(path.read_bytes(), payloads[item.url])
+
+    def test_connected_resolver_names_missing_classes_and_rejects_unsafe_metadata(self) -> None:
+        module = load_packaging_module()
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            declarations = root / "release-inputs.json"
+            proposal = root / "proposal.json"
+            write_json(declarations, {"schema": 1, "sources": []})
+            resolved = module.resolve_inputs(
+                TARGETS_PATH,
+                declarations,
+                root / "cache",
+                proposal,
+            )
+            self.assertFalse(resolved["complete"])
+            joined = " ".join(resolved["incomplete_reasons"])
+            self.assertIn("base-image", joined)
+            self.assertIn("os-package-pool", joined)
+            self.assertIn("sigrok-runtime", joined)
+
+            write_json(
+                declarations,
+                {
+                    "schema": 1,
+                    "sources": [
+                        {
+                            "architecture": "arm64",
+                            "artifact_type": "raspberry-pi-image-xz",
+                            "license": "",
+                            "name": "base-image",
+                            "provenance": "https://provenance.example.invalid/base",
+                            "redistribution": "permitted",
+                            "scope": "rpi-debian13-arm64",
+                            "url": "https://inputs.example.invalid/base",
+                            "version": "1",
+                        }
+                    ],
+                },
+            )
+            with self.assertRaisesRegex(module.PackagingError, "license"):
+                module.resolve_inputs(
+                    TARGETS_PATH,
+                    declarations,
+                    root / "cache",
+                    proposal,
+                )
 
 
 if __name__ == "__main__":

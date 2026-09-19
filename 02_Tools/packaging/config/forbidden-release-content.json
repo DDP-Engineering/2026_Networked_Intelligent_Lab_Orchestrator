@@ -1,0 +1,28 @@
+{
+  "content_rules": [
+    {
+      "id": "development-credential",
+      "pattern": "admin_password|administrator-secret|development bearer token"
+    },
+    {
+      "id": "host-path",
+      "pattern": "(?:[A-Z]:\\\\Users\\\\|/home/[^/]+/|/mnt/[a-z]/Users/)"
+    }
+  ],
+  "content_scan_max_bytes": 4194304,
+  "path_rules": [
+    {
+      "id": "test-runtime",
+      "pattern": "(?:^|/)(?:fake_python|fixtures?|__pycache__)(?:$|/)"
+    },
+    {
+      "id": "development-tree",
+      "pattern": "(?:^|/)(?:\\.git|\\.venv|node_modules)(?:$|/)"
+    },
+    {
+      "id": "secret-name",
+      "pattern": "(?:^|/)(?:.*\\.(?:key|pem)|.*password.*|credentials?)(?:$|/)"
+    }
+  ],
+  "schema": 1
+}

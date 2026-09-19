@@ -113,7 +113,9 @@ explicitly requested host change.
   paths, and WireGuard keys and wireless passwords only inside the helper's
   keystore. An appliance's first administrator is created once at the console
   with `nilo admin bootstrap --data-dir <absolute-path> --username <name>`,
-  which has no HTTP route and reads the password from standard input.
+  which has no HTTP route and reads the password from standard input. Packaged
+  first boot instead uses `nilo seed-admin` with an absolute root-protected
+  password file; the command consumes that file only after durable bootstrap.
 
 ## Readiness checks
 
@@ -143,7 +145,8 @@ Produce what an appliance installs. `02_Tools/scripts/build-appliance.sh` emits
 binaries under `05_Software/nilo_assistant/dist/linux-<arch>/`, the GUI `build`
 script emits the static assets for `--gui-dir`, and
 `02_Tools/scripts/build-sigrok-bundle.py` prepares an integration catalog for a
-target architecture and Python minor.
+target architecture from an explicit complete runtime root containing its
+Python entrypoint, Sigrok backend and third-party notices.
 
 Install the privileged helper on the target explicitly, substituting the staged
 binary and the service account:
@@ -186,7 +189,19 @@ checkout mounted read-only; declared artifacts are published to the ignored
 
 Packaging has a separate connected acquisition step followed by the same
 network-none boundary. The checked-in input lock is intentionally incomplete,
-so these commands refuse production preparation until its reasons are resolved:
+so production preparation and artifact assembly refuse until its reasons are
+resolved. Resolve reviewed source declarations and inspect the proposal before
+adopting it as the lock:
+
+```powershell
+.\02_Tools\packaging\fetch\resolve-inputs.ps1
+```
+
+```sh
+sh ./02_Tools/packaging/fetch/resolve-inputs.sh
+```
+
+After adoption, fetch, verify and prepare each exact target:
 
 ```powershell
 .\02_Tools\packaging\fetch\fetch-all.ps1 ubuntu-24.04-amd64
@@ -195,10 +210,15 @@ so these commands refuse production preparation until its reasons are resolved:
 ```
 
 The equivalent POSIX entry points live under `02_Tools/packaging/{fetch,verify}`
-and `02_Tools/env/with-build-environment.sh`. A successful package-preparation
-action writes a deterministic receipt below
-`02_Tools/cache/containers/outputs/packaging/`; it does not yet build a release
-artifact and never records physical hardware acceptance as passed.
+and `02_Tools/env/with-build-environment.sh`. A successful preparation writes a
+deterministic receipt below `02_Tools/cache/containers/outputs/packaging/`.
+With target binaries, GUI, production bundles, dependency pools and (for Pi)
+the base image staged, the POSIX entry points under
+`02_Tools/packaging/build/` create canonical payloads, `.deb` packages,
+self-extracting `.run` installers, the `.img.xz` card image and the closed
+release directory. `02_Tools/packaging/verify/` recomputes their integrity and
+evidence closure. These tools never record physical hardware acceptance as
+passed; those rows remain `not_run` until executed on the named target.
 
 ## Verification
 

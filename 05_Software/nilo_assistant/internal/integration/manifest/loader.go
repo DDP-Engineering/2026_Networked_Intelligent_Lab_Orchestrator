@@ -119,6 +119,23 @@ func validateManifest(manifest *Manifest, root string) error {
 	if manifest.Protocol != protocolV1 {
 		return fmt.Errorf("%w: %q", ErrUnsupportedProtocol, manifest.Protocol)
 	}
+	if manifest.StateSchema == 0 {
+		manifest.StateSchema = 1
+	}
+	if manifest.StateSchema < 1 {
+		return fmt.Errorf("%w: state schema must be positive", ErrInvalidManifest)
+	}
+	seenMigrations := make(map[[2]int]struct{}, len(manifest.StateMigrations))
+	for _, migration := range manifest.StateMigrations {
+		key := [2]int{migration.From, migration.To}
+		if migration.From < 1 || migration.To <= migration.From || migration.Kind != "preserve-json" {
+			return fmt.Errorf("%w: unsupported state migration", ErrInvalidManifest)
+		}
+		if _, duplicate := seenMigrations[key]; duplicate {
+			return fmt.Errorf("%w: duplicate state migration", ErrInvalidManifest)
+		}
+		seenMigrations[key] = struct{}{}
+	}
 	declaredPlatforms := make(map[string]struct{}, len(manifest.Platforms))
 	for _, platform := range manifest.Platforms {
 		if !supportedPlatform(platform) {

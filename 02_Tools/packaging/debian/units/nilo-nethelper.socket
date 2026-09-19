@@ -1,0 +1,14 @@
+[Unit]
+Description=NILO privileged network helper socket
+Before=nilo.service
+
+[Socket]
+ListenStream=/run/nilo/nethelper.sock
+SocketUser=root
+SocketGroup=nilo
+SocketMode=0660
+Service=nilo-nethelper.service
+RemoveOnStop=true
+
+[Install]
+WantedBy=sockets.target

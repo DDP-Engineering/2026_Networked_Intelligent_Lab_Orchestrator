@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-REL-6fd2a7b2"
+
+title = "Upgrade installed integrations atomically"
+
+status = "active"
+
+requirement = """
+When an administrator upgrades an installed integration from the release catalogue while no related job is active, NILO shall atomically activate the verified new bundle while preserving its enabled state and operating mode, and shall restore the prior usable bundle and state with an audit result if migration or health verification fails.
+"""
+
+verification = "Install and enable an older fixture bundle, upgrade to a verified newer fixture and observe version/digest change with state preserved and an audit entry; repeat with an active job, invalid bundle, failed migration and failed health check and confirm refusal or complete rollback to the prior files and state."
+
+affected_paths = ["05_Software/nilo_assistant/internal/bench/packages.go", "05_Software/nilo_assistant/internal/bench/jobs_test.go", "05_Software/nilo_assistant/cmd/nilo/bench.go", "05_Software/nilo_assistant/internal/httpapi/bench.go"]
+
+linked_tests = ["05_Software/nilo_assistant/internal/bench/jobs_test.go::TestIntegrationUpgradePreservesStateRefusesBusyAndRollsBackFailedHealth"]
+
+
+spec = "specs/REQ-REL-6fd2a7b2.md"
+
+priority = "high"   # low | normal | high
+rationale = "Updating only the immutable catalogue must not leave an installed integration incompatible with the new core."
+
+created = 2026-09-19
+updated = 2026-09-19

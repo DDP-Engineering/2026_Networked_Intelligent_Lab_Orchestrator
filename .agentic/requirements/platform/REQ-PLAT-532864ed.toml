@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-PLAT-532864ed"
+
+title = "Bundle self-contained production integrations"
+
+status = "active"
+
+requirement = """
+When a release catalogue is built for either supported architecture, the packaging tooling shall produce every production integration as a verified self-contained bundle that runs without system Python or network access and shall reject any target whose real Sigrok runtime closure is absent, unsafe or unlicensed for redistribution.
+"""
+
+verification = "Build amd64 and arm64 catalogue fixtures, inspect their runtime and licence inventories, and execute each real integration health check in an environment without system Python or a default route; remove or tamper with a runtime, introduce escaping links or omit licence provenance and confirm the target build fails."
+
+affected_paths = ["02_Tools/scripts/build-sigrok-bundle.py", "02_Tools/scripts/build-appliance.sh", "02_Tools/packaging/release_builder.py", "02_Tools/packaging/config/", "05_Software/integrations/sigrok/", "05_Software/nilo_assistant/internal/integration/manifest/", "05_Software/scripts/tests/test_release_packaging.py"]
+
+linked_tests = ["05_Software/scripts/tests/test_release_packaging.py::ProductionIntegrationTests.test_sigrok_bundle_embeds_its_runtime_without_package_resolution", "05_Software/scripts/tests/test_release_packaging.py::ProductionIntegrationTests.test_sigrok_bundle_refuses_incomplete_or_fixture_runtimes"]
+
+
+spec = "specs/REQ-PLAT-532864ed.md"
+
+priority = "high"   # low | normal | high
+rationale = "Integrations are release functionality and must not acquire undeclared runtimes after installation."
+
+created = 2026-09-19
+updated = 2026-09-19

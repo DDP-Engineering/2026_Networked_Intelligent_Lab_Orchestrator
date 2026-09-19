@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-PLAT-c98ee5fa"
+
+title = "Build lifecycle-safe Debian packages"
+
+status = "active"
+
+requirement = """
+When an exact target payload is packaged, the Debian builder shall create a policy-valid architecture-specific `nilo` package containing only the declared immutable application files, hardened service units and idempotent maintainer scripts, while leaving mutable identity and runtime state outside package ownership and preventing service start during image construction.
+"""
+
+verification = "Build amd64 and arm64 fixture packages, inspect control metadata, paths, ownership, modes, conffiles, dependencies, units and scripts, then run install, reinstall, upgrade, remove, purge and image-chroot simulations; assert no `/usr/local` payload, embedded mutable state, live service start or non-idempotent transition."
+
+affected_paths = ["02_Tools/packaging/debian/", "02_Tools/packaging/build/build-deb.sh", "02_Tools/packaging/verify/verify-deb.sh", "02_Tools/packaging/release_builder.py", "05_Software/scripts/tests/test_release_packaging.py"]
+
+linked_tests = ["05_Software/scripts/tests/test_release_packaging.py::DebianPackageTests.test_debian_package_is_deterministic_and_policy_safe", "05_Software/scripts/tests/test_release_packaging.py::DebianPackageTests.test_debian_package_refuses_target_or_payload_mismatch"]
+
+
+spec = "specs/REQ-PLAT-c98ee5fa.md"
+
+priority = "high"   # low | normal | high
+rationale = "The internal package is the package-manager-owned payload shared by existing-host installers and the Pi image."
+
+created = 2026-09-19
+updated = 2026-09-19

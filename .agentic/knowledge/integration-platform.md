@@ -9,11 +9,11 @@ lifecycle and queued instrument actions belong to [Managed bench integrations](b
 
 ## Purpose and boundaries
 
-The integration platform loads bounded runtime packages and supervises their external processes through the language-neutral `nilo.integration/1` lifecycle. It isolates plugin faults from Bench Core; it does not grant integrations arbitrary shell or filesystem authority. The Sigrok SW-01 feasibility slice demonstrates one additional subordinate native process boundary without changing that public lifecycle.
+The integration platform loads bounded runtime packages and supervises their external processes through the language-neutral `nilo.integration/1` lifecycle. It isolates plugin faults from Bench Core; it does not grant integrations arbitrary shell or filesystem authority. Production packages carry their complete target runtime closure, including the interpreter and native backend, so installed runners do not resolve host packages or reach a network. The Sigrok SW-01 feasibility slice demonstrates one additional subordinate native process boundary without changing that public lifecycle.
 
 ## Public interface
 
-Go callers use `manifest.Load`, protocol codecs and registries, and `supervisor.ProcessSupervisor` methods `Describe`, `Execute`, `Cancel`, and `Shutdown`. Python integration authors implement the asynchronous SDK lifecycle interface and launch its NDJSON server. Every enabled package is expected to pass the common contract harness.
+Go callers use `manifest.Load`, protocol codecs and registries, and `supervisor.ProcessSupervisor` methods `Describe`, `Execute`, `Cancel`, and `Shutdown`. Python integration authors implement the asynchronous SDK lifecycle interface and launch its NDJSON server. Every enabled package is expected to pass the common contract harness. `build-sigrok-bundle.py` accepts an explicit architecture-matched runtime root and emits the runner, SDK, schemas, runtime inventory and third-party notices as one bounded package.
 
 ## Invariants
 
@@ -24,6 +24,9 @@ Go callers use `manifest.Load`, protocol codecs and registries, and `supervisor.
 - A native library adapter stays subordinate to its Python integration runner,
   uses a separate bounded protocol, and cannot widen the package's public
   operation grammar by itself.
+- A production bundle embeds regular, non-symlink runtime files, a real Python
+  entrypoint, the Sigrok backend and redistribution notices; fixture runtimes,
+  package resolution and an unmeasured runtime limit are refused.
 
 ## Key behaviors
 
@@ -35,6 +38,8 @@ Go callers use `manifest.Load`, protocol codecs and registries, and `supervisor.
 - `REQ-TEST-2bbda8a9` - proves packages with the common contract suite.
 - `REQ-REL-c2695283` - contains experimental native Sigrok work in a separately
   supervised child with bounded `nilo.sigrok.worker/1` records.
+- `REQ-PLAT-532864ed` - builds the production Sigrok integration with its
+  architecture-specific interpreter/backend closure and licence evidence.
 
 ## Architecture
 
@@ -56,6 +61,7 @@ flowchart LR
     supervisor --> codec
     process --> sdk
     sdk --> plugin
+    bundle_runtime[("bundled Python + sigrok-cli + notices")] --> process
     plugin -. Sigrok feasibility .-> worker["StructuredWorker child adapter"]
     worker -. fixed commands .-> native(["native Sigrok worker"])
     sdk --> schemas
@@ -74,6 +80,9 @@ Protocol stdout is reserved for NDJSON; diagnostics use bounded stderr. OS-speci
 - `05_Software/integration_sdk/python/` - pinned Python SDK package, models, lifecycle API, server, tests, lockfile, and author documentation.
 - `05_Software/integrations/fake_python/` - deterministic manifest, schemas, Python implementation, entry point, tests, and lockfile.
 - `05_Software/tests/contract/` - package-level black-box contract fixtures, documentation, and tests.
+- `02_Tools/scripts/build-sigrok-bundle.py` - validates and embeds the complete
+  target runtime, SDK, schemas, runner and third-party notices without package
+  resolution.
 
 - `05_Software/nilo_assistant/internal/integration/protocol/describe_test.go` — SDK metadata interoperability regression.
 - `05_Software/integrations/sigrok/` — curated digital adapter; lifecycle ownership is documented in bench-integrations.md.

@@ -15,6 +15,8 @@
     "events": {"type": "array", "items": {"$ref": "event.schema.json"}},
     "artifacts": {"type": "array", "items": {"$ref": "event.schema.json"}},
     "health_checks": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["id", "timeout"], "properties": {"id": {"type": "string", "minLength": 1}, "timeout": {"type": "string", "minLength": 1, "maxLength": 32}}}},
-    "contract_fixtures": {"type": "array", "items": {"type": "string", "minLength": 1}}
+    "contract_fixtures": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "state_schema": {"type": "integer", "minimum": 1},
+    "state_migrations": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["from", "to", "kind"], "properties": {"from": {"type": "integer", "minimum": 1}, "to": {"type": "integer", "minimum": 2}, "kind": {"const": "preserve-json"}}}}
   }
 }

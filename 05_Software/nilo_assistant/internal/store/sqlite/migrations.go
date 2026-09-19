@@ -66,6 +66,9 @@ var passwordPolicyClassesMigration string
 //go:embed migrations/017_appliance_discovery.sql
 var applianceDiscoveryMigration string
 
+//go:embed migrations/018_integration_package_state.sql
+var integrationPackageStateMigration string
+
 var migrations = []migration{
 	{version: "001_initial", sql: initialMigration},
 	{version: "002_policy_snapshots", sql: policySnapshotsMigration},
@@ -84,6 +87,7 @@ var migrations = []migration{
 	{version: "015_password_policy", sql: passwordPolicyMigration},
 	{version: "016_password_policy_classes", sql: passwordPolicyClassesMigration},
 	{version: "017_appliance_discovery", sql: applianceDiscoveryMigration},
+	{version: "018_integration_package_state", sql: integrationPackageStateMigration},
 }
 
 func applyMigrations(ctx context.Context, database *sql.DB) error {

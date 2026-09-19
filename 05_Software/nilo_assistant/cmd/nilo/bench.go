@@ -58,7 +58,7 @@ func runBenchCommand(ctx context.Context, group string, args []string, streams n
 		switch action {
 		case "list":
 			path = "/api/v1/plugins"
-		case "install", "enable", "disable", "restart", "uninstall", "discover":
+		case "install", "upgrade", "enable", "disable", "restart", "uninstall", "discover":
 			path = "/api/v1/plugins/" + url.PathEscape(plugin) + "/" + action
 			method = http.MethodPost
 			body = map[string]string{}

@@ -26,6 +26,10 @@ not add or replace any public Bench operation.
 waits for its workers. `ListPlugins`, `Lifecycle`, `Discover`, `Submit`, `GetJob`,
 `ListJobs`, `Action`, `OpenArtifact` are shared by HTTP and MCP; CLI/GUI use HTTP.
 `app.StartBench` composes this only for a server, after startup reconciliation.
+The lifecycle surface also accepts `upgrade`: it waits a bounded interval for
+the installed integration to become idle, verifies and stages the replacement
+on the same filesystem, preserves enablement/mode/database state, health-checks
+the switched package, and restores the prior package if health fails.
 
 `/api/v1/plugins` exposes curated availability and lifecycle; `/api/v1/bench/jobs`
 returns durable transaction acknowledgements and summaries. Individual reads
@@ -43,6 +47,9 @@ The eight MCP tools and CLI equivalents are listed in
   most 4 KiB each. Terminal data is bounded to 1 MiB; late replies cannot change it.
 - Restart marks unfinished jobs incomplete without replay. Disable prevents new
   and queued work; busy restart/uninstall refuse. History survives uninstall.
+- Upgrade refuses after a bounded busy wait and never exposes a partially copied
+  package; a failed replacement health check restores the prior filesystem and
+  preserved lifecycle state.
 - Read/execute/approve/manage are separate permissions. Tokens use current owner
   scopes per call, never a cached actor or human approval authority.
 - Verified curated package copies and core-owned paths bound execution and
@@ -76,6 +83,8 @@ The eight MCP tools and CLI equivalents are listed in
 - REQ-DATA-721ec2ea: confined, digest-verified artifacts with provenance.
 - REQ-UX-30e2e009: common GUI, CLI and MCP outcomes.
 - REQ-PLAT-d1427e1e: one package contract for bundled and later installation.
+- REQ-REL-6fd2a7b2: atomic in-place package upgrade with bounded idle wait,
+  preserved state, health verification and rollback.
 
 ## Architecture
 
@@ -84,7 +93,7 @@ flowchart TD
     gui([PluginsPage and CLI]) --> http[HTTP bench handlers]
     mcp([MCP bench tools]) --> manager[bench.Manager]
     http --> manager
-    manager --> packages[packages: verified catalog and installed copy]
+    manager --> packages[packages: verified catalog, staged install and atomic upgrade]
     manager --> queue[scheduler: two workers and device serialization]
     manager --> db[(SQLite plugins/jobs/sessions)]
     queue --> operation[operation.Service Prepare/Run and policy]
