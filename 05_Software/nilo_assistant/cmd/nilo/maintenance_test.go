@@ -100,6 +100,23 @@ func TestMaintenanceSnapshotRefusesANonNILODatabase(t *testing.T) {
 	}
 }
 
+func TestMaintenanceMigrateAppliesAndVerifiesTheCurrentSchema(t *testing.T) {
+	binary := buildNilo(t)
+	dataDir := t.TempDir()
+	result := mustRunAdmin(t, binary, "", "maintenance", "migrate", "--data-dir", dataDir)
+	if !strings.Contains(result.stdout, `"status":"migrated"`) ||
+		!strings.Contains(result.stdout, `"schema_identity":"`) {
+		t.Fatalf("migrate result = %q", result.stdout)
+	}
+	if _, err := os.Stat(filepath.Join(dataDir, "nilo.db")); err != nil {
+		t.Fatalf("migration did not create the application database: %v", err)
+	}
+	second := mustRunAdmin(t, binary, "", "maintenance", "migrate", "--data-dir", dataDir)
+	if !strings.Contains(second.stdout, `"status":"migrated"`) {
+		t.Fatalf("idempotent migrate result = %q", second.stdout)
+	}
+}
+
 func TestMaintenanceInventoryRemoveAndConfirmedPurge(t *testing.T) {
 	binary := buildNilo(t)
 	dataDir := t.TempDir()
@@ -119,7 +136,20 @@ func TestMaintenanceInventoryRemoveAndConfirmedPurge(t *testing.T) {
 	if refused.exitCode == 0 || !strings.Contains(refused.combined, "--confirm-local") {
 		t.Fatalf("unconfirmed purge = %#v", refused)
 	}
-	mustRunAdmin(t, binary, "", "maintenance", "purge", "--data-dir", dataDir, "--confirm-local")
+	purged := mustRunAdmin(t, binary, "", "maintenance", "purge", "--data-dir", dataDir, "--confirm-local")
+	var purgeResult struct {
+		Backup string `json:"backup"`
+		State  string `json:"state"`
+	}
+	if err := json.Unmarshal([]byte(purged.stdout), &purgeResult); err != nil {
+		t.Fatalf("decode purge result: %v", err)
+	}
+	if purgeResult.State != "purged" || purgeResult.Backup == "" {
+		t.Fatalf("purge result = %#v", purgeResult)
+	}
+	if _, err := os.Stat(filepath.Join(purgeResult.Backup, "snapshot.json")); err != nil {
+		t.Fatalf("verified purge backup is missing: %v", err)
+	}
 	entries, err := os.ReadDir(dataDir)
 	if err != nil {
 		t.Fatal(err)

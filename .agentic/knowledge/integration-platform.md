@@ -13,7 +13,7 @@ The integration platform loads bounded runtime packages and supervises their ext
 
 ## Public interface
 
-Go callers use `manifest.Load`, protocol codecs and registries, and `supervisor.ProcessSupervisor` methods `Describe`, `Execute`, `Cancel`, and `Shutdown`. Python integration authors implement the asynchronous SDK lifecycle interface and launch its NDJSON server. Every enabled package is expected to pass the common contract harness. `build-sigrok-bundle.py` accepts an explicit architecture-matched runtime root and emits the runner, SDK, schemas, runtime inventory and third-party notices as one bounded package.
+Go callers use `manifest.Load`, protocol codecs and registries, and `supervisor.ProcessSupervisor` methods `Describe`, `Execute`, `Cancel`, and `Shutdown`. Python integration authors implement the asynchronous SDK lifecycle interface and launch its NDJSON server. Every enabled package is expected to pass the common contract harness. `build-sigrok-bundle.py` accepts an explicit architecture-matched runtime root, requires an observed Linux namespace with loopback as its only interface and no default route, executes the fixed target interpreter/version/import and Sigrok driver-scan health checks with a confined `PATH`, and emits the runner, SDK, schemas, component/runtime inventory, before/after network observations, hashed health results and third-party notices as one bounded package.
 
 ## Invariants
 
@@ -26,7 +26,10 @@ Go callers use `manifest.Load`, protocol codecs and registries, and `supervisor.
   operation grammar by itself.
 - A production bundle embeds regular, non-symlink runtime files, a real Python
   entrypoint, the Sigrok backend and redistribution notices; fixture runtimes,
-  package resolution and an unmeasured runtime limit are refused.
+  package resolution, failed target-runtime health execution and an unmeasured
+  runtime limit are refused. Health status is derived from executed commands
+  bracketed by observed network isolation, never accepted from a manifest or
+  environment assertion.
 
 ## Key behaviors
 
@@ -61,7 +64,10 @@ flowchart LR
     supervisor --> codec
     process --> sdk
     sdk --> plugin
-    bundle_runtime[("bundled Python + sigrok-cli + notices")] --> process
+    bundle_runtime[("bundled Python + sigrok-cli + notices")]
+    bundle_health["fixed target-runtime health execution"]
+    bundle_runtime --> bundle_health
+    bundle_health --> process
     plugin -. Sigrok feasibility .-> worker["StructuredWorker child adapter"]
     worker -. fixed commands .-> native(["native Sigrok worker"])
     sdk --> schemas
@@ -81,8 +87,8 @@ Protocol stdout is reserved for NDJSON; diagnostics use bounded stderr. OS-speci
 - `05_Software/integrations/fake_python/` - deterministic manifest, schemas, Python implementation, entry point, tests, and lockfile.
 - `05_Software/tests/contract/` - package-level black-box contract fixtures, documentation, and tests.
 - `02_Tools/scripts/build-sigrok-bundle.py` - validates and embeds the complete
-  target runtime, SDK, schemas, runner and third-party notices without package
-  resolution.
+  target runtime, SDK, schemas, runner, executed health evidence and third-party
+  notices without package resolution.
 
 - `05_Software/nilo_assistant/internal/integration/protocol/describe_test.go` — SDK metadata interoperability regression.
 - `05_Software/integrations/sigrok/` — curated digital adapter; lifecycle ownership is documented in bench-integrations.md.

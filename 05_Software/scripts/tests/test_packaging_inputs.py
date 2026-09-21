@@ -118,6 +118,7 @@ def lock_document(
         else ["dependency closures are not locked"],
         "inputs": [
             {
+                "apt": None,
                 "architecture": "all" if scope == "shared" else (
                     "arm64" if scope == "rpi-debian13-arm64" else "amd64"
                 ),
@@ -182,13 +183,106 @@ def deb_payload(architecture: str) -> bytes:
     )
 
 
+def dependency_pool_payload(
+    architecture: str,
+    suite: str,
+    *,
+    dependency_version: str,
+    dependency_expression: str,
+    dependency_provides: str = "",
+) -> bytes:
+    """Build signed-style fixture metadata with a versioned dependency edge."""
+    provides_control = f"Provides: {dependency_provides}\n" if dependency_provides else ""
+    dependency_control = (
+        f"Package: fixture-dependency\nVersion: {dependency_version}\nArchitecture: {architecture}\n"
+        f"{provides_control}Description: resolver dependency fixture\n"
+    ).encode()
+    dependency = (
+        b"!<arch>\n"
+        + ar_member("debian-binary", b"2.0\n")
+        + ar_member("control.tar.xz", tar_payload({"./control": dependency_control}))
+        + ar_member("data.tar.xz", tar_payload({"./usr/share/dependency": b"fixture"}))
+    )
+    application_control = (
+        f"Package: fixture-application\nVersion: 1.0\nArchitecture: {architecture}\n"
+        f"Depends: {dependency_expression}\nDescription: resolver root fixture\n"
+    ).encode()
+    application = (
+        b"!<arch>\n"
+        + ar_member("debian-binary", b"2.0\n")
+        + ar_member("control.tar.xz", tar_payload({"./control": application_control}))
+        + ar_member("data.tar.xz", tar_payload({"./usr/share/application": b"fixture"}))
+    )
+    files = {
+        f"pool/fixture-application_1.0_{architecture}.deb": application,
+        f"pool/fixture-dependency_{dependency_version}_{architecture}.deb": dependency,
+    }
+    paragraphs = []
+    for filename, contents in sorted(files.items()):
+        package = "fixture-application" if "application" in filename else "fixture-dependency"
+        version = "1.0" if package == "fixture-application" else dependency_version
+        depends = f"Depends: {dependency_expression}\n" if package == "fixture-application" else ""
+        provides = f"Provides: {dependency_provides}\n" if package == "fixture-dependency" and dependency_provides else ""
+        paragraphs.append(
+            f"Package: {package}\nVersion: {version}\nArchitecture: {architecture}\n"
+            f"{depends}{provides}Filename: {filename}\nSize: {len(contents)}\n"
+            f"SHA256: {hashlib.sha256(contents).hexdigest()}\n"
+        )
+    packages = ("\n".join(paragraphs) + "\n").encode()
+    inrelease = (
+        "-----BEGIN PGP SIGNED MESSAGE-----\nHash: SHA256\n\n"
+        f"Suite: {suite}\nCodename: {suite}\nComponents: main\nArchitectures: {architecture}\n"
+        f"SHA256:\n {hashlib.sha256(packages).hexdigest()} {len(packages)} apt/Packages\n"
+        "-----BEGIN PGP SIGNATURE-----\nfixture\n-----END PGP SIGNATURE-----\n"
+    ).encode()
+    return tar_payload({
+        "apt/InRelease": inrelease,
+        "apt/Packages": packages,
+        "apt/archive-keyring.gpg": b"fixture archive keyring",
+        **files,
+    })
+
+
+def apt_pool_payload(architecture: str, suite: str) -> bytes:
+    package = deb_payload(architecture)
+    filename = f"pool/fixture-dependency_1.0_{architecture}.deb"
+    packages = (
+        "Package: fixture-dependency\n"
+        "Version: 1.0\n"
+        f"Architecture: {architecture}\n"
+        f"Filename: {filename}\n"
+        f"Size: {len(package)}\n"
+        f"SHA256: {hashlib.sha256(package).hexdigest()}\n\n"
+    ).encode()
+    inrelease = (
+        "-----BEGIN PGP SIGNED MESSAGE-----\n"
+        "Hash: SHA256\n\n"
+        f"Suite: {suite}\n"
+        f"Codename: {suite}\n"
+        "Components: main\n"
+        f"Architectures: {architecture}\n"
+        "SHA256:\n"
+        f" {hashlib.sha256(packages).hexdigest()} {len(packages)} apt/Packages\n"
+        "-----BEGIN PGP SIGNATURE-----\nfixture\n-----END PGP SIGNATURE-----\n"
+    ).encode()
+    return tar_payload(
+        {
+            "apt/InRelease": inrelease,
+            "apt/Packages": packages,
+            "apt/archive-keyring.gpg": b"fixture archive keyring",
+            filename: package,
+        }
+    )
+
+
 def resolved_payload(name: str, architecture: str) -> bytes:
     if name == "base-image":
         image = bytearray(512)
         image[510:512] = b"\x55\xaa"
         return lzma.compress(bytes(image))
     if name == "os-package-pool":
-        return tar_payload({f"fixture_1.0_{architecture}.deb": deb_payload(architecture)})
+        suite = "trixie" if architecture == "arm64" else "noble"
+        return apt_pool_payload(architecture, suite)
     if name == "sigrok-runtime":
         return tar_payload(
             {
@@ -1044,6 +1138,15 @@ class PackagingInputTests(unittest.TestCase):
                 payloads[url] = payload
                 sources.append(
                     {
+                        "apt": {
+                            "base_packages": [],
+                            "component": "main",
+                            "keyring_sha256": hashlib.sha256(b"fixture archive keyring").hexdigest(),
+                            "repository": "https://repository.example.invalid/snapshot",
+                            "roots": ["fixture-dependency"],
+                            "signing_fingerprints": ["1" * 40],
+                            "suite": "trixie" if architecture == "arm64" else "noble",
+                        } if name == "os-package-pool" else None,
                         "architecture": architecture,
                         "artifact_type": module.INPUT_ARTIFACT_TYPES[name],
                         "license": "MIT",
@@ -1072,6 +1175,7 @@ class PackagingInputTests(unittest.TestCase):
                 cache,
                 proposal,
                 opener=opener,
+                signature_verifier=lambda keyring, inrelease, fingerprints: fingerprints[0],
             )
             self.assertTrue(resolved["complete"])
             self.assertEqual(resolved["incomplete_reasons"], [])
@@ -1081,6 +1185,9 @@ class PackagingInputTests(unittest.TestCase):
             for item in lock.inputs:
                 path = module.cache_object_path(cache, item.sha256)
                 self.assertEqual(path.read_bytes(), payloads[item.url])
+                if item.name == "os-package-pool":
+                    self.assertEqual(item.apt["packages"][0]["package"], "fixture-dependency")
+                    self.assertEqual(item.apt["packages"][0]["signed_by"], "1" * 40)
 
     def test_connected_resolver_names_missing_classes_and_rejects_unsafe_metadata(self) -> None:
         module = load_packaging_module()
@@ -1107,6 +1214,7 @@ class PackagingInputTests(unittest.TestCase):
                     "schema": 1,
                     "sources": [
                         {
+                            "apt": None,
                             "architecture": "arm64",
                             "artifact_type": "raspberry-pi-image-xz",
                             "license": "",
@@ -1127,6 +1235,140 @@ class PackagingInputTests(unittest.TestCase):
                     root / "cache",
                     proposal,
                 )
+
+    def test_connected_resolver_rejects_untrusted_signatures_and_incomplete_apt_closure(self) -> None:
+        module = load_packaging_module()
+        architecture = "amd64"
+        url = "https://inputs.example.invalid/ubuntu/pool"
+        policy = {
+            "base_packages": [],
+            "component": "main",
+            "keyring_sha256": hashlib.sha256(b"fixture archive keyring").hexdigest(),
+            "repository": "https://repository.example.invalid/snapshot",
+            "roots": ["fixture-dependency"],
+            "signing_fingerprints": ["1" * 40],
+            "suite": "noble",
+        }
+        source = {
+            "apt": policy,
+            "architecture": architecture,
+            "artifact_type": "debian-pool-tar",
+            "license": "mixed",
+            "name": "os-package-pool",
+            "provenance": "https://provenance.example.invalid/ubuntu/pool",
+            "redistribution": "permitted",
+            "scope": "ubuntu-24.04-amd64",
+            "url": url,
+            "version": "snapshot-1",
+        }
+
+        def opener(request, timeout=0):
+            return FakeResponse(apt_pool_payload(architecture, "noble"), request.full_url)
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            declarations = root / "release-inputs.json"
+            write_json(declarations, {"schema": 1, "sources": [source]})
+            with self.assertRaisesRegex(module.PackagingError, "untrusted fingerprint"):
+                module.resolve_inputs(
+                    TARGETS_PATH,
+                    declarations,
+                    root / "cache-untrusted",
+                    root / "untrusted.json",
+                    opener=opener,
+                    signature_verifier=lambda keyring, inrelease, fingerprints: "2" * 40,
+                )
+
+            source["apt"] = {**policy, "roots": ["missing-dependency"]}
+            write_json(declarations, {"schema": 1, "sources": [source]})
+            with self.assertRaisesRegex(module.PackagingError, "dependency closure is missing"):
+                module.resolve_inputs(
+                    TARGETS_PATH,
+                    declarations,
+                    root / "cache-incomplete",
+                    root / "incomplete.json",
+                    opener=opener,
+                    signature_verifier=lambda keyring, inrelease, fingerprints: fingerprints[0],
+                )
+
+    def test_connected_resolver_rejects_unsatisfied_debian_version_relationships(self) -> None:
+        module = load_packaging_module()
+        payload = dependency_pool_payload(
+            "amd64", "noble",
+            dependency_version="1.0",
+            dependency_expression="fixture-dependency (>= 2.0)",
+        )
+        source = {
+            "apt": {
+                "base_packages": [],
+                "component": "main",
+                "keyring_sha256": hashlib.sha256(b"fixture archive keyring").hexdigest(),
+                "repository": "https://repository.example.invalid/snapshot",
+                "roots": ["fixture-application"],
+                "signing_fingerprints": ["1" * 40],
+                "suite": "noble",
+            },
+            "architecture": "amd64",
+            "artifact_type": "debian-pool-tar",
+            "license": "mixed",
+            "name": "os-package-pool",
+            "provenance": "https://provenance.example.invalid/ubuntu/pool",
+            "redistribution": "permitted",
+            "scope": "ubuntu-24.04-amd64",
+            "url": "https://inputs.example.invalid/ubuntu/pool",
+            "version": "snapshot-1",
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            declarations = root / "release-inputs.json"
+            write_json(declarations, {"schema": 1, "sources": [source]})
+            with self.assertRaisesRegex(module.PackagingError, "version relationship"):
+                module.resolve_inputs(
+                    TARGETS_PATH,
+                    declarations,
+                    root / "cache",
+                    root / "proposal.json",
+                    opener=lambda request, timeout=0: FakeResponse(payload, request.full_url),
+                    signature_verifier=lambda keyring, inrelease, fingerprints: fingerprints[0],
+                )
+
+    def test_debian_closure_honours_architecture_alternatives_and_virtual_providers(self) -> None:
+        module = load_packaging_module()
+        payload = dependency_pool_payload(
+            "amd64", "noble",
+            dependency_version="1:3.0-1",
+            dependency_expression="virtual-feature (>= 2.0) [amd64] | absent [arm64]",
+            dependency_provides="virtual-feature (= 1:3.0-1)",
+        )
+        source = {
+            "apt": {
+                "base_packages": [], "component": "main",
+                "keyring_sha256": hashlib.sha256(b"fixture archive keyring").hexdigest(),
+                "repository": "https://repository.example.invalid/snapshot",
+                "roots": ["fixture-application"], "signing_fingerprints": ["1" * 40],
+                "suite": "noble",
+            },
+            "architecture": "amd64", "artifact_type": "debian-pool-tar",
+            "license": "mixed", "name": "os-package-pool",
+            "provenance": "https://provenance.example.invalid/ubuntu/pool",
+            "redistribution": "permitted", "scope": "ubuntu-24.04-amd64",
+            "url": "https://inputs.example.invalid/ubuntu/pool", "version": "snapshot-1",
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            declarations = root / "release-inputs.json"
+            write_json(declarations, {"schema": 1, "sources": [source]})
+            proposal = module.resolve_inputs(
+                TARGETS_PATH, declarations, root / "cache", root / "proposal.json",
+                opener=lambda request, timeout=0: FakeResponse(payload, request.full_url),
+                signature_verifier=lambda keyring, inrelease, fingerprints: fingerprints[0],
+            )
+            locked = proposal["inputs"][0]["apt"]
+            self.assertEqual(
+                [package["package"] for package in locked["packages"]],
+                ["fixture-application", "fixture-dependency"],
+            )
+            self.assertEqual(locked["packages"][1]["provides"], "virtual-feature (= 1:3.0-1)")
 
 
 if __name__ == "__main__":

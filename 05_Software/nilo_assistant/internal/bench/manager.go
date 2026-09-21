@@ -81,6 +81,9 @@ func New(options Options) (*Manager, error) {
 			return nil, err
 		}
 	}
+	if err := recoverPackageUpgrades(options); err != nil {
+		return nil, err
+	}
 	storage, err := artifact.NewStore(artifact.Config{ArtifactRoot: filepath.Join(options.DataDir, "artifacts"), StagingRoot: filepath.Join(options.DataDir, "staging"), MaximumBytes: 8 << 20}, artifact.Dependencies{Repository: sqlite.NewArtifactRepository(options.Database), NewArtifactID: domain.NewArtifactID, Now: func() time.Time { return options.Now().UTC() }})
 	if err != nil {
 		return nil, err

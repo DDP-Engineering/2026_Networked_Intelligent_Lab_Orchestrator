@@ -2,7 +2,12 @@
 
 package maintenance
 
-import "golang.org/x/sys/windows"
+import (
+	"errors"
+	"os"
+
+	"golang.org/x/sys/windows"
+)
 
 func availableBytes(path string) (uint64, error) {
 	pointer, err := windows.UTF16PtrFromString(path)
@@ -21,4 +26,12 @@ func syncDirectory(string) error {
 	// File contents are flushed before each rename; MoveFileEx is used by Go's
 	// os.Rename implementation for the metadata transition.
 	return nil
+}
+
+func syncFile(path string) error {
+	file, err := os.OpenFile(path, os.O_RDWR, 0)
+	if err != nil {
+		return err
+	}
+	return errors.Join(file.Sync(), file.Close())
 }

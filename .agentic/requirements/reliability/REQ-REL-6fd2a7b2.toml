@@ -19,9 +19,9 @@ When an administrator upgrades an installed integration from the release catalog
 
 verification = "Install and enable an older fixture bundle, upgrade to a verified newer fixture and observe version/digest change with state preserved and an audit entry; repeat with an active job, invalid bundle, failed migration and failed health check and confirm refusal or complete rollback to the prior files and state."
 
-affected_paths = ["05_Software/nilo_assistant/internal/bench/packages.go", "05_Software/nilo_assistant/internal/bench/jobs_test.go", "05_Software/nilo_assistant/cmd/nilo/bench.go", "05_Software/nilo_assistant/internal/httpapi/bench.go"]
+affected_paths = ["05_Software/nilo_assistant/internal/bench/packages.go", "05_Software/nilo_assistant/internal/bench/upgrade_recovery.go", "05_Software/nilo_assistant/internal/bench/package_sync_unix.go", "05_Software/nilo_assistant/internal/bench/package_sync_windows.go", "05_Software/nilo_assistant/internal/bench/manager.go", "05_Software/nilo_assistant/internal/bench/jobs_test.go", "05_Software/nilo_assistant/internal/bench/package_modes_unix_test.go", "05_Software/nilo_assistant/cmd/nilo/bench.go", "05_Software/nilo_assistant/internal/httpapi/bench.go"]
 
-linked_tests = ["05_Software/nilo_assistant/internal/bench/jobs_test.go::TestIntegrationUpgradePreservesStateRefusesBusyAndRollsBackFailedHealth"]
+linked_tests = ["05_Software/nilo_assistant/internal/bench/jobs_test.go::TestIntegrationUpgradePreservesStateRefusesBusyAndRollsBackFailedHealth", "05_Software/nilo_assistant/internal/bench/jobs_test.go::TestIntegrationUpgradeRecoversCandidateActivationInterruptedBeforeStateCommit", "05_Software/nilo_assistant/internal/bench/package_modes_unix_test.go::TestPackageLifecyclePreservesEmbeddedRuntimeExecuteModes"]
 
 
 spec = "specs/REQ-REL-6fd2a7b2.md"
@@ -30,4 +30,4 @@ priority = "high"   # low | normal | high
 rationale = "Updating only the immutable catalogue must not leave an installed integration incompatible with the new core."
 
 created = 2026-09-19
-updated = 2026-09-19
+updated = 2026-09-20

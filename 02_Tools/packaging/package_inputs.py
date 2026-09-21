@@ -28,14 +28,16 @@ import io
 import lzma
 import os
 import re
+import shutil
 import stat
+import subprocess
 import sys
 import tempfile
 import tarfile
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, BinaryIO, Callable, Sequence
 
 
@@ -97,16 +99,32 @@ OS_FIELDS = frozenset({"id", "family", "version_id"})
 LOCK_FIELDS = frozenset({"schema", "complete", "incomplete_reasons", "inputs"})
 INPUT_FIELDS = frozenset(
     {
-        "architecture", "artifact_type", "license", "name", "provenance",
+        "apt", "architecture", "artifact_type", "license", "name", "provenance",
         "redistribution", "scope", "sha256", "size", "url", "version",
     }
 )
 DECLARED_INPUT_FIELDS = frozenset(
     {
-        "architecture", "artifact_type", "license", "name", "provenance",
+        "apt", "architecture", "artifact_type", "license", "name", "provenance",
         "redistribution", "scope", "url", "version",
     }
 )
+APT_POLICY_FIELDS = frozenset(
+    {
+        "base_packages", "component", "keyring_sha256", "repository", "roots",
+        "signing_fingerprints", "suite",
+    }
+)
+APT_LOCK_FIELDS = APT_POLICY_FIELDS | {"packages"}
+APT_PACKAGE_FIELDS = frozenset(
+    {
+        "architecture", "depends", "filename", "package", "pre_depends", "provides",
+        "sha256", "signed_by", "size", "version",
+    }
+)
+DEBIAN_PACKAGE_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9+.-]*$")
+DEBIAN_FILENAME_PATTERN = re.compile(r"^pool/[A-Za-z0-9][A-Za-z0-9+._/~:-]*\.deb$")
+SIGNING_FINGERPRINT_PATTERN = re.compile(r"^[0-9A-F]{40}(?:[0-9A-F]{24})?$")
 INPUT_ARTIFACT_TYPES = {
     "base-image": "raspberry-pi-image-xz",
     "go-module-cache": "go-module-cache-tar",
@@ -219,6 +237,7 @@ class LockedInput:
     redistribution: str
     sha256: str
     size: int
+    apt: dict[str, Any] | None
 
 
 @dataclass(frozen=True)
@@ -254,10 +273,12 @@ class VerifiedInput:
     sha256: str
     size: int
     cache_object: str
+    apt: dict[str, Any] | None
 
     def to_dict(self) -> dict[str, Any]:
         """@brief Return the canonical receipt representation."""
         return {
+            "apt": self.apt,
             "architecture": self.architecture,
             "artifact_type": self.artifact_type,
             "cache_object": self.cache_object,
@@ -464,6 +485,103 @@ def _validate_https_url(value: Any, context: str) -> str:
     return url
 
 
+def _require_sorted_package_names(value: Any, context: str, *, allow_empty: bool) -> list[str]:
+    if not isinstance(value, list) or (not value and not allow_empty):
+        qualifier = "an array" if allow_empty else "a non-empty array"
+        raise PackagingError(f"{context} must be {qualifier}")
+    if any(not isinstance(item, str) or DEBIAN_PACKAGE_ID_PATTERN.fullmatch(item) is None for item in value):
+        raise PackagingError(f"{context} contains an invalid Debian package name")
+    if value != sorted(set(value)):
+        raise PackagingError(f"{context} must be sorted and unique")
+    return list(value)
+
+
+def _parse_apt_policy(value: Any, context: str) -> dict[str, Any]:
+    policy = _require_object(value, context)
+    _check_fields(policy, APT_POLICY_FIELDS, context)
+    component = _require_nonempty_string(policy["component"], f"{context}.component")
+    suite = _require_nonempty_string(policy["suite"], f"{context}.suite")
+    if INPUT_NAME_PATTERN.fullmatch(component) is None or INPUT_NAME_PATTERN.fullmatch(suite) is None:
+        raise PackagingError(f"{context} suite/component metadata is unsafe")
+    keyring_sha256 = _require_nonempty_string(policy["keyring_sha256"], f"{context}.keyring_sha256")
+    if SHA256_PATTERN.fullmatch(keyring_sha256) is None:
+        raise PackagingError(f"{context}.keyring_sha256 must be 64 lowercase hex characters")
+    fingerprints = policy["signing_fingerprints"]
+    if not isinstance(fingerprints, list) or not fingerprints:
+        raise PackagingError(f"{context}.signing_fingerprints must be a non-empty array")
+    normalized_fingerprints = [str(value).upper() for value in fingerprints]
+    if (
+        any(SIGNING_FINGERPRINT_PATTERN.fullmatch(value) is None for value in normalized_fingerprints)
+        or normalized_fingerprints != sorted(set(normalized_fingerprints))
+    ):
+        raise PackagingError(f"{context}.signing_fingerprints must be sorted unique full fingerprints")
+    return {
+        "base_packages": _require_sorted_package_names(
+            policy["base_packages"], f"{context}.base_packages", allow_empty=True,
+        ),
+        "component": component,
+        "keyring_sha256": keyring_sha256,
+        "repository": _validate_https_url(policy["repository"], f"{context}.repository"),
+        "roots": _require_sorted_package_names(policy["roots"], f"{context}.roots", allow_empty=False),
+        "signing_fingerprints": normalized_fingerprints,
+        "suite": suite,
+    }
+
+
+def _parse_locked_apt(value: Any, context: str, architecture: str) -> dict[str, Any]:
+    apt = _require_object(value, context)
+    _check_fields(apt, APT_LOCK_FIELDS, context)
+    policy = _parse_apt_policy(
+        {key: apt[key] for key in APT_POLICY_FIELDS}, context,
+    )
+    packages_value = apt["packages"]
+    if not isinstance(packages_value, list) or not packages_value:
+        raise PackagingError(f"{context}.packages must be a non-empty array")
+    packages: list[dict[str, Any]] = []
+    for index, raw in enumerate(packages_value):
+        package_context = f"{context}.packages[{index}]"
+        package = _require_object(raw, package_context)
+        _check_fields(package, APT_PACKAGE_FIELDS, package_context)
+        name = _require_nonempty_string(package["package"], f"{package_context}.package")
+        if DEBIAN_PACKAGE_ID_PATTERN.fullmatch(name) is None:
+            raise PackagingError(f"{package_context}.package is invalid")
+        package_architecture = _require_nonempty_string(
+            package["architecture"], f"{package_context}.architecture",
+        )
+        if package_architecture not in {architecture, "all"}:
+            raise PackagingError(f"{package_context}.architecture does not match the target")
+        filename = _require_nonempty_string(package["filename"], f"{package_context}.filename")
+        if DEBIAN_FILENAME_PATTERN.fullmatch(filename) is None or ".." in PurePosixPath(filename).parts:
+            raise PackagingError(f"{package_context}.filename is unsafe")
+        digest = _require_nonempty_string(package["sha256"], f"{package_context}.sha256")
+        if SHA256_PATTERN.fullmatch(digest) is None:
+            raise PackagingError(f"{package_context}.sha256 is invalid")
+        size = package["size"]
+        if type(size) is not int or size <= 0:
+            raise PackagingError(f"{package_context}.size must be a positive integer")
+        signed_by = str(package["signed_by"]).upper()
+        if signed_by not in policy["signing_fingerprints"]:
+            raise PackagingError(f"{package_context}.signed_by is not an admitted fingerprint")
+        packages.append(
+            {
+                "architecture": package_architecture,
+                "depends": str(package["depends"]),
+                "filename": filename,
+                "package": name,
+                "pre_depends": str(package["pre_depends"]),
+                "provides": str(package["provides"]),
+                "sha256": digest,
+                "signed_by": signed_by,
+                "size": size,
+                "version": _require_nonempty_string(package["version"], f"{package_context}.version"),
+            }
+        )
+    identities = [(item["package"], item["version"], item["architecture"]) for item in packages]
+    if identities != sorted(identities) or len(identities) != len(set(identities)):
+        raise PackagingError(f"{context}.packages must be sorted and unique")
+    return {**policy, "packages": packages}
+
+
 def _parse_locked_input(
     value: Any,
     index: int,
@@ -503,6 +621,13 @@ def _parse_locked_input(
     size = record["size"]
     if type(size) is not int or size <= 0:
         raise PackagingError(f"{context}.size must be a positive integer")
+    apt_value = record["apt"]
+    if artifact_type == "debian-pool-tar":
+        apt = _parse_locked_apt(apt_value, f"{context}.apt", architecture)
+    elif apt_value is not None:
+        raise PackagingError(f"{context}.apt is allowed only for a Debian pool")
+    else:
+        apt = None
     return LockedInput(
         name=name,
         scope=scope,
@@ -515,6 +640,7 @@ def _parse_locked_input(
         redistribution=redistribution,
         sha256=sha256,
         size=size,
+        apt=apt,
     )
 
 
@@ -781,6 +907,7 @@ def _verify_object(
         sha256=item.sha256,
         size=item.size,
         cache_object=path.relative_to(cache_root).as_posix(),
+        apt=item.apt,
     )
 
 
@@ -882,7 +1009,382 @@ def _validated_tar_members(path: Path, context: str) -> dict[str, tarfile.TarInf
     return observed
 
 
-def _validate_resolved_artifact(path: Path, item: LockedInput) -> None:
+def _clear_signed_payload(contents: bytes, context: str) -> bytes:
+    try:
+        text = contents.decode("utf-8")
+    except UnicodeDecodeError as error:
+        raise PackagingError(f"{context}: InRelease is not UTF-8") from error
+    prefix = "-----BEGIN PGP SIGNED MESSAGE-----\n"
+    marker = "\n-----BEGIN PGP SIGNATURE-----\n"
+    if not text.startswith(prefix) or marker not in text:
+        raise PackagingError(f"{context}: InRelease is not a clear-signed document")
+    headers_and_payload = text[len(prefix) :].split(marker, 1)[0]
+    separator = headers_and_payload.find("\n\n")
+    if separator < 0:
+        raise PackagingError(f"{context}: InRelease clear-sign headers are malformed")
+    payload = headers_and_payload[separator + 2 :]
+    unescaped = "\n".join(line[2:] if line.startswith("- ") else line for line in payload.split("\n"))
+    return unescaped.encode("utf-8")
+
+
+def _parse_deb822_paragraphs(contents: bytes, context: str) -> list[dict[str, str]]:
+    try:
+        lines = contents.decode("utf-8").splitlines()
+    except UnicodeDecodeError as error:
+        raise PackagingError(f"{context}: metadata is not UTF-8") from error
+    paragraphs: list[dict[str, str]] = []
+    current: dict[str, str] = {}
+    last_key = ""
+    for line in [*lines, ""]:
+        if not line:
+            if current:
+                paragraphs.append(current)
+                current = {}
+                last_key = ""
+            continue
+        if line[0].isspace():
+            if not last_key:
+                raise PackagingError(f"{context}: orphan continuation line")
+            current[last_key] += "\n" + line.strip()
+            continue
+        key, separator, value = line.partition(":")
+        if not separator or not key or key in current:
+            raise PackagingError(f"{context}: malformed or duplicate field")
+        current[key] = value.strip()
+        last_key = key
+    return paragraphs
+
+
+def _default_apt_signature_verifier(
+    keyring: Path, inrelease: Path, admitted_fingerprints: list[str],
+) -> str:
+    executable = shutil.which("gpgv")
+    if not executable:
+        raise PackagingError("Debian pool signature verification requires gpgv")
+    try:
+        result = subprocess.run(
+            [executable, "--status-fd", "1", "--keyring", str(keyring), str(inrelease)],
+            check=False,
+            capture_output=True,
+            timeout=60,
+        )
+    except (OSError, subprocess.TimeoutExpired) as error:
+        raise PackagingError(f"Debian pool signature verification failed to execute: {error}") from error
+    if result.returncode != 0:
+        raise PackagingError("Debian pool InRelease signature is invalid")
+    status = result.stdout.decode("utf-8", errors="replace")
+    observed = [
+        line.split()[2].upper()
+        for line in status.splitlines()
+        if line.startswith("[GNUPG:] VALIDSIG ") and len(line.split()) >= 3
+    ]
+    matched = next((value for value in observed if value in admitted_fingerprints), "")
+    if not matched:
+        raise PackagingError("Debian pool signature does not match an admitted full fingerprint")
+    return matched
+
+
+DEPENDENCY_ALTERNATIVE_PATTERN = re.compile(
+    r"^([a-z0-9][a-z0-9+.-]*)(?::(any|native|[a-z0-9-]+))?"
+    r"(?:\s*\((<<|<=|=|>=|>>)\s*([^)\s]+)\))?"
+    r"(?:\s*\[([^\]]+)\])?\s*$"
+)
+
+
+def _debian_version_parts(version: str) -> tuple[int, str, str]:
+    epoch_text, separator, remainder = version.partition(":")
+    if separator:
+        if not epoch_text.isdigit():
+            raise PackagingError(f"Debian version has an invalid epoch: {version}")
+        epoch = int(epoch_text)
+    else:
+        epoch, remainder = 0, epoch_text
+    upstream, separator, revision = remainder.rpartition("-")
+    if not separator:
+        upstream, revision = remainder, "0"
+    if not upstream:
+        raise PackagingError(f"Debian version is invalid: {version}")
+    return epoch, upstream, revision
+
+
+def _debian_non_digit_order(character: str) -> int:
+    if character == "~":
+        return -1
+    if character == "":
+        return 0
+    if character.isalpha():
+        return ord(character)
+    return ord(character) + 256
+
+
+def _debian_part_compare(left: str, right: str) -> int:
+    left_index = right_index = 0
+    while left_index < len(left) or right_index < len(right):
+        while (
+            (left_index < len(left) and not left[left_index].isdigit())
+            or (right_index < len(right) and not right[right_index].isdigit())
+        ):
+            left_character = left[left_index] if left_index < len(left) and not left[left_index].isdigit() else ""
+            right_character = right[right_index] if right_index < len(right) and not right[right_index].isdigit() else ""
+            difference = _debian_non_digit_order(left_character) - _debian_non_digit_order(right_character)
+            if difference:
+                return -1 if difference < 0 else 1
+            if left_character:
+                left_index += 1
+            if right_character:
+                right_index += 1
+        left_zero = left_index
+        while left_zero < len(left) and left[left_zero] == "0":
+            left_zero += 1
+        right_zero = right_index
+        while right_zero < len(right) and right[right_zero] == "0":
+            right_zero += 1
+        left_end = left_zero
+        while left_end < len(left) and left[left_end].isdigit():
+            left_end += 1
+        right_end = right_zero
+        while right_end < len(right) and right[right_end].isdigit():
+            right_end += 1
+        left_digits, right_digits = left[left_zero:left_end], right[right_zero:right_end]
+        if len(left_digits) != len(right_digits):
+            return -1 if len(left_digits) < len(right_digits) else 1
+        if left_digits != right_digits:
+            return -1 if left_digits < right_digits else 1
+        left_index, right_index = left_end, right_end
+    return 0
+
+
+def _debian_version_compare(left: str, right: str) -> int:
+    left_epoch, left_upstream, left_revision = _debian_version_parts(left)
+    right_epoch, right_upstream, right_revision = _debian_version_parts(right)
+    if left_epoch != right_epoch:
+        return -1 if left_epoch < right_epoch else 1
+    upstream = _debian_part_compare(left_upstream, right_upstream)
+    return upstream if upstream else _debian_part_compare(left_revision, right_revision)
+
+
+def _version_satisfies(actual: str, relationship: str | None, required: str | None) -> bool:
+    if relationship is None:
+        return True
+    assert required is not None
+    compared = _debian_version_compare(actual, required)
+    return {
+        "<<": compared < 0,
+        "<=": compared <= 0,
+        "=": compared == 0,
+        ">=": compared >= 0,
+        ">>": compared > 0,
+    }[relationship]
+
+
+def _dependency_groups(expression: str, architecture: str) -> list[list[tuple[str, str | None, str | None]]]:
+    groups: list[list[tuple[str, str | None, str | None]]] = []
+    for clause in filter(None, (value.strip() for value in expression.split(","))):
+        alternatives: list[tuple[str, str | None, str | None]] = []
+        for raw in clause.split("|"):
+            if re.search(r"\s<[^>]+>\s*$", raw):
+                raise PackagingError("Debian build-profile qualifiers are not valid runtime closure input")
+            matched = DEPENDENCY_ALTERNATIVE_PATTERN.fullmatch(raw.strip())
+            if matched is None:
+                raise PackagingError(f"Debian dependency expression is unsupported or unsafe: {raw.strip()}")
+            name, qualifier, relationship, version, restrictions = matched.groups()
+            if qualifier not in {None, "any", "native", architecture}:
+                continue
+            if restrictions:
+                tokens = restrictions.split()
+                positives = [token for token in tokens if not token.startswith("!")]
+                negatives = [token[1:] for token in tokens if token.startswith("!")]
+                if (positives and architecture not in positives) or architecture in negatives:
+                    continue
+            alternatives.append((name, relationship, version))
+        if alternatives:
+            groups.append(alternatives)
+    return groups
+
+
+def _provided_versions(record: dict[str, Any]) -> dict[str, str | None]:
+    provided: dict[str, str | None] = {str(record["package"]): str(record["version"])}
+    for raw in filter(None, (value.strip() for value in str(record.get("provides", "")).split(","))):
+        matched = re.fullmatch(r"([a-z0-9][a-z0-9+.-]*)(?:\s*\(=\s*([^)\s]+)\))?", raw)
+        if matched is None:
+            raise PackagingError(f"Debian Provides expression is unsupported or unsafe: {raw}")
+        provided[matched.group(1)] = matched.group(2)
+    return provided
+
+
+def _validate_apt_pool(
+    path: Path,
+    item: LockedInput,
+    members: dict[str, tarfile.TarInfo],
+    policy: dict[str, Any],
+    signature_verifier: Callable[[Path, Path, list[str]], str],
+) -> dict[str, Any]:
+    required = {"apt/InRelease", "apt/Packages", "apt/archive-keyring.gpg"}
+    if not required.issubset(members):
+        raise PackagingError(f"{item.name}: Debian pool lacks signed repository metadata")
+    with tarfile.open(path, mode="r:*") as archive:
+        extracted: dict[str, bytes] = {}
+        for name in members:
+            if members[name].isfile():
+                stream = archive.extractfile(members[name])
+                if stream is None:
+                    raise PackagingError(f"{item.name}: cannot read {name}")
+                extracted[name] = stream.read()
+    keyring_digest = hashlib.sha256(extracted["apt/archive-keyring.gpg"]).hexdigest()
+    if keyring_digest != policy["keyring_sha256"]:
+        raise PackagingError(f"{item.name}: archive keyring digest mismatch")
+    with tempfile.TemporaryDirectory(prefix="nilo-apt-signature-") as temporary:
+        temporary_root = Path(temporary)
+        keyring = temporary_root / "archive-keyring.gpg"
+        inrelease = temporary_root / "InRelease"
+        keyring.write_bytes(extracted["apt/archive-keyring.gpg"])
+        inrelease.write_bytes(extracted["apt/InRelease"])
+        signed_by = str(
+            signature_verifier(keyring, inrelease, list(policy["signing_fingerprints"]))
+        ).upper()
+    if signed_by not in policy["signing_fingerprints"]:
+        raise PackagingError(f"{item.name}: signature verifier returned an untrusted fingerprint")
+
+    release_paragraphs = _parse_deb822_paragraphs(
+        _clear_signed_payload(extracted["apt/InRelease"], item.name), f"{item.name}/InRelease",
+    )
+    if len(release_paragraphs) != 1:
+        raise PackagingError(f"{item.name}: InRelease must contain one metadata paragraph")
+    release = release_paragraphs[0]
+    if policy["suite"] not in {release.get("Suite"), release.get("Codename")}:
+        raise PackagingError(f"{item.name}: signed suite/codename mismatch")
+    if policy["component"] not in release.get("Components", "").split():
+        raise PackagingError(f"{item.name}: signed component mismatch")
+    if item.architecture not in release.get("Architectures", "").split():
+        raise PackagingError(f"{item.name}: signed architecture mismatch")
+    packages_digest = hashlib.sha256(extracted["apt/Packages"]).hexdigest()
+    packages_size = len(extracted["apt/Packages"])
+    checksum_lines = release.get("SHA256", "").splitlines()
+    if not any(
+        line.split() == [packages_digest, str(packages_size), "apt/Packages"]
+        for line in checksum_lines
+    ):
+        raise PackagingError(f"{item.name}: signed InRelease does not bind apt/Packages")
+
+    paragraphs = _parse_deb822_paragraphs(extracted["apt/Packages"], f"{item.name}/Packages")
+    packages: list[dict[str, Any]] = []
+    by_name: dict[str, dict[str, Any]] = {}
+    filenames: set[str] = set()
+    for index, paragraph in enumerate(paragraphs):
+        context = f"{item.name}/Packages[{index}]"
+        required_fields = {"Package", "Version", "Architecture", "Filename", "Size", "SHA256"}
+        if not required_fields.issubset(paragraph):
+            raise PackagingError(f"{context}: package provenance is incomplete")
+        name = paragraph["Package"]
+        filename = paragraph["Filename"]
+        if DEBIAN_PACKAGE_ID_PATTERN.fullmatch(name) is None or DEBIAN_FILENAME_PATTERN.fullmatch(filename) is None:
+            raise PackagingError(f"{context}: package identity or filename is unsafe")
+        if filename in filenames or filename not in extracted or not filename.startswith("pool/"):
+            raise PackagingError(f"{context}: package file is missing or duplicated")
+        filenames.add(filename)
+        contents = extracted[filename]
+        try:
+            expected_size = int(paragraph["Size"])
+        except ValueError as error:
+            raise PackagingError(f"{context}: package size is invalid") from error
+        digest = hashlib.sha256(contents).hexdigest()
+        if len(contents) != expected_size or digest != paragraph["SHA256"]:
+            raise PackagingError(f"{context}: package bytes do not match signed metadata")
+        control = _deb_control_from_bytes(contents, context)
+        if any(
+            control.get(key) != paragraph[field]
+            for key, field in (("Package", "Package"), ("Version", "Version"), ("Architecture", "Architecture"))
+        ):
+            raise PackagingError(f"{context}: package control identity mismatches repository metadata")
+        if any(
+            control.get(field, "") != paragraph.get(field, "")
+            for field in ("Depends", "Pre-Depends", "Provides")
+        ):
+            raise PackagingError(f"{context}: package control relationships mismatch repository metadata")
+        if paragraph["Architecture"] not in {item.architecture, "all"}:
+            raise PackagingError(f"{context}: architecture mismatch")
+        record = {
+            "architecture": paragraph["Architecture"],
+            "depends": paragraph.get("Depends", ""),
+            "filename": filename,
+            "package": name,
+            "pre_depends": paragraph.get("Pre-Depends", ""),
+            "provides": paragraph.get("Provides", ""),
+            "sha256": digest,
+            "signed_by": signed_by,
+            "size": len(contents),
+            "version": paragraph["Version"],
+        }
+        if name in by_name:
+            raise PackagingError(f"{context}: multiple versions of one package are not allowed")
+        by_name[name] = record
+        packages.append(record)
+    actual_debs = {name for name in extracted if name.startswith("pool/") and name.endswith(".deb")}
+    if actual_debs != filenames:
+        raise PackagingError(f"{item.name}: pool contains a .deb absent from signed Packages metadata")
+
+    base = set(policy["base_packages"])
+    providers: dict[str, list[tuple[dict[str, Any], str | None]]] = {}
+    for record in packages:
+        for provided_name, provided_version in _provided_versions(record).items():
+            providers.setdefault(provided_name, []).append((record, provided_version))
+    for candidates in providers.values():
+        candidates.sort(key=lambda value: (str(value[0]["package"]), str(value[0]["version"])))
+    reachable: set[str] = set()
+    pending = list(policy["roots"])
+    while pending:
+        name = pending.pop()
+        if name in reachable or name in base:
+            continue
+        record = by_name.get(name)
+        if record is None:
+            raise PackagingError(f"{item.name}: dependency closure is missing {name}")
+        reachable.add(name)
+        for field in ("pre_depends", "depends"):
+            for alternatives in _dependency_groups(str(record[field]), item.architecture):
+                selected: dict[str, Any] | None = None
+                for dependency_name, relationship, required_version in alternatives:
+                    for candidate, provided_version in providers.get(dependency_name, []):
+                        if relationship is None or (
+                            provided_version is not None
+                            and _version_satisfies(provided_version, relationship, required_version)
+                        ):
+                            selected = candidate
+                            break
+                    if selected is not None:
+                        break
+                    if dependency_name in base and relationship is None:
+                        selected = {"package": dependency_name}
+                        break
+                if selected is None:
+                    rendered = " | ".join(
+                        name + (f" ({relationship} {version})" if relationship else "")
+                        for name, relationship, version in alternatives
+                    )
+                    names_present = any(name in providers or name in base for name, _, _ in alternatives)
+                    reason = (
+                        "dependency version relationship is unsatisfied"
+                        if names_present else "dependency closure is missing"
+                    )
+                    raise PackagingError(f"{item.name}: {reason}: {rendered}")
+                if selected["package"] not in base:
+                    pending.append(str(selected["package"]))
+    if reachable != set(by_name):
+        raise PackagingError(f"{item.name}: pool contains packages outside the declared recursive closure")
+    packages.sort(key=lambda value: (value["package"], value["version"], value["architecture"]))
+    completed = {**policy, "packages": packages}
+    if "packages" in policy and policy["packages"] != packages:
+        raise PackagingError(f"{item.name}: locked per-package provenance does not match the pool")
+    return completed
+
+
+def _validate_resolved_artifact(
+    path: Path,
+    item: LockedInput,
+    *,
+    apt_policy: dict[str, Any] | None = None,
+    signature_verifier: Callable[[Path, Path, list[str]], str] = _default_apt_signature_verifier,
+) -> dict[str, Any] | None:
     """Validate that a connected resolution produced its reviewed artifact class."""
     if item.artifact_type == "raspberry-pi-image-xz":
         try:
@@ -892,23 +1394,14 @@ def _validate_resolved_artifact(path: Path, item: LockedInput) -> None:
             raise PackagingError(f"{item.name}: base image is not a valid xz stream") from error
         if len(header) != 512 or header[510:512] != b"\x55\xaa":
             raise PackagingError(f"{item.name}: base image lacks an MBR signature")
-        return
+        return None
 
     members = _validated_tar_members(path, item.name)
     if item.artifact_type == "debian-pool-tar":
-        package_names = sorted(name for name, member in members.items() if member.isfile())
-        if not package_names or any(not name.endswith(".deb") for name in package_names):
-            raise PackagingError(f"{item.name}: Debian pool must contain only .deb files")
-        with tarfile.open(path, mode="r:*") as archive:
-            for name in package_names:
-                stream = archive.extractfile(members[name])
-                if stream is None:
-                    raise PackagingError(f"{item.name}: cannot read {name}")
-                control = _deb_control_from_bytes(stream.read(), f"{item.name}/{name}")
-                if control.get("Architecture") not in {item.architecture, "all"}:
-                    raise PackagingError(f"{item.name}/{name}: architecture mismatch")
-                if not control.get("Package") or not control.get("Version"):
-                    raise PackagingError(f"{item.name}/{name}: package identity is incomplete")
+        effective_policy = apt_policy if apt_policy is not None else item.apt
+        if effective_policy is None:
+            raise PackagingError(f"{item.name}: Debian pool lacks a signed repository policy")
+        return _validate_apt_pool(path, item, members, effective_policy, signature_verifier)
     elif item.artifact_type == "sigrok-runtime-tar":
         required = {"runtime-manifest.json", "THIRD_PARTY_NOTICES.txt", "bin/python3", "bin/sigrok-cli"}
         if not required.issubset(members):
@@ -916,6 +1409,7 @@ def _validate_resolved_artifact(path: Path, item: LockedInput) -> None:
     elif item.artifact_type == "source-offers-tar":
         if not any(name.endswith(("SOURCE_OFFER.txt", ".tar.gz", ".tar.xz", ".zip")) for name in members):
             raise PackagingError(f"{item.name}: source-offer archive contains no source offer")
+    return None
 
 
 def _has_ipv4_default_route(path: Path) -> bool:
@@ -1143,6 +1637,7 @@ def resolve_inputs(
     proposal_path: Path,
     *,
     opener: Callable[..., Any] = urllib.request.urlopen,
+    signature_verifier: Callable[[Path, Path, list[str]], str] = _default_apt_signature_verifier,
 ) -> dict[str, Any]:
     """Resolve declared connected sources into an immutable lock proposal.
 
@@ -1166,7 +1661,7 @@ def resolve_inputs(
         raise PackagingError("release input declarations sources must be an array")
 
     known_scopes = {"shared", *(target.id for target in registry.targets)}
-    parsed: list[dict[str, str]] = []
+    parsed: list[dict[str, Any]] = []
     seen: set[tuple[str, str]] = set()
     for index, value in enumerate(document["sources"]):
         context = f"sources[{index}]"
@@ -1194,8 +1689,15 @@ def resolve_inputs(
         redistribution = _require_nonempty_string(source["redistribution"], f"{context}.redistribution")
         if redistribution != "permitted":
             raise PackagingError(f"{context}.redistribution must be explicitly permitted")
+        if artifact_type == "debian-pool-tar":
+            apt = _parse_apt_policy(source["apt"], f"{context}.apt")
+        elif source["apt"] is not None:
+            raise PackagingError(f"{context}.apt is allowed only for a Debian pool")
+        else:
+            apt = None
         parsed.append(
             {
+                "apt": apt,
                 "architecture": architecture,
                 "artifact_type": artifact_type,
                 "license": _require_nonempty_string(source["license"], f"{context}.license"),
@@ -1250,8 +1752,14 @@ def resolve_inputs(
                 url=source["url"], version=source["version"], license=source["license"],
                 provenance=source["provenance"], redistribution=source["redistribution"],
                 sha256=sha256, size=size,
+                apt=source["apt"],
             )
-            _validate_resolved_artifact(temporary_path, candidate)
+            apt = _validate_resolved_artifact(
+                temporary_path,
+                candidate,
+                apt_policy=source["apt"],
+                signature_verifier=signature_verifier,
+            )
             final_path = cache_object_path(cache_root, sha256)
             final_path.parent.mkdir(parents=True, exist_ok=True)
             if final_path.exists():
@@ -1261,7 +1769,7 @@ def resolve_inputs(
             else:
                 os.replace(temporary_path, final_path)
                 temporary_path = None
-            locked.append({**source, "sha256": sha256, "size": size})
+            locked.append({**source, "apt": apt, "sha256": sha256, "size": size})
         finally:
             if temporary_path is not None:
                 temporary_path.unlink(missing_ok=True)
@@ -1458,6 +1966,7 @@ def prepare_inputs(
         raise PackagingError(errors)
     lock_digest = hashlib.sha256(lock_bytes).hexdigest()
     receipt = {
+        "cache_root": str(cache_root.resolve()),
         "hardware_acceptance": {
             "required_checks": list(target.hardware_acceptance),
             "status": "not_run",

@@ -3,6 +3,7 @@
 package maintenance
 
 import (
+	"errors"
 	"os"
 	"syscall"
 )
@@ -22,4 +23,12 @@ func syncDirectory(path string) error {
 	}
 	defer directory.Close()
 	return directory.Sync()
+}
+
+func syncFile(path string) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	return errors.Join(file.Sync(), file.Close())
 }

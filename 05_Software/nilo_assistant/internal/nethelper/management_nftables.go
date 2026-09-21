@@ -60,4 +60,16 @@ func (n *NetworkManager) InstallManagementAccess(ctx context.Context, configurat
 	return err
 }
 
+func (n *NetworkManager) RemoveManagementAccess(ctx context.Context) error {
+	state, err := n.ManagementAccessTable(ctx)
+	if err != nil || state == TableAbsent {
+		return err
+	}
+	if state != TableOwned {
+		return ErrManagementAccessForeign
+	}
+	_, err = runNft(ctx, "", "delete", "table", "inet", "nilo_management")
+	return err
+}
+
 var _ ManagementAccessDriver = (*NetworkManager)(nil)

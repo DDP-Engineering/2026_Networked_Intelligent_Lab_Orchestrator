@@ -2,70 +2,145 @@
 # Recover a package transaction interrupted after its first state mutation.
 set -eu
 
-data=/var/lib/nilo
-transactions=$data/transactions
+root=${NILO_RECOVERY_ROOT:-}
+if [ -n "$root" ]; then
+  case "$root" in /*) ;; *) echo 'alternate recovery root must be absolute' >&2; exit 2 ;; esac
+  [ "${NILO_ACCEPTANCE_DISPOSABLE_TARGET:-}" = test-fixture ] || {
+    echo 'alternate recovery root is restricted to disposable acceptance' >&2; exit 2;
+  }
+  root=${root%/}
+  expected_owner="$(id -un):$(id -gn)"
+else
+  expected_owner=root:root
+fi
+data=$root/var/lib/nilo
+state=$root/var/lib/nilo-installer
+transactions=$state/transactions
+completed=$state/completed
+[ -e "$state" ] || exit 0
+[ -d "$state" ] && [ ! -L "$state" ] && [ "$(stat -c '%a:%U:%G' "$state")" = "700:$expected_owner" ] || {
+  echo 'unsafe NILO installer state root' >&2; exit 1;
+}
 [ -d "$transactions" ] || exit 0
+[ ! -L "$transactions" ] && [ "$(stat -c '%a:%U:%G' "$transactions")" = "700:$expected_owner" ] || {
+  echo 'unsafe NILO installer transaction root' >&2; exit 1;
+}
+
+retire_transaction() {
+  destination=$completed/${transaction##*/}
+  install -d -m 0700 "$completed"
+  [ -d "$completed" ] && [ ! -L "$completed" ] && [ "$(stat -c '%a:%U:%G' "$completed")" = "700:$expected_owner" ] || {
+    echo 'unsafe completed NILO transaction root' >&2; exit 1;
+  }
+  [ ! -e "$destination" ] || { echo "duplicate completed NILO transaction: $destination" >&2; exit 1; }
+  mv "$transaction" "$destination"
+  sync "$destination" "$completed" "$transactions" "$state"
+}
 
 for journal in "$transactions"/*/transaction.json; do
   [ -f "$journal" ] && [ ! -L "$journal" ] || continue
+  [ "$(stat -c '%a:%U:%G' "$journal")" = "600:$expected_owner" ] || { echo "unsafe NILO recovery journal permissions: $journal" >&2; exit 1; }
   transaction=${journal%/transaction.json}
   case "$transaction" in
-    /var/lib/nilo/transactions/install-*) ;;
+    "$root"/var/lib/nilo-installer/transactions/install-*) ;;
     *) echo "unsafe NILO recovery transaction: $transaction" >&2; exit 1 ;;
   esac
-  [ -d "$transaction" ] && [ ! -L "$transaction" ] || { echo "unsafe NILO recovery transaction directory: $transaction" >&2; exit 1; }
+  [ -d "$transaction" ] && [ ! -L "$transaction" ] && [ "$(stat -c '%a:%U:%G' "$transaction")" = "700:$expected_owner" ] || { echo "unsafe NILO recovery transaction directory: $transaction" >&2; exit 1; }
 
-  phase=$(sed -n 's/.*"phase":"\([a-z-]*\)".*/\1/p' "$journal")
+  phase=$(sed -n 's/.*"phase":"\([a-z_-]*\)".*/\1/p' "$journal")
   version=$(sed -n 's/.*"version":"\([A-Za-z0-9.+:~_-]*\)".*/\1/p' "$journal")
+  had_prior_nilo=$(sed -n 's/.*"had_prior_nilo":\([01]\).*/\1/p' "$journal")
+  had_prior_data_dir=$(sed -n 's/.*"had_prior_data_dir":\([01]\).*/\1/p' "$journal")
   prior_debs=$(sed -n 's/.*"prior_debs":"\([^"]*\)".*/\1/p' "$journal")
+  prior_debs_sha256=$(sed -n 's/.*"prior_debs_sha256":"\([0-9a-f]*\)".*/\1/p' "$journal")
   new_packages=$(sed -n 's/.*"new_packages":"\([^"]*\)".*/\1/p' "$journal")
+  new_packages_sha256=$(sed -n 's/.*"new_packages_sha256":"\([0-9a-f]*\)".*/\1/p' "$journal")
+  changed_packages=$(sed -n 's/.*"changed_packages":"\([^"]*\)".*/\1/p' "$journal")
+  changed_packages_sha256=$(sed -n 's/.*"changed_packages_sha256":"\([0-9a-f]*\)".*/\1/p' "$journal")
   snapshot=$(sed -n 's/.*"snapshot":"\([^"]*\)".*/\1/p' "$journal")
   [ "$prior_debs" = "$transaction/prior-packages.list" ] || { echo "unsafe prior-package list in $journal" >&2; exit 1; }
   [ "$new_packages" = "$transaction/new-packages.list" ] || { echo "unsafe new-package list in $journal" >&2; exit 1; }
-  [ "$snapshot" = "/var/lib/nilo/snapshots/${transaction##*/}" ] || { echo "unsafe snapshot path in $journal" >&2; exit 1; }
+  [ "$changed_packages" = "$transaction/changed-packages.list" ] || { echo "unsafe changed-package list in $journal" >&2; exit 1; }
+  [ "$snapshot" = "$root/var/lib/nilo/snapshots/${transaction##*/}" ] || { echo "unsafe snapshot path in $journal" >&2; exit 1; }
+  case "$had_prior_nilo" in 0|1) ;; *) echo "invalid prior-install state in $journal" >&2; exit 1 ;; esac
+  case "$had_prior_data_dir" in 0|1) ;; *) echo "invalid prior-data state in $journal" >&2; exit 1 ;; esac
   [ -f "$prior_debs" ] && [ ! -L "$prior_debs" ] || exit 1
   [ -f "$new_packages" ] && [ ! -L "$new_packages" ] || exit 1
+  [ -f "$changed_packages" ] && [ ! -L "$changed_packages" ] || exit 1
+  for protected_file in "$prior_debs" "$new_packages" "$changed_packages"; do
+    [ "$(stat -c '%a:%U:%G' "$protected_file")" = "600:$expected_owner" ] || { echo "unsafe recovery metadata permissions: $protected_file" >&2; exit 1; }
+  done
+  [ "$(sha256sum "$prior_debs" | awk '{print $1}')" = "$prior_debs_sha256" ] || { echo "prior-package list digest mismatch in $journal" >&2; exit 1; }
+  [ "$(sha256sum "$new_packages" | awk '{print $1}')" = "$new_packages_sha256" ] || { echo "new-package list digest mismatch in $journal" >&2; exit 1; }
+  [ "$(sha256sum "$changed_packages" | awk '{print $1}')" = "$changed_packages_sha256" ] || { echo "changed-package list digest mismatch in $journal" >&2; exit 1; }
 
   case "$phase" in
     committed) rm -rf -- "$transaction"; continue ;;
     preflight|quiesced|snapshotted|dependencies|package|migrated|started|verified|rolling_back|recovery-required) ;;
-    rolled_back) continue ;;
+    rolled_back)
+      if [ "$had_prior_data_dir" -eq 0 ]; then
+        rm -rf -- "$data"
+        sync "$root/var/lib"
+      fi
+      retire_transaction
+      continue
+      ;;
     *) echo "invalid NILO recovery journal: $journal" >&2; exit 1 ;;
   esac
 
-  sed 's/"phase":"[a-z-]*"/"phase":"rolling_back"/' "$journal" >"$journal.tmp"
+  sed 's/"phase":"[a-z_-]*"/"phase":"rolling_back"/' "$journal" >"$journal.tmp"
+  sync "$journal.tmp"
   mv -f "$journal.tmp" "$journal"
-  sync "$journal"
+  sync "$journal" "$transaction"
   ok=1
+  systemctl stop nilo.service nilo-firstboot.service nilo-nethelper.service nilo-nethelper.socket >/dev/null 2>&1 || ok=0
+  systemctl is-active nilo.service nilo-nethelper.service >/dev/null 2>&1 && ok=0
   if [ -f "$transaction/policy-created" ]; then
-    rm -f /usr/sbin/policy-rc.d "$transaction/policy-created" || ok=0
+    rm -f "$root/usr/sbin/policy-rc.d" "$transaction/policy-created" || ok=0
   fi
-  while read -r package_id prior_deb; do
+  set --
+  while read -r package_id prior_version prior_digest prior_deb; do
     [ -n "$package_id" ] || continue
     case "$package_id" in *[!a-z0-9+.-]*) ok=0; continue ;; esac
+    case "$prior_version" in *[!A-Za-z0-9.+:~_-]*|'') ok=0; continue ;; esac
+    case "$prior_digest" in *[!0-9a-f]*|'') ok=0; continue ;; esac
+    [ "${#prior_digest}" -eq 64 ] || { ok=0; continue; }
     case "$prior_deb" in "$transaction"/prior-packages/*.deb) ;; *) ok=0; continue ;; esac
     [ -f "$prior_deb" ] && [ ! -L "$prior_deb" ] || { ok=0; continue; }
-    dpkg -i "$prior_deb" >/dev/null 2>&1 || ok=0
+    [ "$(stat -c '%a:%U:%G' "$prior_deb")" = "600:$expected_owner" ] || { ok=0; continue; }
+    [ "$(sha256sum "$prior_deb" | awk '{print $1}')" = "$prior_digest" ] || { ok=0; continue; }
+    [ "$(dpkg-deb -f "$prior_deb" Package)" = "$package_id" ] || { ok=0; continue; }
+    [ "$(dpkg-deb -f "$prior_deb" Version)" = "$prior_version" ] || { ok=0; continue; }
+    set -- "$@" "$prior_deb"
   done <"$prior_debs"
+  [ "$#" -eq 0 ] || dpkg -i "$@" >/dev/null 2>&1 || ok=0
   while read -r package_id; do
     [ -n "$package_id" ] || continue
     case "$package_id" in *[!a-z0-9+.-]*) ok=0; continue ;; esac
     dpkg --purge "$package_id" >/dev/null 2>&1 || ok=0
   done <"$new_packages"
   if [ -d "$snapshot" ] && [ ! -L "$snapshot" ]; then
-    /usr/bin/nilo maintenance restore --data-dir "$data" --snapshot "$snapshot" \
+    "$root/usr/bin/nilo" maintenance restore --data-dir "$data" --snapshot "$snapshot" \
       --failed-target-version "$version" >/dev/null 2>&1 || ok=0
   fi
   systemctl daemon-reload >/dev/null 2>&1 || ok=0
-  systemctl start nilo-nethelper.socket nilo.service >/dev/null 2>&1 || ok=0
+  [ "$had_prior_nilo" -ne 1 ] || systemctl start nilo-nethelper.socket nilo.service >/dev/null 2>&1 || ok=0
+  if [ "$ok" -eq 1 ] && [ "$had_prior_data_dir" -eq 0 ]; then
+    rm -rf -- "$data" || ok=0
+    sync "$root/var/lib" || ok=0
+  fi
   if [ "$ok" -eq 1 ]; then
-    sed 's/"phase":"[a-z-]*"/"phase":"rolled_back"/' "$journal" >"$journal.tmp"
+    sed 's/"phase":"[a-z_-]*"/"phase":"rolled_back"/' "$journal" >"$journal.tmp"
+    sync "$journal.tmp"
     mv -f "$journal.tmp" "$journal"
-    sync "$journal"
+    sync "$journal" "$transaction"
+    retire_transaction
   else
-    sed 's/"phase":"[a-z-]*"/"phase":"recovery-required"/' "$journal" >"$journal.tmp"
+    systemctl stop nilo.service nilo-nethelper.service nilo-nethelper.socket >/dev/null 2>&1 || true
+    sed 's/"phase":"[a-z_-]*"/"phase":"recovery-required"/' "$journal" >"$journal.tmp"
+    sync "$journal.tmp"
     mv -f "$journal.tmp" "$journal"
-    sync "$journal"
+    sync "$journal" "$transaction"
     echo "NILO installer recovery requires local intervention: $transaction" >&2
     exit 1
   fi

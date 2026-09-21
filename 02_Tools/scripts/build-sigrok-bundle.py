@@ -14,12 +14,67 @@ import hashlib
 import json
 import shutil
 import stat
+import subprocess
+import sys
 import tempfile
 from pathlib import Path
+from typing import Callable
 
 
 MAXIMUM_RUNTIME_BYTES = 1024 * 1024 * 1024
 ELF_MACHINES = {"amd64": 62, "arm64": 183}
+HEALTH_CHECKS = (
+    ("python-version", ("bin/python3", "--version")),
+    ("sigrok-version", ("bin/sigrok-cli", "--version")),
+    ("sigrok-driver-scan", ("bin/sigrok-cli", "--scan")),
+)
+
+
+def _observe_offline_network() -> dict[str, object]:
+    """Observe the namespace rather than trusting a caller-supplied label."""
+    if not sys.platform.startswith("linux"):
+        raise ValueError("Runtime health checks require a loopback-only Linux namespace")
+    try:
+        interfaces = sorted(path.name for path in Path("/sys/class/net").iterdir())
+        ipv4_lines = Path("/proc/net/route").read_text(encoding="ascii").splitlines()[1:]
+        ipv6_lines = Path("/proc/net/ipv6_route").read_text(encoding="ascii").splitlines()
+    except OSError as error:
+        raise ValueError(f"Cannot observe runtime health network isolation: {error}") from error
+    ipv4_default = any(
+        len(fields) >= 8 and fields[1] == "00000000" and fields[7] == "00000000"
+        for fields in (line.split() for line in ipv4_lines)
+    )
+    ipv6_default = False
+    for fields in (line.split() for line in ipv6_lines):
+        if len(fields) < 10 or fields[0] != "0" * 32 or fields[1] != "00":
+            continue
+        try:
+            flags = int(fields[8], 16)
+        except ValueError as error:
+            raise ValueError("Runtime health namespace has malformed IPv6 routes") from error
+        if flags & 0x0200 == 0:
+            ipv6_default = True
+            break
+    return {
+        "interfaces": interfaces,
+        "ipv4_default_route": ipv4_default,
+        "ipv6_default_route": ipv6_default,
+        "platform": "linux",
+        "verified": True,
+    }
+
+
+def _require_offline_network(observer: Callable[[], dict[str, object]]) -> dict[str, object]:
+    observation = observer()
+    if observation != {
+        "interfaces": ["lo"],
+        "ipv4_default_route": False,
+        "ipv6_default_route": False,
+        "platform": "linux",
+        "verified": True,
+    }:
+        raise ValueError("Runtime health checks require a loopback-only namespace with no default route")
+    return dict(observation)
 
 
 def _read_runtime_manifest(runtime_root: Path, architecture: str) -> dict:
@@ -44,13 +99,13 @@ def _read_runtime_manifest(runtime_root: Path, architecture: str) -> dict:
         if not component["source"].startswith("https://"):
             raise ValueError("Runtime component source must use HTTPS")
     health = manifest["health_checks"]
-    required_health = {"python-version", "sigrok-version", "sigrok-driver-scan"}
-    if not isinstance(health, list) or any(not isinstance(item, dict) for item in health):
-        raise ValueError("Runtime health evidence is incomplete")
-    if {item.get("id") for item in health} != required_health:
-        raise ValueError("Runtime health evidence is incomplete")
-    if any(set(item) != {"command", "id", "status"} or item["status"] != "passed" for item in health):
-        raise ValueError("Runtime health evidence did not pass")
+    if not isinstance(health, list) or len(health) != len(HEALTH_CHECKS):
+        raise ValueError("Runtime health declarations are incomplete")
+    for item, (identifier, arguments) in zip(health, HEALTH_CHECKS, strict=True):
+        if not isinstance(item, dict) or set(item) != {"arguments", "id"}:
+            raise ValueError("Runtime health declaration is invalid")
+        if item["id"] != identifier or item["arguments"] != list(arguments):
+            raise ValueError("Runtime health declaration is invalid")
     return manifest
 
 
@@ -110,7 +165,72 @@ def _validate_runtime(runtime_root: Path, architecture: str) -> int:
     return total
 
 
-def build(destination: Path, architecture: str, runtime_root: Path) -> None:
+def _execute_health_checks(
+    runtime_root: Path,
+    runner: Callable[..., subprocess.CompletedProcess[str]],
+    network_observer: Callable[[], dict[str, object]],
+) -> dict:
+    """Execute the fixed runtime checks and return bounded derived evidence."""
+    before = _require_offline_network(network_observer)
+    environment = {
+        "HOME": str(runtime_root),
+        "LANG": "C",
+        "LC_ALL": "C",
+        "PATH": str(runtime_root / "bin"),
+        "PYTHONDONTWRITEBYTECODE": "1",
+    }
+    checks = []
+    for identifier, relative_arguments in HEALTH_CHECKS:
+        executable = (runtime_root / relative_arguments[0]).resolve()
+        try:
+            executable.relative_to(runtime_root)
+        except ValueError as error:
+            raise ValueError("Runtime health executable escapes its root") from error
+        arguments = [str(executable), *relative_arguments[1:]]
+        try:
+            result = runner(
+                arguments,
+                check=True,
+                capture_output=True,
+                cwd=runtime_root,
+                env=environment,
+                text=True,
+                timeout=30,
+            )
+        except (OSError, subprocess.SubprocessError) as error:
+            raise ValueError(f"Runtime health check failed: {identifier}") from error
+        if result.returncode != 0:
+            raise ValueError(f"Runtime health check failed: {identifier}")
+        stdout = result.stdout or ""
+        stderr = result.stderr or ""
+        checks.append(
+            {
+                "arguments": list(relative_arguments),
+                "id": identifier,
+                "status": "passed",
+                "stderr_sha256": hashlib.sha256(stderr.encode()).hexdigest(),
+                "stdout_sha256": hashlib.sha256(stdout.encode()).hexdigest(),
+            }
+        )
+    after = _require_offline_network(network_observer)
+    return {
+        "checks": checks,
+        "network_isolation": {"after": after, "before": before, **before},
+        "schema": 1,
+        "source_manifest_sha256": hashlib.sha256(
+            (runtime_root / "runtime-manifest.json").read_bytes()
+        ).hexdigest(),
+    }
+
+
+def build(
+    destination: Path,
+    architecture: str,
+    runtime_root: Path,
+    *,
+    runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
+    network_observer: Callable[[], dict[str, object]] = _observe_offline_network,
+) -> None:
     """Assemble code and one complete, already acquired target runtime."""
     repository = Path(__file__).resolve().parents[2]
     project = repository / "05_Software/integrations/sigrok"
@@ -119,6 +239,7 @@ def build(destination: Path, architecture: str, runtime_root: Path) -> None:
     if architecture not in {"arm64", "amd64"}:
         raise ValueError(f"Unsupported architecture: {architecture}")
     measured_bytes = _validate_runtime(runtime_root, architecture)
+    health_evidence = _execute_health_checks(runtime_root, runner, network_observer)
     if destination.exists():
         raise ValueError("Bundle destination must not already exist")
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -177,6 +298,10 @@ def build(destination: Path, architecture: str, runtime_root: Path) -> None:
                 sort_keys=True,
             )
             + "\n",
+            encoding="utf-8",
+        )
+        (stage / "runtime-health.json").write_text(
+            json.dumps(health_evidence, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
         manifest = json.loads((project / "manifest.json").read_text(encoding="utf-8"))

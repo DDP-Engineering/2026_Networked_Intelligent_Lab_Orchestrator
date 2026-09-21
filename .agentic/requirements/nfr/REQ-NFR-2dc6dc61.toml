@@ -17,11 +17,11 @@ requirement = """
 When the same identified source, complete verified input cache and target definition are built twice offline, the release tooling shall produce byte-identical project-owned payloads and record any intentionally non-reproducible final-container field separately from the deterministic source evidence.
 """
 
-verification = "Build each fixture target twice with fixed SOURCE_DATE_EPOCH, locale and timezone in separate empty output directories and compare every project-owned file and archive digest; inject host timestamps, path order and ownership differences and confirm normalization or a named refusal."
+verification = "Have the repository-owned acceptance verifier build each fixture target twice with fixed SOURCE_DATE_EPOCH, locale and timezone in fresh empty output directories and compare every project-owned file and archive digest; require each builder to bind its artifact to a pre-established invocation, source, tool, command and input identity, then inject copied artifacts, caller-authored receipts, host timestamps, path order and ownership differences and confirm normalization or a named refusal."
 
 affected_paths = ["02_Tools/packaging/build/", "02_Tools/packaging/release_builder.py", "02_Tools/packaging/config/", "05_Software/scripts/tests/test_release_packaging.py"]
 
-linked_tests = ["05_Software/scripts/tests/test_release_packaging.py::DeterministicPayloadTests.test_payload_is_byte_reproducible_and_manifested", "05_Software/scripts/tests/test_release_packaging.py::DeterministicPayloadTests.test_payload_refuses_links_special_files_and_mutable_state"]
+linked_tests = ["05_Software/scripts/tests/test_release_packaging.py::DeterministicPayloadTests.test_payload_is_byte_reproducible_and_manifested", "05_Software/scripts/tests/test_release_packaging.py::DeterministicPayloadTests.test_payload_refuses_links_special_files_and_mutable_state", "05_Software/scripts/tests/test_release_packaging.py::DebianPackageTests.test_debian_package_refuses_payload_bytes_not_bound_by_the_manifest", "05_Software/scripts/tests/test_release_packaging.py::ReleaseEvidenceTests.test_reproducibility_runs_two_fixed_builds_in_fresh_roots", "05_Software/scripts/tests/test_release_packaging.py::ReleaseEvidenceTests.test_build_set_receipts_are_emitted_from_artifact_builder_receipts", "05_Software/scripts/tests/test_release_packaging.py::ReleaseEvidenceTests.test_build_set_receipts_reject_post_hoc_receipts_for_copied_artifacts", "05_Software/scripts/tests/test_release_packaging.py::ReleaseEvidenceTests.test_build_set_receipts_reject_malformed_embedded_builder_metadata"]
 
 
 spec = "specs/REQ-NFR-2dc6dc61.md"
@@ -30,4 +30,4 @@ priority = "normal"   # low | normal | high
 rationale = "Deterministic payloads make target artifacts traceable to the locked inputs rather than the build host."
 
 created = 2026-09-19
-updated = 2026-09-19
+updated = 2026-09-20

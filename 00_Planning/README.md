@@ -12,6 +12,15 @@ Project goals, architecture decisions, milestones, and implementation plans.
   Windows/WSL2 and native Ubuntu OCI build boundary, locked toolchain, Git LFS offline archive,
   dual-remote preservation and acceptance gates that precede further feature
   implementation.
+- [Packaging and delivery plan](Packaging_and_Delivery_Plan.md): one package per
+  architecture containing NILO and every integration, an offline installer per
+  target, a directly writable Raspberry Pi image, and the work packages that
+  produce them.
+- [Camera plugin plan](Camera_Plugin_Plan.md): the first feature plugin after
+  sigrok. USB cameras as named managed devices, snapshots with device
+  controls, processing and overlays for humans and agents alike, the bench
+  core generalisation this needs, and a later live preview. Temporary; delete
+  it when its work packages are delivered.
 - [TODO](TODO.md): mixed backlog; older status statements need reconciliation
   before selecting new work.
 - [GUI design references](GUI_Design/README.md): retained visual direction.

@@ -190,6 +190,76 @@ func TestIntegrationUpgradePreservesStateRefusesBusyAndRollsBackFailedHealth(t *
 		t.Fatalf("upgrade audit actions = %v", actions)
 	}
 }
+
+func TestIntegrationUpgradeRecoversCandidateActivationInterruptedBeforeStateCommit(t *testing.T) {
+	manager, actor, _ := testManager(t, "ask")
+	before, err := manager.ListPlugins(context.Background(), actor)
+	if err != nil || len(before) != 1 {
+		t.Fatalf("load prior plugin = %+v, %v", before, err)
+	}
+	priorVersion := before[0].Version
+	target, err := manager.packageRoot("sigrok")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var priorDigest string
+	if err := manager.db().QueryRow(`SELECT digest FROM bench_plugins WHERE id='sigrok'`).Scan(&priorDigest); err != nil {
+		t.Fatal(err)
+	}
+	rewriteCatalogVersion(t, manager, "2.0.0")
+	integrationRoot := filepath.Join(manager.options.DataDir, "integrations")
+	stageName := ".upgrade-sigrok-candidate"
+	backupName := ".upgrade-sigrok-backup"
+	stage := filepath.Join(integrationRoot, stageName)
+	backup := filepath.Join(integrationRoot, backupName)
+	if err := os.CopyFS(stage, os.DirFS(filepath.Join(manager.options.BundleDir, "sigrok"))); err != nil {
+		t.Fatal(err)
+	}
+	candidateDigest, err := verifyPackage(stage)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(backup, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := manager.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Rename(target, filepath.Join(backup, "previous")); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Rename(stage, target); err != nil {
+		t.Fatal(err)
+	}
+	journal := map[string]any{
+		"backup": backupName, "candidate_digest": candidateDigest, "id": "sigrok",
+		"phase": "candidate_active", "prior_digest": priorDigest, "schema": 1,
+		"stage": stageName, "target": "sigrok",
+	}
+	encoded, err := json.Marshal(journal)
+	if err != nil {
+		t.Fatal(err)
+	}
+	journalPath := filepath.Join(integrationRoot, ".upgrade-sigrok.json")
+	if err := os.WriteFile(journalPath, encoded, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	recovered, err := New(manager.options)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer recovered.Close()
+	plugins, err := recovered.ListPlugins(context.Background(), actor)
+	if err != nil || len(plugins) != 1 || plugins[0].Version != priorVersion || plugins[0].Digest != priorDigest {
+		t.Fatalf("recovered plugin = %+v, %v", plugins, err)
+	}
+	for _, path := range []string{journalPath, backup, stage} {
+		if _, err := os.Lstat(path); !os.IsNotExist(err) {
+			t.Fatalf("recovery residue remains at %s: %v", path, err)
+		}
+	}
+}
 func (r *controlledRunner) Cancel(context.Context, string, domain.RequestID) error { return nil }
 func (r *controlledRunner) Shutdown(context.Context) error                         { return nil }
 func (r *controlledRunner) Execute(ctx context.Context, request protocol.ExecuteRequest, sink protocol.EventSink) (protocol.ExecuteResult, error) {
@@ -252,6 +322,31 @@ func testManager(t *testing.T, mode string) (*Manager, identity.Actor, *controll
 		}
 		files[name] = fmt.Sprintf("%x", sha256.Sum256(content))
 	}
+	runtimeFiles := map[string][]byte{
+		"runtime/bin/python3":    []byte("#!/bin/sh\nexit 0\n"),
+		"runtime/bin/sigrok-cli": []byte("#!/bin/sh\nexit 0\n"),
+	}
+	var runtimeBytes int64
+	for name, content := range runtimeFiles {
+		target := filepath.Join(bundle, name)
+		if err := os.MkdirAll(filepath.Dir(target), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(target, content, 0o700); err != nil {
+			t.Fatal(err)
+		}
+		runtimeBytes += int64(len(content))
+		files[name] = fmt.Sprintf("%x", sha256.Sum256(content))
+	}
+	runtimeDescriptor, _ := json.Marshal(map[string]any{
+		"architecture": runtime.GOARCH, "backend": "sigrok-cli",
+		"measured_bytes": runtimeBytes, "maximum_bytes": runtimeBytes * 2,
+		"project_version": "test", "self_contained": true,
+	})
+	if err := os.WriteFile(filepath.Join(bundle, "runtime.json"), runtimeDescriptor, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	files["runtime.json"] = fmt.Sprintf("%x", sha256.Sum256(runtimeDescriptor))
 	index, _ := json.Marshal(files)
 	if err := os.WriteFile(filepath.Join(bundle, "files.sha256.json"), index, 0600); err != nil {
 		t.Fatal(err)

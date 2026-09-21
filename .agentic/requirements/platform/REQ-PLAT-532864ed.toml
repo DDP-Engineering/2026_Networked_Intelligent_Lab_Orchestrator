@@ -21,7 +21,7 @@ verification = "Build amd64 and arm64 catalogue fixtures, inspect their runtime 
 
 affected_paths = ["02_Tools/scripts/build-sigrok-bundle.py", "02_Tools/scripts/build-appliance.sh", "02_Tools/packaging/release_builder.py", "02_Tools/packaging/config/", "05_Software/integrations/sigrok/", "05_Software/nilo_assistant/internal/integration/manifest/", "05_Software/scripts/tests/test_release_packaging.py"]
 
-linked_tests = ["05_Software/scripts/tests/test_release_packaging.py::ProductionIntegrationTests.test_sigrok_bundle_embeds_its_runtime_without_package_resolution", "05_Software/scripts/tests/test_release_packaging.py::ProductionIntegrationTests.test_sigrok_bundle_refuses_incomplete_or_fixture_runtimes"]
+linked_tests = ["05_Software/scripts/tests/test_release_packaging.py::ProductionIntegrationTests.test_sigrok_bundle_embeds_its_runtime_without_package_resolution", "05_Software/scripts/tests/test_release_packaging.py::ProductionIntegrationTests.test_sigrok_bundle_refuses_incomplete_or_fixture_runtimes", "05_Software/scripts/tests/test_release_packaging.py::ProductionIntegrationTests.test_sigrok_bundle_rejects_failed_executed_health_check", "05_Software/scripts/tests/test_release_packaging.py::ProductionIntegrationTests.test_sigrok_bundle_rejects_health_checks_in_a_routed_namespace"]
 
 
 spec = "specs/REQ-PLAT-532864ed.md"

@@ -74,6 +74,9 @@ type Request struct {
 	TLSDigest                []byte                            `json:"tls_digest,omitempty"`
 	TLSHash                  string                            `json:"tls_hash,omitempty"`
 	TLSAlgorithm             string                            `json:"tls_algorithm,omitempty"`
+	OwnedTunnels             []OwnedTunnel                     `json:"owned_tunnels,omitempty"`
+	LocalConfirmation        bool                              `json:"local_confirmation,omitempty"`
+	PurgeOwnedState          bool                              `json:"purge_owned_state,omitempty"`
 }
 
 // Response has no field that can hold key material, and must never gain one.
@@ -108,6 +111,7 @@ type Response struct {
 	TLSIdentity             *TLSIdentityPublic            `json:"tls_identity,omitempty"`
 	TLSSignature            []byte                        `json:"tls_signature,omitempty"`
 	IdentifyAction          *network.IdentifyActionResult `json:"identify_action,omitempty"`
+	Cleanup                 *CleanupReport                `json:"cleanup,omitempty"`
 }
 
 // secretOperations are the only operations that may name staged key material.
@@ -190,7 +194,17 @@ func dispatch(ctx context.Context, e *Engine, q Request) Response {
 	if (q.TLSGeneration != "" || len(q.TLSDigest) != 0 || q.TLSHash != "" || q.TLSAlgorithm != "") && q.Op != "tls.identity.sign" {
 		return Response{Error: "unexpected TLS signing parameters", Code: "invalid_request"}
 	}
+	if (q.OwnedTunnels != nil || q.LocalConfirmation || q.PurgeOwnedState) && q.Op != "maintenance.cleanup" {
+		return Response{Error: "unexpected maintenance cleanup parameters", Code: "invalid_request"}
+	}
 	switch q.Op {
+	case "maintenance.cleanup":
+		if q.ID != "" || q.OwnedTunnels == nil || q.PurgeOwnedState && !q.LocalConfirmation {
+			return Response{Error: "maintenance cleanup requires an explicit owned-tunnel inventory", Code: "invalid_request"}
+		}
+		var report CleanupReport
+		report, err = e.CleanupOwned(ctx, q.OwnedTunnels, q.LocalConfirmation, q.PurgeOwnedState)
+		r.Cleanup = &report
 	case "appliance.identity.read":
 		if q.ID != "" {
 			return Response{Error: "appliance identity read requires an empty envelope", Code: "invalid_request"}

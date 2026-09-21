@@ -289,6 +289,7 @@ func (m *Manager) waitPluginIdle(ctx context.Context, id string, maximum time.Du
 }
 
 func rollbackPackageSwitch(target, backupRoot string) error {
+	integrationRoot := filepath.Dir(target)
 	failed := filepath.Join(backupRoot, "failed-upgrade")
 	previous := filepath.Join(backupRoot, "previous")
 	if err := os.Rename(target, failed); err != nil {
@@ -296,6 +297,9 @@ func rollbackPackageSwitch(target, backupRoot string) error {
 	}
 	if err := os.Rename(previous, target); err != nil {
 		_ = os.Rename(failed, target)
+		return err
+	}
+	if err := syncPackageDirectory(integrationRoot); err != nil {
 		return err
 	}
 	return os.RemoveAll(failed)
@@ -365,7 +369,7 @@ func (m *Manager) upgradePlugin(ctx context.Context, actor identity.Actor, curre
 	if err != nil {
 		return errors.Join(ErrInvalid, err)
 	}
-	stage, err := os.MkdirTemp(filepath.Dir(target), ".upgrade-")
+	stage, err := os.MkdirTemp(filepath.Dir(target), ".upgrade-"+current.ID+"-stage-")
 	if err != nil {
 		return err
 	}
@@ -400,25 +404,58 @@ func (m *Manager) upgradePlugin(ctx context.Context, actor identity.Actor, curre
 		rollbackErr := m.recordUpgradeRollback(ctx, actor, current, descriptor.Package.Version, "migration")
 		return errors.Join(err, rollbackErr)
 	}
-	backupRoot, err := os.MkdirTemp(filepath.Dir(target), ".rollback-")
+	backupRoot, err := os.MkdirTemp(filepath.Dir(target), ".upgrade-"+current.ID+"-backup-")
 	if err != nil {
 		return err
 	}
 	defer os.RemoveAll(backupRoot)
+	integrationRoot := filepath.Dir(target)
+	if err := syncPackageTree(stage); err != nil {
+		return err
+	}
+	journal := upgradeJournal{
+		Backup: filepath.Base(backupRoot), CandidateDigest: digest, ID: current.ID,
+		Phase: "prepared", PriorDigest: priorDigest, Schema: upgradeJournalSchema,
+		Stage: filepath.Base(stage), Target: current.ID,
+	}
+	if err := writeUpgradeJournal(integrationRoot, journal); err != nil {
+		return err
+	}
 	if err := os.Rename(target, filepath.Join(backupRoot, "previous")); err != nil {
+		_ = removeUpgradeJournal(integrationRoot, current.ID)
 		rollbackErr := m.recordUpgradeRollback(ctx, actor, current, descriptor.Package.Version, "activate-backup")
 		return errors.Join(err, rollbackErr)
 	}
+	if err := syncPackageDirectory(integrationRoot); err != nil {
+		return err
+	}
+	journal.Phase = "backup_moved"
+	if err := writeUpgradeJournal(integrationRoot, journal); err != nil {
+		return err
+	}
 	if err := os.Rename(stage, target); err != nil {
 		restoreErr := os.Rename(filepath.Join(backupRoot, "previous"), target)
+		if restoreErr == nil {
+			restoreErr = errors.Join(syncPackageDirectory(integrationRoot), removeUpgradeJournal(integrationRoot, current.ID))
+		}
 		rollbackErr := m.recordUpgradeRollback(ctx, actor, current, descriptor.Package.Version, "activate-candidate")
 		return errors.Join(err, restoreErr, rollbackErr)
+	}
+	if err := syncPackageDirectory(integrationRoot); err != nil {
+		return err
+	}
+	journal.Phase = "candidate_active"
+	if err := writeUpgradeJournal(integrationRoot, journal); err != nil {
+		return err
 	}
 	candidate := current
 	candidate.Digest = digest
 	if err := m.health(ctx, candidate); err != nil {
 		m.report(err)
 		restoreErr := rollbackPackageSwitch(target, backupRoot)
+		if restoreErr == nil {
+			restoreErr = removeUpgradeJournal(integrationRoot, current.ID)
+		}
 		rollbackErr := m.recordUpgradeRollback(ctx, actor, current, descriptor.Package.Version, "health")
 		return errors.Join(ErrUnavailable, restoreErr, rollbackErr)
 	}
@@ -427,8 +464,15 @@ func (m *Manager) upgradePlugin(ctx context.Context, actor identity.Actor, curre
 		digest, descriptor.StateSchema, migratedState, current.ID,
 	); err != nil {
 		restoreErr := rollbackPackageSwitch(target, backupRoot)
+		if restoreErr == nil {
+			restoreErr = removeUpgradeJournal(integrationRoot, current.ID)
+		}
 		rollbackErr := m.recordUpgradeRollback(ctx, actor, current, descriptor.Package.Version, "state-commit")
 		return errors.Join(err, restoreErr, rollbackErr)
+	}
+	journal.Phase = "state_committed"
+	if err := writeUpgradeJournal(integrationRoot, journal); err != nil {
+		return err
 	}
 	if err := m.record(ctx, actor, "plugin.upgrade_succeeded", current.ID, map[string]string{"from": current.Version, "to": descriptor.Package.Version}); err != nil {
 		_, stateErr := m.db().ExecContext(ctx,
@@ -436,10 +480,16 @@ func (m *Manager) upgradePlugin(ctx context.Context, actor identity.Actor, curre
 			priorDigest, priorStateSchema, priorState, current.ID,
 		)
 		restoreErr := rollbackPackageSwitch(target, backupRoot)
+		if stateErr == nil && restoreErr == nil {
+			restoreErr = removeUpgradeJournal(integrationRoot, current.ID)
+		}
 		rollbackErr := m.recordUpgradeRollback(ctx, actor, current, descriptor.Package.Version, "success-audit")
 		return errors.Join(err, stateErr, restoreErr, rollbackErr)
 	}
-	return nil
+	if err := os.RemoveAll(backupRoot); err != nil {
+		return err
+	}
+	return removeUpgradeJournal(integrationRoot, current.ID)
 }
 
 // Lifecycle serializes admission against installation and enablement changes.

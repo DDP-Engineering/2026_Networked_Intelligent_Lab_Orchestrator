@@ -71,7 +71,7 @@ func ServeUnix(ctx context.Context, listener *net.UnixListener, e *Engine, allow
 			return err
 		}
 		uid, err := peerUID(c)
-		if err != nil || uid != allowedUID {
+		if err != nil || uid != allowedUID && uid != 0 {
 			c.Close()
 			continue
 		}

@@ -29,7 +29,10 @@ waits for its workers. `ListPlugins`, `Lifecycle`, `Discover`, `Submit`, `GetJob
 The lifecycle surface also accepts `upgrade`: it waits a bounded interval for
 the installed integration to become idle, verifies and stages the replacement
 on the same filesystem, preserves enablement/mode/database state, health-checks
-the switched package, and restores the prior package if health fails.
+the switched package, and restores the prior package if health fails. The
+stage, every rename boundary and the database transition are durably journaled
+and directory-synced; manager startup reconciles an interrupted activation to
+the package digest that SQLite still declares authoritative before serving it.
 
 `/api/v1/plugins` exposes curated availability and lifecycle; `/api/v1/bench/jobs`
 returns durable transaction acknowledgements and summaries. Individual reads
@@ -49,7 +52,9 @@ The eight MCP tools and CLI equivalents are listed in
   and queued work; busy restart/uninstall refuse. History survives uninstall.
 - Upgrade refuses after a bounded busy wait and never exposes a partially copied
   package; a failed replacement health check restores the prior filesystem and
-  preserved lifecycle state.
+  preserved lifecycle state. An interruption between filesystem activation and
+  database commit is resolved from the durable journal and authoritative stored
+  digest before package discovery resumes.
 - Read/execute/approve/manage are separate permissions. Tokens use current owner
   scopes per call, never a cached actor or human approval authority.
 - Verified curated package copies and core-owned paths bound execution and
@@ -94,6 +99,7 @@ flowchart TD
     mcp([MCP bench tools]) --> manager[bench.Manager]
     http --> manager
     manager --> packages[packages: verified catalog, staged install and atomic upgrade]
+    packages --> journal[(durable activation journal)]
     manager --> queue[scheduler: two workers and device serialization]
     manager --> db[(SQLite plugins/jobs/sessions)]
     queue --> operation[operation.Service Prepare/Run and policy]
@@ -117,6 +123,9 @@ curated typed adapter and resource claims; transport handlers remain shared.
 - `05_Software/nilo_assistant/internal/bench/`: model, manager, packages,
   parameters, jobs, execution and scheduler; `jobs_test.go` covers state/concurrency,
   `bundle_test.go` validates assembled target runner interoperability.
+- `05_Software/nilo_assistant/internal/bench/upgrade_recovery.go` and
+  `package_sync_*.go`: durable activation journal, directory sync and startup
+  reconciliation for interrupted package upgrades.
 - `05_Software/nilo_assistant/internal/app/bench.go`: server composition.
 - `05_Software/nilo_assistant/internal/operation/service.go`, `queue_test.go`:
   separated durable preparation, queued approval and execution.

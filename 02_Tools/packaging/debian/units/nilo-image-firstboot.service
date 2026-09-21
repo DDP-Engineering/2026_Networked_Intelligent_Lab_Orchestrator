@@ -1,0 +1,13 @@
+[Unit]
+Description=Complete NILO Raspberry Pi image preparation
+After=local-fs.target NetworkManager.service systemd-udev-settle.service
+Before=nilo-firstboot.service nilo-nethelper.socket nilo.service
+Wants=NetworkManager.service systemd-udev-settle.service
+ConditionPathExists=/var/lib/nilo/image-firstboot.pending
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/nilo/nilo-image-firstboot
+
+[Install]
+WantedBy=multi-user.target

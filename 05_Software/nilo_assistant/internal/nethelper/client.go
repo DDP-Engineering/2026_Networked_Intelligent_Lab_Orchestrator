@@ -32,6 +32,24 @@ func NewClient(socket string, source network.Source) *Client {
 	return &Client{socket: socket, source: source, previous: map[string]rateSample{}}
 }
 
+// CleanupOwned asks the privileged helper to converge only the supplied
+// durable ownership inventory and helper-owned state.
+func (c *Client) CleanupOwned(
+	ctx context.Context,
+	tunnels []OwnedTunnel,
+	localConfirmed bool,
+	purgeState bool,
+) (CleanupReport, error) {
+	response, err := c.call(ctx, Request{
+		Op: "maintenance.cleanup", OwnedTunnels: tunnels,
+		LocalConfirmation: localConfirmed, PurgeOwnedState: purgeState,
+	})
+	if response.Cleanup == nil {
+		return CleanupReport{}, err
+	}
+	return *response.Cleanup, err
+}
+
 // Restart asks the authenticated privileged helper for an orderly reboot.
 func (c *Client) Restart(ctx context.Context) error {
 	_, err := c.call(ctx, Request{Op: "system.restart"})

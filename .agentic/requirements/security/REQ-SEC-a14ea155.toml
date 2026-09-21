@@ -21,7 +21,7 @@ verification = "Scan complete fixture payloads and observe an empty forbidden-co
 
 affected_paths = ["02_Tools/packaging/release_builder.py", "02_Tools/packaging/verify/verify-release.sh", "02_Tools/packaging/config/forbidden-release-content.json", "05_Software/scripts/tests/test_release_packaging.py"]
 
-linked_tests = ["05_Software/scripts/tests/test_release_packaging.py::DeterministicPayloadTests.test_release_scanner_names_forbidden_production_content", "05_Software/scripts/tests/test_release_packaging.py::DeterministicPayloadTests.test_payload_refuses_links_special_files_and_mutable_state"]
+linked_tests = ["05_Software/scripts/tests/test_release_packaging.py::DeterministicPayloadTests.test_release_scanner_names_forbidden_production_content", "05_Software/scripts/tests/test_release_packaging.py::DeterministicPayloadTests.test_release_scanner_checks_large_and_binary_files", "05_Software/scripts/tests/test_release_packaging.py::DeterministicPayloadTests.test_payload_refuses_links_special_files_and_mutable_state"]
 
 
 spec = "specs/REQ-SEC-a14ea155.md"

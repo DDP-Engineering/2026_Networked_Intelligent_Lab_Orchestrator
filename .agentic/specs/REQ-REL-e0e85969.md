@@ -13,7 +13,7 @@ the exact operator action and retained paths.
 
 `transaction.json` has a closed phase vocabulary: `preflight`, `quiesced`,
 `snapshotted`, `dependencies`, `package`, `migrated`, `started`, `verified`,
-`committed`, `rolling_back`, `rolled_back`, `recovery_required`. Each record
+`committed`, `rolling_back`, `rolled_back`, `recovery-required`. Each record
 contains target/version/snapshot/package digests and is atomically replaced and
 fsynced. Startup with a nonterminal record resumes rollback, never forward
 installation.

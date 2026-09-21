@@ -19,9 +19,9 @@ When a release engineer resolves inputs for an exact delivery target during the 
 
 verification = "Resolve fixture Ubuntu and Raspberry Pi closures from target-specific repositories and observe sorted lock entries with origin, version, architecture, licence, size and digest plus complete cache objects; then omit each input class, alter repository metadata or a digest, and confirm the lock remains incomplete and offline building is refused."
 
-affected_paths = ["02_Tools/packaging/config/inputs.lock.json", "02_Tools/packaging/config/release-inputs.json", "02_Tools/packaging/fetch/", "02_Tools/packaging/package_inputs.py", "02_Tools/packaging/README.md", "05_Software/scripts/tests/test_release_packaging.py"]
+affected_paths = ["02_Tools/packaging/config/inputs.lock.json", "02_Tools/packaging/config/release-inputs.json", "02_Tools/packaging/fetch/", "02_Tools/packaging/package_inputs.py", "02_Tools/packaging/release_builder.py", "02_Tools/packaging/README.md", "05_Software/scripts/tests/test_packaging_inputs.py", "05_Software/scripts/tests/test_release_packaging.py"]
 
-linked_tests = ["05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_connected_resolver_creates_a_complete_reviewable_lock_and_cache", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_connected_resolver_names_missing_classes_and_rejects_unsafe_metadata"]
+linked_tests = ["05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_connected_resolver_creates_a_complete_reviewable_lock_and_cache", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_connected_resolver_names_missing_classes_and_rejects_unsafe_metadata", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_connected_resolver_rejects_untrusted_signatures_and_incomplete_apt_closure", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_connected_resolver_rejects_unsatisfied_debian_version_relationships", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_debian_closure_honours_architecture_alternatives_and_virtual_providers"]
 
 
 spec = "specs/REQ-PLAT-4af865a9.md"
@@ -30,4 +30,4 @@ priority = "high"   # low | normal | high
 rationale = "An offline artifact cannot be complete unless every byte unavailable from the documented target base is acquired and reviewed before isolation."
 
 created = 2026-09-19
-updated = 2026-09-19
+updated = 2026-09-20

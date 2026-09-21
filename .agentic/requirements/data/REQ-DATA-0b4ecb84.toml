@@ -14,14 +14,14 @@ title = "Emit complete release evidence"
 status = "active"
 
 requirement = """
-When a candidate release is assembled, the release tooling shall emit a canonical artifact index, external SHA-256 file, input and build provenance, SPDX SBOM, third-party notices and source-obligation inventory that trace every target deliverable to the project version, source identity, exact target, complete input lock and recorded verification status.
+When a candidate release is assembled, the release tooling shall emit a canonical artifact index, external SHA-256 file, input and build provenance, SPDX SBOM with explicit deliverable-to-artifact and deliverable-to-input relationships, third-party notices and source-obligation inventory that trace every target deliverable to the project version, source identity, exact target, complete input lock and recorded verification status.
 """
 
 verification = "Assemble a fixture release and validate each metadata schema and cross-reference against artifact bytes, VERSION, target and lock; remove or mismatch an artifact, dependency, licence, source obligation, source identity or verification record and confirm release verification fails with the missing relationship named."
 
-affected_paths = ["02_Tools/packaging/release_builder.py", "02_Tools/packaging/build/build-release.sh", "02_Tools/packaging/verify/verify-release.sh", "02_Tools/packaging/schemas/", "07_Delivery/", "05_Software/scripts/tests/test_release_packaging.py"]
+affected_paths = ["02_Tools/packaging/release_builder.py", "02_Tools/packaging/build/build-release.sh", "02_Tools/packaging/build/build-candidate-set.sh", "02_Tools/packaging/build/record-build-set.sh", "02_Tools/packaging/verify/verify-release.sh", "02_Tools/packaging/schemas/", "02_Tools/tests/packaging/release-acceptance.sh", "02_Tools/tests/packaging/run-target-acceptance.sh", "02_Tools/tests/packaging/target-lifecycle-check.sh", "07_Delivery/", "05_Software/scripts/tests/test_release_packaging.py"]
 
-linked_tests = ["05_Software/scripts/tests/test_release_packaging.py::ReleaseEvidenceTests.test_release_evidence_closes_every_artifact_and_keeps_physical_checks_not_run", "05_Software/scripts/tests/test_release_packaging.py::ReleaseEvidenceTests.test_release_evidence_refuses_an_incomplete_lock"]
+linked_tests = ["05_Software/scripts/tests/test_release_packaging.py::ReleaseEvidenceTests.test_release_evidence_closes_every_artifact_and_keeps_physical_checks_not_run", "05_Software/scripts/tests/test_release_packaging.py::ReleaseEvidenceTests.test_release_evidence_refuses_an_incomplete_lock", "05_Software/scripts/tests/test_release_packaging.py::ReleaseEvidenceTests.test_release_evidence_refuses_missing_executed_software_acceptance", "05_Software/scripts/tests/test_release_packaging.py::ReleaseEvidenceTests.test_release_evidence_rejects_malformed_artifacts_and_weakened_apt_provenance", "05_Software/scripts/tests/test_release_packaging.py::ReleaseEvidenceTests.test_build_set_receipts_are_emitted_from_artifact_builder_receipts", "05_Software/scripts/tests/test_release_packaging.py::ReleaseEvidenceTests.test_release_sbom_requires_artifact_dependency_relationships", "05_Software/scripts/tests/test_release_packaging.py::ReleaseEvidenceTests.test_release_rejects_source_offer_bytes_not_bound_to_the_admitted_lock"]
 
 
 spec = "specs/REQ-DATA-0b4ecb84.md"
@@ -30,4 +30,4 @@ priority = "normal"   # low | normal | high
 rationale = "A reviewer needs one machine-readable chain from immutable inputs to each offline artifact and its acceptance limitations."
 
 created = 2026-09-19
-updated = 2026-09-19
+updated = 2026-09-20

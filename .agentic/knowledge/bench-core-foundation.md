@@ -4,7 +4,7 @@
 
 Select this page for the Go Bench Core under `05_Software/nilo_assistant/`:
 the `nilo` command line (`serve`, `discover`, `open`, `admin` in local and remote mode, `network`,
-`activity`, `diagnostics`), the authenticated `/api/v1` HTTP routes and their
+`activity`, `diagnostics`, `maintenance`, `seed-admin`), the authenticated `/api/v1` HTTP routes and their
 permissions, identities, sessions, API tokens and their audit events, network
 operations, the simulation catalog, and the SQLite repositories. Start at
 `cmd/nilo/main.go` for a command, `internal/httpapi/server.go` for a route
@@ -57,6 +57,22 @@ appliance routes expose authenticated public identity/About facts, label,
 friendly-name mutation and session-only Identify, while a separate literal
 loopback listener exposes only local status and the same printable label.
 
+`nilo maintenance` supplies the package-owned migration, inventory,
+snapshot/restore, remove and confirmed purge boundary. Snapshots checkpoint and
+integrity-check SQLite, bind application/schema versions, preserve Linux
+ownership, modes, ACLs and xattrs, and restore by an atomic whole-directory
+exchange. Removal asks the root helper to delete only exact durably owned
+network resources; a possible active management tunnel is retained without
+local confirmation. Confirmed purge first retains a verified sibling backup.
+`nilo seed-admin` consumes a bounded root-owned password file and removes it
+only after durable creation or confirmation of the same enabled administrator.
+Packaged first boot preserves the image's root-owned mode-`0600` source, copies
+it through a root one-shot to an ephemeral `nilo`-owned mode-`0600` handoff,
+and runs the same command as `nilo`; the root source is deleted only after that
+handoff is consumed. Portable snapshot restore places a sibling exclusion
+marker before releasing its internal lock and reverses a partial three-rename
+exchange before another maintenance operation can observe it.
+
 ## Invariants
 
 - Every protected route declares its permission in `server.go` or `bench.go`; the command
@@ -85,6 +101,14 @@ loopback listener exposes only local status and the same printable label.
 - Network changes go through preview, acknowledgement, confirmation and
   rollback; a noninteractive mutation needs `--acknowledge`, which is never
   consent for anything else.
+- Maintenance removal and purge delete helper resources only when durable
+  ownership and the live exact object agree; foreign or failed resources remain
+  and are reported for retry. An active management tunnel requires local
+  confirmation before deactivation, and application purge requires a verified
+  recoverable backup before state deletion.
+- Snapshot restore verifies all content and metadata before constructing a
+  complete fsynced sibling state tree and atomically exchanging the whole data
+  root. A partial tree is never exposed as the active application state.
 - Whether a network interface may carry appliance management access is decided
   from what a provider observed about the hardware - the device kind, a physical
   adapter observation and the permanent adapter identity - and never from the
@@ -488,6 +512,13 @@ The simulation catalog is deliberately dependency-free and cannot discover or co
 ## Files
 
 - `internal/nethelper/`, `cmd/nilo-nethelper/` - bounded privileged D-Bus interface operations, root-only durable recovery/event records, process-owned Avahi publication, and the explicitly enabled Pi GPIO path.
+- `internal/nethelper/cleanup.go`, `protocol.go`, `client.go`, `socket_linux.go`
+  - peer-authenticated maintenance cleanup of exact helper-owned tunnels,
+  forwarding, commissioning, discovery and management-firewall resources, with
+  partial-failure retention and typed reports.
+- `cmd/nilo/maintenance.go`, `internal/maintenance/` - migration, owned-state
+  inventory, metadata-preserving snapshots, atomic restore, preserve-state
+  removal, verified purge backup and confirmed purge.
 - `cmd/nilo/network_runtime*.go`, `internal/httpapi/serving.go` - explicit live provider selection, TLS and runtime-aware static GUI.
 - `02_Tools/tests/network/` - disposable real-NetworkManager and unprivileged HTTPS process tests (opt-in, separate from the ordinary suite).
 

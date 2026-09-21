@@ -1,8 +1,8 @@
 [Unit]
 Description=NILO Bench Core
-After=network-online.target nilo-nethelper.socket nilo-nethelper.service nilo-firstboot.service
+After=network-online.target nilo-image-firstboot.service nilo-nethelper.socket nilo-nethelper.service nilo-firstboot.service
 Wants=network-online.target
-Requires=nilo-nethelper.socket nilo-nethelper.service
+Requires=nilo-image-firstboot.service nilo-nethelper.socket nilo-nethelper.service
 
 [Service]
 Type=simple

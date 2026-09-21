@@ -3,6 +3,7 @@ package nethelper
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -183,6 +184,34 @@ func (s *FileStore) LoadForwarding() (*ForwardingInventory, error) {
 // SaveForwarding writes the device-network inventory before the host changes.
 func (s *FileStore) SaveForwarding(inventory ForwardingInventory) error {
 	return s.save("forwarding.json", inventory)
+}
+
+// PurgeOwnedState removes only the fixed helper-owned records and directories
+// beneath the already validated private helper root. Unknown entries survive
+// for operator inspection; the live lock file survives until service stop.
+func (s *FileStore) PurgeOwnedState() error {
+	owned := []string{
+		"appliance-identity.json", "commissioning-profiles.json", "direct-recovery.json",
+		"forwarding.json", "hardware-recovery-event.json", "identify-actions.json",
+		"install.json", "recovery.json", "secrets", "tls",
+	}
+	var failures []error
+	for _, name := range owned {
+		path := filepath.Join(s.directory, name)
+		if err := os.RemoveAll(path); err != nil {
+			failures = append(failures, fmt.Errorf("remove helper-owned %s: %w", name, err))
+		}
+	}
+	if runtime.GOOS != "windows" {
+		directory, err := os.Open(s.directory)
+		if err != nil {
+			failures = append(failures, err)
+		} else {
+			failures = append(failures, directory.Sync())
+			failures = append(failures, directory.Close())
+		}
+	}
+	return errors.Join(failures...)
 }
 func (s *FileStore) save(target string, r any) error {
 	data, err := json.Marshal(r)

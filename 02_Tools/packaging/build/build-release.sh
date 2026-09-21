@@ -1,6 +1,6 @@
 #!/bin/sh
 set -eu
-[ "$#" -eq 6 ] || { echo "usage: build-release.sh ARTIFACT_DIRECTORY ACCEPTANCE_JSON SOURCE_OFFERS_DIRECTORY UBUNTU_RECEIPT PI_RECEIPT OUTPUT_DIRECTORY" >&2; exit 2; }
+[ "$#" -eq 6 ] || { echo "usage: build-release.sh ARTIFACT_DIRECTORY ACCEPTANCE_PLAN_JSON SOURCE_OFFERS_DIRECTORY UBUNTU_RECEIPT PI_RECEIPT OUTPUT_DIRECTORY" >&2; exit 2; }
 repo=$(CDPATH= cd -- "$(dirname -- "$0")/../../.." && pwd)
 version=$(tr -d '\r\n' <"$repo/VERSION")
 epoch=${SOURCE_DATE_EPOCH:-$(git -C "$repo" log -1 --format=%ct)}

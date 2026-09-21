@@ -1,0 +1,35 @@
+#!/bin/sh
+# Complete appliance-image preparation once, on the deployed Raspberry Pi.
+set -eu
+
+marker=/var/lib/nilo/image-firstboot.pending
+[ -f "$marker" ] && [ ! -L "$marker" ] || exit 0
+[ "$(id -u)" -eq 0 ] || { echo 'image first boot requires root' >&2; exit 1; }
+
+root_partition=$(readlink -f "$(findmnt -n -o SOURCE /)")
+case "$root_partition" in /dev/*) ;; *) echo "unsupported root source: $root_partition" >&2; exit 1 ;; esac
+partition_number=$(lsblk -nro PARTN "$root_partition")
+parent_name=$(lsblk -nro PKNAME "$root_partition")
+[ -n "$partition_number" ] && [ -n "$parent_name" ] || {
+  echo "cannot identify the root partition parent: $root_partition" >&2
+  exit 1
+}
+disk="/dev/$parent_name"
+[ -b "$disk" ] && [ -b "$root_partition" ] || { echo 'root block devices are unavailable' >&2; exit 1; }
+
+parted -s "$disk" resizepart "$partition_number" 100%
+partprobe "$disk"
+udevadm settle
+resize2fs "$root_partition"
+
+systemd-machine-id-setup
+machine_id=$(cat /etc/machine-id)
+case "$machine_id" in
+  ''|*[!0-9a-f]* ) echo 'machine identity generation failed' >&2; exit 1 ;;
+esac
+[ "${#machine_id}" -eq 32 ] || { echo 'machine identity has the wrong length' >&2; exit 1; }
+systemctl is-active NetworkManager.service >/dev/null
+
+rm -f -- "$marker"
+sync /var/lib/nilo /etc/machine-id
+

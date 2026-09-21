@@ -33,14 +33,16 @@ mkdir "$root"
 mount -o ro,noload "$root_partition" "$root"
 mounted=1
 
-for path in usr/bin/nilo usr/libexec/nilo/nilo-installer-recover var/lib/nilo/first-admin.password; do
+for path in usr/bin/nilo usr/libexec/nilo/nilo-image-firstboot usr/libexec/nilo/nilo-installer-recover var/lib/nilo-installer/first-admin.password var/lib/nilo/image-firstboot.pending; do
   [ -f "$root/$path" ] && [ ! -L "$root/$path" ] || { echo "image is missing required file: $path" >&2; exit 2; }
 done
 chroot "$root" dpkg-query -W -f='${Status}\n' nilo | grep -qx 'install ok installed'
-for unit in nilo-nethelper.socket nilo-recovery.service nilo-firstboot.service nilo.service; do
+for unit in NetworkManager.service nilo-image-firstboot.service nilo-nethelper.socket nilo-recovery.service nilo-firstboot.service nilo.service; do
   [ "$(systemctl --root="$root" is-enabled "$unit")" = enabled ] || { echo "image unit is not enabled: $unit" >&2; exit 2; }
 done
-[ "$(stat -c '%a:%U:%G' "$root/var/lib/nilo/first-admin.password")" = '600:nilo:nilo' ] || { echo 'image credential permissions are invalid' >&2; exit 2; }
+[ -f "$root/etc/NetworkManager/conf.d/10-nilo-managed.conf" ] || { echo 'image lacks NILO NetworkManager ownership configuration' >&2; exit 2; }
+[ "$(stat -c '%a:%U:%G' "$root/var/lib/nilo-installer")" = '700:root:root' ] || { echo 'installer state permissions are invalid' >&2; exit 2; }
+[ "$(stat -c '%a:%U:%G' "$root/var/lib/nilo-installer/first-admin.password")" = '600:root:root' ] || { echo 'image credential permissions are invalid' >&2; exit 2; }
 [ ! -s "$root/etc/machine-id" ] || { echo 'image machine-id is not sanitized' >&2; exit 2; }
 if find "$root/etc/ssh" -maxdepth 1 -name 'ssh_host_*' -print -quit | grep -q .; then
   echo 'image contains an SSH host key' >&2; exit 2

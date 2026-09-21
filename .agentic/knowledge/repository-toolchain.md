@@ -87,12 +87,23 @@ base image are pinned, so production preparation currently refuses to run.
 
 `packaging/fetch/resolve-inputs.*` resolves reviewed declarations once during
 the connected phase, stores only digest-verified bytes and writes a proposal
-whose required classes must be complete before adoption. Offline shell entry
-points under `packaging/build/` then stage and build canonical payloads, `.deb`
-packages, target-specific self-extracting installers and the Pi image from
-explicit local inputs. `build-release.sh` accepts only the exact five-artifact
-matrix and closes checksums, SPDX SBOM, notices, provenance and acceptance
-evidence; `verify/` recomputes the closure and rejects undeclared files.
+whose required classes must be complete before adoption. An OS package pool is
+accepted only when its digest-pinned keyring and admitted full signing
+fingerprint verify the `InRelease` signature, the signed index binds every
+package byte, and the pool is exactly the recursive root/base dependency
+closure. Offline shell entry points under `packaging/build/` then rehash the
+admitted cache objects and build canonical payloads, `.deb` packages,
+target-specific self-extracting installers and the Pi image from explicit local
+inputs. `build-release.sh` accepts only the exact five-artifact matrix and a
+schema-2 check plan. It reparses the canonical lock, revalidates each admitted
+signed pool, structurally parses every artifact, and executes each named
+software check only through the digest-bound repository verifier closure in an
+observed loopback-only/no-default-route Linux namespace. It derives the result
+from the exit code, requires each installer to contain the exact revalidated
+pool and matching NILO package, compares a distinct rebuild byte for byte,
+binds both artifact sets, captures and hashes its output, and then closes checksums, the
+per-package SPDX SBOM, notices, provenance and acceptance evidence; `verify/`
+recomputes the closure and rejects undeclared files.
 
 Two container runs sit outside that locked boundary because they need
 capabilities it drops. `02_Tools/tests/network/check.sh` runs the privileged
@@ -165,6 +176,10 @@ replacements without an explicit override.
   with declared version/licence provenance and exact size and SHA-256
   verification, and offline preparation sees that cache through a read-only
   mount.
+- OS dependency pools are authenticated by a digest-pinned keyring, an admitted
+  full signing fingerprint and signed index digests; every `.deb` has matching
+  control identity and architecture, and no package outside or missing from the
+  recursive declared closure is admitted.
 - Packaging target IDs map to exactly one canonical OS identity, release,
   architecture, artifact set, and physical-acceptance checklist. Cache
   verification rejects symlinks and non-regular objects; on Linux it traverses
@@ -180,12 +195,32 @@ replacements without an explicit override.
 - Release payloads contain regular files and directories only, normalize
   ownership and timestamps, exclude mutable state and forbidden development
   content, and are byte-reproducible for identical staged input and epoch.
-- Installers verify their own embedded archive before extraction, accept only
-  declared regular files, use local-only package operations, and retain a
-  durable recovery journal until package, state and health verification commit.
+- Installer launchers authenticate one unique member inventory and the embedded
+  manifest before full extraction, then accept only declared regular files and
+  verify each file before execution. Installers use local-only package
+  operations, extract their authenticated private repack tool before mutation,
+  restore a failed clean install to absent state, and retain their root-only
+  durable recovery journal outside service-writable application data until
+  package, state and health verification commit.
 - A release directory contains exactly the declared target artifacts and
-  evidence. Physical target rows stay `not_run` unless separately observed on
-  the named hardware; unsigned candidates cannot be marked public.
+  evidence. Each artifact receipt binds an invocation identity established
+  before the builder runs plus its source revision, builder digest, command,
+  declared inputs and artifact path; a build-set receipt can close only five
+  consistently bound receipts and cannot be recreated for copied artifacts.
+  Source-offer bytes must exactly
+  match the admitted source archive and its index maps every input to licence
+  and source-obligation evidence; runtime manifests expand into component-level
+  SPDX records, and deliverable relationships bind artifacts to all admitted
+  shared and target inputs. Software acceptance is executed by the assembler rather than
+  accepted as caller-authored status or command. Destructive checks run in a
+  fresh digest-pinned exact-target container with engine-level network-none and
+  retain the configured image reference, observed image ID, kernel, OS release
+  and architecture. Package failure checks enter real package transactions and
+  interruption recovery covers every durable marker; the verifier closure,
+  artifact set, before/after network observation and output bytes are
+  digest-bound. Physical target rows stay `not_run` unless
+  separately observed on the named hardware; unsigned candidates cannot be
+  marked public.
 
 ## Change map
 
@@ -285,7 +320,12 @@ replacements without an explicit override.
 - `REQ-PLAT-4af865a9` - resolves every required release-input class into a
   reviewable digest lock and cache proposal during the connected phase.
 - `REQ-NFR-2dc6dc61` and `REQ-SEC-a14ea155` - build canonical reproducible
-  payloads and exclude mutable, secret, development and unsafe content.
+  payloads and exclude mutable, secret, development and unsafe content. Release
+  acceptance owns two fixed `build-candidate-set.sh` executions in fresh roots;
+  each starts from the identified Git revision and lock-bound language/runtime
+  cache archives and rebuilds binaries, GUI, bundles, payloads and final
+  artifacts. Embedded schema-3 builder receipts retain causal evidence but
+  caller-authored receipts never substitute for those executions.
 - `REQ-PLAT-c98ee5fa` - builds policy-safe Debian packages for both exact
   targets with hardened units and idempotent lifecycle scripts.
 - `REQ-SEC-936214c0` and `REQ-REL-e0e85969` - create self-verifying offline
@@ -360,14 +400,16 @@ flowchart TD
     static_assets --> appliance_core
     packaging_targets[("exact target registry")]
     packaging_lock[("packaging input lock")]
-    connected_fetch(["connected verified fetch"])
+    connected_fetch(["connected signed-repository fetch"])
+    apt_index[("verified InRelease, Packages and exact package closure")]
     packaging_cache[("ignored digest cache")]
     package_action(["network-none package preparation"])
     preparation_receipt[("deterministic input receipt")]
     packaging_targets --> connected_fetch
     declarations[("reviewed release input declarations")] --> connected_fetch
     packaging_lock --> connected_fetch
-    connected_fetch --> packaging_cache
+    connected_fetch --> apt_index
+    apt_index --> packaging_cache
     packaging_targets --> package_action
     packaging_lock --> package_action
     packaging_cache --> package_action
@@ -378,15 +420,17 @@ flowchart TD
     deb[("target Debian package")]
     installer[("self-extracting offline installer")]
     pi_image[("Raspberry Pi image")]
-    release_evidence[("checksums, SBOM, notices, provenance, acceptance")]
+    acceptance_runner(["offline acceptance command executor"])
+    release_evidence[("checksums, SBOM, notices, provenance, captured acceptance")]
     packaging_cache --> artifact_builder
     staged_product --> artifact_builder
     artifact_builder --> payload
     payload --> deb
     deb --> installer
     deb --> pi_image
-    installer --> release_evidence
-    pi_image --> release_evidence
+    installer --> acceptance_runner
+    pi_image --> acceptance_runner
+    acceptance_runner --> release_evidence
 ```
 
 The scripts modify environment variables only in their child process. The
@@ -445,9 +489,10 @@ only durable state, and they live on the WSL Linux filesystem.
   checked, network-disabled build, test, package-preparation, shell, and command
   entry points.
 - `02_Tools/packaging/` - exact target registry, explicitly complete/incomplete
-  input lock, connected declaration resolver and acquisition wrappers, cache
-  verifier, offline preparation, artifact build/verification entry points,
-  Debian unit/recovery assets, Pi image mutator, evidence schemas and operator
+  input lock, signed-APT declaration resolver and acquisition wrappers,
+  cache/admitted-package verifier, offline preparation, artifact
+  build/verification entry points, Debian lifecycle and first-boot assets, Pi
+  image mutator, executable acceptance plan, evidence schemas and operator
   documentation; `release_builder.py` is the canonical archive/evidence engine.
 - `05_Software/scripts/tests/test_packaging_inputs.py` - target, lock, fetch,
   cache, isolation, receipt, and wrapper contract tests with no external

@@ -6,12 +6,14 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"io/fs"
+	"maps"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -22,33 +24,89 @@ import (
 	storesqlite "nilo.local/nilo/internal/store/sqlite"
 )
 
-const snapshotSchema = 1
+const snapshotSchema = 3
 const ownershipFile = ".nilo-owner.json"
 
 var transactionName = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$`)
 
 // File describes one application-owned regular file.
 type File struct {
-	Mode   fs.FileMode `json:"-"`
-	Path   string      `json:"path"`
-	SHA256 string      `json:"sha256"`
-	Size   int64       `json:"size"`
+	GID    int               `json:"-"`
+	Mode   fs.FileMode       `json:"-"`
+	Path   string            `json:"path"`
+	SHA256 string            `json:"sha256"`
+	Size   int64             `json:"size"`
+	UID    int               `json:"-"`
+	XAttrs map[string]string `json:"-"`
 }
 
 type manifestFile struct {
-	Mode   uint32 `json:"mode"`
-	Path   string `json:"path"`
-	SHA256 string `json:"sha256"`
-	Size   int64  `json:"size"`
+	GID    int               `json:"gid"`
+	Mode   uint32            `json:"mode"`
+	Path   string            `json:"path"`
+	SHA256 string            `json:"sha256"`
+	Size   int64             `json:"size"`
+	UID    int               `json:"uid"`
+	XAttrs map[string]string `json:"xattrs"`
+}
+
+type manifestDirectory struct {
+	GID    int               `json:"gid"`
+	Mode   uint32            `json:"mode"`
+	Path   string            `json:"path"`
+	UID    int               `json:"uid"`
+	XAttrs map[string]string `json:"xattrs"`
 }
 
 type snapshotManifest struct {
-	DatabaseSchema string         `json:"database_schema"`
-	Files          []manifestFile `json:"files"`
-	Schema         int            `json:"schema"`
-	SourceVersion  string         `json:"source_version"`
-	TargetVersion  string         `json:"target_version"`
-	Transaction    string         `json:"transaction"`
+	DatabaseSchema string              `json:"database_schema"`
+	Directories    []manifestDirectory `json:"directories"`
+	Files          []manifestFile      `json:"files"`
+	Schema         int                 `json:"schema"`
+	SourceVersion  string              `json:"source_version"`
+	TargetVersion  string              `json:"target_version"`
+	Transaction    string              `json:"transaction"`
+}
+
+func inventoryDirectories(root string) ([]manifestDirectory, error) {
+	directories := make([]manifestDirectory, 0)
+	err := filepath.WalkDir(root, func(path string, entry fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		relative, err := filepath.Rel(root, path)
+		if err != nil {
+			return err
+		}
+		first := strings.Split(relative, string(filepath.Separator))[0]
+		if relative != "." && entry.IsDir() && (first == "snapshots" || first == "transactions") {
+			return filepath.SkipDir
+		}
+		if !entry.IsDir() {
+			return nil
+		}
+		info, err := entry.Info()
+		if err != nil {
+			return err
+		}
+		if info.Mode()&os.ModeSymlink != 0 {
+			return fmt.Errorf("application state contains a symbolic link: %s", relative)
+		}
+		uid, gid, attributes, err := captureFileMetadata(path, info)
+		if err != nil {
+			return fmt.Errorf("inspect directory metadata for %s: %w", relative, err)
+		}
+		directories = append(directories, manifestDirectory{
+			GID: gid, Mode: uint32(info.Mode().Perm()), Path: filepath.ToSlash(relative),
+			UID: uid, XAttrs: attributes,
+		})
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	sort.Slice(directories, func(left, right int) bool { return directories[left].Path < directories[right].Path })
+	return directories, nil
 }
 
 type ownershipMarker struct {
@@ -235,7 +293,11 @@ func Inventory(dataDir string) ([]File, error) {
 		if err != nil {
 			return fmt.Errorf("hash %s: %w", relative, err)
 		}
-		files = append(files, File{Mode: info.Mode().Perm(), Path: filepath.ToSlash(relative), SHA256: digest, Size: info.Size()})
+		uid, gid, attributes, err := captureFileMetadata(path, info)
+		if err != nil {
+			return fmt.Errorf("inspect metadata for %s: %w", relative, err)
+		}
+		files = append(files, File{GID: gid, Mode: info.Mode().Perm(), Path: filepath.ToSlash(relative), SHA256: digest, Size: info.Size(), UID: uid, XAttrs: attributes})
 		return nil
 	})
 	if err != nil {
@@ -246,6 +308,11 @@ func Inventory(dataDir string) ([]File, error) {
 }
 
 func acquire(dataDir string) (func() error, error) {
+	if _, err := os.Lstat(portableExchangeMarker(dataDir)); err == nil {
+		return nil, errors.New("another maintenance operation is active")
+	} else if !errors.Is(err, fs.ErrNotExist) {
+		return nil, err
+	}
 	path := filepath.Join(dataDir, ".maintenance.lock")
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
 	if err != nil {
@@ -260,6 +327,42 @@ func acquire(dataDir string) (func() error, error) {
 		return nil, err
 	}
 	return func() error { return errors.Join(file.Close(), os.Remove(path)) }, nil
+}
+
+func portableExchangeMarker(dataDir string) string {
+	return filepath.Join(filepath.Dir(dataDir), "."+filepath.Base(dataDir)+".maintenance-exchange.lock")
+}
+
+func acquirePortableExchangeExclusion(dataDir string) (func() error, error) {
+	path := portableExchangeMarker(dataDir)
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
+	if err != nil {
+		if errors.Is(err, fs.ErrExist) {
+			return nil, errors.New("another maintenance exchange is active")
+		}
+		return nil, err
+	}
+	if _, err := fmt.Fprintf(file, "%d\n", os.Getpid()); err != nil {
+		_ = file.Close()
+		_ = os.Remove(path)
+		return nil, err
+	}
+	if err := file.Sync(); err != nil {
+		_ = file.Close()
+		_ = os.Remove(path)
+		return nil, err
+	}
+	if err := file.Close(); err != nil {
+		_ = os.Remove(path)
+		return nil, err
+	}
+	if err := syncDirectory(filepath.Dir(dataDir)); err != nil {
+		_ = os.Remove(path)
+		return nil, err
+	}
+	return func() error {
+		return errors.Join(os.Remove(path), syncDirectory(filepath.Dir(dataDir)))
+	}, nil
 }
 
 func copyFile(source, destination string, mode fs.FileMode) error {
@@ -279,6 +382,93 @@ func copyFile(source, destination string, mode fs.FileMode) error {
 	syncErr := output.Sync()
 	closeErr := output.Close()
 	return errors.Join(copyErr, syncErr, closeErr)
+}
+
+func copyFileWithMetadata(source, destination string, file File) error {
+	if err := copyFile(source, destination, file.Mode); err != nil {
+		return err
+	}
+	return applyFileMetadata(destination, file.Mode, file.UID, file.GID, file.XAttrs)
+}
+
+func verifyFileMetadata(path string, expected File) error {
+	info, err := os.Lstat(path)
+	if err != nil {
+		return err
+	}
+	uid, gid, attributes, err := captureFileMetadata(path, info)
+	if err != nil {
+		return err
+	}
+	if info.Mode().Perm() != expected.Mode.Perm() || uid != expected.UID || gid != expected.GID || !maps.Equal(attributes, expected.XAttrs) {
+		return errors.New("file metadata mismatch")
+	}
+	return nil
+}
+
+func copyDirectoryTree(source, destination string) error {
+	return filepath.WalkDir(source, func(path string, entry fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		relative, err := filepath.Rel(source, path)
+		if err != nil {
+			return err
+		}
+		target := filepath.Join(destination, relative)
+		info, err := entry.Info()
+		if err != nil {
+			return err
+		}
+		if info.Mode()&os.ModeSymlink != 0 {
+			return errors.New("maintenance state contains a symbolic link")
+		}
+		uid, gid, attributes, err := captureFileMetadata(path, info)
+		if err != nil {
+			return err
+		}
+		if entry.IsDir() {
+			if relative == "." {
+				return os.Mkdir(target, info.Mode().Perm())
+			}
+			if err := os.Mkdir(target, info.Mode().Perm()); err != nil {
+				return err
+			}
+			return applyFileMetadata(target, info.Mode(), uid, gid, attributes)
+		}
+		if !info.Mode().IsRegular() {
+			return errors.New("maintenance state contains a special file")
+		}
+		return copyFileWithMetadata(path, target, File{GID: gid, Mode: info.Mode(), UID: uid, XAttrs: attributes})
+	})
+}
+
+func syncTree(root string) error {
+	directories := make([]string, 0)
+	err := filepath.WalkDir(root, func(path string, entry fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if entry.IsDir() {
+			directories = append(directories, path)
+			return nil
+		}
+		// The staging lock was already fsynced by writeFileDurable. Avoid a
+		// second read-handle Sync, which Windows rejects for this lock file.
+		if entry.Name() == ".maintenance.lock" {
+			return nil
+		}
+		return syncFile(path)
+	})
+	if err != nil {
+		return err
+	}
+	for index := len(directories) - 1; index >= 0; index-- {
+		if err := syncDirectory(directories[index]); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func writeFileDurable(path string, contents []byte, mode fs.FileMode) error {
@@ -324,6 +514,10 @@ func Snapshot(dataDir, transaction, targetVersion string) (result SnapshotResult
 	if err != nil {
 		return result, err
 	}
+	directories, err := inventoryDirectories(root)
+	if err != nil {
+		return result, err
+	}
 	snapshots := filepath.Join(root, "snapshots")
 	if err := os.MkdirAll(snapshots, 0o750); err != nil {
 		return result, err
@@ -339,7 +533,11 @@ func Snapshot(dataDir, transaction, targetVersion string) (result SnapshotResult
 	if err != nil {
 		return result, fmt.Errorf("inspect snapshot free space: %w", err)
 	}
-	const snapshotReserve = uint64(64 * 1024 * 1024)
+	snapshotReserve := contentBytes / 10
+	const minimumSnapshotReserve = uint64(256 * 1024 * 1024)
+	if snapshotReserve < minimumSnapshotReserve {
+		snapshotReserve = minimumSnapshotReserve
+	}
 	if available < contentBytes+snapshotReserve {
 		return result, fmt.Errorf("insufficient free space for snapshot: have %d bytes, require %d", available, contentBytes+snapshotReserve)
 	}
@@ -355,20 +553,44 @@ func Snapshot(dataDir, transaction, targetVersion string) (result SnapshotResult
 	}
 	defer func() { _ = os.RemoveAll(temporary) }()
 	manifest := snapshotManifest{
-		DatabaseSchema: databaseSchema, Files: make([]manifestFile, 0, len(files)), Schema: snapshotSchema,
+		DatabaseSchema: databaseSchema, Directories: directories,
+		Files: make([]manifestFile, 0, len(files)), Schema: snapshotSchema,
 		SourceVersion: buildinfo.Version, TargetVersion: targetVersion, Transaction: transaction,
+	}
+	filesRoot := filepath.Join(temporary, "files")
+	for _, directory := range directories {
+		destination := filesRoot
+		if directory.Path != "." {
+			destination = filepath.Join(filesRoot, filepath.FromSlash(directory.Path))
+		}
+		if err := os.Mkdir(destination, fs.FileMode(directory.Mode)); err != nil {
+			return result, fmt.Errorf("snapshot directory %s: %w", directory.Path, err)
+		}
 	}
 	for _, file := range files {
 		source := filepath.Join(root, filepath.FromSlash(file.Path))
 		destination := filepath.Join(temporary, "files", filepath.FromSlash(file.Path))
-		if err := copyFile(source, destination, file.Mode); err != nil {
+		if err := copyFileWithMetadata(source, destination, file); err != nil {
 			return result, fmt.Errorf("snapshot %s: %w", file.Path, err)
+		}
+		if err := verifyFileMetadata(destination, file); err != nil {
+			return result, fmt.Errorf("snapshot metadata changed for %s: %w", file.Path, err)
 		}
 		digest, hashErr := hashFile(destination)
 		if hashErr != nil || digest != file.SHA256 {
 			return result, fmt.Errorf("application state changed while snapshotting: %s", file.Path)
 		}
-		manifest.Files = append(manifest.Files, manifestFile{Mode: uint32(file.Mode.Perm()), Path: file.Path, SHA256: file.SHA256, Size: file.Size})
+		manifest.Files = append(manifest.Files, manifestFile{GID: file.GID, Mode: uint32(file.Mode.Perm()), Path: file.Path, SHA256: file.SHA256, Size: file.Size, UID: file.UID, XAttrs: file.XAttrs})
+	}
+	for index := len(directories) - 1; index >= 0; index-- {
+		directory := directories[index]
+		destination := filesRoot
+		if directory.Path != "." {
+			destination = filepath.Join(filesRoot, filepath.FromSlash(directory.Path))
+		}
+		if err := applyFileMetadata(destination, fs.FileMode(directory.Mode), directory.UID, directory.GID, directory.XAttrs); err != nil {
+			return result, fmt.Errorf("snapshot directory metadata %s: %w", directory.Path, err)
+		}
 	}
 	encoded, err := json.MarshalIndent(manifest, "", "  ")
 	if err != nil {
@@ -392,6 +614,86 @@ func Snapshot(dataDir, transaction, targetVersion string) (result SnapshotResult
 		return result, err
 	}
 	return SnapshotResult{Files: len(files), Schema: snapshotSchema, Snapshot: final}, nil
+}
+
+// CreatePurgeBackup creates and retains one verified sibling snapshot before
+// destructive purge. Keeping it outside the owned data root prevents the purge
+// itself from deleting its recovery material.
+func CreatePurgeBackup(dataDir string) (string, error) {
+	root, err := canonicalDataDir(dataDir)
+	if err != nil {
+		return "", err
+	}
+	if err := verifyPurgeOwnership(root); err != nil {
+		return "", err
+	}
+	backup := filepath.Join(filepath.Dir(root), filepath.Base(root)+"-purge-backup")
+	if backupInfo, err := os.Lstat(backup); err == nil {
+		if !backupInfo.IsDir() || backupInfo.Mode()&os.ModeSymlink != 0 {
+			return "", errors.New("purge backup path exists but is not a real directory")
+		}
+		manifest, manifestErr := readManifest(backup)
+		if manifestErr != nil || manifest.Transaction != "purge-backup" || manifest.SourceVersion != buildinfo.Version {
+			return "", errors.New("existing purge backup is invalid or belongs to another version")
+		}
+		if err := verifySnapshotFiles(backup, manifest); err != nil {
+			return "", fmt.Errorf("existing purge backup is invalid: %w", err)
+		}
+		current, inventoryErr := Inventory(root)
+		if inventoryErr != nil {
+			return "", inventoryErr
+		}
+		if len(current) != len(manifest.Files) {
+			return "", errors.New("existing purge backup does not match current application state")
+		}
+		for index, file := range current {
+			stored := manifest.Files[index]
+			if file.Path != stored.Path || file.SHA256 != stored.SHA256 || file.Size != stored.Size ||
+				uint32(file.Mode.Perm()) != stored.Mode || file.UID != stored.UID || file.GID != stored.GID ||
+				!maps.Equal(file.XAttrs, stored.XAttrs) {
+				return "", errors.New("existing purge backup does not match current application state")
+			}
+		}
+		currentDirectories, inventoryErr := inventoryDirectories(root)
+		if inventoryErr != nil {
+			return "", inventoryErr
+		}
+		if len(currentDirectories) != len(manifest.Directories) {
+			return "", errors.New("existing purge backup does not match current application state")
+		}
+		for index, directory := range currentDirectories {
+			stored := manifest.Directories[index]
+			if directory.Path != stored.Path || directory.Mode != stored.Mode || directory.UID != stored.UID ||
+				directory.GID != stored.GID || !maps.Equal(directory.XAttrs, stored.XAttrs) {
+				return "", errors.New("existing purge backup does not match current application state")
+			}
+		}
+		return backup, nil
+	} else if !errors.Is(err, fs.ErrNotExist) {
+		return "", err
+	}
+	result, err := Snapshot(root, "purge-backup", buildinfo.Version)
+	if err != nil {
+		return "", err
+	}
+	if err := os.Rename(result.Snapshot, backup); err != nil {
+		return "", fmt.Errorf("retain purge backup outside application state: %w", err)
+	}
+	if err := syncDirectory(filepath.Dir(root)); err != nil {
+		return "", fmt.Errorf("sync purge backup directory: %w", err)
+	}
+	return backup, nil
+}
+
+func verifyPurgeOwnership(root string) error {
+	isSQLite, inspectErr := sqliteDatabase(filepath.Join(root, "nilo.db"))
+	if inspectErr != nil || !isSQLite {
+		return errors.New("purge requires a verified NILO-owned data directory")
+	}
+	if _, inspectErr = inspectDatabase(filepath.Join(root, "nilo.db")); inspectErr != nil {
+		return fmt.Errorf("purge requires a verified NILO-owned data directory: %w", inspectErr)
+	}
+	return verifyOwnership(root)
 }
 
 func readManifest(snapshot string) (snapshotManifest, error) {
@@ -423,37 +725,47 @@ func readManifest(snapshot string) (snapshotManifest, error) {
 		if _, exists := seen[file.Path]; exists {
 			return manifest, errors.New("snapshot manifest contains a duplicate file declaration")
 		}
+		if file.UID < -1 || file.GID < -1 || file.XAttrs == nil {
+			return manifest, errors.New("snapshot manifest contains invalid ownership metadata")
+		}
+		for name, encoded := range file.XAttrs {
+			if (!strings.HasPrefix(name, "user.") && name != "system.posix_acl_access") || len(name) > 255 {
+				return manifest, errors.New("snapshot manifest contains an unsafe extended attribute")
+			}
+			if _, err := base64.StdEncoding.DecodeString(encoded); err != nil {
+				return manifest, errors.New("snapshot manifest contains an invalid extended attribute")
+			}
+		}
 		seen[file.Path] = struct{}{}
+	}
+	directorySeen := make(map[string]struct{}, len(manifest.Directories))
+	for _, directory := range manifest.Directories {
+		clean := filepath.ToSlash(filepath.Clean(filepath.FromSlash(directory.Path)))
+		if directory.Path == "" || directory.Path != clean || filepath.IsAbs(directory.Path) ||
+			strings.Contains(directory.Path, "\\") || strings.HasPrefix(directory.Path, "../") ||
+			directory.Mode > 0o777 || directory.UID < -1 || directory.GID < -1 || directory.XAttrs == nil {
+			return manifest, errors.New("snapshot manifest contains an unsafe directory declaration")
+		}
+		if _, exists := directorySeen[directory.Path]; exists {
+			return manifest, errors.New("snapshot manifest contains a duplicate directory declaration")
+		}
+		for name, encoded := range directory.XAttrs {
+			if (!strings.HasPrefix(name, "user.") && name != "system.posix_acl_access" && name != "system.posix_acl_default") || len(name) > 255 {
+				return manifest, errors.New("snapshot manifest contains an unsafe extended attribute")
+			}
+			if _, err := base64.StdEncoding.DecodeString(encoded); err != nil {
+				return manifest, errors.New("snapshot manifest contains an invalid extended attribute")
+			}
+		}
+		directorySeen[directory.Path] = struct{}{}
+	}
+	if _, exists := directorySeen["."]; !exists {
+		return manifest, errors.New("snapshot manifest lacks root directory metadata")
 	}
 	return manifest, nil
 }
 
-// Restore verifies every snapshot byte before atomically replacing current
-// application files.
-func Restore(dataDir, snapshot, failedTargetVersion string) (err error) {
-	root, err := canonicalDataDir(dataDir)
-	if err != nil {
-		return err
-	}
-	snapshot, err = filepath.Abs(snapshot)
-	if err != nil {
-		return err
-	}
-	snapshotRoot := filepath.Join(root, "snapshots")
-	relative, err := filepath.Rel(snapshotRoot, snapshot)
-	if err != nil || relative == "." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) || relative == ".." {
-		return errors.New("snapshot must be below the data directory snapshot root")
-	}
-	manifest, err := readManifest(snapshot)
-	if err != nil {
-		return err
-	}
-	if manifest.SourceVersion != buildinfo.Version {
-		return fmt.Errorf("snapshot source version %s does not match running version %s", manifest.SourceVersion, buildinfo.Version)
-	}
-	if failedTargetVersion == "" || manifest.TargetVersion != failedTargetVersion {
-		return fmt.Errorf("snapshot target version %s does not match failed target version %s", manifest.TargetVersion, failedTargetVersion)
-	}
+func verifySnapshotFiles(snapshot string, manifest snapshotManifest) error {
 	if manifest.DatabaseSchema != "" {
 		snapshotDatabase := filepath.Join(snapshot, "files", "nilo.db")
 		temporary, createErr := os.CreateTemp("", "nilo-restore-database-*.db")
@@ -488,49 +800,164 @@ func Restore(dataDir, snapshot, failedTargetVersion string) (err error) {
 		if err != nil || digest != file.SHA256 {
 			return fmt.Errorf("snapshot digest mismatch: %s", file.Path)
 		}
+		expected := File{GID: file.GID, Mode: fs.FileMode(file.Mode), UID: file.UID, XAttrs: file.XAttrs}
+		if err := verifyFileMetadata(path, expected); err != nil {
+			return fmt.Errorf("snapshot metadata mismatch: %s", file.Path)
+		}
+	}
+	for _, directory := range manifest.Directories {
+		path := filepath.Join(snapshot, "files")
+		if directory.Path != "." {
+			path = filepath.Join(path, filepath.FromSlash(directory.Path))
+		}
+		info, err := os.Lstat(path)
+		if err != nil || !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
+			return fmt.Errorf("snapshot directory is invalid: %s", directory.Path)
+		}
+		expected := File{GID: directory.GID, Mode: fs.FileMode(directory.Mode), UID: directory.UID, XAttrs: directory.XAttrs}
+		if err := verifyFileMetadata(path, expected); err != nil {
+			return fmt.Errorf("snapshot directory metadata mismatch: %s", directory.Path)
+		}
+	}
+	return nil
+}
+
+// Restore verifies every snapshot byte before atomically replacing current
+// application files.
+func Restore(dataDir, snapshot, failedTargetVersion string) (err error) {
+	root, err := canonicalDataDir(dataDir)
+	if err != nil {
+		return err
+	}
+	snapshot, err = filepath.Abs(snapshot)
+	if err != nil {
+		return err
+	}
+	snapshotRoot := filepath.Join(root, "snapshots")
+	relative, err := filepath.Rel(snapshotRoot, snapshot)
+	if err != nil || relative == "." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) || relative == ".." {
+		return errors.New("snapshot must be below the data directory snapshot root")
+	}
+	manifest, err := readManifest(snapshot)
+	if err != nil {
+		return err
+	}
+	if manifest.SourceVersion != buildinfo.Version {
+		return fmt.Errorf("snapshot source version %s does not match running version %s", manifest.SourceVersion, buildinfo.Version)
+	}
+	if failedTargetVersion == "" || manifest.TargetVersion != failedTargetVersion {
+		return fmt.Errorf("snapshot target version %s does not match failed target version %s", manifest.TargetVersion, failedTargetVersion)
+	}
+	if err := verifySnapshotFiles(snapshot, manifest); err != nil {
+		return err
 	}
 	release, err := acquire(root)
 	if err != nil {
 		return err
 	}
-	defer func() { err = errors.Join(err, release()) }()
-	currentFiles, err := Inventory(root)
+	released := false
+	defer func() {
+		if !released {
+			err = errors.Join(err, release())
+		}
+	}()
+	rootInfo, err := os.Lstat(root)
 	if err != nil {
 		return err
 	}
-	wanted := make(map[string]struct{}, len(manifest.Files))
-	for _, file := range manifest.Files {
-		wanted[file.Path] = struct{}{}
-		source := filepath.Join(snapshot, "files", filepath.FromSlash(file.Path))
-		destination := filepath.Join(root, filepath.FromSlash(file.Path))
-		temporary := destination + ".restore-" + manifest.Transaction
-		_ = os.Remove(temporary)
-		if err := copyFile(source, temporary, fs.FileMode(file.Mode)); err != nil {
-			return err
-		}
-		if err := os.Rename(temporary, destination); err != nil {
-			_ = os.Remove(temporary)
-			return err
-		}
-		if err := os.Chmod(destination, fs.FileMode(file.Mode)); err != nil {
-			return err
-		}
-		if err := syncDirectory(filepath.Dir(destination)); err != nil {
-			return err
-		}
-	}
-	for _, file := range currentFiles {
-		if _, keep := wanted[file.Path]; keep {
-			continue
-		}
-		if err := os.Remove(filepath.Join(root, filepath.FromSlash(file.Path))); err != nil {
-			return fmt.Errorf("remove post-snapshot state %s: %w", file.Path, err)
-		}
-	}
-	if err := syncDirectory(root); err != nil {
+	stage := filepath.Join(filepath.Dir(root), "."+filepath.Base(root)+".restore-"+manifest.Transaction)
+	if _, err := os.Lstat(stage); err == nil {
+		return errors.New("restore staging directory already exists")
+	} else if !errors.Is(err, fs.ErrNotExist) {
 		return err
 	}
-	return nil
+	if err := os.Mkdir(stage, rootInfo.Mode().Perm()); err != nil {
+		return err
+	}
+	swapped := false
+	defer func() {
+		if !swapped {
+			_ = os.RemoveAll(stage)
+		}
+	}()
+	for _, directory := range manifest.Directories {
+		if directory.Path == "." {
+			continue
+		}
+		if err := os.MkdirAll(filepath.Join(stage, filepath.FromSlash(directory.Path)), fs.FileMode(directory.Mode)); err != nil {
+			return err
+		}
+	}
+	for _, file := range manifest.Files {
+		source := filepath.Join(snapshot, "files", filepath.FromSlash(file.Path))
+		destination := filepath.Join(stage, filepath.FromSlash(file.Path))
+		metadata := File{GID: file.GID, Mode: fs.FileMode(file.Mode), UID: file.UID, XAttrs: file.XAttrs}
+		if err := copyFileWithMetadata(source, destination, metadata); err != nil {
+			return err
+		}
+	}
+	for index := len(manifest.Directories) - 1; index >= 0; index-- {
+		directory := manifest.Directories[index]
+		destination := stage
+		if directory.Path != "." {
+			destination = filepath.Join(stage, filepath.FromSlash(directory.Path))
+		}
+		if err := applyFileMetadata(destination, fs.FileMode(directory.Mode), directory.UID, directory.GID, directory.XAttrs); err != nil {
+			return err
+		}
+	}
+	for _, name := range []string{"snapshots", "transactions"} {
+		source := filepath.Join(root, name)
+		if _, statErr := os.Lstat(source); errors.Is(statErr, fs.ErrNotExist) {
+			continue
+		} else if statErr != nil {
+			return statErr
+		}
+		if err := copyDirectoryTree(source, filepath.Join(stage, name)); err != nil {
+			return err
+		}
+	}
+	if err := writeFileDurable(filepath.Join(stage, ".maintenance.lock"), []byte("restore\n"), 0o600); err != nil {
+		return err
+	}
+	if err := syncTree(stage); err != nil {
+		return err
+	}
+	var releaseErr error
+	releasedBeforeExchange := releaseBeforeDirectoryExchange()
+	var releaseExclusion func() error
+	if releasedBeforeExchange {
+		releaseExclusion, err = acquirePortableExchangeExclusion(root)
+		if err != nil {
+			return err
+		}
+		defer func() {
+			if releaseExclusion != nil {
+				err = errors.Join(err, releaseExclusion())
+			}
+		}()
+		releaseErr = release()
+		released = true
+		if releaseErr != nil {
+			return releaseErr
+		}
+	}
+	if err := exchangeDirectories(root, stage); err != nil {
+		return fmt.Errorf("atomically exchange restored application state: %w", err)
+	}
+	swapped = true
+	if releasedBeforeExchange {
+		releaseErr = errors.Join(
+			os.Remove(filepath.Join(root, ".maintenance.lock")),
+			syncDirectory(root),
+		)
+	} else {
+		releaseErr = release()
+		released = true
+	}
+	cleanupErr := os.RemoveAll(stage)
+	syncErr := syncDirectory(filepath.Dir(root))
+	return errors.Join(releaseErr, cleanupErr, syncErr)
 }
 
 func retainNewest(root string, keep int) error {
@@ -577,14 +1004,7 @@ func Purge(dataDir string) (err error) {
 	if err != nil {
 		return err
 	}
-	isSQLite, inspectErr := sqliteDatabase(filepath.Join(root, "nilo.db"))
-	if inspectErr != nil || !isSQLite {
-		return errors.New("purge requires a verified NILO-owned data directory")
-	}
-	if _, inspectErr = inspectDatabase(filepath.Join(root, "nilo.db")); inspectErr != nil {
-		return fmt.Errorf("purge requires a verified NILO-owned data directory: %w", inspectErr)
-	}
-	if err := verifyOwnership(root); err != nil {
+	if err := verifyPurgeOwnership(root); err != nil {
 		return err
 	}
 	release, err := acquire(root)

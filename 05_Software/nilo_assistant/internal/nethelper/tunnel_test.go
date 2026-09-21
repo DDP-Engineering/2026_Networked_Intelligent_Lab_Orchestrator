@@ -19,6 +19,7 @@ type fakeTunnels struct {
 	deleted   []string
 	active    string
 	createErr error
+	deleteErr error
 	external  bool
 }
 
@@ -39,6 +40,9 @@ func (d *fakeDriver) CreateTunnel(_ context.Context, profileID string, profile n
 }
 
 func (d *fakeDriver) DeleteTunnel(_ context.Context, connectionRef string) error {
+	if d.tunnels.deleteErr != nil {
+		return d.tunnels.deleteErr
+	}
 	d.tunnels.deleted = append(d.tunnels.deleted, connectionRef)
 	kept := d.tunnels.created[:0]
 	for _, tunnel := range d.tunnels.created {

@@ -17,6 +17,11 @@ image structure and external/internal checksums. Raspberry Pi boot, expansion,
 identity, admin consumption, networking, power and GPIO plus mini-PC USB remain
 `not_run` without named hardware evidence.
 
+Build reproducibility is executable acceptance: the fixed verifier consumes a
+reviewed candidate-build-input document and performs two complete builds in
+fresh roots. External artifact directories and caller-authored receipts are not
+accepted as proof.
+
 ## Examples
 
 An amd64 container can pass Ubuntu package lifecycle but not mini-PC USB. QEMU
