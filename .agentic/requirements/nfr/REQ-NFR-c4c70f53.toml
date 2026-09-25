@@ -53,24 +53,24 @@ verification = "Security tests reject concatenated command strings, absolute run
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/config/paths.go",
-    "05_Software/nilo_assistant/internal/integration/manifest/",
-    "05_Software/nilo_assistant/internal/integration/supervisor/",
-    "05_Software/nilo_assistant/internal/artifact/",
+    "05_Software/core/internal/config/paths.go",
+    "05_Software/core/internal/integration/manifest/",
+    "05_Software/core/internal/integration/supervisor/",
+    "05_Software/core/internal/artifact/",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/config/paths_test.go::TestResolveWithinAcceptsConfinedCandidates",
-    "05_Software/nilo_assistant/internal/config/paths_test.go::TestResolveWithinRejectsUnconfinedCandidates",
-    "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go::TestInvalidCommandFixtureIsRejected",
-    "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go::TestLoadRejectsPackageSchemaReferenceEscape",
-    "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go::TestLoadRejectsPhysicalPathEscapes",
-    "05_Software/nilo_assistant/internal/integration/manifest/loader_test.go::TestLoadRejectsSymlinkedSchemaDirectory",
-    "05_Software/nilo_assistant/internal/artifact/store_test.go::TestNewStoreRejectsRootsThatAliasTheSamePhysicalDirectory",
-    "05_Software/nilo_assistant/internal/artifact/store_test.go::TestRegisterRejectsUnconfinedAndNonAbsoluteStagedPaths",
-    "05_Software/nilo_assistant/internal/artifact/store_test.go::TestRegisterRejectsSymlinkedStagedFile",
+    "05_Software/core/internal/config/paths_test.go::TestResolveWithinAcceptsConfinedCandidates",
+    "05_Software/core/internal/config/paths_test.go::TestResolveWithinRejectsUnconfinedCandidates",
+    "05_Software/core/internal/integration/manifest/loader_test.go::TestInvalidCommandFixtureIsRejected",
+    "05_Software/core/internal/integration/manifest/loader_test.go::TestLoadRejectsPackageSchemaReferenceEscape",
+    "05_Software/core/internal/integration/manifest/loader_test.go::TestLoadRejectsPhysicalPathEscapes",
+    "05_Software/core/internal/integration/manifest/loader_test.go::TestLoadRejectsSymlinkedSchemaDirectory",
+    "05_Software/core/internal/artifact/store_test.go::TestNewStoreRejectsRootsThatAliasTheSamePhysicalDirectory",
+    "05_Software/core/internal/artifact/store_test.go::TestRegisterRejectsUnconfinedAndNonAbsoluteStagedPaths",
+    "05_Software/core/internal/artifact/store_test.go::TestRegisterRejectsSymlinkedStagedFile",
 ]
 
 # --- optional below this line ---

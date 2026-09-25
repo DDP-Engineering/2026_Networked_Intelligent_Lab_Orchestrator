@@ -19,9 +19,9 @@ When packaging preparation records evidence without executing on the selected ph
 
 verification = "Prepare each target from a complete fixture cache without hardware execution and inspect the deterministic receipt for `not_run`, the target-specific required checks, and the absence of any passed hardware status; reject caller-supplied evidence fields that attempt to promote the status."
 
-affected_paths = ["02_Tools/packaging/package_inputs.py", "02_Tools/packaging/config/targets.json", "02_Tools/packaging/README.md", "00_Planning/Packaging_and_Delivery_Plan.md", "05_Software/scripts/tests/test_packaging_inputs.py"]
+affected_paths = ["02_Tools/packaging/package_inputs.py", "02_Tools/packaging/config/targets.json", "02_Tools/packaging/README.md", "00_Planning/Packaging_and_Delivery_Plan.md", "02_Tools/tests/software/test_packaging_inputs.py"]
 
-linked_tests = ["05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_shipped_target_registry_is_exact", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_target_registry_rejects_ambiguous_or_inconsistent_metadata", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_prepare_receipts_never_infer_hardware_acceptance", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_cli_and_wrappers_keep_fetch_and_offline_paths_separate"]
+linked_tests = ["02_Tools/tests/software/test_packaging_inputs.py::PackagingInputTests.test_shipped_target_registry_is_exact", "02_Tools/tests/software/test_packaging_inputs.py::PackagingInputTests.test_target_registry_rejects_ambiguous_or_inconsistent_metadata", "02_Tools/tests/software/test_packaging_inputs.py::PackagingInputTests.test_prepare_receipts_never_infer_hardware_acceptance", "02_Tools/tests/software/test_packaging_inputs.py::PackagingInputTests.test_cli_and_wrappers_keep_fetch_and_offline_paths_separate"]
 
 
 spec = "specs/REQ-TEST-c442102f.md"

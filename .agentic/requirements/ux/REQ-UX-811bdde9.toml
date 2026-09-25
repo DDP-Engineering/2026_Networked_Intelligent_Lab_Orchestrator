@@ -57,16 +57,16 @@ verification = "A component test opens the network summary and the Network page 
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
-    "05_Software/nilo_gui/src/components/shell/NetworkSummary.tsx",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
+    "05_Software/frontend/src/components/pages/NetworkPage.tsx",
+    "05_Software/frontend/src/components/shell/NetworkSummary.tsx",
+    "05_Software/frontend/src/components/shell/shell.test.tsx",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::says appliance network reporting is unavailable, in the summary",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::says the same on the Network page, and reports only HTTP reachability",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::says appliance network reporting is unavailable, in the summary",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::says the same on the Network page, and reports only HTTP reachability",
 ]
 
 # --- optional below this line ---

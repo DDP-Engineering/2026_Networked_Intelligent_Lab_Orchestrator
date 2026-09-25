@@ -26,16 +26,16 @@ when space is insufficient. Record-scoped actions remain with their records.
 verification = "Component tests locate a single authorized Activity button in the title group before supporting text, exercise its existing callback and omit it when unavailable. Browser tests check Network and both Authentication pages at 1920, 1366, 1024 and 800 pixel widths: button follows the title, aligns beside it where space permits, remains in the header with at least a 44px target and no document overflow. Existing shell tests retain identity filters and permission gating."
 
 affected_paths = [
-  "05_Software/nilo_gui/src/components/authentication/UsersPage.tsx",
-  "05_Software/nilo_gui/src/components/authentication/ApiTokensPage.tsx",
-  "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
-  "05_Software/nilo_gui/src/styles/shell.css",
+  "05_Software/frontend/src/components/authentication/UsersPage.tsx",
+  "05_Software/frontend/src/components/authentication/ApiTokensPage.tsx",
+  "05_Software/frontend/src/components/pages/NetworkPage.tsx",
+  "05_Software/frontend/src/styles/shell.css",
 ]
 
 linked_tests = [
-  "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::page-scoped Activity placement",
-  "05_Software/nilo_gui/e2e/field-display.spec.ts::expectPageActivityBesideTitle",
-  "05_Software/nilo_gui/src/components/shell/shell.test.tsx::the navigation > opens Activity from Authentication with the identity component applied",
+  "05_Software/frontend/src/components/AuthenticationPage.test.tsx::page-scoped Activity placement",
+  "05_Software/frontend/e2e/field-display.spec.ts::expectPageActivityBesideTitle",
+  "05_Software/frontend/src/components/shell/shell.test.tsx::the navigation > opens Activity from Authentication with the identity component applied",
 ]
 
 

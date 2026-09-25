@@ -20,22 +20,22 @@ If a proposed password policy carries a minimum length below the absolute floor 
 verification = "A test submits a policy with a minimum length of 7 and asserts the change is refused with a message naming the floor of 8, that a subsequent read returns the previous policy unchanged, and that a password set immediately afterwards is still held to that previous policy; a second test does the same for a minimum length of 1025."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/auth/password_policy.go",
-    "05_Software/nilo_assistant/internal/identity/service.go",
-    "05_Software/nilo_assistant/internal/httpapi/password_policy.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/migrations/016_password_policy_classes.sql",
-    "05_Software/nilo_assistant/internal/auth/password_policy_test.go",
-    "05_Software/nilo_assistant/internal/identity/password_policy_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/password_policy_test.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/password_policy_repository_test.go",
+    "05_Software/core/internal/auth/password_policy.go",
+    "05_Software/core/internal/identity/service.go",
+    "05_Software/core/internal/httpapi/password_policy.go",
+    "05_Software/core/internal/store/sqlite/migrations/016_password_policy_classes.sql",
+    "05_Software/core/internal/auth/password_policy_test.go",
+    "05_Software/core/internal/identity/password_policy_test.go",
+    "05_Software/core/internal/httpapi/password_policy_test.go",
+    "05_Software/core/internal/store/sqlite/password_policy_repository_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/auth/password_policy_test.go::TestPasswordPolicyValidateRefusesALengthOutsideItsBounds",
-    "05_Software/nilo_assistant/internal/auth/password_policy_test.go::TestPasswordPolicyValidateAcceptsEveryCombinationOfRequirements",
-    "05_Software/nilo_assistant/internal/identity/password_policy_test.go::TestSetPasswordPolicyRefusesAMinimumBelowTheFloor",
-    "05_Software/nilo_assistant/internal/httpapi/password_policy_test.go::TestPasswordPolicyRouteRefusesAMinimumBelowTheFloorNamingIt",
-    "05_Software/nilo_assistant/internal/store/sqlite/password_policy_repository_test.go::TestPasswordPolicyTableRefusesValuesOutsideItsBounds",
+    "05_Software/core/internal/auth/password_policy_test.go::TestPasswordPolicyValidateRefusesALengthOutsideItsBounds",
+    "05_Software/core/internal/auth/password_policy_test.go::TestPasswordPolicyValidateAcceptsEveryCombinationOfRequirements",
+    "05_Software/core/internal/identity/password_policy_test.go::TestSetPasswordPolicyRefusesAMinimumBelowTheFloor",
+    "05_Software/core/internal/httpapi/password_policy_test.go::TestPasswordPolicyRouteRefusesAMinimumBelowTheFloorNamingIt",
+    "05_Software/core/internal/store/sqlite/password_policy_repository_test.go::TestPasswordPolicyTableRefusesValuesOutsideItsBounds",
 ]
 
 

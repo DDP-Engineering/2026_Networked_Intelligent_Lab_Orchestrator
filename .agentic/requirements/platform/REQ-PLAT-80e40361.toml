@@ -57,11 +57,11 @@ When a maintainer explicitly rebuilds the NILO development environment, the repo
 verification = "Build from a clean cache with the reviewed Containerfile and lock, then run inventory and definition checks that reject mutable bases, unlisted packages, mismatched tool versions, missing licences/SBOM/provenance, or missing browser and native/cross toolchains."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
-affected_paths = ["02_Tools/containers/build/", "02_Tools/scripts/build-build-environment.sh", "02_Tools/scripts/build_environment.py", "02_Tools/scripts/collect-build-environment-metadata.sh", "02_Tools/scripts/verify-build-environment.sh", "05_Software/nilo_assistant/go.sum", "05_Software/scripts/tests/test_build_environment.py", "02_Tools/env/with-build-environment.sh", "02_Tools/tests/build-environment/build-all.sh"]
+affected_paths = ["02_Tools/containers/build/", "02_Tools/scripts/build-build-environment.sh", "02_Tools/scripts/build_environment.py", "02_Tools/scripts/collect-build-environment-metadata.sh", "02_Tools/scripts/verify-build-environment.sh", "05_Software/core/go.sum", "02_Tools/tests/software/test_build_environment.py", "02_Tools/env/with-build-environment.sh", "02_Tools/tests/build-environment/build-all.sh"]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
-linked_tests = ["05_Software/scripts/tests/test_build_environment.py"]
+linked_tests = ["02_Tools/tests/software/test_build_environment.py"]
 
 # --- optional below this line ---
 

@@ -261,7 +261,7 @@ selection would have stranded the board until somebody reached it physically.
 
 ### 2.8 Current NILO deployment
 
-The board runs NILO 0.8.0 from `/var/lib/nilo`. `nilo.service`,
+The board runs NILO 0.9.0 with runtime state in `/var/lib/nilo`. `nilo.service`,
 `nilo-nethelper.service` and the independent recovery timer are active and
 enabled. The core service uses the helper-managed TLS identity and has no
 file-backed certificate or private-key argument. Its served certificate covers
@@ -283,10 +283,22 @@ HTTP 401. The PLC at `192.168.0.130` did not answer ICMP or TCP 504 during this
 check; that is an availability observation, not evidence that its preserved
 NILO configuration changed.
 
-The root-only rollback directory is
-`/var/backups/nilo/pre-helper-tls-0.8.0-20260917T114203Z`. It contains the prior
-service unit and a configuration/state archive whose SHA-256 is
-`7f8a23ffc494f4665228b26b779c1e27fa4aea4186509397af7f3c7109e24c3`.
+The 2026-09-25 development deployment replaced the ARM64 core, helper, and GUI
+after archiving the prior runtime and state. The current root-only rollback
+directory is `/var/backups/nilo/pre-0.9.0-20260925T202739`; its
+`runtime-and-state.tar.gz` has SHA-256
+`415f6126f0a90278e3c595fc9912c6f8177199986de230a5f7f2eecbed3495df`.
+The installed core and helper hashes match the staged build. Both services and
+the recovery timer are active and enabled with zero service restarts. The
+NetworkManager profile digest is unchanged, `wlan0` and `nilo0` retain their
+addresses, and the NILO nftables tables are present. A Windows client received
+HTTP 200 for the GUI and HTTP 401 for the protected status API over both local
+Wi-Fi and WireGuard. Headless Chromium rendered the live sign-in page showing
+version 0.9.0; its served JavaScript matches the locally built asset byte for
+byte. This bench smoke test did not sign in, exercise the PLC, or test GPIO.
+
+The preceding 0.8.0 helper-TLS rollback remains at
+`/var/backups/nilo/pre-helper-tls-0.8.0-20260917T114203Z`.
 The optional GPIO recovery path remains disabled until the BCM17 button and
 BCM27 LED circuit is physically confirmed.
 

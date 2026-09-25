@@ -20,15 +20,15 @@ When the privileged helper creates or updates a NILO-owned automatic IPv4 or IPv
 verification = "Disposable NetworkManager tests create owned automatic v4/v6 profiles and each excluded profile class, reconcile twice, and inspect normalized settings: only eligible owned clients carry hostname sending, the exact serial value and supported NILO vendor options; foreign and excluded profiles remain byte-for-byte unchanged and invalid names are refused before mutation."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_settings_linux.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_commissioning_linux.go",
-    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
-    "05_Software/nilo_assistant/internal/network/model.go",
+    "05_Software/core/internal/nethelper/networkmanager_settings_linux.go",
+    "05_Software/core/internal/nethelper/networkmanager_commissioning_linux.go",
+    "05_Software/core/internal/nethelper/protocol.go",
+    "05_Software/core/internal/network/model.go",
     "02_Tools/tests/network/run.sh",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/nethelper/dhcp_identity_test.go::*",
+    "05_Software/core/internal/nethelper/dhcp_identity_test.go::*",
 ]
 
 

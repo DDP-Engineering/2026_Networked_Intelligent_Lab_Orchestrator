@@ -42,16 +42,16 @@ affected_paths = [
     "02_Tools/tests/appliance/probe.sh",
     "02_Tools/tests/appliance/run.sh",
     "02_Tools/tests/network/check.sh",
-    "05_Software/scripts/tests/test_appliance_stage.py",
+    "02_Tools/tests/software/test_appliance_stage.py",
 ]
 
 linked_tests = [
-    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceImageDefinitionTests::test_base_image_is_named_by_digest_and_packages_are_explicit",
-    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceImageDefinitionTests::test_node_and_browser_engine_are_pinned_from_the_toolchain_manifest",
-    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceImageDefinitionTests::test_inventory_names_every_tool_the_stage_depends_on",
-    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceImageDefinitionTests::test_every_inventory_probe_is_actually_run_inside_the_image",
-    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceImageDefinitionTests::test_inventory_probe_preserves_a_failed_commands_status",
-    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceImageDefinitionTests::test_shared_image_keeps_network_install_and_appliance_targets_distinct",
+    "02_Tools/tests/software/test_appliance_stage.py::ApplianceImageDefinitionTests::test_base_image_is_named_by_digest_and_packages_are_explicit",
+    "02_Tools/tests/software/test_appliance_stage.py::ApplianceImageDefinitionTests::test_node_and_browser_engine_are_pinned_from_the_toolchain_manifest",
+    "02_Tools/tests/software/test_appliance_stage.py::ApplianceImageDefinitionTests::test_inventory_names_every_tool_the_stage_depends_on",
+    "02_Tools/tests/software/test_appliance_stage.py::ApplianceImageDefinitionTests::test_every_inventory_probe_is_actually_run_inside_the_image",
+    "02_Tools/tests/software/test_appliance_stage.py::ApplianceImageDefinitionTests::test_inventory_probe_preserves_a_failed_commands_status",
+    "02_Tools/tests/software/test_appliance_stage.py::ApplianceImageDefinitionTests::test_shared_image_keeps_network_install_and_appliance_targets_distinct",
 ]
 
 

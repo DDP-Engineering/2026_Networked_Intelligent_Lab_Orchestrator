@@ -19,24 +19,24 @@ The appliance shall rename a saved WireGuard profile while keeping its stable id
 verification = "A repository and API test renames a referenced profile and asserts the device network reference, the profile identifier and the stored configuration are unchanged."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/profiles.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/vpn_profile_repository.go",
-    "05_Software/nilo_assistant/internal/network/profile_manager.go",
-    "05_Software/nilo_assistant/internal/network/simulation.go",
-    "05_Software/nilo_assistant/internal/network/operation.go",
-    "05_Software/nilo_assistant/internal/network/wireguard.go",
-    "05_Software/nilo_assistant/internal/httpapi/network_operations.go",
-    "05_Software/nilo_assistant/cmd/nilo/network_vpn.go",
-    "05_Software/nilo_assistant/internal/network/profile_manager_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/network_wireguard_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/network_vpn_test.go",
+    "05_Software/core/internal/network/profiles.go",
+    "05_Software/core/internal/store/sqlite/vpn_profile_repository.go",
+    "05_Software/core/internal/network/profile_manager.go",
+    "05_Software/core/internal/network/simulation.go",
+    "05_Software/core/internal/network/operation.go",
+    "05_Software/core/internal/network/wireguard.go",
+    "05_Software/core/internal/httpapi/network_operations.go",
+    "05_Software/core/cmd/nilo/network_vpn.go",
+    "05_Software/core/internal/network/profile_manager_test.go",
+    "05_Software/core/internal/httpapi/network_wireguard_test.go",
+    "05_Software/core/cmd/nilo/network_vpn_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/store/sqlite/vpn_profile_repository_test.go::TestRenamingKeepsTheIdentityAndTheSecretReference",
-    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestRenameKeepsTheIdentityTheKeyAndTheConnection",
-    "05_Software/nilo_assistant/internal/httpapi/network_wireguard_test.go::TestWireGuardRenameKeepsTheIdentityAndRefusesATakenName",
-    "05_Software/nilo_assistant/cmd/nilo/network_vpn_test.go::TestNetworkVPNCommandsUsePreviewAndSeparateAcknowledgement",
+    "05_Software/core/internal/store/sqlite/vpn_profile_repository_test.go::TestRenamingKeepsTheIdentityAndTheSecretReference",
+    "05_Software/core/internal/network/profile_manager_test.go::TestRenameKeepsTheIdentityTheKeyAndTheConnection",
+    "05_Software/core/internal/httpapi/network_wireguard_test.go::TestWireGuardRenameKeepsTheIdentityAndRefusesATakenName",
+    "05_Software/core/cmd/nilo/network_vpn_test.go::TestNetworkVPNCommandsUsePreviewAndSeparateAcknowledgement",
 ]
 
 spec = "specs/REQ-FUNC-2f8d63b5.md"

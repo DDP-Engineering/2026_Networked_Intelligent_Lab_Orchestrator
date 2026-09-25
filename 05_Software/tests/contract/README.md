@@ -3,14 +3,13 @@
 The contract kit exercises an install-shaped runner through newline-delimited
 JSON. It launches a supplied executable plus an independent argument array
 with no shell, reads protocol records only from stdout, and treats stderr as
-diagnostics. The deterministic `fake_python` package is the first fixture: it
-has no network, shell, hardware, or repository-path dependency outside the
-temporary staging directory explicitly supplied to its artifact operation.
+diagnostics. The deterministic Go package under `tests/fixtures/contract_runner`
+is built into a temporary directory for these tests. It has no hardware or
+network dependency; its artifact operation writes only into an explicit
+temporary staging directory.
 
-Run the fake package checks from its package directory:
+Run the contract suite from the repository root with the locked SDK test environment:
 
 ```powershell
-uv run pytest -q
-uv run ruff check .
-uv run ruff format --check .
+.\02_Tools\env\with-tools.ps1 uv run --project 05_Software/integrations/sdk/python --all-groups --locked pytest -q 05_Software/tests/contract/test_integration_contract.py
 ```

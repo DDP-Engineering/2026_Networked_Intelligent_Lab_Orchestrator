@@ -57,11 +57,11 @@ When build-environment acceptance is evaluated, the repository shall report all 
 verification = "Acceptance-report tests load complete, incomplete, stale, and internally inconsistent evidence files, assert only fully supported gates pass, require recorded restore and round-trip commands to include their mandatory arguments, and confirm the command exits nonzero while naming every missing or failed proof."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
-affected_paths = ["02_Tools/tests/build-environment/verify-acceptance.py", "02_Tools/tests/build-environment/evidence.schema.json", "02_Tools/tests/build-environment/evidence.example.json", "02_Tools/tests/build-environment/README.md", "05_Software/scripts/tests/test_build_environment.py", "02_Tools/scripts/build_environment.py"]
+affected_paths = ["02_Tools/tests/build-environment/verify-acceptance.py", "02_Tools/tests/build-environment/evidence.schema.json", "02_Tools/tests/build-environment/evidence.example.json", "02_Tools/tests/build-environment/README.md", "02_Tools/tests/software/test_build_environment.py", "02_Tools/scripts/build_environment.py"]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
-linked_tests = ["05_Software/scripts/tests/test_build_environment.py"]
+linked_tests = ["02_Tools/tests/software/test_build_environment.py"]
 
 # --- optional below this line ---
 

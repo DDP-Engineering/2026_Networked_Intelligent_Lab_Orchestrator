@@ -17,7 +17,7 @@ Windows PowerShell:
 
 ```powershell
 .\02_Tools\bootstrap\bootstrap.ps1
-.\05_Software\scripts\test-increment-1.ps1
+.\02_Tools\scripts\test-increment-1.ps1
 git diff --check
 git status --short
 ```
@@ -26,12 +26,12 @@ Linux x86_64 or ARM64:
 
 ```sh
 ./02_Tools/bootstrap/bootstrap.sh
-./05_Software/scripts/test-increment-1.sh
+./02_Tools/scripts/test-increment-1.sh
 git diff --check
 git status --short
 ```
 
-The scripts verify the pinned tool versions, sync both locked Python projects, run Python tests and Ruff, run the generic package contract, run focused and full Go tests plus vet, run race tests where the host supports them, execute the real fake-runner acceptance slice in a clean temporary data directory, cross-compile Linux ARM64/Linux x86_64/Windows x86_64, and ensure the checks leave no new repository artifact.
+The scripts verify the pinned tool versions, sync the Python SDK, run its tests and Ruff, run the generic package contract against the test-only Go runner, run focused and full Go tests plus vet, run race tests where the host supports them, execute the runner acceptance slice in a clean temporary data directory, cross-compile Linux ARM64/Linux x86_64/Windows x86_64, and ensure the checks leave no new repository artifact.
 
 ## Observed evidence on 2026-08-31
 
@@ -47,12 +47,12 @@ Native Raspberry Pi 4 Linux ARM64 execution has not yet been recorded. Increment
 
 ## Authoring entry points
 
-- Wire protocol and schemas: `05_Software/schemas/integration/v1` and `05_Software/nilo_assistant/internal/integration/protocol`.
-- Package manifest loading: `05_Software/nilo_assistant/internal/integration/manifest`.
-- Python integration SDK: `05_Software/integration_sdk/python`.
+- Wire protocol and schemas: `05_Software/contracts/integration/v1` and `05_Software/core/internal/integration/protocol`.
+- Package manifest loading: `05_Software/core/internal/integration/manifest`.
+- Python integration SDK: `05_Software/integrations/sdk/python`.
 - Generic package contract: `05_Software/tests/contract/test_integration_contract.py`.
-- Install-shaped example package: `05_Software/integrations/fake_python`.
-- Operation lifecycle and evidence boundary: `05_Software/nilo_assistant/internal/operation`.
+- Test-only contract package: `05_Software/tests/fixtures/contract_runner`.
+- Operation lifecycle and evidence boundary: `05_Software/core/internal/operation`.
 
 ## Known later work
 

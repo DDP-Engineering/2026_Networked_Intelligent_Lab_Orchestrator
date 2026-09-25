@@ -20,15 +20,15 @@ When `nilo open <name>` uniquely discovers a matching permanent or friendly appl
 verification = "Automated Windows, macOS and Linux command tests inject the discovery result set and browser-launch boundary; an exact serial and unique friendly match each launch the advertised HTTPS URL once, while timeout, malformed URL, duplicate friendly name and multiple UUID matches return their stable errors and make zero launch calls."
 
 affected_paths = [
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/cmd/nilo/browser_windows.go",
-    "05_Software/nilo_assistant/cmd/nilo/browser_darwin.go",
-    "05_Software/nilo_assistant/cmd/nilo/browser_linux.go",
-    "05_Software/nilo_assistant/internal/discovery/model.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/cmd/nilo/browser_windows.go",
+    "05_Software/core/cmd/nilo/browser_darwin.go",
+    "05_Software/core/cmd/nilo/browser_linux.go",
+    "05_Software/core/internal/discovery/model.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/cmd/nilo/discover_test.go::*",
+    "05_Software/core/cmd/nilo/discover_test.go::*",
 ]
 
 

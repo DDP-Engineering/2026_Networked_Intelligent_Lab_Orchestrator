@@ -56,17 +56,17 @@ verification = "A table-driven test asks the role model for the permissions of e
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/auth/role.go",
-    "05_Software/nilo_assistant/internal/auth/role_test.go",
+    "05_Software/core/internal/auth/role.go",
+    "05_Software/core/internal/auth/role_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/auth/role_test.go::TestRolePermissionsMatchTheFixedMatrix",
-    "05_Software/nilo_assistant/internal/auth/role_test.go::TestNoRoleHoldsAPermissionOutsideTheDefinedSet",
-    "05_Software/nilo_assistant/internal/auth/role_test.go::TestParseRoleAndPermissionRejectUnknownValues",
-    "05_Software/nilo_assistant/internal/auth/role_test.go::TestPowerPermissionBelongsToOperatorsAndAdministrators",
+    "05_Software/core/internal/auth/role_test.go::TestRolePermissionsMatchTheFixedMatrix",
+    "05_Software/core/internal/auth/role_test.go::TestNoRoleHoldsAPermissionOutsideTheDefinedSet",
+    "05_Software/core/internal/auth/role_test.go::TestParseRoleAndPermissionRejectUnknownValues",
+    "05_Software/core/internal/auth/role_test.go::TestPowerPermissionBelongsToOperatorsAndAdministrators",
 ]
 
 # --- optional below this line ---

@@ -60,20 +60,20 @@ verification = "Simulation composition and mock tests submit both power actions 
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/internal/power/power.go",
-    "05_Software/nilo_assistant/internal/httpapi/power.go",
-    "05_Software/nilo_gui/src/api/mock.ts",
-    "05_Software/nilo_gui/src/api/mock.test.ts",
-    "05_Software/nilo_gui/src/components/shell/TopRow.tsx",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/internal/power/power.go",
+    "05_Software/core/internal/httpapi/power.go",
+    "05_Software/frontend/src/api/mock.ts",
+    "05_Software/frontend/src/api/mock.test.ts",
+    "05_Software/frontend/src/components/shell/TopRow.tsx",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/httpapi/power_test.go::TestPowerRouteReportsUnavailableController",
-    "05_Software/nilo_gui/src/api/mock.test.ts::keeps simulation power control inert even for an administrator session",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::does not offer power actions in simulation, even with permission",
+    "05_Software/core/internal/httpapi/power_test.go::TestPowerRouteReportsUnavailableController",
+    "05_Software/frontend/src/api/mock.test.ts::keeps simulation power control inert even for an administrator session",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::does not offer power actions in simulation, even with permission",
 ]
 
 # --- optional below this line ---

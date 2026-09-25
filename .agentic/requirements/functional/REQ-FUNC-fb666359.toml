@@ -20,21 +20,21 @@ When a commissioned Raspberry Pi reports a button release held for at least ten 
 verification = "Automated commissioning-reset tests start from commissioned state with management and protected device claims, inject a long-press request, and observe temporary recovery removed, lifecycle provisioning, explicit management selection cleared, protected adapters still excluded, and all other eligible Ethernet adapters derived for commissioning; injected persistence or helper failures leave the original commissioned access intact."
 
 affected_paths = [
-    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go",
-    "05_Software/nilo_assistant/internal/network/management_access.go",
-    "05_Software/nilo_assistant/internal/appliance/commissioner.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository.go",
-    "05_Software/nilo_assistant/internal/app/app.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/migrations.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go",
+    "05_Software/core/cmd/nilo/hardware_recovery.go",
+    "05_Software/core/internal/store/sqlite/commissioning_repository_test.go",
+    "05_Software/core/internal/network/management_access.go",
+    "05_Software/core/internal/appliance/commissioner.go",
+    "05_Software/core/internal/store/sqlite/commissioning_repository.go",
+    "05_Software/core/internal/app/app.go",
+    "05_Software/core/internal/store/sqlite/migrations.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/cmd/nilo/hardware_recovery_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go::*",
-    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::*",
-    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::*",
+    "05_Software/core/internal/store/sqlite/commissioning_repository_test.go::*",
+    "05_Software/core/cmd/nilo/hardware_recovery_test.go::*",
+    "05_Software/core/internal/network/hardware_recovery_test.go::*",
 ]
 
 

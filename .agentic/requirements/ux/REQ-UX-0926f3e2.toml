@@ -60,25 +60,25 @@ verification = "Component tests open each action, inspect the warning and destru
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/components/shell/AppShell.tsx",
-    "05_Software/nilo_gui/src/components/shell/TopRow.tsx",
-    "05_Software/nilo_gui/src/components/PowerConfirmation.tsx",
-    "05_Software/nilo_gui/src/api/client.ts",
-    "05_Software/nilo_gui/src/api/contract.ts",
-    "05_Software/nilo_gui/src/components/PowerConfirmation.test.tsx",
-    "05_Software/nilo_gui/src/api/client.test.ts",
-    "05_Software/nilo_gui/src/App.test.tsx",
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx",
+    "05_Software/frontend/src/components/shell/AppShell.tsx",
+    "05_Software/frontend/src/components/shell/TopRow.tsx",
+    "05_Software/frontend/src/components/PowerConfirmation.tsx",
+    "05_Software/frontend/src/api/client.ts",
+    "05_Software/frontend/src/api/contract.ts",
+    "05_Software/frontend/src/components/PowerConfirmation.test.tsx",
+    "05_Software/frontend/src/api/client.test.ts",
+    "05_Software/frontend/src/App.test.tsx",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/api/client.test.ts::submits an exact power action with the session CSRF token",
-    "05_Software/nilo_gui/src/components/PowerConfirmation.test.tsx::sends nothing when cancelled",
-    "05_Software/nilo_gui/src/components/PowerConfirmation.test.tsx::requires one explicit confirmation and reports acceptance",
-    "05_Software/nilo_gui/src/components/PowerConfirmation.test.tsx::does not infer success from a lost connection or retry automatically",
-    "05_Software/nilo_gui/src/components/PowerConfirmation.test.tsx::distinguishes a server refusal from an unconfirmed connection loss",
+    "05_Software/frontend/src/api/client.test.ts::submits an exact power action with the session CSRF token",
+    "05_Software/frontend/src/components/PowerConfirmation.test.tsx::sends nothing when cancelled",
+    "05_Software/frontend/src/components/PowerConfirmation.test.tsx::requires one explicit confirmation and reports acceptance",
+    "05_Software/frontend/src/components/PowerConfirmation.test.tsx::does not infer success from a lost connection or retry automatically",
+    "05_Software/frontend/src/components/PowerConfirmation.test.tsx::distinguishes a server refusal from an unconfirmed connection loss",
 ]
 
 # --- optional below this line ---

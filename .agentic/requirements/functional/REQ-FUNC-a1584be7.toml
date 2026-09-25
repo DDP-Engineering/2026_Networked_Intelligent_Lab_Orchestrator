@@ -19,23 +19,23 @@ When an administrator selects a different managed WireGuard profile while one is
 verification = "A Linux switch test confirms the preview lists the dependencies and that an unconfirmed switch leaves the original tunnel, routes and DNS observed as before."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/profile_manager.go",
-    "05_Software/nilo_assistant/internal/network/appliance.go",
-    "05_Software/nilo_assistant/internal/nethelper/tunnel_engine.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux.go",
-    "05_Software/nilo_assistant/internal/nethelper/engine.go",
-    "05_Software/nilo_assistant/internal/network/profile_manager_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/tunnel_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go",
+    "05_Software/core/internal/network/profile_manager.go",
+    "05_Software/core/internal/network/appliance.go",
+    "05_Software/core/internal/nethelper/tunnel_engine.go",
+    "05_Software/core/internal/nethelper/networkmanager_wireguard_linux.go",
+    "05_Software/core/internal/nethelper/networkmanager_linux.go",
+    "05_Software/core/internal/nethelper/engine.go",
+    "05_Software/core/internal/network/profile_manager_test.go",
+    "05_Software/core/internal/nethelper/tunnel_test.go",
+    "05_Software/core/internal/nethelper/networkmanager_wireguard_linux_test.go",
+    "05_Software/core/cmd/nilo/network_system_linux_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestActivationResolvesTheConnectionAndPreviewsTheSwitch",
-    "05_Software/nilo_assistant/internal/nethelper/tunnel_test.go::TestTunnelActivationIsCheckpointedAgainstTheWholeSystem",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux_test.go::TestNetworkManagerWireGuardLifecycleSystem",
-    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go::TestApplianceSystemHTTPSAndHelperRecovery",
+    "05_Software/core/internal/network/profile_manager_test.go::TestActivationResolvesTheConnectionAndPreviewsTheSwitch",
+    "05_Software/core/internal/nethelper/tunnel_test.go::TestTunnelActivationIsCheckpointedAgainstTheWholeSystem",
+    "05_Software/core/internal/nethelper/networkmanager_wireguard_linux_test.go::TestNetworkManagerWireGuardLifecycleSystem",
+    "05_Software/core/cmd/nilo/network_system_linux_test.go::TestApplianceSystemHTTPSAndHelperRecovery",
 ]
 
 spec = "specs/REQ-FUNC-2f8d63b5.md"

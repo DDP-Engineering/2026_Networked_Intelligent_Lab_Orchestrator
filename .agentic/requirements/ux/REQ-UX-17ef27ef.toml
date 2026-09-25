@@ -20,19 +20,19 @@ When the Management access interfaces control displays a physical adapter claime
 verification = "A component test renders applied, disabled, pending and temporarily absent device-network claims, asserts each matching management checkbox is disabled with an associated visible reason while a distinct adapter remains enabled, and the translation catalogue test confirms the text exists in English, German and Romanian."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/api/management-access.ts",
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
-    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.tsx",
-    "05_Software/nilo_gui/src/i18n/en.ts",
-    "05_Software/nilo_gui/src/i18n/de.ts",
-    "05_Software/nilo_gui/src/i18n/ro.ts",
-    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.test.tsx",
+    "05_Software/frontend/src/api/management-access.ts",
+    "05_Software/frontend/src/components/pages/NetworkPage.tsx",
+    "05_Software/frontend/src/components/network/ManagementAccessPanel.tsx",
+    "05_Software/frontend/src/i18n/en.ts",
+    "05_Software/frontend/src/i18n/de.ts",
+    "05_Software/frontend/src/i18n/ro.ts",
+    "05_Software/frontend/src/components/network/ManagementAccessPanel.test.tsx",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.test.tsx::distinguishes an absent saved adapter from its same-name replacement",
-    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.test.tsx::keeps a device-owned adapter visible, disabled, and explained",
-    "05_Software/nilo_gui/e2e/network.spec.ts::keeps opposite-role adapters visible and explains sequential repurposing",
+    "05_Software/frontend/src/components/network/ManagementAccessPanel.test.tsx::distinguishes an absent saved adapter from its same-name replacement",
+    "05_Software/frontend/src/components/network/ManagementAccessPanel.test.tsx::keeps a device-owned adapter visible, disabled, and explained",
+    "05_Software/frontend/e2e/network.spec.ts::keeps opposite-role adapters visible and explains sequential repurposing",
 ]
 
 

@@ -54,19 +54,19 @@ verification = "Tests resolve the effective permissions of a token whose scopes 
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/auth/role.go",
-    "05_Software/nilo_assistant/internal/identity/service.go",
-    "05_Software/nilo_assistant/internal/httpapi/identity.go",
-    "05_Software/nilo_assistant/internal/auth/role_test.go",
-    "05_Software/nilo_assistant/internal/identity/service_test.go",
+    "05_Software/core/internal/auth/role.go",
+    "05_Software/core/internal/identity/service.go",
+    "05_Software/core/internal/httpapi/identity.go",
+    "05_Software/core/internal/auth/role_test.go",
+    "05_Software/core/internal/identity/service_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/auth/role_test.go::TestEffectivePermissionsIntersectScopesWithTheOwnerRole",
-    "05_Software/nilo_assistant/internal/identity/service_test.go::TestTokenPermissionsAreScopesIntersectedWithTheOwnerRole",
-    "05_Software/nilo_assistant/internal/identity/service_test.go::TestRoleChangeAppliesToTheNextAuthorizationCheck",
+    "05_Software/core/internal/auth/role_test.go::TestEffectivePermissionsIntersectScopesWithTheOwnerRole",
+    "05_Software/core/internal/identity/service_test.go::TestTokenPermissionsAreScopesIntersectedWithTheOwnerRole",
+    "05_Software/core/internal/identity/service_test.go::TestRoleChangeAppliesToTheNextAuthorizationCheck",
 ]
 
 # --- optional below this line ---

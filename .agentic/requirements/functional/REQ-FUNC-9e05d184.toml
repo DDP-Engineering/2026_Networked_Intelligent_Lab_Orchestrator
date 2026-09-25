@@ -53,28 +53,28 @@ verification = "An automated test activates one profile, activates a second and 
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/simulation.go",
-    "05_Software/nilo_assistant/internal/network/wireguard.go",
-    "05_Software/nilo_assistant/internal/network/profile.go",
-    "05_Software/nilo_assistant/internal/network/simulation_test.go",
-    "05_Software/nilo_assistant/internal/network/profile_manager.go",
-    "05_Software/nilo_assistant/internal/network/appliance.go",
-    "05_Software/nilo_assistant/internal/nethelper/tunnel_engine.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux.go",
-    "05_Software/nilo_assistant/internal/network/profile_manager_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/tunnel_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux_test.go",
+    "05_Software/core/internal/network/simulation.go",
+    "05_Software/core/internal/network/wireguard.go",
+    "05_Software/core/internal/network/profile.go",
+    "05_Software/core/internal/network/simulation_test.go",
+    "05_Software/core/internal/network/profile_manager.go",
+    "05_Software/core/internal/network/appliance.go",
+    "05_Software/core/internal/nethelper/tunnel_engine.go",
+    "05_Software/core/internal/nethelper/networkmanager_wireguard_linux.go",
+    "05_Software/core/internal/network/profile_manager_test.go",
+    "05_Software/core/internal/nethelper/tunnel_test.go",
+    "05_Software/core/internal/nethelper/networkmanager_wireguard_linux_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/simulation_test.go::TestSimulationChangesReportedStateAndRestoresItsCheckpoint",
-    "05_Software/nilo_assistant/internal/network/simulation_test.go::TestSimulationWireGuardLifecycleAndSingleStartupSelection",
-    "05_Software/nilo_assistant/internal/network/simulation_test.go::TestSimulationRejectsMissingAndExternalProfiles",
-    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestActivationResolvesTheConnectionAndPreviewsTheSwitch",
-    "05_Software/nilo_assistant/internal/nethelper/tunnel_test.go::TestTunnelActivationIsCheckpointedAgainstTheWholeSystem",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux_test.go::TestNetworkManagerWireGuardLifecycleSystem",
+    "05_Software/core/internal/network/simulation_test.go::TestSimulationChangesReportedStateAndRestoresItsCheckpoint",
+    "05_Software/core/internal/network/simulation_test.go::TestSimulationWireGuardLifecycleAndSingleStartupSelection",
+    "05_Software/core/internal/network/simulation_test.go::TestSimulationRejectsMissingAndExternalProfiles",
+    "05_Software/core/internal/network/profile_manager_test.go::TestActivationResolvesTheConnectionAndPreviewsTheSwitch",
+    "05_Software/core/internal/nethelper/tunnel_test.go::TestTunnelActivationIsCheckpointedAgainstTheWholeSystem",
+    "05_Software/core/internal/nethelper/networkmanager_wireguard_linux_test.go::TestNetworkManagerWireGuardLifecycleSystem",
 ]
 
 # --- optional below this line ---
@@ -89,5 +89,5 @@ created = 2026-09-02
 updated = 2026-09-04
 
 # Planned files not implemented at the 2026-09-03 audit:
-# 05_Software/nilo_assistant/internal/network/tunnel.go
-# 05_Software/nilo_assistant/internal/network/tunnel_test.go
+# 05_Software/core/internal/network/tunnel.go
+# 05_Software/core/internal/network/tunnel_test.go

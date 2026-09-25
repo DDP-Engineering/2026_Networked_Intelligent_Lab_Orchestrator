@@ -20,12 +20,12 @@ When a remote CLI command receives a non-URL `--server` value, the CLI shall res
 verification = "Automated command-group tests pass an explicit URL, unique serial, unique friendly name, absent name and ambiguous friendly name through the shared server resolver; the URL bypasses discovery unchanged, unique names select the expected UUID/HTTPS endpoint, and missing/ambiguous cases issue no remote request and return stable errors across every remote command group."
 
 affected_paths = [
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/internal/discovery/model.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/internal/discovery/model.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/cmd/nilo/discover_test.go::*",
+    "05_Software/core/cmd/nilo/discover_test.go::*",
 ]
 
 

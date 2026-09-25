@@ -20,18 +20,18 @@ Whenever the set of advertised serial, recovery or friendly local names changes,
 verification = "An automated state-machine test adds, replaces and removes a friendly name, enters and leaves provisioning, restarts after each transaction boundary and injects generation, activation and publication failures; at every observable step a TLS handshake for each advertised name finds that name in the active SAN set, while failed preparation leaves the prior certificate/publications working and unadvertised stale aliases are eventually withdrawn."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/appliance/naming.go",
-    "05_Software/nilo_assistant/internal/network/mdns_announcer.go",
-    "05_Software/nilo_assistant/internal/nethelper/tls_identity.go",
-    "05_Software/nilo_assistant/internal/nethelper/avahi_linux.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/cmd/nilo/discovery_runtime.go",
+    "05_Software/core/internal/appliance/naming.go",
+    "05_Software/core/internal/network/mdns_announcer.go",
+    "05_Software/core/internal/nethelper/tls_identity.go",
+    "05_Software/core/internal/nethelper/avahi_linux.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/cmd/nilo/discovery_runtime.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/appliance/naming_test.go::*",
-    "05_Software/nilo_assistant/internal/nethelper/tls_identity_test.go::*",
-    "05_Software/nilo_assistant/internal/network/mdns_announcer_test.go::*",
+    "05_Software/core/internal/appliance/naming_test.go::*",
+    "05_Software/core/internal/nethelper/tls_identity_test.go::*",
+    "05_Software/core/internal/network/mdns_announcer_test.go::*",
 ]
 
 

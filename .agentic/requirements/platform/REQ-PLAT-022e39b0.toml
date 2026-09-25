@@ -49,14 +49,14 @@ verification = "An automated test arranges each outcome in turn against injected
 affected_paths = [
     "02_Tools/scripts/nilo-dev.ps1",
     "02_Tools/lib/DevLifecycle.ps1",
-    "05_Software/scripts/tests/test_development_lifecycle.py",
+    "02_Tools/tests/software/test_development_lifecycle.py",
     "02_Tools/README.md",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_exit_codes_are_distinct_and_documented",
+    "02_Tools/tests/software/test_development_lifecycle.py::DevelopmentLifecycleTests::test_exit_codes_are_distinct_and_documented",
 ]
 
 # --- optional below this line ---

@@ -53,7 +53,7 @@ case "$($go_command version)" in *" go$GO_VERSION "*) ;; *) echo 'offline Go ver
 [ "$($npm_command --version)" = "$NPM_VERSION" ] || { echo 'offline npm version mismatch' >&2; exit 2; }
 for arch in amd64 arm64; do
   (
-    cd "$work/source/05_Software/nilo_assistant"
+    cd "$work/source/05_Software/core"
     GOOS=linux GOARCH=$arch CGO_ENABLED=0 GOPROXY=off GOMODCACHE="$go_module_cache" \
       GOCACHE="$work/go-cache-$arch" "$go_command" build \
       -trimpath -mod=readonly -o "$work/bin/$arch/nilo" ./cmd/nilo
@@ -62,7 +62,7 @@ for arch in amd64 arm64; do
       -trimpath -mod=readonly -o "$work/bin/$arch/nilo-nethelper" ./cmd/nilo-nethelper
   )
 done
-gui_source="$work/source/05_Software/nilo_gui"
+gui_source="$work/source/05_Software/frontend"
 (
   cd "$gui_source"
   npm_config_cache="$npm_cache" "$npm_command" ci --offline --ignore-scripts

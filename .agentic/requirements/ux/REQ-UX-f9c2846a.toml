@@ -20,24 +20,24 @@ While the appliance is in first-boot provisioning, the browser interface shall s
 verification = "An automated component test renders the first-boot workflow over a status carrying two eligible adapters and one container interface, and asserts: the standing alert names the exposure as temporary; each eligible adapter's name, adapter identity and address are shown; the adapter the session arrived on is marked and the other is not; the URL section shows the appliance URL and says the local name works only on the local network; the container interface offers no selection control; and the rendered text contains none of \"password\", \"private_key\", \"preshared\" or \"psk\"."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/components/network/CommissioningPanel.tsx",
-    "05_Software/nilo_gui/src/components/network/CommissioningPanel.test.tsx",
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
-    "05_Software/nilo_gui/src/api/management-access.ts",
-    "05_Software/nilo_gui/src/i18n/en.ts",
-    "05_Software/nilo_gui/src/i18n/de.ts",
-    "05_Software/nilo_gui/src/i18n/ro.ts",
-    "05_Software/nilo_assistant/internal/network/management_access.go",
-    "05_Software/nilo_assistant/internal/httpapi/management_access.go",
+    "05_Software/frontend/src/components/network/CommissioningPanel.tsx",
+    "05_Software/frontend/src/components/network/CommissioningPanel.test.tsx",
+    "05_Software/frontend/src/components/pages/NetworkPage.tsx",
+    "05_Software/frontend/src/api/management-access.ts",
+    "05_Software/frontend/src/i18n/en.ts",
+    "05_Software/frontend/src/i18n/de.ts",
+    "05_Software/frontend/src/i18n/ro.ts",
+    "05_Software/core/internal/network/management_access.go",
+    "05_Software/core/internal/httpapi/management_access.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/src/components/network/CommissioningPanel.test.tsx::warns that every eligible adapter is a temporary management path",
-    "05_Software/nilo_gui/src/components/network/CommissioningPanel.test.tsx::lists each eligible adapter with its identity, type and addresses",
-    "05_Software/nilo_gui/src/components/network/CommissioningPanel.test.tsx::marks the interface this browser session arrived on",
-    "05_Software/nilo_gui/src/components/network/CommissioningPanel.test.tsx::explains that the local name works only on the local network",
-    "05_Software/nilo_gui/src/components/network/CommissioningPanel.test.tsx::leaves an interface that cannot carry management access unselectable and says why",
-    "05_Software/nilo_gui/src/components/network/CommissioningPanel.test.tsx::shows no secret-shaped value anywhere",
+    "05_Software/frontend/src/components/network/CommissioningPanel.test.tsx::warns that every eligible adapter is a temporary management path",
+    "05_Software/frontend/src/components/network/CommissioningPanel.test.tsx::lists each eligible adapter with its identity, type and addresses",
+    "05_Software/frontend/src/components/network/CommissioningPanel.test.tsx::marks the interface this browser session arrived on",
+    "05_Software/frontend/src/components/network/CommissioningPanel.test.tsx::explains that the local name works only on the local network",
+    "05_Software/frontend/src/components/network/CommissioningPanel.test.tsx::leaves an interface that cannot carry management access unselectable and says why",
+    "05_Software/frontend/src/components/network/CommissioningPanel.test.tsx::shows no secret-shaped value anywhere",
 ]
 
 

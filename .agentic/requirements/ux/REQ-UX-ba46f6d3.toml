@@ -23,15 +23,15 @@ the listing without opening the filter panel.
 verification = "A browser test at 1024x600 and at 800x480 asserts the filter form is hidden, reads the scope controls without opening it, activates Audit and asserts the control reports itself selected and the listing re-queries; the same test asserts the scope controls keep a 44 pixel target and cause no document overflow at the narrower size."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.tsx",
-    "05_Software/nilo_gui/src/styles/shell.css",
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx",
-    "05_Software/nilo_gui/e2e/field-display.spec.ts",
+    "05_Software/frontend/src/components/pages/ActivityPage.tsx",
+    "05_Software/frontend/src/styles/shell.css",
+    "05_Software/frontend/src/components/pages/ActivityPage.test.tsx",
+    "05_Software/frontend/e2e/field-display.spec.ts",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx::keeps the scope chips outside the collapsed filter drawer",
-    "05_Software/nilo_gui/e2e/field-display.spec.ts::1024x600: the activity listing reads as records and opens one in a dialog",
+    "05_Software/frontend/src/components/pages/ActivityPage.test.tsx::keeps the scope chips outside the collapsed filter drawer",
+    "05_Software/frontend/e2e/field-display.spec.ts::1024x600: the activity listing reads as records and opens one in a dialog",
 ]
 
 

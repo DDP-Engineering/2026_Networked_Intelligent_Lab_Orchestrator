@@ -63,23 +63,23 @@ verification stage; the stage is observed to invoke the headless script.
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/package.json",
-    "05_Software/nilo_gui/playwright.config.ts",
-    "05_Software/nilo_gui/vite.config.ts",
-    "05_Software/nilo_gui/tsconfig.node.json",
-    "05_Software/nilo_gui/e2e/commands.test.ts",
+    "05_Software/frontend/package.json",
+    "05_Software/frontend/playwright.config.ts",
+    "05_Software/frontend/vite.config.ts",
+    "05_Software/frontend/tsconfig.node.json",
+    "05_Software/frontend/e2e/commands.test.ts",
     "02_Tools/tests/appliance/run.sh",
-    "05_Software/scripts/aegis_test.py",
-    "05_Software/nilo_gui/README.md",
+    "02_Tools/scripts/aegis_test.py",
+    "05_Software/frontend/README.md",
     "06_SoftwareDocu/Development_and_Simulation_Flow.md",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/e2e/commands.test.ts::the integrated browser test commands",
-    "05_Software/nilo_gui/e2e/commands.test.ts::name the headless command, not the headed one",
-    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceBrowserSuiteTests::test_stage_builds_the_interface_and_runs_the_browser_suite",
+    "05_Software/frontend/e2e/commands.test.ts::the integrated browser test commands",
+    "05_Software/frontend/e2e/commands.test.ts::name the headless command, not the headed one",
+    "02_Tools/tests/software/test_appliance_stage.py::ApplianceBrowserSuiteTests::test_stage_builds_the_interface_and_runs_the_browser_suite",
 ]
 
 # --- optional below this line ---

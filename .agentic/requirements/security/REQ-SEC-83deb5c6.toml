@@ -20,15 +20,15 @@ The privileged helper shall accept only validated local-name and DNS-SD publicat
 verification = "Automated protocol tests pass validated alias/service objects only to their matching publication operation and observe all mixed or malformed requests refused; a fake Avahi bus proves replacement frees only entry groups owned by that helper connection and reports responder unavailability, while inspection confirms the request schema contains no responder text, file path, command, or arbitrary TXT map."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/nethelper/avahi_linux.go",
-    "05_Software/nilo_assistant/internal/nethelper/avahi_render_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
-    "05_Software/nilo_assistant/internal/nethelper/engine_test.go",
+    "05_Software/core/internal/nethelper/avahi_linux.go",
+    "05_Software/core/internal/nethelper/avahi_render_test.go",
+    "05_Software/core/internal/nethelper/protocol.go",
+    "05_Software/core/internal/nethelper/engine_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/nethelper/avahi_render_test.go::*",
-    "05_Software/nilo_assistant/internal/nethelper/engine_test.go::*",
+    "05_Software/core/internal/nethelper/avahi_render_test.go::*",
+    "05_Software/core/internal/nethelper/engine_test.go::*",
 ]
 
 

@@ -20,17 +20,17 @@ When startup reconciliation finds that every usable persisted management binding
 verification = "A startup process test loads an all-conflicting legacy state, asserts a non-zero startup result with the stable adapter and both roles but no secrets, proves the listener and application handlers never open and no forwarding or widening firewall mutation occurs, then adds a safe management path and observes recovered startup."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/adapter_roles.go",
-    "05_Software/nilo_assistant/internal/network/management_access.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/internal/network/appliance_device_networks.go",
-    "05_Software/nilo_assistant/internal/httpapi/serving.go",
+    "05_Software/core/internal/network/adapter_roles.go",
+    "05_Software/core/internal/network/management_access.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/internal/network/appliance_device_networks.go",
+    "05_Software/core/internal/httpapi/serving.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go::TestApplianceSystemFailsClosedBeforeListeningOnAnAllPathRoleConflict",
-    "05_Software/nilo_assistant/internal/network/management_access_test.go::TestManagementAccessStartupFailsClosedWhenEveryUsablePathConflicts",
-    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestApplianceDefersDeviceForwardingUntilExplicitStartupReconciliation",
+    "05_Software/core/cmd/nilo/network_system_linux_test.go::TestApplianceSystemFailsClosedBeforeListeningOnAnAllPathRoleConflict",
+    "05_Software/core/internal/network/management_access_test.go::TestManagementAccessStartupFailsClosedWhenEveryUsablePathConflicts",
+    "05_Software/core/internal/network/profile_manager_test.go::TestApplianceDefersDeviceForwardingUntilExplicitStartupReconciliation",
 ]
 
 

@@ -31,14 +31,14 @@ a skip.
 
 affected_paths = [
     "02_Tools/tests/appliance/check.sh",
-    "05_Software/scripts/tests/test_appliance_stage.py",
+    "02_Tools/tests/software/test_appliance_stage.py",
 ]
 
 linked_tests = [
-    "05_Software/scripts/tests/test_appliance_stage.py::AppliancePrerequisiteTests::test_absent_container_engine_is_named_and_the_run_fails",
-    "05_Software/scripts/tests/test_appliance_stage.py::AppliancePrerequisiteTests::test_unreachable_engine_daemon_is_named_and_the_run_fails",
-    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceUnsupportedHostTests::test_entry_point_refuses_an_unsupported_host_by_name",
-    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceUnsupportedHostTests::test_a_windows_host_is_refused_rather_than_passing",
+    "02_Tools/tests/software/test_appliance_stage.py::AppliancePrerequisiteTests::test_absent_container_engine_is_named_and_the_run_fails",
+    "02_Tools/tests/software/test_appliance_stage.py::AppliancePrerequisiteTests::test_unreachable_engine_daemon_is_named_and_the_run_fails",
+    "02_Tools/tests/software/test_appliance_stage.py::ApplianceUnsupportedHostTests::test_entry_point_refuses_an_unsupported_host_by_name",
+    "02_Tools/tests/software/test_appliance_stage.py::ApplianceUnsupportedHostTests::test_a_windows_host_is_refused_rather_than_passing",
 ]
 
 

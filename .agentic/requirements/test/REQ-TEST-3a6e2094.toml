@@ -35,11 +35,11 @@ affected_paths = [
     "02_Tools/tests/appliance/run.sh",
     "02_Tools/tests/network/network-up.sh",
     "02_Tools/tests/network/run.sh",
-    "05_Software/nilo_assistant/cmd/nilo/appliance_stage_linux_test.go",
+    "05_Software/core/cmd/nilo/appliance_stage_linux_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/cmd/nilo/appliance_stage_linux_test.go::TestApplianceStageStartsUnderRealHelperAndNetworkManager",
+    "05_Software/core/cmd/nilo/appliance_stage_linux_test.go::TestApplianceStageStartsUnderRealHelperAndNetworkManager",
 ]
 
 

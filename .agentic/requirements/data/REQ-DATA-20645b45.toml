@@ -17,16 +17,16 @@ without joining the record to any other table.
 verification = "A service test deletes a token and then its owner, reads both records back from the audit repository after the rows are gone and asserts the target label, actor username and owner username without reading the identity tables; an HTTP test deletes through the routes and asserts the labels in the stored events; a live command test asserts the labels after a remote deletion; every serialized field is scanned for password, secret and verifier canaries."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/identity/service.go",
-    "05_Software/nilo_assistant/internal/identity/service_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/deletion_audit_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/admin_live_test.go",
+    "05_Software/core/internal/identity/service.go",
+    "05_Software/core/internal/identity/service_test.go",
+    "05_Software/core/internal/httpapi/deletion_audit_test.go",
+    "05_Software/core/cmd/nilo/admin_live_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/identity/service_test.go::TestDeletionsAreAuditedOnceWithCompleteSafeDetails",
-    "05_Software/nilo_assistant/internal/httpapi/deletion_audit_test.go::TestRefusedAndAppliedDeletionsReadFromTheHistoryAlone",
-    "05_Software/nilo_assistant/cmd/nilo/admin_live_test.go::TestRemoteAdministrationAgainstARealApplianceHonoursRolesScopesAndCredentialState",
+    "05_Software/core/internal/identity/service_test.go::TestDeletionsAreAuditedOnceWithCompleteSafeDetails",
+    "05_Software/core/internal/httpapi/deletion_audit_test.go::TestRefusedAndAppliedDeletionsReadFromTheHistoryAlone",
+    "05_Software/core/cmd/nilo/admin_live_test.go::TestRemoteAdministrationAgainstARealApplianceHonoursRolesScopesAndCredentialState",
 ]
 
 spec = ""

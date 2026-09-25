@@ -49,16 +49,16 @@ verification = "An automated test runs the start command to success against inje
 affected_paths = [
     "02_Tools/scripts/nilo-dev.ps1",
     "02_Tools/lib/DevLifecycle.ps1",
-    "05_Software/scripts/tests/test_development_lifecycle.py",
+    "02_Tools/tests/software/test_development_lifecycle.py",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_successful_start_prints_endpoints_selection_and_follow_ups",
-    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_printed_commands_are_portable_and_quoted",
-    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_token_command_uses_the_translated_checkout_path",
-    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_an_already_answering_start_still_prints_the_token_command",
+    "02_Tools/tests/software/test_development_lifecycle.py::DevelopmentLifecycleTests::test_successful_start_prints_endpoints_selection_and_follow_ups",
+    "02_Tools/tests/software/test_development_lifecycle.py::DevelopmentLifecycleTests::test_printed_commands_are_portable_and_quoted",
+    "02_Tools/tests/software/test_development_lifecycle.py::DevelopmentLifecycleTests::test_token_command_uses_the_translated_checkout_path",
+    "02_Tools/tests/software/test_development_lifecycle.py::DevelopmentLifecycleTests::test_an_already_answering_start_still_prints_the_token_command",
 ]
 
 # --- optional below this line ---

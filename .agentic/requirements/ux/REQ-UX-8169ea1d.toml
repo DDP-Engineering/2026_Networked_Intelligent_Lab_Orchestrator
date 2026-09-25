@@ -33,17 +33,17 @@ verification = "Component tests drive the interface with a stub client whose sta
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/App.tsx",
-    "05_Software/nilo_gui/src/components/pages/BenchPage.tsx",
-    "05_Software/nilo_gui/src/App.test.tsx",
-    "05_Software/nilo_gui/README.md",
+    "05_Software/frontend/src/App.tsx",
+    "05_Software/frontend/src/components/pages/BenchPage.tsx",
+    "05_Software/frontend/src/App.test.tsx",
+    "05_Software/frontend/README.md",
     ".agentic/knowledge/gui-foundation.md",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/App.test.tsx",
+    "05_Software/frontend/src/App.test.tsx",
 ]
 
 # --- optional below this line ---

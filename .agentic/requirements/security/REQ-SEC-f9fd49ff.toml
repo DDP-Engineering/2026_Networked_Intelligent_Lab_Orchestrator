@@ -53,23 +53,23 @@ verification = "Token tests create, authenticate, reload, and revoke a token; th
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/auth/token.go",
-    "05_Software/nilo_assistant/internal/auth/repository.go",
-    "05_Software/nilo_assistant/internal/app/app.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/auth_repository.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/core/internal/auth/token.go",
+    "05_Software/core/internal/auth/repository.go",
+    "05_Software/core/internal/app/app.go",
+    "05_Software/core/internal/store/sqlite/auth_repository.go",
+    "05_Software/core/cmd/nilo/main.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/auth/token_test.go::TestNewTokenCreatesOneTimePlaintextAndVerifier",
-    "05_Software/nilo_assistant/internal/auth/token_test.go::TestNewTokenRejectsShortRandomRead",
-    "05_Software/nilo_assistant/internal/store/sqlite/auth_repository_test.go::TestAuthRepositoryStoresOnlyVerifierAndRejectsDuplicateVerifier",
-    "05_Software/nilo_assistant/internal/store/sqlite/auth_repository_test.go::TestAuthRepositoryAuthenticatesAfterReloadAndPersistsRevocation",
-    "05_Software/nilo_assistant/internal/store/sqlite/auth_repository_test.go::TestAuthRepositoryReturnsTypedErrorForUnknownToken",
-    "05_Software/nilo_assistant/cmd/nilo/main_test.go::TestDevelopmentIssueTokenCommandCreatesAuthenticatableLockedIdentity",
-    "05_Software/nilo_assistant/internal/store/sqlite/auth_repository_test.go::TestAuthRepositoryRollsBackDevelopmentUserWhenTokenInsertFails",
+    "05_Software/core/internal/auth/token_test.go::TestNewTokenCreatesOneTimePlaintextAndVerifier",
+    "05_Software/core/internal/auth/token_test.go::TestNewTokenRejectsShortRandomRead",
+    "05_Software/core/internal/store/sqlite/auth_repository_test.go::TestAuthRepositoryStoresOnlyVerifierAndRejectsDuplicateVerifier",
+    "05_Software/core/internal/store/sqlite/auth_repository_test.go::TestAuthRepositoryAuthenticatesAfterReloadAndPersistsRevocation",
+    "05_Software/core/internal/store/sqlite/auth_repository_test.go::TestAuthRepositoryReturnsTypedErrorForUnknownToken",
+    "05_Software/core/cmd/nilo/main_test.go::TestDevelopmentIssueTokenCommandCreatesAuthenticatableLockedIdentity",
+    "05_Software/core/internal/store/sqlite/auth_repository_test.go::TestAuthRepositoryRollsBackDevelopmentUserWhenTokenInsertFails",
 ]
 
 # --- optional below this line ---

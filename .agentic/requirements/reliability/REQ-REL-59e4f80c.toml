@@ -19,13 +19,13 @@ If the audit store cannot accept an event, then the appliance shall refuse to be
 verification = "A fault-injection test fails the audit write and asserts the mutation is refused with no side effect, the degraded state is reported, and an in-flight rollback still completes."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/operation.go",
-    "05_Software/nilo_assistant/internal/network/operation_durability_test.go",
+    "05_Software/core/internal/network/operation.go",
+    "05_Software/core/internal/network/operation_durability_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/operation_durability_test.go::TestAChangeIsRefusedWhenItCannotBeRecorded",
-    "05_Software/nilo_assistant/internal/network/operation_durability_test.go::TestRollbackIsStillPossibleWhenAuditIsUnavailable",
+    "05_Software/core/internal/network/operation_durability_test.go::TestAChangeIsRefusedWhenItCannotBeRecorded",
+    "05_Software/core/internal/network/operation_durability_test.go::TestRollbackIsStillPossibleWhenAuditIsUnavailable",
 ]
 
 spec = "specs/REQ-FUNC-2f8d63b5.md"

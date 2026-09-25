@@ -20,15 +20,15 @@ When a hardware long press requests a network commissioning reset, NILO shall pr
 verification = "An automated repository test seeds every named data class plus commissioned management and active recovery state, performs the reset, and compares stable identity, security, audit, integration, PLC/device-network and unrelated profile records byte-for-byte while observing only provisioning lifecycle, derived management selection, and an idle recovery tombstone carrying the handled generation but no temporary link identity."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/appliance/commissioner.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/management_access_repository.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/hardware_recovery_repository.go",
+    "05_Software/core/internal/appliance/commissioner.go",
+    "05_Software/core/internal/store/sqlite/commissioning_repository.go",
+    "05_Software/core/internal/store/sqlite/commissioning_repository_test.go",
+    "05_Software/core/internal/store/sqlite/management_access_repository.go",
+    "05_Software/core/internal/store/sqlite/hardware_recovery_repository.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go::*",
+    "05_Software/core/internal/store/sqlite/commissioning_repository_test.go::*",
 ]
 
 

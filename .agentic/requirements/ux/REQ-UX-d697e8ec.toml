@@ -61,17 +61,17 @@ verification = "A shell integration test activates View activity from Users and 
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/components/authentication/UsersPage.tsx",
-    "05_Software/nilo_gui/src/components/authentication/ApiTokensPage.tsx",
-    "05_Software/nilo_gui/src/components/shell/AppShell.tsx",
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.tsx",
+    "05_Software/frontend/src/components/authentication/UsersPage.tsx",
+    "05_Software/frontend/src/components/authentication/ApiTokensPage.tsx",
+    "05_Software/frontend/src/components/shell/AppShell.tsx",
+    "05_Software/frontend/src/components/pages/ActivityPage.tsx",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::the navigation > opens Activity from Authentication with the identity component applied",
-    "05_Software/nilo_assistant/internal/httpapi/activity_test.go::TestActivityListsAndExportsIdentityMutationsByCommonComponent",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::the navigation > opens Activity from Authentication with the identity component applied",
+    "05_Software/core/internal/httpapi/activity_test.go::TestActivityListsAndExportsIdentityMutationsByCommonComponent",
 ]
 
 # --- optional below this line ---

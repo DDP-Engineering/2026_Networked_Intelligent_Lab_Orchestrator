@@ -54,16 +54,16 @@ verification = "An HTTP test authenticates as an Operator, reads the current-ses
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/httpapi/identity.go",
-    "05_Software/nilo_assistant/internal/httpapi/server.go",
-    "05_Software/nilo_assistant/internal/identity/service.go",
-    "05_Software/nilo_assistant/internal/httpapi/identity_test.go",
+    "05_Software/core/internal/httpapi/identity.go",
+    "05_Software/core/internal/httpapi/server.go",
+    "05_Software/core/internal/identity/service.go",
+    "05_Software/core/internal/httpapi/identity_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/httpapi/identity_test.go::TestSessionRouteReportsTheActorRoleAndEffectivePermissions",
+    "05_Software/core/internal/httpapi/identity_test.go::TestSessionRouteReportsTheActorRoleAndEffectivePermissions",
 ]
 
 # --- optional below this line ---

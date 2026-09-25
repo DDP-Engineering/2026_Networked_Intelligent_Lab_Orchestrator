@@ -1,12 +1,29 @@
 # Increment 1 acceptance
 
-## Purpose
+## Routing
 
-The acceptance component proves that the foundation works as one composed system through a real Python child process and real persistence. It is not hardware-in-the-loop evidence and does not replace the mandatory native Raspberry Pi run.
+Use this page for the Increment 1 foundation gate, its test-only integration
+runner, or the Windows, Linux, and Raspberry Pi acceptance commands. Start with
+`02_Tools/scripts/test-increment-1.ps1` or `test-increment-1.sh`, then
+`05_Software/core/internal/acceptance/increment1_e2e_test.go` for the composed
+lifecycle test. The integration wire contract belongs to *Integration platform*;
+repository-wide test routing belongs to *Repository-local toolchain*.
+
+## Purpose and boundaries
+
+The acceptance component proves that the foundation works as one composed system through a real Go child process and real persistence. It is not hardware-in-the-loop evidence and does not replace the mandatory native Raspberry Pi run.
 
 ## Public interface
 
-Developers run `05_Software/scripts/test-increment-1.ps1` on Windows or `test-increment-1.sh` on Linux. The scripts use repository-local tools, run focused and full suites, exercise the real fake runner, vet Go, cross-compile the supported targets, and reject new repository artifacts.
+Developers run `02_Tools/scripts/test-increment-1.ps1` on Windows or `test-increment-1.sh` on Linux. The scripts use repository-local tools, run focused and full suites, exercise the test-only contract runner, vet Go, cross-compile the supported targets, and reject new repository artifacts.
+
+## Invariants
+
+- The acceptance runner is built from `05_Software/tests/fixtures/contract_runner/`
+  into a temporary package and is never a product integration.
+- The lifecycle test uses real foundation services and temporary state; its
+  result does not claim physical hardware acceptance.
+- Native Raspberry Pi execution remains a separate release gate.
 
 ## Key behaviors
 
@@ -23,14 +40,14 @@ flowchart TD
     unit["Go and Python suites"]
     contract["integration contract"]
     e2e["Go acceptance fixture"]
-    fake(["real fake Python process"])
+    runner(["test-only Go runner process"])
     stores[("temporary SQLite and artifacts")]
     builds["three target builds"]
     script --> doctor
     script --> unit
     script --> contract
     script --> e2e
-    e2e --> fake
+    e2e --> runner
     e2e --> stores
     script --> builds
 ```
@@ -39,11 +56,12 @@ Windows proves the host workflow and compile portability. Release readiness stil
 
 ## Files
 
-- `05_Software/nilo_assistant/internal/acceptance/increment1_e2e_test.go` - externally observable lifecycle assertions.
-- `05_Software/nilo_assistant/internal/acceptance/increment1_fixture_test.go` - real service, store, schema, supervisor, and package composition fixture.
-- `05_Software/scripts/test-increment-1.ps1` - Windows one-command gate.
-- `05_Software/scripts/test-increment-1.sh` - Linux and Raspberry Pi one-command gate.
+- `05_Software/core/internal/acceptance/increment1_e2e_test.go` - externally observable lifecycle assertions.
+- `05_Software/core/internal/acceptance/increment1_fixture_test.go` - real service, store, schema, supervisor, and package composition fixture.
+- `05_Software/tests/fixtures/contract_runner/` - test-only Go process and package declaration.
+- `02_Tools/scripts/test-increment-1.ps1` - Windows one-command gate.
+- `02_Tools/scripts/test-increment-1.sh` - Linux and Raspberry Pi one-command gate.
 - `05_Software/INCREMENT_1_ACCEPTANCE.md` - gate scope, commands, and Pi release-blocking evidence.
-- `05_Software/scripts/aegis_test.py` - polyglot suite router used by AEGIS.
-- `05_Software/scripts/tests/test_aegis_test.py` - router contract tests.
-- `05_Software/scripts/verify-portable-core.ps1` and `05_Software/scripts/verify-portable-core.sh` - focused portable build checks.
+- `02_Tools/scripts/aegis_test.py` - polyglot suite router used by AEGIS.
+- `02_Tools/tests/software/test_aegis_test.py` - router contract tests.
+- `02_Tools/scripts/verify-portable-core.ps1` and `02_Tools/scripts/verify-portable-core.sh` - focused portable build checks.

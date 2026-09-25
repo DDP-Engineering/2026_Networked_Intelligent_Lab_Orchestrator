@@ -53,17 +53,17 @@ verification = "Restart tests close a database containing running, queued, and c
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/session/",
-    "05_Software/nilo_assistant/internal/store/sqlite/session_repository.go",
-    "05_Software/nilo_assistant/internal/app/",
+    "05_Software/core/internal/session/",
+    "05_Software/core/internal/store/sqlite/session_repository.go",
+    "05_Software/core/internal/app/",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/store/sqlite/session_repository_test.go::TestSessionRepositoryRejectsBackwardStartupReconciliationWithoutPartialRepair",
-    "05_Software/nilo_assistant/internal/store/sqlite/session_repository_test.go::TestSessionRepositoryReconcilesOnlyPersistedRunningSessionsAfterRestart",
-    "05_Software/nilo_assistant/internal/app/app_test.go::TestNewOpensFoundationServicesAndReconcilesInterruptedSession",
+    "05_Software/core/internal/store/sqlite/session_repository_test.go::TestSessionRepositoryRejectsBackwardStartupReconciliationWithoutPartialRepair",
+    "05_Software/core/internal/store/sqlite/session_repository_test.go::TestSessionRepositoryReconcilesOnlyPersistedRunningSessionsAfterRestart",
+    "05_Software/core/internal/app/app_test.go::TestNewOpensFoundationServicesAndReconcilesInterruptedSession",
 ]
 
 # --- optional below this line ---

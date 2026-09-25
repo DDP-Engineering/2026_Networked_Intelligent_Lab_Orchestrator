@@ -114,9 +114,9 @@ versioned separately.
 
 - The root `VERSION` file is the single canonical declaration. Two mirrors must
   match it: the `Version` literal in
-  `05_Software/nilo_assistant/internal/buildinfo/buildinfo.go`, which is what
+  `05_Software/core/internal/buildinfo/buildinfo.go`, which is what
   `nilo version` and the HTTP status build block report, and the `version`
-  field in `05_Software/nilo_gui/package.json` and its lockfile. The buildinfo
+  field in `05_Software/frontend/package.json` and its lockfile. The buildinfo
   mirror is enforced by a test; the rest are not.
 - Assigning a version and building a release are repository operations, not
   AEGIS work: do not open a task journal for them and do not run the stages

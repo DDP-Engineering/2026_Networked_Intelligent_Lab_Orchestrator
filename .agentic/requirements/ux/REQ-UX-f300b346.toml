@@ -56,21 +56,21 @@ verification = "A component test opens several pages, asserts selecting a tab sh
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/components/shell/TabStrip.tsx",
-    "05_Software/nilo_gui/src/components/shell/useWorkspace.ts",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
+    "05_Software/frontend/src/components/shell/TabStrip.tsx",
+    "05_Software/frontend/src/components/shell/useWorkspace.ts",
+    "05_Software/frontend/src/components/shell/shell.test.tsx",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::opens a page once, however many times it is chosen",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::activates the tab that is selected",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::moves the selection with the arrow, Home and End keys",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::leaves the active page alone when another tab closes",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::falls back to the left neighbour when the active tab closes",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::falls back to the right neighbour when the first tab closes",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::states that no page is open when the last tab closes",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::opens a page once, however many times it is chosen",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::activates the tab that is selected",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::moves the selection with the arrow, Home and End keys",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::leaves the active page alone when another tab closes",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::falls back to the left neighbour when the active tab closes",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::falls back to the right neighbour when the first tab closes",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::states that no page is open when the last tab closes",
 ]
 
 # --- optional below this line ---

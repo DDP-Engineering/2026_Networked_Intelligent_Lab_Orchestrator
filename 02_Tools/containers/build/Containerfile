@@ -53,7 +53,7 @@ COPY 02_Tools/containers/build/inventory.json /opt/nilo/environment/inventory.js
 COPY 02_Tools/containers/build/sbom.spdx.json /opt/nilo/environment/sbom.spdx.json
 COPY 02_Tools/containers/build/provenance.json /opt/nilo/environment/provenance.json
 COPY 02_Tools/containers/build/licenses/ /opt/nilo/environment/licenses/
-COPY 05_Software/nilo_gui/package.json 05_Software/nilo_gui/package-lock.json ./nilo_gui/
+COPY 05_Software/frontend/package.json 05_Software/frontend/package-lock.json ./nilo_gui/
 RUN cd /build-context/nilo_gui \
  && find /opt/nilo/inputs/npm -type f -name '*.tgz' -print0 | sort -z | xargs -0 -n 1 npm cache add \
  && npm ci --offline --ignore-scripts \

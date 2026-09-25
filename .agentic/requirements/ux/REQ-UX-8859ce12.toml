@@ -19,20 +19,20 @@ The device-network editor shall group its settings in the order Identity, Device
 verification = "A component test opens the device-network editor and asserts the seven groups appear in order with Advanced collapsed, enters an address without a prefix and a port of 70000 and asserts a message appears after each field with no preview requested, enters port 504 and asserts the preview carries 504, and asserts the review names the device-side adapter with 192.168.0.1/24, the target 192.168.0.130, the local source range, and states that source NAT is used and WireGuard is not; a second test opens the adapter dialog and asserts its three groups."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.tsx",
-    "05_Software/nilo_gui/src/components/network/addressing.ts",
-    "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.tsx",
-    "05_Software/nilo_gui/src/i18n/en.ts",
-    "05_Software/nilo_gui/src/i18n/de.ts",
-    "05_Software/nilo_gui/src/i18n/ro.ts",
-    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx",
-    "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.test.tsx",
+    "05_Software/frontend/src/components/network/DeviceNetworksPanel.tsx",
+    "05_Software/frontend/src/components/network/addressing.ts",
+    "05_Software/frontend/src/components/network/InterfaceSettingsDialog.tsx",
+    "05_Software/frontend/src/i18n/en.ts",
+    "05_Software/frontend/src/i18n/de.ts",
+    "05_Software/frontend/src/i18n/ro.ts",
+    "05_Software/frontend/src/components/network/DeviceNetworksPanel.test.tsx",
+    "05_Software/frontend/src/components/network/InterfaceSettingsDialog.test.tsx",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx::groups the editor by task, validates beside the field and reviews in plain language",
-    "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.test.tsx::flags a static address without a prefix beside the field and previews nothing",
-    "05_Software/nilo_gui/e2e/field-display.spec.ts::the shell and the Network page are readable and complete",
+    "05_Software/frontend/src/components/network/DeviceNetworksPanel.test.tsx::groups the editor by task, validates beside the field and reviews in plain language",
+    "05_Software/frontend/src/components/network/InterfaceSettingsDialog.test.tsx::flags a static address without a prefix beside the field and previews nothing",
+    "05_Software/frontend/e2e/field-display.spec.ts::the shell and the Network page are readable and complete",
 ]
 
 spec = ""

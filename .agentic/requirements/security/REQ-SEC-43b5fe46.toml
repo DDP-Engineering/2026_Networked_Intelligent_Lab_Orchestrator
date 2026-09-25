@@ -53,26 +53,26 @@ verification = "An automated test previews a change, acknowledges it and asserts
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/operation.go",
-    "05_Software/nilo_assistant/internal/httpapi/network.go",
-    "05_Software/nilo_assistant/internal/network/wireguard.go",
-    "05_Software/nilo_assistant/internal/network/change_test.go",
-    "05_Software/nilo_assistant/internal/network/operation_safety_test.go",
-    "05_Software/nilo_assistant/internal/network/operation_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/network_operations_test.go",
+    "05_Software/core/internal/network/operation.go",
+    "05_Software/core/internal/httpapi/network.go",
+    "05_Software/core/internal/network/wireguard.go",
+    "05_Software/core/internal/network/change_test.go",
+    "05_Software/core/internal/network/operation_safety_test.go",
+    "05_Software/core/internal/network/operation_test.go",
+    "05_Software/core/internal/httpapi/network_operations_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/operation_test.go::TestAcknowledgementRunsTheChangeExactlyOnce",
-    "05_Software/nilo_assistant/internal/network/operation_test.go::TestAcknowledgementIsRefusedUnlessItMatchesWhatWasShown",
-    "05_Software/nilo_assistant/internal/httpapi/network_operations_test.go::TestAnAcknowledgementIsRefusedUnlessItMatchesThePreview",
-    "05_Software/nilo_assistant/internal/httpapi/network_operations_test.go::TestAPreviewLeavesTheReportedStateUnchanged",
-    "05_Software/nilo_assistant/internal/network/change_test.go::TestProfilePreviewBindsParametersAndReturnsNoSecrets",
-    "05_Software/nilo_assistant/internal/network/operation_safety_test.go::TestConcurrentAcknowledgementsReserveBeforeRecovery",
-    "05_Software/nilo_assistant/internal/network/operation_safety_test.go::TestConfirmationDoesNotClaimSuccessWhenCheckpointReleaseFails",
-    "05_Software/nilo_assistant/internal/network/operation_safety_test.go::TestFailedApplyAndFailedRecoveryRemainProminentAndBlockNewChanges",
+    "05_Software/core/internal/network/operation_test.go::TestAcknowledgementRunsTheChangeExactlyOnce",
+    "05_Software/core/internal/network/operation_test.go::TestAcknowledgementIsRefusedUnlessItMatchesWhatWasShown",
+    "05_Software/core/internal/httpapi/network_operations_test.go::TestAnAcknowledgementIsRefusedUnlessItMatchesThePreview",
+    "05_Software/core/internal/httpapi/network_operations_test.go::TestAPreviewLeavesTheReportedStateUnchanged",
+    "05_Software/core/internal/network/change_test.go::TestProfilePreviewBindsParametersAndReturnsNoSecrets",
+    "05_Software/core/internal/network/operation_safety_test.go::TestConcurrentAcknowledgementsReserveBeforeRecovery",
+    "05_Software/core/internal/network/operation_safety_test.go::TestConfirmationDoesNotClaimSuccessWhenCheckpointReleaseFails",
+    "05_Software/core/internal/network/operation_safety_test.go::TestFailedApplyAndFailedRecoveryRemainProminentAndBlockNewChanges",
 ]
 
 # --- optional below this line ---

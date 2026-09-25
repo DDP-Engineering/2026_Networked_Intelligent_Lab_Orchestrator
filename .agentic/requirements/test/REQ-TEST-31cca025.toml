@@ -26,18 +26,18 @@ affected_paths = [
     "02_Tools/tests/appliance/run.sh",
     "02_Tools/tests/appliance/check.sh",
     "02_Tools/tests/appliance/inventory.json",
-    "05_Software/nilo_gui/e2e/topology.ts",
-    "05_Software/nilo_gui/e2e/network.spec.ts",
-    "05_Software/scripts/aegis_test.py",
+    "05_Software/frontend/e2e/topology.ts",
+    "05_Software/frontend/e2e/network.spec.ts",
+    "02_Tools/scripts/aegis_test.py",
     "07_Delivery/NILO_Discovery_Verification.md",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/discovery/client_test.go::*",
-    "05_Software/nilo_assistant/internal/httpapi/appliance_identity_test.go::*",
-    "05_Software/nilo_assistant/internal/nethelper/commissioning_services_test.go::*",
-    "05_Software/nilo_assistant/internal/network/ssdp_test.go::*",
-    "05_Software/nilo_gui/src/components/pages/AboutPage.test.tsx::*",
+    "05_Software/core/internal/discovery/client_test.go::*",
+    "05_Software/core/internal/httpapi/appliance_identity_test.go::*",
+    "05_Software/core/internal/nethelper/commissioning_services_test.go::*",
+    "05_Software/core/internal/network/ssdp_test.go::*",
+    "05_Software/frontend/src/components/pages/AboutPage.test.tsx::*",
 ]
 
 

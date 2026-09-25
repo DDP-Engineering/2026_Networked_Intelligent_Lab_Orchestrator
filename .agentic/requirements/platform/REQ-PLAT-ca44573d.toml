@@ -20,19 +20,19 @@ Where the appliance is not a configured Raspberry Pi delivery, NILO shall leave 
 verification = "Portable Linux and simulation startup tests omit hardware-recovery configuration on x86_64 and observe successful startup without opening a GPIO device or starting a button loop; invalid partial GPIO configuration is refused, and installation documentation identifies console/reinstall as the generic-host path."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/config/config.go",
-    "05_Software/nilo_assistant/internal/nethelper/gpio_linux.go",
-    "05_Software/nilo_assistant/internal/nethelper/recovery_hardware.go",
-    "05_Software/nilo_assistant/cmd/nilo-nethelper/serve_linux.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/cmd/nilo-nethelper/main.go",
+    "05_Software/core/internal/config/config.go",
+    "05_Software/core/internal/nethelper/gpio_linux.go",
+    "05_Software/core/internal/nethelper/recovery_hardware.go",
+    "05_Software/core/cmd/nilo-nethelper/serve_linux.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/cmd/nilo-nethelper/main.go",
     "02_Tools/scripts/install-nethelper.sh",
     "06_SoftwareDocu/Network_Operations.md",
     "06_SoftwareDocu/Local_Hardware_Access.md",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/nethelper/engine_test.go::TestHardwareRecoveryIsUnavailableUntilExplicitlyConfigured",
+    "05_Software/core/internal/nethelper/engine_test.go::TestHardwareRecoveryIsUnavailableUntilExplicitlyConfigured",
 ]
 
 

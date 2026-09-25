@@ -4,7 +4,7 @@ FROM ${NILO_BASE} AS network-system
 RUN apt-get update && apt-get install -y --no-install-recommends network-manager avahi-daemon avahi-utils dnsmasq dbus iproute2 iputils-ping nftables ca-certificates gcc libc6-dev && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /run/dbus /etc/NetworkManager/conf.d && printf '[main]\nplugins=keyfile\nno-auto-default=*\n[device]\nmatch-device=interface-name:eth0\nmanaged=1\n' > /etc/NetworkManager/conf.d/nilo-test.conf
 
-WORKDIR /repo/05_Software/nilo_assistant
+WORKDIR /repo/05_Software/core
 
 # The appliance stage extends the deliberately clean network-install fixture.
 # Keeping the targets distinct lets that fixture prove WireGuard installation
@@ -12,7 +12,7 @@ WORKDIR /repo/05_Software/nilo_assistant
 # needs.
 FROM network-system AS appliance
 
-# Pinned in 02_Tools/toolchain.versions; 05_Software/scripts/tests/test_appliance_stage.py
+# Pinned in 02_Tools/toolchain.versions; 02_Tools/tests/software/test_appliance_stage.py
 # asserts these stay equal to that manifest, so the image never drifts from the
 # versions the rest of the repository builds and tests against.
 ARG NODE_VERSION=24.20.0
@@ -46,7 +46,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends wireguard-tools
 # context is the repository root and Dockerfile.dockerignore keeps it to the two
 # manifests this needs. The browser engine is already installed above, so the
 # package's own download is skipped rather than duplicated.
-COPY 05_Software/nilo_gui/package.json 05_Software/nilo_gui/package-lock.json /opt/nilo/gui-modules/
+COPY 05_Software/frontend/package.json 05_Software/frontend/package-lock.json /opt/nilo/gui-modules/
 RUN cd /opt/nilo/gui-modules && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --no-audit --no-fund && rm -rf /root/.npm
 
-WORKDIR /repo/05_Software/nilo_assistant
+WORKDIR /repo/05_Software/core

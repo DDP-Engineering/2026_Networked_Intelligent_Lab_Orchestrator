@@ -20,14 +20,14 @@ Once the appliance has completed commissioning, NILO shall keep the persistent m
 verification = "Automated tests start commissioned with one saved management adapter, attach another adapter, and observe the persisted selection unchanged and the new destination refused; a temporary recovery test observes ephemeral admission without a persistence write and exact removal on expiry, while an explicit administrator update remains accepted and provisioning still refuses explicit selection."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/management_access.go",
-    "05_Software/nilo_assistant/internal/network/management_provisioning_test.go",
-    "05_Software/nilo_assistant/internal/network/management_access_test.go",
+    "05_Software/core/internal/network/management_access.go",
+    "05_Software/core/internal/network/management_provisioning_test.go",
+    "05_Software/core/internal/network/management_access_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/management_provisioning_test.go::*",
-    "05_Software/nilo_assistant/internal/network/management_access_test.go::*",
+    "05_Software/core/internal/network/management_provisioning_test.go::*",
+    "05_Software/core/internal/network/management_access_test.go::*",
 ]
 
 

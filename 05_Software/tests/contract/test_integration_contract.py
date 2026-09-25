@@ -14,9 +14,40 @@ from pathlib import Path
 from typing import Any
 
 from jsonschema import Draft202012Validator
+import pytest
 
 ROOT = Path(__file__).parents[2]
-PACKAGE = ROOT / "integrations" / "fake_python"
+SOURCE_PACKAGE = ROOT / "tests" / "fixtures" / "contract_runner"
+PACKAGE = SOURCE_PACKAGE
+
+
+def build_runner(package: Path) -> None:
+    executable = package / ("runner.exe" if os.name == "nt" else "runner")
+    built = subprocess.run(
+        ["go", "build", "-o", str(executable), str(package / "main.go")],
+        cwd=ROOT,
+        capture_output=True,
+        check=False,
+    )
+    assert built.returncode == 0, built.stderr.decode()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def installed_contract_runner() -> Any:
+    global PACKAGE
+    with tempfile.TemporaryDirectory() as directory:
+        package = Path(directory) / "contract_runner"
+        shutil.copytree(SOURCE_PACKAGE, package)
+        build_runner(package)
+        PACKAGE = package
+        yield
+    PACKAGE = SOURCE_PACKAGE
+
+
+def test_contract_runner_is_a_test_only_go_fixture() -> None:
+    assert (SOURCE_PACKAGE / "main.go").is_file()
+    assert (SOURCE_PACKAGE / "manifest.json").is_file()
+    assert not (ROOT / "integrations" / "fake_python").exists()
 
 
 def request(message_id: str, method: str, payload: dict[str, Any]) -> dict[str, Any]:
@@ -58,9 +89,10 @@ def validate_schema(relative_path: str, value: object) -> None:
     Draft202012Validator(json.loads((PACKAGE / relative_path).read_text(encoding="utf-8"))).validate(value)
 
 
-def fake_command(package: Path = PACKAGE) -> tuple[str, list[str]]:
+def fixture_command(package: Path | None = None) -> tuple[str, list[str]]:
     """Resolve and launch the manifest's installed runner without substitution."""
 
+    package = package or PACKAGE
     package_manifest = manifest(package)
     runner = select_host_runner(package_manifest)
     executable = package / runner["executable"]
@@ -96,22 +128,22 @@ def test_manifest_declares_the_expected_policies_and_separate_runner_fields() ->
         "fail": "always_prompt",
         "crash": "always_prompt",
     }
-    assert all(operation["resources"] == ["fake/device/stable-001"] for operation in package_manifest["operations"])
-    assert {artifact["id"] for artifact in package_manifest["artifacts"]} == {"fake_artifact"}
+    assert all(operation["resources"] == ["contract/device/stable-001"] for operation in package_manifest["operations"])
+    assert {artifact["id"] for artifact in package_manifest["artifacts"]} == {"contract_artifact"}
     selected = select_host_runner(package_manifest)
     assert selected["arguments"] == ["--stdio"]
     assert selected["executable"] != ""
     assert (
         select_host_runner(package_manifest, "linux", "arm64")["executable"]
-        == ".venv-linux-arm64/bin/nilo-fake-integration"
+        == "runner"
     )
     assert (
         select_host_runner(package_manifest, "linux", "amd64")["executable"]
-        == ".venv-linux-x86_64/bin/nilo-fake-integration"
+        == "runner"
     )
     assert (
         select_host_runner(package_manifest, "windows", "amd64")["executable"]
-        == ".venv-windows-x86_64/Scripts/nilo-fake-integration.exe"
+        == "runner.exe"
     )
     assert select_host_runner({"runner": package_manifest["runner"]}, "plan9", "amd64") == package_manifest[
         "runner"
@@ -146,16 +178,10 @@ def test_manifest_operation_schemas_are_strict_and_validate_canonical_samples() 
 def test_clean_package_install_launches_the_host_manifest_command() -> None:
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
-        clean_package = root / "integrations" / "fake_python"
-        clean_sdk = root / "integration_sdk" / "python"
-        ignored_generated = shutil.ignore_patterns(".venv", ".venv-*", "__pycache__")
-        shutil.copytree(PACKAGE, clean_package, ignore=ignored_generated)
-        shutil.copytree(ROOT / "integration_sdk" / "python", clean_sdk, ignore=ignored_generated)
-        installed = subprocess.run(
-            ["uv", "sync", "--all-groups", "--locked"], cwd=clean_package, capture_output=True
-        )
-        assert installed.returncode == 0, installed.stderr.decode()
-        executable, arguments = fake_command(clean_package)
+        clean_package = root / "contract_runner"
+        shutil.copytree(SOURCE_PACKAGE, clean_package)
+        build_runner(clean_package)
+        executable, arguments = fixture_command(clean_package)
         completed = subprocess.run(
             [executable, *arguments],
             input=(
@@ -175,7 +201,7 @@ def test_clean_package_install_launches_the_host_manifest_command() -> None:
 
 def test_runner_hello_describe_health_and_echo_have_strict_ordering() -> None:
     package_manifest = manifest()
-    executable, arguments = fake_command()
+    executable, arguments = fixture_command()
     completed = launch(
         executable,
         arguments,
@@ -228,7 +254,7 @@ def test_runner_rejects_malformed_request_without_protocol_stdout() -> None:
     malformed = request("hello-1", "hello", {"type": "hello", "client": "contract-kit"})
     malformed["unexpected"] = True
 
-    executable, arguments = fake_command()
+    executable, arguments = fixture_command()
     completed = launch(executable, arguments, [malformed])
 
     assert completed.returncode != 0
@@ -237,7 +263,7 @@ def test_runner_rejects_malformed_request_without_protocol_stdout() -> None:
 
 
 def test_runner_preserves_selected_fake_failure_code() -> None:
-    executable, arguments = fake_command()
+    executable, arguments = fixture_command()
     completed = launch(
         executable,
         arguments,
@@ -273,7 +299,7 @@ def test_runner_crash_and_malformed_request_exit_with_open_stdin() -> None:
         ),
         request("hello-1", "hello", {"type": "hello", "client": "contract-kit"}),
     ):
-        executable, arguments = fake_command()
+        executable, arguments = fixture_command()
         process = subprocess.Popen(
             [executable, *arguments], cwd=PACKAGE, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
@@ -297,7 +323,7 @@ def test_runner_crash_and_malformed_request_exit_with_open_stdin() -> None:
 
 def test_runner_cancel_and_safe_shutdown_have_one_terminal_execute_response() -> None:
     execute_id = "00000000-0000-0000-0000-000000000001"
-    executable, arguments = fake_command()
+    executable, arguments = fixture_command()
     process = subprocess.Popen(
         [executable, *arguments],
         cwd=PACKAGE,
@@ -363,7 +389,7 @@ def test_runner_cancel_and_safe_shutdown_have_one_terminal_execute_response() ->
 
 def test_runner_artifact_stays_in_explicit_staging_and_crash_preserves_progress() -> None:
     with tempfile.TemporaryDirectory() as directory:
-        executable, arguments = fake_command()
+        executable, arguments = fixture_command()
         completed = launch(
             executable,
             arguments,
@@ -377,19 +403,19 @@ def test_runner_artifact_stays_in_explicit_staging_and_crash_preserves_progress(
             ],
         )
         messages = decode_records(completed.stdout)
-        artifact = Path(directory) / "fake-artifact.bin"
+        artifact = Path(directory) / "contract-artifact.bin"
         assert completed.returncode == 0, completed.stderr.decode()
-        assert artifact.read_bytes() == b"nilo fake artifact v1\n"
+        assert artifact.read_bytes() == b"nilo contract artifact v1\n"
         assert messages[-2]["payload"]["type"] == "artifact"
         validate_schema("schemas/artifact.event.schema.json", messages[-2]["payload"])
         validate_schema("schemas/artifact.result.schema.json", messages[-1]["payload"]["data"])
         assert messages[-1]["payload"] == {
             "type": "result",
             "status": "completed",
-            "data": {"artifact_id": "fake_artifact"},
+            "data": {"artifact_id": "contract_artifact"},
         }
 
-    executable, arguments = fake_command()
+    executable, arguments = fixture_command()
     crash = launch(
         executable,
         arguments,

@@ -20,21 +20,21 @@ When an operator runs the appliance password-policy command against a NILO with 
 verification = "A command-line test runs the command against a test appliance with no policy values and asserts the printed policy matches the appliance's; it then runs it with a minimum length and a class list and asserts the appliance stores exactly those, that giving only one of the two exits with usage and contacts nothing, that an unknown class name is refused before anything is contacted, and that a minimum below the floor prints the appliance's refusal naming the floor."
 
 affected_paths = [
-    "05_Software/nilo_assistant/cmd/nilo/admin_password_policy.go",
-    "05_Software/nilo_assistant/cmd/nilo/admin.go",
-    "05_Software/nilo_assistant/internal/apiclient/client.go",
-    "05_Software/nilo_assistant/cmd/nilo/admin_password_policy_test.go",
+    "05_Software/core/cmd/nilo/admin_password_policy.go",
+    "05_Software/core/cmd/nilo/admin.go",
+    "05_Software/core/internal/apiclient/client.go",
+    "05_Software/core/cmd/nilo/admin_password_policy_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/cmd/nilo/admin_password_policy_test.go::TestRemotePasswordPolicyReadsWithNoValuesGiven",
-    "05_Software/nilo_assistant/cmd/nilo/admin_password_policy_test.go::TestRemotePasswordPolicySubmitsBothValues",
-    "05_Software/nilo_assistant/cmd/nilo/admin_password_policy_test.go::TestRemotePasswordPolicyRefusesExactlyOneValue",
-    "05_Software/nilo_assistant/cmd/nilo/admin_password_policy_test.go::TestRemotePasswordPolicyRefusesAnUnknownClassName",
-    "05_Software/nilo_assistant/cmd/nilo/admin_password_policy_test.go::TestRemotePasswordPolicyClearsEveryRequirementWithNone",
-    "05_Software/nilo_assistant/cmd/nilo/admin_password_policy_test.go::TestRemotePasswordPolicyReportsTheAppliancesRefusal",
-    "05_Software/nilo_assistant/cmd/nilo/admin_password_policy_test.go::TestPasswordPolicyIsARemoteModeCommand",
-    "05_Software/nilo_assistant/cmd/nilo/admin_password_policy_test.go::TestAdminUsageNamesThePasswordPolicyCommand",
+    "05_Software/core/cmd/nilo/admin_password_policy_test.go::TestRemotePasswordPolicyReadsWithNoValuesGiven",
+    "05_Software/core/cmd/nilo/admin_password_policy_test.go::TestRemotePasswordPolicySubmitsBothValues",
+    "05_Software/core/cmd/nilo/admin_password_policy_test.go::TestRemotePasswordPolicyRefusesExactlyOneValue",
+    "05_Software/core/cmd/nilo/admin_password_policy_test.go::TestRemotePasswordPolicyRefusesAnUnknownClassName",
+    "05_Software/core/cmd/nilo/admin_password_policy_test.go::TestRemotePasswordPolicyClearsEveryRequirementWithNone",
+    "05_Software/core/cmd/nilo/admin_password_policy_test.go::TestRemotePasswordPolicyReportsTheAppliancesRefusal",
+    "05_Software/core/cmd/nilo/admin_password_policy_test.go::TestPasswordPolicyIsARemoteModeCommand",
+    "05_Software/core/cmd/nilo/admin_password_policy_test.go::TestAdminUsageNamesThePasswordPolicyCommand",
 ]
 
 

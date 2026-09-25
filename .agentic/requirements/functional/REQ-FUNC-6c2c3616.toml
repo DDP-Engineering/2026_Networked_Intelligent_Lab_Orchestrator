@@ -20,31 +20,31 @@ When an adapter-role request is refused, the Bench Core API shall return HTTP 40
 verification = "API contract tests trigger both conflict directions and assert status 409, the exact code and safe detail fields, reject unknown role values in parsers, and recursively scan the body and logs for fixture Wi-Fi passwords, private/preshared keys and bearer/session values."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/adapter_roles.go",
-    "05_Software/nilo_assistant/internal/httpapi/management_access.go",
-    "05_Software/nilo_assistant/internal/httpapi/device_networks.go",
-    "05_Software/nilo_assistant/internal/httpapi/network_operations.go",
-    "05_Software/nilo_assistant/internal/httpapi/adapter_roles.go",
-    "05_Software/nilo_assistant/internal/httpapi/adapter_roles_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/management_access_api_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/device_networks_test.go",
-    "05_Software/nilo_gui/src/api/management-access.ts",
-    "05_Software/nilo_gui/src/api/devicenetworks.ts",
-    "05_Software/nilo_gui/src/api/client.ts",
-    "05_Software/nilo_gui/src/api/client.test.ts",
-    "05_Software/nilo_gui/src/api/management-access.test.ts",
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
+    "05_Software/core/internal/network/adapter_roles.go",
+    "05_Software/core/internal/httpapi/management_access.go",
+    "05_Software/core/internal/httpapi/device_networks.go",
+    "05_Software/core/internal/httpapi/network_operations.go",
+    "05_Software/core/internal/httpapi/adapter_roles.go",
+    "05_Software/core/internal/httpapi/adapter_roles_test.go",
+    "05_Software/core/internal/httpapi/management_access_api_test.go",
+    "05_Software/core/internal/httpapi/device_networks_test.go",
+    "05_Software/frontend/src/api/management-access.ts",
+    "05_Software/frontend/src/api/devicenetworks.ts",
+    "05_Software/frontend/src/api/client.ts",
+    "05_Software/frontend/src/api/client.test.ts",
+    "05_Software/frontend/src/api/management-access.test.ts",
+    "05_Software/frontend/src/components/pages/NetworkPage.tsx",
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/httpapi/adapter_roles_test.go::TestAdapterRoleConflictResponseIsStructuredAndSecretFree",
-    "05_Software/nilo_assistant/internal/httpapi/management_access_api_test.go::TestManagementAccessAPIReturnsStructuredAdapterRoleConflict",
-    "05_Software/nilo_assistant/internal/httpapi/device_networks_test.go::TestDeviceNetworkPreviewReturnsStructuredManagementRoleConflict",
-    "05_Software/nilo_gui/src/api/management-access.test.ts::parses the exact safe role-conflict details and rejects unknown roles",
-    "05_Software/nilo_gui/src/api/client.test.ts::carries validated adapter-role conflict details on a 409 refusal",
-    "05_Software/nilo_gui/src/api/client.test.ts::withholds backend prose when adapter-role conflict details are malformed",
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::preserves typed adapter detail when acknowledgement finds a new role conflict",
+    "05_Software/core/internal/httpapi/adapter_roles_test.go::TestAdapterRoleConflictResponseIsStructuredAndSecretFree",
+    "05_Software/core/internal/httpapi/management_access_api_test.go::TestManagementAccessAPIReturnsStructuredAdapterRoleConflict",
+    "05_Software/core/internal/httpapi/device_networks_test.go::TestDeviceNetworkPreviewReturnsStructuredManagementRoleConflict",
+    "05_Software/frontend/src/api/management-access.test.ts::parses the exact safe role-conflict details and rejects unknown roles",
+    "05_Software/frontend/src/api/client.test.ts::carries validated adapter-role conflict details on a 409 refusal",
+    "05_Software/frontend/src/api/client.test.ts::withholds backend prose when adapter-role conflict details are malformed",
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx::preserves typed adapter detail when acknowledgement finds a new role conflict",
 ]
 
 

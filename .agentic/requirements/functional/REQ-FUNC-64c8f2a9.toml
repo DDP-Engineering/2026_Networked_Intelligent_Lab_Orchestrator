@@ -19,19 +19,19 @@ While a device network with local access is enabled, the appliance shall forward
 verification = "An isolated multi-namespace Linux test opens a TCP connection from a client namespace through the gateway to a server on the device subnet and observes the server seeing the appliance address as the source."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/forwarding_plan.go",
-    "05_Software/nilo_assistant/internal/network/forwarding_plan_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/forwarding.go",
-    "05_Software/nilo_assistant/internal/nethelper/nftables_render.go",
-    "05_Software/nilo_assistant/internal/nethelper/nftables_linux.go",
+    "05_Software/core/internal/network/forwarding_plan.go",
+    "05_Software/core/internal/network/forwarding_plan_test.go",
+    "05_Software/core/internal/nethelper/forwarding.go",
+    "05_Software/core/internal/nethelper/nftables_render.go",
+    "05_Software/core/internal/nethelper/nftables_linux.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/forwarding_plan_test.go::TestALocalOriginalPlanTranslatesTheSourceOnly",
-    "05_Software/nilo_assistant/internal/network/forwarding_plan_test.go::TestPreservedSourceRemovesTheSourceTranslation",
-    "05_Software/nilo_assistant/internal/nethelper/forwarding_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/nftables_render_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/nftables_linux_test.go",
+    "05_Software/core/internal/network/forwarding_plan_test.go::TestALocalOriginalPlanTranslatesTheSourceOnly",
+    "05_Software/core/internal/network/forwarding_plan_test.go::TestPreservedSourceRemovesTheSourceTranslation",
+    "05_Software/core/internal/nethelper/forwarding_test.go",
+    "05_Software/core/internal/nethelper/nftables_render_test.go",
+    "05_Software/core/internal/nethelper/nftables_linux_test.go",
 ]
 
 spec = "specs/REQ-FUNC-2f8d63b5.md"

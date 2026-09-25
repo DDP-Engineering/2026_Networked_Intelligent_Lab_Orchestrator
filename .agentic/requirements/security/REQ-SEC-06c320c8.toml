@@ -20,15 +20,15 @@ If a password presented for verification is longer than the fixed maximum of 102
 verification = "A test presents a password longer than the maximum to the verification path and asserts it is refused with the bound named and no key derivation attempted, both under the shipped policy and under a policy whose configured minimum has been changed."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/auth/password.go",
-    "05_Software/nilo_assistant/internal/auth/password_policy.go",
-    "05_Software/nilo_assistant/internal/auth/password_test.go",
-    "05_Software/nilo_assistant/internal/auth/password_policy_test.go",
+    "05_Software/core/internal/auth/password.go",
+    "05_Software/core/internal/auth/password_policy.go",
+    "05_Software/core/internal/auth/password_test.go",
+    "05_Software/core/internal/auth/password_policy_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/auth/password_test.go::TestPasswordFunctionsRejectTheMaximumAndTheEmptyPassword",
-    "05_Software/nilo_assistant/internal/auth/password_policy_test.go::TestPasswordPolicyCheckKeepsTheMaximumWhateverThePolicySays",
+    "05_Software/core/internal/auth/password_test.go::TestPasswordFunctionsRejectTheMaximumAndTheEmptyPassword",
+    "05_Software/core/internal/auth/password_policy_test.go::TestPasswordPolicyCheckKeepsTheMaximumWhateverThePolicySays",
 ]
 
 

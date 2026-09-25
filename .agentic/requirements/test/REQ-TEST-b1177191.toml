@@ -27,20 +27,20 @@ stated.
 """
 
 affected_paths = [
-    "05_Software/nilo_gui/e2e/topology.ts",
-    "05_Software/nilo_gui/e2e/topology.test.ts",
-    "05_Software/nilo_gui/e2e/commands.test.ts",
-    "05_Software/nilo_gui/e2e/prerequisites.ts",
-    "05_Software/nilo_gui/e2e/prerequisites.test.ts",
-    "05_Software/nilo_gui/playwright.config.ts",
+    "05_Software/frontend/e2e/topology.ts",
+    "05_Software/frontend/e2e/topology.test.ts",
+    "05_Software/frontend/e2e/commands.test.ts",
+    "05_Software/frontend/e2e/prerequisites.ts",
+    "05_Software/frontend/e2e/prerequisites.test.ts",
+    "05_Software/frontend/playwright.config.ts",
     "02_Tools/tests/appliance/check.sh",
     "02_Tools/tests/appliance/run.sh",
     "02_Tools/tests/network/Dockerfile",
     "02_Tools/tests/network/check.sh",
-    "05_Software/scripts/aegis_test.py",
-    "05_Software/scripts/tests/test_aegis_test.py",
-    "05_Software/scripts/tests/test_appliance_stage.py",
-    "05_Software/nilo_gui/README.md",
+    "02_Tools/scripts/aegis_test.py",
+    "02_Tools/tests/software/test_aegis_test.py",
+    "02_Tools/tests/software/test_appliance_stage.py",
+    "05_Software/frontend/README.md",
     "02_Tools/README.md",
     "02_Tools/tests/appliance/README.md",
     "06_SoftwareDocu/Development_and_Simulation_Flow.md",
@@ -49,9 +49,9 @@ affected_paths = [
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/e2e/topology.test.ts::serves the built interface rather than starting a development server",
-    "05_Software/nilo_gui/e2e/prerequisites.test.ts::fails when nothing was built, rather than falling back to a dev server",
-    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceBrowserSuiteTests",
+    "05_Software/frontend/e2e/topology.test.ts::serves the built interface rather than starting a development server",
+    "05_Software/frontend/e2e/prerequisites.test.ts::fails when nothing was built, rather than falling back to a dev server",
+    "02_Tools/tests/software/test_appliance_stage.py::ApplianceBrowserSuiteTests",
 ]
 
 

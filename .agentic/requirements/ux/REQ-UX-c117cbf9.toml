@@ -20,16 +20,16 @@ Where an administrator opens the Authentication identities page, the browser int
 verification = "A component test renders the Authentication identities page as an administrator and asserts that neither the signed-in sentence nor the sentence describing disabling and permanent deletion appears anywhere on it, while the listing, its actions and their contextual help remain present. The identities note and the policy note are asserted absent from the English, German and Romanian catalogues; the signed-in sentence remains, because the API tokens page still carries it."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/components/authentication/UsersPage.tsx",
-    "05_Software/nilo_gui/src/components/authentication/PasswordPolicyPanel.tsx",
-    "05_Software/nilo_gui/src/i18n/en.ts",
-    "05_Software/nilo_gui/src/i18n/de.ts",
-    "05_Software/nilo_gui/src/i18n/ro.ts",
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx",
+    "05_Software/frontend/src/components/authentication/UsersPage.tsx",
+    "05_Software/frontend/src/components/authentication/PasswordPolicyPanel.tsx",
+    "05_Software/frontend/src/i18n/en.ts",
+    "05_Software/frontend/src/i18n/de.ts",
+    "05_Software/frontend/src/i18n/ro.ts",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::Authentication identities page prose > carries no signed-in sentence and no paragraph about the actions",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::Authentication identities page prose > carries no signed-in sentence and no paragraph about the actions",
 ]
 
 

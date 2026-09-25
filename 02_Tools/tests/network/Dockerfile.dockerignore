@@ -3,5 +3,5 @@
 # takes the source it tests from a read-only mount at run time, never from a
 # build context.
 *
-!05_Software/nilo_gui/package.json
-!05_Software/nilo_gui/package-lock.json
+!05_Software/frontend/package.json
+!05_Software/frontend/package-lock.json

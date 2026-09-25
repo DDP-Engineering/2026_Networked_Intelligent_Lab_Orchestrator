@@ -57,11 +57,11 @@ When an archive generation is prepared for publication, the maintenance tooling 
 verification = "Publication-preflight tests consume synthetic manifests and readback inventories, reject missing Gitea parts, unverified backup/headroom, partial GitHub selections, or mismatched OIDs, and accept GitHub absence only when the manifest declares no complete replica."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
-affected_paths = ["02_Tools/scripts/build_environment.py", "02_Tools/scripts/mirror-build-environment-lfs.ps1", "02_Tools/tests/build-environment/verify-lfs-replicas.ps1", "02_Tools/tests/build-environment/evidence.example.json", "02_Tools/archives/build-environment/current.json", "02_Tools/containers/build/README.md", "05_Software/scripts/tests/test_build_environment.py"]
+affected_paths = ["02_Tools/scripts/build_environment.py", "02_Tools/scripts/mirror-build-environment-lfs.ps1", "02_Tools/tests/build-environment/verify-lfs-replicas.ps1", "02_Tools/tests/build-environment/evidence.example.json", "02_Tools/archives/build-environment/current.json", "02_Tools/containers/build/README.md", "02_Tools/tests/software/test_build_environment.py"]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
-linked_tests = ["05_Software/scripts/tests/test_build_environment.py"]
+linked_tests = ["02_Tools/tests/software/test_build_environment.py"]
 
 # --- optional below this line ---
 

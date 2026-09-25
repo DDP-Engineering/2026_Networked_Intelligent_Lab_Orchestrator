@@ -27,7 +27,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $toolRoot = Split-Path -Parent $PSScriptRoot
 $repositoryRoot = (Resolve-Path (Join-Path $toolRoot '..')).Path
-$frontendRoot = Join-Path $repositoryRoot '05_Software\nilo_gui'
+$frontendRoot = Join-Path $repositoryRoot '05_Software\frontend'
 $toolWrapper = Join-Path $toolRoot 'env\with-tools.ps1'
 $browserRuntime = Join-Path $toolRoot 'runtime\windows-x86_64\playwright'
 $driver = Join-Path $frontendRoot 'node_modules\@playwright\test'

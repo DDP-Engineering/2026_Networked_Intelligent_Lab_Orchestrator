@@ -19,8 +19,8 @@ When the interface is reopened or reloaded while a network operation is awaiting
 verification = "A real-backend browser test starts a connectivity change, reloads the page and asserts the pending operation, its deadline and both actions are present."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
-    "05_Software/nilo_gui/src/api/contract.ts",
+    "05_Software/frontend/src/components/pages/NetworkPage.tsx",
+    "05_Software/frontend/src/api/contract.ts",
 ]
 
 linked_tests = []

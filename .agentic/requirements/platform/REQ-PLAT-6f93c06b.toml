@@ -53,15 +53,15 @@ verification = "Listener validation tests accept IPv4 and IPv6 loopback addresse
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/httpapi/listener.go",
-    "05_Software/nilo_assistant/internal/httpapi/listener_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/core/internal/httpapi/listener.go",
+    "05_Software/core/internal/httpapi/listener_test.go",
+    "05_Software/core/cmd/nilo/main.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/httpapi/listener_test.go::TestValidateSimulationBindRequiresLiteralLoopbackHost",
+    "05_Software/core/internal/httpapi/listener_test.go::TestValidateSimulationBindRequiresLiteralLoopbackHost",
 ]
 
 # --- optional below this line ---

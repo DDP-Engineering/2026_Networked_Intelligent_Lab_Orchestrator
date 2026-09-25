@@ -53,18 +53,18 @@ verification = "Concurrent SQLite tests submit overlapping and disjoint claim se
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/session/",
-    "05_Software/nilo_assistant/internal/store/sqlite/migrations/001_initial.sql",
-    "05_Software/nilo_assistant/internal/store/sqlite/session_repository.go",
+    "05_Software/core/internal/session/",
+    "05_Software/core/internal/store/sqlite/migrations/001_initial.sql",
+    "05_Software/core/internal/store/sqlite/session_repository.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/store/sqlite/db_test.go::TestDatabaseRejectsSecondActiveLeaseForTheSameResource",
-    "05_Software/nilo_assistant/internal/store/sqlite/session_repository_test.go::TestSessionRepositoryUsesCompareAndSwapAndExclusiveLeases",
-    "05_Software/nilo_assistant/internal/store/sqlite/session_repository_test.go::TestSessionRepositoryTerminalTransitionRollsBackWhenLeaseReleaseFails",
-    "05_Software/nilo_assistant/internal/session/service_test.go::TestServiceReleasesLeasesAfterTerminalTransition",
+    "05_Software/core/internal/store/sqlite/db_test.go::TestDatabaseRejectsSecondActiveLeaseForTheSameResource",
+    "05_Software/core/internal/store/sqlite/session_repository_test.go::TestSessionRepositoryUsesCompareAndSwapAndExclusiveLeases",
+    "05_Software/core/internal/store/sqlite/session_repository_test.go::TestSessionRepositoryTerminalTransitionRollsBackWhenLeaseReleaseFails",
+    "05_Software/core/internal/session/service_test.go::TestServiceReleasesLeasesAfterTerminalTransition",
 ]
 
 # --- optional below this line ---

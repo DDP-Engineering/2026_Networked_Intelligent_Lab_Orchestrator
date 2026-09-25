@@ -19,16 +19,16 @@ The appliance shall authorize activity reads with activity.read, activity export
 verification = "Negative HTTP and CLI tests assert each route refuses a viewer, an operator, a scoped token lacking the permission and a revoked token."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/auth/role.go",
-    "05_Software/nilo_assistant/internal/httpapi/server.go",
-    "05_Software/nilo_gui/src/api/permissions.ts",
-    "05_Software/nilo_gui/src/components/shell/pages.ts",
+    "05_Software/core/internal/auth/role.go",
+    "05_Software/core/internal/httpapi/server.go",
+    "05_Software/frontend/src/api/permissions.ts",
+    "05_Software/frontend/src/components/shell/pages.ts",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/auth/role_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/activity_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/network_vpn_test.go",
+    "05_Software/core/internal/auth/role_test.go",
+    "05_Software/core/internal/httpapi/activity_test.go",
+    "05_Software/core/cmd/nilo/network_vpn_test.go",
 ]
 
 spec = "specs/REQ-FUNC-2f8d63b5.md"

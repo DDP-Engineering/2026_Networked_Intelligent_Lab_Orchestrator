@@ -54,7 +54,7 @@ flowchart LR
     codec["Go protocol codec"]
     process(["external runner process"])
     sdk["Python SDK server"]
-    plugin["Integration implementation: fake_python or sigrok"]
+    plugin["Integration implementation: sigrok"]
     schemas[("JSON schemas")]
     stderr[("64 KiB diagnostic ring")]
     manifest --> loader
@@ -79,18 +79,18 @@ Protocol stdout is reserved for NDJSON; diagnostics use bounded stderr. OS-speci
 
 ## Files
 
-- `05_Software/schemas/integration/v1/` - public manifest, operation, and event JSON schemas.
-- `05_Software/nilo_assistant/internal/integration/manifest/` - embedded schema copies, bounded loader, model, fixtures, and tests.
-- `05_Software/nilo_assistant/internal/integration/protocol/` - strict Go message types, codec, lifecycle registry, and tests.
-- `05_Software/nilo_assistant/internal/integration/supervisor/` - process lifecycle, OS adapters, diagnostic ring, helper process, and tests.
-- `05_Software/integration_sdk/python/` - pinned Python SDK package, models, lifecycle API, server, tests, lockfile, and author documentation.
-- `05_Software/integrations/fake_python/` - deterministic manifest, schemas, Python implementation, entry point, tests, and lockfile.
+- `05_Software/contracts/integration/v1/` - public manifest, operation, and event JSON schemas.
+- `05_Software/core/internal/integration/manifest/` - embedded schema copies, bounded loader, model, fixtures, and tests.
+- `05_Software/core/internal/integration/protocol/` - strict Go message types, codec, lifecycle registry, and tests.
+- `05_Software/core/internal/integration/supervisor/` - process lifecycle, OS adapters, diagnostic ring, helper process, and tests.
+- `05_Software/integrations/sdk/python/` - pinned Python SDK package, models, lifecycle API, server, tests, lockfile, and author documentation.
+- `05_Software/tests/fixtures/contract_runner/` - deterministic test-only Go runner, manifest, and schemas for cross-component contract and acceptance tests.
 - `05_Software/tests/contract/` - package-level black-box contract fixtures, documentation, and tests.
 - `02_Tools/scripts/build-sigrok-bundle.py` - validates and embeds the complete
   target runtime, SDK, schemas, runner, executed health evidence and third-party
   notices without package resolution.
 
-- `05_Software/nilo_assistant/internal/integration/protocol/describe_test.go` — SDK metadata interoperability regression.
+- `05_Software/core/internal/integration/protocol/describe_test.go` — SDK metadata interoperability regression.
 - `05_Software/integrations/sigrok/` — curated digital adapter; lifecycle ownership is documented in bench-integrations.md.
 - `05_Software/integrations/sigrok/src/nilo_sigrok/structured_worker.py` —
   feasibility-only child containment and protocol validation beneath the public

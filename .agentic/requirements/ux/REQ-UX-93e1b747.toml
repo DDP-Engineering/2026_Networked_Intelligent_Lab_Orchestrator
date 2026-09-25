@@ -62,18 +62,18 @@ verification = "Component and shell tests render sessions carrying read-only, ma
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/api/permissions.ts",
-    "05_Software/nilo_gui/src/components/shell/pages.ts",
-    "05_Software/nilo_gui/src/components/authentication/UsersPage.tsx",
-    "05_Software/nilo_gui/src/components/authentication/ApiTokensPage.tsx",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
+    "05_Software/frontend/src/api/permissions.ts",
+    "05_Software/frontend/src/components/shell/pages.ts",
+    "05_Software/frontend/src/components/authentication/UsersPage.tsx",
+    "05_Software/frontend/src/components/authentication/ApiTokensPage.tsx",
+    "05_Software/frontend/src/components/shell/shell.test.tsx",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::the navigation > shows only the Authentication destination that the session may read",
-    "05_Software/nilo_assistant/internal/httpapi/administration_test.go::TestAdministrationRoutesEnforcePermissions",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::the navigation > shows only the Authentication destination that the session may read",
+    "05_Software/core/internal/httpapi/administration_test.go::TestAdministrationRoutesEnforcePermissions",
 ]
 
 # --- optional below this line ---

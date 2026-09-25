@@ -20,20 +20,20 @@ While temporary network recovery is active, NILO shall expose only the existing 
 verification = "Composed appliance-profile, active-recovery-overlay, certificate-name, and profile tests observe the normal TLS listener and secure cookie, HTTP 401 for unauthenticated protected APIs, CSRF refusal for an authenticated cookie mutation without its token, ordinary role refusal, non-persistent destination admission only on the selected link, and no additional listener or route."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/hardware_recovery.go",
-    "05_Software/nilo_assistant/internal/network/management_access.go",
-    "05_Software/nilo_assistant/internal/httpapi/server.go",
-    "05_Software/nilo_assistant/internal/httpapi/management_access_api_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/cmd/nilo/appliance_stage_linux_test.go",
+    "05_Software/core/internal/network/hardware_recovery.go",
+    "05_Software/core/internal/network/management_access.go",
+    "05_Software/core/internal/httpapi/server.go",
+    "05_Software/core/internal/httpapi/management_access_api_test.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/cmd/nilo/appliance_stage_linux_test.go",
     "02_Tools/tests/appliance/run.sh",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/management_access_test.go::TestRecoveryManagementOverlayWidensAdmissionWithoutPersistingTheInterface",
-    "05_Software/nilo_assistant/internal/httpapi/management_access_api_test.go::TestTemporaryRecoveryReachabilityKeepsTheExistingHTTPSIdentityAndAccessControls",
-    "05_Software/nilo_assistant/cmd/nilo/appliance_stage_linux_test.go::TestApplianceStageStartsUnderRealHelperAndNetworkManager",
-    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::TestDiscoveryCertificateNamesAddTheSharedAliasOnlyForPiRecovery",
+    "05_Software/core/internal/network/management_access_test.go::TestRecoveryManagementOverlayWidensAdmissionWithoutPersistingTheInterface",
+    "05_Software/core/internal/httpapi/management_access_api_test.go::TestTemporaryRecoveryReachabilityKeepsTheExistingHTTPSIdentityAndAccessControls",
+    "05_Software/core/cmd/nilo/appliance_stage_linux_test.go::TestApplianceStageStartsUnderRealHelperAndNetworkManager",
+    "05_Software/core/cmd/nilo/hardware_recovery_test.go::TestDiscoveryCertificateNamesAddTheSharedAliasOnlyForPiRecovery",
 ]
 
 

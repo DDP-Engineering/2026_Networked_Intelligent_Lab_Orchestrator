@@ -20,27 +20,27 @@ When the device-network editor displays a physical adapter claimed by applied or
 verification = "A component test renders applied and pending management claims, asserts matching device-side adapter options are disabled with an associated visible reason while local-ingress selection and a distinct device-side adapter remain available, and the translation catalogue test confirms the text exists in English, German and Romanian."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/management_access.go",
-    "05_Software/nilo_assistant/internal/network/management_access_test.go",
-    "05_Software/nilo_gui/src/api/devicenetworks.ts",
-    "05_Software/nilo_gui/src/api/management-access.ts",
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
-    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.tsx",
-    "05_Software/nilo_gui/src/i18n/en.ts",
-    "05_Software/nilo_gui/src/i18n/de.ts",
-    "05_Software/nilo_gui/src/i18n/ro.ts",
-    "05_Software/nilo_gui/src/api/mock.ts",
-    "05_Software/nilo_gui/src/api/network.test.ts",
-    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx",
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
-    "05_Software/nilo_gui/e2e/network.spec.ts",
+    "05_Software/core/internal/network/management_access.go",
+    "05_Software/core/internal/network/management_access_test.go",
+    "05_Software/frontend/src/api/devicenetworks.ts",
+    "05_Software/frontend/src/api/management-access.ts",
+    "05_Software/frontend/src/components/pages/NetworkPage.tsx",
+    "05_Software/frontend/src/components/network/DeviceNetworksPanel.tsx",
+    "05_Software/frontend/src/i18n/en.ts",
+    "05_Software/frontend/src/i18n/de.ts",
+    "05_Software/frontend/src/i18n/ro.ts",
+    "05_Software/frontend/src/api/mock.ts",
+    "05_Software/frontend/src/api/network.test.ts",
+    "05_Software/frontend/src/components/network/DeviceNetworksPanel.test.tsx",
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx",
+    "05_Software/frontend/e2e/network.spec.ts",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/management_access_test.go::TestManagementAccessStatusMarksPendingRollbackAdaptersAsManagementOwned",
-    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx::disables a management adapter only for the device-facing selection",
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::shares one management-role observation with the device selector",
-    "05_Software/nilo_gui/e2e/network.spec.ts::keeps opposite-role adapters visible and explains sequential repurposing",
+    "05_Software/core/internal/network/management_access_test.go::TestManagementAccessStatusMarksPendingRollbackAdaptersAsManagementOwned",
+    "05_Software/frontend/src/components/network/DeviceNetworksPanel.test.tsx::disables a management adapter only for the device-facing selection",
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx::shares one management-role observation with the device selector",
+    "05_Software/frontend/e2e/network.spec.ts::keeps opposite-role adapters visible and explains sequential repurposing",
 ]
 
 

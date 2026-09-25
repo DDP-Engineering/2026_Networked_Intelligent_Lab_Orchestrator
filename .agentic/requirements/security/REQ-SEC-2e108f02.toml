@@ -53,31 +53,31 @@ verification = "An automated test calls every network route as a viewer, an oper
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/auth/role.go",
-    "05_Software/nilo_assistant/internal/httpapi/network.go",
-    "05_Software/nilo_assistant/internal/httpapi/server.go",
-    "05_Software/nilo_assistant/internal/auth/role_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/network_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/network_operations_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/identity_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/server_test.go",
+    "05_Software/core/internal/auth/role.go",
+    "05_Software/core/internal/httpapi/network.go",
+    "05_Software/core/internal/httpapi/server.go",
+    "05_Software/core/internal/auth/role_test.go",
+    "05_Software/core/internal/httpapi/network_test.go",
+    "05_Software/core/internal/httpapi/network_operations_test.go",
+    "05_Software/core/internal/httpapi/identity_test.go",
+    "05_Software/core/internal/httpapi/server_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/auth/role_test.go::TestNetworkPermissionsAreReadableByEveryRoleAndManagedByAdministratorsOnly",
-    "05_Software/nilo_assistant/internal/auth/role_test.go::TestRolePermissionsMatchTheFixedMatrix",
-    "05_Software/nilo_assistant/internal/auth/role_test.go::TestNoRoleHoldsAPermissionOutsideTheDefinedSet",
-    "05_Software/nilo_assistant/internal/httpapi/network_test.go::TestNetworkStatusIsReadableByEveryRole",
-    "05_Software/nilo_assistant/internal/httpapi/network_test.go::TestNetworkStatusRequiresACredential",
-    "05_Software/nilo_assistant/internal/httpapi/network_test.go::TestNetworkStatusRefusesATokenNarrowedAwayFromNetworkRead",
-    "05_Software/nilo_assistant/internal/httpapi/network_test.go::TestNetworkStatusRefusesARevokedToken",
-    "05_Software/nilo_assistant/internal/httpapi/network_test.go::TestNetworkStatusFollowsTheOwnersCurrentState",
-    "05_Software/nilo_assistant/internal/httpapi/network_test.go::TestNetworkStatisticsRefusesAMissingInterfaceOrAnUnofferedPeriod",
-    "05_Software/nilo_assistant/internal/httpapi/network_operations_test.go::TestNetworkManagementRoutesAreAdministratorOnly",
-    "05_Software/nilo_assistant/internal/httpapi/network_operations_test.go::TestNetworkManagementRefusesANarrowedAdministratorToken",
-    "05_Software/nilo_assistant/internal/httpapi/network_operations_test.go::TestOperationProgressIsReadableByEveryRole",
+    "05_Software/core/internal/auth/role_test.go::TestNetworkPermissionsAreReadableByEveryRoleAndManagedByAdministratorsOnly",
+    "05_Software/core/internal/auth/role_test.go::TestRolePermissionsMatchTheFixedMatrix",
+    "05_Software/core/internal/auth/role_test.go::TestNoRoleHoldsAPermissionOutsideTheDefinedSet",
+    "05_Software/core/internal/httpapi/network_test.go::TestNetworkStatusIsReadableByEveryRole",
+    "05_Software/core/internal/httpapi/network_test.go::TestNetworkStatusRequiresACredential",
+    "05_Software/core/internal/httpapi/network_test.go::TestNetworkStatusRefusesATokenNarrowedAwayFromNetworkRead",
+    "05_Software/core/internal/httpapi/network_test.go::TestNetworkStatusRefusesARevokedToken",
+    "05_Software/core/internal/httpapi/network_test.go::TestNetworkStatusFollowsTheOwnersCurrentState",
+    "05_Software/core/internal/httpapi/network_test.go::TestNetworkStatisticsRefusesAMissingInterfaceOrAnUnofferedPeriod",
+    "05_Software/core/internal/httpapi/network_operations_test.go::TestNetworkManagementRoutesAreAdministratorOnly",
+    "05_Software/core/internal/httpapi/network_operations_test.go::TestNetworkManagementRefusesANarrowedAdministratorToken",
+    "05_Software/core/internal/httpapi/network_operations_test.go::TestOperationProgressIsReadableByEveryRole",
 ]
 
 # --- optional below this line ---

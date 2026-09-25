@@ -19,9 +19,9 @@ When offline package preparation is invoked, the tooling shall proceed only on L
 
 verification = "Invoke preparation with injected Linux network observations and a complete fixture cache and observe a receipt; then present a non-Linux platform, non-loopback interface, default route, or cache defect and confirm preparation fails before output, while call instrumentation shows the preparation path has no fetch operation. Execute the actual OCI package action with a complete fixture and confirm the engine receives network-none plus a read-only cache mount and the receipt records only loopback with no default routes."
 
-affected_paths = ["02_Tools/packaging/package_inputs.py", "02_Tools/packaging/build/prepare-offline.sh", "02_Tools/env/with-build-environment.ps1", "02_Tools/env/with-build-environment.sh", "02_Tools/packaging/README.md", "02_Tools/README.md", "02_Tools/tests/packaging/Dockerfile", "02_Tools/tests/packaging/check.sh", "05_Software/scripts/tests/test_packaging_inputs.py"]
+affected_paths = ["02_Tools/packaging/package_inputs.py", "02_Tools/packaging/build/prepare-offline.sh", "02_Tools/env/with-build-environment.ps1", "02_Tools/env/with-build-environment.sh", "02_Tools/packaging/README.md", "02_Tools/README.md", "02_Tools/tests/packaging/Dockerfile", "02_Tools/tests/packaging/check.sh", "02_Tools/tests/software/test_packaging_inputs.py"]
 
-linked_tests = ["05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_prepare_requires_linux_loopback_only_and_preserves_prior_output", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_ipv6_reject_route_does_not_imply_connectivity", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_cli_and_wrappers_keep_fetch_and_offline_paths_separate", "02_Tools/tests/packaging/check.sh"]
+linked_tests = ["02_Tools/tests/software/test_packaging_inputs.py::PackagingInputTests.test_prepare_requires_linux_loopback_only_and_preserves_prior_output", "02_Tools/tests/software/test_packaging_inputs.py::PackagingInputTests.test_ipv6_reject_route_does_not_imply_connectivity", "02_Tools/tests/software/test_packaging_inputs.py::PackagingInputTests.test_cli_and_wrappers_keep_fetch_and_offline_paths_separate", "02_Tools/tests/packaging/check.sh"]
 
 
 spec = "specs/REQ-SEC-dd110b06.md"

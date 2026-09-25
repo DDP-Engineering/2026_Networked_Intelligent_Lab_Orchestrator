@@ -53,16 +53,16 @@ verification = "Unit tests drive the client with a recording stub transport, ass
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/api/contract.ts",
-    "05_Software/nilo_gui/src/api/client.ts",
-    "05_Software/nilo_gui/src/api/client.test.ts",
-    "05_Software/nilo_assistant/internal/httpapi/server.go",
-    "05_Software/nilo_assistant/internal/httpapi/server_test.go",
-    "05_Software/nilo_assistant/internal/systeminfo/info.go",
-    "05_Software/nilo_assistant/internal/systeminfo/info_linux.go",
-    "05_Software/nilo_assistant/internal/systeminfo/info_other.go",
-    "05_Software/nilo_assistant/internal/systeminfo/info_test.go",
-    "05_Software/nilo_gui/README.md",
+    "05_Software/frontend/src/api/contract.ts",
+    "05_Software/frontend/src/api/client.ts",
+    "05_Software/frontend/src/api/client.test.ts",
+    "05_Software/core/internal/httpapi/server.go",
+    "05_Software/core/internal/httpapi/server_test.go",
+    "05_Software/core/internal/systeminfo/info.go",
+    "05_Software/core/internal/systeminfo/info_linux.go",
+    "05_Software/core/internal/systeminfo/info_other.go",
+    "05_Software/core/internal/systeminfo/info_test.go",
+    "05_Software/frontend/README.md",
     "06_SoftwareDocu/Development_and_Simulation_Flow.md",
     ".agentic/knowledge/gui-foundation.md",
 ]
@@ -70,9 +70,9 @@ affected_paths = [
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/api/client.test.ts",
-    "05_Software/nilo_assistant/internal/httpapi/server_test.go::TestStatusReturnsVersionedSimulationBuildInformation",
-    "05_Software/nilo_assistant/internal/systeminfo/info_test.go::*",
+    "05_Software/frontend/src/api/client.test.ts",
+    "05_Software/core/internal/httpapi/server_test.go::TestStatusReturnsVersionedSimulationBuildInformation",
+    "05_Software/core/internal/systeminfo/info_test.go::*",
 ]
 
 # --- optional below this line ---

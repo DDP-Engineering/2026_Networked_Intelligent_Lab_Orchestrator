@@ -49,14 +49,14 @@ verification = "An automated test drives the classification with an injected pro
 affected_paths = [
     "02_Tools/scripts/nilo-dev.ps1",
     "02_Tools/lib/DevLifecycle.ps1",
-    "05_Software/scripts/tests/test_development_lifecycle.py",
+    "02_Tools/tests/software/test_development_lifecycle.py",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_status_classifies_from_what_the_endpoints_answer",
-    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_a_backend_that_answers_something_else_is_not_accepted",
+    "02_Tools/tests/software/test_development_lifecycle.py::DevelopmentLifecycleTests::test_status_classifies_from_what_the_endpoints_answer",
+    "02_Tools/tests/software/test_development_lifecycle.py::DevelopmentLifecycleTests::test_a_backend_that_answers_something_else_is_not_accepted",
 ]
 
 # --- optional below this line ---

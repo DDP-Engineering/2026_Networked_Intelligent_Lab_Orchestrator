@@ -20,18 +20,18 @@ When Network Overview presents management-access state, the browser interface sh
 verification = "A component test renders Network Overview while management access is reading, pending confirmation, after the read fails with an internal contract violation, and after it returns recovered state with an outcome; each case asserts exactly one management status line is visible, pending confirmation keeps its action controls without another explanatory status, the failure case contains localized operator text but neither a simultaneous reading line nor the internal parser text, and the recovered case contains both state and localized outcome."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
-    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.tsx",
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
-    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.test.tsx",
-    "05_Software/nilo_gui/src/i18n/en.ts",
-    "05_Software/nilo_gui/src/i18n/de.ts",
-    "05_Software/nilo_gui/src/i18n/ro.ts",
+    "05_Software/frontend/src/components/pages/NetworkPage.tsx",
+    "05_Software/frontend/src/components/network/ManagementAccessPanel.tsx",
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx",
+    "05_Software/frontend/src/components/network/ManagementAccessPanel.test.tsx",
+    "05_Software/frontend/src/i18n/en.ts",
+    "05_Software/frontend/src/i18n/de.ts",
+    "05_Software/frontend/src/i18n/ro.ts",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.test.tsx",
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
+    "05_Software/frontend/src/components/network/ManagementAccessPanel.test.tsx",
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx",
 ]
 
 

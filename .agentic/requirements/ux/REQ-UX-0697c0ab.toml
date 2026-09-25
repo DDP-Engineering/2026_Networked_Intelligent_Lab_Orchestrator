@@ -56,23 +56,23 @@ verification = "A test reads the shipped token stylesheet and asserts every sema
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/styles/tokens.css",
-    "05_Software/nilo_gui/src/theme/ThemeProvider.tsx",
-    "05_Software/nilo_gui/src/theme/themes.ts",
-    "05_Software/nilo_gui/src/styles/shell.css",
-    "05_Software/nilo_gui/src/layout.test.ts",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
-    "05_Software/nilo_gui/src/main.tsx",
-    "05_Software/nilo_gui/src/test/render.tsx",
+    "05_Software/frontend/src/styles/tokens.css",
+    "05_Software/frontend/src/theme/ThemeProvider.tsx",
+    "05_Software/frontend/src/theme/themes.ts",
+    "05_Software/frontend/src/styles/shell.css",
+    "05_Software/frontend/src/layout.test.ts",
+    "05_Software/frontend/src/components/shell/shell.test.tsx",
+    "05_Software/frontend/src/main.tsx",
+    "05_Software/frontend/src/test/render.tsx",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/layout.test.ts::redefines every light token for dark and for the system dark branch",
-    "05_Software/nilo_gui/src/layout.test.ts::declares no literal colour outside the token file",
-    "05_Software/nilo_gui/src/layout.test.ts::gives keyboard focus a visible ring in both themes",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::stamps the selected theme on the document root and keeps it",
+    "05_Software/frontend/src/layout.test.ts::redefines every light token for dark and for the system dark branch",
+    "05_Software/frontend/src/layout.test.ts::declares no literal colour outside the token file",
+    "05_Software/frontend/src/layout.test.ts::gives keyboard focus a visible ring in both themes",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::stamps the selected theme on the document root and keeps it",
 ]
 
 # --- optional below this line ---

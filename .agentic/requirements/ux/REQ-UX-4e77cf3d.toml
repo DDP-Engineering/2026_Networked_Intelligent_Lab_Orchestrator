@@ -60,22 +60,22 @@ verification = "Component tests render appliance and simulation status for each 
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/components/shell/TopRow.tsx",
-    "05_Software/nilo_gui/src/components/shell/AppShell.tsx",
-    "05_Software/nilo_gui/src/components/shell/Icon.tsx",
-    "05_Software/nilo_gui/src/api/contract.ts",
-    "05_Software/nilo_gui/src/i18n/en.ts",
-    "05_Software/nilo_gui/src/i18n/de.ts",
-    "05_Software/nilo_gui/src/i18n/ro.ts",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
+    "05_Software/frontend/src/components/shell/TopRow.tsx",
+    "05_Software/frontend/src/components/shell/AppShell.tsx",
+    "05_Software/frontend/src/components/shell/Icon.tsx",
+    "05_Software/frontend/src/api/contract.ts",
+    "05_Software/frontend/src/i18n/en.ts",
+    "05_Software/frontend/src/i18n/de.ts",
+    "05_Software/frontend/src/i18n/ro.ts",
+    "05_Software/frontend/src/components/shell/shell.test.tsx",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::offers appliance power actions only to permitted browser sessions",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::does not offer power actions in simulation, even with permission",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::does not offer appliance power actions to a viewer",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::offers appliance power actions only to permitted browser sessions",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::does not offer power actions in simulation, even with permission",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::does not offer appliance power actions to a viewer",
 ]
 
 # --- optional below this line ---

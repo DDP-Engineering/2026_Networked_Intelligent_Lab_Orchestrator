@@ -324,10 +324,10 @@ bench Pi through [Local Hardware Access](Local_Hardware_Access.md); historical
 IP addresses are not deployment configuration.
 
 1. Build the GUI with `npm run build` through the repository tool wrapper in
-   `05_Software/nilo_gui`; deploy its `dist` contents to `/opt/nilo/gui`.
+   `05_Software/frontend`; deploy its `dist` contents to `/opt/nilo/gui`.
 2. Run `sh 02_Tools/scripts/build-appliance.sh` using the prepared Linux
    toolchain. Binaries are produced under
-   `05_Software/nilo_assistant/dist/linux-<arch>/`; choose `arm64` for the Pi.
+   `05_Software/core/dist/linux-<arch>/`; choose `arm64` for the Pi.
 3. Install the helper explicitly on the target, substituting the staged binary:
    `sudo sh 02_Tools/scripts/install-nethelper.sh /path/to/nilo-nethelper nilo`.
    It installs the helper service and independent recovery timer. Device-network

@@ -5,7 +5,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $toolRoot = Split-Path -Parent $PSScriptRoot
 $repositoryRoot = (Resolve-Path (Join-Path $toolRoot '..')).Path
-$frontendRoot = Join-Path $repositoryRoot '05_Software\nilo_gui'
+$frontendRoot = Join-Path $repositoryRoot '05_Software\frontend'
 $lockFile = Join-Path $frontendRoot 'package-lock.json'
 $toolWrapper = Join-Path $toolRoot 'env\with-tools.ps1'
 

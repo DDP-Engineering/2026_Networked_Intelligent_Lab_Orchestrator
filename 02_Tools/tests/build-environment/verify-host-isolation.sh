@@ -36,7 +36,7 @@ sentinel_name=.nilo-host-isolation-sentinel-$$
 sentinel_token="host-owned-$$"
 
 {
-    printf '%s\n' "05_Software/nilo_gui/node_modules"
+    printf '%s\n' "05_Software/frontend/node_modules"
     find 05_Software -name pyproject.toml -print | while IFS= read -r project; do
         printf '%s\n' "$(dirname "$project")/.venv-linux-x86_64"
     done
@@ -75,7 +75,7 @@ else
     set -- --engine "$engine"
 fi
 "$repo_root/02_Tools/env/with-build-environment.sh" "$@" run \
-    'npm --prefix 05_Software/nilo_gui ci --offline --ignore-scripts && ./02_Tools/tests/build-environment/prepare-python-environments.sh'
+    'npm --prefix 05_Software/frontend ci --offline --ignore-scripts && ./02_Tools/tests/build-environment/prepare-python-environments.sh'
 
 fingerprint > "$work/after"
 

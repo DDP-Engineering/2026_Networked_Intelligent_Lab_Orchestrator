@@ -2,7 +2,7 @@
 set -eu
 [ -f /.dockerenv ] || { echo 'Run only in the disposable test container' >&2; exit 1; }
 [ "${NILO_NETWORK_SYSTEM:-}" = 1 ] || { echo 'Explicit system-test opt-in required' >&2; exit 1; }
-cd /repo/05_Software/nilo_assistant
+cd /repo/05_Software/core
 race_flag=
 if [ "${NILO_NETWORK_RACE:-0}" = 1 ]; then race_flag=-race; fi
 # Finish compilation/downloads while the container still has its original link.

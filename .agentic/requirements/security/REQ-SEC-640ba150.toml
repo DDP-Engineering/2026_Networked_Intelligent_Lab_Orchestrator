@@ -20,28 +20,28 @@ When hardware network recovery is armed, refused, activated, extended, expired, 
 verification = "Automated recovery tests drive every transition and refusal, force each required audit append to fail, prove a pre-transition refusal cannot advance the handled hardware generation or acknowledge its event, and prove the first advanced durable record contains a bounded retry marker that later flushes without repeating network mutation. Persisted Activity rows carry the expected system actor, bounded outcome/reason and safe adapter fields; sentinel passwords, tokens, keys, profile text and injected helper errors are absent from rows, serialized responses, and logs."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/hardware_recovery.go",
-    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/activity_repository.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/hardware_recovery_repository.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/hardware_recovery_repository_test.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/migrations/014_network_recovery.sql",
-    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository.go",
+    "05_Software/core/internal/network/hardware_recovery.go",
+    "05_Software/core/internal/network/hardware_recovery_test.go",
+    "05_Software/core/cmd/nilo/hardware_recovery_test.go",
+    "05_Software/core/internal/store/sqlite/activity_repository.go",
+    "05_Software/core/internal/store/sqlite/hardware_recovery_repository.go",
+    "05_Software/core/internal/store/sqlite/hardware_recovery_repository_test.go",
+    "05_Software/core/internal/store/sqlite/migrations/014_network_recovery.sql",
+    "05_Software/core/internal/store/sqlite/commissioning_repository.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryAuditsBoundedLifecycleAndRefusal",
-    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryFailureAuditAndReturnedErrorOmitHelperDetail",
-    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryRetriesArmAndArmedExpiryWhenTheirAuditIsUnavailable",
-    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryRetriesPostMutationAuditWithoutRepeatingTheMutation",
-    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestPendingActivationAuditCannotBlockExpiryCleanup",
-    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryQueuesExpiryAndRestoreRequestAuditsWithoutRepeatingCleanup",
-    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryQueuesFailureAuditsUntilTheyCanBeRecorded",
-    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryQueuesExtensionAndRestorationFailureAudits",
-    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryPersistsPendingAuditWithTheFirstAdvancedFailureOrCancelState",
-    "05_Software/nilo_assistant/cmd/nilo/hardware_recovery_test.go::TestPhysicalArmRefusalAuditPrecedesHandledGenerationAndAcknowledgement",
-    "05_Software/nilo_assistant/internal/store/sqlite/hardware_recovery_repository_test.go::TestHardwareRecoveryRecordSurvivesRestartWithoutNetworkPayload",
+    "05_Software/core/internal/network/hardware_recovery_test.go::TestRecoveryAuditsBoundedLifecycleAndRefusal",
+    "05_Software/core/internal/network/hardware_recovery_test.go::TestRecoveryFailureAuditAndReturnedErrorOmitHelperDetail",
+    "05_Software/core/internal/network/hardware_recovery_test.go::TestRecoveryRetriesArmAndArmedExpiryWhenTheirAuditIsUnavailable",
+    "05_Software/core/internal/network/hardware_recovery_test.go::TestRecoveryRetriesPostMutationAuditWithoutRepeatingTheMutation",
+    "05_Software/core/internal/network/hardware_recovery_test.go::TestPendingActivationAuditCannotBlockExpiryCleanup",
+    "05_Software/core/internal/network/hardware_recovery_test.go::TestRecoveryQueuesExpiryAndRestoreRequestAuditsWithoutRepeatingCleanup",
+    "05_Software/core/internal/network/hardware_recovery_test.go::TestRecoveryQueuesFailureAuditsUntilTheyCanBeRecorded",
+    "05_Software/core/internal/network/hardware_recovery_test.go::TestRecoveryQueuesExtensionAndRestorationFailureAudits",
+    "05_Software/core/internal/network/hardware_recovery_test.go::TestRecoveryPersistsPendingAuditWithTheFirstAdvancedFailureOrCancelState",
+    "05_Software/core/cmd/nilo/hardware_recovery_test.go::TestPhysicalArmRefusalAuditPrecedesHandledGenerationAndAcknowledgement",
+    "05_Software/core/internal/store/sqlite/hardware_recovery_repository_test.go::TestHardwareRecoveryRecordSurvivesRestartWithoutNetworkPayload",
 ]
 
 

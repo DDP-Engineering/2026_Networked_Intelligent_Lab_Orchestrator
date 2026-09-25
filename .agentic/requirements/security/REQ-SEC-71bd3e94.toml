@@ -19,16 +19,16 @@ The appliance shall forward to a device network only traffic whose ingress path 
 verification = "Isolated Linux traffic tests attempt each denied case and observe no packet reaching the target, rather than asserting on rule text."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/forwarding_plan.go",
-    "05_Software/nilo_assistant/internal/network/forwarding_plan_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/nftables_render.go",
+    "05_Software/core/internal/network/forwarding_plan.go",
+    "05_Software/core/internal/network/forwarding_plan_test.go",
+    "05_Software/core/internal/nethelper/nftables_render.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/forwarding_plan_test.go::TestThePlanGuardsBeforeItGrants",
-    "05_Software/nilo_assistant/internal/network/forwarding_plan_test.go::TestBothAccessIsTheUnionOfTwoExplicitPaths",
-    "05_Software/nilo_assistant/internal/nethelper/nftables_linux_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/nftables_vpn_linux_test.go",
+    "05_Software/core/internal/network/forwarding_plan_test.go::TestThePlanGuardsBeforeItGrants",
+    "05_Software/core/internal/network/forwarding_plan_test.go::TestBothAccessIsTheUnionOfTwoExplicitPaths",
+    "05_Software/core/internal/nethelper/nftables_linux_test.go",
+    "05_Software/core/internal/nethelper/nftables_vpn_linux_test.go",
 ]
 
 spec = "specs/REQ-FUNC-2f8d63b5.md"

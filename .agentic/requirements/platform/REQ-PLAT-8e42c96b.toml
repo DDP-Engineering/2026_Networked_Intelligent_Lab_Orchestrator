@@ -20,16 +20,16 @@ When the recorded permanent appliance name is first installed, the privileged he
 verification = "Automated helper and installer tests supply each configured image default, a custom hostname, an empty value and a repeated initialization; they observe one checked hostname change only for a known default, no shell or arbitrary hostname input, custom and already-personalized values byte-for-byte unchanged, and no hostname write during commissioning reset."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/nethelper/hostname_linux.go",
-    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
-    "05_Software/nilo_assistant/internal/nethelper/engine.go",
-    "05_Software/nilo_assistant/cmd/nilo-nethelper/serve_linux.go",
+    "05_Software/core/internal/nethelper/hostname_linux.go",
+    "05_Software/core/internal/nethelper/protocol.go",
+    "05_Software/core/internal/nethelper/engine.go",
+    "05_Software/core/cmd/nilo-nethelper/serve_linux.go",
     "02_Tools/scripts/install-nethelper.sh",
     "02_Tools/scripts/build-appliance.sh",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/nethelper/hostname_test.go::*",
+    "05_Software/core/internal/nethelper/hostname_test.go::*",
 ]
 
 

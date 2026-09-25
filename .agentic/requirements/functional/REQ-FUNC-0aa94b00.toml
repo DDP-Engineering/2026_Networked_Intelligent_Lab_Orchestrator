@@ -53,27 +53,27 @@ verification = "An automated test requests each of the three periods and asserts
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/statistics.go",
-    "05_Software/nilo_assistant/internal/network/service.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/network_repository.go",
-    "05_Software/nilo_assistant/internal/httpapi/network.go",
-    "05_Software/nilo_assistant/internal/httpapi/server.go",
-    "05_Software/nilo_assistant/internal/network/statistics_test.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/network_repository_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/network_test.go",
+    "05_Software/core/internal/network/statistics.go",
+    "05_Software/core/internal/network/service.go",
+    "05_Software/core/internal/store/sqlite/network_repository.go",
+    "05_Software/core/internal/httpapi/network.go",
+    "05_Software/core/internal/httpapi/server.go",
+    "05_Software/core/internal/network/statistics_test.go",
+    "05_Software/core/internal/store/sqlite/network_repository_test.go",
+    "05_Software/core/internal/httpapi/network_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/statistics_test.go::TestParsePeriodAcceptsOnlyTheThreeOfferedWindows",
-    "05_Software/nilo_assistant/internal/network/statistics_test.go::TestStatisticsReturnsAtMostOnePointPerMinuteOfThePeriod",
-    "05_Software/nilo_assistant/internal/network/statistics_test.go::TestStatisticsMarksPointsStaleOnceSamplingHasStopped",
-    "05_Software/nilo_assistant/internal/network/statistics_test.go::TestStatisticsReportsAnEmptyWindowAsStaleRatherThanAsAFailure",
-    "05_Software/nilo_assistant/internal/network/statistics_test.go::TestStatisticsRequiresAnInterfaceAndAKnownPeriod",
-    "05_Software/nilo_assistant/internal/store/sqlite/network_repository_test.go::TestNetworkRepositoryBoundsHistoryToTheRequestedPeriod",
-    "05_Software/nilo_assistant/internal/httpapi/network_test.go::TestNetworkStatisticsRefusesAMissingInterfaceOrAnUnofferedPeriod",
-    "05_Software/nilo_assistant/internal/httpapi/network_test.go::TestNetworkStatisticsMarksAnUnrefreshedSeriesStale",
+    "05_Software/core/internal/network/statistics_test.go::TestParsePeriodAcceptsOnlyTheThreeOfferedWindows",
+    "05_Software/core/internal/network/statistics_test.go::TestStatisticsReturnsAtMostOnePointPerMinuteOfThePeriod",
+    "05_Software/core/internal/network/statistics_test.go::TestStatisticsMarksPointsStaleOnceSamplingHasStopped",
+    "05_Software/core/internal/network/statistics_test.go::TestStatisticsReportsAnEmptyWindowAsStaleRatherThanAsAFailure",
+    "05_Software/core/internal/network/statistics_test.go::TestStatisticsRequiresAnInterfaceAndAKnownPeriod",
+    "05_Software/core/internal/store/sqlite/network_repository_test.go::TestNetworkRepositoryBoundsHistoryToTheRequestedPeriod",
+    "05_Software/core/internal/httpapi/network_test.go::TestNetworkStatisticsRefusesAMissingInterfaceOrAnUnofferedPeriod",
+    "05_Software/core/internal/httpapi/network_test.go::TestNetworkStatisticsMarksAnUnrefreshedSeriesStale",
 ]
 
 # --- optional below this line ---

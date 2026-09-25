@@ -20,27 +20,27 @@ Where an administrator opens the Authentication page, the browser interface shal
 verification = "A component test renders the Authentication page as an administrator and asserts the policy disclosure is present and closed, that the identity listing is what the page shows without opening it, and that opening it reveals the minimum length and four checkboxes carrying the current policy; ticking two and submitting asserts the appliance client is called with exactly those requirements and the shown policy follows the response, while a refused change displays the appliance's message and leaves the previous values shown. The strings are asserted present in English, German and Romanian."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/components/authentication/PasswordPolicyPanel.tsx",
-    "05_Software/nilo_gui/src/components/authentication/UsersPage.tsx",
-    "05_Software/nilo_gui/src/api/contract.ts",
-    "05_Software/nilo_gui/src/api/client.ts",
-    "05_Software/nilo_gui/src/api/mock.ts",
-    "05_Software/nilo_gui/src/styles/shell.css",
-    "05_Software/nilo_gui/src/i18n/en.ts",
-    "05_Software/nilo_gui/src/i18n/de.ts",
-    "05_Software/nilo_gui/src/i18n/ro.ts",
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx",
-    "05_Software/nilo_gui/src/App.test.tsx",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
+    "05_Software/frontend/src/components/authentication/PasswordPolicyPanel.tsx",
+    "05_Software/frontend/src/components/authentication/UsersPage.tsx",
+    "05_Software/frontend/src/api/contract.ts",
+    "05_Software/frontend/src/api/client.ts",
+    "05_Software/frontend/src/api/mock.ts",
+    "05_Software/frontend/src/styles/shell.css",
+    "05_Software/frontend/src/i18n/en.ts",
+    "05_Software/frontend/src/i18n/de.ts",
+    "05_Software/frontend/src/i18n/ro.ts",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx",
+    "05_Software/frontend/src/App.test.tsx",
+    "05_Software/frontend/src/components/shell/shell.test.tsx",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::appliance password policy > starts collapsed, with the listing visible behind it",
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::appliance password policy > shows the stored policy once opened",
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::appliance password policy > submits the whole policy when requirements are ticked",
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::appliance password policy > reports the appliance's refusal and keeps the stored policy shown",
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::appliance password policy > is absent for a session without the permission",
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::appliance password policy > is editable for a session holding only the policy permission",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::appliance password policy > starts collapsed, with the listing visible behind it",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::appliance password policy > shows the stored policy once opened",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::appliance password policy > submits the whole policy when requirements are ticked",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::appliance password policy > reports the appliance's refusal and keeps the stored policy shown",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::appliance password policy > is absent for a session without the permission",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::appliance password policy > is editable for a session holding only the policy permission",
 ]
 
 

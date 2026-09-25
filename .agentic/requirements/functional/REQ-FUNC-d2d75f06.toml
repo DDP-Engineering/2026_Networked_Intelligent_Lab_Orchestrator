@@ -20,23 +20,23 @@ While an appliance is provisioning, NILO shall automatically obtain an RFC 3927 
 verification = "An automated service test presents eligible Ethernet interfaces with DHCP, static, addressless, protected, and wireless states and observes that only safe addressless Ethernet interfaces request helper-owned RFC 3927 addressing; disposable NetworkManager system tests create and remove an inventoried in-memory profile, observe a 169.254/16 address after conflict probing without a default route or DNS configuration, and prove a foreign same-prefix profile remains byte-for-byte unchanged."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/commissioning_link.go",
-    "05_Software/nilo_assistant/internal/network/commissioning_link_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_commissioning_linux.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_recovery_linux_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/internal/nethelper/commissioning_link.go",
-    "05_Software/nilo_assistant/internal/nethelper/store.go",
-    "05_Software/nilo_assistant/internal/nethelper/engine.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_commissioning_linux.go",
-    "05_Software/nilo_assistant/internal/network/model.go",
+    "05_Software/core/internal/network/commissioning_link.go",
+    "05_Software/core/internal/network/commissioning_link_test.go",
+    "05_Software/core/internal/nethelper/networkmanager_commissioning_linux.go",
+    "05_Software/core/internal/nethelper/networkmanager_recovery_linux_test.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/internal/nethelper/commissioning_link.go",
+    "05_Software/core/internal/nethelper/store.go",
+    "05_Software/core/internal/nethelper/engine.go",
+    "05_Software/core/internal/nethelper/networkmanager_linux.go",
+    "05_Software/core/internal/nethelper/networkmanager_commissioning_linux.go",
+    "05_Software/core/internal/network/model.go",
     "02_Tools/tests/network/run.sh",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/commissioning_link_test.go::*",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_recovery_linux_test.go::*",
+    "05_Software/core/internal/network/commissioning_link_test.go::*",
+    "05_Software/core/internal/nethelper/networkmanager_recovery_linux_test.go::*",
 ]
 
 

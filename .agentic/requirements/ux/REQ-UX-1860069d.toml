@@ -19,21 +19,21 @@ The device-network editor and the adapter configuration dialog shall offer a How
 verification = "A component test opens the How to configure help from the device-network editor and asserts the six sections are present with the example addresses 192.168.0.1/24 and 192.168.0.130, the external-route sentence and the recovery sentence, that Escape closes it with focus returned, and that the adapter configuration dialog offers the same control; the catalogue test asserts every help key exists in German and Romanian."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/components/help/WorkflowHelp.tsx",
-    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.tsx",
-    "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.tsx",
-    "05_Software/nilo_gui/src/i18n/en.ts",
-    "05_Software/nilo_gui/src/i18n/de.ts",
-    "05_Software/nilo_gui/src/i18n/ro.ts",
-    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx",
-    "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.test.tsx",
-    "05_Software/nilo_gui/src/i18n/messages.test.ts",
+    "05_Software/frontend/src/components/help/WorkflowHelp.tsx",
+    "05_Software/frontend/src/components/network/DeviceNetworksPanel.tsx",
+    "05_Software/frontend/src/components/network/InterfaceSettingsDialog.tsx",
+    "05_Software/frontend/src/i18n/en.ts",
+    "05_Software/frontend/src/i18n/de.ts",
+    "05_Software/frontend/src/i18n/ro.ts",
+    "05_Software/frontend/src/components/network/DeviceNetworksPanel.test.tsx",
+    "05_Software/frontend/src/components/network/InterfaceSettingsDialog.test.tsx",
+    "05_Software/frontend/src/i18n/messages.test.ts",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx::explains how to configure a device network on request",
-    "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.test.tsx::opens the how-to help with the six sections",
-    "05_Software/nilo_gui/src/i18n/messages.test.ts::defines every English key in de",
+    "05_Software/frontend/src/components/network/DeviceNetworksPanel.test.tsx::explains how to configure a device network on request",
+    "05_Software/frontend/src/components/network/InterfaceSettingsDialog.test.tsx::opens the how-to help with the six sections",
+    "05_Software/frontend/src/i18n/messages.test.ts::defines every English key in de",
 ]
 
 spec = ""

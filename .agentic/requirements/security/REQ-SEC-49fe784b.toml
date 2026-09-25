@@ -55,19 +55,19 @@ verification = "HTTP tests submit a session-authenticated logout with no token, 
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/httpapi/identity.go",
-    "05_Software/nilo_assistant/internal/auth/session.go",
-    "05_Software/nilo_assistant/internal/identity/service.go",
-    "05_Software/nilo_assistant/internal/httpapi/identity_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/administration.go",
-    "05_Software/nilo_assistant/internal/httpapi/server.go",
+    "05_Software/core/internal/httpapi/identity.go",
+    "05_Software/core/internal/auth/session.go",
+    "05_Software/core/internal/identity/service.go",
+    "05_Software/core/internal/httpapi/identity_test.go",
+    "05_Software/core/internal/httpapi/administration.go",
+    "05_Software/core/internal/httpapi/server.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/httpapi/identity_test.go::TestStateChangingSessionRequestsRequireTheMatchingCSRFToken",
-    "05_Software/nilo_assistant/internal/httpapi/administration_test.go::TestAdministrationRoutesRequireTheSessionCSRFToken",
+    "05_Software/core/internal/httpapi/identity_test.go::TestStateChangingSessionRequestsRequireTheMatchingCSRFToken",
+    "05_Software/core/internal/httpapi/administration_test.go::TestAdministrationRoutesRequireTheSessionCSRFToken",
 ]
 
 # --- optional below this line ---

@@ -20,18 +20,18 @@ When no appliance-name record exists, the privileged helper shall derive and per
 verification = "Automated helper tests initialize empty state with Pi, DMI, absent, malformed and changing source fixtures; they assert the exact version-1 names, deterministic hardware-derived results, one persisted fallback, mode-restricted state, unchanged results across restart and commissioning reset, distinct names for distinct inputs, and absence of each raw source value from public responses and logs."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/nethelper/appliance_identity.go",
-    "05_Software/nilo_assistant/internal/nethelper/appliance_identity_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/store.go",
-    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
-    "05_Software/nilo_assistant/internal/nethelper/client.go",
-    "05_Software/nilo_assistant/internal/appliance/identity.go",
+    "05_Software/core/internal/nethelper/appliance_identity.go",
+    "05_Software/core/internal/nethelper/appliance_identity_test.go",
+    "05_Software/core/internal/nethelper/store.go",
+    "05_Software/core/internal/nethelper/protocol.go",
+    "05_Software/core/internal/nethelper/client.go",
+    "05_Software/core/internal/appliance/identity.go",
     "02_Tools/scripts/install-nethelper.sh",
     "02_Tools/scripts/build-appliance.sh",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/nethelper/appliance_identity_test.go::*",
+    "05_Software/core/internal/nethelper/appliance_identity_test.go::*",
 ]
 
 

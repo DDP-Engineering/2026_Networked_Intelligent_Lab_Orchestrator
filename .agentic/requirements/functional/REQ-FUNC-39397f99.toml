@@ -53,18 +53,18 @@ verification = "Python SDK tests implement a fixture integration, invoke every l
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/integration_sdk/python/",
+    "05_Software/integrations/sdk/python/",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/integration_sdk/python/tests/test_models.py::test_hello_request_rejects_extra_fields",
-    "05_Software/integration_sdk/python/tests/test_models.py::test_shared_golden_fixture_validates_and_round_trips",
-    "05_Software/integration_sdk/python/tests/test_server.py::test_server_handles_each_non_execute_lifecycle_method_after_hello",
-    "05_Software/integration_sdk/python/tests/test_server.py::test_execute_does_not_block_correlated_cancel",
-    "05_Software/integration_sdk/python/tests/test_server.py::test_server_emits_events_then_one_execute_terminal_response",
-    "05_Software/integration_sdk/python/tests/test_server.py::test_server_answers_hello_and_describe_without_diagnostic_stdout",
+    "05_Software/integrations/sdk/python/tests/test_models.py::test_hello_request_rejects_extra_fields",
+    "05_Software/integrations/sdk/python/tests/test_models.py::test_shared_golden_fixture_validates_and_round_trips",
+    "05_Software/integrations/sdk/python/tests/test_server.py::test_server_handles_each_non_execute_lifecycle_method_after_hello",
+    "05_Software/integrations/sdk/python/tests/test_server.py::test_execute_does_not_block_correlated_cancel",
+    "05_Software/integrations/sdk/python/tests/test_server.py::test_server_emits_events_then_one_execute_terminal_response",
+    "05_Software/integrations/sdk/python/tests/test_server.py::test_server_answers_hello_and_describe_without_diagnostic_stdout",
 ]
 
 # --- optional below this line ---

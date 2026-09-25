@@ -56,20 +56,20 @@ verification = "Command tests run each subcommand against a temporary data direc
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/cmd/nilo/admin.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/internal/identity/service.go",
-    "05_Software/nilo_assistant/internal/auth/user.go",
-    "05_Software/nilo_assistant/cmd/nilo/admin_test.go",
-    "05_Software/nilo_assistant/internal/auth/session_test.go",
+    "05_Software/core/cmd/nilo/admin.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/internal/identity/service.go",
+    "05_Software/core/internal/auth/user.go",
+    "05_Software/core/cmd/nilo/admin_test.go",
+    "05_Software/core/internal/auth/session_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/cmd/nilo/admin_test.go::TestAdminUserCommandsManageIdentitiesWithoutPrintingPasswords",
-    "05_Software/nilo_assistant/cmd/nilo/admin_test.go::TestAdminBootstrapRefusesMismatchedOrWeakPasswords",
-    "05_Software/nilo_assistant/internal/auth/session_test.go::TestNormalizeUsernameFoldsCaseAndRejectsUnusableNames",
+    "05_Software/core/cmd/nilo/admin_test.go::TestAdminUserCommandsManageIdentitiesWithoutPrintingPasswords",
+    "05_Software/core/cmd/nilo/admin_test.go::TestAdminBootstrapRefusesMismatchedOrWeakPasswords",
+    "05_Software/core/internal/auth/session_test.go::TestNormalizeUsernameFoldsCaseAndRejectsUnusableNames",
 ]
 
 # --- optional below this line ---

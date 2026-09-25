@@ -53,21 +53,21 @@ verification = "Authentication tests verify correct and incorrect passwords, dis
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/auth/password.go",
-    "05_Software/nilo_assistant/internal/auth/password_test.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/auth_repository.go",
+    "05_Software/core/internal/auth/password.go",
+    "05_Software/core/internal/auth/password_test.go",
+    "05_Software/core/internal/store/sqlite/auth_repository.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/auth/password_test.go::TestHashPasswordRoundTripsAndDoesNotMutateCallerBuffer",
-    "05_Software/nilo_assistant/internal/auth/password_test.go::TestVerifyPasswordRejectsWrongPassword",
-    "05_Software/nilo_assistant/internal/auth/password_test.go::TestHashPasswordUsesDistinctSalts",
-    "05_Software/nilo_assistant/internal/auth/password_test.go::TestPasswordFunctionsRejectTheMaximumAndTheEmptyPassword",
-    "05_Software/nilo_assistant/internal/auth/password_test.go::TestVerifyPasswordRejectsMalformedAndUnsupportedPHCInputs",
-    "05_Software/nilo_assistant/internal/auth/password_test.go::TestVerifyPasswordRejectsOversizedPHCInputBeforeParsing",
-    "05_Software/nilo_assistant/internal/auth/password_test.go::TestVerifyPasswordRejectsOversizedPHCComponentsBeforeDecode",
+    "05_Software/core/internal/auth/password_test.go::TestHashPasswordRoundTripsAndDoesNotMutateCallerBuffer",
+    "05_Software/core/internal/auth/password_test.go::TestVerifyPasswordRejectsWrongPassword",
+    "05_Software/core/internal/auth/password_test.go::TestHashPasswordUsesDistinctSalts",
+    "05_Software/core/internal/auth/password_test.go::TestPasswordFunctionsRejectTheMaximumAndTheEmptyPassword",
+    "05_Software/core/internal/auth/password_test.go::TestVerifyPasswordRejectsMalformedAndUnsupportedPHCInputs",
+    "05_Software/core/internal/auth/password_test.go::TestVerifyPasswordRejectsOversizedPHCInputBeforeParsing",
+    "05_Software/core/internal/auth/password_test.go::TestVerifyPasswordRejectsOversizedPHCComponentsBeforeDecode",
 ]
 
 # --- optional below this line ---

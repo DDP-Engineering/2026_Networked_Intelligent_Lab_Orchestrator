@@ -49,15 +49,15 @@ verification = "An automated test runs the start command against a stand-in dist
 affected_paths = [
     "02_Tools/scripts/nilo-dev.ps1",
     "02_Tools/lib/DevLifecycle.ps1",
-    "05_Software/scripts/tests/test_development_lifecycle.py",
+    "02_Tools/tests/software/test_development_lifecycle.py",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_backend_data_directory_is_linux_native",
-    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_a_windows_mounted_home_is_refused",
-    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_a_diagnostic_line_from_wsl_does_not_corrupt_the_data_directory",
+    "02_Tools/tests/software/test_development_lifecycle.py::DevelopmentLifecycleTests::test_backend_data_directory_is_linux_native",
+    "02_Tools/tests/software/test_development_lifecycle.py::DevelopmentLifecycleTests::test_a_windows_mounted_home_is_refused",
+    "02_Tools/tests/software/test_development_lifecycle.py::DevelopmentLifecycleTests::test_a_diagnostic_line_from_wsl_does_not_corrupt_the_data_directory",
 ]
 
 # --- optional below this line ---

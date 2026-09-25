@@ -19,15 +19,15 @@ The appliance shall answer an authorized activity query filtered by category, ti
 verification = "An API test asserts filtering on each field, a bounded page size, stable cursor paging across a full result set, and the reported retained window."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/activity/activity.go",
-    "05_Software/nilo_assistant/internal/httpapi/activity.go",
-    "05_Software/nilo_assistant/cmd/nilo/activity.go",
-    "05_Software/nilo_gui/src/api/activity.ts",
+    "05_Software/core/internal/activity/activity.go",
+    "05_Software/core/internal/httpapi/activity.go",
+    "05_Software/core/cmd/nilo/activity.go",
+    "05_Software/frontend/src/api/activity.ts",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/activity/activity_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/activity_test.go",
+    "05_Software/core/internal/activity/activity_test.go",
+    "05_Software/core/internal/httpapi/activity_test.go",
 ]
 
 spec = "specs/REQ-FUNC-2f8d63b5.md"

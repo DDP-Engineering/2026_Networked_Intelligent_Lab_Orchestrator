@@ -20,26 +20,26 @@ While the appliance is provisioning, NILO shall answer both its permanent `<seri
 verification = "Automated announcer/helper tests publish the serial and recovery aliases across two interface indexes and observe only their current A/AAAA records, independent helper-owned groups, no alias when the set is empty, no republish for an identical request, replacement after an interface change, and retry after responder failure; injected `nilo.local` collision/withdrawal leaves the serial alias resolving, while invalid labels, loopback, duplicates, unknown interfaces and configuration separators are refused."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/mdns.go",
-    "05_Software/nilo_assistant/internal/network/mdns_announcer.go",
-    "05_Software/nilo_assistant/internal/network/mdns_announcer_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/avahi_plan.go",
-    "05_Software/nilo_assistant/internal/nethelper/avahi_render_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/avahi_linux.go",
-    "05_Software/nilo_assistant/internal/nethelper/avahi_linux_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/mdns.go",
-    "05_Software/nilo_assistant/internal/nethelper/client.go",
-    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/cmd/nilo/discovery_runtime.go",
+    "05_Software/core/internal/network/mdns.go",
+    "05_Software/core/internal/network/mdns_announcer.go",
+    "05_Software/core/internal/network/mdns_announcer_test.go",
+    "05_Software/core/internal/nethelper/avahi_plan.go",
+    "05_Software/core/internal/nethelper/avahi_render_test.go",
+    "05_Software/core/internal/nethelper/avahi_linux.go",
+    "05_Software/core/internal/nethelper/avahi_linux_test.go",
+    "05_Software/core/internal/nethelper/networkmanager_linux_test.go",
+    "05_Software/core/internal/nethelper/mdns.go",
+    "05_Software/core/internal/nethelper/client.go",
+    "05_Software/core/internal/nethelper/protocol.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/cmd/nilo/discovery_runtime.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/mdns_announcer_test.go::*",
-    "05_Software/nilo_assistant/internal/nethelper/avahi_render_test.go::*",
-    "05_Software/nilo_assistant/internal/nethelper/avahi_linux_test.go::*",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux_test.go::*",
+    "05_Software/core/internal/network/mdns_announcer_test.go::*",
+    "05_Software/core/internal/nethelper/avahi_render_test.go::*",
+    "05_Software/core/internal/nethelper/avahi_linux_test.go::*",
+    "05_Software/core/internal/nethelper/networkmanager_linux_test.go::*",
 ]
 
 

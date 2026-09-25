@@ -59,18 +59,18 @@ verification = "Role and HTTP tests submit requests as Viewer, Operator and Admi
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/auth/role.go",
-    "05_Software/nilo_assistant/internal/httpapi/server.go",
-    "05_Software/nilo_assistant/internal/httpapi/power.go",
-    "05_Software/nilo_gui/src/components/AdministrationForms.tsx",
+    "05_Software/core/internal/auth/role.go",
+    "05_Software/core/internal/httpapi/server.go",
+    "05_Software/core/internal/httpapi/power.go",
+    "05_Software/frontend/src/components/AdministrationForms.tsx",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/auth/role_test.go::TestPowerPermissionBelongsToOperatorsAndAdministrators",
-    "05_Software/nilo_assistant/internal/httpapi/power_test.go::TestPowerRouteRefusesViewerBearerAndInvalidCSRFBeforeDispatch",
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::does not offer session-only appliance power as an API token scope",
+    "05_Software/core/internal/auth/role_test.go::TestPowerPermissionBelongsToOperatorsAndAdministrators",
+    "05_Software/core/internal/httpapi/power_test.go::TestPowerRouteRefusesViewerBearerAndInvalidCSRFBeforeDispatch",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::does not offer session-only appliance power as an API token scope",
 ]
 
 # --- optional below this line ---

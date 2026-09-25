@@ -55,13 +55,13 @@ verification = "Automated PowerShell tests use a fake WSL executable to verify s
 affected_paths = [
     "02_Tools/scripts/doctor-wsl.ps1",
     "02_Tools/lib/Wsl.ps1",
-    "05_Software/scripts/tests/test_toolchain_bootstrap.py",
+    "02_Tools/tests/software/test_toolchain_bootstrap.py",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/scripts/tests/test_toolchain_bootstrap.py::ToolchainBootstrapTests::test_wsl_doctor_checks_kernel_checkout_and_linux_tools",
+    "02_Tools/tests/software/test_toolchain_bootstrap.py::ToolchainBootstrapTests::test_wsl_doctor_checks_kernel_checkout_and_linux_tools",
 ]
 
 # --- optional below this line ---

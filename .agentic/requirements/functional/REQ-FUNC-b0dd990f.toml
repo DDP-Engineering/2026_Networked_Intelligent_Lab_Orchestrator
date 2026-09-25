@@ -53,23 +53,23 @@ verification = "Golden protocol tests exercise every lifecycle method, event cor
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/schemas/integration/v1/",
-    "05_Software/nilo_assistant/internal/integration/protocol/",
-    "05_Software/integration_sdk/python/src/nilo_integration/",
+    "05_Software/contracts/integration/v1/",
+    "05_Software/core/internal/integration/protocol/",
+    "05_Software/integrations/sdk/python/src/nilo_integration/",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/integration/protocol/codec_test.go::TestSharedRegistryValidatesGoldenLifecycleAndRoundTrips",
-    "05_Software/nilo_assistant/internal/integration/protocol/codec_test.go::TestRegistryRejectsOrphanMismatchedAndDuplicateMessages",
-    "05_Software/nilo_assistant/internal/integration/protocol/codec_test.go::TestRegistryRejectsMultipleTerminalResponsesAndEventsAfterTerminal",
-    "05_Software/nilo_assistant/internal/integration/protocol/codec_test.go::TestDecoderReportsOutstandingExecuteAtEOF",
-    "05_Software/nilo_assistant/internal/integration/protocol/codec_test.go::TestEncoderRejectsFrameOverOneMiBAndAcceptsExactBoundary",
-    "05_Software/integration_sdk/python/tests/test_models.py::test_shared_golden_fixture_validates_and_round_trips",
-    "05_Software/integration_sdk/python/tests/test_server.py::test_execute_does_not_block_correlated_cancel",
-    "05_Software/integration_sdk/python/tests/test_server.py::test_eof_with_running_non_execute_request_is_not_success",
-    "05_Software/integration_sdk/python/tests/test_server.py::test_terminal_write_fault_is_connection_fatal",
+    "05_Software/core/internal/integration/protocol/codec_test.go::TestSharedRegistryValidatesGoldenLifecycleAndRoundTrips",
+    "05_Software/core/internal/integration/protocol/codec_test.go::TestRegistryRejectsOrphanMismatchedAndDuplicateMessages",
+    "05_Software/core/internal/integration/protocol/codec_test.go::TestRegistryRejectsMultipleTerminalResponsesAndEventsAfterTerminal",
+    "05_Software/core/internal/integration/protocol/codec_test.go::TestDecoderReportsOutstandingExecuteAtEOF",
+    "05_Software/core/internal/integration/protocol/codec_test.go::TestEncoderRejectsFrameOverOneMiBAndAcceptsExactBoundary",
+    "05_Software/integrations/sdk/python/tests/test_models.py::test_shared_golden_fixture_validates_and_round_trips",
+    "05_Software/integrations/sdk/python/tests/test_server.py::test_execute_does_not_block_correlated_cancel",
+    "05_Software/integrations/sdk/python/tests/test_server.py::test_eof_with_running_non_execute_request_is_not_success",
+    "05_Software/integrations/sdk/python/tests/test_server.py::test_terminal_write_fault_is_connection_fatal",
 ]
 
 # --- optional below this line ---

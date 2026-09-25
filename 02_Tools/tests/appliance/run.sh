@@ -10,7 +10,7 @@ set -eu
 
 # The image inventory, proved rather than declared. Each probe below must stay
 # equal to 02_Tools/tests/appliance/inventory.json, which
-# 05_Software/scripts/tests/test_appliance_stage.py asserts, so the list cannot
+# 02_Tools/tests/software/test_appliance_stage.py asserts, so the list cannot
 # drift from what the stage actually depends on.
 . /repo/02_Tools/tests/appliance/probe.sh
 chromium=$(find "$PLAYWRIGHT_BROWSERS_PATH" -type f -path '*/chrome-linux*/chrome' -print -quit)
@@ -26,7 +26,7 @@ probe node node --version
 probe chromium /tmp/nilo-appliance-chromium --version
 echo '--- end inventory ---'
 
-cd /repo/05_Software/nilo_assistant
+cd /repo/05_Software/core
 
 # Finish compilation and any module reads while the container still has its
 # original link, exactly as the helper system run does.
@@ -83,7 +83,7 @@ NILO_NETHELPER_BINARY=/tmp/nilo-nethelper \
 gui_root=/tmp/nilo-gui
 rm -rf "$gui_root"
 mkdir -p "$gui_root"
-cp -r /repo/05_Software/nilo_gui/. "$gui_root"/
+cp -r /repo/05_Software/frontend/. "$gui_root"/
 rm -rf "$gui_root/node_modules"
 ln -s /opt/nilo/gui-modules/node_modules "$gui_root/node_modules"
 cd "$gui_root"

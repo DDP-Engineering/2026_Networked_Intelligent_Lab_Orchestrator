@@ -53,17 +53,17 @@ verification = "A table-driven resolver test asserts all twelve approved policy-
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/policy/",
-    "05_Software/nilo_assistant/internal/store/sqlite/policy_repository.go",
+    "05_Software/core/internal/policy/",
+    "05_Software/core/internal/store/sqlite/policy_repository.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/policy/resolver_test.go::TestResolveApprovedPolicyMatrix",
-    "05_Software/nilo_assistant/internal/policy/resolver_test.go::TestResolveUnknownIdentityAndDeviceAuthorityPrecedence",
-    "05_Software/nilo_assistant/internal/policy/resolver_test.go::TestResolveOperationOverrideReplacesDefaultWithoutBypassingBindingPolicies",
-    "05_Software/nilo_assistant/internal/policy/resolver_test.go::TestResolveSnapshotRecordsAllInputsAndCopiesOverride",
+    "05_Software/core/internal/policy/resolver_test.go::TestResolveApprovedPolicyMatrix",
+    "05_Software/core/internal/policy/resolver_test.go::TestResolveUnknownIdentityAndDeviceAuthorityPrecedence",
+    "05_Software/core/internal/policy/resolver_test.go::TestResolveOperationOverrideReplacesDefaultWithoutBypassingBindingPolicies",
+    "05_Software/core/internal/policy/resolver_test.go::TestResolveSnapshotRecordsAllInputsAndCopiesOverride",
 ]
 
 # --- optional below this line ---

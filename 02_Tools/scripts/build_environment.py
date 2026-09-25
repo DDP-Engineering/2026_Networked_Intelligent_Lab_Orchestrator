@@ -158,7 +158,7 @@ def validate_lock(path: Path) -> dict[str, Any]:
     download_hashes = {item["name"]: item["sha256"] for item in downloads}
     for name, key in {"go":"GO_LINUX_AMD64_SHA256", "uv":"UV_LINUX_AMD64_SHA256", "node":"NODE_LINUX_AMD64_SHA256", "playwright-lock":"PLAYWRIGHT_LOCK_SHA256", "playwright-browser-catalog":"PLAYWRIGHT_BROWSER_CATALOG_SHA256"}.items():
         _require(download_hashes.get(name) == values.get(key), f"lock and toolchain.versions disagree for {name} digest")
-    package_lock = repository_root / "05_Software/nilo_gui/package-lock.json"
+    package_lock = repository_root / "05_Software/frontend/package-lock.json"
     _require(_sha256(package_lock) == download_hashes["playwright-lock"], "GUI package lock digest does not match the environment lock")
     return lock
 

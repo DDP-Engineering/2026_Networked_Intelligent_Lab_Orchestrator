@@ -54,18 +54,18 @@ verification = "A command test seeds a running session holding an active lease i
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/app/app.go",
-    "05_Software/nilo_assistant/cmd/nilo/admin.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/internal/app/app_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/admin_test.go",
+    "05_Software/core/internal/app/app.go",
+    "05_Software/core/cmd/nilo/admin.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/internal/app/app_test.go",
+    "05_Software/core/cmd/nilo/admin_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/app/app_test.go::TestOpenLeavesInterruptedSessionsForTheServerToReconcile",
-    "05_Software/nilo_assistant/cmd/nilo/admin_test.go::TestAdminUserListLeavesRunningSessionsAndTheirLeasesUntouched",
+    "05_Software/core/internal/app/app_test.go::TestOpenLeavesInterruptedSessionsForTheServerToReconcile",
+    "05_Software/core/cmd/nilo/admin_test.go::TestAdminUserListLeavesRunningSessionsAndTheirLeasesUntouched",
 ]
 
 # --- optional below this line ---

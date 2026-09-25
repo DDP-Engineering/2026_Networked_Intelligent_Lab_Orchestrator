@@ -53,15 +53,15 @@ verification = "Policy repository tests discover new and known identities across
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/policy/",
-    "05_Software/nilo_assistant/internal/store/sqlite/policy_repository.go",
+    "05_Software/core/internal/policy/",
+    "05_Software/core/internal/store/sqlite/policy_repository.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/policy/resolver_test.go::TestResolveUnknownIdentityAndDeviceAuthorityPrecedence",
-    "05_Software/nilo_assistant/internal/store/sqlite/policy_repository_test.go::TestPolicyRepositoryPersistsUnknownAppAndDeviceAskDecision",
+    "05_Software/core/internal/policy/resolver_test.go::TestResolveUnknownIdentityAndDeviceAuthorityPrecedence",
+    "05_Software/core/internal/store/sqlite/policy_repository_test.go::TestPolicyRepositoryPersistsUnknownAppAndDeviceAskDecision",
 ]
 
 # --- optional below this line ---

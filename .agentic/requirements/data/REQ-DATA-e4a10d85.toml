@@ -19,19 +19,19 @@ The appliance shall retain audit, operational and debug records under separate c
 verification = "A storage-pressure test fills each store past its budget, asserts bounded purging, asserts ordinary operations are not blocked by it, and asserts the reported retained window matches what is actually retained."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/store/sqlite/audit_repository.go",
-    "05_Software/nilo_assistant/internal/audit/audit.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository_test.go",
-    "05_Software/nilo_assistant/internal/activity/housekeeping.go",
-    "05_Software/nilo_assistant/internal/activity/policy.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/activity_repository.go",
-    "05_Software/nilo_assistant/internal/activity/health.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/migrations/010_activity.sql",
+    "05_Software/core/internal/store/sqlite/audit_repository.go",
+    "05_Software/core/internal/audit/audit.go",
+    "05_Software/core/internal/store/sqlite/appliance_repository_test.go",
+    "05_Software/core/internal/activity/housekeeping.go",
+    "05_Software/core/internal/activity/policy.go",
+    "05_Software/core/internal/store/sqlite/activity_repository.go",
+    "05_Software/core/internal/activity/health.go",
+    "05_Software/core/internal/store/sqlite/migrations/010_activity.sql",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository_test.go::TestAuditSequenceNeverRepeatsAfterRetentionEmptiesTheTable",
-    "05_Software/nilo_assistant/internal/activity/activity_test.go",
+    "05_Software/core/internal/store/sqlite/appliance_repository_test.go::TestAuditSequenceNeverRepeatsAfterRetentionEmptiesTheTable",
+    "05_Software/core/internal/activity/activity_test.go",
 ]
 
 spec = "specs/REQ-FUNC-2f8d63b5.md"

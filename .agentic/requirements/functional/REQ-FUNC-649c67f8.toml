@@ -53,19 +53,19 @@ verification = "A command test invokes development token issuance, authenticates
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/app/app.go",
-    "05_Software/nilo_assistant/internal/auth/repository.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/auth_repository.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/auth_repository_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/cmd/nilo/main_test.go",
+    "05_Software/core/internal/app/app.go",
+    "05_Software/core/internal/auth/repository.go",
+    "05_Software/core/internal/store/sqlite/auth_repository.go",
+    "05_Software/core/internal/store/sqlite/auth_repository_test.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/cmd/nilo/main_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/cmd/nilo/main_test.go::TestDevelopmentIssueTokenCommandCreatesAuthenticatableLockedIdentity",
-    "05_Software/nilo_assistant/internal/store/sqlite/auth_repository_test.go::TestAuthRepositoryRollsBackDevelopmentUserWhenTokenInsertFails",
+    "05_Software/core/cmd/nilo/main_test.go::TestDevelopmentIssueTokenCommandCreatesAuthenticatableLockedIdentity",
+    "05_Software/core/internal/store/sqlite/auth_repository_test.go::TestAuthRepositoryRollsBackDevelopmentUserWhenTokenInsertFails",
 ]
 
 # --- optional below this line ---

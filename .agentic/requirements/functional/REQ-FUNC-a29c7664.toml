@@ -57,11 +57,11 @@ When a developer runs build-environment setup from an already-cloned checkout, t
 verification = "Automated restore tests use a synthetic OCI archive to prove ordered part, per-part SHA-256/size/LFS OID, joined size/SHA-256, temporary and daemon-storage capacity checks, import, image digest, and inventory checks; missing, duplicate, unexpected, reordered, pointer, corrupt, wrong-digest, and insufficient-space cases fail before execution."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
-affected_paths = ["02_Tools/bootstrap/bootstrap-build-environment.ps1", "02_Tools/bootstrap/bootstrap-build-environment.sh", "02_Tools/scripts/build_environment.py", "02_Tools/scripts/restore-build-environment.sh", "02_Tools/archives/build-environment/current.json", "05_Software/scripts/tests/test_build_environment.py", "02_Tools/scripts/export-build-environment.sh"]
+affected_paths = ["02_Tools/bootstrap/bootstrap-build-environment.ps1", "02_Tools/bootstrap/bootstrap-build-environment.sh", "02_Tools/scripts/build_environment.py", "02_Tools/scripts/restore-build-environment.sh", "02_Tools/archives/build-environment/current.json", "02_Tools/tests/software/test_build_environment.py", "02_Tools/scripts/export-build-environment.sh"]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
-linked_tests = ["05_Software/scripts/tests/test_build_environment.py"]
+linked_tests = ["02_Tools/tests/software/test_build_environment.py"]
 
 # --- optional below this line ---
 

@@ -71,15 +71,15 @@ survive, rather than returning successfully.
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/e2e/topology.ts",
-    "05_Software/nilo_gui/e2e/topology.test.ts",
-    "05_Software/nilo_gui/e2e/bench-core.spec.ts",
+    "05_Software/frontend/e2e/topology.ts",
+    "05_Software/frontend/e2e/topology.test.ts",
+    "05_Software/frontend/e2e/bench-core.spec.ts",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/e2e/topology.test.ts::releasing what a run created",
+    "05_Software/frontend/e2e/topology.test.ts::releasing what a run created",
 ]
 
 # --- optional below this line ---

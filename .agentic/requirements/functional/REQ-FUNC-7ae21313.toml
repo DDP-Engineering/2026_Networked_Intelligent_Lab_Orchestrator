@@ -20,16 +20,16 @@ The Network service shall report a network interface as eligible to carry applia
 verification = "An automated table-driven test asks the eligibility rule about readings shaped as a physical Ethernet adapter, a physical Wi-Fi adapter, a virtual Ethernet device, a bridge, a loopback device, a WireGuard tunnel device and a physical adapter whose adapter identity is empty, and asserts only the first two are eligible. The same test repeats the physical Ethernet case under the name \"docker0\" and the virtual device case under the name \"enp1s0\", asserting both answers follow the recorded hardware facts and are unchanged by the swapped names. A further test reads the simulated catalog and asserts it contains at least one eligible adapter and at least one interface that is ineligible for a reason other than loopback."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/eligibility.go",
-    "05_Software/nilo_assistant/internal/network/eligibility_test.go",
-    "05_Software/nilo_assistant/internal/network/model.go",
-    "05_Software/nilo_assistant/internal/network/provider_simulated.go",
-    "05_Software/nilo_assistant/internal/network/provider_simulated_test.go",
+    "05_Software/core/internal/network/eligibility.go",
+    "05_Software/core/internal/network/eligibility_test.go",
+    "05_Software/core/internal/network/model.go",
+    "05_Software/core/internal/network/provider_simulated.go",
+    "05_Software/core/internal/network/provider_simulated_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/eligibility_test.go::TestEligibilityFollowsHardwareFactsNotInterfaceNames",
-    "05_Software/nilo_assistant/internal/network/provider_simulated_test.go::TestSimulatedCatalogCarriesEligibleAndIneligibleInterfaces",
+    "05_Software/core/internal/network/eligibility_test.go::TestEligibilityFollowsHardwareFactsNotInterfaceNames",
+    "05_Software/core/internal/network/provider_simulated_test.go::TestSimulatedCatalogCarriesEligibleAndIneligibleInterfaces",
 ]
 
 

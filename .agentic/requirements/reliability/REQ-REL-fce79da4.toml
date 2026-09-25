@@ -53,15 +53,15 @@ verification = "A server lifecycle test cancels the serving context, observes th
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/httpapi/server.go",
-    "05_Software/nilo_assistant/internal/httpapi/server_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/core/internal/httpapi/server.go",
+    "05_Software/core/internal/httpapi/server_test.go",
+    "05_Software/core/cmd/nilo/main.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/httpapi/server_test.go::TestServeStopsAfterContextCancellation",
+    "05_Software/core/internal/httpapi/server_test.go::TestServeStopsAfterContextCancellation",
 ]
 
 # --- optional below this line ---

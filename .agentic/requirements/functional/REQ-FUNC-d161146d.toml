@@ -49,14 +49,14 @@ verification = "An automated test drives the readiness check with an injected pr
 affected_paths = [
     "02_Tools/scripts/nilo-dev.ps1",
     "02_Tools/lib/DevLifecycle.ps1",
-    "05_Software/scripts/tests/test_development_lifecycle.py",
+    "02_Tools/tests/software/test_development_lifecycle.py",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_start_reports_success_only_after_both_endpoints_answer",
-    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_start_reports_a_timeout_naming_the_silent_component",
+    "02_Tools/tests/software/test_development_lifecycle.py::DevelopmentLifecycleTests::test_start_reports_success_only_after_both_endpoints_answer",
+    "02_Tools/tests/software/test_development_lifecycle.py::DevelopmentLifecycleTests::test_start_reports_a_timeout_naming_the_silent_component",
 ]
 
 # --- optional below this line ---

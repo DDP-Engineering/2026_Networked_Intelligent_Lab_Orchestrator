@@ -17,12 +17,12 @@ Plugins heading and large lifecycle card consume the working area.
 
 OBSERVED in the current repository:
 
-- `05_Software/nilo_gui/src/components/pages/PluginsPage.tsx` combines all four
+- `05_Software/frontend/src/components/pages/PluginsPage.tsx` combines all four
   concerns, polls every 1.5 seconds, displays UUIDs and absolute deadlines, and
   offers uninstall without a confirmation dialog.
-- `05_Software/nilo_gui/src/components/shell/pages.ts` derives instrument pages
+- `05_Software/frontend/src/components/shell/pages.ts` derives instrument pages
   from the older integration inventory, separately from managed plugin state.
-- `05_Software/nilo_assistant/internal/bench/packages.go` and
+- `05_Software/core/internal/bench/packages.go` and
   `internal/httpapi/bench.go` require `plugins.manage` for every lifecycle action,
   including restart. Managed inventory includes available catalog entries as
   well as installed packages; submenu membership must filter `installed`.

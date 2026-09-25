@@ -22,14 +22,14 @@ size.
 verification = "A component test renders the Activity page and asserts the first query carries a limit of 10 and that the page-size control offers 10, 25, 50, 100 and all; selecting 50 asserts the next query carries a limit of 50 from page 1, and selecting all asserts the query carries the whole selection."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.tsx",
-    "05_Software/nilo_gui/src/api/activity.ts",
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx",
+    "05_Software/frontend/src/components/pages/ActivityPage.tsx",
+    "05_Software/frontend/src/api/activity.ts",
+    "05_Software/frontend/src/components/pages/ActivityPage.test.tsx",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx::selects component families, page sizes and numbered pages",
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx::opens with the given filters, changes pages and discloses the gap",
+    "05_Software/frontend/src/components/pages/ActivityPage.test.tsx::selects component families, page sizes and numbered pages",
+    "05_Software/frontend/src/components/pages/ActivityPage.test.tsx::opens with the given filters, changes pages and discloses the gap",
 ]
 
 

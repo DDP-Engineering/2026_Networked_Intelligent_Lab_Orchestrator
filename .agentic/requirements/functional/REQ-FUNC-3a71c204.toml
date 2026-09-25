@@ -19,27 +19,27 @@ The appliance shall record a saved interface configuration against the adapter's
 verification = "A repository and provider test saves a configuration for an adapter, renames the kernel device and reports the configuration still bound; removing the adapter reports the configuration present and unapplied instead of applied or deleted."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/interface_settings.go",
-    "05_Software/nilo_assistant/internal/network/model.go",
-    "05_Software/nilo_assistant/internal/network/service.go",
-    "05_Software/nilo_assistant/internal/network/wifi.go",
-    "05_Software/nilo_assistant/internal/network/simulation_settings.go",
-    "05_Software/nilo_assistant/internal/network/appliance_settings.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/interface_settings_repository.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/migrations/008_interface_settings.sql",
-    "05_Software/nilo_assistant/internal/store/sqlite/migrations.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux.go",
-    "05_Software/nilo_assistant/internal/network/interface_settings_test.go",
-    "05_Software/nilo_assistant/internal/network/simulation_settings_test.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/interface_settings_repository_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_settings_linux_test.go",
+    "05_Software/core/internal/network/interface_settings.go",
+    "05_Software/core/internal/network/model.go",
+    "05_Software/core/internal/network/service.go",
+    "05_Software/core/internal/network/wifi.go",
+    "05_Software/core/internal/network/simulation_settings.go",
+    "05_Software/core/internal/network/appliance_settings.go",
+    "05_Software/core/internal/store/sqlite/interface_settings_repository.go",
+    "05_Software/core/internal/store/sqlite/migrations/008_interface_settings.sql",
+    "05_Software/core/internal/store/sqlite/migrations.go",
+    "05_Software/core/internal/nethelper/networkmanager_linux.go",
+    "05_Software/core/internal/network/interface_settings_test.go",
+    "05_Software/core/internal/network/simulation_settings_test.go",
+    "05_Software/core/internal/store/sqlite/interface_settings_repository_test.go",
+    "05_Software/core/internal/nethelper/networkmanager_settings_linux_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/interface_settings_test.go::TestSavedSettingsFollowTheAdapterNotTheKernelName",
-    "05_Software/nilo_assistant/internal/network/simulation_settings_test.go::TestSimulationAppliesAndPersistsInterfaceSettings",
-    "05_Software/nilo_assistant/internal/store/sqlite/interface_settings_repository_test.go::TestInterfaceSettingsRoundTripAndRevision",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_settings_linux_test.go::TestNetworkManagerSettingsSystem",
+    "05_Software/core/internal/network/interface_settings_test.go::TestSavedSettingsFollowTheAdapterNotTheKernelName",
+    "05_Software/core/internal/network/simulation_settings_test.go::TestSimulationAppliesAndPersistsInterfaceSettings",
+    "05_Software/core/internal/store/sqlite/interface_settings_repository_test.go::TestInterfaceSettingsRoundTripAndRevision",
+    "05_Software/core/internal/nethelper/networkmanager_settings_linux_test.go::TestNetworkManagerSettingsSystem",
 ]
 
 spec = "specs/REQ-FUNC-2f8d63b5.md"

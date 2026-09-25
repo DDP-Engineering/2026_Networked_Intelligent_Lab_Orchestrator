@@ -20,17 +20,17 @@ Where an appliance-local display is supported, NILO shall serve an unauthenticat
 verification = "Automated listener and browser tests request the status page from IPv4 and IPv6 loopback without a session and observe the exact safe metadata/QR, then request the same path through every management and non-management listener and observe refusal; socket inspection proves loopback-only binds, and simulation/unsupported-display configuration creates no extra listener."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/httpapi/local_status.go",
-    "05_Software/nilo_assistant/internal/httpapi/local_status_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/listener.go",
-    "05_Software/nilo_assistant/internal/httpapi/server.go",
-    "05_Software/nilo_assistant/internal/config/config.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/internal/appliance/label.go",
+    "05_Software/core/internal/httpapi/local_status.go",
+    "05_Software/core/internal/httpapi/local_status_test.go",
+    "05_Software/core/internal/httpapi/listener.go",
+    "05_Software/core/internal/httpapi/server.go",
+    "05_Software/core/internal/config/config.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/internal/appliance/label.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/httpapi/local_status_test.go::*",
+    "05_Software/core/internal/httpapi/local_status_test.go::*",
 ]
 
 

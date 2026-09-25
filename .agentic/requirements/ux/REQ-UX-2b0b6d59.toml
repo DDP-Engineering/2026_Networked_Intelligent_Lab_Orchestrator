@@ -19,20 +19,20 @@ Where a setting carries help, the browser interface shall place a help control b
 verification = "A component test activates a help control with a mouse click, with Enter from the keyboard and with a pointer event, asserts the popover text is visible and associated through aria-expanded and aria-controls, asserts Escape closes it and returns focus to the control, asserts opening a second help closes the first, and asserts no help content exists only in a title attribute; a browser test at 1024x600 and 800x480 opens a help popover by pointer and by keyboard and asserts it lies within the viewport."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/components/help/HelpPopover.tsx",
-    "05_Software/nilo_gui/src/components/help/Field.tsx",
-    "05_Software/nilo_gui/src/components/layers.ts",
-    "05_Software/nilo_gui/src/styles/shell.css",
-    "05_Software/nilo_gui/src/components/help/HelpPopover.test.tsx",
+    "05_Software/frontend/src/components/help/HelpPopover.tsx",
+    "05_Software/frontend/src/components/help/Field.tsx",
+    "05_Software/frontend/src/components/layers.ts",
+    "05_Software/frontend/src/styles/shell.css",
+    "05_Software/frontend/src/components/help/HelpPopover.test.tsx",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/src/components/help/HelpPopover.test.tsx::opens on click with an accessible name, and Escape returns focus",
-    "05_Software/nilo_gui/src/components/help/HelpPopover.test.tsx::opens from the keyboard and from a coarse pointer",
-    "05_Software/nilo_gui/src/components/help/HelpPopover.test.tsx::keeps only one settings help open at a time and closes on outside activation",
-    "05_Software/nilo_gui/src/components/help/HelpPopover.test.tsx::carries its content as text, not as a title attribute",
-    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx::offers settings help beside the label that opens by click and closes with Escape",
-    "05_Software/nilo_gui/e2e/field-display.spec.ts::the shell and the Network page are readable and complete",
+    "05_Software/frontend/src/components/help/HelpPopover.test.tsx::opens on click with an accessible name, and Escape returns focus",
+    "05_Software/frontend/src/components/help/HelpPopover.test.tsx::opens from the keyboard and from a coarse pointer",
+    "05_Software/frontend/src/components/help/HelpPopover.test.tsx::keeps only one settings help open at a time and closes on outside activation",
+    "05_Software/frontend/src/components/help/HelpPopover.test.tsx::carries its content as text, not as a title attribute",
+    "05_Software/frontend/src/components/network/DeviceNetworksPanel.test.tsx::offers settings help beside the label that opens by click and closes with Escape",
+    "05_Software/frontend/e2e/field-display.spec.ts::the shell and the Network page are readable and complete",
 ]
 
 spec = ""

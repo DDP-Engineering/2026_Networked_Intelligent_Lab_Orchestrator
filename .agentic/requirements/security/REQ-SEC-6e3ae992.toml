@@ -54,15 +54,15 @@ verification = "An HTTP test creates an identity and a token and reads both list
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/httpapi/administration.go",
-    "05_Software/nilo_assistant/internal/httpapi/identity.go",
+    "05_Software/core/internal/httpapi/administration.go",
+    "05_Software/core/internal/httpapi/identity.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/httpapi/administration_test.go::TestAdministrationResponsesCarryNoVerifiers",
-    "05_Software/nilo_assistant/internal/httpapi/administration_test.go::TestTokenListingReportsSafeMetadataOnly",
+    "05_Software/core/internal/httpapi/administration_test.go::TestAdministrationResponsesCarryNoVerifiers",
+    "05_Software/core/internal/httpapi/administration_test.go::TestTokenListingReportsSafeMetadataOnly",
 ]
 
 # --- optional below this line ---

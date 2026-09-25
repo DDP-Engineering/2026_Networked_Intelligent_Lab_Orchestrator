@@ -33,10 +33,10 @@ verification = "A unit test drives the client with a recording stub transport an
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/api/contract.ts",
-    "05_Software/nilo_gui/src/api/client.ts",
-    "05_Software/nilo_gui/src/api/client.test.ts",
-    "05_Software/nilo_gui/README.md",
+    "05_Software/frontend/src/api/contract.ts",
+    "05_Software/frontend/src/api/client.ts",
+    "05_Software/frontend/src/api/client.test.ts",
+    "05_Software/frontend/README.md",
     "06_SoftwareDocu/Development_and_Simulation_Flow.md",
     ".agentic/knowledge/gui-foundation.md",
 ]
@@ -44,8 +44,8 @@ affected_paths = [
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/api/client.test.ts",
-    "05_Software/nilo_gui/src/api/contract.test.ts",
+    "05_Software/frontend/src/api/client.test.ts",
+    "05_Software/frontend/src/api/contract.test.ts",
 ]
 
 # --- optional below this line ---

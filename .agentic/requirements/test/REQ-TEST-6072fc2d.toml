@@ -33,15 +33,15 @@ affected_paths = [
     "02_Tools/tests/appliance/check.sh",
     "02_Tools/tests/appliance/run.sh",
     "02_Tools/tests/network/network-up.sh",
-    "05_Software/scripts/tests/test_appliance_stage.py",
+    "02_Tools/tests/software/test_appliance_stage.py",
 ]
 
 linked_tests = [
-    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceHostIsolationTests::test_entry_point_creates_and_removes_its_own_engine_network",
-    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceHostIsolationTests::test_cleanup_does_not_remove_a_container_that_create_never_created",
-    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceHostIsolationTests::test_entry_point_compares_host_interfaces_and_route_around_the_run",
-    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceHostIsolationTests::test_container_side_touches_no_host_interface",
-    "05_Software/scripts/tests/test_appliance_stage.py::ApplianceHostIsolationTests::test_container_side_refuses_to_run_outside_its_container",
+    "02_Tools/tests/software/test_appliance_stage.py::ApplianceHostIsolationTests::test_entry_point_creates_and_removes_its_own_engine_network",
+    "02_Tools/tests/software/test_appliance_stage.py::ApplianceHostIsolationTests::test_cleanup_does_not_remove_a_container_that_create_never_created",
+    "02_Tools/tests/software/test_appliance_stage.py::ApplianceHostIsolationTests::test_entry_point_compares_host_interfaces_and_route_around_the_run",
+    "02_Tools/tests/software/test_appliance_stage.py::ApplianceHostIsolationTests::test_container_side_touches_no_host_interface",
+    "02_Tools/tests/software/test_appliance_stage.py::ApplianceHostIsolationTests::test_container_side_refuses_to_run_outside_its_container",
 ]
 
 

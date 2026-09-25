@@ -53,28 +53,28 @@ verification = "An automated test imports configurations carrying each executabl
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/profile.go",
-    "05_Software/nilo_assistant/internal/network/simulation.go",
-    "05_Software/nilo_assistant/internal/network/wireguard.go",
-    "05_Software/nilo_assistant/internal/network/profile_test.go",
+    "05_Software/core/internal/network/profile.go",
+    "05_Software/core/internal/network/simulation.go",
+    "05_Software/core/internal/network/wireguard.go",
+    "05_Software/core/internal/network/profile_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfileRejectsEveryExecutableDirective",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfileRejectsUnsupportedDirectivesByName",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestTheNetworkPackageCannotStartAProcess",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfilePreservesEverySupportedSetting",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfileKeepsASplitTunnelSplit",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfileSeparatesKeyMaterialFromTheProfile",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestSecretsRedactThemselvesWhenPrintedOrSerialised",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestAnImportedProfileIsInactiveAndDoesNotAutoConnect",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfileRefusesIncompleteOrUnusableInput",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfileRequiresAUsableName",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestProfileValidationRejectsInvalidNetworkSettingsAndAcceptsDisabledKeepalive",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestProfileKeepsPresharedKeysAlignedWithPeers",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfileIgnoresCommentsAndBlankLines",
+    "05_Software/core/internal/network/profile_test.go::TestParseProfileRejectsEveryExecutableDirective",
+    "05_Software/core/internal/network/profile_test.go::TestParseProfileRejectsUnsupportedDirectivesByName",
+    "05_Software/core/internal/network/profile_test.go::TestTheNetworkPackageCannotStartAProcess",
+    "05_Software/core/internal/network/profile_test.go::TestParseProfilePreservesEverySupportedSetting",
+    "05_Software/core/internal/network/profile_test.go::TestParseProfileKeepsASplitTunnelSplit",
+    "05_Software/core/internal/network/profile_test.go::TestParseProfileSeparatesKeyMaterialFromTheProfile",
+    "05_Software/core/internal/network/profile_test.go::TestSecretsRedactThemselvesWhenPrintedOrSerialised",
+    "05_Software/core/internal/network/profile_test.go::TestAnImportedProfileIsInactiveAndDoesNotAutoConnect",
+    "05_Software/core/internal/network/profile_test.go::TestParseProfileRefusesIncompleteOrUnusableInput",
+    "05_Software/core/internal/network/profile_test.go::TestParseProfileRequiresAUsableName",
+    "05_Software/core/internal/network/profile_test.go::TestProfileValidationRejectsInvalidNetworkSettingsAndAcceptsDisabledKeepalive",
+    "05_Software/core/internal/network/profile_test.go::TestProfileKeepsPresharedKeysAlignedWithPeers",
+    "05_Software/core/internal/network/profile_test.go::TestParseProfileIgnoresCommentsAndBlankLines",
 ]
 
 # --- optional below this line ---

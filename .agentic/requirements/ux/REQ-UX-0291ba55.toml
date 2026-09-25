@@ -22,14 +22,14 @@ header and the filters, and shall present it to no other identity.
 verification = "A component test renders the page for an identity that may manage retention and asserts the retention disclosure appears after the header and before the filter panel, collapsed, and that opening it and saving still reaches the save callback; the same test renders the page for an identity that may not manage retention and asserts the disclosure is absent."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.tsx",
-    "05_Software/nilo_gui/src/styles/shell.css",
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx",
-    "05_Software/nilo_gui/e2e/field-display.spec.ts",
+    "05_Software/frontend/src/components/pages/ActivityPage.tsx",
+    "05_Software/frontend/src/styles/shell.css",
+    "05_Software/frontend/src/components/pages/ActivityPage.test.tsx",
+    "05_Software/frontend/e2e/field-display.spec.ts",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx::keeps retention as the only administration, above the filters",
+    "05_Software/frontend/src/components/pages/ActivityPage.test.tsx::keeps retention as the only administration, above the filters",
 ]
 
 

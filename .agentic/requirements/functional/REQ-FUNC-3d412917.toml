@@ -53,16 +53,16 @@ verification = "Unit tests drive each of the client's resource methods with stub
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/api/contract.ts",
-    "05_Software/nilo_gui/src/api/client.ts",
-    "05_Software/nilo_gui/src/api/client.test.ts",
-    "05_Software/nilo_gui/src/components/pages/BenchPage.tsx",
+    "05_Software/frontend/src/api/contract.ts",
+    "05_Software/frontend/src/api/client.ts",
+    "05_Software/frontend/src/api/client.test.ts",
+    "05_Software/frontend/src/components/pages/BenchPage.tsx",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/api/client.test.ts",
+    "05_Software/frontend/src/api/client.test.ts",
 ]
 
 # --- optional below this line ---

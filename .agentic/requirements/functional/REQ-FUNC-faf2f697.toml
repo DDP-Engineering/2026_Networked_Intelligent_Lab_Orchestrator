@@ -53,46 +53,46 @@ verification = "An automated test imports a full-tunnel and a split-tunnel profi
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/profile.go",
-    "05_Software/nilo_assistant/internal/network/simulation.go",
-    "05_Software/nilo_assistant/internal/network/wireguard.go",
-    "05_Software/nilo_assistant/internal/network/profile_test.go",
-    "05_Software/nilo_assistant/internal/network/simulation_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/network_wireguard_test.go",
-    "05_Software/nilo_assistant/internal/network/profile_manager.go",
-    "05_Software/nilo_assistant/internal/nethelper/tunnel_engine.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux.go",
-    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
-    "05_Software/nilo_assistant/internal/nethelper/client.go",
-    "05_Software/nilo_assistant/internal/nethelper/tunnel_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux_test.go",
-    "05_Software/nilo_assistant/internal/network/profile_manager_test.go",
+    "05_Software/core/internal/network/profile.go",
+    "05_Software/core/internal/network/simulation.go",
+    "05_Software/core/internal/network/wireguard.go",
+    "05_Software/core/internal/network/profile_test.go",
+    "05_Software/core/internal/network/simulation_test.go",
+    "05_Software/core/internal/httpapi/network_wireguard_test.go",
+    "05_Software/core/internal/network/profile_manager.go",
+    "05_Software/core/internal/nethelper/tunnel_engine.go",
+    "05_Software/core/internal/nethelper/networkmanager_wireguard_linux.go",
+    "05_Software/core/internal/nethelper/protocol.go",
+    "05_Software/core/internal/nethelper/client.go",
+    "05_Software/core/internal/nethelper/tunnel_test.go",
+    "05_Software/core/internal/nethelper/networkmanager_wireguard_linux_test.go",
+    "05_Software/core/internal/network/profile_manager_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfilePreservesEverySupportedSetting",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfileKeepsASplitTunnelSplit",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestAnImportedProfileIsInactiveAndDoesNotAutoConnect",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfileRefusesIncompleteOrUnusableInput",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfileRequiresAUsableName",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfileIgnoresCommentsAndBlankLines",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfileRejectsEveryExecutableDirective",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfileRejectsUnsupportedDirectivesByName",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfileSeparatesKeyMaterialFromTheProfile",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestSecretsRedactThemselvesWhenPrintedOrSerialised",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestProfileValidationRejectsInvalidNetworkSettingsAndAcceptsDisabledKeepalive",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestProfileKeepsPresharedKeysAlignedWithPeers",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestTheNetworkPackageCannotStartAProcess",
-    "05_Software/nilo_assistant/internal/network/simulation_test.go::TestSimulationChangesReportedStateAndRestoresItsCheckpoint",
-    "05_Software/nilo_assistant/internal/network/simulation_test.go::TestSimulationWireGuardLifecycleAndSingleStartupSelection",
-    "05_Software/nilo_assistant/internal/network/simulation_test.go::TestSimulationRejectsMissingAndExternalProfiles",
-    "05_Software/nilo_assistant/internal/httpapi/network_wireguard_test.go::TestWireGuardReadAndAcknowledgedImportLifecycle",
-    "05_Software/nilo_assistant/internal/httpapi/network_wireguard_test.go::TestNetworkRequestRejectsTrailingJSONAndUnknownFields",
-    "05_Software/nilo_assistant/internal/nethelper/tunnel_test.go::TestProfileCreationPromotesTheStagedKeyAndCreatesTheConnection",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux_test.go::TestNetworkManagerWireGuardLifecycleSystem",
-    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestImportBindsTheStagedKeyThroughTheHelperAndSavesAnInactiveProfile",
+    "05_Software/core/internal/network/profile_test.go::TestParseProfilePreservesEverySupportedSetting",
+    "05_Software/core/internal/network/profile_test.go::TestParseProfileKeepsASplitTunnelSplit",
+    "05_Software/core/internal/network/profile_test.go::TestAnImportedProfileIsInactiveAndDoesNotAutoConnect",
+    "05_Software/core/internal/network/profile_test.go::TestParseProfileRefusesIncompleteOrUnusableInput",
+    "05_Software/core/internal/network/profile_test.go::TestParseProfileRequiresAUsableName",
+    "05_Software/core/internal/network/profile_test.go::TestParseProfileIgnoresCommentsAndBlankLines",
+    "05_Software/core/internal/network/profile_test.go::TestParseProfileRejectsEveryExecutableDirective",
+    "05_Software/core/internal/network/profile_test.go::TestParseProfileRejectsUnsupportedDirectivesByName",
+    "05_Software/core/internal/network/profile_test.go::TestParseProfileSeparatesKeyMaterialFromTheProfile",
+    "05_Software/core/internal/network/profile_test.go::TestSecretsRedactThemselvesWhenPrintedOrSerialised",
+    "05_Software/core/internal/network/profile_test.go::TestProfileValidationRejectsInvalidNetworkSettingsAndAcceptsDisabledKeepalive",
+    "05_Software/core/internal/network/profile_test.go::TestProfileKeepsPresharedKeysAlignedWithPeers",
+    "05_Software/core/internal/network/profile_test.go::TestTheNetworkPackageCannotStartAProcess",
+    "05_Software/core/internal/network/simulation_test.go::TestSimulationChangesReportedStateAndRestoresItsCheckpoint",
+    "05_Software/core/internal/network/simulation_test.go::TestSimulationWireGuardLifecycleAndSingleStartupSelection",
+    "05_Software/core/internal/network/simulation_test.go::TestSimulationRejectsMissingAndExternalProfiles",
+    "05_Software/core/internal/httpapi/network_wireguard_test.go::TestWireGuardReadAndAcknowledgedImportLifecycle",
+    "05_Software/core/internal/httpapi/network_wireguard_test.go::TestNetworkRequestRejectsTrailingJSONAndUnknownFields",
+    "05_Software/core/internal/nethelper/tunnel_test.go::TestProfileCreationPromotesTheStagedKeyAndCreatesTheConnection",
+    "05_Software/core/internal/nethelper/networkmanager_wireguard_linux_test.go::TestNetworkManagerWireGuardLifecycleSystem",
+    "05_Software/core/internal/network/profile_manager_test.go::TestImportBindsTheStagedKeyThroughTheHelperAndSavesAnInactiveProfile",
 ]
 
 # --- optional below this line ---
@@ -107,4 +107,4 @@ created = 2026-09-02
 updated = 2026-09-04
 
 # Planned files not implemented at the 2026-09-03 audit:
-# 05_Software/nilo_assistant/cmd/nilo-nethelper/profile.go
+# 05_Software/core/cmd/nilo-nethelper/profile.go

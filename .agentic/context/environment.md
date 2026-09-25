@@ -18,13 +18,13 @@ and the environment wrappers change `PATH` only for their child process.
 - `02_Tools/toolchain.versions` is the authority for the host toolchain: Go,
   uv, the uv-managed CPython, Node.js, npm, and the Playwright and Chromium
   versions, each with its published SHA-256.
-- `05_Software/nilo_assistant/go.mod` and `go.sum` pin the Go module graph. The
+- `05_Software/core/go.mod` and `go.sum` pin the Go module graph. The
   module's declared language version can trail the pinned host Go release.
-- `05_Software/nilo_gui/package.json` and `package-lock.json` pin React,
+- `05_Software/frontend/package.json` and `package-lock.json` pin React,
   TypeScript, Vite, Vitest, ESLint, Prettier and Playwright by exact version.
 - Each locked Python project pins its own graph, including Ruff, in its
-  `uv.lock`: `05_Software/integration_sdk/python/`,
-  `05_Software/integrations/sigrok/` and `.../fake_python/`.
+  `uv.lock`: `05_Software/integrations/sdk/python/` and
+  `05_Software/integrations/sigrok/`.
 - The reproducible build and test boundary is one Linux amd64 OCI image,
   generation `noble-20260905-01`, defined by `02_Tools/containers/build/` and
   run through Docker Engine or Podman. It carries the pinned language tools,
@@ -90,13 +90,13 @@ explicitly requested host change.
   Each is an administrator setting and never a client parameter.
 - The data directory holds `nilo.db`, `artifacts/`, `integrations/` and
   `staging/`; the layout is decided in
-  `05_Software/nilo_assistant/internal/config/config.go`.
+  `05_Software/core/internal/config/config.go`.
 - Runtime state - the database, artifacts, sockets and runner temporaries -
   always lives on a Linux filesystem, never on a Windows-mounted path. On the
   appliance the service account owns it under `/var/lib/nilo`; a locally run
   core keeps it below `$HOME/.local/state/` inside the distribution, and a home
   directory resolving to a Windows drive mount is refused rather than used.
-- The interface reads `05_Software/nilo_gui/.env` for `VITE_NILO_API_MODE` and
+- The interface reads `05_Software/frontend/.env` for `VITE_NILO_API_MODE` and
   `VITE_NILO_API_BASE_URL`. Override locally in an ignored `.env.local`. The
   browser requests origin-relative `/api` paths, which the Vite development
   server forwards to the configured endpoint and which an appliance serves
@@ -142,7 +142,7 @@ instance and exercises the installed analyzer through the integration.
 ## Build and run
 
 Produce what an appliance installs. `02_Tools/scripts/build-appliance.sh` emits
-binaries under `05_Software/nilo_assistant/dist/linux-<arch>/`, the GUI `build`
+binaries under `05_Software/core/dist/linux-<arch>/`, the GUI `build`
 script emits the static assets for `--gui-dir`, and
 `02_Tools/scripts/build-sigrok-bundle.py` prepares an integration catalog for a
 target architecture from an explicit complete runtime root containing its
@@ -169,7 +169,7 @@ Iterate on the interface from the development host against that appliance, with
 `VITE_NILO_API_BASE_URL` pointing at it:
 
 ```powershell
-.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run dev
+.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\frontend run dev
 ```
 
 Build inside the locked container, which is the result that counts:
@@ -224,14 +224,15 @@ passed; those rows remain `not_run` until executed on the named target.
 
 `.agentic/aegis.toml` declares the command keys, with `workdir = 05_Software`:
 
-- `test` - `python scripts/aegis_test.py full`
-- `test_impacted` - `python scripts/aegis_test.py impacted {tests}`
-- `lint` - `python scripts/aegis_test.py lint`
+- `test` - `python ../02_Tools/scripts/aegis_test.py full`
+- `test_impacted` - `python ../02_Tools/scripts/aegis_test.py impacted {tests}`
+- `lint` - `python ../02_Tools/scripts/aegis_test.py lint`
 
-The router in `05_Software/scripts/aegis_test.py` discovers every Go module and
+The router in `02_Tools/scripts/aegis_test.py` discovers every Go module and
 locked Python project below `05_Software`, and on Windows the frontend project
-as well. `full` runs the script tests, `go test ./...`, each Python suite
-through `uv run pytest`, then GUI `test:ci` and `build`, followed by
+as well. `full` runs the tooling tests under `02_Tools/tests/software/`,
+`go test ./...`, each Python suite through `uv run pytest`, then GUI
+`test:ci` and `build`, followed by the shared runner contract suite and
 `02_Tools/tests/appliance/check.sh` under WSL2. That stage rebuilds the GUI and
 runs Playwright against an appliance-profile core; direct browser execution on
 the host is not acceptance evidence. Impacted routing is deliberately
@@ -240,8 +241,8 @@ and GUI `format:check` and `lint`.
 
 Other entry points:
 
-- `05_Software/scripts/test-increment-1.ps1` and `.sh` - the foundation gate.
-- `05_Software/scripts/verify-portable-core.ps1` and `.sh` - the Go suite plus
+- `02_Tools/scripts/test-increment-1.ps1` and `.sh` - the foundation gate.
+- `02_Tools/scripts/verify-portable-core.ps1` and `.sh` - the Go suite plus
   CGO-free builds for Linux ARM64, Linux x86_64 and Windows x86_64.
 - `02_Tools/env/with-build-environment.ps1 test` (or the `.sh` wrapper) - the
   authoritative offline gate: locked restores, lint, unit, contract and build

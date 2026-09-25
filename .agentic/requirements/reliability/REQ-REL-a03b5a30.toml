@@ -20,18 +20,18 @@ When startup or maintenance reconciliation finds a physical adapter in both pers
 verification = "A startup/reconciliation test loads legacy conflicts alongside a usable Ethernet or WireGuard management path, asserts device-facing intent is retained, the conflicting management binding is absent from active and last-known-good state, the recovered detail names only safe adapter metadata, and the destination gate admits only the retained paths after restart."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/adapter_roles.go",
-    "05_Software/nilo_assistant/internal/network/management_access.go",
-    "05_Software/nilo_assistant/internal/network/device_network_manager.go",
-    "05_Software/nilo_assistant/internal/network/appliance_device_networks.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/internal/network/profile_manager_test.go",
+    "05_Software/core/internal/network/adapter_roles.go",
+    "05_Software/core/internal/network/management_access.go",
+    "05_Software/core/internal/network/device_network_manager.go",
+    "05_Software/core/internal/network/appliance_device_networks.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/internal/network/profile_manager_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/management_access_test.go::TestManagementAccessStartupRecoversAConflictThroughTheRetainedPath",
-    "05_Software/nilo_assistant/internal/network/management_access_test.go::TestManagementAccessMaintenanceReconcilesRolesBeforeOpeningARenamedPath",
-    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestApplianceDefersDeviceForwardingUntilExplicitStartupReconciliation",
+    "05_Software/core/internal/network/management_access_test.go::TestManagementAccessStartupRecoversAConflictThroughTheRetainedPath",
+    "05_Software/core/internal/network/management_access_test.go::TestManagementAccessMaintenanceReconcilesRolesBeforeOpeningARenamedPath",
+    "05_Software/core/internal/network/profile_manager_test.go::TestApplianceDefersDeviceForwardingUntilExplicitStartupReconciliation",
 ]
 
 

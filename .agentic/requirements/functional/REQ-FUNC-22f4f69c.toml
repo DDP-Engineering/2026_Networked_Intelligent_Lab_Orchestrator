@@ -53,13 +53,13 @@ verification = "An HTTP handler test requests the integration inventory twice wi
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/simulation/catalog.go",
-    "05_Software/nilo_assistant/internal/simulation/catalog_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/server.go",
-    "05_Software/nilo_assistant/internal/httpapi/server_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/cmd/nilo/main_test.go",
-    "05_Software/nilo_assistant/README.md",
+    "05_Software/core/internal/simulation/catalog.go",
+    "05_Software/core/internal/simulation/catalog_test.go",
+    "05_Software/core/internal/httpapi/server.go",
+    "05_Software/core/internal/httpapi/server_test.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/cmd/nilo/main_test.go",
+    "05_Software/core/README.md",
     "06_SoftwareDocu/Development_and_Simulation_Flow.md",
     ".agentic/knowledge/bench-core-foundation.md",
 ]
@@ -67,8 +67,8 @@ affected_paths = [
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/simulation/catalog_test.go::TestCatalogReturnsStableScenarioIntegrationInventory",
-    "05_Software/nilo_assistant/internal/httpapi/server_test.go::TestIntegrationInventoryReturnsExactDeterministicSimulationEnvelope",
+    "05_Software/core/internal/simulation/catalog_test.go::TestCatalogReturnsStableScenarioIntegrationInventory",
+    "05_Software/core/internal/httpapi/server_test.go::TestIntegrationInventoryReturnsExactDeterministicSimulationEnvelope",
 ]
 
 # --- optional below this line ---

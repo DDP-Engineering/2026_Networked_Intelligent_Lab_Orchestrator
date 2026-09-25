@@ -23,14 +23,14 @@ that reading the newest record requires no vertical scrolling.
 verification = "A browser test signs in as an administrator at 1024x600, opens Activity against a listing of several records with the filter and retention disclosures closed, and asserts that the bounding box of the first table row ends above the viewport bottom; the administrator case is the boundary, because it is the only one that also renders the retention disclosure above the filters."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.tsx",
-    "05_Software/nilo_gui/src/styles/shell.css",
-    "05_Software/nilo_gui/src/components/activity/ActivityHealthBanner.tsx",
-    "05_Software/nilo_gui/e2e/field-display.spec.ts",
+    "05_Software/frontend/src/components/pages/ActivityPage.tsx",
+    "05_Software/frontend/src/styles/shell.css",
+    "05_Software/frontend/src/components/activity/ActivityHealthBanner.tsx",
+    "05_Software/frontend/e2e/field-display.spec.ts",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/e2e/field-display.spec.ts::1024x600: the activity listing reads as records and opens one in a dialog",
+    "05_Software/frontend/e2e/field-display.spec.ts::1024x600: the activity listing reads as records and opens one in a dialog",
 ]
 
 

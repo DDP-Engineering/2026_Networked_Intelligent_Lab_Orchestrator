@@ -35,7 +35,7 @@ container.
 
 ## What it proves
 
-`05_Software/nilo_assistant/cmd/nilo/appliance_stage_linux_test.go`:
+`05_Software/core/cmd/nilo/appliance_stage_linux_test.go`:
 
 - the pairing starts and Bench Core reports the HTTPS address it listens on,
   refusing an unauthenticated request and answering an authenticated one;

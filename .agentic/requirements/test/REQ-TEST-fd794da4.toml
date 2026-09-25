@@ -64,16 +64,16 @@ verification = "The Playwright field-display run signs in to a real development 
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/e2e/field-display.spec.ts",
-    "05_Software/nilo_gui/e2e/authentication.spec.ts",
-    "05_Software/nilo_gui/playwright.config.ts",
+    "05_Software/frontend/e2e/field-display.spec.ts",
+    "05_Software/frontend/e2e/authentication.spec.ts",
+    "05_Software/frontend/playwright.config.ts",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/e2e/authentication.spec.ts",
-    "05_Software/nilo_gui/e2e/field-display.spec.ts",
+    "05_Software/frontend/e2e/authentication.spec.ts",
+    "05_Software/frontend/e2e/field-display.spec.ts",
 ]
 
 # --- optional below this line ---

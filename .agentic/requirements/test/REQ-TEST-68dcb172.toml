@@ -56,24 +56,24 @@ verification = "Running the browser end-to-end suite bootstraps an administrator
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/e2e/authentication.spec.ts",
-    "05_Software/nilo_gui/e2e/topology.ts",
-    "05_Software/nilo_gui/e2e/commands.test.ts",
+    "05_Software/frontend/e2e/authentication.spec.ts",
+    "05_Software/frontend/e2e/topology.ts",
+    "05_Software/frontend/e2e/commands.test.ts",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/e2e/authentication.spec.ts::signs a real administrator in with a password",
-    "05_Software/nilo_gui/e2e/authentication.spec.ts::administers identities from the Authentication page",
-    "05_Software/nilo_gui/e2e/authentication.spec.ts::creates an API token and shows its secret exactly once",
-    "05_Software/nilo_gui/e2e/authentication.spec.ts::restores the session across a reload and never shows the secret again",
-    "05_Software/nilo_gui/e2e/authentication.spec.ts::revokes a token only after an explicit confirmation",
-    "05_Software/nilo_gui/e2e/authentication.spec.ts::refuses to remove the last enabled administrator",
-    "05_Software/nilo_gui/e2e/authentication.spec.ts::hides the Authentication entry from an identity that may not administer",
-    "05_Software/nilo_gui/e2e/authentication.spec.ts::ends the session server-side when the human signs out",
-    "05_Software/nilo_gui/e2e/commands.test.ts::never lets the administration spec type a password unredacted",
-    "05_Software/nilo_gui/e2e/commands.test.ts::bootstraps its administrator through standard input, never a command line",
+    "05_Software/frontend/e2e/authentication.spec.ts::signs a real administrator in with a password",
+    "05_Software/frontend/e2e/authentication.spec.ts::administers identities from the Authentication page",
+    "05_Software/frontend/e2e/authentication.spec.ts::creates an API token and shows its secret exactly once",
+    "05_Software/frontend/e2e/authentication.spec.ts::restores the session across a reload and never shows the secret again",
+    "05_Software/frontend/e2e/authentication.spec.ts::revokes a token only after an explicit confirmation",
+    "05_Software/frontend/e2e/authentication.spec.ts::refuses to remove the last enabled administrator",
+    "05_Software/frontend/e2e/authentication.spec.ts::hides the Authentication entry from an identity that may not administer",
+    "05_Software/frontend/e2e/authentication.spec.ts::ends the session server-side when the human signs out",
+    "05_Software/frontend/e2e/commands.test.ts::never lets the administration spec type a password unredacted",
+    "05_Software/frontend/e2e/commands.test.ts::bootstraps its administrator through standard input, never a command line",
 ]
 
 # --- optional below this line ---

@@ -4,7 +4,7 @@
 
 Select this page for Plugins, sigrok/ATK-DL16, `nilo plugin`, `nilo bench`, durable
 instrument commands, transaction IDs, queues, delayed replies and timeouts.
-Start at `05_Software/nilo_assistant/internal/bench/manager.go` and `jobs_test.go`.
+Start at `05_Software/core/internal/bench/manager.go` and `jobs_test.go`.
 Wire protocols and process termination belong to [Integration platform](integration-platform.md);
 identity/SQLite composition belongs to [Bench Core](bench-core-foundation.md);
 visual structure belongs to [Browser GUI](gui-foundation.md).
@@ -120,27 +120,27 @@ curated typed adapter and resource claims; transport handlers remain shared.
 
 ## Files
 
-- `05_Software/nilo_assistant/internal/bench/`: model, manager, packages,
+- `05_Software/core/internal/bench/`: model, manager, packages,
   parameters, jobs, execution and scheduler; `jobs_test.go` covers state/concurrency,
   `bundle_test.go` validates assembled target runner interoperability.
-- `05_Software/nilo_assistant/internal/bench/upgrade_recovery.go` and
+- `05_Software/core/internal/bench/upgrade_recovery.go` and
   `package_sync_*.go`: durable activation journal, directory sync and startup
   reconciliation for interrupted package upgrades.
-- `05_Software/nilo_assistant/internal/app/bench.go`: server composition.
-- `05_Software/nilo_assistant/internal/operation/service.go`, `queue_test.go`:
+- `05_Software/core/internal/app/bench.go`: server composition.
+- `05_Software/core/internal/operation/service.go`, `queue_test.go`:
   separated durable preparation, queued approval and execution.
-- `05_Software/nilo_assistant/internal/store/sqlite/migrations/011_bench.sql`:
+- `05_Software/core/internal/store/sqlite/migrations/011_bench.sql`:
   plugin/job persistence; `audit_repository.go`: atomic queued settlement audit.
-- `05_Software/nilo_assistant/internal/{httpapi,mcp}/bench.go` and adjacent tests:
+- `05_Software/core/internal/{httpapi,mcp}/bench.go` and adjacent tests:
   authenticated HTTP and MCP interfaces; MCP strict codec and session token binding.
-- `05_Software/nilo_assistant/cmd/nilo/bench.go`, `bench_test.go`: API client commands.
-- `05_Software/nilo_assistant/internal/auth/role.go`, `role_test.go`: permissions.
+- `05_Software/core/cmd/nilo/bench.go`, `bench_test.go`: API client commands.
+- `05_Software/core/internal/auth/role.go`, `role_test.go`: permissions.
 - `05_Software/integrations/sigrok/`: manifest/schemas, runner, Python implementation,
   locked dependency graph and package/adapter tests; `structured_worker.py`,
   `worker/nilo_sigrok_worker.c`, `evidence/`, and `tests/test_worker.py` hold the
   feasibility-only structured worker boundary and proof.
-- `05_Software/nilo_gui/src/api/bench.ts`, `bench.test.ts`, `client.ts`: client contract.
-- `05_Software/nilo_gui/src/components/pages/PluginsPage.tsx`, `PluginsPage.test.tsx`:
+- `05_Software/frontend/src/api/bench.ts`, `bench.test.ts`, `client.ts`: client contract.
+- `05_Software/frontend/src/components/pages/PluginsPage.tsx`, `PluginsPage.test.tsx`:
   managed workspace; shell routing, i18n and layout follow gui-foundation.md.
 - `02_Tools/scripts/build-sigrok-bundle.py`, `build-appliance.sh`: bundle preparation.
 - `02_Tools/scripts/check-sigrok-integration.py`: isolated appliance HTTP/CLI/MCP smoke.

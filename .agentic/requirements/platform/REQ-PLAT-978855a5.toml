@@ -55,14 +55,14 @@ verification = "Repository toolchain tests validate the complete version/checksu
 affected_paths = [
     ".gitignore",
     "02_Tools/",
-    "05_Software/scripts/tests/test_toolchain_bootstrap.py",
+    "02_Tools/tests/software/test_toolchain_bootstrap.py",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/scripts/tests/test_toolchain_bootstrap.py::ToolchainBootstrapTests::test_manifest_pins_supported_tool_archives",
-    "05_Software/scripts/tests/test_toolchain_bootstrap.py::ToolchainBootstrapTests::test_bootstrap_and_environment_scripts_are_checksum_gated_and_process_local",
+    "02_Tools/tests/software/test_toolchain_bootstrap.py::ToolchainBootstrapTests::test_manifest_pins_supported_tool_archives",
+    "02_Tools/tests/software/test_toolchain_bootstrap.py::ToolchainBootstrapTests::test_bootstrap_and_environment_scripts_are_checksum_gated_and_process_local",
     "02_Tools/scripts/doctor.ps1",
     "02_Tools/scripts/doctor.sh",
 ]

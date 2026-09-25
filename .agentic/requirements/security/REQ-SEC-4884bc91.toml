@@ -64,27 +64,27 @@ and generated result directories remain ignored by Git.
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/e2e/topology.ts",
-    "05_Software/nilo_gui/e2e/topology.test.ts",
-    "05_Software/nilo_gui/e2e/commands.test.ts",
-    "05_Software/nilo_gui/e2e/authentication.spec.ts",
-    "05_Software/nilo_gui/e2e/bench-core.spec.ts",
-    "05_Software/nilo_gui/e2e/token-redaction.spec.ts",
-    "05_Software/nilo_gui/playwright.config.ts",
-    "05_Software/nilo_gui/.prettierignore",
+    "05_Software/frontend/e2e/topology.ts",
+    "05_Software/frontend/e2e/topology.test.ts",
+    "05_Software/frontend/e2e/commands.test.ts",
+    "05_Software/frontend/e2e/authentication.spec.ts",
+    "05_Software/frontend/e2e/bench-core.spec.ts",
+    "05_Software/frontend/e2e/token-redaction.spec.ts",
+    "05_Software/frontend/playwright.config.ts",
+    "05_Software/frontend/.prettierignore",
     ".gitignore",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/e2e/topology.test.ts::a credential carried into the browser",
-    "05_Software/nilo_gui/e2e/topology.test.ts::the harness source",
-    "05_Software/nilo_gui/e2e/commands.test.ts::never lets the bench-core spec type its password unredacted",
-    "05_Software/nilo_gui/e2e/commands.test.ts::never lets the administration spec type a password unredacted",
-    "05_Software/nilo_gui/e2e/commands.test.ts::bootstraps its administrator through standard input, never a command line",
-    "05_Software/nilo_gui/e2e/token-redaction.spec.ts::a failing fill on a resolved field never surfaces its argument",
-    "05_Software/nilo_gui/e2e/token-redaction.spec.ts::an unwrapped fill would have leaked it, which is why the wrapper exists",
+    "05_Software/frontend/e2e/topology.test.ts::a credential carried into the browser",
+    "05_Software/frontend/e2e/topology.test.ts::the harness source",
+    "05_Software/frontend/e2e/commands.test.ts::never lets the bench-core spec type its password unredacted",
+    "05_Software/frontend/e2e/commands.test.ts::never lets the administration spec type a password unredacted",
+    "05_Software/frontend/e2e/commands.test.ts::bootstraps its administrator through standard input, never a command line",
+    "05_Software/frontend/e2e/token-redaction.spec.ts::a failing fill on a resolved field never surfaces its argument",
+    "05_Software/frontend/e2e/token-redaction.spec.ts::an unwrapped fill would have leaked it, which is why the wrapper exists",
 ]
 
 # --- optional below this line ---

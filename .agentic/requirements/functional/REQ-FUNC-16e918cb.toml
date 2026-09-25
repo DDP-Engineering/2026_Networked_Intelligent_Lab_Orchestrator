@@ -53,34 +53,34 @@ verification = "A system test selects a startup profile, restarts the service an
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/simulation.go",
-    "05_Software/nilo_assistant/internal/network/wireguard.go",
-    "05_Software/nilo_assistant/internal/network/profile.go",
-    "05_Software/nilo_assistant/internal/network/simulation_test.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/vpn_profile_repository.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/migrations/007_vpn_profiles.sql",
-    "05_Software/nilo_assistant/internal/network/tunnel.go",
-    "05_Software/nilo_assistant/internal/network/profile_manager.go",
-    "05_Software/nilo_assistant/internal/network/appliance.go",
-    "05_Software/nilo_assistant/internal/network/runtime.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/internal/nethelper/tunnel_engine.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux.go",
-    "05_Software/nilo_assistant/internal/network/profile_manager_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/tunnel_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go",
+    "05_Software/core/internal/network/simulation.go",
+    "05_Software/core/internal/network/wireguard.go",
+    "05_Software/core/internal/network/profile.go",
+    "05_Software/core/internal/network/simulation_test.go",
+    "05_Software/core/internal/store/sqlite/vpn_profile_repository.go",
+    "05_Software/core/internal/store/sqlite/migrations/007_vpn_profiles.sql",
+    "05_Software/core/internal/network/tunnel.go",
+    "05_Software/core/internal/network/profile_manager.go",
+    "05_Software/core/internal/network/appliance.go",
+    "05_Software/core/internal/network/runtime.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/internal/nethelper/tunnel_engine.go",
+    "05_Software/core/internal/nethelper/networkmanager_wireguard_linux.go",
+    "05_Software/core/internal/network/profile_manager_test.go",
+    "05_Software/core/internal/nethelper/tunnel_test.go",
+    "05_Software/core/cmd/nilo/network_system_linux_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/simulation_test.go::TestSimulationChangesReportedStateAndRestoresItsCheckpoint",
-    "05_Software/nilo_assistant/internal/network/simulation_test.go::TestSimulationWireGuardLifecycleAndSingleStartupSelection",
-    "05_Software/nilo_assistant/internal/network/simulation_test.go::TestSimulationRejectsMissingAndExternalProfiles",
-    "05_Software/nilo_assistant/internal/store/sqlite/vpn_profile_repository_test.go::TestOnlyOneProfileIsSelectedForStartup",
-    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestStartupConnectsTheSelectedProfileOnceAndRecordsItAsTheSystem",
-    "05_Software/nilo_assistant/internal/nethelper/tunnel_test.go::TestStartupActivationNeedsNoWindowButRefusesDuringRecovery",
-    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go::TestApplianceSystemHTTPSAndHelperRecovery",
+    "05_Software/core/internal/network/simulation_test.go::TestSimulationChangesReportedStateAndRestoresItsCheckpoint",
+    "05_Software/core/internal/network/simulation_test.go::TestSimulationWireGuardLifecycleAndSingleStartupSelection",
+    "05_Software/core/internal/network/simulation_test.go::TestSimulationRejectsMissingAndExternalProfiles",
+    "05_Software/core/internal/store/sqlite/vpn_profile_repository_test.go::TestOnlyOneProfileIsSelectedForStartup",
+    "05_Software/core/internal/network/profile_manager_test.go::TestStartupConnectsTheSelectedProfileOnceAndRecordsItAsTheSystem",
+    "05_Software/core/internal/nethelper/tunnel_test.go::TestStartupActivationNeedsNoWindowButRefusesDuringRecovery",
+    "05_Software/core/cmd/nilo/network_system_linux_test.go::TestApplianceSystemHTTPSAndHelperRecovery",
 ]
 
 # --- optional below this line ---
@@ -95,6 +95,6 @@ created = 2026-09-02
 updated = 2026-09-04
 
 # Planned files not implemented at the 2026-09-03 audit:
-# 05_Software/nilo_assistant/internal/network/startup.go
-# 05_Software/nilo_assistant/internal/network/startup_test.go
+# 05_Software/core/internal/network/startup.go
+# 05_Software/core/internal/network/startup_test.go
 # 05_Software/tests/system/test_vpn_startup.py

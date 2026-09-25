@@ -56,17 +56,17 @@ verification = "A component test asserts the selector lists exactly the language
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/i18n/languages.ts",
-    "05_Software/nilo_gui/src/i18n/LanguageProvider.tsx",
-    "05_Software/nilo_gui/src/components/shell/TopRow.tsx",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
+    "05_Software/frontend/src/i18n/languages.ts",
+    "05_Software/frontend/src/i18n/LanguageProvider.tsx",
+    "05_Software/frontend/src/components/shell/TopRow.tsx",
+    "05_Software/frontend/src/components/shell/shell.test.tsx",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::offers exactly the languages with a catalogue, and translates the shell",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::leaves identifiers, protocol names and reported values untranslated",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::offers exactly the languages with a catalogue, and translates the shell",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::leaves identifiers, protocol names and reported values untranslated",
 ]
 
 # --- optional below this line ---

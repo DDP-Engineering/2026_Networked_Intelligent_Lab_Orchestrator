@@ -806,5 +806,5 @@ section if they are not delivered together.
   extension boundaries this plan builds on.
 - `06_SoftwareDocu/Local_Hardware_Access.md` — bench devices and the rule to
   identify USB hardware by vendor, product and serial.
-- `05_Software/schemas/integration/v1/` — the package contract.
+- `05_Software/contracts/integration/v1/` — the package contract.
 - `05_Software/integrations/sigrok/` — the reference package this one mirrors.

@@ -32,7 +32,7 @@ wheels = [
 [[package]]
 name = "nilo-integration-sdk"
 version = "0.1.0"
-source = { editable = "../../integration_sdk/python" }
+source = { editable = "../sdk/python" }
 dependencies = [
     { name = "pydantic" },
 ]
@@ -42,6 +42,7 @@ requires-dist = [{ name = "pydantic", specifier = "==2.13.5" }]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "jsonschema", specifier = "==4.26.0" },
     { name = "pytest", specifier = "==9.1.1" },
     { name = "pytest-asyncio", specifier = "==1.4.0" },
     { name = "ruff", specifier = "==0.16.5" },
@@ -63,7 +64,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "nilo-integration-sdk", editable = "../../integration_sdk/python" }]
+requires-dist = [{ name = "nilo-integration-sdk", editable = "../sdk/python" }]
 
 [package.metadata.requires-dev]
 dev = [

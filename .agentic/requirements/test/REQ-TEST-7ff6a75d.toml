@@ -66,9 +66,9 @@ browser test.
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/scripts/aegis_test.py",
-    "05_Software/scripts/tests/test_aegis_test.py",
-    "05_Software/nilo_gui/package.json",
+    "02_Tools/scripts/aegis_test.py",
+    "02_Tools/tests/software/test_aegis_test.py",
+    "05_Software/frontend/package.json",
     "02_Tools/README.md",
     "06_SoftwareDocu/Development_and_Simulation_Flow.md",
     ".agentic/knowledge/repository-toolchain.md",
@@ -77,13 +77,13 @@ affected_paths = [
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/scripts/tests/test_aegis_test.py::AegisTestRouterTests::test_windows_frontend_runs_test_build_format_and_lint_commands",
-    "05_Software/scripts/tests/test_aegis_test.py::AegisTestRouterTests::test_a_failing_browser_end_to_end_run_fails_the_whole_command",
-    "05_Software/scripts/tests/test_aegis_test.py::AegisTestRouterTests::test_windows_appliance_stage_invokes_the_translated_script_without_shell_code",
-    "05_Software/scripts/tests/test_aegis_test.py::AegisTestRouterTests::test_windows_appliance_stage_selects_the_only_installed_distribution",
-    "05_Software/scripts/tests/test_aegis_test.py::AegisTestRouterTests::test_windows_appliance_stage_rejects_an_uninstalled_selected_distribution",
-    "05_Software/scripts/tests/test_aegis_test.py::AegisTestRouterTests::test_windows_appliance_stage_fails_when_no_distribution_is_installed",
-    "05_Software/scripts/tests/test_aegis_test.py::AegisTestRouterTests::test_windows_appliance_stage_requires_selection_for_multiple_distributions",
+    "02_Tools/tests/software/test_aegis_test.py::AegisTestRouterTests::test_windows_frontend_runs_test_build_format_and_lint_commands",
+    "02_Tools/tests/software/test_aegis_test.py::AegisTestRouterTests::test_a_failing_browser_end_to_end_run_fails_the_whole_command",
+    "02_Tools/tests/software/test_aegis_test.py::AegisTestRouterTests::test_windows_appliance_stage_invokes_the_translated_script_without_shell_code",
+    "02_Tools/tests/software/test_aegis_test.py::AegisTestRouterTests::test_windows_appliance_stage_selects_the_only_installed_distribution",
+    "02_Tools/tests/software/test_aegis_test.py::AegisTestRouterTests::test_windows_appliance_stage_rejects_an_uninstalled_selected_distribution",
+    "02_Tools/tests/software/test_aegis_test.py::AegisTestRouterTests::test_windows_appliance_stage_fails_when_no_distribution_is_installed",
+    "02_Tools/tests/software/test_aegis_test.py::AegisTestRouterTests::test_windows_appliance_stage_requires_selection_for_multiple_distributions",
 ]
 
 # --- optional below this line ---

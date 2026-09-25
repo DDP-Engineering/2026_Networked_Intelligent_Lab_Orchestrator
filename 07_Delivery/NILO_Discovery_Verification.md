@@ -19,9 +19,9 @@ certificate; verify the printed permanent name before accepting it.
 ## Automated evidence routes
 
 - Go unit and contract tests: `go test ./...` from
-  `05_Software/nilo_assistant` through the pinned toolchain.
+  `05_Software/core` through the pinned toolchain.
 - GUI component and production build: `npm run test:ci` and `npm run build`
-  from `05_Software/nilo_gui` through the repository wrapper.
+  from `05_Software/frontend` through the repository wrapper.
 - Disposable privileged networking: `02_Tools/tests/network/check.sh`.
 - Appliance-profile browser and listener boundary:
   `02_Tools/tests/appliance/check.sh`.

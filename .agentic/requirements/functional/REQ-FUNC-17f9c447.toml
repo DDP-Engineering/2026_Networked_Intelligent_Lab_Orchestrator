@@ -20,16 +20,16 @@ When `nilo discover --label` selects one discovered appliance, the command shall
 verification = "Automated CLI artifact tests select by unique serial and friendly name, parse the produced document, decode its QR and assert exact label text/address normalization/HTTPS URL; empty, ambiguous, secret-bearing and malformed discovery records are refused before output, and the generated page renders within the documented workshop label dimensions."
 
 affected_paths = [
-    "05_Software/nilo_assistant/cmd/nilo/discover.go",
-    "05_Software/nilo_assistant/internal/discovery/model.go",
-    "05_Software/nilo_assistant/internal/appliance/label.go",
-    "05_Software/nilo_assistant/internal/appliance/label_test.go",
-    "05_Software/nilo_assistant/go.mod",
-    "05_Software/nilo_assistant/go.sum",
+    "05_Software/core/cmd/nilo/discover.go",
+    "05_Software/core/internal/discovery/model.go",
+    "05_Software/core/internal/appliance/label.go",
+    "05_Software/core/internal/appliance/label_test.go",
+    "05_Software/core/go.mod",
+    "05_Software/core/go.sum",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/appliance/label_test.go::*",
+    "05_Software/core/internal/appliance/label_test.go::*",
 ]
 
 

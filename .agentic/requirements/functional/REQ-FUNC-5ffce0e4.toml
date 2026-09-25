@@ -54,15 +54,15 @@ verification = "A component test signs in, selects sign out, and asserts a sign-
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/App.tsx",
-    "05_Software/nilo_gui/src/components/shell/TopRow.tsx",
-    "05_Software/nilo_gui/src/api/client.ts",
+    "05_Software/frontend/src/App.tsx",
+    "05_Software/frontend/src/components/shell/TopRow.tsx",
+    "05_Software/frontend/src/api/client.ts",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/App.test.tsx::ends the session server-side when the human signs out",
+    "05_Software/frontend/src/App.test.tsx::ends the session server-side when the human signs out",
 ]
 
 # --- optional below this line ---

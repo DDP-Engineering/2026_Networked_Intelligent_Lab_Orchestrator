@@ -49,18 +49,19 @@ Every enabled integration package shall pass the common contract suite for lifec
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "The contract harness launches the fake Python package through its declared entry point and reports a failing case for each deliberately broken contract fixture plus a passing result for the conforming fixture."
+verification = "The contract harness builds a test-only Go runner, launches it through its package declaration, and checks valid lifecycle records, strict rejection, cancellation, artifacts, crash diagnostics, and a clean copied-package launch."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
     "05_Software/tests/contract/",
-    "05_Software/integration_sdk/python/tests/",
-    "05_Software/integrations/fake_python/tests/",
+    "05_Software/integrations/sdk/python/tests/",
+    "05_Software/tests/fixtures/contract_runner/",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
+    "05_Software/tests/contract/test_integration_contract.py::test_contract_runner_is_a_test_only_go_fixture",
     "05_Software/tests/contract/test_integration_contract.py::test_manifest_declares_the_expected_policies_and_separate_runner_fields",
     "05_Software/tests/contract/test_integration_contract.py::test_clean_package_install_launches_the_host_manifest_command",
     "05_Software/tests/contract/test_integration_contract.py::test_runner_hello_describe_health_and_echo_have_strict_ordering",
@@ -78,4 +79,4 @@ priority = "high"   # low | normal | high
 rationale = "A common suite prevents each hardware family from inventing an incompatible control boundary."        # why this behavior exists, if not obvious
 
 created = 2026-08-30
-updated = 2026-08-31
+updated = 2026-09-25

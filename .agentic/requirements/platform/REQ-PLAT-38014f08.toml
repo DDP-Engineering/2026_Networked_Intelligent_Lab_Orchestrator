@@ -66,21 +66,21 @@ not as the appliance acceptance browser.
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/package.json",
-    "05_Software/nilo_gui/package-lock.json",
+    "05_Software/frontend/package.json",
+    "05_Software/frontend/package-lock.json",
     "02_Tools/env/with-tools.ps1",
     "02_Tools/bootstrap/bootstrap-browser.ps1",
     "02_Tools/bootstrap/bootstrap-frontend.ps1",
     "02_Tools/bootstrap/bootstrap-development.ps1",
     "02_Tools/README.md",
-    "05_Software/scripts/tests/test_toolchain_bootstrap.py",
+    "02_Tools/tests/software/test_toolchain_bootstrap.py",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/scripts/tests/test_toolchain_bootstrap.py::ToolchainBootstrapTests::test_browser_runtime_is_pinned_and_stays_below_the_repository",
-    "05_Software/scripts/tests/test_toolchain_bootstrap.py::ToolchainBootstrapTests::test_combined_bootstrap_orchestrates_windows_and_wsl_tools",
+    "02_Tools/tests/software/test_toolchain_bootstrap.py::ToolchainBootstrapTests::test_browser_runtime_is_pinned_and_stays_below_the_repository",
+    "02_Tools/tests/software/test_toolchain_bootstrap.py::ToolchainBootstrapTests::test_combined_bootstrap_orchestrates_windows_and_wsl_tools",
 ]
 
 # --- optional below this line ---

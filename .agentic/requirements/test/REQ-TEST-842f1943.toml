@@ -56,20 +56,20 @@ verification = "Running the browser end-to-end suite signs a real administrator 
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/e2e/shell.spec.ts",
-    "05_Software/nilo_gui/e2e/topology.ts",
+    "05_Software/frontend/e2e/shell.spec.ts",
+    "05_Software/frontend/e2e/topology.ts",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/e2e/shell.spec.ts::puts the wordmark, tabs and every control on one row",
-    "05_Software/nilo_gui/e2e/shell.spec.ts::anchors Network in the lower cluster, not among the instruments",
-    "05_Software/nilo_gui/e2e/shell.spec.ts::opens and closes pages as tabs",
-    "05_Software/nilo_gui/e2e/shell.spec.ts::reports the appliance network state the backend actually served",
-    "05_Software/nilo_gui/e2e/shell.spec.ts::keeps the theme and the language across a reload, with the session",
-    "05_Software/nilo_gui/e2e/shell.spec.ts::narrows the navigation to a labeled rail on a small viewport without clipping it",
-    "05_Software/nilo_gui/e2e/shell.spec.ts::keeps one runtime indicator on every screen",
+    "05_Software/frontend/e2e/shell.spec.ts::puts the wordmark, tabs and every control on one row",
+    "05_Software/frontend/e2e/shell.spec.ts::anchors Network in the lower cluster, not among the instruments",
+    "05_Software/frontend/e2e/shell.spec.ts::opens and closes pages as tabs",
+    "05_Software/frontend/e2e/shell.spec.ts::reports the appliance network state the backend actually served",
+    "05_Software/frontend/e2e/shell.spec.ts::keeps the theme and the language across a reload, with the session",
+    "05_Software/frontend/e2e/shell.spec.ts::narrows the navigation to a labeled rail on a small viewport without clipping it",
+    "05_Software/frontend/e2e/shell.spec.ts::keeps one runtime indicator on every screen",
 ]
 
 # --- optional below this line ---

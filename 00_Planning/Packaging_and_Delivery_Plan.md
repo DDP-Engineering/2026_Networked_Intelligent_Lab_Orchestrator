@@ -400,8 +400,8 @@ supported base OS or the package dependency contract:
 - a runtime-local launcher that sets only confined library and module paths;
 - integration-specific licence notices and provenance.
 
-The current `fake_python` runtime is a test fixture and must never enter a
-production release.
+The contract runner under `05_Software/tests/fixtures/` is test-only and must
+never enter a production release.
 
 The Sigrok integration is a release blocker on both architectures. If a
 redistributable, validated runtime cannot be produced for `amd64` and `arm64`,
@@ -1039,10 +1039,10 @@ None of these decisions may silently expand the stated support matrix.
 - `06_SoftwareDocu/Sigrok_Integration.md`
 - `VERSION`
 - `CHANGELOG.md`
-- `05_Software/nilo_assistant/cmd/nilo/main.go`
-- `05_Software/nilo_assistant/cmd/nilo-nethelper/`
-- `05_Software/nilo_assistant/internal/bench/packages.go`
-- `05_Software/nilo_assistant/internal/httpapi/server.go`
-- `05_Software/nilo_assistant/internal/integration/`
-- `05_Software/nilo_assistant/internal/nethelper/`
+- `05_Software/core/cmd/nilo/main.go`
+- `05_Software/core/cmd/nilo-nethelper/`
+- `05_Software/core/internal/bench/packages.go`
+- `05_Software/core/internal/httpapi/server.go`
+- `05_Software/core/internal/integration/`
+- `05_Software/core/internal/nethelper/`
 - `05_Software/integrations/`

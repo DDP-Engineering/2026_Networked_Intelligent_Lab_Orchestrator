@@ -49,14 +49,14 @@ verification = "An automated test reads the lifecycle sources and confirms they 
 affected_paths = [
     "02_Tools/scripts/nilo-dev.ps1",
     "02_Tools/lib/DevLifecycle.ps1",
-    "05_Software/scripts/tests/test_development_lifecycle.py",
+    "02_Tools/tests/software/test_development_lifecycle.py",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_the_lifecycle_writes_no_files_into_the_repository",
-    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_token_command_uses_the_translated_checkout_path",
+    "02_Tools/tests/software/test_development_lifecycle.py::DevelopmentLifecycleTests::test_the_lifecycle_writes_no_files_into_the_repository",
+    "02_Tools/tests/software/test_development_lifecycle.py::DevelopmentLifecycleTests::test_token_command_uses_the_translated_checkout_path",
 ]
 
 # --- optional below this line ---

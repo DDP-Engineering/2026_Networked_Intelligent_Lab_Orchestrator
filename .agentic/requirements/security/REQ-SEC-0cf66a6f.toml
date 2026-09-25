@@ -57,11 +57,11 @@ When a developer runs a normal build or test command in the accepted build envir
 verification = "Wrapper contract tests inspect the generated engine invocation and an offline integration run confirms no network, privileged mode, host networking, credential mounts, or engine socket while preserving the command exit code, editable UID/GID outputs, host dependency content, and interruption-safe cleanup of task-owned isolation sentinels."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
-affected_paths = ["02_Tools/containers/build/Containerfile", "02_Tools/env/with-build-environment.ps1", "02_Tools/env/with-build-environment.sh", "02_Tools/tests/build-environment/verify-offline.sh", "05_Software/scripts/tests/test_build_environment.py", "02_Tools/scripts/verify-build-environment.sh", "02_Tools/tests/build-environment/verify-host-isolation.sh", "02_Tools/tests/build-environment/build-all.sh"]
+affected_paths = ["02_Tools/containers/build/Containerfile", "02_Tools/env/with-build-environment.ps1", "02_Tools/env/with-build-environment.sh", "02_Tools/tests/build-environment/verify-offline.sh", "02_Tools/tests/software/test_build_environment.py", "02_Tools/scripts/verify-build-environment.sh", "02_Tools/tests/build-environment/verify-host-isolation.sh", "02_Tools/tests/build-environment/build-all.sh"]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
-linked_tests = ["05_Software/scripts/tests/test_build_environment.py"]
+linked_tests = ["02_Tools/tests/software/test_build_environment.py"]
 
 # --- optional below this line ---
 

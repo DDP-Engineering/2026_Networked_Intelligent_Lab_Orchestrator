@@ -56,23 +56,23 @@ verification = "A test reads the shipped stylesheet and asserts the shell grid g
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/components/shell/AppShell.tsx",
-    "05_Software/nilo_gui/src/components/shell/TopRow.tsx",
-    "05_Software/nilo_gui/src/styles/shell.css",
-    "05_Software/nilo_gui/src/styles/tokens.css",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
-    "05_Software/nilo_gui/src/layout.test.ts",
-    "05_Software/nilo_gui/src/components/shell/Menu.tsx",
-    "05_Software/nilo_gui/src/components/shell/Icon.tsx",
+    "05_Software/frontend/src/components/shell/AppShell.tsx",
+    "05_Software/frontend/src/components/shell/TopRow.tsx",
+    "05_Software/frontend/src/styles/shell.css",
+    "05_Software/frontend/src/styles/tokens.css",
+    "05_Software/frontend/src/components/shell/shell.test.tsx",
+    "05_Software/frontend/src/layout.test.ts",
+    "05_Software/frontend/src/components/shell/Menu.tsx",
+    "05_Software/frontend/src/components/shell/Icon.tsx",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::carries the wordmark, the tabs and every control on one row",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::adds no second tab strip and no page title above the workspace",
-    "05_Software/nilo_gui/src/layout.test.ts::lays the shell out as one grid with a compact header row",
-    "05_Software/nilo_gui/src/layout.test.ts::keeps the header row between 44 and 48 pixels",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::carries the wordmark, the tabs and every control on one row",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::adds no second tab strip and no page title above the workspace",
+    "05_Software/frontend/src/layout.test.ts::lays the shell out as one grid with a compact header row",
+    "05_Software/frontend/src/layout.test.ts::keeps the header row between 44 and 48 pixels",
 ]
 
 # --- optional below this line ---

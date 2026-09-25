@@ -65,19 +65,19 @@ verification = "A component test loads enabled and disabled users including the 
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/components/authentication/UsersPage.tsx",
-    "05_Software/nilo_gui/src/components/authentication/AdministrationPanel.tsx",
-    "05_Software/nilo_gui/src/components/AdministrationForms.tsx",
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx",
-    "05_Software/nilo_gui/src/components/RowActions.tsx",
-    "05_Software/nilo_gui/src/styles/shell.css",
+    "05_Software/frontend/src/components/authentication/UsersPage.tsx",
+    "05_Software/frontend/src/components/authentication/AdministrationPanel.tsx",
+    "05_Software/frontend/src/components/AdministrationForms.tsx",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx",
+    "05_Software/frontend/src/components/RowActions.tsx",
+    "05_Software/frontend/src/styles/shell.css",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::administration listings > lets the Users destination own identity loading without fetching tokens",
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::identity administration",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::administration listings > lets the Users destination own identity loading without fetching tokens",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::identity administration",
 ]
 
 # --- optional below this line ---

@@ -19,24 +19,24 @@ When the appliance starts, it shall reconcile every persisted network operation 
 verification = "A restart test leaves an operation in each non-terminal state, restarts the service and asserts each is resolved from the helper record with the observed outcome recorded once."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/operation.go",
-    "05_Software/nilo_assistant/internal/network/persistence.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/network_operation_repository.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/internal/network/operation_durability_test.go",
-    "05_Software/nilo_assistant/internal/app/durable_network_test.go",
-    "05_Software/nilo_assistant/internal/network/operation_reconcile_test.go",
-    "05_Software/nilo_assistant/internal/network/appliance.go",
-    "05_Software/nilo_assistant/internal/nethelper/client.go",
-    "05_Software/nilo_assistant/cmd/nilo/network_runtime.go",
+    "05_Software/core/internal/network/operation.go",
+    "05_Software/core/internal/network/persistence.go",
+    "05_Software/core/internal/store/sqlite/network_operation_repository.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/internal/network/operation_durability_test.go",
+    "05_Software/core/internal/app/durable_network_test.go",
+    "05_Software/core/internal/network/operation_reconcile_test.go",
+    "05_Software/core/internal/network/appliance.go",
+    "05_Software/core/internal/nethelper/client.go",
+    "05_Software/core/cmd/nilo/network_runtime.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/operation_durability_test.go::TestAPendingChangeIsFoundAgainAfterARestart",
-    "05_Software/nilo_assistant/internal/app/durable_network_test.go::TestAnInterfaceToggleKeepsAttributableHistoryAcrossARestart",
-    "05_Software/nilo_assistant/internal/network/operation_reconcile_test.go::TestAdoptedOperationsAreReconciledAgainstTheHelperRecord",
-    "05_Software/nilo_assistant/internal/network/operation_reconcile_test.go::TestAPendingHelperChangeStaysAwaiting",
-    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go::TestApplianceSystemHTTPSAndHelperRecovery",
+    "05_Software/core/internal/network/operation_durability_test.go::TestAPendingChangeIsFoundAgainAfterARestart",
+    "05_Software/core/internal/app/durable_network_test.go::TestAnInterfaceToggleKeepsAttributableHistoryAcrossARestart",
+    "05_Software/core/internal/network/operation_reconcile_test.go::TestAdoptedOperationsAreReconciledAgainstTheHelperRecord",
+    "05_Software/core/internal/network/operation_reconcile_test.go::TestAPendingHelperChangeStaysAwaiting",
+    "05_Software/core/cmd/nilo/network_system_linux_test.go::TestApplianceSystemHTTPSAndHelperRecovery",
 ]
 
 spec = "specs/REQ-FUNC-2f8d63b5.md"

@@ -53,35 +53,35 @@ verification = "An automated test drives the sampler with a controlled clock and
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/store/sqlite/network_repository.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/migrations.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/migrations/005_network_traffic.sql",
-    "05_Software/nilo_assistant/internal/network/sampler.go",
-    "05_Software/nilo_assistant/internal/app/app.go",
-    "05_Software/nilo_assistant/internal/network/runtime.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/internal/network/runtime_test.go",
-    "05_Software/nilo_assistant/internal/network/sampler_test.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/network_repository_test.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/db_test.go",
+    "05_Software/core/internal/store/sqlite/network_repository.go",
+    "05_Software/core/internal/store/sqlite/migrations.go",
+    "05_Software/core/internal/store/sqlite/migrations/005_network_traffic.sql",
+    "05_Software/core/internal/network/sampler.go",
+    "05_Software/core/internal/app/app.go",
+    "05_Software/core/internal/network/runtime.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/internal/network/runtime_test.go",
+    "05_Software/core/internal/network/sampler_test.go",
+    "05_Software/core/internal/store/sqlite/network_repository_test.go",
+    "05_Software/core/internal/store/sqlite/db_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/sampler_test.go::TestSamplerWritesOneAggregatePerInterfacePerMinute",
-    "05_Software/nilo_assistant/internal/network/sampler_test.go::TestSamplerMeasuresIntervalsWithTheMonotonicClock",
-    "05_Software/nilo_assistant/internal/network/sampler_test.go::TestSamplerPrunesAnythingOlderThanTwentyFourHours",
-    "05_Software/nilo_assistant/internal/network/sampler_test.go::TestNewSamplerRequiresItsCollaborators",
-    "05_Software/nilo_assistant/internal/store/sqlite/network_repository_test.go::TestNetworkRepositoryRoundTripsEveryStoredField",
-    "05_Software/nilo_assistant/internal/store/sqlite/network_repository_test.go::TestNetworkRepositoryPrunesOnlyExpiredMinutes",
-    "05_Software/nilo_assistant/internal/store/sqlite/network_repository_test.go::TestNetworkRepositoryKeepsOneRowPerInterfaceMinute",
-    "05_Software/nilo_assistant/internal/store/sqlite/network_repository_test.go::TestNetworkHistorySurvivesAnApplicationRestart",
-    "05_Software/nilo_assistant/internal/network/runtime_test.go::TestMaintenancePersistsTrafficExpiresChangesAndStops",
-    "05_Software/nilo_assistant/internal/network/sampler_test.go::TestSamplerDoesNotBridgeAFailedReading",
-    "05_Software/nilo_assistant/internal/network/sampler_test.go::TestSamplerRetriesStorageFailureWithoutLosingTheClosedMinute",
-    "05_Software/nilo_assistant/internal/network/sampler_test.go::TestSamplerTreatsACounterResetAsAGapRatherThanZeroTraffic",
-    "05_Software/nilo_assistant/internal/network/sampler_test.go::TestSamplerLeavesAGapWhenAMinuteHasNoUsableSample",
+    "05_Software/core/internal/network/sampler_test.go::TestSamplerWritesOneAggregatePerInterfacePerMinute",
+    "05_Software/core/internal/network/sampler_test.go::TestSamplerMeasuresIntervalsWithTheMonotonicClock",
+    "05_Software/core/internal/network/sampler_test.go::TestSamplerPrunesAnythingOlderThanTwentyFourHours",
+    "05_Software/core/internal/network/sampler_test.go::TestNewSamplerRequiresItsCollaborators",
+    "05_Software/core/internal/store/sqlite/network_repository_test.go::TestNetworkRepositoryRoundTripsEveryStoredField",
+    "05_Software/core/internal/store/sqlite/network_repository_test.go::TestNetworkRepositoryPrunesOnlyExpiredMinutes",
+    "05_Software/core/internal/store/sqlite/network_repository_test.go::TestNetworkRepositoryKeepsOneRowPerInterfaceMinute",
+    "05_Software/core/internal/store/sqlite/network_repository_test.go::TestNetworkHistorySurvivesAnApplicationRestart",
+    "05_Software/core/internal/network/runtime_test.go::TestMaintenancePersistsTrafficExpiresChangesAndStops",
+    "05_Software/core/internal/network/sampler_test.go::TestSamplerDoesNotBridgeAFailedReading",
+    "05_Software/core/internal/network/sampler_test.go::TestSamplerRetriesStorageFailureWithoutLosingTheClosedMinute",
+    "05_Software/core/internal/network/sampler_test.go::TestSamplerTreatsACounterResetAsAGapRatherThanZeroTraffic",
+    "05_Software/core/internal/network/sampler_test.go::TestSamplerLeavesAGapWhenAMinuteHasNoUsableSample",
 ]
 
 # --- optional below this line ---

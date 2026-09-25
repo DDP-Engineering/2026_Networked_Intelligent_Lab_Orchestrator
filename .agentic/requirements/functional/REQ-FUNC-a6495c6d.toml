@@ -53,33 +53,33 @@ verification = "An automated test submits an interface change and a profile acti
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/operation.go",
-    "05_Software/nilo_assistant/internal/httpapi/network.go",
-    "05_Software/nilo_assistant/internal/httpapi/server.go",
-    "05_Software/nilo_assistant/internal/httpapi/network_operations.go",
-    "05_Software/nilo_assistant/internal/network/change_test.go",
-    "05_Software/nilo_assistant/internal/network/runtime_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/network_wireguard_test.go",
-    "05_Software/nilo_assistant/internal/network/operation_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/network_operations_test.go",
+    "05_Software/core/internal/network/operation.go",
+    "05_Software/core/internal/httpapi/network.go",
+    "05_Software/core/internal/httpapi/server.go",
+    "05_Software/core/internal/httpapi/network_operations.go",
+    "05_Software/core/internal/network/change_test.go",
+    "05_Software/core/internal/network/runtime_test.go",
+    "05_Software/core/internal/httpapi/network_wireguard_test.go",
+    "05_Software/core/internal/network/operation_test.go",
+    "05_Software/core/internal/httpapi/network_operations_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/operation_test.go::TestPreviewChangesNothingAndReturnsAReproducibleRevision",
-    "05_Software/nilo_assistant/internal/network/operation_test.go::TestAcknowledgementRunsTheChangeExactlyOnce",
-    "05_Software/nilo_assistant/internal/network/operation_test.go::TestOnlyConnectivityChangesEnterAConfirmationWindow",
-    "05_Software/nilo_assistant/internal/network/operation_test.go::TestNewOperationManagerRequiresItsCollaborators",
-    "05_Software/nilo_assistant/internal/httpapi/network_operations_test.go::TestAConnectivityChangeIsPreviewedAcknowledgedThenConfirmed",
-    "05_Software/nilo_assistant/internal/httpapi/network_operations_test.go::TestReadingAnUnknownOperationIsNotFound",
-    "05_Software/nilo_assistant/internal/httpapi/network_operations_test.go::TestOperationProgressIsReadableByEveryRole",
-    "05_Software/nilo_assistant/internal/httpapi/network_operations_test.go::TestAPreviewLeavesTheReportedStateUnchanged",
-    "05_Software/nilo_assistant/internal/httpapi/network_operations_test.go::TestPreviewRejectsAnActionItDoesNotOffer",
-    "05_Software/nilo_assistant/internal/network/change_test.go::TestProfilePreviewBindsParametersAndReturnsNoSecrets",
-    "05_Software/nilo_assistant/internal/network/runtime_test.go::TestMaintenancePersistsTrafficExpiresChangesAndStops",
-    "05_Software/nilo_assistant/internal/httpapi/network_wireguard_test.go::TestWireGuardReadAndAcknowledgedImportLifecycle",
-    "05_Software/nilo_assistant/internal/httpapi/network_wireguard_test.go::TestNetworkRequestRejectsTrailingJSONAndUnknownFields",
+    "05_Software/core/internal/network/operation_test.go::TestPreviewChangesNothingAndReturnsAReproducibleRevision",
+    "05_Software/core/internal/network/operation_test.go::TestAcknowledgementRunsTheChangeExactlyOnce",
+    "05_Software/core/internal/network/operation_test.go::TestOnlyConnectivityChangesEnterAConfirmationWindow",
+    "05_Software/core/internal/network/operation_test.go::TestNewOperationManagerRequiresItsCollaborators",
+    "05_Software/core/internal/httpapi/network_operations_test.go::TestAConnectivityChangeIsPreviewedAcknowledgedThenConfirmed",
+    "05_Software/core/internal/httpapi/network_operations_test.go::TestReadingAnUnknownOperationIsNotFound",
+    "05_Software/core/internal/httpapi/network_operations_test.go::TestOperationProgressIsReadableByEveryRole",
+    "05_Software/core/internal/httpapi/network_operations_test.go::TestAPreviewLeavesTheReportedStateUnchanged",
+    "05_Software/core/internal/httpapi/network_operations_test.go::TestPreviewRejectsAnActionItDoesNotOffer",
+    "05_Software/core/internal/network/change_test.go::TestProfilePreviewBindsParametersAndReturnsNoSecrets",
+    "05_Software/core/internal/network/runtime_test.go::TestMaintenancePersistsTrafficExpiresChangesAndStops",
+    "05_Software/core/internal/httpapi/network_wireguard_test.go::TestWireGuardReadAndAcknowledgedImportLifecycle",
+    "05_Software/core/internal/httpapi/network_wireguard_test.go::TestNetworkRequestRejectsTrailingJSONAndUnknownFields",
 ]
 
 # --- optional below this line ---

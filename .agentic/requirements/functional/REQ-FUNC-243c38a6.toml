@@ -20,18 +20,18 @@ While the appliance has not completed commissioning, the management listener all
 verification = "Automated tests build provisioning management over controlled interfaces and durable adapter claims and observe exactly the present eligible unprotected physical interfaces in persistence, firewall, and destination admission; adding/removing an interface or protected claim updates the derived set without rebuilding the service, and restart resumes the same safe set."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/management_access.go",
-    "05_Software/nilo_assistant/internal/network/management_provisioning_test.go",
-    "05_Software/nilo_assistant/internal/network/eligibility.go",
-    "05_Software/nilo_assistant/internal/network/commissioning_link.go",
-    "05_Software/nilo_assistant/internal/network/commissioning_link_test.go",
+    "05_Software/core/internal/network/management_access.go",
+    "05_Software/core/internal/network/management_provisioning_test.go",
+    "05_Software/core/internal/network/eligibility.go",
+    "05_Software/core/internal/network/commissioning_link.go",
+    "05_Software/core/internal/network/commissioning_link_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/management_provisioning_test.go::TestProvisioningDerivesTheAllowlistFromEligibleInterfaces",
-    "05_Software/nilo_assistant/internal/network/management_provisioning_test.go::TestProvisioningFollowsAdaptersAsTheyAppearAndLeave",
-    "05_Software/nilo_assistant/internal/network/management_provisioning_test.go::TestProvisioningResumesThePersistedAllowlistAfterRestart",
-    "05_Software/nilo_assistant/internal/network/management_provisioning_test.go::TestProvisioningWithNoEligibleInterfaceAdmitsNothing",
+    "05_Software/core/internal/network/management_provisioning_test.go::TestProvisioningDerivesTheAllowlistFromEligibleInterfaces",
+    "05_Software/core/internal/network/management_provisioning_test.go::TestProvisioningFollowsAdaptersAsTheyAppearAndLeave",
+    "05_Software/core/internal/network/management_provisioning_test.go::TestProvisioningResumesThePersistedAllowlistAfterRestart",
+    "05_Software/core/internal/network/management_provisioning_test.go::TestProvisioningWithNoEligibleInterfaceAdmitsNothing",
 ]
 
 

@@ -20,15 +20,15 @@ When an authenticated actor holding the password-policy permission reads the app
 verification = "An HTTP test drives the production handler over a real database as an administrator, reads the policy and asserts the shipped default, submits a policy with a different minimum length and two classes required, asserts the response reports exactly what was submitted, and asserts a second read returns the same values; a body missing any of the five values is asserted to be refused without changing the stored policy."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/httpapi/password_policy.go",
-    "05_Software/nilo_assistant/internal/httpapi/server.go",
-    "05_Software/nilo_assistant/internal/httpapi/administration.go",
-    "05_Software/nilo_assistant/internal/httpapi/password_policy_test.go",
+    "05_Software/core/internal/httpapi/password_policy.go",
+    "05_Software/core/internal/httpapi/server.go",
+    "05_Software/core/internal/httpapi/administration.go",
+    "05_Software/core/internal/httpapi/password_policy_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/httpapi/password_policy_test.go::TestPasswordPolicyRouteServesTheShippedDefaultAndStoresAReplacement",
-    "05_Software/nilo_assistant/internal/httpapi/password_policy_test.go::TestPasswordPolicyRouteRefusesAnIncompleteOrMalformedBody",
+    "05_Software/core/internal/httpapi/password_policy_test.go::TestPasswordPolicyRouteServesTheShippedDefaultAndStoresAReplacement",
+    "05_Software/core/internal/httpapi/password_policy_test.go::TestPasswordPolicyRouteRefusesAnIncompleteOrMalformedBody",
 ]
 
 

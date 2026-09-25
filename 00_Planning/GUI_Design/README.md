@@ -52,7 +52,7 @@ incidental image detail:
 
 The illustrated Logic Analyzer, USB Camera and Flash Tools instruments were not
 created. The instrument cluster lists the integrations the backend actually
-reports, which today is the simulated fake Python integration.
+reports, which today is the deterministic simulation catalog.
 
 ## Status and provenance
 

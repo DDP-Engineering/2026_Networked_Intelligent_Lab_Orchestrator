@@ -20,23 +20,23 @@ When a physical adapter is selected for management access, the appliance shall p
 verification = "A repository migration and service test save a management adapter, reload it with the adapter absent, then present the same stable identity under a different Linux name and assert the management claim and status follow it; a virtual WireGuard interface remains represented by its interface identity and no secret data is serialized."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/management_access_test.go",
-    "05_Software/nilo_assistant/internal/network/management_access.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/management_access_repository.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/management_access_repository_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/management_access.go",
+    "05_Software/core/internal/network/management_access_test.go",
+    "05_Software/core/internal/network/management_access.go",
+    "05_Software/core/internal/store/sqlite/management_access_repository.go",
+    "05_Software/core/internal/store/sqlite/management_access_repository_test.go",
+    "05_Software/core/internal/httpapi/management_access.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/management_access_test.go::TestManagementAccessPreservesSavedIdentitiesWhenNamesAreReused",
-    "05_Software/nilo_assistant/internal/network/management_access_test.go::TestManagementAccessSavePreservesAnAbsentSelectedAdapter",
-    "05_Software/nilo_assistant/internal/network/management_access_test.go::TestManagementAccessDoesNotAdmitAReplacementWithTheSavedName",
-    "05_Software/nilo_assistant/internal/network/management_access_test.go::TestManagementAccessClosesAdmissionWhenEverySavedAdapterIsAbsent",
-    "05_Software/nilo_assistant/internal/network/management_access_test.go::TestManagementReplacementRevocationSurvivesFirewallFailureAndRetry",
-    "05_Software/nilo_assistant/internal/network/management_access_test.go::TestManagementAccessFollowsAStableAdapterAcrossRename",
-    "05_Software/nilo_assistant/internal/store/sqlite/management_access_repository_test.go::TestManagementAccessRepositoryMigratesLegacyNamesToBindings",
-    "05_Software/nilo_assistant/internal/store/sqlite/management_access_repository_test.go::TestManagementAccessRepositoryPersistsStableAdapterBindings",
-    "05_Software/nilo_assistant/internal/store/sqlite/management_access_repository_test.go::TestManagementAccessRepositoryPersistsRecoveryWithoutSecrets",
+    "05_Software/core/internal/network/management_access_test.go::TestManagementAccessPreservesSavedIdentitiesWhenNamesAreReused",
+    "05_Software/core/internal/network/management_access_test.go::TestManagementAccessSavePreservesAnAbsentSelectedAdapter",
+    "05_Software/core/internal/network/management_access_test.go::TestManagementAccessDoesNotAdmitAReplacementWithTheSavedName",
+    "05_Software/core/internal/network/management_access_test.go::TestManagementAccessClosesAdmissionWhenEverySavedAdapterIsAbsent",
+    "05_Software/core/internal/network/management_access_test.go::TestManagementReplacementRevocationSurvivesFirewallFailureAndRetry",
+    "05_Software/core/internal/network/management_access_test.go::TestManagementAccessFollowsAStableAdapterAcrossRename",
+    "05_Software/core/internal/store/sqlite/management_access_repository_test.go::TestManagementAccessRepositoryMigratesLegacyNamesToBindings",
+    "05_Software/core/internal/store/sqlite/management_access_repository_test.go::TestManagementAccessRepositoryPersistsStableAdapterBindings",
+    "05_Software/core/internal/store/sqlite/management_access_repository_test.go::TestManagementAccessRepositoryPersistsRecoveryWithoutSecrets",
 ]
 
 

@@ -62,25 +62,25 @@ affected_paths = [
     ".agentic/knowledge/gui-foundation.md",
     "06_SoftwareDocu/Development_and_Simulation_Flow.md",
     "06_SoftwareDocu/Network_Operations.md",
-    "05_Software/nilo_gui/src/components/shell/AppShell.tsx",
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
-    "05_Software/nilo_gui/src/components/network/views.ts",
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
-    "05_Software/nilo_gui/src/components/network/WireGuardPanel.tsx",
-    "05_Software/nilo_gui/src/components/network/WireGuardPanel.test.tsx",
-    "05_Software/nilo_gui/src/i18n/en.ts",
-    "05_Software/nilo_gui/src/i18n/de.ts",
-    "05_Software/nilo_gui/src/i18n/ro.ts",
-    "05_Software/nilo_gui/e2e/field-display.spec.ts",
-    "05_Software/nilo_gui/e2e/network.spec.ts",
+    "05_Software/frontend/src/components/shell/AppShell.tsx",
+    "05_Software/frontend/src/components/pages/NetworkPage.tsx",
+    "05_Software/frontend/src/components/network/views.ts",
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx",
+    "05_Software/frontend/src/components/network/WireGuardPanel.tsx",
+    "05_Software/frontend/src/components/network/WireGuardPanel.test.tsx",
+    "05_Software/frontend/src/i18n/en.ts",
+    "05_Software/frontend/src/i18n/de.ts",
+    "05_Software/frontend/src/i18n/ro.ts",
+    "05_Software/frontend/e2e/field-display.spec.ts",
+    "05_Software/frontend/e2e/network.spec.ts",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
-    "05_Software/nilo_gui/e2e/network.spec.ts",
-    "05_Software/nilo_gui/e2e/field-display.spec.ts",
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx",
+    "05_Software/frontend/e2e/network.spec.ts",
+    "05_Software/frontend/e2e/field-display.spec.ts",
 ]
 
 # --- optional below this line ---

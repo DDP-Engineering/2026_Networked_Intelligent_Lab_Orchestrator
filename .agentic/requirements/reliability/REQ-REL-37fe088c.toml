@@ -57,11 +57,11 @@ When a maintainer exports an accepted build image, the archive tooling shall cre
 verification = "Synthetic archive tests export twice with a fixed epoch, compare bytes, verify default and boundary split sizes, validate the generated manifest, restore the archive, and prove one-byte corruption, missing/reordered/extra parts, and a part above 2 GB are rejected."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
-affected_paths = ["02_Tools/scripts/build_environment.py", "02_Tools/scripts/export-build-environment.sh", "02_Tools/scripts/restore-build-environment.sh", "02_Tools/archives/build-environment/", "02_Tools/tests/build-environment/verify-archive-round-trip.sh", ".gitattributes", "05_Software/scripts/tests/test_build_environment.py"]
+affected_paths = ["02_Tools/scripts/build_environment.py", "02_Tools/scripts/export-build-environment.sh", "02_Tools/scripts/restore-build-environment.sh", "02_Tools/archives/build-environment/", "02_Tools/tests/build-environment/verify-archive-round-trip.sh", ".gitattributes", "02_Tools/tests/software/test_build_environment.py"]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
-linked_tests = ["05_Software/scripts/tests/test_build_environment.py"]
+linked_tests = ["02_Tools/tests/software/test_build_environment.py"]
 
 # --- optional below this line ---
 

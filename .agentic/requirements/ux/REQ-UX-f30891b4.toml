@@ -19,17 +19,17 @@ The Bench, Activity, Authentication, About and not-yet-available pages shall use
 verification = "A component test renders the Activity page and asserts the details expansion carries the category and function of an entry while time, outcome, action, subject and actor remain in the row; a browser test at 1024x600 opens Bench, Activity, Authentication and About and asserts no document-level horizontal overflow and no text below 14px."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.tsx",
-    "05_Software/nilo_gui/src/components/pages/BenchPage.tsx",
-    "05_Software/nilo_gui/src/components/pages/SimplePages.tsx",
-    "05_Software/nilo_gui/src/components/AuthenticationPage.tsx",
-    "05_Software/nilo_gui/src/styles/shell.css",
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx",
+    "05_Software/frontend/src/components/pages/ActivityPage.tsx",
+    "05_Software/frontend/src/components/pages/BenchPage.tsx",
+    "05_Software/frontend/src/components/pages/SimplePages.tsx",
+    "05_Software/frontend/src/components/AuthenticationPage.tsx",
+    "05_Software/frontend/src/styles/shell.css",
+    "05_Software/frontend/src/components/pages/ActivityPage.test.tsx",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx::opens with the given filters, pages by cursor and discloses the gap",
-    "05_Software/nilo_gui/e2e/field-display.spec.ts::the other pages stay readable without sideways scrolling",
+    "05_Software/frontend/src/components/pages/ActivityPage.test.tsx::opens with the given filters, pages by cursor and discloses the gap",
+    "05_Software/frontend/e2e/field-display.spec.ts::the other pages stay readable without sideways scrolling",
 ]
 
 spec = ""

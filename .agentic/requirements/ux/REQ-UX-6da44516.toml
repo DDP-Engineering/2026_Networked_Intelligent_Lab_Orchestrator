@@ -55,20 +55,20 @@ verification = "A test reads the shipped stylesheets and asserts the document ro
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/styles/shell.css",
-    "05_Software/nilo_gui/src/index.css",
-    "05_Software/nilo_gui/src/components/shell/AppShell.tsx",
-    "05_Software/nilo_gui/src/layout.test.ts",
+    "05_Software/frontend/src/styles/shell.css",
+    "05_Software/frontend/src/index.css",
+    "05_Software/frontend/src/components/shell/AppShell.tsx",
+    "05_Software/frontend/src/layout.test.ts",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/layout.test.ts::bounds the document to the viewport and refuses page-level scrolling",
-    "05_Software/nilo_gui/src/layout.test.ts::paints no decorative background behind the workspace",
-    "05_Software/nilo_gui/src/layout.test.ts::gives the workspace the space that is left, and its own overflow",
-    "05_Software/nilo_gui/src/layout.test.ts::scrolls long listings inside their own compartments",
-    "05_Software/nilo_gui/src/layout.test.ts::narrows the navigation rather than clipping it on a small viewport",
+    "05_Software/frontend/src/layout.test.ts::bounds the document to the viewport and refuses page-level scrolling",
+    "05_Software/frontend/src/layout.test.ts::paints no decorative background behind the workspace",
+    "05_Software/frontend/src/layout.test.ts::gives the workspace the space that is left, and its own overflow",
+    "05_Software/frontend/src/layout.test.ts::scrolls long listings inside their own compartments",
+    "05_Software/frontend/src/layout.test.ts::narrows the navigation rather than clipping it on a small viewport",
 ]
 
 # --- optional below this line ---

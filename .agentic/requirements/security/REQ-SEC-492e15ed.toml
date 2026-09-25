@@ -20,27 +20,27 @@ When a password is set for an identity - created, bootstrapped or reset - throug
 verification = "Tests configure a policy with a raised minimum length and two required classes, then set a password through the HTTP identity administration routes and through the local and remote command line: a password one byte short, and one of sufficient length missing a required class, are each refused with a message naming what is missing and no identity change, while a password meeting the length and every required class is accepted and signs in."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/auth/password_policy.go",
-    "05_Software/nilo_assistant/internal/identity/service.go",
-    "05_Software/nilo_assistant/internal/httpapi/administration.go",
-    "05_Software/nilo_assistant/cmd/nilo/admin.go",
-    "05_Software/nilo_assistant/internal/auth/password_policy_test.go",
-    "05_Software/nilo_assistant/internal/identity/password_policy_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/password_policy_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/admin_password_policy_test.go",
+    "05_Software/core/internal/auth/password_policy.go",
+    "05_Software/core/internal/identity/service.go",
+    "05_Software/core/internal/httpapi/administration.go",
+    "05_Software/core/cmd/nilo/admin.go",
+    "05_Software/core/internal/auth/password_policy_test.go",
+    "05_Software/core/internal/identity/password_policy_test.go",
+    "05_Software/core/internal/httpapi/password_policy_test.go",
+    "05_Software/core/cmd/nilo/admin_password_policy_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/auth/password_policy_test.go::TestPasswordPolicyCheckHoldsAPasswordToTheConfiguredLength",
-    "05_Software/nilo_assistant/internal/auth/password_policy_test.go::TestPasswordPolicyCheckRequiresEachTickedClass",
-    "05_Software/nilo_assistant/internal/auth/password_policy_test.go::TestPasswordPolicyCheckNamesEveryUnmetRequirementAndNoOther",
-    "05_Software/nilo_assistant/internal/auth/password_policy_test.go::TestPasswordPolicyCheckClassifiesEveryRune",
-    "05_Software/nilo_assistant/internal/auth/password_policy_test.go::TestPasswordPolicyCheckTreatsInvalidUTF8AsSpecialRatherThanAnError",
-    "05_Software/nilo_assistant/internal/auth/password_policy_test.go::TestPasswordPolicyCheckNeverRepeatsThePassword",
-    "05_Software/nilo_assistant/internal/identity/password_policy_test.go::TestSetPasswordPolicyHoldsEveryLaterPasswordSetToIt",
-    "05_Software/nilo_assistant/internal/identity/password_policy_test.go::TestResetPasswordIsHeldToTheConfiguredPolicy",
-    "05_Software/nilo_assistant/internal/httpapi/password_policy_test.go::TestIdentityRoutesHoldANewPasswordToTheConfiguredPolicy",
-    "05_Software/nilo_assistant/cmd/nilo/admin_password_policy_test.go::TestLocalUserCommandsAreHeldToTheStoredPasswordPolicy",
+    "05_Software/core/internal/auth/password_policy_test.go::TestPasswordPolicyCheckHoldsAPasswordToTheConfiguredLength",
+    "05_Software/core/internal/auth/password_policy_test.go::TestPasswordPolicyCheckRequiresEachTickedClass",
+    "05_Software/core/internal/auth/password_policy_test.go::TestPasswordPolicyCheckNamesEveryUnmetRequirementAndNoOther",
+    "05_Software/core/internal/auth/password_policy_test.go::TestPasswordPolicyCheckClassifiesEveryRune",
+    "05_Software/core/internal/auth/password_policy_test.go::TestPasswordPolicyCheckTreatsInvalidUTF8AsSpecialRatherThanAnError",
+    "05_Software/core/internal/auth/password_policy_test.go::TestPasswordPolicyCheckNeverRepeatsThePassword",
+    "05_Software/core/internal/identity/password_policy_test.go::TestSetPasswordPolicyHoldsEveryLaterPasswordSetToIt",
+    "05_Software/core/internal/identity/password_policy_test.go::TestResetPasswordIsHeldToTheConfiguredPolicy",
+    "05_Software/core/internal/httpapi/password_policy_test.go::TestIdentityRoutesHoldANewPasswordToTheConfiguredPolicy",
+    "05_Software/core/cmd/nilo/admin_password_policy_test.go::TestLocalUserCommandsAreHeldToTheStoredPasswordPolicy",
 ]
 
 

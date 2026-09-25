@@ -53,33 +53,33 @@ verification = "A browser test applies a connectivity change and asserts a visib
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
-    "05_Software/nilo_gui/src/api/contract.ts",
-    "05_Software/nilo_gui/src/api/client.ts",
-    "05_Software/nilo_gui/src/i18n/en.ts",
-    "05_Software/nilo_gui/src/i18n/de.ts",
-    "05_Software/nilo_gui/src/i18n/ro.ts",
-    "05_Software/nilo_gui/e2e/network.spec.ts",
-    "05_Software/nilo_gui/src/components/network/WireGuardPanel.tsx",
-    "05_Software/nilo_gui/src/components/network/NetworkConfirmation.tsx",
-    "05_Software/nilo_gui/src/components/shell/AppShell.tsx",
-    "05_Software/nilo_gui/src/components/shell/TopRow.tsx",
-    "05_Software/nilo_gui/src/api/wireguard.ts",
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
-    "05_Software/nilo_gui/src/components/network/WireGuardPanel.test.tsx",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
+    "05_Software/frontend/src/components/pages/NetworkPage.tsx",
+    "05_Software/frontend/src/api/contract.ts",
+    "05_Software/frontend/src/api/client.ts",
+    "05_Software/frontend/src/i18n/en.ts",
+    "05_Software/frontend/src/i18n/de.ts",
+    "05_Software/frontend/src/i18n/ro.ts",
+    "05_Software/frontend/e2e/network.spec.ts",
+    "05_Software/frontend/src/components/network/WireGuardPanel.tsx",
+    "05_Software/frontend/src/components/network/NetworkConfirmation.tsx",
+    "05_Software/frontend/src/components/shell/AppShell.tsx",
+    "05_Software/frontend/src/components/shell/TopRow.tsx",
+    "05_Software/frontend/src/api/wireguard.ts",
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx",
+    "05_Software/frontend/src/components/network/WireGuardPanel.test.tsx",
+    "05_Software/frontend/src/components/shell/shell.test.tsx",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::counts the confirmation window down and offers both ways out",
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::keeps the change when the administrator confirms inside the window",
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::restores the previous state when the administrator asks for it",
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::reports a rollback that was not verified prominently",
-    "05_Software/nilo_gui/e2e/network.spec.ts",
-    "05_Software/nilo_gui/src/components/network/WireGuardPanel.test.tsx",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx::counts the confirmation window down and offers both ways out",
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx::keeps the change when the administrator confirms inside the window",
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx::restores the previous state when the administrator asks for it",
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx::reports a rollback that was not verified prominently",
+    "05_Software/frontend/e2e/network.spec.ts",
+    "05_Software/frontend/src/components/network/WireGuardPanel.test.tsx",
+    "05_Software/frontend/src/components/shell/shell.test.tsx",
 ]
 
 # --- optional below this line ---

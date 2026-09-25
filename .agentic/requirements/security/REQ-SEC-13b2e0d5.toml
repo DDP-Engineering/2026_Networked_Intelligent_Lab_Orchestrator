@@ -20,20 +20,20 @@ Where an actor does not hold the password-policy permission, which only the Admi
 verification = "Tests drive the production handler with an Operator session, a Viewer session, an API token whose scopes exclude the permission, and no credential at all, and assert that the read and the change are each refused with the ordinary authorization status and a body carrying no policy value, while an administrator session performs both."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/auth/role.go",
-    "05_Software/nilo_assistant/internal/httpapi/server.go",
-    "05_Software/nilo_assistant/internal/httpapi/password_policy.go",
-    "05_Software/nilo_assistant/internal/identity/service.go",
-    "05_Software/nilo_assistant/internal/auth/role_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/password_policy_test.go",
-    "05_Software/nilo_assistant/internal/identity/password_policy_test.go",
+    "05_Software/core/internal/auth/role.go",
+    "05_Software/core/internal/httpapi/server.go",
+    "05_Software/core/internal/httpapi/password_policy.go",
+    "05_Software/core/internal/identity/service.go",
+    "05_Software/core/internal/auth/role_test.go",
+    "05_Software/core/internal/httpapi/password_policy_test.go",
+    "05_Software/core/internal/identity/password_policy_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/httpapi/password_policy_test.go::TestPasswordPolicyRouteIsClosedToEveryCallerWithoutThePermission",
-    "05_Software/nilo_assistant/internal/identity/password_policy_test.go::TestSetPasswordPolicyRefusesANonAdministrator",
-    "05_Software/nilo_assistant/internal/auth/role_test.go::TestActivityPermissionsBelongToAdministratorsOnly",
-    "05_Software/nilo_assistant/internal/auth/role_test.go::TestNoRoleHoldsAPermissionOutsideTheDefinedSet",
+    "05_Software/core/internal/httpapi/password_policy_test.go::TestPasswordPolicyRouteIsClosedToEveryCallerWithoutThePermission",
+    "05_Software/core/internal/identity/password_policy_test.go::TestSetPasswordPolicyRefusesANonAdministrator",
+    "05_Software/core/internal/auth/role_test.go::TestActivityPermissionsBelongToAdministratorsOnly",
+    "05_Software/core/internal/auth/role_test.go::TestNoRoleHoldsAPermissionOutsideTheDefinedSet",
 ]
 
 

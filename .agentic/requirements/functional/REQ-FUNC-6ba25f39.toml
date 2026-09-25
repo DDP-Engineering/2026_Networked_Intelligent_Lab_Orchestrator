@@ -19,13 +19,13 @@ The appliance shall stream an authorized, filtered activity export as JSONL or C
 verification = "An API test exports both formats, asserts the header metadata, asserts the size bound is enforced, and asserts a field beginning with an equals sign is neutralized."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/activity/activity.go",
-    "05_Software/nilo_assistant/internal/httpapi/activity.go",
+    "05_Software/core/internal/activity/activity.go",
+    "05_Software/core/internal/httpapi/activity.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/activity/activity_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/activity_test.go",
+    "05_Software/core/internal/activity/activity_test.go",
+    "05_Software/core/internal/httpapi/activity_test.go",
 ]
 
 spec = "specs/REQ-FUNC-2f8d63b5.md"

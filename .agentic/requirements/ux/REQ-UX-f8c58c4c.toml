@@ -24,17 +24,17 @@ Apply filters and Clear filters go on behaving as they do today.
 verification = "A browser test at a wide viewport asserts that the scope controls, the six filter fields and the More filters disclosure share one row by comparing their vertical offsets, then narrows the viewport and asserts they wrap onto further rows without document overflow and with the More filters disclosure never alone on a row; a component test applies a field filter, opens More filters and clears the panel, asserting the queries the page sends are unchanged."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.tsx",
-    "05_Software/nilo_gui/src/styles/shell.css",
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx",
-    "05_Software/nilo_gui/src/layout.test.ts",
-    "05_Software/nilo_gui/e2e/field-display.spec.ts",
+    "05_Software/frontend/src/components/pages/ActivityPage.tsx",
+    "05_Software/frontend/src/styles/shell.css",
+    "05_Software/frontend/src/components/pages/ActivityPage.test.tsx",
+    "05_Software/frontend/src/layout.test.ts",
+    "05_Software/frontend/e2e/field-display.spec.ts",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx::puts the scope chips on the filter line on a wide display",
-    "05_Software/nilo_gui/src/layout.test.ts::wraps the activity filter line and stacks the head below 56rem",
-    "05_Software/nilo_gui/e2e/field-display.spec.ts::1366: the activity header and its filters are each one line",
+    "05_Software/frontend/src/components/pages/ActivityPage.test.tsx::puts the scope chips on the filter line on a wide display",
+    "05_Software/frontend/src/layout.test.ts::wraps the activity filter line and stacks the head below 56rem",
+    "05_Software/frontend/e2e/field-display.spec.ts::1366: the activity header and its filters are each one line",
 ]
 
 

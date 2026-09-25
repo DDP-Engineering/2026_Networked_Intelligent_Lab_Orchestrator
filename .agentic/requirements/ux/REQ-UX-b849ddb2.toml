@@ -56,20 +56,20 @@ verification = "A component test holds an administration request unresolved and 
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/components/AuthenticationPage.tsx",
-    "05_Software/nilo_gui/src/components/AdministrationForms.tsx",
-    "05_Software/nilo_gui/src/components/Modal.tsx",
+    "05_Software/frontend/src/components/AuthenticationPage.tsx",
+    "05_Software/frontend/src/components/AdministrationForms.tsx",
+    "05_Software/frontend/src/components/Modal.tsx",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::reports each listing as loading before it answers",
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::creates an identity and reports what changed",
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::changes a role through a focused dialog",
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::carries the reason Bench Core gave for refusing a change",
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::marks a change in progress and refuses a second submission",
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::names a listing Bench Core would not serve, without emptying the other",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::reports each listing as loading before it answers",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::creates an identity and reports what changed",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::changes a role through a focused dialog",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::carries the reason Bench Core gave for refusing a change",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::marks a change in progress and refuses a second submission",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::names a listing Bench Core would not serve, without emptying the other",
 ]
 
 # --- optional below this line ---

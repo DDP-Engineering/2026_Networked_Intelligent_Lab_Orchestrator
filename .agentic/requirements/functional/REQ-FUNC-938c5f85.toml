@@ -57,16 +57,16 @@ verification = "An HTTP test submits each of those cases as an administrator, as
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/httpapi/administration.go",
-    "05_Software/nilo_assistant/internal/identity/service.go",
-    "05_Software/nilo_assistant/internal/auth/password.go",
-    "05_Software/nilo_assistant/internal/auth/role.go",
+    "05_Software/core/internal/httpapi/administration.go",
+    "05_Software/core/internal/identity/service.go",
+    "05_Software/core/internal/auth/password.go",
+    "05_Software/core/internal/auth/role.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/httpapi/administration_test.go::TestAdministrationRefusesRequestsItCannotApply",
+    "05_Software/core/internal/httpapi/administration_test.go::TestAdministrationRefusesRequestsItCannotApply",
 ]
 
 # --- optional below this line ---

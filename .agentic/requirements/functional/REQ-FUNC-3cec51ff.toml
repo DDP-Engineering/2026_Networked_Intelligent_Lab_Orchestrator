@@ -53,22 +53,22 @@ verification = "An automated test performs MCP tool discovery and asserts the re
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/mcp/server.go",
-    "05_Software/nilo_assistant/internal/mcp/server_test.go",
-    "05_Software/nilo_assistant/internal/network/wireguard.go",
-    "05_Software/nilo_assistant/internal/mcp/protocol_test.go",
-    "05_Software/nilo_assistant/go.mod",
-    "05_Software/nilo_assistant/go.sum",
-    "05_Software/nilo_assistant/internal/mcp/fixture_test.go",
+    "05_Software/core/internal/mcp/server.go",
+    "05_Software/core/internal/mcp/server_test.go",
+    "05_Software/core/internal/network/wireguard.go",
+    "05_Software/core/internal/mcp/protocol_test.go",
+    "05_Software/core/go.mod",
+    "05_Software/core/go.sum",
+    "05_Software/core/internal/mcp/fixture_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/mcp/server_test.go::TestTheEndpointOffersExactlyThreeReadTools",
-    "05_Software/nilo_assistant/internal/mcp/server_test.go::TestTheEndpointHoldsNoMutatingCapability",
-    "05_Software/nilo_assistant/internal/mcp/server_test.go::TestNewHandlerRequiresItsCollaborators",
-    "05_Software/nilo_assistant/internal/mcp/protocol_test.go::TestStreamableDiscoveryReadsAndRevocationWithRealToken",
+    "05_Software/core/internal/mcp/server_test.go::TestTheEndpointOffersExactlyThreeReadTools",
+    "05_Software/core/internal/mcp/server_test.go::TestTheEndpointHoldsNoMutatingCapability",
+    "05_Software/core/internal/mcp/server_test.go::TestNewHandlerRequiresItsCollaborators",
+    "05_Software/core/internal/mcp/protocol_test.go::TestStreamableDiscoveryReadsAndRevocationWithRealToken",
 ]
 
 # --- optional below this line ---
@@ -83,4 +83,4 @@ created = 2026-09-02
 updated = 2026-09-03
 
 # Planned files not implemented at the 2026-09-03 audit:
-# 05_Software/nilo_assistant/internal/mcp/tools.go
+# 05_Software/core/internal/mcp/tools.go

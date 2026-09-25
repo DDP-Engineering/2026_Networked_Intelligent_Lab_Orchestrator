@@ -18,16 +18,16 @@ listing route accepts no filters.
 verification = "A command test runs `network operation list` against a recording HTTP stub and asserts exactly one authenticated GET to /api/v1/network/operations with no query string, exit 0, and with --json the stub's document byte-for-byte on standard output; a run with an extra argument or an unknown --state flag exits 2 and makes no request; a stub answering 403 yields exit 1 with the appliance's error code on standard error; the live appliance test lists operations through a real simulation server."
 
 affected_paths = [
-    "05_Software/nilo_assistant/cmd/nilo/network.go",
-    "05_Software/nilo_assistant/cmd/nilo/network_operation_list_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/admin_live_test.go",
+    "05_Software/core/cmd/nilo/network.go",
+    "05_Software/core/cmd/nilo/network_operation_list_test.go",
+    "05_Software/core/cmd/nilo/admin_live_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/cmd/nilo/network_operation_list_test.go::TestOperationListCallsTheListingRoute",
-    "05_Software/nilo_assistant/cmd/nilo/network_operation_list_test.go::TestOperationListTakesNoFiltersOrArguments",
-    "05_Software/nilo_assistant/cmd/nilo/network_operation_list_test.go::TestOperationListRefusalExitsOneWithTheApplianceCode",
-    "05_Software/nilo_assistant/cmd/nilo/admin_live_test.go::TestRemoteAdministrationAgainstARealApplianceHonoursRolesScopesAndCredentialState",
+    "05_Software/core/cmd/nilo/network_operation_list_test.go::TestOperationListCallsTheListingRoute",
+    "05_Software/core/cmd/nilo/network_operation_list_test.go::TestOperationListTakesNoFiltersOrArguments",
+    "05_Software/core/cmd/nilo/network_operation_list_test.go::TestOperationListRefusalExitsOneWithTheApplianceCode",
+    "05_Software/core/cmd/nilo/admin_live_test.go::TestRemoteAdministrationAgainstARealApplianceHonoursRolesScopesAndCredentialState",
 ]
 
 spec = ""

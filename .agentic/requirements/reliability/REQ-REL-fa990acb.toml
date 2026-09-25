@@ -20,12 +20,12 @@ If completing commissioning does not finish, the appliance shall restore the man
 verification = "An automated test commissions a provisioning appliance through a recorder that refuses to record the lifecycle state, and asserts the failure is reported, the derived allowlist and the firewall are restored to what they were, an adapter that was serving beforehand is still admitted, and an adapter attached afterwards still joins - which is only true while the appliance is still provisioning."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/commissioning.go",
-    "05_Software/nilo_assistant/internal/network/commissioning_test.go",
+    "05_Software/core/internal/network/commissioning.go",
+    "05_Software/core/internal/network/commissioning_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/commissioning_test.go::TestCommissioningRestoresTheDerivedAllowlistWhenTheStateCannotBeRecorded",
+    "05_Software/core/internal/network/commissioning_test.go::TestCommissioningRestoresTheDerivedAllowlistWhenTheStateCannotBeRecorded",
 ]
 
 

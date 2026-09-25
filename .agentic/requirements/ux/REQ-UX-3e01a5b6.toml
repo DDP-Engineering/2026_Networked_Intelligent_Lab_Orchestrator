@@ -22,20 +22,20 @@ and no further descriptive text.
 verification = "A component test renders the Activity page for an identity that may export and asserts that the header contains the title and the Export control and no descriptive paragraph, then renders it for an identity that may not export and asserts the header carries the title alone; a browser test at 1920 and 1024 pixel widths asserts the Export control shares the line of the title with its right edge at the right edge of the header, keeps a 44 pixel target and causes no document overflow."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.tsx",
-    "05_Software/nilo_gui/src/styles/shell.css",
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx",
-    "05_Software/nilo_gui/src/layout.test.ts",
-    "05_Software/nilo_gui/e2e/field-display.spec.ts",
-    "05_Software/nilo_gui/src/i18n/en.ts",
-    "05_Software/nilo_gui/src/i18n/de.ts",
-    "05_Software/nilo_gui/src/i18n/ro.ts",
+    "05_Software/frontend/src/components/pages/ActivityPage.tsx",
+    "05_Software/frontend/src/styles/shell.css",
+    "05_Software/frontend/src/components/pages/ActivityPage.test.tsx",
+    "05_Software/frontend/src/layout.test.ts",
+    "05_Software/frontend/e2e/field-display.spec.ts",
+    "05_Software/frontend/src/i18n/en.ts",
+    "05_Software/frontend/src/i18n/de.ts",
+    "05_Software/frontend/src/i18n/ro.ts",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx::carries the title and Export on one header line, and no description",
-    "05_Software/nilo_gui/src/layout.test.ts::wraps the activity filter line and stacks the head below 56rem",
-    "05_Software/nilo_gui/e2e/field-display.spec.ts::1920: the activity header and its filters are each one line",
+    "05_Software/frontend/src/components/pages/ActivityPage.test.tsx::carries the title and Export on one header line, and no description",
+    "05_Software/frontend/src/layout.test.ts::wraps the activity filter line and stacks the head below 56rem",
+    "05_Software/frontend/e2e/field-display.spec.ts::1920: the activity header and its filters are each one line",
 ]
 
 

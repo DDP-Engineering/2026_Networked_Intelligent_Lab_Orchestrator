@@ -54,10 +54,10 @@ verification = "Inspection: the authorization and token test files construct the
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/httpapi/identity_test.go",
-    "05_Software/nilo_assistant/internal/identity/service_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/admin_test.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/identity_repository_test.go",
+    "05_Software/core/internal/httpapi/identity_test.go",
+    "05_Software/core/internal/identity/service_test.go",
+    "05_Software/core/cmd/nilo/admin_test.go",
+    "05_Software/core/internal/store/sqlite/identity_repository_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;

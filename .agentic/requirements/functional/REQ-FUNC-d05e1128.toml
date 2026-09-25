@@ -49,15 +49,15 @@ verification = "An automated test invokes the entry point for each of the two co
 affected_paths = [
     "02_Tools/scripts/nilo-dev.ps1",
     "02_Tools/lib/DevLifecycle.ps1",
-    "05_Software/scripts/tests/test_development_lifecycle.py",
+    "02_Tools/tests/software/test_development_lifecycle.py",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_entry_point_and_library_exist",
-    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_entry_point_accepts_its_commands_and_rejects_bad_input",
-    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_options_default_to_the_documented_values",
+    "02_Tools/tests/software/test_development_lifecycle.py::DevelopmentLifecycleTests::test_entry_point_and_library_exist",
+    "02_Tools/tests/software/test_development_lifecycle.py::DevelopmentLifecycleTests::test_entry_point_accepts_its_commands_and_rejects_bad_input",
+    "02_Tools/tests/software/test_development_lifecycle.py::DevelopmentLifecycleTests::test_options_default_to_the_documented_values",
 ]
 
 # --- optional below this line ---

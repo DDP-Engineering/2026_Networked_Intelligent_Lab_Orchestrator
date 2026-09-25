@@ -19,16 +19,16 @@ The browser interface shall render ordinary body and control text at 16 CSS pixe
 verification = "A stylesheet test asserts the token file declares the title, section, body, dense and label sizes with the body at 16px and no size token below 14px, that the shell stylesheet declares no font-size below 14px and no text-transform uppercase, and that the document body uses the body token; a browser test walks every visible text node at 1920x1080, 1366x768, 1024x600 and 800x480 in both themes and finds none rendered below 14px."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/styles/tokens.css",
-    "05_Software/nilo_gui/src/styles/shell.css",
-    "05_Software/nilo_gui/src/index.css",
-    "05_Software/nilo_gui/src/layout.test.ts",
+    "05_Software/frontend/src/styles/tokens.css",
+    "05_Software/frontend/src/styles/shell.css",
+    "05_Software/frontend/src/index.css",
+    "05_Software/frontend/src/layout.test.ts",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/src/layout.test.ts::declares the type scale as tokens with the body at 16px and nothing below 14px",
-    "05_Software/nilo_gui/src/layout.test.ts::sizes every component from the scale, never below 14px and never in capitals",
-    "05_Software/nilo_gui/e2e/field-display.spec.ts::the shell and the Network page are readable and complete",
+    "05_Software/frontend/src/layout.test.ts::declares the type scale as tokens with the body at 16px and nothing below 14px",
+    "05_Software/frontend/src/layout.test.ts::sizes every component from the scale, never below 14px and never in capitals",
+    "05_Software/frontend/e2e/field-display.spec.ts::the shell and the Network page are readable and complete",
 ]
 
 spec = ""

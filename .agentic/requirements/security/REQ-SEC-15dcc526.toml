@@ -53,45 +53,45 @@ verification = "A system test imports a profile carrying a known private key and
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/profile_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/keystore.go",
-    "05_Software/nilo_assistant/internal/nethelper/keystore_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/keystore_engine.go",
-    "05_Software/nilo_assistant/internal/nethelper/keystore_stager.go",
-    "05_Software/nilo_assistant/internal/nethelper/tunnel_engine.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux.go",
-    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
-    "05_Software/nilo_assistant/internal/nethelper/client.go",
-    "05_Software/nilo_assistant/cmd/nilo-nethelper/serve_linux.go",
-    "05_Software/nilo_assistant/internal/nethelper/keystore_stager_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/secrets_rpc_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/tunnel_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go",
+    "05_Software/core/internal/network/profile_test.go",
+    "05_Software/core/internal/nethelper/keystore.go",
+    "05_Software/core/internal/nethelper/keystore_test.go",
+    "05_Software/core/internal/nethelper/keystore_engine.go",
+    "05_Software/core/internal/nethelper/keystore_stager.go",
+    "05_Software/core/internal/nethelper/tunnel_engine.go",
+    "05_Software/core/internal/nethelper/networkmanager_wireguard_linux.go",
+    "05_Software/core/internal/nethelper/protocol.go",
+    "05_Software/core/internal/nethelper/client.go",
+    "05_Software/core/cmd/nilo-nethelper/serve_linux.go",
+    "05_Software/core/internal/nethelper/keystore_stager_test.go",
+    "05_Software/core/internal/nethelper/secrets_rpc_test.go",
+    "05_Software/core/internal/nethelper/tunnel_test.go",
+    "05_Software/core/internal/nethelper/networkmanager_wireguard_linux_test.go",
+    "05_Software/core/cmd/nilo/network_system_linux_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestParseProfileSeparatesKeyMaterialFromTheProfile",
-    "05_Software/nilo_assistant/internal/network/profile_test.go::TestSecretsRedactThemselvesWhenPrintedOrSerialised",
-    "05_Software/nilo_assistant/internal/nethelper/keystore_test.go::TestProfileKeystoreStagesThenPromotes",
-    "05_Software/nilo_assistant/internal/nethelper/keystore_test.go::TestProfileKeystoreKeepsFilesPrivate",
-    "05_Software/nilo_assistant/internal/nethelper/keystore_test.go::TestProfileKeystoreRefusesAnUnsafeLocationOrIdentity",
-    "05_Software/nilo_assistant/internal/nethelper/keystore_test.go::TestProfileKeystoreExpiresAbandonedImports",
-    "05_Software/nilo_assistant/internal/nethelper/keystore_test.go::TestSecretsNeverReachAHelperResponse",
-    "05_Software/nilo_assistant/internal/store/sqlite/vpn_profile_repository_test.go::TestAStoredProfileCarriesNoKeyMaterial",
-    "05_Software/nilo_assistant/internal/nethelper/keystore_stager_test.go::TestAnImportPutsItsKeysInTheKeystoreAndNowhereElse",
-    "05_Software/nilo_assistant/internal/nethelper/keystore_stager_test.go::TestAFailedImportLeavesNoStagedKeyMaterial",
-    "05_Software/nilo_assistant/internal/nethelper/secrets_rpc_test.go::TestStagingOverTheProtocolBindsKeyMaterialToAProfile",
-    "05_Software/nilo_assistant/internal/nethelper/secrets_rpc_test.go::TestOnlyStagingMayCarryKeyMaterial",
-    "05_Software/nilo_assistant/internal/nethelper/secrets_rpc_test.go::TestAHelperWithoutKeyStorageRefusesCustody",
-    "05_Software/nilo_assistant/internal/nethelper/secrets_rpc_test.go::TestTheResponseTypeHasNowhereToPutASecret",
-    "05_Software/nilo_assistant/internal/nethelper/tunnel_test.go::TestProfileCreationPromotesTheStagedKeyAndCreatesTheConnection",
-    "05_Software/nilo_assistant/internal/nethelper/tunnel_test.go::TestAFailedConnectionCreationLeavesNoKeyMaterial",
-    "05_Software/nilo_assistant/internal/nethelper/tunnel_test.go::TestInventoryIsReadOnlyAndCarriesNoKey",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux_test.go::TestNetworkManagerWireGuardLifecycleSystem",
-    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go::TestApplianceSystemHTTPSAndHelperRecovery",
+    "05_Software/core/internal/network/profile_test.go::TestParseProfileSeparatesKeyMaterialFromTheProfile",
+    "05_Software/core/internal/network/profile_test.go::TestSecretsRedactThemselvesWhenPrintedOrSerialised",
+    "05_Software/core/internal/nethelper/keystore_test.go::TestProfileKeystoreStagesThenPromotes",
+    "05_Software/core/internal/nethelper/keystore_test.go::TestProfileKeystoreKeepsFilesPrivate",
+    "05_Software/core/internal/nethelper/keystore_test.go::TestProfileKeystoreRefusesAnUnsafeLocationOrIdentity",
+    "05_Software/core/internal/nethelper/keystore_test.go::TestProfileKeystoreExpiresAbandonedImports",
+    "05_Software/core/internal/nethelper/keystore_test.go::TestSecretsNeverReachAHelperResponse",
+    "05_Software/core/internal/store/sqlite/vpn_profile_repository_test.go::TestAStoredProfileCarriesNoKeyMaterial",
+    "05_Software/core/internal/nethelper/keystore_stager_test.go::TestAnImportPutsItsKeysInTheKeystoreAndNowhereElse",
+    "05_Software/core/internal/nethelper/keystore_stager_test.go::TestAFailedImportLeavesNoStagedKeyMaterial",
+    "05_Software/core/internal/nethelper/secrets_rpc_test.go::TestStagingOverTheProtocolBindsKeyMaterialToAProfile",
+    "05_Software/core/internal/nethelper/secrets_rpc_test.go::TestOnlyStagingMayCarryKeyMaterial",
+    "05_Software/core/internal/nethelper/secrets_rpc_test.go::TestAHelperWithoutKeyStorageRefusesCustody",
+    "05_Software/core/internal/nethelper/secrets_rpc_test.go::TestTheResponseTypeHasNowhereToPutASecret",
+    "05_Software/core/internal/nethelper/tunnel_test.go::TestProfileCreationPromotesTheStagedKeyAndCreatesTheConnection",
+    "05_Software/core/internal/nethelper/tunnel_test.go::TestAFailedConnectionCreationLeavesNoKeyMaterial",
+    "05_Software/core/internal/nethelper/tunnel_test.go::TestInventoryIsReadOnlyAndCarriesNoKey",
+    "05_Software/core/internal/nethelper/networkmanager_wireguard_linux_test.go::TestNetworkManagerWireGuardLifecycleSystem",
+    "05_Software/core/cmd/nilo/network_system_linux_test.go::TestApplianceSystemHTTPSAndHelperRecovery",
 ]
 
 # --- optional below this line ---
@@ -106,6 +106,6 @@ created = 2026-09-02
 updated = 2026-09-04
 
 # Planned files not implemented at the 2026-09-03 audit:
-# 05_Software/nilo_assistant/internal/network/keystore.go
-# 05_Software/nilo_assistant/cmd/nilo-nethelper/keystore.go
+# 05_Software/core/internal/network/keystore.go
+# 05_Software/core/cmd/nilo-nethelper/keystore.go
 # 05_Software/tests/system/test_secret_redaction.py

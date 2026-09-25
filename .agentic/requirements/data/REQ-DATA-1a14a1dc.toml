@@ -55,19 +55,19 @@ verification = "A component test selects a theme and a language, renders the app
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/preferences/store.ts",
-    "05_Software/nilo_gui/src/theme/ThemeProvider.tsx",
-    "05_Software/nilo_gui/src/i18n/LanguageProvider.tsx",
-    "05_Software/nilo_gui/src/App.test.tsx",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
+    "05_Software/frontend/src/preferences/store.ts",
+    "05_Software/frontend/src/theme/ThemeProvider.tsx",
+    "05_Software/frontend/src/i18n/LanguageProvider.tsx",
+    "05_Software/frontend/src/App.test.tsx",
+    "05_Software/frontend/src/components/shell/shell.test.tsx",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::stamps the selected theme on the document root and keeps it",
-    "05_Software/nilo_gui/src/App.test.tsx::never writes a password or a CSRF token to a durable store or the console",
-    "05_Software/nilo_gui/src/App.test.tsx::never writes the development token to a durable browser store",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::stamps the selected theme on the document root and keeps it",
+    "05_Software/frontend/src/App.test.tsx::never writes a password or a CSRF token to a durable store or the console",
+    "05_Software/frontend/src/App.test.tsx::never writes the development token to a durable browser store",
 ]
 
 # --- optional below this line ---

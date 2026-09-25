@@ -20,22 +20,22 @@ The appliance shall report the commissioning lifecycle state recorded in its dat
 verification = "An automated test opens one data directory, reads the lifecycle state, closes it, opens it again and asserts the same state is reported, repeating the cycle for both permitted values. A further test writes an absent and then an unrecognized recorded value directly and asserts each is refused with an error rather than defaulting."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/appliance/commissioning.go",
-    "05_Software/nilo_assistant/internal/appliance/commissioning_test.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go",
-    "05_Software/nilo_assistant/internal/app/app.go",
-    "05_Software/nilo_assistant/internal/app/app_test.go",
+    "05_Software/core/internal/appliance/commissioning.go",
+    "05_Software/core/internal/appliance/commissioning_test.go",
+    "05_Software/core/internal/store/sqlite/commissioning_repository.go",
+    "05_Software/core/internal/store/sqlite/commissioning_repository_test.go",
+    "05_Software/core/internal/app/app.go",
+    "05_Software/core/internal/app/app_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/app/app_test.go::TestOpenReportsTheRecordedCommissioningStateAcrossReopen",
-    "05_Software/nilo_assistant/internal/app/app_test.go::TestOpenRefusesADatabaseWithNoRecordedCommissioningState",
-    "05_Software/nilo_assistant/internal/appliance/commissioning_test.go::TestCommissioningStateAcceptsOnlyTheTwoRecordedStates",
-    "05_Software/nilo_assistant/internal/appliance/commissioning_test.go::TestLoadCommissioningReportsTheRecordedState",
-    "05_Software/nilo_assistant/internal/appliance/commissioning_test.go::TestLoadCommissioningRefusesAnAbsentOrUnrecognizedState",
-    "05_Software/nilo_assistant/internal/appliance/commissioning_test.go::TestLoadCommissioningRequiresAStore",
-    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go::TestCommissioningRepositoryRefusesAnAbsentRow",
+    "05_Software/core/internal/app/app_test.go::TestOpenReportsTheRecordedCommissioningStateAcrossReopen",
+    "05_Software/core/internal/app/app_test.go::TestOpenRefusesADatabaseWithNoRecordedCommissioningState",
+    "05_Software/core/internal/appliance/commissioning_test.go::TestCommissioningStateAcceptsOnlyTheTwoRecordedStates",
+    "05_Software/core/internal/appliance/commissioning_test.go::TestLoadCommissioningReportsTheRecordedState",
+    "05_Software/core/internal/appliance/commissioning_test.go::TestLoadCommissioningRefusesAnAbsentOrUnrecognizedState",
+    "05_Software/core/internal/appliance/commissioning_test.go::TestLoadCommissioningRequiresAStore",
+    "05_Software/core/internal/store/sqlite/commissioning_repository_test.go::TestCommissioningRepositoryRefusesAnAbsentRow",
 ]
 
 

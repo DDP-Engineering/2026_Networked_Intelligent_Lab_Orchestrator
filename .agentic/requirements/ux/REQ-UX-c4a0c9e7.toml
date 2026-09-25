@@ -57,17 +57,17 @@ verification = "Layout and real-browser tests render long Users and API-token li
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/styles/shell.css",
-    "05_Software/nilo_gui/src/components/authentication/UsersPage.tsx",
-    "05_Software/nilo_gui/src/components/authentication/ApiTokensPage.tsx",
-    "05_Software/nilo_gui/src/layout.test.ts",
+    "05_Software/frontend/src/styles/shell.css",
+    "05_Software/frontend/src/components/authentication/UsersPage.tsx",
+    "05_Software/frontend/src/components/authentication/ApiTokensPage.tsx",
+    "05_Software/frontend/src/layout.test.ts",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/layout.test.ts::single-viewport layout > keeps focused administration listings in natural page flow",
-    "05_Software/nilo_gui/src/layout.test.ts::single-viewport layout > turns record tables into labeled cards below 56rem",
+    "05_Software/frontend/src/layout.test.ts::single-viewport layout > keeps focused administration listings in natural page flow",
+    "05_Software/frontend/src/layout.test.ts::single-viewport layout > turns record tables into labeled cards below 56rem",
 ]
 
 # --- optional below this line ---

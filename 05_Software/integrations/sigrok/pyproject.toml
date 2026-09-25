@@ -15,7 +15,7 @@ requires = ["uv_build==0.11.25"]
 build-backend = "uv_build"
 
 [tool.uv.sources]
-nilo-integration-sdk = { path = "../../integration_sdk/python", editable = true }
+nilo-integration-sdk = { path = "../sdk/python", editable = true }
 
 [tool.uv.build-backend]
 module-name = "nilo_sigrok"

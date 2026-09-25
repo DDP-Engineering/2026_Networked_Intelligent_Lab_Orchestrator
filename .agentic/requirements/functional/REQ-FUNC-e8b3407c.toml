@@ -19,14 +19,14 @@ The appliance shall preserve an imported profile's AllowedIPs, DNS and default-r
 verification = "A Linux test imports a split-tunnel and a full-tunnel profile, enables and removes a device network over each, and asserts the imported configuration is byte-identical after."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/store/sqlite/vpn_profile_repository.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux_test.go",
+    "05_Software/core/internal/store/sqlite/vpn_profile_repository.go",
+    "05_Software/core/internal/nethelper/networkmanager_wireguard_linux.go",
+    "05_Software/core/internal/nethelper/networkmanager_wireguard_linux_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/store/sqlite/vpn_profile_repository_test.go::TestTwoProfilesSurviveARestartAndStayInactive",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux_test.go::TestNetworkManagerWireGuardLifecycleSystem",
+    "05_Software/core/internal/store/sqlite/vpn_profile_repository_test.go::TestTwoProfilesSurviveARestartAndStayInactive",
+    "05_Software/core/internal/nethelper/networkmanager_wireguard_linux_test.go::TestNetworkManagerWireGuardLifecycleSystem",
 ]
 
 spec = "specs/REQ-FUNC-2f8d63b5.md"

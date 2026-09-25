@@ -19,13 +19,13 @@ The interface shall offer one shared Activity page with audit, event and debug f
 verification = "A component and browser test follows the link from the Network page and asserts the Activity filters arrive already narrowed to that function and target."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.tsx",
-    "05_Software/nilo_gui/src/components/shell/AppShell.tsx",
+    "05_Software/frontend/src/components/pages/ActivityPage.tsx",
+    "05_Software/frontend/src/components/shell/AppShell.tsx",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx",
-    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx",
+    "05_Software/frontend/src/components/pages/ActivityPage.test.tsx",
+    "05_Software/frontend/src/components/network/DeviceNetworksPanel.test.tsx",
 ]
 
 spec = "specs/REQ-FUNC-2f8d63b5.md"

@@ -20,19 +20,19 @@ The browser interface shall let an administrator choose which adapters keep mana
 verification = "An automated component test asserts that deselecting every adapter and submitting reports a refusal and sends nothing; that keeping only an adapter other than the session's own raises a confirmation and sends nothing until it is accepted, then sends that adapter with the confirmation flag; that an ordinary selection sends exactly the chosen adapters without it; that a refusal from the appliance is displayed while the selection stays checked; and that an identity which may not manage interfaces is offered no completion control."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/components/network/CommissioningPanel.tsx",
-    "05_Software/nilo_gui/src/components/network/CommissioningPanel.test.tsx",
-    "05_Software/nilo_gui/src/components/shell/AppShell.tsx",
-    "05_Software/nilo_gui/src/api/client.ts",
-    "05_Software/nilo_gui/src/api/mock.ts",
+    "05_Software/frontend/src/components/network/CommissioningPanel.tsx",
+    "05_Software/frontend/src/components/network/CommissioningPanel.test.tsx",
+    "05_Software/frontend/src/components/shell/AppShell.tsx",
+    "05_Software/frontend/src/api/client.ts",
+    "05_Software/frontend/src/api/mock.ts",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/src/components/network/CommissioningPanel.test.tsx::refuses to complete with nothing selected",
-    "05_Software/nilo_gui/src/components/network/CommissioningPanel.test.tsx::asks for confirmation before giving up the current browser path",
-    "05_Software/nilo_gui/src/components/network/CommissioningPanel.test.tsx::completes onto the selected interfaces",
-    "05_Software/nilo_gui/src/components/network/CommissioningPanel.test.tsx::reports a refusal from the appliance without losing the selection",
-    "05_Software/nilo_gui/src/components/network/CommissioningPanel.test.tsx::offers no commissioning control to an identity that may not manage",
+    "05_Software/frontend/src/components/network/CommissioningPanel.test.tsx::refuses to complete with nothing selected",
+    "05_Software/frontend/src/components/network/CommissioningPanel.test.tsx::asks for confirmation before giving up the current browser path",
+    "05_Software/frontend/src/components/network/CommissioningPanel.test.tsx::completes onto the selected interfaces",
+    "05_Software/frontend/src/components/network/CommissioningPanel.test.tsx::reports a refusal from the appliance without losing the selection",
+    "05_Software/frontend/src/components/network/CommissioningPanel.test.tsx::offers no commissioning control to an identity that may not manage",
 ]
 
 

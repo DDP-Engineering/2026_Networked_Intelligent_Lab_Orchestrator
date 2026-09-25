@@ -20,20 +20,20 @@ When an administrator needs to repurpose a management adapter for a device netwo
 verification = "A component and browser test opens repurposing guidance from both selectors, asserts the three ordered actions and persistent current-session/last-route warnings, confirms no one-click role swap is offered, and exercises the workflow with a replacement path before the device-side option becomes available."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
-    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.tsx",
-    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.tsx",
-    "05_Software/nilo_gui/src/components/help/WorkflowHelp.tsx",
-    "05_Software/nilo_gui/src/i18n/en.ts",
-    "05_Software/nilo_gui/src/i18n/de.ts",
-    "05_Software/nilo_gui/src/i18n/ro.ts",
-    "05_Software/nilo_gui/e2e/network.spec.ts",
+    "05_Software/frontend/src/components/pages/NetworkPage.tsx",
+    "05_Software/frontend/src/components/network/ManagementAccessPanel.tsx",
+    "05_Software/frontend/src/components/network/DeviceNetworksPanel.tsx",
+    "05_Software/frontend/src/components/help/WorkflowHelp.tsx",
+    "05_Software/frontend/src/i18n/en.ts",
+    "05_Software/frontend/src/i18n/de.ts",
+    "05_Software/frontend/src/i18n/ro.ts",
+    "05_Software/frontend/e2e/network.spec.ts",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/src/components/network/ManagementAccessPanel.test.tsx::keeps a device-owned adapter visible, disabled, and explained",
-    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx::disables a management adapter only for the device-facing selection",
-    "05_Software/nilo_gui/e2e/network.spec.ts::keeps opposite-role adapters visible and explains sequential repurposing",
+    "05_Software/frontend/src/components/network/ManagementAccessPanel.test.tsx::keeps a device-owned adapter visible, disabled, and explained",
+    "05_Software/frontend/src/components/network/DeviceNetworksPanel.test.tsx::disables a management adapter only for the device-facing selection",
+    "05_Software/frontend/e2e/network.spec.ts::keeps opposite-role adapters visible and explains sequential repurposing",
 ]
 
 

@@ -57,11 +57,11 @@ When a Windows developer selects a supported WSL2 Ubuntu 24.04 distribution, the
 verification = "Script-contract tests exercise ready, missing, unsupported, offline, and explicit Docker/Podman installation modes through an injected WSL boundary and assert ordinary setup makes no host change, rejects Docker Desktop assumptions, requires verified local packages, simulates complete dependency resolution before installation, refuses removals and unapproved downgrades, and forwards the selected distribution's actual Windows backing volume."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
-affected_paths = ["02_Tools/bootstrap/bootstrap-build-environment.ps1", "02_Tools/bootstrap/bootstrap-container-engine.sh", "02_Tools/bootstrap/bootstrap-container-engine-wsl.sh", "02_Tools/bootstrap/setup-build-environment-image.sh", "02_Tools/lib/Wsl.ps1", "02_Tools/archives/wsl-host-bootstrap/", "02_Tools/README.md", "05_Software/scripts/tests/test_build_environment.py", "02_Tools/scripts/build_environment.py"]
+affected_paths = ["02_Tools/bootstrap/bootstrap-build-environment.ps1", "02_Tools/bootstrap/bootstrap-container-engine.sh", "02_Tools/bootstrap/bootstrap-container-engine-wsl.sh", "02_Tools/bootstrap/setup-build-environment-image.sh", "02_Tools/lib/Wsl.ps1", "02_Tools/archives/wsl-host-bootstrap/", "02_Tools/README.md", "02_Tools/tests/software/test_build_environment.py", "02_Tools/scripts/build_environment.py"]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
-linked_tests = ["05_Software/scripts/tests/test_build_environment.py"]
+linked_tests = ["02_Tools/tests/software/test_build_environment.py"]
 
 # --- optional below this line ---
 

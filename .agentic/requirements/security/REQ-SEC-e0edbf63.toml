@@ -20,31 +20,31 @@ If a device-network create, update, or enable request selects a physical adapter
 verification = "With applied and pending management configurations, automated manager and API tests create, update and enable a device network on the same stable adapter, assert the structured conflict and zero store/forwarder/helper changes, and show that disable/delete and a different device-side adapter still follow their normal lifecycle."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/adapter_roles.go",
-    "05_Software/nilo_assistant/internal/network/management_access.go",
-    "05_Software/nilo_assistant/internal/network/device_network_manager.go",
-    "05_Software/nilo_assistant/internal/network/appliance_device_networks.go",
-    "05_Software/nilo_assistant/internal/network/operation.go",
-    "05_Software/nilo_assistant/internal/network/appliance.go",
-    "05_Software/nilo_assistant/internal/network/wireguard.go",
-    "05_Software/nilo_assistant/internal/network/persistence.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/internal/httpapi/device_networks.go",
-    "05_Software/nilo_assistant/internal/httpapi/network_operations.go",
-    "05_Software/nilo_assistant/internal/network/device_network_manager_test.go",
-    "05_Software/nilo_assistant/internal/network/management_access_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/device_networks_test.go",
-    "05_Software/nilo_assistant/internal/network/profile_manager_test.go",
+    "05_Software/core/internal/network/adapter_roles.go",
+    "05_Software/core/internal/network/management_access.go",
+    "05_Software/core/internal/network/device_network_manager.go",
+    "05_Software/core/internal/network/appliance_device_networks.go",
+    "05_Software/core/internal/network/operation.go",
+    "05_Software/core/internal/network/appliance.go",
+    "05_Software/core/internal/network/wireguard.go",
+    "05_Software/core/internal/network/persistence.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/internal/httpapi/device_networks.go",
+    "05_Software/core/internal/httpapi/network_operations.go",
+    "05_Software/core/internal/network/device_network_manager_test.go",
+    "05_Software/core/internal/network/management_access_test.go",
+    "05_Software/core/internal/httpapi/device_networks_test.go",
+    "05_Software/core/internal/network/profile_manager_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/device_network_manager_test.go::TestDeviceNetworkManagerRejectsAManagementClaimBeforeStoreOrForwarderMutation",
-    "05_Software/nilo_assistant/internal/network/management_access_test.go::TestManagementAccessStatusMarksPendingRollbackAdaptersAsManagementOwned",
-    "05_Software/nilo_assistant/internal/httpapi/device_networks_test.go::TestDeviceNetworkPreviewReturnsStructuredManagementRoleConflict",
-    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestApplianceRehydratesDeviceNetworkRecoveryAcrossRestart",
-    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestAppliancePersistsDeviceRecoveryMetadataBeforeHelperPreparation",
-    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestApplianceRestoresPreparedDeviceRecoveryWhenCheckpointPersistenceIsCancelled",
-    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestApplianceReconcilesInterruptedDeviceNetworkCreateWithoutRecoveryMetadata",
+    "05_Software/core/internal/network/device_network_manager_test.go::TestDeviceNetworkManagerRejectsAManagementClaimBeforeStoreOrForwarderMutation",
+    "05_Software/core/internal/network/management_access_test.go::TestManagementAccessStatusMarksPendingRollbackAdaptersAsManagementOwned",
+    "05_Software/core/internal/httpapi/device_networks_test.go::TestDeviceNetworkPreviewReturnsStructuredManagementRoleConflict",
+    "05_Software/core/internal/network/profile_manager_test.go::TestApplianceRehydratesDeviceNetworkRecoveryAcrossRestart",
+    "05_Software/core/internal/network/profile_manager_test.go::TestAppliancePersistsDeviceRecoveryMetadataBeforeHelperPreparation",
+    "05_Software/core/internal/network/profile_manager_test.go::TestApplianceRestoresPreparedDeviceRecoveryWhenCheckpointPersistenceIsCancelled",
+    "05_Software/core/internal/network/profile_manager_test.go::TestApplianceReconcilesInterruptedDeviceNetworkCreateWithoutRecoveryMetadata",
 ]
 
 

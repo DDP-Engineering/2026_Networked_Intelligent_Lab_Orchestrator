@@ -23,14 +23,14 @@ affected_paths = [
     "CHANGELOG.md",
     ".agentic/knowledge/bench-core-foundation.md",
     "06_SoftwareDocu/Network_Operations.md",
-    "05_Software/nilo_assistant/internal/httpapi/management_access.go",
-    "05_Software/nilo_assistant/internal/httpapi/management_access_api_test.go",
-    "05_Software/nilo_gui/src/api/management-access.test.ts",
+    "05_Software/core/internal/httpapi/management_access.go",
+    "05_Software/core/internal/httpapi/management_access_api_test.go",
+    "05_Software/frontend/src/api/management-access.test.ts",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/httpapi/management_access_api_test.go::TestManagementAccessPayloadUsesEmptyAddressArrays",
-    "05_Software/nilo_gui/src/api/management-access.test.ts",
+    "05_Software/core/internal/httpapi/management_access_api_test.go::TestManagementAccessPayloadUsesEmptyAddressArrays",
+    "05_Software/frontend/src/api/management-access.test.ts",
 ]
 
 

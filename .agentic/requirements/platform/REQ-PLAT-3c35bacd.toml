@@ -20,16 +20,16 @@ When the appliance starts or its discovery names change, Bench Core shall serve 
 verification = "Automated startup/rotation tests pair a helper-backed signer with certificates carrying all, some or none of the active serial/recovery/friendly names; each missing SAN produces one actionable bounded warning on the applicable interface/diagnostic surface while covered names continue serving, unadvertised aliases produce no warning, and unreadable, malformed, expired or signer-mismatched public material is refused before activation. Inspection of a running appliance confirms first contact objects to the signer alone for every advertised name and that Bench Core creates or modifies no key file."
 
 affected_paths = [
-    "05_Software/nilo_assistant/cmd/nilo/discovery_runtime.go",
-    "05_Software/nilo_assistant/cmd/nilo/discovery_runtime_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/internal/httpapi/serving.go",
-    "05_Software/nilo_assistant/internal/httpapi/server.go",
-    "05_Software/nilo_assistant/internal/nethelper/client.go",
+    "05_Software/core/cmd/nilo/discovery_runtime.go",
+    "05_Software/core/cmd/nilo/discovery_runtime_test.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/internal/httpapi/serving.go",
+    "05_Software/core/internal/httpapi/server.go",
+    "05_Software/core/internal/nethelper/client.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/cmd/nilo/discovery_runtime_test.go::*",
+    "05_Software/core/cmd/nilo/discovery_runtime_test.go::*",
 ]
 
 

@@ -64,14 +64,14 @@ appliance inventory, without browser navigation or another password sign-in.
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/e2e/bench-core.spec.ts",
-    "05_Software/nilo_gui/e2e/topology.ts",
+    "05_Software/frontend/e2e/bench-core.spec.ts",
+    "05_Software/frontend/e2e/topology.ts",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/e2e/bench-core.spec.ts::presents Bench Core as unreachable and recovers through the interface",
+    "05_Software/frontend/e2e/bench-core.spec.ts::presents Bench Core as unreachable and recovers through the interface",
 ]
 
 # --- optional below this line ---

@@ -53,19 +53,19 @@ verification = "Supervisor tests use a controllable runner to assert cancel orde
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/integration/supervisor/",
-    "05_Software/nilo_assistant/internal/operation/",
+    "05_Software/core/internal/integration/supervisor/",
+    "05_Software/core/internal/operation/",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/integration/supervisor/supervisor_test.go::TestSupervisorCancelTargetsActiveExecuteWireID",
-    "05_Software/nilo_assistant/internal/integration/supervisor/supervisor_test.go::TestSupervisorUsesOperationRequestIDForTargetedCancel",
-    "05_Software/nilo_assistant/internal/integration/supervisor/supervisor_test.go::TestCooperativeTerminalResponseCannotRaceCancelSafeShutdown",
-    "05_Software/nilo_assistant/internal/integration/supervisor/supervisor_test.go::TestSupervisorTimeoutAndCancellationTerminateRunner",
-    "05_Software/nilo_assistant/internal/operation/service_test.go::TestRunningCancellationInvokesSupervisorRecordsTerminalStateAndReleasesLease",
-    "05_Software/nilo_assistant/internal/acceptance/increment1_e2e_test.go::TestIncrement1RealFakeIntegrationLifecycle",
+    "05_Software/core/internal/integration/supervisor/supervisor_test.go::TestSupervisorCancelTargetsActiveExecuteWireID",
+    "05_Software/core/internal/integration/supervisor/supervisor_test.go::TestSupervisorUsesOperationRequestIDForTargetedCancel",
+    "05_Software/core/internal/integration/supervisor/supervisor_test.go::TestCooperativeTerminalResponseCannotRaceCancelSafeShutdown",
+    "05_Software/core/internal/integration/supervisor/supervisor_test.go::TestSupervisorTimeoutAndCancellationTerminateRunner",
+    "05_Software/core/internal/operation/service_test.go::TestRunningCancellationInvokesSupervisorRecordsTerminalStateAndReleasesLease",
+    "05_Software/core/internal/acceptance/increment1_e2e_test.go::TestIncrement1ContractRunnerLifecycle",
 ]
 
 # --- optional below this line ---

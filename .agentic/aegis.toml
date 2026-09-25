@@ -17,9 +17,9 @@ max_fix_cycles = 5
 
 [commands]
 # `aegis test` runs `test`; `aegis check --run` runs every entry here.
-test = "python scripts/aegis_test.py full"
-test_impacted = "python scripts/aegis_test.py impacted {tests}"  # {tests} = the focused regression set
-lint = "python scripts/aegis_test.py lint"
+test = "python ../02_Tools/scripts/aegis_test.py full"
+test_impacted = "python ../02_Tools/scripts/aegis_test.py impacted {tests}"  # {tests} = the focused regression set
+lint = "python ../02_Tools/scripts/aegis_test.py lint"
 workdir = "05_Software"
 timeout = 0   # seconds allowed per command; 0, negative, absent and
               # unreadable all mean no limit, so the only way to get one is
@@ -54,19 +54,31 @@ default_branch = "master"
 
 # Globs used by the traceability heuristics of `aegis check`.
 source = [
-    "05_Software/integrations/sigrok/",
+    # Include removed source locations so a layout migration's deletion side
+    # remains classified until the candidate is committed.
     "05_Software/nilo_assistant/",
     "05_Software/nilo_gui/",
+    "05_Software/integration_sdk/",
+    "05_Software/integrations/fake_python/",
+    "05_Software/schemas/",
+    "05_Software/scripts/",
+    "05_Software/integrations/sigrok/",
+    "05_Software/integrations/sdk/python/",
+    "05_Software/contracts/",
+    "05_Software/tests/fixtures/",
+    "05_Software/core/",
+    "05_Software/frontend/",
 ]
 tests = [
     "05_Software/integrations/sigrok/tests/",
     "05_Software/tests/",
-    "05_Software/scripts/",
-    "05_Software/nilo_assistant/**/*_test.go",
-    "05_Software/nilo_gui/src/*.test.ts",
-    "05_Software/nilo_gui/src/*.test.tsx",
-    "05_Software/nilo_gui/src/**/*.test.ts",
-    "05_Software/nilo_gui/src/**/*.test.tsx",
+    "02_Tools/scripts/",
+    "02_Tools/tests/software/",
+    "05_Software/core/**/*_test.go",
+    "05_Software/frontend/src/*.test.ts",
+    "05_Software/frontend/src/*.test.tsx",
+    "05_Software/frontend/src/**/*.test.ts",
+    "05_Software/frontend/src/**/*.test.tsx",
 ]
 docs = [
     "VERSION",
@@ -74,6 +86,7 @@ docs = [
     ".gitignore",
     "README.md",
     "05_Software/README.md",
+    "05_Software/INCREMENT_1_ACCEPTANCE.md",
     "00_Planning/",
     "01_Documentation/",
     "02_Tools/",
@@ -119,9 +132,9 @@ secret_patterns_extra = []
 # scan was answered rather than muted by accident. Anything that ever holds a
 # real credential does not belong on this list.
 ignore = [
-    "05_Software/nilo_assistant/internal/auth/password_test.go",
-    "05_Software/nilo_assistant/internal/auth/password_policy_test.go",
-    "05_Software/nilo_gui/src/api/mock.ts",
+    "05_Software/core/internal/auth/password_test.go",
+    "05_Software/core/internal/auth/password_policy_test.go",
+    "05_Software/frontend/src/api/mock.ts",
 ]
 # Warnings that fail `check --strict`. Each one here is an integrity failure
 # rather than a matter of taste, and each is at zero occurrences today, so

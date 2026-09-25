@@ -54,22 +54,22 @@ verification = "HTTP tests present a token past its expiry, a revoked token, and
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/store/sqlite/identity_repository.go",
-    "05_Software/nilo_assistant/internal/identity/service.go",
-    "05_Software/nilo_assistant/internal/httpapi/identity.go",
-    "05_Software/nilo_assistant/internal/auth/token.go",
-    "05_Software/nilo_assistant/internal/identity/service_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/identity_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/server_test.go",
+    "05_Software/core/internal/store/sqlite/identity_repository.go",
+    "05_Software/core/internal/identity/service.go",
+    "05_Software/core/internal/httpapi/identity.go",
+    "05_Software/core/internal/auth/token.go",
+    "05_Software/core/internal/identity/service_test.go",
+    "05_Software/core/internal/httpapi/identity_test.go",
+    "05_Software/core/internal/httpapi/server_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/identity/service_test.go::TestUnusableTokensAreRejected",
-    "05_Software/nilo_assistant/internal/identity/service_test.go::TestDisabledIdentityCannotLogInAndReEnablingRestoresLogin",
-    "05_Software/nilo_assistant/internal/httpapi/identity_test.go::TestUnusableBearerCredentialsAreRejectedAsUnauthorized",
-    "05_Software/nilo_assistant/internal/httpapi/server_test.go::TestProtectedAPIRejectsMissingAndMalformedCredentials",
+    "05_Software/core/internal/identity/service_test.go::TestUnusableTokensAreRejected",
+    "05_Software/core/internal/identity/service_test.go::TestDisabledIdentityCannotLogInAndReEnablingRestoresLogin",
+    "05_Software/core/internal/httpapi/identity_test.go::TestUnusableBearerCredentialsAreRejectedAsUnauthorized",
+    "05_Software/core/internal/httpapi/server_test.go::TestProtectedAPIRejectsMissingAndMalformedCredentials",
 ]
 
 # --- optional below this line ---

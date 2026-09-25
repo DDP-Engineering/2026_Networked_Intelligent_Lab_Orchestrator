@@ -53,17 +53,17 @@ verification = "A command test supplies an unsupported scenario, asserts a non-z
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/simulation/catalog.go",
-    "05_Software/nilo_assistant/internal/simulation/catalog_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/cmd/nilo/main_test.go",
+    "05_Software/core/internal/simulation/catalog.go",
+    "05_Software/core/internal/simulation/catalog_test.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/cmd/nilo/main_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/simulation/catalog_test.go::TestParseScenarioRejectsUnsupportedIdentifier",
-    "05_Software/nilo_assistant/cmd/nilo/main_test.go::TestNiloServeCommandRejectsUnsupportedScenarioBeforeListening",
+    "05_Software/core/internal/simulation/catalog_test.go::TestParseScenarioRejectsUnsupportedIdentifier",
+    "05_Software/core/cmd/nilo/main_test.go::TestNiloServeCommandRejectsUnsupportedScenarioBeforeListening",
 ]
 
 # --- optional below this line ---

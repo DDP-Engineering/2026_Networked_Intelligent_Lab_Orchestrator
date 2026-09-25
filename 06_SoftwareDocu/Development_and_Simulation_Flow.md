@@ -81,8 +81,8 @@ Windows 11 development host
        |
        | nilo.integration/1
        v
-    simulated Python integrations
-      simulated instruments, PLCs, programmers, artifacts, and failures
+    deterministic simulation catalog
+      simulated integration and device identities and readiness
 
   Windows TypeScript toolchain
     GUI development server
@@ -197,7 +197,8 @@ with an explicit management-interface gate and TLS.
 
 ## 6. Simulation scenarios
 
-The simulation catalog should grow from the existing fake Python integration.
+The simulation catalog provides deterministic integration and device identities.
+Its scenarios should grow with the product services they exercise.
 It should provide deterministic scenarios covering at least:
 
 - healthy appliance and integration status;
@@ -410,7 +411,7 @@ right tool for driving one component on its own.
 From a WSL2 shell, use the shared source checkout but keep state in Linux:
 
 ```bash
-cd /mnt/f/2026_Networked_Intelligent_Lab_Orchestrator/05_Software/nilo_assistant
+cd /mnt/f/2026_Networked_Intelligent_Lab_Orchestrator/05_Software/core
 mkdir -p "$HOME/.local/state/nilo-development"
 ../../02_Tools/env/with-tools.sh go run ./cmd/nilo development issue-token \
   --data-dir "$HOME/.local/state/nilo-development"
@@ -448,7 +449,7 @@ To exercise the human login path instead of a token, create an administrator
 once against the same data directory and log in over HTTP:
 
 ```powershell
-wsl.exe -- bash -lc "cd /mnt/f/2026_Networked_Intelligent_Lab_Orchestrator/05_Software/nilo_assistant && \
+wsl.exe -- bash -lc "cd /mnt/f/2026_Networked_Intelligent_Lab_Orchestrator/05_Software/core && \
   printf 'change-this-password\nchange-this-password\n' | \
   ../../02_Tools/env/with-tools.sh go run ./cmd/nilo admin bootstrap \
     --data-dir `$HOME/.local/state/nilo-development --username admin"
@@ -505,7 +506,7 @@ run:
 Start the GUI against the WSL2 backend from the repository root:
 
 ```powershell
-.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run dev
+.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\frontend run dev
 ```
 
 Open `http://127.0.0.1:5173/` in the Windows browser. Before authentication,
@@ -730,7 +731,7 @@ port such as 504.
 To develop the interface with no WSL2 backend at all, use mock mode:
 
 ```powershell
-.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run dev:mock
+.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\frontend run dev:mock
 ```
 
 Mock mode answers from the repository's own contract-aligned mock and contacts
@@ -741,7 +742,7 @@ last-administrator rule the backend does, so a screen that works there is not
 relying on the mock being lenient; its store is in memory, so reloading the page
 in mock mode signs you out. The mock routes on the request path, so one scenario
 can leave the status healthy while an inventory is unusable. Select the answer
-by setting `VITE_NILO_MOCK_SCENARIO` in `05_Software/nilo_gui/.env.mock`, or in
+by setting `VITE_NILO_MOCK_SCENARIO` in `05_Software/frontend/.env.mock`, or in
 an ignored `.env.mock.local`:
 
 | Scenario                 | What the mock answers                                          |
@@ -760,7 +761,7 @@ an ignored `.env.mock.local`:
 simulation profile serves, so a mock session and a WSL2 session show the same
 integration and device identities.
 
-The endpoint itself comes from `05_Software/nilo_gui/.env`:
+The endpoint itself comes from `05_Software/frontend/.env`:
 `VITE_NILO_API_MODE` selects `live` or `mock`, and `VITE_NILO_API_BASE_URL` must
 match the `--bind` address passed to `nilo serve --profile simulation`
 (`http://127.0.0.1:8090` by default). Override either locally in an ignored
@@ -785,10 +786,10 @@ while both inventories report their entries as unavailable.
 Run the complete focused frontend gate with:
 
 ```powershell
-.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run format:check
-.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run lint
-.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run test:ci
-.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\nilo_gui run build
+.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\frontend run format:check
+.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\frontend run lint
+.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\frontend run test:ci
+.\02_Tools\env\with-tools.ps1 npm.cmd --prefix .\05_Software\frontend run build
 ```
 
 ### 8.3 Integrated browser test
@@ -924,7 +925,7 @@ not the hardware-in-the-loop level in the table above.
 The existing Windows foundation gate is:
 
 ```powershell
-.\05_Software\scripts\test-increment-1.ps1
+.\02_Tools\scripts\test-increment-1.ps1
 ```
 
 `nilo serve-foundation-check` remains a short-lived composition check. `nilo

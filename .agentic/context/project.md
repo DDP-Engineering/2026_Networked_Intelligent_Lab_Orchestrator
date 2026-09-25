@@ -128,7 +128,7 @@ one of three fixed roles - Administrator, Operator or Viewer.
   directly; no compatibility aliases, parallel contracts or data conversion are
   added to preserve an earlier development build.
 - One project-level Semantic Version lives in `VERSION`, mirrored by
-  `internal/buildinfo` and `nilo_gui/package.json`.
+  `internal/buildinfo` and `05_Software/frontend/package.json`.
 - The project is licensed under PolyForm Noncommercial 1.0.0.
 - **One package per delivery target, integrations included.** NILO ships as
   one software: a release package for the Raspberry Pi and one for the Ubuntu
@@ -148,7 +148,7 @@ one of three fixed roles - Administrator, Operator or Viewer.
 
 ## Implementation orientation
 
-- `05_Software/nilo_assistant/` - Go module `nilo.local/nilo`, built without
+- `05_Software/core/` - Go module `nilo.local/nilo`, built without
   CGO. `cmd/nilo/main.go` is the command surface (`version`, `serve`,
   `serve-foundation-check`, `development issue-token`, `admin`, `seed-admin`,
   `maintenance`, `network`, `plugin`, `bench`, `activity`);
@@ -160,14 +160,15 @@ one of three fixed roles - Administrator, Operator or Viewer.
   lifecycle, `internal/bench/` the plugin and job manager,
   `internal/integration/{manifest,protocol,supervisor}/` the package boundary,
   and `internal/store/sqlite/` the database with its embedded migrations.
-- `05_Software/nilo_gui/` - React, TypeScript and Vite. Requests are
+- `05_Software/frontend/` - React, TypeScript and Vite. Requests are
   origin-relative under `/api`; `src/api/contract.ts` holds the client
   contract, `src/components/shell/pages.ts` the navigation, and
   `src/preferences/store.ts` is the only module that touches browser storage.
-- `05_Software/integration_sdk/python/` is the supported Python authoring
-  surface; `05_Software/integrations/sigrok/` and `.../fake_python/` are the
-  reference packages; `05_Software/schemas/integration/v1/` is the public,
-  language-neutral package contract mirrored by the Go loader.
+- `05_Software/integrations/sdk/python/` is the supported Python authoring
+  surface; `05_Software/integrations/sigrok/` is the current curated package.
+  `05_Software/contracts/integration/v1/` is the public, language-neutral
+  package contract mirrored by the Go loader. The test-only Go runner in
+  `05_Software/tests/fixtures/contract_runner/` exercises the shared boundary.
 - Component detail, per-file routing and requirement links live in
   `.agentic/knowledge/`.
 

@@ -20,16 +20,16 @@ Where Raspberry Pi hardware recovery is enabled, NILO shall drive an active-high
 verification = "A fake output test drives every recovery transition and restart state and compares the emitted GPIO27 pattern with the documented cadence, including reset-pending while a long press is held and a persistent failure pattern after an unproved restore; a wired Pi observation confirms electrical polarity and visible patterns when hardware is available."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/nethelper/gpio_button.go",
-    "05_Software/nilo_assistant/internal/nethelper/gpio_linux.go",
-    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go",
-    "05_Software/nilo_assistant/cmd/nilo-nethelper/main.go",
+    "05_Software/core/internal/nethelper/gpio_button.go",
+    "05_Software/core/internal/nethelper/gpio_linux.go",
+    "05_Software/core/internal/nethelper/gpio_button_test.go",
+    "05_Software/core/cmd/nilo-nethelper/main.go",
     "06_SoftwareDocu/Network_Operations.md",
     "07_Delivery/NILO_First_Boot_Provisioning_Verification.md",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/nethelper/gpio_button_test.go::TestRecoveryIndicatorCadence",
+    "05_Software/core/internal/nethelper/gpio_button_test.go::TestRecoveryIndicatorCadence",
 ]
 
 

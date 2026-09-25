@@ -20,13 +20,13 @@ If two or more eligible Ethernet links appear in one observed sample before reco
 verification = "A deterministic test submits the same simultaneous candidate sample in both input orders and observes exactly one atomic recovery claim, one temporary link-local profile and one alias/admission; the selected identity is the same lowest canonical stable adapter identity and all losers remain byte-for-byte unchanged."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/hardware_recovery.go",
-    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go",
-    "05_Software/nilo_assistant/internal/network/adapter_roles.go",
+    "05_Software/core/internal/network/hardware_recovery.go",
+    "05_Software/core/internal/network/hardware_recovery_test.go",
+    "05_Software/core/internal/network/adapter_roles.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/hardware_recovery_test.go::TestRecoveryRequiresAPostArmSafeLinkTransitionAndChoosesOneAdapter",
+    "05_Software/core/internal/network/hardware_recovery_test.go::TestRecoveryRequiresAPostArmSafeLinkTransitionAndChoosesOneAdapter",
 ]
 
 

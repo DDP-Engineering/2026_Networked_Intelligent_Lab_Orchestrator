@@ -19,9 +19,9 @@ When a release engineer selects a delivery target, the packaging tooling shall r
 
 verification = "Load the shipped target registry, select each supported target, and assert its exact OS and architecture metadata; then supply unknown IDs, duplicate IDs, unsupported architectures, malformed OS releases, and inconsistent artifact declarations and observe a named validation error before lock processing."
 
-affected_paths = ["02_Tools/packaging/config/targets.json", "02_Tools/packaging/package_inputs.py", "02_Tools/packaging/README.md", "07_Delivery/README.md", ".agentic/context/project.md", "05_Software/scripts/tests/test_packaging_inputs.py"]
+affected_paths = ["02_Tools/packaging/config/targets.json", "02_Tools/packaging/package_inputs.py", "02_Tools/packaging/README.md", "07_Delivery/README.md", ".agentic/context/project.md", "02_Tools/tests/software/test_packaging_inputs.py"]
 
-linked_tests = ["05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_shipped_target_registry_is_exact", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_target_registry_rejects_ambiguous_or_inconsistent_metadata", "05_Software/scripts/tests/test_packaging_inputs.py::PackagingInputTests.test_list_targets_cli_is_canonical_and_rejects_unknown_target"]
+linked_tests = ["02_Tools/tests/software/test_packaging_inputs.py::PackagingInputTests.test_shipped_target_registry_is_exact", "02_Tools/tests/software/test_packaging_inputs.py::PackagingInputTests.test_target_registry_rejects_ambiguous_or_inconsistent_metadata", "02_Tools/tests/software/test_packaging_inputs.py::PackagingInputTests.test_list_targets_cli_is_canonical_and_rejects_unknown_target"]
 
 
 spec = "specs/REQ-PLAT-da89bf3b.md"

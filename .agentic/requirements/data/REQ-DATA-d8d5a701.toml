@@ -55,20 +55,20 @@ verification = "A test opens a database at the pre-migration schema, inserts an 
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/store/sqlite/migrations/004_identity_access_control.sql",
-    "05_Software/nilo_assistant/internal/store/sqlite/migrations.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/identity_repository.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/auth_repository.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/identity_repository_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/admin_test.go",
+    "05_Software/core/internal/store/sqlite/migrations/004_identity_access_control.sql",
+    "05_Software/core/internal/store/sqlite/migrations.go",
+    "05_Software/core/internal/store/sqlite/identity_repository.go",
+    "05_Software/core/internal/store/sqlite/auth_repository.go",
+    "05_Software/core/internal/store/sqlite/identity_repository_test.go",
+    "05_Software/core/cmd/nilo/admin_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/store/sqlite/identity_repository_test.go::TestForwardMigrationPreservesLegacyIdentitiesAsLeastPrivileged",
-    "05_Software/nilo_assistant/internal/store/sqlite/identity_repository_test.go::TestIdentityRepositoryRoundTripsUsersTokensAndSessionsAcrossReopen",
-    "05_Software/nilo_assistant/cmd/nilo/admin_test.go::TestDevelopmentTokenIdentityIsNotAdministrative",
+    "05_Software/core/internal/store/sqlite/identity_repository_test.go::TestForwardMigrationPreservesLegacyIdentitiesAsLeastPrivileged",
+    "05_Software/core/internal/store/sqlite/identity_repository_test.go::TestIdentityRepositoryRoundTripsUsersTokensAndSessionsAcrossReopen",
+    "05_Software/core/cmd/nilo/admin_test.go::TestDevelopmentTokenIdentityIsNotAdministrative",
 ]
 
 # --- optional below this line ---

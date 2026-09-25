@@ -20,20 +20,20 @@ The privileged helper shall generate each appliance's TLS private key in its roo
 verification = "Automated protocol and TLS handshake tests initialize an empty keystore, serve HTTPS through a helper-backed signer, reject unsupported hashes, algorithms, callers and malformed signing requests, and inspect every response/log/export plus filesystem modes with a sentinel key marker; no private-key bytes are readable by the Bench Core account or serializable through the helper protocol, including failure paths."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/nethelper/keystore.go",
-    "05_Software/nilo_assistant/internal/nethelper/tls_identity.go",
-    "05_Software/nilo_assistant/internal/nethelper/tls_identity_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
-    "05_Software/nilo_assistant/internal/nethelper/client.go",
-    "05_Software/nilo_assistant/internal/httpapi/server.go",
-    "05_Software/nilo_assistant/internal/httpapi/tls_test.go",
-    "05_Software/nilo_assistant/cmd/nilo-nethelper/serve_linux.go",
+    "05_Software/core/internal/nethelper/keystore.go",
+    "05_Software/core/internal/nethelper/tls_identity.go",
+    "05_Software/core/internal/nethelper/tls_identity_test.go",
+    "05_Software/core/internal/nethelper/protocol.go",
+    "05_Software/core/internal/nethelper/client.go",
+    "05_Software/core/internal/httpapi/server.go",
+    "05_Software/core/internal/httpapi/tls_test.go",
+    "05_Software/core/cmd/nilo-nethelper/serve_linux.go",
     "02_Tools/scripts/install-nethelper.sh",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/nethelper/tls_identity_test.go::*",
-    "05_Software/nilo_assistant/internal/httpapi/tls_test.go::*",
+    "05_Software/core/internal/nethelper/tls_identity_test.go::*",
+    "05_Software/core/internal/httpapi/tls_test.go::*",
 ]
 
 

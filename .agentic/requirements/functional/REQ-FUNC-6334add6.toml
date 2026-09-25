@@ -20,33 +20,33 @@ While an appliance is serving management access, NILO shall continuously adverti
 verification = "Automated announcer/helper tests publish two appliances in provisioning and commissioned states, browse `_nilo._tcp.local`, and assert distinct human-readable instances, exact management-interface scope, immutable serial-name SRV targets/ports and exact version-2 TXT keys with optional friendly name; tests change lifecycle, friendly name, management interfaces and port, then simulate helper/responder restart, per-link collision and stale groups and observe scoped reassertion/retry without a suffixed target, secret field or loss of an unaffected serial publication."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/mdns.go",
-    "05_Software/nilo_assistant/internal/network/mdns_announcer.go",
-    "05_Software/nilo_assistant/internal/network/mdns_announcer_test.go",
-    "05_Software/nilo_assistant/internal/discovery/client.go",
-    "05_Software/nilo_assistant/internal/discovery/client_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/avahi_linux.go",
-    "05_Software/nilo_assistant/internal/nethelper/avahi_render_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/cmd/nilo/discovery_runtime.go",
-    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go",
+    "05_Software/core/internal/network/mdns.go",
+    "05_Software/core/internal/network/mdns_announcer.go",
+    "05_Software/core/internal/network/mdns_announcer_test.go",
+    "05_Software/core/internal/discovery/client.go",
+    "05_Software/core/internal/discovery/client_test.go",
+    "05_Software/core/internal/nethelper/avahi_linux.go",
+    "05_Software/core/internal/nethelper/avahi_render_test.go",
+    "05_Software/core/internal/nethelper/protocol.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/cmd/nilo/discovery_runtime.go",
+    "05_Software/core/cmd/nilo/network_system_linux_test.go",
     "02_Tools/tests/network/run.sh",
     "02_Tools/tests/network/network-up.sh",
     "02_Tools/tests/network/Dockerfile",
     "02_Tools/tests/appliance/inventory.json",
-    "05_Software/nilo_assistant/internal/nethelper/avahi_plan.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux_test.go",
-    "05_Software/scripts/tests/test_appliance_stage.py",
+    "05_Software/core/internal/nethelper/avahi_plan.go",
+    "05_Software/core/internal/nethelper/networkmanager_linux.go",
+    "05_Software/core/internal/nethelper/networkmanager_linux_test.go",
+    "02_Tools/tests/software/test_appliance_stage.py",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/mdns_announcer_test.go::*",
-    "05_Software/nilo_assistant/internal/discovery/client_test.go::*",
-    "05_Software/nilo_assistant/internal/nethelper/avahi_render_test.go::*",
-    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go::*",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_linux_test.go::*",
+    "05_Software/core/internal/network/mdns_announcer_test.go::*",
+    "05_Software/core/internal/discovery/client_test.go::*",
+    "05_Software/core/internal/nethelper/avahi_render_test.go::*",
+    "05_Software/core/cmd/nilo/network_system_linux_test.go::*",
+    "05_Software/core/internal/nethelper/networkmanager_linux_test.go::*",
 ]
 
 

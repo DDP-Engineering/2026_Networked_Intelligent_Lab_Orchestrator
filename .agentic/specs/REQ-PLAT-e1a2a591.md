@@ -13,7 +13,7 @@ from Bench Core remains later integration work.
 
 ## Data / interface
 
-- Project root: `05_Software/nilo_gui`.
+- Project root: `05_Software/frontend`.
 - Dependency restore: `npm ci`.
 - Development server: `npm run dev`.
 - Formatting check: `npm run format:check`.

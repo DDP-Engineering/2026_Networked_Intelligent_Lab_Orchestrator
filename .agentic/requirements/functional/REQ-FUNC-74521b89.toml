@@ -20,25 +20,25 @@ When an authorized administrator sets or clears a friendly appliance name, NILO 
 verification = "Automated service, API and Avahi tests start with a working serial name, set, replace and clear a friendly label, and observe authorization/CSRF enforcement, certificate-before-advertisement ordering, persistence and both names resolving; invalid, duplicate and injected link-collision cases return the typed conflict and leave the prior certificate, friendly alias, serial publication and durable record consistent across restart."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/appliance/naming.go",
-    "05_Software/nilo_assistant/internal/appliance/naming_test.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/migrations.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/migrations/015_appliance_discovery.sql",
-    "05_Software/nilo_assistant/internal/httpapi/appliance_identity.go",
-    "05_Software/nilo_assistant/internal/httpapi/appliance_identity_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/discovery_runtime.go",
-    "05_Software/nilo_assistant/internal/network/mdns.go",
-    "05_Software/nilo_assistant/internal/network/mdns_announcer.go",
-    "05_Software/nilo_assistant/internal/nethelper/avahi_linux.go",
-    "05_Software/nilo_assistant/internal/nethelper/avahi_plan.go",
-    "05_Software/nilo_assistant/internal/nethelper/client.go",
-    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
+    "05_Software/core/internal/appliance/naming.go",
+    "05_Software/core/internal/appliance/naming_test.go",
+    "05_Software/core/internal/store/sqlite/appliance_repository.go",
+    "05_Software/core/internal/store/sqlite/migrations.go",
+    "05_Software/core/internal/store/sqlite/migrations/017_appliance_discovery.sql",
+    "05_Software/core/internal/httpapi/appliance_identity.go",
+    "05_Software/core/internal/httpapi/appliance_identity_test.go",
+    "05_Software/core/cmd/nilo/discovery_runtime.go",
+    "05_Software/core/internal/network/mdns.go",
+    "05_Software/core/internal/network/mdns_announcer.go",
+    "05_Software/core/internal/nethelper/avahi_linux.go",
+    "05_Software/core/internal/nethelper/avahi_plan.go",
+    "05_Software/core/internal/nethelper/client.go",
+    "05_Software/core/internal/nethelper/protocol.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/appliance/naming_test.go::*",
-    "05_Software/nilo_assistant/internal/httpapi/appliance_identity_test.go::*",
+    "05_Software/core/internal/appliance/naming_test.go::*",
+    "05_Software/core/internal/httpapi/appliance_identity_test.go::*",
 ]
 
 

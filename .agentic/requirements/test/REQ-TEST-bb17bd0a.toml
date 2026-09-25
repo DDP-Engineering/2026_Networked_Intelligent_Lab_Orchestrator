@@ -60,14 +60,14 @@ verification = "Automated tests prove both actions through fakes and every refus
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/httpapi/power_test.go",
-    "05_Software/nilo_assistant/internal/auth/role_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/power_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/power_linux_test.go",
-    "05_Software/nilo_gui/src/components/PowerConfirmation.test.tsx",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
-    "05_Software/nilo_gui/src/api/mock.test.ts",
-    "05_Software/nilo_gui/e2e/bench-core.spec.ts",
+    "05_Software/core/internal/httpapi/power_test.go",
+    "05_Software/core/internal/auth/role_test.go",
+    "05_Software/core/internal/nethelper/power_test.go",
+    "05_Software/core/internal/nethelper/power_linux_test.go",
+    "05_Software/frontend/src/components/PowerConfirmation.test.tsx",
+    "05_Software/frontend/src/components/shell/shell.test.tsx",
+    "05_Software/frontend/src/api/mock.test.ts",
+    "05_Software/frontend/e2e/bench-core.spec.ts",
     "06_SoftwareDocu/Development_and_Simulation_Flow.md",
     "06_SoftwareDocu/Local_Hardware_Access.md",
 ]
@@ -75,11 +75,11 @@ affected_paths = [
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/auth/role_test.go::TestPowerPermissionBelongsToOperatorsAndAdministrators",
-    "05_Software/nilo_assistant/internal/httpapi/power_test.go::TestOperatorAndAdministratorSessionsDispatchExactPowerActionsAfterAudit",
-    "05_Software/nilo_assistant/internal/nethelper/power_linux_test.go::TestLoginManagerMapsPowerActionsToExactDBusMethods",
-    "05_Software/nilo_gui/src/components/PowerConfirmation.test.tsx::requires one explicit confirmation and reports acceptance",
-    "05_Software/nilo_gui/e2e/bench-core.spec.ts::signs in with a development token and shows the simulated bench",
+    "05_Software/core/internal/auth/role_test.go::TestPowerPermissionBelongsToOperatorsAndAdministrators",
+    "05_Software/core/internal/httpapi/power_test.go::TestOperatorAndAdministratorSessionsDispatchExactPowerActionsAfterAudit",
+    "05_Software/core/internal/nethelper/power_linux_test.go::TestLoginManagerMapsPowerActionsToExactDBusMethods",
+    "05_Software/frontend/src/components/PowerConfirmation.test.tsx::requires one explicit confirmation and reports acceptance",
+    "05_Software/frontend/e2e/bench-core.spec.ts::signs in with a development token and shows the simulated bench",
 ]
 
 # --- optional below this line ---

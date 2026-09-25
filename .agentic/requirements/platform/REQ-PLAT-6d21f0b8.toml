@@ -19,18 +19,18 @@ The appliance shall create, modify and delete only the network resources it owns
 verification = "An isolated Linux test captures the full connection, route and ruleset state before and after a device network is enabled and removed, and asserts every externally created resource is byte-identical."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/forwarding_plan.go",
-    "05_Software/nilo_assistant/internal/network/forwarding_plan_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/forwarding.go",
-    "05_Software/nilo_assistant/internal/nethelper/nftables_render.go",
-    "05_Software/nilo_assistant/internal/nethelper/nftables_linux.go",
+    "05_Software/core/internal/network/forwarding_plan.go",
+    "05_Software/core/internal/network/forwarding_plan_test.go",
+    "05_Software/core/internal/nethelper/forwarding.go",
+    "05_Software/core/internal/nethelper/nftables_render.go",
+    "05_Software/core/internal/nethelper/nftables_linux.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/forwarding_plan_test.go::TestOwnedResourceNamesAreUniqueAndAttributable",
-    "05_Software/nilo_assistant/internal/nethelper/forwarding_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/nftables_render_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/nftables_linux_test.go",
+    "05_Software/core/internal/network/forwarding_plan_test.go::TestOwnedResourceNamesAreUniqueAndAttributable",
+    "05_Software/core/internal/nethelper/forwarding_test.go",
+    "05_Software/core/internal/nethelper/nftables_render_test.go",
+    "05_Software/core/internal/nethelper/nftables_linux_test.go",
 ]
 
 spec = "specs/REQ-FUNC-2f8d63b5.md"

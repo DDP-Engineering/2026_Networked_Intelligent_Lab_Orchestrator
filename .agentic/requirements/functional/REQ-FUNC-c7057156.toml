@@ -53,45 +53,45 @@ verification = "An automated test requests readiness against probes with fixed r
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/nethelper/probe.go",
-    "05_Software/nilo_assistant/internal/network/wireguard.go",
-    "05_Software/nilo_assistant/internal/httpapi/network.go",
-    "05_Software/nilo_assistant/internal/network/simulation.go",
-    "05_Software/nilo_assistant/internal/network/profile.go",
-    "05_Software/nilo_assistant/internal/httpapi/network_wireguard_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/wireguard.go",
-    "05_Software/nilo_assistant/internal/nethelper/wireguard_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/wireguard_linux.go",
-    "05_Software/nilo_assistant/internal/nethelper/wireguard_linux_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
-    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go",
+    "05_Software/core/internal/nethelper/probe.go",
+    "05_Software/core/internal/network/wireguard.go",
+    "05_Software/core/internal/httpapi/network.go",
+    "05_Software/core/internal/network/simulation.go",
+    "05_Software/core/internal/network/profile.go",
+    "05_Software/core/internal/httpapi/network_wireguard_test.go",
+    "05_Software/core/internal/nethelper/wireguard.go",
+    "05_Software/core/internal/nethelper/wireguard_test.go",
+    "05_Software/core/internal/nethelper/wireguard_linux.go",
+    "05_Software/core/internal/nethelper/wireguard_linux_test.go",
+    "05_Software/core/internal/nethelper/protocol.go",
+    "05_Software/core/cmd/nilo/network_system_linux_test.go",
     "02_Tools/tests/network/Dockerfile",
-    "05_Software/nilo_gui/src/api/wireguard.ts",
-    "05_Software/nilo_gui/src/api/wireguard.test.ts",
-    "05_Software/nilo_gui/src/components/network/WireGuardPanel.tsx",
-    "05_Software/nilo_gui/src/components/network/WireGuardPanel.test.tsx",
-    "05_Software/nilo_gui/src/components/shell/TopRow.tsx",
-    "05_Software/nilo_gui/src/i18n/en.ts",
-    "05_Software/nilo_gui/src/i18n/de.ts",
-    "05_Software/nilo_gui/src/i18n/ro.ts",
-    "05_Software/nilo_gui/e2e/network.spec.ts",
+    "05_Software/frontend/src/api/wireguard.ts",
+    "05_Software/frontend/src/api/wireguard.test.ts",
+    "05_Software/frontend/src/components/network/WireGuardPanel.tsx",
+    "05_Software/frontend/src/components/network/WireGuardPanel.test.tsx",
+    "05_Software/frontend/src/components/shell/TopRow.tsx",
+    "05_Software/frontend/src/i18n/en.ts",
+    "05_Software/frontend/src/i18n/de.ts",
+    "05_Software/frontend/src/i18n/ro.ts",
+    "05_Software/frontend/e2e/network.spec.ts",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
-linked_tests = [    "05_Software/nilo_assistant/internal/httpapi/network_wireguard_test.go::TestWireGuardReadAndAcknowledgedImportLifecycle",
-    "05_Software/nilo_assistant/internal/httpapi/network_wireguard_test.go::TestNetworkRequestRejectsTrailingJSONAndUnknownFields",
-    "05_Software/nilo_assistant/internal/nethelper/wireguard_test.go::TestWireGuardReadinessKeepsProbeFactsSeparate",
-    "05_Software/nilo_assistant/internal/nethelper/wireguard_test.go::TestWireGuardHelperReadIsAllowlistedAndDoesNotMutate",
-    "05_Software/nilo_assistant/internal/nethelper/wireguard_linux_test.go::TestKernelReadinessUsesRunningKernelEvidence",
-    "05_Software/nilo_assistant/internal/nethelper/wireguard_linux_test.go::TestWireGuardVersionRejectsUnexpectedOutput",
-    "05_Software/nilo_assistant/internal/nethelper/wireguard_linux_test.go::TestWireGuardVersionOutputIsBounded",
-    "05_Software/nilo_assistant/internal/nethelper/wireguard_linux_test.go::TestWireGuardReadinessThroughAuthenticatedSocket",
-    "05_Software/nilo_assistant/internal/nethelper/wireguard_linux_test.go::TestWireGuardSystemReadinessDoesNotChangeNetwork",
-    "05_Software/nilo_assistant/cmd/nilo/network_system_linux_test.go::TestApplianceSystemHTTPSAndHelperRecovery",
-    "05_Software/nilo_gui/src/api/wireguard.test.ts",
-    "05_Software/nilo_gui/src/components/network/WireGuardPanel.test.tsx",
-    "05_Software/nilo_gui/e2e/network.spec.ts",
+linked_tests = [    "05_Software/core/internal/httpapi/network_wireguard_test.go::TestWireGuardReadAndAcknowledgedImportLifecycle",
+    "05_Software/core/internal/httpapi/network_wireguard_test.go::TestNetworkRequestRejectsTrailingJSONAndUnknownFields",
+    "05_Software/core/internal/nethelper/wireguard_test.go::TestWireGuardReadinessKeepsProbeFactsSeparate",
+    "05_Software/core/internal/nethelper/wireguard_test.go::TestWireGuardHelperReadIsAllowlistedAndDoesNotMutate",
+    "05_Software/core/internal/nethelper/wireguard_linux_test.go::TestKernelReadinessUsesRunningKernelEvidence",
+    "05_Software/core/internal/nethelper/wireguard_linux_test.go::TestWireGuardVersionRejectsUnexpectedOutput",
+    "05_Software/core/internal/nethelper/wireguard_linux_test.go::TestWireGuardVersionOutputIsBounded",
+    "05_Software/core/internal/nethelper/wireguard_linux_test.go::TestWireGuardReadinessThroughAuthenticatedSocket",
+    "05_Software/core/internal/nethelper/wireguard_linux_test.go::TestWireGuardSystemReadinessDoesNotChangeNetwork",
+    "05_Software/core/cmd/nilo/network_system_linux_test.go::TestApplianceSystemHTTPSAndHelperRecovery",
+    "05_Software/frontend/src/api/wireguard.test.ts",
+    "05_Software/frontend/src/components/network/WireGuardPanel.test.tsx",
+    "05_Software/frontend/e2e/network.spec.ts",
 ]
 
 # --- optional below this line ---
@@ -106,4 +106,4 @@ created = 2026-09-02
 updated = 2026-09-03
 
 # Planned files not implemented at the 2026-09-03 audit:
-# 05_Software/nilo_assistant/internal/network/wireguard_test.go
+# 05_Software/core/internal/network/wireguard_test.go

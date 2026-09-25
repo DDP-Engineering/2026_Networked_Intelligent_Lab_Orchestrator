@@ -16,13 +16,13 @@ and `--token-file`, and exit 2.
 verification = "A command test runs the built binary with an unknown command and asserts exit 2 and that standard error names serve, admin, network, activity and diagnostics together with --data-dir, --server and --token-file."
 
 affected_paths = [
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/cmd/nilo/main_usage_test.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/cmd/nilo/main_usage_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/cmd/nilo/main_usage_test.go::TestRootUsageNamesEveryCommandGroup",
-    "05_Software/nilo_assistant/cmd/nilo/main_test.go::TestNiloCLIContract",
+    "05_Software/core/cmd/nilo/main_usage_test.go::TestRootUsageNamesEveryCommandGroup",
+    "05_Software/core/cmd/nilo/main_test.go::TestNiloCLIContract",
 ]
 
 spec = ""

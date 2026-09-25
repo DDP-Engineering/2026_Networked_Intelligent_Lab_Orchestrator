@@ -19,15 +19,15 @@ The integrated browser suite shall drive a real browser against a real Bench Cor
 verification = "Running the browser suite passes the field-display specification for every viewport and theme; a run with NILO_FIELD_REVIEW=1 leaves one screenshot per viewport and theme for the shell and the Network page under test-results/field."
 
 affected_paths = [
-    "05_Software/nilo_gui/e2e/field-display.spec.ts",
-    "05_Software/nilo_gui/e2e/network.spec.ts",
-    "05_Software/nilo_gui/e2e/shell.spec.ts",
+    "05_Software/frontend/e2e/field-display.spec.ts",
+    "05_Software/frontend/e2e/network.spec.ts",
+    "05_Software/frontend/e2e/shell.spec.ts",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/e2e/field-display.spec.ts::the shell and the Network page are readable and complete",
-    "05_Software/nilo_gui/e2e/field-display.spec.ts::a change awaiting confirmation is stated in the overview and restored",
-    "05_Software/nilo_gui/e2e/field-display.spec.ts::the other pages stay readable without sideways scrolling",
+    "05_Software/frontend/e2e/field-display.spec.ts::the shell and the Network page are readable and complete",
+    "05_Software/frontend/e2e/field-display.spec.ts::a change awaiting confirmation is stated in the overview and restored",
+    "05_Software/frontend/e2e/field-display.spec.ts::the other pages stay readable without sideways scrolling",
 ]
 
 spec = ""

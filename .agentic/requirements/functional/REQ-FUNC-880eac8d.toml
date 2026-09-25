@@ -53,26 +53,26 @@ verification = "Table-driven domain and orchestration tests submit approved, aut
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/domain/",
-    "05_Software/nilo_assistant/internal/session/",
-    "05_Software/nilo_assistant/internal/operation/",
-    "05_Software/nilo_assistant/internal/store/sqlite/operation_repository.go",
+    "05_Software/core/internal/domain/",
+    "05_Software/core/internal/session/",
+    "05_Software/core/internal/operation/",
+    "05_Software/core/internal/store/sqlite/operation_repository.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/domain/session_test.go::TestSessionTransitionsAllowOnlyApprovedEdges",
-    "05_Software/nilo_assistant/internal/domain/session_test.go::TestSessionTransitionsRejectUndefinedEdges",
-    "05_Software/nilo_assistant/internal/domain/session_test.go::TestRuntimeIdentityConstructorsGenerateVersionSevenUUIDsAndParsersRejectInvalidUUIDs",
-    "05_Software/nilo_assistant/internal/domain/session_test.go::TestNewOperationRequestKeepsStableValidatedOperationNames",
-    "05_Software/nilo_assistant/internal/domain/session_test.go::TestNewOperationRequestExposesValueGetters",
-    "05_Software/nilo_assistant/internal/domain/session_test.go::TestNewOperationRequestCopiesCanonicalParameters",
-    "05_Software/nilo_assistant/internal/operation/service_test.go::TestAskCreatesPendingApprovalWithoutRunner",
-    "05_Software/nilo_assistant/internal/operation/service_test.go::TestApprovalQueuesLeasesRunsPersistsEvidenceAndCompletes",
-    "05_Software/nilo_assistant/internal/operation/service_test.go::TestRunnerFailureUsesFailedOnlyForTypedRemoteFailure",
-    "05_Software/nilo_assistant/internal/operation/service_test.go::TestConflictingRequestReturnsTypedBusyWithoutStartingRunner",
-    "05_Software/nilo_assistant/internal/store/sqlite/operation_repository_test.go::TestOperationRepositoryAtomicallyPersistsAndLoadsRequestWithPolicySnapshot",
+    "05_Software/core/internal/domain/session_test.go::TestSessionTransitionsAllowOnlyApprovedEdges",
+    "05_Software/core/internal/domain/session_test.go::TestSessionTransitionsRejectUndefinedEdges",
+    "05_Software/core/internal/domain/session_test.go::TestRuntimeIdentityConstructorsGenerateVersionSevenUUIDsAndParsersRejectInvalidUUIDs",
+    "05_Software/core/internal/domain/session_test.go::TestNewOperationRequestKeepsStableValidatedOperationNames",
+    "05_Software/core/internal/domain/session_test.go::TestNewOperationRequestExposesValueGetters",
+    "05_Software/core/internal/domain/session_test.go::TestNewOperationRequestCopiesCanonicalParameters",
+    "05_Software/core/internal/operation/service_test.go::TestAskCreatesPendingApprovalWithoutRunner",
+    "05_Software/core/internal/operation/service_test.go::TestApprovalQueuesLeasesRunsPersistsEvidenceAndCompletes",
+    "05_Software/core/internal/operation/service_test.go::TestRunnerFailureUsesFailedOnlyForTypedRemoteFailure",
+    "05_Software/core/internal/operation/service_test.go::TestConflictingRequestReturnsTypedBusyWithoutStartingRunner",
+    "05_Software/core/internal/store/sqlite/operation_repository_test.go::TestOperationRepositoryAtomicallyPersistsAndLoadsRequestWithPolicySnapshot",
 ]
 
 # --- optional below this line ---

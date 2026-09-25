@@ -5,6 +5,8 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-09-25
+
 ### Added
 
 - Exact Ubuntu amd64 and Raspberry Pi arm64 packaging targets, verified
@@ -13,6 +15,8 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Changed
 
+- Software is grouped by frontend, core, integrations, contracts, and cross-component tests; repository test tooling lives in `02_Tools`.
+- A test-only Go runner replaces the fake Python reference integration while preserving the shared runner contract and acceptance coverage.
 - About now leads with appliance controls and permanent identity, groups its
   software, system and management facts, keeps the scroll rail at the workspace
   edge, and shows hardware addresses only on the embedded printable label.

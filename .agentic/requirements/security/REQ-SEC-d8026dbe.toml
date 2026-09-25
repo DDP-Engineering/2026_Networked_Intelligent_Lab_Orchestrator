@@ -55,20 +55,20 @@ verification = "A test drives the login path with an injected clock, submits the
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/auth/throttle.go",
-    "05_Software/nilo_assistant/internal/identity/service.go",
-    "05_Software/nilo_assistant/internal/httpapi/identity.go",
-    "05_Software/nilo_assistant/internal/auth/throttle_test.go",
-    "05_Software/nilo_assistant/internal/identity/service_test.go",
+    "05_Software/core/internal/auth/throttle.go",
+    "05_Software/core/internal/identity/service.go",
+    "05_Software/core/internal/httpapi/identity.go",
+    "05_Software/core/internal/auth/throttle_test.go",
+    "05_Software/core/internal/identity/service_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/auth/throttle_test.go::TestLoginThrottleRefusesAfterTheFailureLimitUntilTheWindowElapses",
-    "05_Software/nilo_assistant/internal/auth/throttle_test.go::TestLoginThrottleClearsCountedFailuresOnSuccess",
-    "05_Software/nilo_assistant/internal/auth/throttle_test.go::TestLoginThrottleTreatsUsernamesCaseInsensitively",
-    "05_Software/nilo_assistant/internal/identity/service_test.go::TestLoginIsThrottledAfterRepeatedFailuresUntilTheWindowElapses",
+    "05_Software/core/internal/auth/throttle_test.go::TestLoginThrottleRefusesAfterTheFailureLimitUntilTheWindowElapses",
+    "05_Software/core/internal/auth/throttle_test.go::TestLoginThrottleClearsCountedFailuresOnSuccess",
+    "05_Software/core/internal/auth/throttle_test.go::TestLoginThrottleTreatsUsernamesCaseInsensitively",
+    "05_Software/core/internal/identity/service_test.go::TestLoginIsThrottledAfterRepeatedFailuresUntilTheWindowElapses",
 ]
 
 # --- optional below this line ---

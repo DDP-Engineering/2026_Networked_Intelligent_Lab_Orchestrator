@@ -61,13 +61,13 @@ affected_paths = [
     "02_Tools/README.md",
     "06_SoftwareDocu/Development_and_Simulation_Flow.md",
     "AGENTS.md",
-    "05_Software/scripts/tests/test_toolchain_bootstrap.py",
+    "02_Tools/tests/software/test_toolchain_bootstrap.py",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/scripts/tests/test_toolchain_bootstrap.py::ToolchainBootstrapTests::test_combined_bootstrap_orchestrates_windows_and_wsl_tools",
+    "02_Tools/tests/software/test_toolchain_bootstrap.py::ToolchainBootstrapTests::test_combined_bootstrap_orchestrates_windows_and_wsl_tools",
 ]
 
 # --- optional below this line ---

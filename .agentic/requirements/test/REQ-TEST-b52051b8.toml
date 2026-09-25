@@ -14,7 +14,7 @@ schema = 1
 # and must match the category folder this file sits in.
 id = "REQ-TEST-b52051b8"
 
-title = "Prove the fake integration lifecycle"
+title = "Prove the integration lifecycle with a test runner"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
@@ -38,7 +38,7 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-The Increment 1 acceptance harness shall drive the real fake Python runner through approval, automatic execution, progress, artifact evidence, cancellation, runner crash, and restart reconciliation using the real Go foundation services.
+The Increment 1 acceptance harness shall drive an isolated test runner through approval, automatic execution, progress, artifact evidence, cancellation, runner crash, and restart reconciliation using the real Go foundation services.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -53,19 +53,19 @@ verification = "The black-box test starts with a clean temporary database and pa
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/acceptance/increment1_e2e_test.go",
-    "05_Software/nilo_assistant/internal/acceptance/increment1_fixture_test.go",
-    "05_Software/integrations/fake_python/",
-    "05_Software/scripts/test-increment-1.ps1",
-    "05_Software/scripts/test-increment-1.sh",
+    "05_Software/core/internal/acceptance/increment1_e2e_test.go",
+    "05_Software/core/internal/acceptance/increment1_fixture_test.go",
+    "05_Software/tests/fixtures/contract_runner/",
+    "02_Tools/scripts/test-increment-1.ps1",
+    "02_Tools/scripts/test-increment-1.sh",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/acceptance/increment1_e2e_test.go::TestIncrement1RealFakeIntegrationLifecycle",
-    "05_Software/scripts/test-increment-1.ps1",
-    "05_Software/scripts/test-increment-1.sh",
+    "05_Software/core/internal/acceptance/increment1_e2e_test.go::TestIncrement1ContractRunnerLifecycle",
+    "02_Tools/scripts/test-increment-1.ps1",
+    "02_Tools/scripts/test-increment-1.sh",
 ]
 
 # --- optional below this line ---
@@ -74,7 +74,7 @@ linked_tests = [
 spec = ""
 
 priority = "high"   # low | normal | high
-rationale = "The fake package is the release-independent proof that the reusable integration platform works before sigrok is added."        # why this behavior exists, if not obvious
+rationale = "A test-only runner proves the reusable integration platform without adding a product integration."        # why this behavior exists, if not obvious
 
 created = 2026-08-30
-updated = 2026-08-31
+updated = 2026-09-25

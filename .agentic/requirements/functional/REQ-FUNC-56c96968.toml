@@ -53,26 +53,26 @@ verification = "An automated test runs each documented network subcommand agains
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/cmd/nilo/network.go",
-    "05_Software/nilo_assistant/cmd/nilo/network_test.go",
-    "05_Software/nilo_assistant/internal/apiclient/client.go",
-    "05_Software/nilo_assistant/cmd/nilo/network_vpn.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/cmd/nilo/network_vpn_test.go",
+    "05_Software/core/cmd/nilo/network.go",
+    "05_Software/core/cmd/nilo/network_test.go",
+    "05_Software/core/internal/apiclient/client.go",
+    "05_Software/core/cmd/nilo/network_vpn.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/cmd/nilo/network_vpn_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/cmd/nilo/network_test.go::TestNetworkStatusCallsTheAuthenticatedAPI",
-    "05_Software/nilo_assistant/cmd/nilo/network_test.go::TestNetworkStatisticsSendsTheInterfaceAndPeriod",
-    "05_Software/nilo_assistant/cmd/nilo/network_test.go::TestAcknowledgeSendsTheRevisionItWasGiven",
-    "05_Software/nilo_assistant/cmd/nilo/network_test.go::TestConfirmAndRollbackAreSeparateCommands",
-    "05_Software/nilo_assistant/cmd/nilo/network_test.go::TestARefusedRequestExitsOneAndReportsTheServerError",
-    "05_Software/nilo_assistant/cmd/nilo/network_test.go::TestJSONOutputIsTheServersOwnDocument",
-    "05_Software/nilo_assistant/cmd/nilo/network_vpn_test.go::TestNetworkVPNCommandsUsePreviewAndSeparateAcknowledgement",
-    "05_Software/nilo_assistant/cmd/nilo/network_vpn_test.go::TestNoninteractiveNetworkMutationRequiresExplicitAcknowledgement",
-    "05_Software/nilo_assistant/cmd/nilo/network_vpn_test.go::TestStartupPreviewShowsSelectedValue",
+    "05_Software/core/cmd/nilo/network_test.go::TestNetworkStatusCallsTheAuthenticatedAPI",
+    "05_Software/core/cmd/nilo/network_test.go::TestNetworkStatisticsSendsTheInterfaceAndPeriod",
+    "05_Software/core/cmd/nilo/network_test.go::TestAcknowledgeSendsTheRevisionItWasGiven",
+    "05_Software/core/cmd/nilo/network_test.go::TestConfirmAndRollbackAreSeparateCommands",
+    "05_Software/core/cmd/nilo/network_test.go::TestARefusedRequestExitsOneAndReportsTheServerError",
+    "05_Software/core/cmd/nilo/network_test.go::TestJSONOutputIsTheServersOwnDocument",
+    "05_Software/core/cmd/nilo/network_vpn_test.go::TestNetworkVPNCommandsUsePreviewAndSeparateAcknowledgement",
+    "05_Software/core/cmd/nilo/network_vpn_test.go::TestNoninteractiveNetworkMutationRequiresExplicitAcknowledgement",
+    "05_Software/core/cmd/nilo/network_vpn_test.go::TestStartupPreviewShowsSelectedValue",
 ]
 
 # --- optional below this line ---

@@ -24,19 +24,19 @@ and shall report nothing there while neither condition holds.
 verification = "A component test renders the page with audit writes failing and asserts the notice names the reported failure; renders it with one truncated retained window and asserts the gap line names that category, its purge instant and its reason; and renders it with audit writes healthy and no truncated window and asserts no text stands between the header and the filters, including no per-category retained count."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/components/activity/ActivityHealthBanner.tsx",
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.tsx",
-    "05_Software/nilo_gui/src/styles/shell.css",
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx",
-    "05_Software/nilo_gui/src/i18n/en.ts",
-    "05_Software/nilo_gui/src/i18n/de.ts",
-    "05_Software/nilo_gui/src/i18n/ro.ts",
+    "05_Software/frontend/src/components/activity/ActivityHealthBanner.tsx",
+    "05_Software/frontend/src/components/pages/ActivityPage.tsx",
+    "05_Software/frontend/src/styles/shell.css",
+    "05_Software/frontend/src/components/pages/ActivityPage.test.tsx",
+    "05_Software/frontend/src/i18n/en.ts",
+    "05_Software/frontend/src/i18n/de.ts",
+    "05_Software/frontend/src/i18n/ro.ts",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx::says nothing above the listing while recording is healthy",
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx::states a degraded audit persistence as a refusal condition",
-    "05_Software/nilo_gui/src/components/pages/ActivityPage.test.tsx::opens with the given filters, changes pages and discloses the gap",
+    "05_Software/frontend/src/components/pages/ActivityPage.test.tsx::says nothing above the listing while recording is healthy",
+    "05_Software/frontend/src/components/pages/ActivityPage.test.tsx::states a degraded audit persistence as a refusal condition",
+    "05_Software/frontend/src/components/pages/ActivityPage.test.tsx::opens with the given filters, changes pages and discloses the gap",
 ]
 
 

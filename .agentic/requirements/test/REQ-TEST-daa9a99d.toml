@@ -49,16 +49,16 @@ verification = "The lifecycle test suite runs on a developer workstation and in 
 affected_paths = [
     "02_Tools/scripts/nilo-dev.ps1",
     "02_Tools/lib/DevLifecycle.ps1",
-    "05_Software/scripts/tests/test_development_lifecycle.py",
+    "02_Tools/tests/software/test_development_lifecycle.py",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_boundaries_are_injectable_and_this_suite_uses_them",
-    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_shell_paths_are_quoted_against_apostrophes",
-    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_existing_bootstrap_entry_points_are_unchanged_in_shape",
-    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_the_launcher_preserves_argument_boundaries",
+    "02_Tools/tests/software/test_development_lifecycle.py::DevelopmentLifecycleTests::test_boundaries_are_injectable_and_this_suite_uses_them",
+    "02_Tools/tests/software/test_development_lifecycle.py::DevelopmentLifecycleTests::test_shell_paths_are_quoted_against_apostrophes",
+    "02_Tools/tests/software/test_development_lifecycle.py::DevelopmentLifecycleTests::test_existing_bootstrap_entry_points_are_unchanged_in_shape",
+    "02_Tools/tests/software/test_development_lifecycle.py::DevelopmentLifecycleTests::test_the_launcher_preserves_argument_boundaries",
 ]
 
 # --- optional below this line ---

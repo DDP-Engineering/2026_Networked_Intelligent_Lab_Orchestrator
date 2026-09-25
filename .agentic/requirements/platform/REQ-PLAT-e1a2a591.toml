@@ -57,7 +57,7 @@ affected_paths = [
     "02_Tools/bootstrap/bootstrap-frontend.ps1",
     "02_Tools/bootstrap/bootstrap-development.ps1",
     "02_Tools/README.md",
-    "05_Software/nilo_gui/",
+    "05_Software/frontend/",
     "05_Software/README.md",
     "06_SoftwareDocu/Development_and_Simulation_Flow.md",
 ]
@@ -65,8 +65,8 @@ affected_paths = [
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/scripts/tests/test_toolchain_bootstrap.py::ToolchainBootstrapTests::test_frontend_project_is_locked_static_build",
-    "05_Software/nilo_gui/package.json::build",
+    "02_Tools/tests/software/test_toolchain_bootstrap.py::ToolchainBootstrapTests::test_frontend_project_is_locked_static_build",
+    "05_Software/frontend/package.json::build",
 ]
 
 # --- optional below this line ---

@@ -19,12 +19,12 @@ When a device network is disabled, deleted or narrowed by a service restriction,
 verification = "An isolated Linux test holds a long-lived TCP flow through the device network and another unrelated flow, disables the device network, and asserts the first drops and the second survives."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/nethelper/nftables_render.go",
+    "05_Software/core/internal/nethelper/nftables_render.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/nethelper/nftables_linux_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/nftables_render_test.go",
+    "05_Software/core/internal/nethelper/nftables_linux_test.go",
+    "05_Software/core/internal/nethelper/nftables_render_test.go",
 ]
 
 spec = "specs/REQ-FUNC-2f8d63b5.md"

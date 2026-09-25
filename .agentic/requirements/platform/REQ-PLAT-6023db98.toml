@@ -57,11 +57,11 @@ When a developer invokes the POSIX build-environment bootstrap on a native host,
 verification = "Executable tests inject OS-release, architecture, systemd, engine, and image-setup boundaries; they assert supported native Ubuntu forwards the selected shared image/archive options, unsupported OS/architecture/systemd fail before engine access, ordinary setup never installs packages, and explicit installation requires a verified local host-bootstrap archive."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
-affected_paths = [".gitattributes", "02_Tools/bootstrap/bootstrap-build-environment.sh", "02_Tools/bootstrap/bootstrap-container-engine.sh", "02_Tools/bootstrap/setup-build-environment-image.sh", "02_Tools/scripts/collect-build-environment-metadata.sh", "02_Tools/scripts/export-build-environment.sh", "02_Tools/archives/wsl-host-bootstrap/", "05_Software/nilo_gui/e2e/topology.ts", "05_Software/nilo_gui/playwright.config.ts", "05_Software/scripts/tests/test_build_environment.py", "00_Planning/Development_Build_Environment_Plan.md", "02_Tools/README.md", "06_SoftwareDocu/Development_and_Simulation_Flow.md"]
+affected_paths = [".gitattributes", "02_Tools/bootstrap/bootstrap-build-environment.sh", "02_Tools/bootstrap/bootstrap-container-engine.sh", "02_Tools/bootstrap/setup-build-environment-image.sh", "02_Tools/scripts/collect-build-environment-metadata.sh", "02_Tools/scripts/export-build-environment.sh", "02_Tools/archives/wsl-host-bootstrap/", "05_Software/frontend/e2e/topology.ts", "05_Software/frontend/playwright.config.ts", "02_Tools/tests/software/test_build_environment.py", "00_Planning/Development_Build_Environment_Plan.md", "02_Tools/README.md", "06_SoftwareDocu/Development_and_Simulation_Flow.md"]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
-linked_tests = ["05_Software/nilo_gui/e2e/topology.test.ts", "05_Software/nilo_gui/e2e/prerequisites.test.ts", "05_Software/scripts/tests/test_build_environment.py"]
+linked_tests = ["05_Software/frontend/e2e/topology.test.ts", "05_Software/frontend/e2e/prerequisites.test.ts", "02_Tools/tests/software/test_build_environment.py"]
 
 # --- optional below this line ---
 

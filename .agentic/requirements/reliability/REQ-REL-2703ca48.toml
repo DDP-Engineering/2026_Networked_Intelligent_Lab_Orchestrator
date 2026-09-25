@@ -53,20 +53,20 @@ verification = "An automated test starts one connectivity change, submits a seco
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/operation.go",
-    "05_Software/nilo_assistant/internal/network/operation_safety_test.go",
-    "05_Software/nilo_assistant/internal/network/operation_test.go",
-    "05_Software/nilo_assistant/internal/network/changer_simulated.go",
+    "05_Software/core/internal/network/operation.go",
+    "05_Software/core/internal/network/operation_safety_test.go",
+    "05_Software/core/internal/network/operation_test.go",
+    "05_Software/core/internal/network/changer_simulated.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/operation_test.go::TestOnlyOneConnectivityChangeMayBeInFlight",
-    "05_Software/nilo_assistant/internal/network/operation_test.go::TestAChangeIsRefusedWhenRecoveryCannotBeArmed",
-    "05_Software/nilo_assistant/internal/network/operation_safety_test.go::TestConcurrentAcknowledgementsReserveBeforeRecovery",
-    "05_Software/nilo_assistant/internal/network/operation_safety_test.go::TestConfirmationDoesNotClaimSuccessWhenCheckpointReleaseFails",
-    "05_Software/nilo_assistant/internal/network/operation_safety_test.go::TestFailedApplyAndFailedRecoveryRemainProminentAndBlockNewChanges",
+    "05_Software/core/internal/network/operation_test.go::TestOnlyOneConnectivityChangeMayBeInFlight",
+    "05_Software/core/internal/network/operation_test.go::TestAChangeIsRefusedWhenRecoveryCannotBeArmed",
+    "05_Software/core/internal/network/operation_safety_test.go::TestConcurrentAcknowledgementsReserveBeforeRecovery",
+    "05_Software/core/internal/network/operation_safety_test.go::TestConfirmationDoesNotClaimSuccessWhenCheckpointReleaseFails",
+    "05_Software/core/internal/network/operation_safety_test.go::TestFailedApplyAndFailedRecoveryRemainProminentAndBlockNewChanges",
 ]
 
 # --- optional below this line ---

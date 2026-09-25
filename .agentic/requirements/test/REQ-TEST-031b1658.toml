@@ -54,24 +54,24 @@ verification = "Test-router unit tests prove frontend project discovery and exac
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
     ".agentic/aegis.toml",
-    "05_Software/scripts/aegis_test.py",
-    "05_Software/scripts/tests/test_aegis_test.py",
-    "05_Software/nilo_gui/package.json",
-    "05_Software/nilo_gui/package-lock.json",
-    "05_Software/nilo_gui/eslint.config.js",
-    "05_Software/nilo_gui/.prettierrc.json",
-    "05_Software/nilo_gui/src/",
+    "02_Tools/scripts/aegis_test.py",
+    "02_Tools/tests/software/test_aegis_test.py",
+    "05_Software/frontend/package.json",
+    "05_Software/frontend/package-lock.json",
+    "05_Software/frontend/eslint.config.js",
+    "05_Software/frontend/.prettierrc.json",
+    "05_Software/frontend/src/",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/scripts/tests/test_aegis_test.py::AegisTestRouterTests::test_discover_suites_finds_windows_frontend_and_ignores_generated_packages",
-    "05_Software/scripts/tests/test_aegis_test.py::AegisTestRouterTests::test_windows_frontend_runs_test_build_format_and_lint_commands",
-    "05_Software/nilo_gui/package.json::format:check",
-    "05_Software/nilo_gui/package.json::lint",
-    "05_Software/nilo_gui/package.json::test:ci",
-    "05_Software/nilo_gui/package.json::build",
+    "02_Tools/tests/software/test_aegis_test.py::AegisTestRouterTests::test_discover_suites_finds_windows_frontend_and_ignores_generated_packages",
+    "02_Tools/tests/software/test_aegis_test.py::AegisTestRouterTests::test_windows_frontend_runs_test_build_format_and_lint_commands",
+    "05_Software/frontend/package.json::format:check",
+    "05_Software/frontend/package.json::lint",
+    "05_Software/frontend/package.json::test:ci",
+    "05_Software/frontend/package.json::build",
 ]
 
 # --- optional below this line ---

@@ -49,14 +49,14 @@ verification = "An automated test runs the start command against an injected bro
 affected_paths = [
     "02_Tools/scripts/nilo-dev.ps1",
     "02_Tools/lib/DevLifecycle.ps1",
-    "05_Software/scripts/tests/test_development_lifecycle.py",
+    "02_Tools/tests/software/test_development_lifecycle.py",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_browser_opens_only_when_requested",
-    "05_Software/scripts/tests/test_development_lifecycle.py::DevelopmentLifecycleTests::test_browser_opens_when_requested_against_an_already_healthy_topology",
+    "02_Tools/tests/software/test_development_lifecycle.py::DevelopmentLifecycleTests::test_browser_opens_only_when_requested",
+    "02_Tools/tests/software/test_development_lifecycle.py::DevelopmentLifecycleTests::test_browser_opens_when_requested_against_an_already_healthy_topology",
 ]
 
 # --- optional below this line ---

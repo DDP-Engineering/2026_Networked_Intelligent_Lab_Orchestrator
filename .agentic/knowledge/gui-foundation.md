@@ -21,7 +21,7 @@ suggesting that a simulated result came from physical equipment.
 
 ## Public interface
 
-The project root is `05_Software/nilo_gui`. Developers use its npm scripts
+The project root is `05_Software/frontend`. Developers use its npm scripts
 through `02_Tools/env/with-tools.ps1`: `dev` serves the interface against a real
 backend, `dev:mock` serves it against the built-in contract mock, `format:check`
 and `lint` enforce source quality, `test:ci` runs deterministic component tests,
@@ -397,53 +397,53 @@ visible.
 - `src/components/network/{WireGuardPanel,NetworkConfirmation}.tsx` - profile controls and native acknowledgement modal.
 - `e2e/network.spec.ts` - isolated real-backend Network browser scenarios.
 
-- `05_Software/nilo_gui/package.json` and `package-lock.json` - exact commands,
+- `05_Software/frontend/package.json` and `package-lock.json` - exact commands,
   dependency versions, transitive resolution, and integrity hashes.
-- `05_Software/nilo_gui/.env` and `.env.mock` - committed build-time endpoint
+- `05_Software/frontend/.env` and `.env.mock` - committed build-time endpoint
   configuration for the WSL2-backed and mock-only development modes.
-- `05_Software/nilo_gui/src/api/contract.ts` - the `nilo.http/1` constants, the
+- `05_Software/frontend/src/api/contract.ts` - the `nilo.http/1` constants, the
   origin-relative paths, the status, integration, device, session, identity and
   token types, and the strict parsers shared by the client and the mock.
-- `05_Software/nilo_gui/src/api/client.ts` - the typed client's fourteen methods
+- `05_Software/frontend/src/api/client.ts` - the typed client's fourteen methods
   over one shared exchange, the `Credential` union, and `BenchCoreError` with
   its five causes.
-- `05_Software/nilo_gui/src/api/csrf.ts` - reads the readable `nilo_csrf`
+- `05_Software/frontend/src/api/csrf.ts` - reads the readable `nilo_csrf`
   cookie, the only part of the session credential the page can see.
-- `05_Software/nilo_gui/src/version.ts` - exposes the checked-in GUI package
+- `05_Software/frontend/src/version.ts` - exposes the checked-in GUI package
   version for the pre-authentication product identity.
-- `05_Software/nilo_gui/src/api/permissions.ts` - whether a session has any
+- `05_Software/frontend/src/api/permissions.ts` - whether a session has any
   reason to open the Authentication page.
-- `05_Software/nilo_gui/src/api/mock.ts` - path-routed, contract-built answers
+- `05_Software/frontend/src/api/mock.ts` - path-routed, contract-built answers
   for the eight development scenarios, plus an in-memory identity and token
   store enforcing the same role matrix, CSRF rule and last-administrator rule
   the backend does; the ready and unavailable inventories reproduce the Go
   simulation catalog exactly.
-- `05_Software/nilo_gui/src/config/environment.ts` - environment reader,
+- `05_Software/frontend/src/config/environment.ts` - environment reader,
   `GuiConfigurationError`, and the configured-client factory.
-- `05_Software/nilo_gui/src/App.tsx` - session restoration, the held credential,
+- `05_Software/frontend/src/App.tsx` - session restoration, the held credential,
   the concurrent three-resource request, and the unauthenticated and
   not-yet-connected screens.
-- `05_Software/nilo_gui/src/styles/tokens.css` - the one semantic palette,
+- `05_Software/frontend/src/styles/tokens.css` - the one semantic palette,
   defined for light, for dark, and for the system theme's dark branch.
-- `05_Software/nilo_gui/src/styles/shell.css` - the shell grid and every
+- `05_Software/frontend/src/styles/shell.css` - the shell grid and every
   component in it, declaring no literal colour.
-- `05_Software/nilo_gui/src/preferences/store.ts` - the only durable browser
+- `05_Software/frontend/src/preferences/store.ts` - the only durable browser
   storage this interface uses, and the two keys it holds.
-- `05_Software/nilo_gui/src/theme/` and `src/i18n/` - the theme and language
+- `05_Software/frontend/src/theme/` and `src/i18n/` - the theme and language
   providers, their contexts, and the three message catalogues.
-- `05_Software/nilo_gui/src/components/shell/` - `AppShell`, `TopRow`,
+- `05_Software/frontend/src/components/shell/` - `AppShell`, `TopRow`,
   `TabStrip`, `SideNav`, `NetworkSummary`, `Menu`, `Icon`, the page registry and
   the tab state.
-- `05_Software/nilo_gui/src/components/pages/` - `BenchPage`, `NetworkPage` and
+- `05_Software/frontend/src/components/pages/` - `BenchPage`, `NetworkPage` and
   the About, not-yet-available and integration pages. About reads the
   authenticated appliance resource and presents permanent/friendly names,
   management addresses, the printable label, friendly-name administration and
   the permission-gated Identify action. Identify decodes the versioned
   `supported` response and absolute `active_until` deadline; About controls and
   management links retain 44-pixel targets at field-display sizes.
-- `05_Software/nilo_gui/src/components/SignInScreen.tsx` - the unauthenticated
+- `05_Software/frontend/src/components/SignInScreen.tsx` - the unauthenticated
   screen with both forms.
-- `05_Software/nilo_gui/src/components/AuthenticationPage.tsx`,
+- `05_Software/frontend/src/components/AuthenticationPage.tsx`,
   `src/components/authentication/`, `AdministrationForms.tsx` and `Modal.tsx` -
   the fetch-free view dispatcher, focused Users and API tokens resource owners,
   shared dialog bodies for every change, and the focused dialog itself with its
@@ -452,48 +452,48 @@ visible.
   closed `<details>` following the Activity retention disclosure; its number
   field carries no min or max, because the bounds belong to the appliance and a
   browser restating them would drift from it.
-- `05_Software/nilo_gui/src/App.css` and `src/index.css` - single-viewport
+- `05_Software/frontend/src/App.css` and `src/index.css` - single-viewport
   layout, the inventory scroll compartment, and the CSS custom properties every
   colour is expressed through.
-- `05_Software/nilo_gui/src/App.test.tsx`,
+- `05_Software/frontend/src/App.test.tsx`,
   `src/components/AuthenticationPage.test.tsx`, `src/api/client.test.ts`,
   `src/api/contract.test.ts`, `src/api/mock.test.ts`,
   `src/config/environment.test.ts`, and `src/layout.test.ts` - the shell,
   administration-page, client, contract, mock, configuration, and layout tests.
-- `05_Software/nilo_gui/src/test/setup.ts` - jest-dom matchers and the
+- `05_Software/frontend/src/test/setup.ts` - jest-dom matchers and the
   Testing Library cleanup Vitest does not register without injected globals.
-- `05_Software/nilo_gui/vite.config.ts` - local development server, the `/api`
+- `05_Software/frontend/vite.config.ts` - local development server, the `/api`
   forwarding for both serve and preview, Vitest, and static build configuration.
-- `05_Software/nilo_gui/src/config/devServer.test.ts` - asserts that forwarding
+- `05_Software/frontend/src/config/devServer.test.ts` - asserts that forwarding
   is declared and takes its target from the environment.
-- `05_Software/nilo_gui/playwright.config.ts` - the integrated browser runner:
+- `05_Software/frontend/playwright.config.ts` - the integrated browser runner:
   headless, serial, no retries, and no retained trace, video or screenshot.
-- `05_Software/nilo_gui/e2e/topology.ts` - one run's appliance-profile Bench
+- `05_Software/frontend/e2e/topology.ts` - one run's appliance-profile Bench
   Core, privileged helper boundary, generated TLS material, temporary database,
   bootstrapped administrator, bounded readiness and shutdown waits, and teardown
   limited to its own child processes and state.
-- `05_Software/nilo_gui/e2e/prerequisites.ts` - the appliance-stage binaries,
+- `05_Software/frontend/e2e/prerequisites.ts` - the appliance-stage binaries,
   built assets and runtime configuration checks, each failing with the stage
   action that supplies it.
-- `05_Software/nilo_gui/e2e/bench-core.spec.ts` - the password-authenticated
+- `05_Software/frontend/e2e/bench-core.spec.ts` - the password-authenticated
   appliance journey: status, empty fresh-appliance inventories, the unreachable
   screen, and recovery.
-- `05_Software/nilo_gui/e2e/authentication.spec.ts` - the human browser journey
+- `05_Software/frontend/e2e/authentication.spec.ts` - the human browser journey
   against a real administrator the harness bootstraps through the real command
   line: password sign-in, identity creation, a role change, a token with its
   one-time secret, restoration across a reload, revocation, the
   last-administrator refusal, the entry a Viewer does not get, and sign-out.
-- `05_Software/nilo_gui/e2e/token-redaction.spec.ts` - the forced-failure
+- `05_Software/frontend/e2e/token-redaction.spec.ts` - the forced-failure
   regression: a real browser action made to fail after its locator resolves,
   asserting the redaction wrapper removes the value and that the unwrapped call
   would still have leaked it.
-- `05_Software/nilo_gui/e2e/topology.test.ts`, `e2e/prerequisites.test.ts` and
+- `05_Software/frontend/e2e/topology.test.ts`, `e2e/prerequisites.test.ts` and
   `e2e/commands.test.ts` - the harness, prerequisite and command-surface tests,
   which run in the component suite and start no process of their own.
-- `05_Software/nilo_gui/public/favicon.svg` - repository-owned browser icon.
-- `05_Software/nilo_gui/README.md` - exact local restore, development, quality,
+- `05_Software/frontend/public/favicon.svg` - repository-owned browser icon.
+- `05_Software/frontend/README.md` - exact local restore, development, quality,
   build, configuration, and authentication commands.
-- `05_Software/scripts/aegis_test.py` - Windows repository-gate integration.
+- `02_Tools/scripts/aegis_test.py` - Windows repository-gate integration.
 
 ## First-boot commissioning (2026-09-12, TASK-38d62913)
 
@@ -709,7 +709,7 @@ English, German and Romanian share the instrument key set.
 - `src/i18n/{en,de,ro}.ts`, `src/index.css` — translated controls and responsive layout.
 
 The browser mock retains its pre-existing scope; exercise instruments against a
-real simulation-profile runner. Source paths above are relative to `05_Software/nilo_gui/`.
+real simulation-profile runner. Source paths above are relative to `05_Software/frontend/`.
 
 ## Core navigation order without Settings (2026-09-05, TASK-17d71acd)
 

@@ -20,14 +20,14 @@ The appliance shall accept link-local as the IPv4 addressing method of a wired a
 verification = "An automated test validates a link-local configuration on its own and alongside automatic DNS and asserts both are accepted, and validates it with a static address, with a gateway, and on a wireless adapter and asserts each is refused. A second automated test presents an Ethernet adapter whose only address is a link-local one and asserts it is reported eligible for management access and usable as a management path. The privileged helper renders the method as the NetworkManager link-local IPv4 method, which is compiled and vetted for Linux."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/interface_settings.go",
-    "05_Software/nilo_assistant/internal/network/link_local_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_settings_linux.go",
+    "05_Software/core/internal/network/interface_settings.go",
+    "05_Software/core/internal/network/link_local_test.go",
+    "05_Software/core/internal/nethelper/networkmanager_settings_linux.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/link_local_test.go::TestLinkLocalIsAcceptedOnEthernetAndRefusedElsewhere",
-    "05_Software/nilo_assistant/internal/network/link_local_test.go::TestLinkLocalAddressesCarryManagementAccess",
+    "05_Software/core/internal/network/link_local_test.go::TestLinkLocalIsAcceptedOnEthernetAndRefusedElsewhere",
+    "05_Software/core/internal/network/link_local_test.go::TestLinkLocalAddressesCarryManagementAccess",
 ]
 
 

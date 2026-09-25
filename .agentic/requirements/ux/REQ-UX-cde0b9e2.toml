@@ -19,19 +19,19 @@ When the Network page has read the appliance state, it shall show one overview a
 verification = "A component test renders the Network page with a connected uplink, one device network on a second adapter and an active profile and asserts the overview names the uplink and its address, the device-side adapter and its address and the profile name; with no device network and no active profile it asserts the overview reads none for both and shows no simulation sentence; with an operation awaiting confirmation it asserts the overview names it."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/components/network/NetworkOverview.tsx",
-    "05_Software/nilo_gui/src/components/network/addressing.ts",
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
-    "05_Software/nilo_gui/src/i18n/en.ts",
-    "05_Software/nilo_gui/src/i18n/de.ts",
-    "05_Software/nilo_gui/src/i18n/ro.ts",
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
+    "05_Software/frontend/src/components/network/NetworkOverview.tsx",
+    "05_Software/frontend/src/components/network/addressing.ts",
+    "05_Software/frontend/src/components/pages/NetworkPage.tsx",
+    "05_Software/frontend/src/i18n/en.ts",
+    "05_Software/frontend/src/i18n/de.ts",
+    "05_Software/frontend/src/i18n/ro.ts",
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::summarizes the uplink, the device side, the active profile and what is pending",
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::says none where there is no device network and no active profile",
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::names a change awaiting confirmation in the overview",
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx::summarizes the uplink, the device side, the active profile and what is pending",
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx::says none where there is no device network and no active profile",
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx::names a change awaiting confirmation in the overview",
 ]
 
 spec = ""

@@ -58,16 +58,16 @@ verification = "An integrated browser test opens the signed-out interface at eac
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/components/SignInScreen.tsx",
-    "05_Software/nilo_gui/src/styles/shell.css",
-    "05_Software/nilo_gui/e2e/authentication.spec.ts",
-    "05_Software/nilo_gui/tsconfig.node.json",
+    "05_Software/frontend/src/components/SignInScreen.tsx",
+    "05_Software/frontend/src/styles/shell.css",
+    "05_Software/frontend/e2e/authentication.spec.ts",
+    "05_Software/frontend/tsconfig.node.json",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/e2e/authentication.spec.ts::signs a real administrator in with a password",
+    "05_Software/frontend/e2e/authentication.spec.ts::signs a real administrator in with a password",
 ]
 
 # --- optional below this line ---

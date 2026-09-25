@@ -19,17 +19,17 @@ Every visible text and accessible label introduced for the compact field interfa
 verification = "The catalogue test asserts the German and Romanian catalogues define every English key, leave none empty, keep every placeholder and copy no English text outside the shared list."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/i18n/en.ts",
-    "05_Software/nilo_gui/src/i18n/de.ts",
-    "05_Software/nilo_gui/src/i18n/ro.ts",
-    "05_Software/nilo_gui/src/i18n/messages.test.ts",
+    "05_Software/frontend/src/i18n/en.ts",
+    "05_Software/frontend/src/i18n/de.ts",
+    "05_Software/frontend/src/i18n/ro.ts",
+    "05_Software/frontend/src/i18n/messages.test.ts",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/src/i18n/messages.test.ts::defines every English key in de",
-    "05_Software/nilo_gui/src/i18n/messages.test.ts::defines every English key in ro",
-    "05_Software/nilo_gui/src/i18n/messages.test.ts::actually translates de rather than copying English",
-    "05_Software/nilo_gui/src/i18n/messages.test.ts::keeps every placeholder de needs",
+    "05_Software/frontend/src/i18n/messages.test.ts::defines every English key in de",
+    "05_Software/frontend/src/i18n/messages.test.ts::defines every English key in ro",
+    "05_Software/frontend/src/i18n/messages.test.ts::actually translates de rather than copying English",
+    "05_Software/frontend/src/i18n/messages.test.ts::keeps every placeholder de needs",
 ]
 
 spec = ""

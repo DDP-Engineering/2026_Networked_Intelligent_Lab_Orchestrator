@@ -53,16 +53,16 @@ verification = "An automated test calls the MCP endpoint with no token, an unkno
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/mcp/server_test.go",
-    "05_Software/nilo_assistant/internal/mcp/server.go",
-    "05_Software/nilo_assistant/internal/mcp/protocol_test.go",
+    "05_Software/core/internal/mcp/server_test.go",
+    "05_Software/core/internal/mcp/server.go",
+    "05_Software/core/internal/mcp/protocol_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/mcp/server_test.go::TestEveryUnauthorizedRequestIsRefusedWithoutNetworkData",
-    "05_Software/nilo_assistant/internal/mcp/protocol_test.go::TestStreamableDiscoveryReadsAndRevocationWithRealToken",
+    "05_Software/core/internal/mcp/server_test.go::TestEveryUnauthorizedRequestIsRefusedWithoutNetworkData",
+    "05_Software/core/internal/mcp/protocol_test.go::TestStreamableDiscoveryReadsAndRevocationWithRealToken",
 ]
 
 # --- optional below this line ---
@@ -77,4 +77,4 @@ created = 2026-09-02
 updated = 2026-09-03
 
 # Planned files not implemented at the 2026-09-03 audit:
-# 05_Software/nilo_assistant/internal/mcp/auth.go
+# 05_Software/core/internal/mcp/auth.go

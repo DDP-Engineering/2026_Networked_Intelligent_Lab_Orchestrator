@@ -55,24 +55,24 @@ verification = "An HTTP test logs in with correct credentials and asserts a succ
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/auth/session.go",
-    "05_Software/nilo_assistant/internal/identity/service.go",
-    "05_Software/nilo_assistant/internal/httpapi/identity.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/identity_repository.go",
-    "05_Software/nilo_assistant/internal/app/app.go",
-    "05_Software/nilo_assistant/internal/identity/service_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/identity_test.go",
-    "05_Software/nilo_assistant/internal/auth/session_test.go",
+    "05_Software/core/internal/auth/session.go",
+    "05_Software/core/internal/identity/service.go",
+    "05_Software/core/internal/httpapi/identity.go",
+    "05_Software/core/internal/store/sqlite/identity_repository.go",
+    "05_Software/core/internal/app/app.go",
+    "05_Software/core/internal/identity/service_test.go",
+    "05_Software/core/internal/httpapi/identity_test.go",
+    "05_Software/core/internal/auth/session_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/httpapi/identity_test.go::TestLoginIssuesAScriptInaccessibleSessionCookieAndAnExpiringSession",
-    "05_Software/nilo_assistant/internal/httpapi/identity_test.go::TestLoginRejectsWrongCredentialsWithoutRevealingWhichPartFailed",
-    "05_Software/nilo_assistant/internal/identity/service_test.go::TestLoginAcceptsCorrectCredentialsAndRefusesEverythingElse",
-    "05_Software/nilo_assistant/internal/identity/service_test.go::TestSessionStopsAuthenticatingAfterItsExpiry",
-    "05_Software/nilo_assistant/internal/auth/session_test.go::TestNewSessionSecretsProducesDistinctSecretsAndAnAbsoluteExpiry",
+    "05_Software/core/internal/httpapi/identity_test.go::TestLoginIssuesAScriptInaccessibleSessionCookieAndAnExpiringSession",
+    "05_Software/core/internal/httpapi/identity_test.go::TestLoginRejectsWrongCredentialsWithoutRevealingWhichPartFailed",
+    "05_Software/core/internal/identity/service_test.go::TestLoginAcceptsCorrectCredentialsAndRefusesEverythingElse",
+    "05_Software/core/internal/identity/service_test.go::TestSessionStopsAuthenticatingAfterItsExpiry",
+    "05_Software/core/internal/auth/session_test.go::TestNewSessionSecretsProducesDistinctSecretsAndAnAbsoluteExpiry",
 ]
 
 # --- optional below this line ---

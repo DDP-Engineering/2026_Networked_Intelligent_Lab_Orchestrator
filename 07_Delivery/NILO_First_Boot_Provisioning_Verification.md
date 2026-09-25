@@ -138,7 +138,7 @@ reasons that are not this candidate. Each was reproduced on committed `master`
 without the change, and they were accepted by the human under RULING-003 on
 `TASK-2873801a`:
 
-- `05_Software/scripts/tests/test_build_environment.py::BuildEnvironmentTests::test_reconstruction_lock_is_complete_and_consumed_offline`
+- `02_Tools/tests/software/test_build_environment.py::BuildEnvironmentTests::test_reconstruction_lock_is_complete_and_consumed_offline`
   fails with `reconstruction input manifest SHA-256 mismatch`. It short-circuits
   the configured runner before the Go, Python and GUI suites execute, which is
   why those were run individually.

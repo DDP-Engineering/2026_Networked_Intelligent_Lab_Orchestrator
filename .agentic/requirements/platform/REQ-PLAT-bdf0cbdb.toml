@@ -57,10 +57,10 @@ affected_paths = [
     "02_Tools/bootstrap/",
     "02_Tools/env/",
     "02_Tools/README.md",
-    "05_Software/scripts/aegis_test.py",
-    "05_Software/scripts/tests/test_aegis_test.py",
-    "05_Software/scripts/tests/test_toolchain_bootstrap.py",
-    "05_Software/integrations/fake_python/manifest.json",
+    "02_Tools/scripts/aegis_test.py",
+    "02_Tools/tests/software/test_aegis_test.py",
+    "02_Tools/tests/software/test_toolchain_bootstrap.py",
+    "05_Software/tests/fixtures/contract_runner/manifest.json",
     "05_Software/tests/contract/test_integration_contract.py",
     "05_Software/README.md",
 ]
@@ -68,8 +68,8 @@ affected_paths = [
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/scripts/tests/test_aegis_test.py::AegisTestRouterTests::test_discover_suites_finds_go_module_and_each_python_integration",
-    "05_Software/scripts/tests/test_toolchain_bootstrap.py::ToolchainBootstrapTests::test_platform_dependent_tools_use_distinct_host_roots",
+    "02_Tools/tests/software/test_aegis_test.py::AegisTestRouterTests::test_discover_suites_finds_go_module_and_each_python_integration",
+    "02_Tools/tests/software/test_toolchain_bootstrap.py::ToolchainBootstrapTests::test_platform_dependent_tools_use_distinct_host_roots",
     "05_Software/tests/contract/test_integration_contract.py::test_manifest_declares_the_expected_policies_and_separate_runner_fields",
     "05_Software/tests/contract/test_integration_contract.py::test_clean_package_install_launches_the_host_manifest_command",
 ]

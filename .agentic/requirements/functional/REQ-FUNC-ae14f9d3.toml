@@ -55,21 +55,21 @@ verification = "A command test creates a token, asserts the secret appears in th
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/cmd/nilo/admin.go",
-    "05_Software/nilo_assistant/internal/identity/service.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/identity_repository.go",
-    "05_Software/nilo_assistant/internal/auth/token.go",
-    "05_Software/nilo_assistant/cmd/nilo/admin_test.go",
-    "05_Software/nilo_assistant/internal/identity/service_test.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/identity_repository_test.go",
+    "05_Software/core/cmd/nilo/admin.go",
+    "05_Software/core/internal/identity/service.go",
+    "05_Software/core/internal/store/sqlite/identity_repository.go",
+    "05_Software/core/internal/auth/token.go",
+    "05_Software/core/cmd/nilo/admin_test.go",
+    "05_Software/core/internal/identity/service_test.go",
+    "05_Software/core/internal/store/sqlite/identity_repository_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/cmd/nilo/admin_test.go::TestAdminTokenCommandsDiscloseTheSecretOnceAndNeverAgain",
-    "05_Software/nilo_assistant/internal/identity/service_test.go::TestTokenSecretIsDisclosedOnceAndNeverStored",
-    "05_Software/nilo_assistant/internal/store/sqlite/identity_repository_test.go::TestIdentityRepositoryStoresNoTokenOrSessionPlaintext",
+    "05_Software/core/cmd/nilo/admin_test.go::TestAdminTokenCommandsDiscloseTheSecretOnceAndNeverAgain",
+    "05_Software/core/internal/identity/service_test.go::TestTokenSecretIsDisclosedOnceAndNeverStored",
+    "05_Software/core/internal/store/sqlite/identity_repository_test.go::TestIdentityRepositoryStoresNoTokenOrSessionPlaintext",
 ]
 
 # --- optional below this line ---

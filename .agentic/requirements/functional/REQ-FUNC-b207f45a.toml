@@ -19,14 +19,14 @@ When a connection check is requested for a saved device network, the appliance s
 verification = "A service and API test asserts each fact is reported independently and that a timed-out probe yields an explicit unknown result rather than an offline claim."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/device_network_manager.go",
-    "05_Software/nilo_assistant/internal/httpapi/device_networks.go",
-    "05_Software/nilo_assistant/internal/network/device_network_check.go",
+    "05_Software/core/internal/network/device_network_manager.go",
+    "05_Software/core/internal/httpapi/device_networks.go",
+    "05_Software/core/internal/network/device_network_check.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/device_network_manager_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/device_networks_test.go",
+    "05_Software/core/internal/network/device_network_manager_test.go",
+    "05_Software/core/internal/httpapi/device_networks_test.go",
 ]
 
 spec = "specs/REQ-FUNC-2f8d63b5.md"

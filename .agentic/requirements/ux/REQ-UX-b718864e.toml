@@ -58,27 +58,27 @@ verification = "A shell component test renders the rail, asserts the expanded Ne
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/components/shell/pages.ts",
-    "05_Software/nilo_gui/src/components/shell/SideNav.tsx",
-    "05_Software/nilo_gui/src/components/shell/AppShell.tsx",
-    "05_Software/nilo_gui/src/components/network/views.ts",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
-    "05_Software/nilo_gui/src/styles/shell.css",
-    "05_Software/nilo_gui/src/layout.test.ts",
-    "05_Software/nilo_gui/src/i18n/en.ts",
-    "05_Software/nilo_gui/src/i18n/de.ts",
-    "05_Software/nilo_gui/src/i18n/ro.ts",
-    "05_Software/nilo_gui/e2e/shell.spec.ts",
-    "05_Software/nilo_gui/e2e/field-display.spec.ts",
+    "05_Software/frontend/src/components/shell/pages.ts",
+    "05_Software/frontend/src/components/shell/SideNav.tsx",
+    "05_Software/frontend/src/components/shell/AppShell.tsx",
+    "05_Software/frontend/src/components/network/views.ts",
+    "05_Software/frontend/src/components/shell/shell.test.tsx",
+    "05_Software/frontend/src/styles/shell.css",
+    "05_Software/frontend/src/layout.test.ts",
+    "05_Software/frontend/src/i18n/en.ts",
+    "05_Software/frontend/src/i18n/de.ts",
+    "05_Software/frontend/src/i18n/ro.ts",
+    "05_Software/frontend/e2e/shell.spec.ts",
+    "05_Software/frontend/e2e/field-display.spec.ts",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
-    "05_Software/nilo_gui/src/layout.test.ts",
-    "05_Software/nilo_gui/e2e/shell.spec.ts",
-    "05_Software/nilo_gui/e2e/field-display.spec.ts",
+    "05_Software/frontend/src/components/shell/shell.test.tsx",
+    "05_Software/frontend/src/layout.test.ts",
+    "05_Software/frontend/e2e/shell.spec.ts",
+    "05_Software/frontend/e2e/field-display.spec.ts",
 ]
 
 # --- optional below this line ---

@@ -21,11 +21,11 @@ Retired 2026-09-16: the timed debug session was removed from the appliance by co
 verification = "A service and API test starts a session, asserts the raised scope, advances a monotonic clock past expiry, and asserts normal detail is restored; a restart test asserts a session does not survive it and is recorded as interrupted."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/diagnostics/diagnostics.go",
-    "05_Software/nilo_assistant/internal/httpapi/activity.go",
-    "05_Software/nilo_assistant/cmd/nilo/diagnostics.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/diagnostic_repository.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/migrations/010_activity.sql",
+    "05_Software/core/internal/diagnostics/diagnostics.go",
+    "05_Software/core/internal/httpapi/activity.go",
+    "05_Software/core/cmd/nilo/diagnostics.go",
+    "05_Software/core/internal/store/sqlite/diagnostic_repository.go",
+    "05_Software/core/internal/store/sqlite/migrations/010_activity.sql",
 ]
 
 linked_tests = []

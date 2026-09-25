@@ -53,31 +53,31 @@ verification = "An automated test removes an inactive NILO-owned profile and ass
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/profile.go",
-    "05_Software/nilo_assistant/internal/network/profile_test.go",
-    "05_Software/nilo_assistant/internal/network/simulation.go",
-    "05_Software/nilo_assistant/internal/network/wireguard.go",
-    "05_Software/nilo_assistant/internal/network/simulation_test.go",
-    "05_Software/nilo_assistant/internal/network/profiles.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/vpn_profile_repository.go",
-    "05_Software/nilo_assistant/internal/network/profile_manager.go",
-    "05_Software/nilo_assistant/internal/nethelper/tunnel_engine.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux.go",
-    "05_Software/nilo_assistant/internal/network/profile_manager_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/tunnel_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux_test.go",
+    "05_Software/core/internal/network/profile.go",
+    "05_Software/core/internal/network/profile_test.go",
+    "05_Software/core/internal/network/simulation.go",
+    "05_Software/core/internal/network/wireguard.go",
+    "05_Software/core/internal/network/simulation_test.go",
+    "05_Software/core/internal/network/profiles.go",
+    "05_Software/core/internal/store/sqlite/vpn_profile_repository.go",
+    "05_Software/core/internal/network/profile_manager.go",
+    "05_Software/core/internal/nethelper/tunnel_engine.go",
+    "05_Software/core/internal/nethelper/networkmanager_wireguard_linux.go",
+    "05_Software/core/internal/network/profile_manager_test.go",
+    "05_Software/core/internal/nethelper/tunnel_test.go",
+    "05_Software/core/internal/nethelper/networkmanager_wireguard_linux_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/simulation_test.go::TestSimulationChangesReportedStateAndRestoresItsCheckpoint",
-    "05_Software/nilo_assistant/internal/network/simulation_test.go::TestSimulationWireGuardLifecycleAndSingleStartupSelection",
-    "05_Software/nilo_assistant/internal/network/simulation_test.go::TestSimulationRejectsMissingAndExternalProfiles",
-    "05_Software/nilo_assistant/internal/store/sqlite/vpn_profile_repository_test.go::TestDeletingAProfileRemovesOnlyThatProfile",
-    "05_Software/nilo_assistant/internal/network/profile_manager_test.go::TestRemovalRefusesAnActiveOrReferencedProfileAndDeletesOnlyAnInactiveOne",
-    "05_Software/nilo_assistant/internal/nethelper/tunnel_test.go::TestProfileDeletionRemovesTheConnectionAndTheKey",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_wireguard_linux_test.go::TestNetworkManagerWireGuardLifecycleSystem",
+    "05_Software/core/internal/network/simulation_test.go::TestSimulationChangesReportedStateAndRestoresItsCheckpoint",
+    "05_Software/core/internal/network/simulation_test.go::TestSimulationWireGuardLifecycleAndSingleStartupSelection",
+    "05_Software/core/internal/network/simulation_test.go::TestSimulationRejectsMissingAndExternalProfiles",
+    "05_Software/core/internal/store/sqlite/vpn_profile_repository_test.go::TestDeletingAProfileRemovesOnlyThatProfile",
+    "05_Software/core/internal/network/profile_manager_test.go::TestRemovalRefusesAnActiveOrReferencedProfileAndDeletesOnlyAnInactiveOne",
+    "05_Software/core/internal/nethelper/tunnel_test.go::TestProfileDeletionRemovesTheConnectionAndTheKey",
+    "05_Software/core/internal/nethelper/networkmanager_wireguard_linux_test.go::TestNetworkManagerWireGuardLifecycleSystem",
 ]
 
 # --- optional below this line ---

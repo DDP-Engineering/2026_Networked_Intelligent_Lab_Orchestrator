@@ -22,19 +22,19 @@ answer exits 1, in every case without sending any state-changing request, and no
 verification = "Command tests run both deletions against a recording stub: interactive mode with the subject typed back (a username in any case) sends DELETE and exits 0; a different name, a prefix or an empty answer exits 1 and records only the listing GET; noninteractive mode without --confirm-delete exits 2 and records only the listing GET; with --confirm-delete it sends DELETE; --acknowledge is rejected as an unknown flag with exit 2 and no request; the subject's username or token identifier and its safe metadata appear on standard error before any prompt; a 403 on the listing read skips the description and still deletes, while a 401 on it exits 1 with no deletion sent; and a 404 or 409 answer to the deletion exits 1 with the appliance's error code."
 
 affected_paths = [
-    "05_Software/nilo_assistant/cmd/nilo/admin_remote.go",
-    "05_Software/nilo_assistant/cmd/nilo/admin_remote_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/admin_review_test.go",
+    "05_Software/core/cmd/nilo/admin_remote.go",
+    "05_Software/core/cmd/nilo/admin_remote_test.go",
+    "05_Software/core/cmd/nilo/admin_review_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/cmd/nilo/admin_review_test.go::TestDeletionDoesNotRequireTheReadPermission",
-    "05_Software/nilo_assistant/cmd/nilo/admin_review_test.go::TestUsernamesAreFoldedTheWayTheApplianceFoldsThem",
-    "05_Software/nilo_assistant/cmd/nilo/admin_remote_test.go::TestRemoteUserDeletionRequiresTheUsernameTypedBack",
-    "05_Software/nilo_assistant/cmd/nilo/admin_remote_test.go::TestRemoteTokenDeletionRequiresTheTokenIDTypedBack",
-    "05_Software/nilo_assistant/cmd/nilo/admin_remote_test.go::TestNoninteractiveDeletionRequiresConfirmDelete",
-    "05_Software/nilo_assistant/cmd/nilo/admin_remote_test.go::TestDeletingAnUnlistedSubjectIsDecidedByTheAppliance",
-    "05_Software/nilo_assistant/cmd/nilo/admin_remote_test.go::TestRemoteAdminRefusalsExitOneWithTheApplianceCode",
+    "05_Software/core/cmd/nilo/admin_review_test.go::TestDeletionDoesNotRequireTheReadPermission",
+    "05_Software/core/cmd/nilo/admin_review_test.go::TestUsernamesAreFoldedTheWayTheApplianceFoldsThem",
+    "05_Software/core/cmd/nilo/admin_remote_test.go::TestRemoteUserDeletionRequiresTheUsernameTypedBack",
+    "05_Software/core/cmd/nilo/admin_remote_test.go::TestRemoteTokenDeletionRequiresTheTokenIDTypedBack",
+    "05_Software/core/cmd/nilo/admin_remote_test.go::TestNoninteractiveDeletionRequiresConfirmDelete",
+    "05_Software/core/cmd/nilo/admin_remote_test.go::TestDeletingAnUnlistedSubjectIsDecidedByTheAppliance",
+    "05_Software/core/cmd/nilo/admin_remote_test.go::TestRemoteAdminRefusalsExitOneWithTheApplianceCode",
 ]
 
 spec = "specs/REQ-FUNC-6590e0c5.md"

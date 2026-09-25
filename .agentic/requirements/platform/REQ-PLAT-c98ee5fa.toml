@@ -19,9 +19,9 @@ When an exact target payload is packaged, the Debian builder shall create a poli
 
 verification = "Build amd64 and arm64 fixture packages, inspect control metadata, paths, ownership, modes, conffiles, dependencies, units and scripts, then run install, reinstall, upgrade, remove, purge and image-chroot simulations; assert no `/usr/local` payload, embedded mutable state, live service start or non-idempotent transition."
 
-affected_paths = ["02_Tools/packaging/debian/", "02_Tools/packaging/build/build-deb.sh", "02_Tools/packaging/verify/verify-deb.sh", "02_Tools/packaging/release_builder.py", "05_Software/scripts/tests/test_release_packaging.py"]
+affected_paths = ["02_Tools/packaging/debian/", "02_Tools/packaging/build/build-deb.sh", "02_Tools/packaging/verify/verify-deb.sh", "02_Tools/packaging/release_builder.py", "02_Tools/tests/software/test_release_packaging.py"]
 
-linked_tests = ["05_Software/scripts/tests/test_release_packaging.py::DebianPackageTests.test_debian_package_is_deterministic_and_policy_safe", "05_Software/scripts/tests/test_release_packaging.py::DebianPackageTests.test_debian_package_refuses_target_or_payload_mismatch", "05_Software/scripts/tests/test_release_packaging.py::DebianPackageTests.test_debian_package_refuses_payload_bytes_not_bound_by_the_manifest", "05_Software/scripts/tests/test_release_packaging.py::DebianPackageTests.test_release_verifier_rejects_replaced_debian_maintainer_logic", "05_Software/scripts/tests/test_release_packaging.py::RaspberryPiImageTests.test_image_builder_authenticates_package_before_privileged_execution"]
+linked_tests = ["02_Tools/tests/software/test_release_packaging.py::DebianPackageTests.test_debian_package_is_deterministic_and_policy_safe", "02_Tools/tests/software/test_release_packaging.py::DebianPackageTests.test_debian_package_refuses_target_or_payload_mismatch", "02_Tools/tests/software/test_release_packaging.py::DebianPackageTests.test_debian_package_refuses_payload_bytes_not_bound_by_the_manifest", "02_Tools/tests/software/test_release_packaging.py::DebianPackageTests.test_release_verifier_rejects_replaced_debian_maintainer_logic", "02_Tools/tests/software/test_release_packaging.py::RaspberryPiImageTests.test_image_builder_authenticates_package_before_privileged_execution"]
 
 
 spec = "specs/REQ-PLAT-c98ee5fa.md"

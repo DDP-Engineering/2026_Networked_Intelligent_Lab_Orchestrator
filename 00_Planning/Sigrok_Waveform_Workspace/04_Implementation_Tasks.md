@@ -8,13 +8,13 @@ The inspected implementation provides useful plugin supervision, durable operati
 
 | Current location, relative to repository root | Observed gap to revisit |
 |---|---|
-| `05_Software/nilo_gui/src/components/pages/PluginsPage.tsx` | Lifecycle, capture form and transaction listing combined; fixed channel/rate choices and a small SVG sample preview rather than an interactive waveform workspace |
+| `05_Software/frontend/src/components/pages/PluginsPage.tsx` | Lifecycle, capture form and transaction listing combined; fixed channel/rate choices and a small SVG sample preview rather than an interactive waveform workspace |
 | `05_Software/integrations/sigrok/src/nilo_sigrok/plugin.py` | ATK-specific scan parsing, 16 digital channels, limited rate choices, finite capture limits and a first-256-sample preview; insufficient generic analog/trigger/decoder model |
-| `05_Software/nilo_assistant/internal/bench/parameters.go` | Fixed acquisition/driver assumptions and narrow decoder parameters; extend through typed schemas rather than arbitrary unvalidated options |
-| `05_Software/nilo_assistant/internal/bench/model.go` | Operational records exist; capture library and analysis-document identities/names/revisions need design |
-| `05_Software/nilo_assistant/internal/bench/packages.go` | Restart currently uses general plugin management permission; discovery and lifecycle need consistent busy/resource semantics |
-| `05_Software/nilo_assistant/internal/bench/jobs.go` | Queue and device lease foundations exist; history is bounded but lacks the proposed independent capture library, pagination and retention/deletion flow |
-| `05_Software/nilo_assistant/internal/auth/role.go` | Add narrowly scoped restart and any approved capture/document permissions without weakening existing token/role checks |
+| `05_Software/core/internal/bench/parameters.go` | Fixed acquisition/driver assumptions and narrow decoder parameters; extend through typed schemas rather than arbitrary unvalidated options |
+| `05_Software/core/internal/bench/model.go` | Operational records exist; capture library and analysis-document identities/names/revisions need design |
+| `05_Software/core/internal/bench/packages.go` | Restart currently uses general plugin management permission; discovery and lifecycle need consistent busy/resource semantics |
+| `05_Software/core/internal/bench/jobs.go` | Queue and device lease foundations exist; history is bounded but lacks the proposed independent capture library, pagination and retention/deletion flow |
+| `05_Software/core/internal/auth/role.go` | Add narrowly scoped restart and any approved capture/document permissions without weakening existing token/role checks |
 
 Re-read these files when each task begins; repository changes after this research may alter the baseline. Preserve existing contracts through explicit versioning/migrations as needed.
 

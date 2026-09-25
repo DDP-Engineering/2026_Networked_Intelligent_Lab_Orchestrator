@@ -61,11 +61,11 @@ than claiming that it ran in the network-disabled container.
 verification = "Run the offline image verification command and assert its inventory, ELF architecture checks and Go target builds; inspect the resulting evidence and confirm that browser acceptance and the authorized-appliance Sigrok ABI check remain separate named gates whose absent evidence is pending or failed, never passed."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
-affected_paths = ["02_Tools/scripts/verify-build-environment.sh", "02_Tools/tests/build-environment/verify-offline.sh", "02_Tools/tests/build-environment/verify-arm64-abi.sh", "02_Tools/tests/build-environment/evidence.example.json", "05_Software/scripts/tests/test_build_environment.py"]
+affected_paths = ["02_Tools/scripts/verify-build-environment.sh", "02_Tools/tests/build-environment/verify-offline.sh", "02_Tools/tests/build-environment/verify-arm64-abi.sh", "02_Tools/tests/build-environment/evidence.example.json", "02_Tools/tests/software/test_build_environment.py"]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
-linked_tests = ["05_Software/scripts/tests/test_build_environment.py"]
+linked_tests = ["02_Tools/tests/software/test_build_environment.py"]
 
 # --- optional below this line ---
 

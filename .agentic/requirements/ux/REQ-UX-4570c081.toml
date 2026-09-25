@@ -19,19 +19,19 @@ The browser interface shall present the confirmation window and automatic rollba
 verification = "A component test renders the device-network editor with every help popover closed and asserts the appliance-address guidance, the source-address consequence and the field validation message are visible beside their fields, and renders the confirmation dialog and asserts the rollback window sentence is visible; the existing countdown, rollback-failure and refusal tests remain green."
 
 affected_paths = [
-    "05_Software/nilo_gui/src/components/help/Field.tsx",
-    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.tsx",
-    "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.tsx",
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.tsx",
-    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx",
-    "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.test.tsx",
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx",
+    "05_Software/frontend/src/components/help/Field.tsx",
+    "05_Software/frontend/src/components/network/DeviceNetworksPanel.tsx",
+    "05_Software/frontend/src/components/network/InterfaceSettingsDialog.tsx",
+    "05_Software/frontend/src/components/pages/NetworkPage.tsx",
+    "05_Software/frontend/src/components/network/DeviceNetworksPanel.test.tsx",
+    "05_Software/frontend/src/components/network/InterfaceSettingsDialog.test.tsx",
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx",
 ]
 
 linked_tests = [
-    "05_Software/nilo_gui/src/components/network/DeviceNetworksPanel.test.tsx::groups the editor by task, validates beside the field and reviews in plain language",
-    "05_Software/nilo_gui/src/components/network/InterfaceSettingsDialog.test.tsx::groups addressing, DNS and protection, with help beside the settings",
-    "05_Software/nilo_gui/src/components/pages/NetworkPage.test.tsx::states the two-minute rollback window in the confirmation itself",
+    "05_Software/frontend/src/components/network/DeviceNetworksPanel.test.tsx::groups the editor by task, validates beside the field and reviews in plain language",
+    "05_Software/frontend/src/components/network/InterfaceSettingsDialog.test.tsx::groups addressing, DNS and protection, with help beside the settings",
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx::states the two-minute rollback window in the confirmation itself",
 ]
 
 spec = ""

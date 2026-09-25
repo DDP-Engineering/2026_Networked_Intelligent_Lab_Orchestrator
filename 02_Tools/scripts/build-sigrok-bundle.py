@@ -256,7 +256,7 @@ def build(
             stage / "python/nilo_sigrok",
             ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
         )
-        sdk = repository / "05_Software/integration_sdk/python/src/nilo_integration"
+        sdk = repository / "05_Software/integrations/sdk/python/src/nilo_integration"
         shutil.copytree(
             sdk,
             stage / "python/nilo_integration",

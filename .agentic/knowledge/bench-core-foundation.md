@@ -2,7 +2,7 @@
 
 ## Routing
 
-Select this page for the Go Bench Core under `05_Software/nilo_assistant/`:
+Select this page for the Go Bench Core under `05_Software/core/`:
 the `nilo` command line (`serve`, `discover`, `open`, `admin` in local and remote mode, `network`,
 `activity`, `diagnostics`, `maintenance`, `seed-admin`), the authenticated `/api/v1` HTTP routes and their
 permissions, identities, sessions, API tokens and their audit events, network
@@ -555,24 +555,24 @@ The simulation catalog is deliberately dependency-free and cannot discover or co
 - `internal/httpapi/password_policy.go`, `cmd/nilo/admin_password_policy.go` - the administrator-only route pair and its command-line client. A replacement carries the whole policy; a partial one is refused rather than merged, in both.
 - `cmd/nilo/admin.go`, `cmd/nilo/admin_remote.go` - the administration commands: mode resolution and the local data-directory path in the first, the remote API client, readable renderings and the deletion confirmation in the second. `admin_remote_test.go` proves the requests against a recording stub; `admin_live_test.go` proves roles, scopes and credential state against a real `nilo serve` subprocess.
 
-- `05_Software/nilo_assistant/cmd/nilo/` - command entry point and CLI contract tests.
-- `05_Software/nilo_assistant/internal/app/` - foundation composition and startup reconciliation.
-- `05_Software/nilo_assistant/internal/config/` - process configuration and physically confined paths.
-- `05_Software/nilo_assistant/internal/domain/` - UUID identities, immutable requests, artifacts, and session states.
-- `05_Software/nilo_assistant/internal/operation/` - policy-to-runner operation orchestration.
-- `05_Software/nilo_assistant/internal/policy/` - policy matrix, immutable snapshots, and approvals.
-- `05_Software/nilo_assistant/internal/session/` - session transitions, lease ownership, and reconciliation service.
-- `05_Software/nilo_assistant/internal/auth/` - password, role/permission, browser-session and API-token primitives, plus the failed-login brake.
-- `05_Software/nilo_assistant/internal/identity/` - identity, session, token and authorization service shared by the command line and the HTTP boundary.
-- `05_Software/nilo_assistant/internal/audit/` - the event contract, its envelope, and the writer that fills the appliance, boot, category, severity and clock fields so a caller supplies only what it knows. Append, list and bounded retention; no operation can change a stored event.
-- `05_Software/nilo_assistant/internal/appliance/` - the stable appliance identity and the per-boot identity, provisioned while the application opens and therefore before any service that could record an event exists.
-- `05_Software/nilo_assistant/internal/artifact/` - bounded, confined, durable artifact placement with OS adapters.
-- `05_Software/nilo_assistant/internal/store/sqlite/` - database opening, migrations, and all foundation repository implementations and tests.
-- `05_Software/nilo_assistant/internal/buildinfo/` - build metadata reported by the command.
-- `05_Software/nilo_assistant/internal/httpapi/` - loopback-confined simulation listener, credential resolution and per-route permission checks, cookie and CSRF handling, the authentication and status contracts, and graceful lifecycle. `identity.go` holds the middleware and the sign-in, sign-out and current-session handlers; `administration.go` holds the identity and token administration handlers, their validation and the one map from a typed service failure to a documented client error; `server.go` holds the single route table where every route declares its permission.
-- `05_Software/nilo_assistant/internal/simulation/` - immutable healthy and unavailable integration/device catalogs with stable simulation identity.
-- `05_Software/nilo_assistant/go.mod` and `05_Software/nilo_assistant/go.sum` - pinned Go module graph.
-- `05_Software/nilo_assistant/README.md` - portable core usage and boundaries.
+- `05_Software/core/cmd/nilo/` - command entry point and CLI contract tests.
+- `05_Software/core/internal/app/` - foundation composition and startup reconciliation.
+- `05_Software/core/internal/config/` - process configuration and physically confined paths.
+- `05_Software/core/internal/domain/` - UUID identities, immutable requests, artifacts, and session states.
+- `05_Software/core/internal/operation/` - policy-to-runner operation orchestration.
+- `05_Software/core/internal/policy/` - policy matrix, immutable snapshots, and approvals.
+- `05_Software/core/internal/session/` - session transitions, lease ownership, and reconciliation service.
+- `05_Software/core/internal/auth/` - password, role/permission, browser-session and API-token primitives, plus the failed-login brake.
+- `05_Software/core/internal/identity/` - identity, session, token and authorization service shared by the command line and the HTTP boundary.
+- `05_Software/core/internal/audit/` - the event contract, its envelope, and the writer that fills the appliance, boot, category, severity and clock fields so a caller supplies only what it knows. Append, list and bounded retention; no operation can change a stored event.
+- `05_Software/core/internal/appliance/` - the stable appliance identity and the per-boot identity, provisioned while the application opens and therefore before any service that could record an event exists.
+- `05_Software/core/internal/artifact/` - bounded, confined, durable artifact placement with OS adapters.
+- `05_Software/core/internal/store/sqlite/` - database opening, migrations, and all foundation repository implementations and tests.
+- `05_Software/core/internal/buildinfo/` - build metadata reported by the command.
+- `05_Software/core/internal/httpapi/` - loopback-confined simulation listener, credential resolution and per-route permission checks, cookie and CSRF handling, the authentication and status contracts, and graceful lifecycle. `identity.go` holds the middleware and the sign-in, sign-out and current-session handlers; `administration.go` holds the identity and token administration handlers, their validation and the one map from a typed service failure to a documented client error; `server.go` holds the single route table where every route declares its permission.
+- `05_Software/core/internal/simulation/` - immutable healthy and unavailable integration/device catalogs with stable simulation identity.
+- `05_Software/core/go.mod` and `05_Software/core/go.sum` - pinned Go module graph.
+- `05_Software/core/README.md` - portable core usage and boundaries.
 
 ### Network gateway observations
 

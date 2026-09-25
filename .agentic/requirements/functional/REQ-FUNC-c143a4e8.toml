@@ -20,15 +20,15 @@ When an SSDP client retrieves the advertised device-description URL through a ma
 verification = "An automated HTTP and SSDP integration test requests the description without credentials on each management link, validates the exact XML fields and UUID/URL agreement with the SSDP packet, follows the presentation URL to the HTTPS interface, and asserts excluded-interface requests are refused and the document contains no service/control/event elements or state-changing URL."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/httpapi/discovery.go",
-    "05_Software/nilo_assistant/internal/httpapi/discovery_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/server.go",
-    "05_Software/nilo_assistant/internal/network/ssdp.go",
-    "05_Software/nilo_assistant/internal/network/management_access.go",
+    "05_Software/core/internal/httpapi/discovery.go",
+    "05_Software/core/internal/httpapi/discovery_test.go",
+    "05_Software/core/internal/httpapi/server.go",
+    "05_Software/core/internal/network/ssdp.go",
+    "05_Software/core/internal/network/management_access.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/httpapi/discovery_test.go::*",
+    "05_Software/core/internal/httpapi/discovery_test.go::*",
 ]
 
 

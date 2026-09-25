@@ -20,19 +20,19 @@ When the commissioning schema migration is applied, the appliance shall record i
 verification = "An automated test opens a brand-new appliance database and reads back the recorded lifecycle state as provisioning. A second automated test applies the migration set up to the migration before this one, writes an appliance identity row into that database, then applies the full set and reads back the recorded lifecycle state as commissioned, asserting the identity row and the rest of the earlier schema are undisturbed. A third asserts the table rejects a lifecycle state outside the two permitted values and rejects a second row."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/store/sqlite/migrations/013_commissioning.sql",
-    "05_Software/nilo_assistant/internal/store/sqlite/migrations.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go",
-    "05_Software/nilo_assistant/internal/appliance/commissioning.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/db_test.go",
+    "05_Software/core/internal/store/sqlite/migrations/013_commissioning.sql",
+    "05_Software/core/internal/store/sqlite/migrations.go",
+    "05_Software/core/internal/store/sqlite/commissioning_repository.go",
+    "05_Software/core/internal/store/sqlite/commissioning_repository_test.go",
+    "05_Software/core/internal/appliance/commissioning.go",
+    "05_Software/core/internal/store/sqlite/db_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go::TestNewDatabaseRecordsProvisioningCommissioningState",
-    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go::TestUpgradedDatabaseRecordsCommissionedCommissioningState",
-    "05_Software/nilo_assistant/internal/store/sqlite/commissioning_repository_test.go::TestCommissioningTableRejectsAnUnknownStateAndASecondRow",
-    "05_Software/nilo_assistant/internal/store/sqlite/db_test.go::TestOpenConfiguresDurableDatabaseAndMigratesAllFoundationTables",
+    "05_Software/core/internal/store/sqlite/commissioning_repository_test.go::TestNewDatabaseRecordsProvisioningCommissioningState",
+    "05_Software/core/internal/store/sqlite/commissioning_repository_test.go::TestUpgradedDatabaseRecordsCommissionedCommissioningState",
+    "05_Software/core/internal/store/sqlite/commissioning_repository_test.go::TestCommissioningTableRejectsAnUnknownStateAndASecondRow",
+    "05_Software/core/internal/store/sqlite/db_test.go::TestOpenConfiguresDurableDatabaseAndMigratesAllFoundationTables",
 ]
 
 

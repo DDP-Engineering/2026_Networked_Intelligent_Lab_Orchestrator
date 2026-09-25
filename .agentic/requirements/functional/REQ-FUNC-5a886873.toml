@@ -20,19 +20,19 @@ While an interface carries effective management access, NILO shall announce one 
 verification = "Automated responder tests use two management links plus device, WireGuard, loopback and non-allowlisted links; they observe interface-bound multicast/unicast packets with stable UUID USNs, matching search responses, refresh without duplication, byebye on removal/shutdown and no packet on excluded links. The isolated appliance stage then measures Windows 11 appearance and disappearance within 60 seconds."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/ssdp.go",
-    "05_Software/nilo_assistant/internal/network/ssdp_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/ssdp_responder.go",
-    "05_Software/nilo_assistant/internal/nethelper/ssdp_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
-    "05_Software/nilo_assistant/internal/network/management_access.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/core/internal/network/ssdp.go",
+    "05_Software/core/internal/network/ssdp_test.go",
+    "05_Software/core/internal/nethelper/ssdp_responder.go",
+    "05_Software/core/internal/nethelper/ssdp_test.go",
+    "05_Software/core/internal/nethelper/protocol.go",
+    "05_Software/core/internal/network/management_access.go",
+    "05_Software/core/cmd/nilo/main.go",
     "02_Tools/tests/network/run.sh",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/ssdp_test.go::*",
-    "05_Software/nilo_assistant/internal/nethelper/ssdp_test.go::*",
+    "05_Software/core/internal/network/ssdp_test.go::*",
+    "05_Software/core/internal/nethelper/ssdp_test.go::*",
 ]
 
 

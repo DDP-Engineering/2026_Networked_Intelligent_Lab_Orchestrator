@@ -56,15 +56,15 @@ verification = "A component test creates a token with a canary secret, asserts t
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/components/authentication/ApiTokensPage.tsx",
-    "05_Software/nilo_gui/src/components/AdministrationForms.tsx",
+    "05_Software/frontend/src/components/authentication/ApiTokensPage.tsx",
+    "05_Software/frontend/src/components/AdministrationForms.tsx",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::API token creation > discloses the secret once, copies it, and never shows it again",
-    "05_Software/nilo_gui/e2e/authentication.spec.ts::creates an API token and shows its secret exactly once",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::API token creation > discloses the secret once, copies it, and never shows it again",
+    "05_Software/frontend/e2e/authentication.spec.ts::creates an API token and shows its secret exactly once",
 ]
 
 # --- optional below this line ---

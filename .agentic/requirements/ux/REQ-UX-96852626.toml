@@ -56,21 +56,21 @@ verification = "A component test signs in, arranges the backend double to answer
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/App.tsx",
-    "05_Software/nilo_gui/src/api/client.ts",
-    "05_Software/nilo_gui/src/components/pages/BenchPage.tsx",
-    "05_Software/nilo_gui/src/components/AuthenticationPage.tsx",
-    "05_Software/nilo_gui/src/api/client.test.ts",
+    "05_Software/frontend/src/App.tsx",
+    "05_Software/frontend/src/api/client.ts",
+    "05_Software/frontend/src/components/pages/BenchPage.tsx",
+    "05_Software/frontend/src/components/AuthenticationPage.tsx",
+    "05_Software/frontend/src/api/client.test.ts",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/App.test.tsx::returns to the sign-in screen when the session has ended",
-    "05_Software/nilo_gui/src/App.test.tsx::keeps a forbidden identity signed in rather than sending it back to sign in",
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::ends the session when Bench Core says the credential is gone",
-    "05_Software/nilo_gui/src/components/AuthenticationPage.test.tsx::keeps the identity signed in when a change is merely not permitted",
-    "05_Software/nilo_gui/src/api/client.test.ts::classifies a refusal by its status and carries the reason it was given",
+    "05_Software/frontend/src/App.test.tsx::returns to the sign-in screen when the session has ended",
+    "05_Software/frontend/src/App.test.tsx::keeps a forbidden identity signed in rather than sending it back to sign in",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::ends the session when Bench Core says the credential is gone",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::keeps the identity signed in when a change is merely not permitted",
+    "05_Software/frontend/src/api/client.test.ts::classifies a refusal by its status and carries the reason it was given",
 ]
 
 # --- optional below this line ---

@@ -165,7 +165,7 @@ function Get-StatusCommand {
 
 function Get-TokenCommand {
     param([string]$DataDirectory)
-    $assistant = "$(Get-CheckoutInWsl)/05_Software/nilo_assistant"
+    $assistant = "$(Get-CheckoutInWsl)/05_Software/core"
     return ("wsl.exe -d {0} --cd {1} -- ../../02_Tools/env/with-tools.sh go run ./cmd/nilo development issue-token --data-dir {2}" -f `
         (ConvertTo-NiloPowerShellLiteral -Value $settings.Distribution),
         (ConvertTo-NiloPowerShellLiteral -Value $assistant),
@@ -188,7 +188,7 @@ function Invoke-Status {
 function Start-Backend {
     param([string]$DataDirectory)
 
-    $assistant = ConvertTo-NiloShellLiteral -Value "$(Get-CheckoutInWsl)/05_Software/nilo_assistant"
+    $assistant = ConvertTo-NiloShellLiteral -Value "$(Get-CheckoutInWsl)/05_Software/core"
     $binary = ConvertTo-NiloShellLiteral -Value "$DataDirectory/bin/nilo"
     $directory = ConvertTo-NiloShellLiteral -Value $DataDirectory
 
@@ -222,7 +222,7 @@ function Start-Backend {
 
 function Start-Frontend {
     $wrapper = Join-Path $toolsRoot 'env\with-tools.ps1'
-    $gui = Join-Path $repositoryRoot '05_Software\nilo_gui'
+    $gui = Join-Path $repositoryRoot '05_Software\frontend'
 
     # The interface only ever requests origin-relative paths, so the development
     # server's proxy target has to match the backend port chosen here.

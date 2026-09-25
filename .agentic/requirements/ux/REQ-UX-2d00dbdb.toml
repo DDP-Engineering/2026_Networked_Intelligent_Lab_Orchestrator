@@ -55,17 +55,17 @@ verification = "A component test selects the System theme, reports a dark device
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/theme/ThemeProvider.tsx",
-    "05_Software/nilo_gui/src/theme/useSystemColorScheme.ts",
-    "05_Software/nilo_gui/src/styles/tokens.css",
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx",
+    "05_Software/frontend/src/theme/ThemeProvider.tsx",
+    "05_Software/frontend/src/theme/useSystemColorScheme.ts",
+    "05_Software/frontend/src/styles/tokens.css",
+    "05_Software/frontend/src/components/shell/shell.test.tsx",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/components/shell/shell.test.tsx::follows the device preference while System is selected, and reacts to a change",
-    "05_Software/nilo_gui/src/layout.test.ts::follows the device for the system theme in CSS, not in script",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::follows the device preference while System is selected, and reacts to a change",
+    "05_Software/frontend/src/layout.test.ts::follows the device for the system theme in CSS, not in script",
 ]
 
 # --- optional below this line ---

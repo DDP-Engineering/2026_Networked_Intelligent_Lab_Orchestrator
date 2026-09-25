@@ -11,12 +11,12 @@ OCI build environment under `containers/build/` with
 the exact-target packaging boundary under `packaging/`, including connected
 resolution/fetch, the ignored digest cache, offline preparation, deterministic
 artifact builders, release evidence and verifiers, and
-`05_Software/scripts/aegis_test.py`, which routes the repository gate.
+`02_Tools/scripts/aegis_test.py`, which routes the repository gate.
 
 Start at `02_Tools/toolchain.versions` for a pinned version, `02_Tools/env/`
 for how a command reaches a tool, `02_Tools/tests/appliance/check.sh` for the
 appliance verification stage, `02_Tools/tests/build-environment/verify-offline.sh`
-for what the locked container gate runs, and `05_Software/scripts/aegis_test.py`
+for what the locked container gate runs, and `02_Tools/scripts/aegis_test.py`
 for what the host gate discovers and runs.
 
 The privileged NetworkManager helper, its system tests under
@@ -230,13 +230,13 @@ replacements without an explicit override.
 - Change stage ownership, engine networking or cleanup in
   `02_Tools/tests/appliance/check.sh` and `run.sh`.
 - Change browser process topology, deadlines or the appliance origin in
-  `05_Software/nilo_gui/e2e/topology.ts`; keep its component tests and
+  `05_Software/frontend/e2e/topology.ts`; keep its component tests and
   prerequisite contracts synchronized.
-- Change repository routing in `05_Software/scripts/aegis_test.py`; its unit
+- Change repository routing in `02_Tools/scripts/aegis_test.py`; its unit
   tests prove native and Windows/WSL invocation and failure propagation.
 - Change target, lock, cache, or receipt contracts in
   `02_Tools/packaging/package_inputs.py` and `config/`, then update
-  `05_Software/scripts/tests/test_packaging_inputs.py` and the packaging README
+  `02_Tools/tests/software/test_packaging_inputs.py` and the packaging README
   together.
 - Change the packaging cache mount or preparation entry in
   `02_Tools/env/with-build-environment.*` and
@@ -244,7 +244,7 @@ replacements without an explicit override.
   read-only-source/cache, and output-only write boundaries.
 - Change payload, Debian, installer, image or release formats in
   `02_Tools/packaging/release_builder.py` and their shell entry points, then
-  update `05_Software/scripts/tests/test_release_packaging.py`, schemas and the
+  update `02_Tools/tests/software/test_release_packaging.py`, schemas and the
   packaging README together.
 
 ## Key behaviors
@@ -494,10 +494,10 @@ only durable state, and they live on the WSL Linux filesystem.
   build/verification entry points, Debian lifecycle and first-boot assets, Pi
   image mutator, executable acceptance plan, evidence schemas and operator
   documentation; `release_builder.py` is the canonical archive/evidence engine.
-- `05_Software/scripts/tests/test_packaging_inputs.py` - target, lock, fetch,
+- `02_Tools/tests/software/test_packaging_inputs.py` - target, lock, fetch,
   cache, isolation, receipt, and wrapper contract tests with no external
   network or hardware dependency.
-- `05_Software/scripts/tests/test_release_packaging.py` - deterministic payload,
+- `02_Tools/tests/software/test_release_packaging.py` - deterministic payload,
   Debian, installer, image, release-closure, production-runtime and entrypoint
   tests, including POSIX-only traversal and special-file defenses under Linux.
 - `02_Tools/tests/packaging/` - complete-fixture OCI execution of the actual
@@ -522,16 +522,16 @@ only durable state, and they live on the WSL Linux filesystem.
   and browser boundaries.
 - `02_Tools/README.md` - usage, support, cache, offline-kit, lifecycle option,
   and exit-code guidance.
-- `05_Software/scripts/aegis_test.py` - Go, Python, integration, and Windows
+- `02_Tools/scripts/aegis_test.py` - Go, Python, integration, and Windows
   frontend suite discovery that excludes generated environments and outputs, and
   the WSL2 appliance-stage browser step that follows the frontend build.
-- `05_Software/scripts/tests/test_appliance_stage.py` - the appliance stage's
+- `02_Tools/tests/software/test_appliance_stage.py` - the appliance stage's
   image definition, prerequisite refusals and host-isolation contract, driven
   against the real entry point.
-- `05_Software/scripts/tests/test_toolchain_bootstrap.py` - manifest,
+- `02_Tools/tests/software/test_toolchain_bootstrap.py` - manifest,
   non-global bootstrap, WSL safety, orchestration, and diagnostic contract
   tests.
-- `05_Software/scripts/tests/test_development_lifecycle.py` - lifecycle command,
+- `02_Tools/tests/software/test_development_lifecycle.py` - lifecycle command,
   option, readiness, conflict, quoting and reporting tests, driven entirely
   through injected boundaries.
 - `.gitignore` - runtime, cache, and generated-artifact exclusions.

@@ -53,17 +53,17 @@ verification = "A test drives the production client's status, integration, and d
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_gui/src/api/mock.ts",
-    "05_Software/nilo_gui/src/api/contract.ts",
-    "05_Software/nilo_gui/src/api/mock.test.ts",
-    "05_Software/nilo_gui/.env.mock",
-    "05_Software/nilo_gui/README.md",
+    "05_Software/frontend/src/api/mock.ts",
+    "05_Software/frontend/src/api/contract.ts",
+    "05_Software/frontend/src/api/mock.test.ts",
+    "05_Software/frontend/.env.mock",
+    "05_Software/frontend/README.md",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_gui/src/api/mock.test.ts",
+    "05_Software/frontend/src/api/mock.test.ts",
 ]
 
 # --- optional below this line ---

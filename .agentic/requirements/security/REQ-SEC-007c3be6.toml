@@ -20,15 +20,15 @@ When a password policy change is applied, Bench Core shall append exactly one au
 verification = "A test changes the policy as an administrator, reads the Activity history, and asserts exactly one new audit event carrying the actor, the previous minimum and class count and the new ones; the recorded event is passed through the credential-redaction check and a refused change is asserted to append nothing."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/identity/service.go",
-    "05_Software/nilo_assistant/internal/httpapi/password_policy.go",
-    "05_Software/nilo_assistant/internal/identity/password_policy_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/password_policy_test.go",
+    "05_Software/core/internal/identity/service.go",
+    "05_Software/core/internal/httpapi/password_policy.go",
+    "05_Software/core/internal/identity/password_policy_test.go",
+    "05_Software/core/internal/httpapi/password_policy_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/identity/password_policy_test.go::TestSetPasswordPolicyRecordsOneAuditEventAndFailsWithIt",
-    "05_Software/nilo_assistant/internal/httpapi/password_policy_test.go::TestPasswordPolicyChangeAppendsOneAuditEventCarryingNoSecret",
+    "05_Software/core/internal/identity/password_policy_test.go::TestSetPasswordPolicyRecordsOneAuditEventAndFailsWithIt",
+    "05_Software/core/internal/httpapi/password_policy_test.go::TestPasswordPolicyChangeAppendsOneAuditEventCarryingNoSecret",
 ]
 
 

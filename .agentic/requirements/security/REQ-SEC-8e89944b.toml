@@ -56,23 +56,23 @@ verification = "A service test bootstraps a single administrator, attempts to di
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/identity/service.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/identity_repository.go",
-    "05_Software/nilo_assistant/internal/identity/service_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/admin_test.go",
-    "05_Software/nilo_assistant/internal/httpapi/administration.go",
-    "05_Software/nilo_assistant/internal/httpapi/server.go",
+    "05_Software/core/internal/identity/service.go",
+    "05_Software/core/internal/store/sqlite/identity_repository.go",
+    "05_Software/core/internal/identity/service_test.go",
+    "05_Software/core/cmd/nilo/admin_test.go",
+    "05_Software/core/internal/httpapi/administration.go",
+    "05_Software/core/internal/httpapi/server.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/identity/service_test.go::TestLastEnabledAdministratorCannotBeDisabledOrDemoted",
-    "05_Software/nilo_assistant/internal/identity/service_test.go::TestAnAdministratorMayBeDisabledWhileAnotherRemainsEnabled",
-    "05_Software/nilo_assistant/internal/identity/service_test.go::TestConcurrentSelfDemotionsLeaveOneEnabledAdministrator",
-    "05_Software/nilo_assistant/internal/store/sqlite/identity_repository_test.go::TestAdministrativeTransactionsSerializeAcrossConnections",
-    "05_Software/nilo_assistant/cmd/nilo/admin_test.go::TestAdminUserCommandsRefuseANonAdministratorActorAndTheLastAdministrator",
-    "05_Software/nilo_assistant/internal/httpapi/administration_test.go::TestAdministrationRefusesRemovingTheLastAdministrator",
+    "05_Software/core/internal/identity/service_test.go::TestLastEnabledAdministratorCannotBeDisabledOrDemoted",
+    "05_Software/core/internal/identity/service_test.go::TestAnAdministratorMayBeDisabledWhileAnotherRemainsEnabled",
+    "05_Software/core/internal/identity/service_test.go::TestConcurrentSelfDemotionsLeaveOneEnabledAdministrator",
+    "05_Software/core/internal/store/sqlite/identity_repository_test.go::TestAdministrativeTransactionsSerializeAcrossConnections",
+    "05_Software/core/cmd/nilo/admin_test.go::TestAdminUserCommandsRefuseANonAdministratorActorAndTheLastAdministrator",
+    "05_Software/core/internal/httpapi/administration_test.go::TestAdministrationRefusesRemovingTheLastAdministrator",
 ]
 
 # --- optional below this line ---

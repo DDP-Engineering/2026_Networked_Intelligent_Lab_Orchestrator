@@ -53,21 +53,21 @@ verification = "Artifact tests register a valid fixture and reject traversal, sy
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/internal/artifact/",
-    "05_Software/nilo_assistant/internal/store/sqlite/artifact_repository.go",
+    "05_Software/core/internal/artifact/",
+    "05_Software/core/internal/store/sqlite/artifact_repository.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/internal/artifact/store_test.go::TestRegisterCollisionNeverOverwritesExistingDestination",
-    "05_Software/nilo_assistant/internal/artifact/store_test.go::TestRegisterMetadataFailureDoesNotRemoveAReplacedDestination",
-    "05_Software/nilo_assistant/internal/artifact/store_test.go::TestRegisterRejectsUnconfinedAndNonAbsoluteStagedPaths",
-    "05_Software/nilo_assistant/internal/artifact/store_test.go::TestRegisterRejectsSymlinkedStagedFile",
-    "05_Software/nilo_assistant/internal/artifact/store_test.go::TestRegisterRejectsWrongDeclaredSizeAndDigest",
-    "05_Software/nilo_assistant/internal/artifact/store_test.go::TestRegisterBoundsActualStreamedBytes",
-    "05_Software/nilo_assistant/internal/artifact/store_test.go::TestRegisterAtomicallyMovesVerifiedBytesAndPersistsMetadata",
-    "05_Software/nilo_assistant/internal/artifact/store_test.go::TestRegisterMetadataFailureLeavesVerifiedDestinationForSafeReconciliation",
+    "05_Software/core/internal/artifact/store_test.go::TestRegisterCollisionNeverOverwritesExistingDestination",
+    "05_Software/core/internal/artifact/store_test.go::TestRegisterMetadataFailureDoesNotRemoveAReplacedDestination",
+    "05_Software/core/internal/artifact/store_test.go::TestRegisterRejectsUnconfinedAndNonAbsoluteStagedPaths",
+    "05_Software/core/internal/artifact/store_test.go::TestRegisterRejectsSymlinkedStagedFile",
+    "05_Software/core/internal/artifact/store_test.go::TestRegisterRejectsWrongDeclaredSizeAndDigest",
+    "05_Software/core/internal/artifact/store_test.go::TestRegisterBoundsActualStreamedBytes",
+    "05_Software/core/internal/artifact/store_test.go::TestRegisterAtomicallyMovesVerifiedBytesAndPersistsMetadata",
+    "05_Software/core/internal/artifact/store_test.go::TestRegisterMetadataFailureLeavesVerifiedDestinationForSafeReconciliation",
 ]
 
 # --- optional below this line ---

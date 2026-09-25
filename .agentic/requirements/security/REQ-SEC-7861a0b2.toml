@@ -53,26 +53,26 @@ verification = "An automated test inspects the network and admin command groups'
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
-    "05_Software/nilo_assistant/cmd/nilo/network.go",
-    "05_Software/nilo_assistant/cmd/nilo/network_test.go",
-    "05_Software/nilo_assistant/internal/apiclient/client.go",
-    "05_Software/nilo_assistant/cmd/nilo/network_vpn.go",
-    "05_Software/nilo_assistant/cmd/nilo/network_vpn_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/admin.go",
-    "05_Software/nilo_assistant/cmd/nilo/admin_remote.go",
-    "05_Software/nilo_assistant/cmd/nilo/admin_remote_test.go",
+    "05_Software/core/cmd/nilo/network.go",
+    "05_Software/core/cmd/nilo/network_test.go",
+    "05_Software/core/internal/apiclient/client.go",
+    "05_Software/core/cmd/nilo/network_vpn.go",
+    "05_Software/core/cmd/nilo/network_vpn_test.go",
+    "05_Software/core/cmd/nilo/admin.go",
+    "05_Software/core/cmd/nilo/admin_remote.go",
+    "05_Software/core/cmd/nilo/admin_remote_test.go",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/nilo_assistant/cmd/nilo/admin_remote_test.go::TestNoAdminFlagAcceptsATokenOrPasswordValue",
-    "05_Software/nilo_assistant/cmd/nilo/network_test.go::TestNoNetworkFlagAcceptsATokenValue",
-    "05_Software/nilo_assistant/cmd/nilo/network_test.go::TestAMissingTokenFileIsReportedRatherThanSentEmpty",
-    "05_Software/nilo_assistant/cmd/nilo/network_test.go::TestNetworkRequiresAServerAndATokenFile",
-    "05_Software/nilo_assistant/cmd/nilo/network_vpn_test.go::TestNetworkVPNCommandsUsePreviewAndSeparateAcknowledgement",
-    "05_Software/nilo_assistant/cmd/nilo/network_vpn_test.go::TestNoninteractiveNetworkMutationRequiresExplicitAcknowledgement",
-    "05_Software/nilo_assistant/cmd/nilo/network_vpn_test.go::TestStartupPreviewShowsSelectedValue",
+    "05_Software/core/cmd/nilo/admin_remote_test.go::TestNoAdminFlagAcceptsATokenOrPasswordValue",
+    "05_Software/core/cmd/nilo/network_test.go::TestNoNetworkFlagAcceptsATokenValue",
+    "05_Software/core/cmd/nilo/network_test.go::TestAMissingTokenFileIsReportedRatherThanSentEmpty",
+    "05_Software/core/cmd/nilo/network_test.go::TestNetworkRequiresAServerAndATokenFile",
+    "05_Software/core/cmd/nilo/network_vpn_test.go::TestNetworkVPNCommandsUsePreviewAndSeparateAcknowledgement",
+    "05_Software/core/cmd/nilo/network_vpn_test.go::TestNoninteractiveNetworkMutationRequiresExplicitAcknowledgement",
+    "05_Software/core/cmd/nilo/network_vpn_test.go::TestStartupPreviewShowsSelectedValue",
 ]
 
 # --- optional below this line ---

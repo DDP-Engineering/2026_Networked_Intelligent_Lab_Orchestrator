@@ -19,22 +19,22 @@ The appliance shall answer an authorized request for its recent and pending netw
 verification = "An HTTP test creates a pending connectivity change, restarts the service against the same database and asserts the operation is listed with its state, actor and deadline."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/operation.go",
-    "05_Software/nilo_assistant/internal/network/persistence.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/network_operation_repository.go",
-    "05_Software/nilo_assistant/internal/httpapi/network_operations.go",
-    "05_Software/nilo_assistant/internal/httpapi/server.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/internal/httpapi/network_reattach_test.go",
-    "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository_test.go",
-    "05_Software/nilo_assistant/internal/network/operation_durability_test.go",
+    "05_Software/core/internal/network/operation.go",
+    "05_Software/core/internal/network/persistence.go",
+    "05_Software/core/internal/store/sqlite/network_operation_repository.go",
+    "05_Software/core/internal/httpapi/network_operations.go",
+    "05_Software/core/internal/httpapi/server.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/internal/httpapi/network_reattach_test.go",
+    "05_Software/core/internal/store/sqlite/appliance_repository_test.go",
+    "05_Software/core/internal/network/operation_durability_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/httpapi/network_reattach_test.go::TestOperationListLetsAReloadedInterfaceFindThePendingChange",
-    "05_Software/nilo_assistant/internal/httpapi/network_reattach_test.go::TestOperationListIsRefusedWithoutTheNetworkReadPermission",
-    "05_Software/nilo_assistant/internal/store/sqlite/appliance_repository_test.go::TestNetworkOperationsSurviveARestartAndListPending",
-    "05_Software/nilo_assistant/internal/network/operation_durability_test.go::TestAPendingChangeIsFoundAgainAfterARestart",
+    "05_Software/core/internal/httpapi/network_reattach_test.go::TestOperationListLetsAReloadedInterfaceFindThePendingChange",
+    "05_Software/core/internal/httpapi/network_reattach_test.go::TestOperationListIsRefusedWithoutTheNetworkReadPermission",
+    "05_Software/core/internal/store/sqlite/appliance_repository_test.go::TestNetworkOperationsSurviveARestartAndListPending",
+    "05_Software/core/internal/network/operation_durability_test.go::TestAPendingChangeIsFoundAgainAfterARestart",
 ]
 
 spec = "specs/REQ-FUNC-2f8d63b5.md"

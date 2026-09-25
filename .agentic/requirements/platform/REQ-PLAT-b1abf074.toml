@@ -20,15 +20,15 @@ The appliance server shall start without any console listener option when the ap
 verification = "An automated test drives the two decisions the serve command makes. The first asserts that with no listener option the appliance profile resolves to first-boot provisioning on the first-boot port, that an explicit allowlist and a legacy bind still resolve to their own modes and addresses, that the simulation profile with no listener option is refused, and that a bind combined with an allowlist is refused. The second asserts that first-boot serving is permitted when the appliance is recorded as provisioning and refused with a message naming --bind and --management-port when it is recorded as commissioned, while the two explicit modes are permitted in either state."
 
 affected_paths = [
-    "05_Software/nilo_assistant/cmd/nilo/listener_mode.go",
-    "05_Software/nilo_assistant/cmd/nilo/listener_mode_test.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
-    "05_Software/nilo_assistant/cmd/nilo/main_test.go",
+    "05_Software/core/cmd/nilo/listener_mode.go",
+    "05_Software/core/cmd/nilo/listener_mode_test.go",
+    "05_Software/core/cmd/nilo/main.go",
+    "05_Software/core/cmd/nilo/main_test.go",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/cmd/nilo/listener_mode_test.go::TestResolveListenerModeSelectsFirstBootOnlyForTheApplianceProfile",
-    "05_Software/nilo_assistant/cmd/nilo/listener_mode_test.go::TestCheckProvisioningPermittedRefusesACommissionedAppliance",
+    "05_Software/core/cmd/nilo/listener_mode_test.go::TestResolveListenerModeSelectsFirstBootOnlyForTheApplianceProfile",
+    "05_Software/core/cmd/nilo/listener_mode_test.go::TestCheckProvisioningPermittedRefusesACommissionedAppliance",
 ]
 
 

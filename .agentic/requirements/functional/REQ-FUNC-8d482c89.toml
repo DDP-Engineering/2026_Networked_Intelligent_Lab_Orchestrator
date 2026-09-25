@@ -20,27 +20,27 @@ While the appliance is provisioning, NILO shall keep a WPA2 access point whose S
 verification = "Automated coordinator and disposable NetworkManager tests exercise provisioning, commissioning, reset and restart with eligible, saved-client, active-client, protected and absent radios; only the eligible unused radio receives the helper-owned WPA2 profile with exact SSID/passphrase, it stays up while Ethernet is usable, disappears on commissioning, returns on reset, and every foreign/saved profile compares unchanged after success and injected failure."
 
 affected_paths = [
-    "05_Software/nilo_assistant/internal/network/commissioning_ap.go",
-    "05_Software/nilo_assistant/internal/network/commissioning_ap_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_commissioning_linux.go",
-    "05_Software/nilo_assistant/internal/nethelper/engine.go",
-    "05_Software/nilo_assistant/internal/nethelper/commissioning_ap_plan.go",
-    "05_Software/nilo_assistant/internal/nethelper/commissioning_ap_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/commissioning_services_linux.go",
-    "05_Software/nilo_assistant/internal/nethelper/commissioning_link.go",
-    "05_Software/nilo_assistant/internal/nethelper/commissioning_ap_ownership_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_commissioning_ap_linux_test.go",
-    "05_Software/nilo_assistant/internal/nethelper/protocol.go",
-    "05_Software/nilo_assistant/internal/network/management_access.go",
-    "05_Software/nilo_assistant/cmd/nilo/main.go",
+    "05_Software/core/internal/network/commissioning_ap.go",
+    "05_Software/core/internal/network/commissioning_ap_test.go",
+    "05_Software/core/internal/nethelper/networkmanager_commissioning_linux.go",
+    "05_Software/core/internal/nethelper/engine.go",
+    "05_Software/core/internal/nethelper/commissioning_ap_plan.go",
+    "05_Software/core/internal/nethelper/commissioning_ap_test.go",
+    "05_Software/core/internal/nethelper/commissioning_services_linux.go",
+    "05_Software/core/internal/nethelper/commissioning_link.go",
+    "05_Software/core/internal/nethelper/commissioning_ap_ownership_test.go",
+    "05_Software/core/internal/nethelper/networkmanager_commissioning_ap_linux_test.go",
+    "05_Software/core/internal/nethelper/protocol.go",
+    "05_Software/core/internal/network/management_access.go",
+    "05_Software/core/cmd/nilo/main.go",
     "02_Tools/tests/network/run.sh",
 ]
 
 linked_tests = [
-    "05_Software/nilo_assistant/internal/network/commissioning_ap_test.go::*",
-    "05_Software/nilo_assistant/internal/nethelper/commissioning_ap_test.go::*",
-    "05_Software/nilo_assistant/internal/nethelper/commissioning_ap_ownership_test.go::*",
-    "05_Software/nilo_assistant/internal/nethelper/networkmanager_commissioning_ap_linux_test.go::*",
+    "05_Software/core/internal/network/commissioning_ap_test.go::*",
+    "05_Software/core/internal/nethelper/commissioning_ap_test.go::*",
+    "05_Software/core/internal/nethelper/commissioning_ap_ownership_test.go::*",
+    "05_Software/core/internal/nethelper/networkmanager_commissioning_ap_linux_test.go::*",
 ]
 
 
