@@ -1,0 +1,7 @@
+{
+    "wheels":  {
+                   "linuxpy-0.24.0-py3-none-any.whl":  "4e2ce8da45a7a7171bcdcf6b7ab53858d9a83108e24874bd9ddb50a73590a1c6",
+                   "pillow-11.3.0-cp313-cp313-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl":  "c37d8ba9411d6003bba9e518db0db0c58a680ab9fe5179f040b0463644bc9805",
+                   "pyrav4l2-1.0-py3-none-any.whl":  "6b8f92e5bf535531aba1bec9137e5979bc35246ee83c25bd216880b22004d755"
+               }
+}

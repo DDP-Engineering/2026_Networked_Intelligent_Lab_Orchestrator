@@ -1,0 +1,12 @@
+schema = 1
+id = "REQ-FUNC-0141b9d4"
+title = "Describe bounded camera capabilities and operations"
+status = "draft"
+requirement = "When a camera runner discovers a physical device or receives a supported operation, it shall expose validated capture endpoints, formats and typed controls and accept only bounded snapshot, get_controls, set_controls or reset_controls inputs described by the installed package."
+verification = "Exercise the physical V4L2 runner with isolated device test doubles for capture and metadata nodes, MJPEG and YUYV capabilities, writable and unsupported control types, invalid sizes and control values; confirm real discovery and capture on the Pi."
+affected_paths = ["05_Software/integrations/camera/", "05_Software/schemas/integration/v1/"]
+linked_tests = ["05_Software/integrations/camera/tests/test_package.py::test_camera_manifest_declares_phase_one_operations", "05_Software/integrations/camera/tests/test_package.py::test_camera_runner_answers_protocol_hello_and_describe", "05_Software/integrations/camera/tests/test_plugin.py::test_discovery_uses_physical_v4l2_scan", "05_Software/integrations/camera/tests/test_plugin.py::test_snapshot_revalidates_physical_binding_and_retains_image", "05_Software/integrations/camera/tests/test_v4l2.py::test_grouping_excludes_metadata_endpoint_from_capture", "05_Software/integrations/camera/tests/test_v4l2.py::test_capture_selects_advertised_format_and_discards_warmup", "05_Software/integrations/camera/tests/test_v4l2.py::test_typed_v4l2_control_read_set_and_reset"]
+spec = "specs/REQ-FUNC-0141b9d4.md"
+priority = "high"
+created = 2026-09-21
+updated = 2026-09-24

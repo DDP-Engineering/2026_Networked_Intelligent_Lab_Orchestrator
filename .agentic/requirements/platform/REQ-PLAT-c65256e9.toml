@@ -1,0 +1,35 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-PLAT-c65256e9"
+
+title = "Grant camera nodes to the NILO service"
+
+status = "draft"
+
+requirement = """
+When the appliance package installs Camera support, it shall keep V4L2 nodes
+non-world-readable and grant the NILO service access through the video group
+and its packaged udev rule without a manual permission change.
+"""
+
+verification = "Inspect the staged rule and service/maintainer files, then install on both targets and verify /dev/video* effective group/mode and nilo service supplementary groups after reboot."
+
+affected_paths = ["02_Tools/packaging/files/60-nilo-instruments.rules", "02_Tools/packaging/debian/units/nilo.service", "02_Tools/packaging/build/stage-payload.sh", "02_Tools/packaging/release_builder.py"]
+
+linked_tests = ["05_Software/scripts/tests/test_release_packaging.py::DebianPackageTests"]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-25
+updated = 2026-09-25

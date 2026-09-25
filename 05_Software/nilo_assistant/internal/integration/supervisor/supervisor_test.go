@@ -41,6 +41,31 @@ func TestSupervisorDescribesTheConfiguredPackage(t *testing.T) {
 	}
 }
 
+func TestSupervisorConfiguresBeforeUse(t *testing.T) {
+	marker := filepath.Join(t.TempDir(), "configure-marker")
+	supervisor := newTestSupervisor(t, "require-configure", marker)
+	result, err := supervisor.Execute(context.Background(), executeRequest(), eventSinkFunc(func(context.Context, protocol.Envelope) error { return nil }))
+	if err != nil || result.Status != "completed" {
+		t.Fatalf("Execute() = %+v, %v, want completed after configure", result, err)
+	}
+	if observed, err := os.ReadFile(marker); err != nil || string(observed) != "configured\n" {
+		t.Fatalf("configure marker = %q, %v", observed, err)
+	}
+}
+
+func TestSupervisorRefusesWorkAfterConfigureRejection(t *testing.T) {
+	marker := filepath.Join(t.TempDir(), "configure-marker")
+	supervisor := newTestSupervisor(t, "reject-configure", marker)
+	_, err := supervisor.Execute(context.Background(), executeRequest(), eventSinkFunc(func(context.Context, protocol.Envelope) error { return nil }))
+	if !errors.Is(err, ErrRunnerRemote) {
+		t.Fatalf("Execute() error = %v, want configure refusal", err)
+	}
+	observed, readErr := os.ReadFile(marker)
+	if readErr != nil || string(observed) != "configured\n" {
+		t.Fatalf("configure marker = %q, %v, want no work after refusal", observed, readErr)
+	}
+}
+
 func TestSupervisorContainsInvalidRunnerOutput(t *testing.T) {
 	tests := []struct {
 		name string

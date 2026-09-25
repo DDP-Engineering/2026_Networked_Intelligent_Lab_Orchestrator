@@ -8,6 +8,7 @@ Requires=nilo-image-firstboot.service nilo-nethelper.socket nilo-nethelper.servi
 Type=simple
 User=nilo
 Group=nilo
+SupplementaryGroups=video
 EnvironmentFile=-/etc/nilo/nilo.env
 ExecStart=/usr/bin/nilo serve --profile appliance --data-dir /var/lib/nilo --gui-dir /usr/share/nilo/gui --integration-bundles /usr/lib/nilo/integration-bundles --local-status-bind 127.0.0.1:8091
 Restart=on-failure

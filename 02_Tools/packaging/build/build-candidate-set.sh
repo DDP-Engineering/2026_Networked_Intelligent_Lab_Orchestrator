@@ -1,8 +1,8 @@
 #!/bin/sh
 # Build one complete five-artifact candidate and emit its invocation receipt.
 set -eu
-[ "$#" -eq 13 ] || {
-  echo 'usage: build-candidate-set.sh OUTPUT SOURCE_ROOT GO_MODULE_CACHE NPM_CACHE UBUNTU_POOL UBUNTU_RECEIPT UBUNTU_SIGROK_RUNTIME PI_POOL PI_RECEIPT PI_SIGROK_RUNTIME BASE_IMAGE ADMIN_PASSWORD INPUT_LOCK' >&2
+[ "$#" -eq 15 ] || {
+  echo 'usage: build-candidate-set.sh OUTPUT SOURCE_ROOT GO_MODULE_CACHE NPM_CACHE UBUNTU_POOL UBUNTU_RECEIPT UBUNTU_SIGROK_RUNTIME PI_POOL PI_RECEIPT PI_SIGROK_RUNTIME BASE_IMAGE ADMIN_PASSWORD INPUT_LOCK UBUNTU_CAMERA_BUILD_INPUT PI_CAMERA_BUILD_INPUT' >&2
   exit 2
 }
 output=$1
@@ -18,6 +18,8 @@ pi_sigrok_runtime=${10}
 base_image=${11}
 admin_password=${12}
 input_lock=${13}
+ubuntu_camera_build_input=${14}
+pi_camera_build_input=${15}
 case "$output" in /*) ;; *) echo 'candidate output must be an absolute path' >&2; exit 2 ;; esac
 [ ! -e "$output" ] || { echo "candidate output already exists: $output" >&2; exit 2; }
 
@@ -73,6 +75,18 @@ python3 "$work/source/02_Tools/scripts/build-sigrok-bundle.py" \
   --out "$work/bundles/amd64/sigrok" --architecture amd64 --runtime-root "$ubuntu_sigrok_runtime"
 python3 "$work/source/02_Tools/scripts/build-sigrok-bundle.py" \
   --out "$work/bundles/arm64/sigrok" --architecture arm64 --runtime-root "$pi_sigrok_runtime"
+python3 "$work/source/02_Tools/scripts/build-camera-bundle.py" \
+  --project "$work/source/05_Software/integrations/camera" \
+  --dependency-root "$ubuntu_camera_build_input/dependencies" \
+  --wheelhouse "$ubuntu_camera_build_input/wheelhouse" \
+  --out "$work/bundles/amd64/camera" --architecture amd64 \
+  --runtime-root "$ubuntu_sigrok_runtime"
+python3 "$work/source/02_Tools/scripts/build-camera-bundle.py" \
+  --project "$work/source/05_Software/integrations/camera" \
+  --dependency-root "$pi_camera_build_input/dependencies" \
+  --wheelhouse "$pi_camera_build_input/wheelhouse" \
+  --out "$work/bundles/arm64/camera" --architecture arm64 \
+  --runtime-root "$pi_sigrok_runtime"
 sh "$work/source/02_Tools/packaging/build/stage-payload.sh" ubuntu-24.04-amd64 \
   "$work/bin/amd64" "$work/gui" "$work/bundles/amd64" "$work/stage-amd64"
 sh "$work/source/02_Tools/packaging/build/stage-payload.sh" rpi-debian13-arm64 \

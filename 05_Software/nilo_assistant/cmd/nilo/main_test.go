@@ -43,8 +43,13 @@ func TestNiloServeCommandSelectsUnavailableScenario(t *testing.T) {
 	if err := json.Unmarshal(responseBody, &inventory); err != nil {
 		t.Fatalf("decode unavailable device inventory: %v", err)
 	}
-	if inventory.Scenario != "unavailable" || len(inventory.Items) != 1 || inventory.Items[0].Status != "unavailable" {
+	if inventory.Scenario != "unavailable" || len(inventory.Items) != 1 {
 		t.Fatalf("unexpected unavailable inventory: %#v", inventory)
+	}
+	for _, item := range inventory.Items {
+		if item.Status != "unavailable" {
+			t.Fatalf("ready item in unavailable inventory: %#v", inventory)
+		}
 	}
 }
 

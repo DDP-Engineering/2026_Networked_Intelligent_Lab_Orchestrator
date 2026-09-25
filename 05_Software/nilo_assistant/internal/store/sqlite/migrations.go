@@ -69,6 +69,12 @@ var applianceDiscoveryMigration string
 //go:embed migrations/018_integration_package_state.sql
 var integrationPackageStateMigration string
 
+//go:embed migrations/019_managed_devices.sql
+var managedDevicesMigration string
+
+//go:embed migrations/020_bench_plugin_configuration.sql
+var benchPluginConfigurationMigration string
+
 var migrations = []migration{
 	{version: "001_initial", sql: initialMigration},
 	{version: "002_policy_snapshots", sql: policySnapshotsMigration},
@@ -88,6 +94,8 @@ var migrations = []migration{
 	{version: "016_password_policy_classes", sql: passwordPolicyClassesMigration},
 	{version: "017_appliance_discovery", sql: applianceDiscoveryMigration},
 	{version: "018_integration_package_state", sql: integrationPackageStateMigration},
+	{version: "019_managed_devices", sql: managedDevicesMigration},
+	{version: "020_bench_plugin_configuration", sql: benchPluginConfigurationMigration},
 }
 
 func applyMigrations(ctx context.Context, database *sql.DB) error {

@@ -26,13 +26,71 @@ import (
 )
 
 type controlledRunner struct {
-	mu          sync.Mutex
-	calls       int
-	active      int
-	maximum     int
-	describeErr error
-	started     chan struct{}
-	release     chan struct{}
+	mu           sync.Mutex
+	calls        int
+	active       int
+	maximum      int
+	describeErr  error
+	runErr       error
+	mediaType    string
+	artifactID   string
+	artifactFile string
+	started      chan struct{}
+	release      chan struct{}
+}
+
+func TestArtifactMediaTypeMustMatchManifest(t *testing.T) {
+	manager, actor, runner := testManager(t, "auto")
+	runner.mediaType = "image/jpeg"
+	job, err := manager.Submit(context.Background(), actor, submission("wrong-media-type"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	awaitJob(t, manager, actor, job.ID, "running")
+	runner.release <- struct{}{}
+	finished := awaitJob(t, manager, actor, job.ID, "failed")
+	if finished.ArtifactID != "" {
+		t.Fatalf("artifact %q retained despite undeclared media type", finished.ArtifactID)
+	}
+}
+
+func TestTerminalJobPreservesAllowlistedRemoteCode(t *testing.T) {
+	for _, test := range []struct {
+		code string
+		want string
+	}{
+		{code: "device_busy", want: "device_busy"},
+		{code: "device_not_found", want: "device_not_found"},
+		{code: "image_too_large", want: "image_too_large"},
+		{code: "capture_failed", want: "capture_failed"},
+		{code: "vendor_private", want: "execution_failed"},
+	} {
+		t.Run(test.code, func(t *testing.T) {
+			manager, actor, runner := testManager(t, "auto")
+			runner.runErr = &supervisor.RunnerError{Kind: supervisor.ErrRunnerRemote, Cause: &supervisor.RemoteExecutionError{Code: test.code, Message: "private detail"}}
+			job, err := manager.Submit(context.Background(), actor, submission("typed-error-test"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			awaitJob(t, manager, actor, job.ID, "running")
+			runner.release <- struct{}{}
+			deadline := time.Now().Add(4 * time.Second)
+			for time.Now().Before(deadline) {
+				current, err := manager.GetJob(context.Background(), actor, job.ID)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if current.State == "failed" && current.Error != "" {
+					if current.Error != test.want {
+						t.Fatalf("terminal error = %q, want %q", current.Error, test.want)
+					}
+					return
+				}
+				time.Sleep(10 * time.Millisecond)
+			}
+			t.Fatal("terminal job did not retain an error")
+		})
+	}
 }
 
 func (r *controlledRunner) Describe(context.Context, string) (protocol.DescribeResult, error) {
@@ -277,16 +335,31 @@ func (r *controlledRunner) Execute(ctx context.Context, request protocol.Execute
 		return protocol.ExecuteResult{}, ctx.Err()
 	case <-r.release:
 	}
+	if r.runErr != nil {
+		return protocol.ExecuteResult{}, r.runErr
+	}
 	var params map[string]any
 	_ = json.Unmarshal(request.Parameters, &params)
 	data := []byte("synthetic integration evidence")
 	if request.Operation == "capture" {
-		path := filepath.Join(params["staging_directory"].(string), "capture.sr")
+		name := r.artifactFile
+		if name == "" {
+			name = "capture.sr"
+		}
+		path := filepath.Join(params["staging_directory"].(string), name)
 		if err := os.WriteFile(path, data, 0600); err != nil {
 			return protocol.ExecuteResult{}, err
 		}
 		digest := sha256.Sum256(data)
-		payload, _ := json.Marshal(protocol.ArtifactDeclaration{Type: "artifact", ID: "capture", MediaType: "application/octet-stream", SizeBytes: int64(len(data)), Digest: fmt.Sprintf("sha256:%x", digest)})
+		mediaType := r.mediaType
+		if mediaType == "" {
+			mediaType = "application/x-sigrok-session"
+		}
+		id := r.artifactID
+		if id == "" {
+			id = "capture"
+		}
+		payload, _ := json.Marshal(protocol.ArtifactDeclaration{Type: "artifact", ID: id, MediaType: mediaType, SizeBytes: int64(len(data)), Digest: fmt.Sprintf("sha256:%x", digest)})
 		if err := sink.Emit(ctx, protocol.Envelope{Kind: protocol.Event, Method: protocol.Execute, Payload: payload}); err != nil {
 			return protocol.ExecuteResult{}, err
 		}

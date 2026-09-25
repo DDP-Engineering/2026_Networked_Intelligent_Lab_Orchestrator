@@ -122,7 +122,7 @@ func run(ctx context.Context, arguments []string) int {
 	if len(arguments) > 0 && arguments[0] == "network" {
 		return runNetworkCommand(ctx, arguments[1:], networkIO{stdout: os.Stdout, stderr: os.Stderr, stdin: os.Stdin, interactive: networkTerminal()})
 	}
-	if len(arguments) > 0 && (arguments[0] == "plugin" || arguments[0] == "bench") {
+	if len(arguments) > 0 && (arguments[0] == "plugin" || arguments[0] == "bench" || arguments[0] == "camera") {
 		return runBenchCommand(ctx, arguments[0], arguments[1:], networkIO{stdout: os.Stdout, stderr: os.Stderr, stdin: os.Stdin})
 	}
 	if len(arguments) > 0 && arguments[0] == "activity" {

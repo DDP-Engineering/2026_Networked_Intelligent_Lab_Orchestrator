@@ -9,15 +9,16 @@ lifecycle and queued instrument actions belong to [Managed bench integrations](b
 
 ## Purpose and boundaries
 
-The integration platform loads bounded runtime packages and supervises their external processes through the language-neutral `nilo.integration/1` lifecycle. It isolates plugin faults from Bench Core; it does not grant integrations arbitrary shell or filesystem authority. Production packages carry their complete target runtime closure, including the interpreter and native backend, so installed runners do not resolve host packages or reach a network. The Sigrok SW-01 feasibility slice demonstrates one additional subordinate native process boundary without changing that public lifecycle.
+The integration platform loads bounded runtime packages and supervises their external processes through the language-neutral `nilo.integration/1` lifecycle. It isolates plugin faults from Bench Core; it does not grant integrations arbitrary shell or filesystem authority. The Sigrok production bundle carries its target runtime closure, including the interpreter and native backend. The Camera production builder embeds a verified interpreter, locked dependencies and notices; the current Pi bench bundle carries pinned dependencies and uses the target's Python 3.13 interpreter. The Sigrok SW-01 feasibility slice demonstrates one additional subordinate native process boundary without changing that public lifecycle.
 
 ## Public interface
 
-Go callers use `manifest.Load`, protocol codecs and registries, and `supervisor.ProcessSupervisor` methods `Describe`, `Execute`, `Cancel`, and `Shutdown`. Python integration authors implement the asynchronous SDK lifecycle interface and launch its NDJSON server. Every enabled package is expected to pass the common contract harness. `build-sigrok-bundle.py` accepts an explicit architecture-matched runtime root, requires an observed Linux namespace with loopback as its only interface and no default route, executes the fixed target interpreter/version/import and Sigrok driver-scan health checks with a confined `PATH`, and emits the runner, SDK, schemas, component/runtime inventory, before/after network observations, hashed health results and third-party notices as one bounded package.
+Go callers use `manifest.Load`, protocol codecs and registries, and `supervisor.ProcessSupervisor` methods `Describe`, `Execute`, `Cancel`, and `Shutdown`. Each process completes a correlated versioned `configure` exchange after hello and before work. Manifests can declare a confined device configuration schema and list allowed media types for each artifact. Python integration authors implement the asynchronous SDK lifecycle interface and launch its NDJSON server. Every enabled package is expected to pass the common contract harness. `build-sigrok-bundle.py` accepts an explicit architecture-matched runtime root, requires an observed Linux namespace with loopback as its only interface and no default route, executes the fixed target interpreter/version/import and Sigrok driver-scan health checks with a confined `PATH`, and emits the runner, SDK, schemas, component/runtime inventory, before/after network observations, hashed health results and third-party notices as one bounded package.
 
 ## Invariants
 
 - Protocol stdout carries only bounded, correlated NDJSON with one terminal reply.
+- A configure refusal prevents describe and execution in that process.
 - Runner paths stay within a verified package; OS process cleanup is bounded.
 - `response.describe` accepts the SDK's declared integration/operation metadata
   while rejecting unknown fields; it does not change the v1 wire format.
@@ -54,7 +55,7 @@ flowchart LR
     codec["Go protocol codec"]
     process(["external runner process"])
     sdk["Python SDK server"]
-    plugin["Integration implementation: fake_python or sigrok"]
+    plugin["Integration implementation: fake_python, sigrok or Camera"]
     schemas[("JSON schemas")]
     stderr[("64 KiB diagnostic ring")]
     manifest --> loader
@@ -85,6 +86,8 @@ Protocol stdout is reserved for NDJSON; diagnostics use bounded stderr. OS-speci
 - `05_Software/nilo_assistant/internal/integration/supervisor/` - process lifecycle, OS adapters, diagnostic ring, helper process, and tests.
 - `05_Software/integration_sdk/python/` - pinned Python SDK package, models, lifecycle API, server, tests, lockfile, and author documentation.
 - `05_Software/integrations/fake_python/` - deterministic manifest, schemas, Python implementation, entry point, tests, and lockfile.
+- `05_Software/integrations/camera/` - physical USB V4L2 runner, manifest,
+  configuration schemas and JPEG/PNG artifact contract.
 - `05_Software/tests/contract/` - package-level black-box contract fixtures, documentation, and tests.
 - `02_Tools/scripts/build-sigrok-bundle.py` - validates and embeds the complete
   target runtime, SDK, schemas, runner, executed health evidence and third-party

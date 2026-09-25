@@ -7,12 +7,21 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Added
 
+- Physical Camera integration with managed devices, controls, retained snapshots,
+  bounded previews, composition and browser, CLI and MCP access in three languages.
+- Offline Camera candidate builds now require locked target dependencies and
+  embed a verified interpreter and third-party notices.
+- A bounded camera feasibility probe records binding and device evidence for
+  later Raspberry Pi and mini PC acceptance runs.
+- Integration adapters now validate manifest operations and artifacts, derive
+  per-device resources, and configure supervised runners before use.
 - Exact Ubuntu amd64 and Raspberry Pi arm64 packaging targets, verified
   connected input acquisition, fail-closed cache checks, and network-isolated
   preparation receipts establish the offline delivery foundation.
 
 ### Changed
 
+- Camera now has separate appliance administration and named physical-device work pages, with nested Bench navigation and a full-width page scrollbar.
 - About now leads with appliance controls and permanent identity, groups its
   software, system and management facts, keeps the scroll rail at the workspace
   edge, and shows hardware addresses only on the embedded printable label.
@@ -21,6 +30,10 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Fixed
 
+- Terminal jobs retain approved runner error codes, and artifact downloads use
+  verified media types and safe filenames.
+- Camera configuration refuses active work and preserves camera-specific errors
+  in terminal transactions.
 - Packaging input verification now rejects linked or non-regular cache objects
   without blocking on FIFOs, enforces exact target metadata and acceptance
   checks, and binds receipts to one lock snapshot.

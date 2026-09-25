@@ -36,11 +36,12 @@ var (
 // ProcessConfig is the already validated package launch contract. Environment
 // values are accepted only from the fixed allowlist in runnerEnvironment.
 type ProcessConfig struct {
-	PackageID   string
-	PackageRoot string
-	Runner      manifest.Runner
-	GracePeriod time.Duration
-	Environment map[string]string
+	PackageID     string
+	PackageRoot   string
+	Runner        manifest.Runner
+	Configuration json.RawMessage
+	GracePeriod   time.Duration
+	Environment   map[string]string
 }
 
 // Supervisor is the Bench Core integration process boundary.
@@ -98,6 +99,13 @@ func NewProcessSupervisor(config ProcessConfig) (*ProcessSupervisor, error) {
 	config.PackageRoot = root
 	config.Runner.Executable = executable
 	config.Runner.Arguments = append([]string(nil), config.Runner.Arguments...)
+	if len(config.Configuration) == 0 {
+		config.Configuration = json.RawMessage(`{"schema_version":1,"plugin":{"revision":0,"settings":{}},"device":null}`)
+	}
+	if err := validateConfiguration(config.Configuration); err != nil {
+		return nil, fmt.Errorf("%w: configuration: %v", ErrInvalidProcessConfig, err)
+	}
+	config.Configuration = append(json.RawMessage(nil), config.Configuration...)
 	environment, err := canonicalEnvironment(config.Environment)
 	if err != nil {
 		return nil, err
@@ -366,7 +374,69 @@ func (supervisor *ProcessSupervisor) start(ctx context.Context) (*runnerProcess,
 		supervisor.unregister(runner)
 		return nil, runner.classify(ctx, err)
 	}
+	if err := runner.configure(ctx, supervisor.config.Configuration); err != nil {
+		runner.close()
+		supervisor.unregister(runner)
+		var runnerError *RunnerError
+		if errors.As(err, &runnerError) {
+			return nil, err
+		}
+		return nil, runner.classify(ctx, err)
+	}
 	return runner, nil
+}
+
+func validateConfiguration(raw json.RawMessage) error {
+	var value struct {
+		SchemaVersion int `json:"schema_version"`
+		Plugin        *struct {
+			Revision int64           `json:"revision"`
+			Settings json.RawMessage `json:"settings"`
+		} `json:"plugin"`
+		Device *struct {
+			ID       string          `json:"id"`
+			Revision int64           `json:"revision"`
+			Settings json.RawMessage `json:"settings"`
+		} `json:"device"`
+	}
+	if err := decodeStrict(raw, &value); err != nil {
+		return err
+	}
+	if value.SchemaVersion != 1 || value.Plugin == nil || value.Plugin.Revision < 0 || !validSettings(value.Plugin.Settings) {
+		return errors.New("invalid plugin configuration")
+	}
+	if value.Device != nil && (strings.TrimSpace(value.Device.ID) == "" || value.Device.Revision < 0 || !validSettings(value.Device.Settings)) {
+		return errors.New("invalid device configuration")
+	}
+	return nil
+}
+
+func validSettings(raw json.RawMessage) bool {
+	var settings map[string]json.RawMessage
+	return json.Unmarshal(raw, &settings) == nil && settings != nil
+}
+
+func (runner *runnerProcess) configure(ctx context.Context, configuration json.RawMessage) error {
+	requestID, err := runner.send(ctx, protocol.Configure, protocol.ConfigureRequest{Type: "configure", Configuration: configuration})
+	if err != nil {
+		return err
+	}
+	message, err := runner.receive(ctx)
+	if err != nil {
+		return err
+	}
+	if message.Kind != protocol.Response || message.Method != protocol.Configure || message.RequestID != requestID {
+		return runner.protocolError(errors.New("unexpected configure response"))
+	}
+	var response protocol.ControlPayload
+	if decodeStrict(message.Payload, &response) == nil && response.Validate("configure", true) == nil && response.Status == "ok" {
+		return nil
+	}
+	var remoteError protocol.Error
+	if decodeStrict(message.Payload, &remoteError) == nil && remoteError.Validate() == nil {
+		return &RunnerError{Kind: ErrRunnerRemote, Cause: &RemoteExecutionError{Code: remoteError.Code, Message: remoteError.Message, Retryable: remoteError.Retryable}, Diagnostic: runner.diagnostics.String()}
+	}
+	return runner.protocolError(errors.New("invalid configure terminal payload"))
 }
 
 func classifyLaunch(ctx context.Context, cause error) error {

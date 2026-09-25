@@ -292,6 +292,16 @@ def resolved_payload(name: str, architecture: str) -> bytes:
                 "runtime-manifest.json": b"{}\n",
             }
         )
+    if name == "camera-build-input":
+        return tar_payload(
+            {
+                "THIRD_PARTY_NOTICES.txt": b"fixture notices",
+                "dependencies/nilo_integration/__init__.py": b"",
+                "dependencies/pydantic/__init__.py": b"",
+                "wheelhouse/pyrav4l2-1.0-py3-none-any.whl": b"fixture wheel",
+                "wheelhouse/pillow-11.3.0-fixture.whl": b"fixture wheel",
+            }
+        )
     if name == "source-offers":
         return tar_payload({"SOURCE_OFFER.txt": b"fixture source offer"})
     return tar_payload({"cache/fixture": f"{name}-fixture".encode()})

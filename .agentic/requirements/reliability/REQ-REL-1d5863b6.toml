@@ -1,0 +1,12 @@
+schema = 1
+id = "REQ-REL-1d5863b6"
+title = "Reconcile device presence without losing records"
+status = "draft"
+requirement = "When device discovery completes, Bench Core shall atomically reconcile present and absent managed records while preserving names, configuration and history, and shall leave records unknown after discovery failure instead of asserting absence."
+verification = "Discover two devices, remove one, rediscover and inject failure; assert presence transitions, preserved records and unknown state after failed startup discovery."
+affected_paths = ["05_Software/nilo_assistant/internal/bench/", "05_Software/nilo_assistant/internal/store/sqlite/"]
+linked_tests = ["05_Software/nilo_assistant/internal/store/sqlite/managed_device_repository_test.go::TestManagedDeviceFailedDiscoveryLeavesUnknown"]
+spec = "specs/REQ-REL-1d5863b6.md"
+priority = "high"
+created = 2026-09-21
+updated = 2026-09-24

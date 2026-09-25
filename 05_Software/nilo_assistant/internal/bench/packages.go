@@ -23,6 +23,7 @@ import (
 	"nilo.local/nilo/internal/integration/manifest"
 	"nilo.local/nilo/internal/integration/protocol"
 	"nilo.local/nilo/internal/integration/supervisor"
+	"nilo.local/nilo/internal/store/sqlite"
 )
 
 var packageIDPattern = regexp.MustCompile(`^[a-z][a-z0-9_-]{0,63}$`)
@@ -131,9 +132,9 @@ func verifyPackage(root string) (string, error) {
 }
 
 func (m *Manager) loadPlugin(ctx context.Context, id string) (Plugin, error) {
-	p := Plugin{ID: id, DisplayName: id, Simulation: m.options.Simulation, Devices: []Device{}, Operations: []string{}, Status: "available"}
-	if id == "sigrok" {
-		p.DisplayName = "Sigrok Instruments"
+	p := Plugin{ID: id, DisplayName: id, Simulation: m.options.Simulation && id != "camera", Devices: []Device{}, Operations: []string{}, Status: "available"}
+	if adapter, err := adapterFor(id); err == nil {
+		p.DisplayName = adapter.displayName
 	}
 	var devices []byte
 	err := m.db().QueryRowContext(ctx, `SELECT instance_id,installed,enabled,mode,digest,devices_json,last_error FROM bench_plugins WHERE id=?`, id).Scan(&p.InstanceID, &p.Installed, &p.Enabled, &p.Mode, &p.Digest, &devices, &p.Error)
@@ -143,6 +144,13 @@ func (m *Manager) loadPlugin(ctx context.Context, id string) (Plugin, error) {
 	if err = json.Unmarshal(devices, &p.Devices); err != nil {
 		return p, err
 	}
+	if id == "camera" {
+		records, recordErr := sqlite.NewManagedDeviceRepository(m.options.Database).List(ctx, id)
+		if recordErr != nil {
+			return p, recordErr
+		}
+		p.Devices = managedCameraDevices(records)
+	}
 	if p.Installed {
 		p.Status = "disabled"
 		root, err := m.packageRoot(id)
@@ -150,6 +158,9 @@ func (m *Manager) loadPlugin(ctx context.Context, id string) (Plugin, error) {
 			return p, err
 		}
 		descriptor, err := manifest.Load(root)
+		if err == nil {
+			err = verifyAdapterContract(descriptor)
+		}
 		if err != nil {
 			p.Status = "unavailable"
 			p.Error = "Installed package is unavailable"
@@ -218,6 +229,10 @@ func (m *Manager) ListPlugins(ctx context.Context, actor identity.Actor) ([]Plug
 }
 
 func (m *Manager) process(p Plugin) (supervisor.Supervisor, error) {
+	return m.processConfigured(p, "")
+}
+
+func (m *Manager) processConfigured(p Plugin, deviceID string) (supervisor.Supervisor, error) {
 	root, err := m.packageRoot(p.ID)
 	if err != nil {
 		return nil, err
@@ -233,20 +248,19 @@ func (m *Manager) process(p Plugin) (supervisor.Supervisor, error) {
 	if err != nil {
 		return nil, err
 	}
-	args := append([]string(nil), descriptor.Runner.Arguments...)
-	if p.ID == "sigrok" {
-		backend := m.options.Backend
-		bundledBackend := filepath.Join(root, "runtime", "bin", "sigrok-cli")
-		if info, statErr := os.Stat(bundledBackend); statErr == nil && info.Mode().IsRegular() {
-			backend = bundledBackend
-		}
-		args = append(args, "--backend", backend)
-		if m.options.Simulation {
-			args = append(args, "--simulation")
-		}
+	if err := verifyAdapterContract(descriptor); err != nil {
+		return nil, err
+	}
+	configuration, err := m.runnerConfiguration(context.Background(), p.ID, deviceID)
+	if err != nil {
+		return nil, err
+	}
+	args, err := runnerArgumentsFor(p.ID, root, m.options, descriptor.Runner.Arguments)
+	if err != nil {
+		return nil, err
 	}
 	descriptor.Runner.Arguments = args
-	return supervisor.NewProcessSupervisor(supervisor.ProcessConfig{PackageID: p.ID, PackageRoot: root, Runner: descriptor.Runner, GracePeriod: time.Second, Environment: map[string]string{"LANG": "C.UTF-8", "LC_ALL": "C.UTF-8"}})
+	return supervisor.NewProcessSupervisor(supervisor.ProcessConfig{PackageID: p.ID, PackageRoot: root, Runner: descriptor.Runner, Configuration: configuration, GracePeriod: time.Second, Environment: map[string]string{"LANG": "C.UTF-8", "LC_ALL": "C.UTF-8"}})
 }
 
 func (m *Manager) health(ctx context.Context, p Plugin) error {
@@ -681,6 +695,12 @@ func (m *Manager) Discover(ctx context.Context, actor identity.Actor, id string)
 	}
 	if result.Status != "completed" {
 		return nil, ErrUnavailable
+	}
+	if id == "camera" {
+		if _, err := m.reconcileCameraDiscovery(ctx, result.Data); err != nil {
+			return nil, err
+		}
+		return m.initializeDiscoveredCameraRecords(ctx, p)
 	}
 	var data struct {
 		Devices    []Device `json:"devices"`

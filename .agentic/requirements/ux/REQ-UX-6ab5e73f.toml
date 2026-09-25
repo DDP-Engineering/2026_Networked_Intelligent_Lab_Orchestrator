@@ -1,0 +1,19 @@
+# Copyright (c) 2026 DDP Engineering
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+schema = 1
+id = "REQ-UX-6ab5e73f"
+title = "Place the page scrollbar at the workspace edge"
+status = "active"
+requirement = """
+When a workspace page overflows vertically, its scrollport shall fill the
+workspace width so the vertical scrollbar sits at the right edge without an
+unused strip or horizontal page overflow.
+"""
+verification = "Manual: Inspect a long Plugins page in Chrome at wide, narrow and zoomed viewports; compare the scrollbar edge to the workspace edge and check that page content has no horizontal scrollbar."
+affected_paths = ["05_Software/nilo_gui/src/styles/shell.css"]
+linked_tests = []
+spec = ""
+priority = "normal"
+rationale = "The former page max width also limited its scrollport."
+created = 2026-09-25
+updated = 2026-09-25

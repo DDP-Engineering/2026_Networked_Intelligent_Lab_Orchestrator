@@ -1,0 +1,7 @@
+mode: hardware
+target eligible: True
+physical devices: 1
+pi-arm64 webcam: needs_review
+pi-arm64 hdmi: not_run
+ubuntu-amd64 webcam: not_run
+ubuntu-amd64 hdmi: not_run

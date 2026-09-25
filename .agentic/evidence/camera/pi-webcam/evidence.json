@@ -1,0 +1,488 @@
+{
+  "acceptance_matrix": [
+    {
+      "device_kind": "webcam",
+      "status": "needs_review",
+      "target": "pi-arm64"
+    },
+    {
+      "device_kind": "hdmi",
+      "status": "not_run",
+      "target": "pi-arm64"
+    },
+    {
+      "device_kind": "webcam",
+      "status": "not_run",
+      "target": "ubuntu-amd64"
+    },
+    {
+      "device_kind": "hdmi",
+      "status": "not_run",
+      "target": "ubuntu-amd64"
+    }
+  ],
+  "candidates": [
+    {
+      "candidate": "linuxpy",
+      "checks": [
+        {
+          "action": "self-check",
+          "candidate": "linuxpy",
+          "duration_ms": 350,
+          "license": "GPL-3.0-or-later",
+          "pillow_version": "11.3.0",
+          "status": "available",
+          "version": "0.24.0"
+        },
+        {
+          "action": "inspect",
+          "candidate": "linuxpy",
+          "capabilities": [
+            "VIDEO_CAPTURE",
+            "STREAMING"
+          ],
+          "duration_ms": 567,
+          "formats": [
+            "MJPG",
+            "YUYV"
+          ],
+          "node": "video0",
+          "status": "ok"
+        },
+        {
+          "action": "inspect",
+          "candidate": "linuxpy",
+          "capabilities": [
+            "META_CAPTURE",
+            "STREAMING"
+          ],
+          "duration_ms": 588,
+          "formats": [],
+          "node": "video1",
+          "status": "ok"
+        },
+        {
+          "action": "controls",
+          "candidate": "linuxpy",
+          "control_test": {
+            "attempted": 1,
+            "id": "9963776",
+            "original": 0,
+            "readback": 1,
+            "restored": true
+          },
+          "controls": [
+            {
+              "default": 0,
+              "flags": "4096",
+              "id": "9963776",
+              "max": 255,
+              "min": -255,
+              "name": "Brightness",
+              "step": 1,
+              "type": "IntegerControl"
+            },
+            {
+              "default": 15,
+              "flags": "4096",
+              "id": "9963777",
+              "max": 30,
+              "min": 0,
+              "name": "Contrast",
+              "step": 1,
+              "type": "IntegerControl"
+            },
+            {
+              "default": 32,
+              "flags": "4096",
+              "id": "9963778",
+              "max": 127,
+              "min": 0,
+              "name": "Saturation",
+              "step": 1,
+              "type": "IntegerControl"
+            },
+            {
+              "default": 0,
+              "flags": "4096",
+              "id": "9963779",
+              "max": 16000,
+              "min": -16000,
+              "name": "Hue",
+              "step": 1,
+              "type": "IntegerControl"
+            },
+            {
+              "default": true,
+              "flags": "0",
+              "id": "9963788",
+              "max": 1,
+              "min": 0,
+              "name": "White Balance, Automatic",
+              "step": 1,
+              "type": "BooleanControl"
+            },
+            {
+              "default": 100,
+              "flags": "4096",
+              "id": "9963792",
+              "max": 250,
+              "min": 20,
+              "name": "Gamma",
+              "step": 1,
+              "type": "IntegerControl"
+            },
+            {
+              "default": 1,
+              "flags": "0",
+              "id": "9963800",
+              "max": 2,
+              "min": 0,
+              "name": "Power Line Frequency",
+              "step": 1,
+              "type": "MenuControl"
+            },
+            {
+              "default": 5000,
+              "flags": "4112",
+              "id": "9963802",
+              "max": 6500,
+              "min": 2800,
+              "name": "White Balance Temperature",
+              "step": 1,
+              "type": "IntegerControl"
+            },
+            {
+              "default": 16,
+              "flags": "4096",
+              "id": "9963803",
+              "max": 31,
+              "min": 0,
+              "name": "Sharpness",
+              "step": 1,
+              "type": "IntegerControl"
+            },
+            {
+              "default": 0,
+              "flags": "4096",
+              "id": "9963804",
+              "max": 2,
+              "min": 0,
+              "name": "Backlight Compensation",
+              "step": 1,
+              "type": "IntegerControl"
+            }
+          ],
+          "duration_ms": 617,
+          "status": "ok"
+        },
+        {
+          "action": "capture",
+          "candidate": "linuxpy",
+          "capture_ms": 539,
+          "decoded_size": [
+            640,
+            480
+          ],
+          "duration_ms": 1162,
+          "format": "MJPG",
+          "frame_bytes": 7812,
+          "frame_sha256": "0819ea6f926d43b169f7d009d4fc87a491716af0391bbb010c0573d4c03ec823",
+          "height": 480,
+          "status": "ok",
+          "warmup_frames": 2,
+          "width": 640
+        },
+        {
+          "action": "capture",
+          "candidate": "linuxpy",
+          "capture_ms": 1410,
+          "decoded_size": [
+            640,
+            480
+          ],
+          "duration_ms": 1977,
+          "format": "YUYV",
+          "frame_bytes": 614400,
+          "frame_sha256": "ed0d4fa57a90a5b28ea80dbe3649c79bd8d1a5e003bb903230242901e22b86f9",
+          "height": 480,
+          "status": "ok",
+          "warmup_frames": 2,
+          "width": 640
+        },
+        {
+          "action": "cancellation",
+          "status": "ok",
+          "stop_ms": 17
+        }
+      ],
+      "selected_endpoint": "video0",
+      "status": "observed"
+    },
+    {
+      "candidate": "pyrav4l2",
+      "checks": [
+        {
+          "action": "self-check",
+          "candidate": "pyrav4l2",
+          "duration_ms": 318,
+          "license": "Apache Software License (http://www.apache.org/licenses/LICENSE-2.0)",
+          "pillow_version": "11.3.0",
+          "status": "available",
+          "version": "1.0"
+        },
+        {
+          "action": "inspect",
+          "candidate": "pyrav4l2",
+          "capabilities": [
+            "VIDEO_CAPTURE",
+            "STREAMING"
+          ],
+          "duration_ms": 268,
+          "formats": [
+            "MJPG",
+            "YUYV"
+          ],
+          "node": "video0",
+          "status": "ok"
+        },
+        {
+          "action": "inspect",
+          "candidate": "pyrav4l2",
+          "capabilities": [],
+          "duration_ms": 303,
+          "formats": [],
+          "node": "video1",
+          "status": "ok"
+        },
+        {
+          "action": "controls",
+          "candidate": "pyrav4l2",
+          "control_test": {
+            "attempted": 1,
+            "id": "9963776",
+            "original": 0,
+            "readback": 1,
+            "restored": true
+          },
+          "controls": [
+            {
+              "flags": "68",
+              "id": "9961473",
+              "max": 0,
+              "min": 0,
+              "name": "User Controls",
+              "step": 0,
+              "type": "Control"
+            },
+            {
+              "flags": "4096",
+              "id": "9963776",
+              "max": 255,
+              "min": -255,
+              "name": "Brightness",
+              "step": 1,
+              "type": "Control"
+            },
+            {
+              "flags": "4096",
+              "id": "9963777",
+              "max": 30,
+              "min": 0,
+              "name": "Contrast",
+              "step": 1,
+              "type": "Control"
+            },
+            {
+              "flags": "4096",
+              "id": "9963778",
+              "max": 127,
+              "min": 0,
+              "name": "Saturation",
+              "step": 1,
+              "type": "Control"
+            },
+            {
+              "flags": "4096",
+              "id": "9963779",
+              "max": 16000,
+              "min": -16000,
+              "name": "Hue",
+              "step": 1,
+              "type": "Control"
+            },
+            {
+              "flags": "0",
+              "id": "9963788",
+              "max": 1,
+              "min": 0,
+              "name": "White Balance, Automatic",
+              "step": 1,
+              "type": "Control"
+            },
+            {
+              "flags": "4096",
+              "id": "9963792",
+              "max": 250,
+              "min": 20,
+              "name": "Gamma",
+              "step": 1,
+              "type": "Control"
+            },
+            {
+              "flags": "0",
+              "id": "9963800",
+              "max": 2,
+              "min": 0,
+              "name": "Power Line Frequency",
+              "step": 1,
+              "type": "Menu"
+            },
+            {
+              "flags": "4112",
+              "id": "9963802",
+              "max": 6500,
+              "min": 2800,
+              "name": "White Balance Temperature",
+              "step": 1,
+              "type": "Control"
+            },
+            {
+              "flags": "4096",
+              "id": "9963803",
+              "max": 31,
+              "min": 0,
+              "name": "Sharpness",
+              "step": 1,
+              "type": "Control"
+            },
+            {
+              "flags": "4096",
+              "id": "9963804",
+              "max": 2,
+              "min": 0,
+              "name": "Backlight Compensation",
+              "step": 1,
+              "type": "Control"
+            }
+          ],
+          "duration_ms": 314,
+          "status": "ok"
+        },
+        {
+          "action": "capture",
+          "candidate": "pyrav4l2",
+          "capture_ms": 597,
+          "decoded_size": [
+            160,
+            120
+          ],
+          "duration_ms": 889,
+          "format": "MJPG",
+          "frame_bytes": 1064,
+          "frame_sha256": "0cbf9dbe22806a889ce284847b317ff71a12021957e62f7f3e62f92d95165423",
+          "height": 120,
+          "status": "ok",
+          "warmup_frames": 2,
+          "width": 160
+        },
+        {
+          "action": "capture",
+          "candidate": "pyrav4l2",
+          "capture_ms": 626,
+          "decoded_size": [
+            160,
+            120
+          ],
+          "duration_ms": 924,
+          "format": "YUYV",
+          "frame_bytes": 38400,
+          "frame_sha256": "53a718b3d601ac2402718e63b09e526b7ea03370143c533d19fcfddaf036a558",
+          "height": 120,
+          "status": "ok",
+          "warmup_frames": 2,
+          "width": 160
+        },
+        {
+          "action": "cancellation",
+          "status": "ok",
+          "stop_ms": 6
+        }
+      ],
+      "selected_endpoint": "video0",
+      "status": "observed"
+    }
+  ],
+  "device_kind": "webcam",
+  "devices": [
+    {
+      "endpoints": [
+        {
+          "by_id": [
+            "usb-KYE_Systems_Corp._FaceCam_1000X-video-index0"
+          ],
+          "capabilities": [
+            "STREAMING",
+            "VIDEO_CAPTURE"
+          ],
+          "formats": [
+            "MJPG",
+            "YUYV"
+          ],
+          "interface": "00",
+          "name": "video0"
+        },
+        {
+          "by_id": [
+            "usb-KYE_Systems_Corp._FaceCam_1000X-video-index1"
+          ],
+          "capabilities": [
+            "META_CAPTURE",
+            "STREAMING"
+          ],
+          "formats": [],
+          "interface": "00",
+          "name": "video1"
+        }
+      ],
+      "product": "708f",
+      "selected_endpoint": "video0",
+      "serial": "",
+      "unusable_reason": null,
+      "usb_parent": "1-1.3",
+      "vendor": "0458"
+    }
+  ],
+  "host": {
+    "kernel": "6.18.39+rpt-rpi-v8",
+    "machine": "aarch64",
+    "python": "3.13.5",
+    "system": "Linux"
+  },
+  "mode": "hardware",
+  "observed_at": "2026-09-24T18:32:34.421947+00:00",
+  "probe_sources": {
+    "probe_sha256": "9a9b07c53c8d1dc19fcfd46425300cca4a15b9544b5746aaf1bfaffa00e60603",
+    "worker_sha256": "7a0f177c34bdcbee637cebd9ee2e0b5e9cc3cd59214f91ca301d51dc123c6a8d"
+  },
+  "schema_version": 2,
+  "target_eligible": true,
+  "target_profile": "pi-arm64",
+  "wheel_closure": {
+    "status": "verified",
+    "wheels": [
+      {
+        "file": "linuxpy-0.24.0-py3-none-any.whl",
+        "sha256": "4e2ce8da45a7a7171bcdcf6b7ab53858d9a83108e24874bd9ddb50a73590a1c6"
+      },
+      {
+        "file": "pillow-11.3.0-cp313-cp313-manylinux_2_27_aarch64.manylinux_2_28_aarch64.whl",
+        "sha256": "c37d8ba9411d6003bba9e518db0db0c58a680ab9fe5179f040b0463644bc9805"
+      },
+      {
+        "file": "pyrav4l2-1.0-py3-none-any.whl",
+        "sha256": "6b8f92e5bf535531aba1bec9137e5979bc35246ee83c25bd216880b22004d755"
+      }
+    ]
+  }
+}

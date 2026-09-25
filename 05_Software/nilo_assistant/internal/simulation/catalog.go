@@ -31,6 +31,7 @@ type Device struct {
 	Status        string   `json:"status"`
 	Simulation    bool     `json:"simulation"`
 	Capabilities  []string `json:"capabilities"`
+	Configured    bool     `json:"configured,omitempty"`
 }
 
 // Catalog is an immutable snapshot for one deterministic scenario.
@@ -92,7 +93,7 @@ func (catalog Catalog) Integrations() []Integration {
 	result := make([]Integration, len(catalog.integrations))
 	for index, integration := range catalog.integrations {
 		result[index] = integration
-		result[index].Operations = append([]string(nil), integration.Operations...)
+		result[index].Operations = append([]string{}, integration.Operations...)
 	}
 	return result
 }

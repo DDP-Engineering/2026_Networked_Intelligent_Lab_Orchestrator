@@ -57,8 +57,20 @@ func TestBenchToolsUseCurrentTokenScopes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(list.Tools) != 11 {
+	if len(list.Tools) != 22 {
 		t.Fatalf("tools: %d", len(list.Tools))
+	}
+	for _, expected := range []string{"camera_snapshot", "camera_get_controls", "camera_set_controls", "camera_reset_controls", "plugin_devices", "plugin_configuration", "plugin_configure", "plugin_device_configure", "plugin_device_rebind", "plugin_device_forget", "plugin_device_action"} {
+		found := false
+		for _, tool := range list.Tools {
+			if tool.Name == expected {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("missing %s", expected)
+		}
 	}
 	for _, test := range []struct {
 		name   string

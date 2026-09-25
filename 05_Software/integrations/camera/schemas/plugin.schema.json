@@ -1,0 +1,1 @@
+{"type":"object","additionalProperties":false,"properties":{"maximum_width":{"type":"integer","minimum":16,"maximum":4096},"maximum_height":{"type":"integer","minimum":16,"maximum":4096},"maximum_pixels":{"type":"integer","minimum":256,"maximum":16777216},"default_jpeg_quality":{"type":"integer","minimum":1,"maximum":95}}}

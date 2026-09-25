@@ -1,0 +1,12 @@
+schema = 1
+id = "REQ-REL-de43509b"
+title = "Preserve typed camera failures"
+status = "draft"
+requirement = "When a camera runner returns a terminal failure, Bench Core shall retain an allowlisted public failure code through the job and all client reads while mapping any unrecognized code to execution_failed without exposing runner diagnostics."
+verification = "Return each approved code and an arbitrary malicious code from a fixture runner; assert job, HTTP and MCP reads preserve only the allowlist."
+affected_paths = ["05_Software/nilo_assistant/internal/bench/", "05_Software/nilo_assistant/internal/httpapi/bench.go", "05_Software/nilo_assistant/internal/mcp/"]
+linked_tests = ["05_Software/nilo_assistant/internal/bench/jobs_test.go::TestTerminalJobPreservesAllowlistedRemoteCode"]
+spec = "specs/REQ-REL-de43509b.md"
+priority = "high"
+created = 2026-09-21
+updated = 2026-09-21

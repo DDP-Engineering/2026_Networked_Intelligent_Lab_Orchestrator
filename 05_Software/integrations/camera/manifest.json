@@ -1,0 +1,28 @@
+{
+  "package": {
+    "id": "camera",
+    "version": "0.1.0",
+    "publisher": "DDP Engineering",
+    "integrity": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "protocol": "nilo.integration/1",
+  "platforms": [
+    {"os": "linux", "architecture": "arm64"},
+    {"os": "linux", "architecture": "amd64"}
+  ],
+  "runner": {"executable": "runner", "arguments": ["--stdio"]},
+  "app_configuration_schema": "schemas/plugin.schema.json",
+  "device_configuration_schema": "schemas/device.schema.json",
+  "operations": [
+    {"id": "discover_devices", "policy": "auto_eligible", "input_schema": "schemas/discover.input.schema.json", "result_schema": "schemas/result.schema.json", "timeout": "35s", "cancellable": true, "state_changing": false, "resources": []},
+    {"id": "snapshot", "policy": "auto_eligible", "input_schema": "schemas/snapshot.input.schema.json", "result_schema": "schemas/result.schema.json", "timeout": "35s", "cancellable": true, "state_changing": true, "resources": []},
+    {"id": "get_controls", "policy": "auto_eligible", "input_schema": "schemas/controls.input.schema.json", "result_schema": "schemas/result.schema.json", "timeout": "10s", "cancellable": true, "state_changing": false, "resources": []},
+    {"id": "set_controls", "policy": "auto_eligible", "input_schema": "schemas/controls.input.schema.json", "result_schema": "schemas/result.schema.json", "timeout": "10s", "cancellable": true, "state_changing": true, "resources": []},
+    {"id": "reset_controls", "policy": "auto_eligible", "input_schema": "schemas/reset.input.schema.json", "result_schema": "schemas/result.schema.json", "timeout": "10s", "cancellable": true, "state_changing": true, "resources": []}
+  ],
+  "cancellation": {"supported": true, "safe_shutdown": "snapshot"},
+  "events": [{"id": "progress", "schema": "schemas/event.schema.json"}],
+  "artifacts": [{"id": "image", "schema": "schemas/event.schema.json", "media_types": ["image/jpeg", "image/png"]}],
+  "health_checks": [{"id": "runner", "timeout": "5s"}],
+  "contract_fixtures": []
+}
