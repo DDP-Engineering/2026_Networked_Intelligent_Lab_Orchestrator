@@ -9,7 +9,10 @@ beside each page. Instrument lifecycle and transaction views start at
 permissions and runner behavior belong to [Managed bench integrations](bench-integrations.md).
 Camera navigation starts at `src/components/shell/pages.ts` and `SideNav.tsx`;
 physical controls, appliance configuration and snapshot viewing start at
-`src/components/pages/CameraSection.tsx`.
+`src/components/pages/CameraSection.tsx`; Camera-specific behavior is mapped in
+[Camera integration](camera-integration.md).
+Network workflows and shared small-screen rules are mapped in
+[Network GUI](network-gui.md) and [Compact field interface](field-interface.md).
 
 ## Purpose and boundaries
 
@@ -48,10 +51,10 @@ http or https URL, `http://127.0.0.1:8090` by default), and
 files, neither of which holds a credential.
 
 The GUI's own module boundary is `src/api`: `createBenchCoreClient` returns a
-`BenchCoreClient` whose methods take a `Credential` — either
+`BenchCoreClient` whose protected methods take a `Credential` — either
 `{kind:'session', csrfToken}` or `{kind:'bearer', token}` — and cover the three
-bench resources, the sign-in, sign-out and current-session routes, and the
-identity and token administration routes. Every failure arrives as a
+status, Network, Activity, plugin and Camera work, authentication, and identity
+and token administration. Every failure arrives as a
 `BenchCoreError` whose `failure` field is `unauthorized`, `forbidden`,
 `rejected`, `unavailable`, or `malformed`, with the stable code Bench Core sent
 in `code`. They all share one private `exchange`, so the classification cannot
@@ -61,9 +64,8 @@ all — its secret is in an `HttpOnly` cookie the page cannot read — and adds
 reverse, and its token is only ever a header value.
 
 The configured client's `baseUrl` is always the empty same-origin base, so it
-requests origin-relative paths — the three entries of `BENCH_CORE_PATHS`, the
-`/api/v1/auth/*` session routes, and the `/api/v1/users` and `/api/v1/tokens`
-administration routes.
+requests origin-relative paths for status, authentication, administration,
+Network, Activity and Bench work, as defined by the API contract modules.
 `VITE_NILO_API_BASE_URL` is the endpoint the development server forwards `/api`
 to, never a URL the browser fetches directly. This keeps the page and backend
 one origin: an `Authorization` header is not CORS-safelisted, so a direct
@@ -421,7 +423,7 @@ visible.
 - `05_Software/frontend/src/api/contract.ts` - the `nilo.http/1` constants, the
   origin-relative paths, the status, integration, device, session, identity and
   token types, and the strict parsers shared by the client and the mock.
-- `05_Software/frontend/src/api/client.ts` - the typed client's fourteen methods
+- `05_Software/frontend/src/api/client.ts` - the typed client's methods
   over one shared exchange plus a binary camera preview read, the `Credential`
   union, and `BenchCoreError` with its five causes.
 - `05_Software/frontend/src/api/csrf.ts` - reads the readable `nilo_csrf`
@@ -474,7 +476,7 @@ visible.
   closed `<details>` following the Activity retention disclosure; its number
   field carries no min or max, because the bounds belong to the appliance and a
   browser restating them would drift from it.
-- `05_Software/frontend/src/App.css` and `src/index.css` - single-viewport
+- `05_Software/frontend/src/styles/shell.css` and `src/index.css` - single-viewport
   layout, the inventory scroll compartment, and the CSS custom properties every
   colour is expressed through.
 - `05_Software/frontend/src/App.test.tsx`,
@@ -517,191 +519,13 @@ visible.
   build, configuration, and authentication commands.
 - `02_Tools/scripts/aegis_test.py` - Windows repository-gate integration.
 
-## First-boot commissioning (2026-09-12, TASK-38d62913)
+## Network and field workflows
 
-The management-access payload carries `provisioning`, and the browser parser
-reads it as `body.provisioning === true` so an appliance that omits it is
-treated as commissioned - the safe direction, because it shows the ordinary
-allowlist editor rather than offering to commission an appliance that already
-is. `NetworkPage` renders `CommissioningPanel` when that flag is set and
-suppresses the allowlist editor in exactly the same condition; the two are
-mutually exclusive because while provisioning the appliance refuses every change
-the editor could make.
+First-boot commissioning, Network records, navigation and adapter roles are
+mapped in [Network GUI](network-gui.md). Shared sizing, contextual help and
+record-action patterns are mapped in [Compact field interface](field-interface.md).
 
-The panel opens with a standing alert naming the exposure as temporary, then
-lists each adapter that may carry management access with its name, stable
-adapter identity, type, connection state and current addresses, marking the one
-this browser session arrived on. An interface that cannot carry management
-access is listed with the appliance's own reason and offers no control at all.
-The URL section shows the usable appliance URLs together with the facts that the
-local name is answered only on the local network and that addresses are not
-permanent identifiers.
-
-Completing commissioning sends the chosen adapters. An empty choice is refused
-in the browser before anything is sent. Giving up the adapter the session
-arrived on raises a second, explicit button naming it, so the consequence is
-read before it is accepted. A refusal from the appliance is shown with the
-selection kept, so the administrator corrects rather than restarts. The control
-is withheld from an identity without the manage permission, and
-`completeCommissioning` is withheld entirely under the simulation profile, which
-has no eligible physical interface to commission.
-
-## Compact Network overview (2026-09-03)
-
-The authenticated shell uses one SIM/LIVE badge, without a footer disclaimer. Network lists show addresses and gateways, plus WireGuard configured addresses and peer endpoints. The API parser retains only public profile metadata. DNS, routes, handshake and readiness diagnostics are collapsed; Import profile opens the form. Completed notices are dismissible; pending confirmation, rollback failures and stale data remain explicit. Gateway fields are additive; an older running backend leaves them unreported until restarted. Do not restart a user simulation session merely to populate these fields: simulated profiles are in memory.
-
-## Device networks, adapter configuration and Activity (2026-09-04)
-
-- `src/api/devicenetworks.ts`, `src/api/activity.ts`, `src/api/settings.ts`
-  parse the device-network, activity and adapter-settings resources;
-  `contract.ts` gained `adapter_id`, `ssid` and `settings` on an interface, the
-  operations listing, and the `activity.read` and `activity.export` permissions; `wireguard.ts` gained the `rename` change.
-  The client exposes one method per route and `exportActivity` returns the
-  export as the text the appliance wrote.
-- `src/api/mock.ts` answers every new route through the same acknowledged
-  lifecycle, keeps device networks, sessions, the policy and an activity
-  history in memory, and gives device-network and Wi-Fi changes a confirmation
-  window as the appliance does.
-- `components/network/DeviceNetworksPanel.tsx`: table (intent and observation
-  are separate columns), editor dialog, enable/disable/delete through previews,
-  check and instructions dialogs, activity link narrowed to the network.
-  `InterfaceSettingsDialog.tsx`: addressing form and, on a wireless adapter,
-  scan and join with a password that is typed once and never displayed.
-  `WireGuardPanel.tsx`: rename in the profile details.
-- `pages/ActivityPage.tsx`: scope, filters and the More filters disclosure on
-  one wrapping line, server paging by cursor, the recording conditions that
-  qualify the listing, JSONL/CSV export from the page header, and the
-  administrator retention policy above the filters. `shell/pages.ts` places the `activity` core page below
-  Authentication, shown to an identity holding `activity.read`; `AppShell` keeps the filter a Network
-  page link chose and remounts the page with it.
-- `pages/NetworkPage.tsx` reads `GET /api/v1/network/operations` on mount and
-  picks up a change still applying, awaiting confirmation, rolling back or
-  blocked in rollback failure; it keeps polling the failure until verified
-  recovery. An uncertain acknowledgement reacquires the matching authoritative
-  operation and replaces any older terminal notice, while a refused preview is
-  shown with the appliance's reason rather than as an outage.
-- Catalogues: 154 keys added to en, de and ro; `messages.test.ts` lists the
-  words the languages share.
-
-## Compact field interface and contextual help (2026-09-04, TASK-9ca3f883)
-
-The interface is sized for a seven-inch appliance display (`1024x600` primary,
-`800x480` fallback) as well as a desktop monitor, and no backend, contract,
-permission or confirmation behaviour changed with it.
-
-- `REQ-UX-c8c16d33` - one semantic type scale in `styles/tokens.css`
-  (`--text-title` 22px, `--text-section` 18px, `--text-body` 16px,
-  `--text-dense` 15px, `--text-label` 14px with their line heights); every
-  `font-size` in `styles/shell.css` names a token, nothing operator-facing is
-  below 14px, and no heading is set in capitals with widened tracking.
-- `REQ-UX-c5f7c0cd` - `--control-height` and `--target-min` are 44px; one base
-  `button, .button` rule, 44px inputs and selects, 22px checkboxes inside
-  44px labels, and a tab close control the height of the row.
-- `REQ-UX-2687f591` - `shell/useViewportClass` reads the same two media queries
-  the stylesheet uses and returns `wide | compact | constrained`. Compact
-  narrows the rail to `--nav-width-compact` and keeps every label; constrained
-  hides the rail, shows the `Menu` control and opens `shell/NavDrawer` (a
-  `Modal` with `variant="drawer"`), and `TopRow` folds the appearance and
-  language menus into the account menu while keeping the tabs, the network
-  summary and the one `SIM`/`LIVE` indicator.
-- `REQ-UX-2de87216` - `Modal` is a head (title and `Close`), a scrolling
-  `.modal-body`, and a `.modal-actions` bar stuck to its bottom; below 56rem or
-  640px it is a full-screen sheet. `components/layers.ts` keeps the stack of
-  dismissible layers so Escape closes only the top one: a help popover over an
-  editor closes the popover.
-- `REQ-UX-2b0b6d59` - `help/HelpPopover` opens on click, tap, Enter, hover and
-  focus, exposes `aria-expanded` and `aria-controls`, closes on Escape, outside
-  activation and its own control with focus returned, closes any other help
-  through one document event, and positions itself from the trigger's rectangle
-  so it stays in the viewport. No explanation is left in a `title` attribute.
-- `REQ-UX-4570c081` - `help/Field` renders label, help, control, persistent
-  guidance and the validation message in reading order, tied to the control by
-  `aria-describedby`. The confirmation window, countdown, rollback failure,
-  refusal and route prerequisites stay in notices and dialogs.
-- `REQ-UX-1860069d` - `help/WorkflowHelp` opens "How to configure" over `Modal`
-  with six catalogue sections (`help.dn.*`, `help.if.*`): goal, values needed,
-  addressing example, what NILO changes, what must exist elsewhere, verify and
-  recover.
-- `REQ-UX-cde0b9e2` - `network/NetworkOverview` states the uplink and its
-  address, the device side, the active profile or None, and what needs
-  attention, computed from the status, the device networks, the WireGuard status
-  and the running operation. `network/addressing.ts` holds `uplinkOf`,
-  `isAddress`, `isPrefix` and `subnetOf`.
-- `REQ-UX-ff989933` - one `table.data-table.record-table` per list with
-  `data-label` on each cell; below 56rem the stylesheet turns rows into labelled
-  cards. Secondary values live in an explicit details row announced as a region.
-- `REQ-UX-61eb69f2` - `components/RowActions.tsx` gives each row one Actions
-  control that opens a compact `Modal` attached to the document body. It identifies the object type
-  and status, gives every choice a full-width target, keeps disabled entries and
-  their reasons visible, separates destructive actions, and cannot be clipped
-  by the table scroll compartment.
-- `REQ-UX-7d9cf7a1` - record rows have no activation handler; technical
-  addresses, prefixes and ports remain plain selectable text beside explicit
-  Details and Actions controls.
-- `REQ-UX-8859ce12` - the device-network editor is Identity, Device side, Access
-  path, Addressing, Services, a collapsed Advanced and a Review that names the
-  adapter and address, the authorized sources and target, whether WireGuard is
-  involved, whether source NAT or preservation is used and whether the
-  management path is affected. Format validation (address, prefix, source list,
-  port range) runs before any preview and appears after the field; ports stay
-  editable with 502 as an example.
-- `REQ-UX-f30891b4` - Bench, Activity, Authentication and About use the same
-  classes; Activity keeps time, outcome, action, subject and actor in the row
-  and moves category, function, actor identity and the raw record into its
-  details.
-- `REQ-NFR-aa1a4734` - 134 catalogue keys added to en, de and ro.
-- `REQ-TEST-5da12a09` - `e2e/field-display.spec.ts` drives 1920x1080, 1366x768,
-  1024x600 and 800x480 in both themes and asserts readable text, 44-pixel field
-  targets, no document overflow, no `title`-only explanation, the drawer, the
-  sheet, help by pointer and keyboard, the editors' final actions, validation
-  and a pending confirmation. It is CSS-pixel proof; the physical seven-inch
-  panel is still unverified.
-
-## Focused Network navigation (2026-09-12, TASK-8f18c927)
-
-Network is one collapsible System group whose root opens Overview and whose
-children open Device access, VPN profiles and Diagnostics. Each destination owns
-one workspace tab and one concern: Overview contains the decision summary,
-management access and interface configuration; Device access contains forwarding
-definitions; VPN profiles contains WireGuard lifecycle and import; and Diagnostics
-contains WireGuard readiness plus traffic history. The existing `network` page
-id remains Overview; the children use internal
-`network:*` ids. Collapsing navigation never closes a tab, Activity remains a
-peer page, and common operation refusal, confirmation and recovery notices stay
-available on every Network view.
-
-`TrafficChart` labels received (RX) and sent (TX) traffic, scales bytes per
-measured minute against a visible time axis, and positions bars by timestamp so
-an unmeasured minute remains a gap. One field-sized listbox maps pointer
-coordinates to the nearest measured minute, avoiding overlapping targets in
-dense one-hour and one-day histories; its options expose exact values, a visible
-marker preserves measured zeroes, and arrow/Home/End keys move the active
-selection. Hover, touch or keyboard selection shows the minute's time, RX, TX
-and total while only the chart itself enters the tab order. Expanded WireGuard
-readiness renders as a compact grid of left-label/right-value facts, and the
-Statistics title shares one responsive header with the interface and period
-controls. This keeps the initial Diagnostics chart in the workspace without
-vertical scrolling at 1024x600 and larger; 800x480 may scroll vertically.
-
-## Adapter role selection (2026-09-11, TASK-8f18c927)
-
-`management-access.ts` strictly parses stable adapter identity, the fixed
-`management`/`device` role vocabulary and validated 409 conflict details.
-`NetworkPage` owns the one management-access observation shared by its focused
-views. The management checkbox and device-side option stay visible but disabled
-for an opposite claim, with a localized persistent explanation. Device-side
-assignment also fails closed while management inventory is reading or failed;
-defaults exclude known management claims. The same adapter remains available as
-local ingress. `WorkflowHelp` exposes the three confirmed repurposing steps from
-both selectors. The development mock and browser fixture return the same
-role-aware contract. Management transition notices render only fixed typed
-outcomes through the locale catalog, never backend diagnostic prose. A valid
-conflict notice raised during preview, acknowledgement, or management update
-survives unchanged polling and is superseded only when the corresponding
-observed role claim disappears; malformed structured conflicts use a fixed
-localized fallback and never retain backend wording.
-
-## Account-menu appliance power controls (2026-09-08, TASK-a3a3d7b2)
+## Account-menu appliance power controls
 
 On a live appliance, `TopRow` adds Restart NILO and Power off NILO beside Sign
 out only when the current browser session carries `system.power.manage`.
@@ -716,7 +540,7 @@ the appliance as success. `AppShell` owns the selected action and binds the
 dialog to `BenchCoreClient.requestPower`, while sign-out keeps its existing
 session behavior.
 
-## Managed instrument workspace (TASK-f1f2d836)
+## Managed instrument workspace
 
 `REQ-UX-30e2e009` adds Plugins and the sigrok integration tab through the same
 `PluginsPage`. The page serializes refreshes, polls summaries and selected detail,
@@ -735,7 +559,7 @@ English, German and Romanian share the instrument key set.
 The browser mock retains its pre-existing scope; exercise instruments against a
 real simulation-profile runner. Source paths above are relative to `05_Software/frontend/`.
 
-## Core navigation order without Settings (2026-09-05, TASK-17d71acd)
+## Core navigation order without Settings
 
 `CORE_PAGES` in `shell/pages.ts` is the top-to-bottom order the lower cluster
 renders, because `SideNav` maps the array as it stands: Plugins, Network with
@@ -746,7 +570,7 @@ open; `Icon`'s `settings` glyph remains available in the glyph catalogue. The Pl
 entry remains available through the managed instrument workspace added by
 TASK-f1f2d836.
 
-## Activity page furniture (2026-09-15, TASK-29673ddb)
+## Activity page furniture
 
 The Activity page is two lines of furniture and then records. `.activity-head`
 is one row: the page title, and the Export menu at its right edge

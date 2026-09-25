@@ -7,7 +7,8 @@ instrument commands, transaction IDs, queues, delayed replies and timeouts.
 Start at `05_Software/core/internal/bench/manager.go` and `jobs_test.go`.
 Wire protocols and process termination belong to [Integration platform](integration-platform.md);
 identity/SQLite composition belongs to [Bench Core](bench-core-foundation.md);
-visual structure belongs to [Browser GUI](gui-foundation.md).
+visual structure belongs to [Browser GUI](gui-foundation.md). Physical capture,
+device records and Camera verification belong to [Camera integration](camera-integration.md).
 
 ## Purpose and boundaries
 
@@ -16,10 +17,9 @@ inventory, command admission, scheduling and retained instrument evidence.
 The Sigrok adapter wraps the installed sigrok CLI for ATK digital captures
 and saved UART analysis. It excludes PWM, arbitrary command/config/path access,
 continuous capture, a marketplace and signal/decoder correctness qualification.
-The Camera adapter uses physical USB V4L2 capture nodes. Each discovered camera
-has a revisioned managed record, a stable `cam-N` identifier, device settings,
-and readiness gated by a core-owned control reset. Camera snapshots retain a
-JPEG or PNG image; authenticated preview reads decode and bound that image.
+The Camera adapter uses physical USB V4L2 capture nodes and revisioned managed
+records; its readiness and image contract are documented in
+[Camera integration](camera-integration.md).
 The Sigrok package also contains an unwired SW-01 feasibility worker that proves
 structured native metadata, mixed Demo packets and decoder callbacks; it does
 not add or replace any public Bench operation.
@@ -106,6 +106,8 @@ and `06_SoftwareDocu/Camera_Integration.md`. Human approval requires a browser s
 - REQ-PLAT-d1427e1e: one package contract for bundled and later installation.
 - REQ-REL-6fd2a7b2: atomic in-place package upgrade with bounded idle wait,
   preserved state, health verification and rollback.
+- Camera-specific requirements, current software behavior and pending physical
+  acceptance are mapped in [Camera integration](camera-integration.md).
 
 ## Architecture
 
@@ -124,6 +126,8 @@ flowchart TD
     adapter --> supervisor[ProcessSupervisor]
     supervisor --> sdk([Python SDK SigrokIntegration])
     sdk --> cli([installed sigrok-cli])
+    supervisor --> camera[Camera Python V4L2 runner]
+    camera --> physical([USB camera])
     sdk -. feasibility only .-> structured[structured_worker.py]
     structured -. fixed commands .-> native[nilo_sigrok_worker]
     native -. callbacks .-> libraries([libsigrok and libsigrokdecode])
@@ -155,12 +159,8 @@ curated typed adapter and resource claims; transport handlers remain shared.
   locked dependency graph and package/adapter tests; `structured_worker.py`,
   `worker/nilo_sigrok_worker.c`, `evidence/`, and `tests/test_worker.py` hold the
   feasibility-only structured worker boundary and proof.
-- `05_Software/integrations/camera/`: physical V4L2 runner, manifest, schemas,
-  bounded image processing and isolated package tests.
-- `05_Software/core/internal/store/sqlite/migrations/019_managed_devices.sql` and
-  `020_bench_plugin_configuration.sql`: revisioned camera and package settings.
-- `05_Software/frontend/src/components/pages/CameraSection.tsx`: camera workspace
-  and administrator device settings.
+- [Camera integration](camera-integration.md) maps the physical runner,
+  revisioned records, GUI, bundle builder and target probes.
 - `05_Software/frontend/src/api/bench.ts`, `bench.test.ts`, `client.ts`: client contract.
 - `05_Software/frontend/src/components/pages/PluginsPage.tsx`, `PluginsPage.test.tsx`:
   managed workspace; shell routing, i18n and layout follow gui-foundation.md.

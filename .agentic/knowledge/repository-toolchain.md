@@ -507,6 +507,9 @@ only durable state, and they live on the WSL Linux filesystem.
 - `02_Tools/tests/camera/` - bounded, non-production V4L2 binding probe with
   fixture checks, isolated candidate workers, an evidence schema and target
   run guide; fixture records remain separate from target hardware evidence.
+- `02_Tools/scripts/build-camera-bundle.py` - verified target interpreter,
+  wheelhouse, dependency and notice assembly for the Camera package; product
+  behavior is mapped in [Camera integration](camera-integration.md).
 - `02_Tools/scripts/build_environment.py` and adjacent shell scripts - lock and
   manifest validation, streaming multipart archive operations, build/export/
   restore verification, metadata collection, and replica preflight.

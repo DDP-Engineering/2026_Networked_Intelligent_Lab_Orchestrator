@@ -1,9 +1,12 @@
 # Plugin administration and virtual bench workflow plan
 
-Status: deferred; this Sigrok workflow proposal is outside the current Camera
-navigation work and will be reconsidered during Sigrok reimplementation. No
-implementation or deployment is authorized by this document. The current
-Camera navigation and appliance administration plan is
+Status: superseded historical proposal. The observations, implementation
+sequence and definition of done below describe an earlier Sigrok UI direction;
+they are not the implementation plan for the future instrument workspace.
+Sigrok replacement is later work: PulseView will be implemented as a NILO
+feature while the hardware interfaces and protocol decoders are preserved and
+migrated. No implementation or deployment is authorized by this document. The
+current Camera navigation and appliance administration plan is
 `00_Planning/Plugin_Navigation_and_Administration_Plan.md`.
 
 ## 1. Intent and evidence

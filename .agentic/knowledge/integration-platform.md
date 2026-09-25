@@ -6,6 +6,7 @@ Select this page for runtime manifests, the NDJSON protocol, Python SDK and
 process supervision. Start at `internal/integration/protocol/message.go` and
 `describe_test.go` for Go/Python description interoperability. Managed package
 lifecycle and queued instrument actions belong to [Managed bench integrations](bench-integrations.md).
+Physical Camera runner behavior belongs to [Camera integration](camera-integration.md).
 
 ## Purpose and boundaries
 

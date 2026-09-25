@@ -10,11 +10,19 @@ The MCP pending result contains `status: pending`, `transaction_id` and polling 
 
 ## Examples
 
-An Auto-mode simulated snapshot completed inside the wait returns image content and id. An Ask-mode job returns pending and id; approval and later polling can still complete it.
+An isolated client test can use a recording camera runner double: an Auto-mode
+physical-camera job completed inside the wait would return image content and
+id. An Ask-mode job would return pending and id; approval and later polling
+could still complete it. The product does not expose a simulated Camera device
+or generated snapshot.
 
 ## Acceptance
 
-Client and job tests exercise completion, pending approval, slow execution, timeout and disconnect without cancellation or unauthorized image disclosure.
+Before this draft is marked active, add linked CLI and MCP tests for completed
+image delivery, pending approval, slow execution, timeout and disconnect. The
+tests must show that an accepted job continues, the CLI writes no file while
+pending, and unauthorized callers receive no image. No linked test currently
+settles this complete client result contract.
 
 ## Assumptions and open decisions
 

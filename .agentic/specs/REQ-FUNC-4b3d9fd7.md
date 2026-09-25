@@ -2,13 +2,14 @@
 
 ## Behavior
 
-The `nilo serve` command starts Bench Core only when `--profile simulation` is
-explicitly selected. The command requires an absolute data directory and an
-explicit listener address. It runs until its context is cancelled or the
-process receives `SIGINT` or `SIGTERM`.
+The `nilo serve` command starts a simulation server when `--profile simulation`
+is explicitly selected. It also supports the appliance profile. Simulation
+requires an absolute data directory and an explicit loopback listener address.
+The server runs until its context is cancelled or the process receives `SIGINT`
+or `SIGTERM`.
 
-The first HTTP contract is `GET /api/v1/status`. It is protected by Bearer-token
-authentication and has no unauthenticated alternative route.
+`GET /api/v1/status` requires an authenticated browser session or Bearer token;
+there is no unauthenticated alternative route.
 
 ## Data / interface
 
@@ -28,14 +29,16 @@ Successful status response:
   "simulation": true,
   "build": {
     "name": "nilo",
-    "version": "0.1.0",
+    "version": "<project VERSION>",
     "integration_protocol": "nilo.integration/1"
   }
 }
 ```
 
-The response uses `application/json`. Unsupported methods return `405`; unknown
-paths return `404`. Protected requests use `Authorization: Bearer <token>`.
+The example's version placeholder is the current root `VERSION`, mirrored by
+`internal/buildinfo`. The response uses `application/json`. Unsupported methods
+return `405`; unknown paths return `404`. Protected requests use a session
+cookie or `Authorization: Bearer <token>`.
 Authentication failures return `401` with `WWW-Authenticate: Bearer` and a
 small JSON error object that contains no status representation.
 
@@ -47,8 +50,8 @@ nilo development issue-token --data-dir <absolute-path>
 
 It creates a unique non-login development identity, persists only the existing
 one-way token verifier, and emits the token ID, user ID, plaintext token, and
-creation time once as JSON. This command is development tooling, not the future
-production administrator enrollment interface.
+creation time once as JSON. This command is development tooling, separate from
+production administrator bootstrap.
 
 ## Acceptance
 

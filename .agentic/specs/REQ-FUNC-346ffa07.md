@@ -15,8 +15,8 @@ Healthy response:
   "api_version": "nilo.http/1",
   "scenario": "healthy",
   "items": [{
-    "id": "simulation.fake-python.device.stable-001",
-    "integration_id": "simulation.fake-python",
+    "id": "simulation.bench.device.stable-001",
+    "integration_id": "simulation.bench",
     "display_name": "SIMULATION - Electronics Bench 001",
     "kind": "simulated-electronics-bench",
     "status": "ready",

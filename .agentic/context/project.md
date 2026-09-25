@@ -16,24 +16,28 @@ appliance that brings instrument access, appliance networking and captured
 evidence into one application for both people and AI agents.
 
 Three audiences reach the same services: a bench engineer or technician through
-the browser interface, automation through the `nilo` command line with a scoped
-API token, and an AI client through the MCP endpoint. A human stays responsible
+the browser interface, automation through the `nilo` command line (with a scoped
+API token for remote commands), and an AI client through the MCP endpoint. A
+human stays responsible
 for wiring, safety and the approval of consequential actions; every actor holds
 one of three fixed roles - Administrator, Operator or Viewer.
 
 ## Product responsibilities
 
 - **One shared core behind three interfaces.** The Go Bench Core owns
-  orchestration and persistence; the React browser interface, the `nilo`
-  command line and the `/mcp` endpoint are clients of the same authenticated
-  `/api/v1` services. The command line is an HTTP client even on the appliance.
+  orchestration and persistence. The React browser and remote `nilo` commands
+  use its authenticated `/api/v1` routes; `/mcp` exposes the same core services
+  through its own authenticated endpoint. Bootstrap and explicitly local
+  `nilo admin --data-dir` operations open the appliance data directory through
+  those core services.
 - **Identity and access control.** Argon2id password verifiers, expiring
   `HttpOnly` browser sessions with a CSRF token, and named API tokens whose
   scopes are intersected with the owner's current role. The three roles map to
   a compiled-in permission set; there is no custom-role editor. One persisted
-  appliance password policy - a minimum length and a minimum count of distinct
-  character classes, above a compiled floor - governs every password being set,
-  on the HTTP routes, the command line and the browser, and is never consulted
+  appliance password policy sets a minimum byte length at or above a compiled floor
+  and may independently require lowercase, uppercase, digits and special
+  characters. It governs every password being set through HTTP routes, the
+  command line and the browser, and is never consulted
   when a stored verifier is checked.
 - **Policy and approvals.** Ask, Auto and Full Access resolution over an
   integration's declared operation policy, immutable policy snapshots, and
@@ -112,9 +116,11 @@ one of three fixed roles - Administrator, Operator or Viewer.
   an actor may *request* an action; `policy.Resolver` decides whether an
   operation may *run* without a human approval. Neither the Administrator role
   nor a fully scoped token touches the second decision.
-- No credential is accepted on a command line. Tokens are read from a file,
-  passwords from standard input, and no response, log, audit event, export or
-  error message carries a password, key or verifier.
+- No credential value is accepted on a command line. Tokens are read from a
+  file; interactive password entry uses standard input, while packaged first
+  boot uses a protected password file consumed by `nilo seed-admin`. No
+  response, log, audit event, export or error message carries a password, key
+  or verifier.
 - WireGuard key material and wireless passwords exist only inside the
   privileged helper's root-owned keystore; the core knows profiles by identity.
 - Temporary network recovery never changes a configured management, production,
@@ -133,16 +139,16 @@ one of three fixed roles - Administrator, Operator or Viewer.
 - One project-level Semantic Version lives in `VERSION`, mirrored by
   `internal/buildinfo` and `05_Software/frontend/package.json`.
 - The project is licensed under PolyForm Noncommercial 1.0.0.
-- **One package per delivery target, integrations included.** NILO ships as
-  one software: a release package for the Raspberry Pi and one for the Ubuntu
-  mini PC each contain Bench Core, the browser interface, the helper and every
-  integration at its current state with all their dependencies, and install
-  without internet access. Integrations are functionality of NILO developed
-  and released with it, not separately released products; on the appliance
-  they remain explicit to install and enable. The Raspberry Pi delivery
-  additionally provides a directly writable card image. Each target is produced
-  by its own packaging script, self-sufficient from the repository after a
-  one-time verified fetch of external inputs.
+- **One package per delivery target, integrations included.** The release
+  design is one offline-installable package each for Raspberry Pi and Ubuntu
+  mini PC. Each package contains Bench Core, the browser interface, the helper
+  and every integration at its current state with its dependencies. Integrations
+  are functionality of NILO developed and released with it, not separately
+  released products; on the appliance they remain explicit to install and
+  enable. Raspberry Pi delivery also provides a directly writable card image.
+  Target-specific packaging tools use verified external inputs, but the
+  checked-in input lock is incomplete, so production packages cannot yet be
+  assembled from it.
 - **A finite tested release matrix.** The initial delivery targets are Ubuntu
   24.04 LTS on amd64 and Raspberry Pi OS based on Debian 13 on arm64. Each exact
   target owns its offline dependency pool and acceptance result; a newer OS
@@ -153,9 +159,9 @@ one of three fixed roles - Administrator, Operator or Viewer.
 
 - `05_Software/core/` - Go module `nilo.local/nilo`, built without
   CGO. `cmd/nilo/main.go` is the command surface (`version`, `serve`,
-  `serve-foundation-check`, `development issue-token`, `admin`, `seed-admin`,
-  `maintenance`, `network`, `plugin`, `bench`, `activity`);
-  `cmd/nilo-nethelper/` is the privileged Linux
+  `serve-foundation-check`, `discover`, `open`, `development issue-token`,
+  `admin`, `seed-admin`, `maintenance`, `network`, `plugin`, `bench`, `camera`,
+  `activity`); `cmd/nilo-nethelper/` is the privileged Linux
   helper. `internal/httpapi/server.go` holds the one route table where every
   route declares its permission, with `internal/httpapi/bench.go` beside it.
   `internal/identity/service.go` owns identity rules, `internal/auth/role.go`
@@ -168,7 +174,8 @@ one of three fixed roles - Administrator, Operator or Viewer.
   contract, `src/components/shell/pages.ts` the navigation, and
   `src/preferences/store.ts` is the only module that touches browser storage.
 - `05_Software/integrations/sdk/python/` is the supported Python authoring
-  surface; `05_Software/integrations/sigrok/` is the current curated package.
+  surface; `05_Software/integrations/sigrok/` and
+  `05_Software/integrations/camera/` are the current curated packages.
   `05_Software/contracts/integration/v1/` is the public, language-neutral
   package contract mirrored by the Go loader. The test-only Go runner in
   `05_Software/tests/fixtures/contract_runner/` exercises the shared boundary.
@@ -189,10 +196,12 @@ one of three fixed roles - Administrator, Operator or Viewer.
   appliance preparation.
 - `06_SoftwareDocu/Sigrok_Integration.md` - current instrument lifecycle,
   limits, shared interfaces and bundle deployment.
+- `06_SoftwareDocu/Camera_Integration.md` - physical camera operation, bundle
+  preparation and target evidence.
 - `07_Delivery/README.md` - packaging and deployment decisions.
 - `07_Delivery/NILO_CLI_and_Authentication.md` - command line, roles,
   permissions, sessions and tokens.
 - `00_Planning/` - product direction and planned work, including the waveform
   workspace plan.
-- `.agentic/knowledge/` - component pages for Bench Core, the browser GUI, the
-  integration platform, managed bench integrations and the toolchain.
+- `.agentic/knowledge/README.md` - component index for Bench Core, integrations,
+  networking, the field interface, the browser GUI and the toolchain.

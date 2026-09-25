@@ -15,8 +15,8 @@ Healthy response:
   "api_version": "nilo.http/1",
   "scenario": "healthy",
   "items": [{
-    "id": "simulation.fake-python",
-    "display_name": "SIMULATION - Fake Python Integration",
+    "id": "simulation.bench",
+    "display_name": "SIMULATION - Demo Integration",
     "status": "healthy",
     "simulation": true,
     "operations": ["artifact", "crash", "echo", "fail", "sleep"]

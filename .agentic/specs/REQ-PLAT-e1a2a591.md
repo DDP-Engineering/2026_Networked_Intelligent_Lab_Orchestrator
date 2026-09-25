@@ -8,8 +8,8 @@ project; no package is installed globally and no generated dependency or build
 directory is committed.
 
 The production build contains static HTML, JavaScript, CSS, and related assets.
-It does not start or embed a Node.js application server. Serving these assets
-from Bench Core remains later integration work.
+It does not start or embed a Node.js application server. Bench Core serves the
+built assets on its API origin when started with `--gui-dir`.
 
 ## Data / interface
 

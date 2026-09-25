@@ -236,7 +236,7 @@ creates.
 | AU-02 | REQ-REL-59e4f80c |
 | AU-03 | REQ-DATA-58f3c012 |
 | AU-04 | REQ-DATA-2c8b5f79 |
-| AU-05 | REQ-FUNC-35da79f1 |
+| AU-05 | Retired: timed debug sessions are no longer offered |
 | AU-06 | REQ-SEC-c62481fe |
 | AU-07 | REQ-DATA-e4a10d85, REQ-FUNC-6ba25f39 |
 | AU-08 | REQ-SEC-d19a7b30 |

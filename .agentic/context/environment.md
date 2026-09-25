@@ -24,7 +24,8 @@ and the environment wrappers change `PATH` only for their child process.
   TypeScript, Vite, Vitest, ESLint, Prettier and Playwright by exact version.
 - Each locked Python project pins its own graph, including Ruff, in its
   `uv.lock`: `05_Software/integrations/sdk/python/` and
-  `05_Software/integrations/sigrok/`.
+  `05_Software/integrations/sigrok/` and
+  `05_Software/integrations/camera/`.
 - The reproducible build and test boundary is one Linux amd64 OCI image,
   generation `noble-20260905-01`, defined by `02_Tools/containers/build/` and
   run through Docker Engine or Podman. It carries the pinned language tools,
@@ -138,15 +139,20 @@ and `02_Tools/tests/build-environment/` check the image, the archive and the
 recorded acceptance evidence. On a prepared target,
 `02_Tools/scripts/check-sigrok-integration.py` starts an isolated HTTPS
 instance and exercises the installed analyzer through the integration.
+`02_Tools/tests/camera/` contains isolated discovery and capture probes;
+physical camera acceptance requires observations on the named target hardware.
 
 ## Build and run
 
 Produce what an appliance installs. `02_Tools/scripts/build-appliance.sh` emits
 binaries under `05_Software/core/dist/linux-<arch>/`, the GUI `build`
-script emits the static assets for `--gui-dir`, and
-`02_Tools/scripts/build-sigrok-bundle.py` prepares an integration catalog for a
-target architecture from an explicit complete runtime root containing its
-Python entrypoint, Sigrok backend and third-party notices.
+script emits the static assets for `--gui-dir`.
+`02_Tools/scripts/build-sigrok-bundle.py` and
+`02_Tools/scripts/build-camera-bundle.py` prepare target-specific integration
+catalogs from verified runtime inputs. The Sigrok bundle needs its Python
+entrypoint, backend and third-party notices; Camera also needs its pinned
+wheelhouse and dependency closure. `build-appliance.sh` includes these bundles
+only when their respective bundle switches and inputs are supplied.
 
 Install the privileged helper on the target explicitly, substituting the staged
 binary and the service account:
@@ -230,14 +236,16 @@ passed; those rows remain `not_run` until executed on the named target.
 
 The router in `02_Tools/scripts/aegis_test.py` discovers every Go module and
 locked Python project below `05_Software`, and on Windows the frontend project
-as well. `full` runs the tooling tests under `02_Tools/tests/software/`,
-`go test ./...`, each Python suite through `uv run pytest`, then GUI
-`test:ci` and `build`, followed by the shared runner contract suite and
-`02_Tools/tests/appliance/check.sh` under WSL2. That stage rebuilds the GUI and
-runs Playwright against an appliance-profile core; direct browser execution on
-the host is not acceptance evidence. Impacted routing is deliberately
-conservative and runs the same set. `lint` runs `go vet`, Python compilation,
-and GUI `format:check` and `lint`.
+as well. `full` runs the Camera probe tests under `02_Tools/tests/camera/`,
+the tooling tests under `02_Tools/tests/software/`, `go test ./...`, and each
+Python suite through `uv run pytest`. On Windows it then runs GUI `test:ci`
+and `build`, followed immediately by `02_Tools/tests/appliance/check.sh`
+through WSL2. The shared runner contract suite runs last on either host.
+The appliance stage rebuilds the GUI and runs Playwright against an
+appliance-profile core; direct browser execution on the host is not acceptance
+evidence. Impacted routing is deliberately conservative and runs the same set.
+`lint` runs `go vet`, Python compilation, and on Windows GUI `format:check`
+and `lint`.
 
 Other entry points:
 
@@ -263,6 +271,8 @@ Other entry points:
   NetworkManager container; it never joins the host network or system bus.
 - `02_Tools/scripts/check-sigrok-integration.py` - opt-in smoke against an
   isolated HTTPS appliance instance with a real analyzer.
+- `02_Tools/tests/camera/` - isolated camera probes and target-hardware
+  evidence capture; its unit tests are included in `full`.
 
 `06_SoftwareDocu/Development_and_Simulation_Flow.md` section 9 states what each
 verification level proves. A lower level never substitutes for a higher release
@@ -300,6 +310,8 @@ physical operation occurred.
 - `06_SoftwareDocu/Network_Operations.md` - isolated network test and appliance
   preparation.
 - `06_SoftwareDocu/Sigrok_Integration.md` - bundle preparation and deployment.
+- `06_SoftwareDocu/Camera_Integration.md` - Camera bundle inputs, operation and
+  physical acceptance evidence.
 - `05_Software/INCREMENT_1_ACCEPTANCE.md` - foundation gate scope, commands and
   the outstanding native Raspberry Pi ARM64 run.
 - `.agentic/knowledge/repository-toolchain.md` - toolchain component detail.

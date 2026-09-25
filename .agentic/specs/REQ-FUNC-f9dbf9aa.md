@@ -17,7 +17,7 @@ behaviors has to be one rule.
 
 ## Behavior
 
-The appliance holds exactly one password policy. It is two numbers:
+The appliance holds exactly one password policy with five fields:
 
 - `minimum_length` — the fewest bytes a password may be.
 - four independent requirements, each on or off: `require_lowercase`,

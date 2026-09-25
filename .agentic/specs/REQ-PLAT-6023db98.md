@@ -43,3 +43,14 @@ systemd probes, and the shared engine/image helper paths through `NILO_TEST_*`
 environment variables. These variables substitute process-local probes only;
 they do not bypass the production validation sequence or authorize package
 installation.
+
+## Acceptance
+
+- Contract tests accept native Ubuntu 24.04 x86-64 with systemd running or
+  degraded and reject other OS releases and architectures before engine use.
+- Windows/WSL2 and native Ubuntu entry points invoke the same Linux engine and
+  image helpers against the same lock and archive format.
+- A present selected engine is preserved; installation requires an explicit
+  option and a verified package archive before any host mutation.
+- The engine verifier refuses Windows-mounted storage, and the execution
+  wrapper keeps the build container network-disabled.

@@ -55,6 +55,10 @@ and no policy language: the matrix below is compiled into Bench Core.
 |---|---|---|---|---|
 | `status.read` | Read the backend status resource | yes | yes | yes |
 | `inventory.read` | Read the integration and device inventories | yes | yes | yes |
+| `bench.read` | Read managed plugins, devices and jobs | yes | yes | yes |
+| `bench.execute` | Submit and control permitted bench work | no | yes | yes |
+| `bench.approve` | Approve pending bench work | no | no | yes |
+| `plugins.manage` | Install and manage integration packages | no | no | yes |
 | `tokens.read.self` | List one's own API tokens | no | yes | yes |
 | `tokens.manage.self` | Create and revoke one's own API tokens | no | yes | yes |
 | `users.read` | List identities, their roles and their state | no | no | yes |
@@ -68,21 +72,16 @@ and no policy language: the matrix below is compiled into Bench Core.
 | `activity.read` | Read the shared activity history | no | no | yes |
 | `activity.export` | Export activity history | no | no | yes |
 | `activity.retention.manage` | Change activity retention | no | no | yes |
+| `password.policy.manage` | Read and replace the appliance password policy | no | no | yes |
 | `system.power.manage` | Restart or power off the appliance from an interactive browser session | no | yes | yes |
 
-The set is deliberately limited to functionality that exists today.
-Other hardware operations, PLC flashing, MCP transport and artifact retrieval
-get their permissions when they get their endpoints; inventing them now
-would produce a matrix that no test can exercise.
+The set covers implemented permission names. Future operations receive an
+explicit role assignment when their endpoints are introduced.
 
-One honest caveat: the two `tokens.*.self` permissions are enforced
-wherever token management is reachable, but token management is reachable
-only from the local administration command line and from the browser
-Authentication page, both of which are administrator-only by design. So an
-Operator holds those permissions and still has no interface through which
-to use them. They are kept rather than dropped because they are what a
-token scope narrows against, and because collapsing them would make
-Operator identical to Viewer. The self-service surface remains deferred.
+The two `tokens.*.self` permissions are defined, but the current token
+administration routes and local or remote administrator command surfaces
+require all-token permissions. An Operator therefore has no self-service token
+interface yet. The self-service surface remains deferred.
 
 Every authenticated actor may read its own session regardless of role;
 that is identity, not authorization, so it carries no permission.
@@ -243,6 +242,10 @@ own the operations recorded in that data directory.
 
 ## HTTP interface
 
+This table covers the foundation identity routes. Bench, Camera, network,
+Activity and password-policy routes use the same permission model and are
+specified with their respective features.
+
 | Route | Credential | Required permission |
 |---|---|---|
 | `POST /api/v1/auth/login` | none | none |
@@ -280,9 +283,13 @@ work, never which of those it was.
 
 ## Command line
 
-Every command takes `--data-dir <absolute-path>`. Passwords are read
-from standard input, never from an argument, and are never printed.
-Mutating commands take `--actor <username>`, naming an existing enabled
+The local administration commands below take `--data-dir <absolute-path>`.
+Remote `nilo admin user` and `nilo admin token` commands instead take
+`--server URL --token-file PATH`; their exact mode and output contract is in
+`REQ-FUNC-6590e0c5.md`. `bootstrap` is local only. Passwords are read from
+standard input, never from an argument, and are never printed. Packaged first
+boot uses the protected password file consumed by `nilo seed-admin`.
+Mutating local commands take `--actor <username>`, naming an existing enabled
 administrator recorded as the audit actor; write access to the data
 directory is already full control of the database, so the flag is
 attribution, not a security boundary.
@@ -305,8 +312,9 @@ creation to the administrator it creates. It refuses to run once any
 enabled administrator exists, which is what stops it being a permanent
 unauthenticated escalation path.
 
-All output is JSON on standard output. `token create` is the only
-command that ever prints a secret, and it prints it once.
+Local administration output is JSON on standard output. Remote administration
+supports human-readable and JSON output. `token create` prints its secret only
+once.
 
 ## Examples
 
