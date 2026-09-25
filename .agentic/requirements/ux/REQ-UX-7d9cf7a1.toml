@@ -1,0 +1,25 @@
+schema = 1
+id = "REQ-UX-7d9cf7a1"
+title = "Keep Network records inert and technical values selectable"
+status = "active"
+
+requirement = """
+Selecting a Network record outside its explicit controls shall not activate an action; its addresses, prefixes and ports shall remain selectable text.
+"""
+
+verification = "A page test clicks the record and its address cell and asserts that no action dialog opens; inspect the rendered record in a browser and confirm that addresses, prefixes and ports can be selected and copied as text."
+
+affected_paths = [
+    "05_Software/frontend/src/components/network/NetworkInterfacesTable.tsx",
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx",
+    "05_Software/frontend/src/components/network/WireGuardPanel.tsx",
+    "05_Software/frontend/src/components/network/DeviceNetworksPanel.tsx",
+]
+linked_tests = [
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx::keeps record text inert and leaves actions behind explicit controls",
+]
+spec = ""
+priority = "high"
+rationale = "Records contain technical values that operators need to copy without triggering a change."
+created = 2026-09-25
+updated = 2026-09-25

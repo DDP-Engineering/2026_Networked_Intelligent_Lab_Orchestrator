@@ -26,7 +26,7 @@ affected_paths = [
 
 linked_tests = [
     "05_Software/frontend/e2e/field-display.spec.ts::the shell and the Network page are readable and complete",
-    "05_Software/frontend/e2e/field-display.spec.ts::a change awaiting confirmation is stated in the overview and restored",
+    "05_Software/frontend/e2e/field-display.spec.ts::signs in and states then restores a change awaiting confirmation",
     "05_Software/frontend/e2e/field-display.spec.ts::the other pages stay readable without sideways scrolling",
 ]
 
@@ -35,4 +35,4 @@ priority = "normal"
 rationale = "Automated viewport proof is the closest this repository can get to the seven-inch panel; the physical display remains a separate acceptance."
 
 created = 2026-09-04
-updated = 2026-09-04
+updated = 2026-09-25

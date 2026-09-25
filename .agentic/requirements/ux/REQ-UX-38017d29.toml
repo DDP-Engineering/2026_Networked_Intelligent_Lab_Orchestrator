@@ -62,7 +62,7 @@ affected_paths = [
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::API token creation > states that a token cannot exceed its owner's current role",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::states that a token cannot exceed its owner’s current role",
 ]
 
 # --- optional below this line ---
@@ -74,4 +74,4 @@ priority = "normal"   # low | normal | high
 rationale = "A scope list looks like a grant, and an administrator who reads it that way would expect selecting every scope to widen a Viewer's token."
 
 created = 2026-09-02
-updated = 2026-09-04
+updated = 2026-09-25

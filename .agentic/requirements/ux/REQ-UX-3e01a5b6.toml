@@ -34,8 +34,8 @@ affected_paths = [
 
 linked_tests = [
     "05_Software/frontend/src/components/pages/ActivityPage.test.tsx::carries the title and Export on one header line, and no description",
-    "05_Software/frontend/src/layout.test.ts::wraps the activity filter line and stacks the head below 56rem",
-    "05_Software/frontend/e2e/field-display.spec.ts::1920: the activity header and its filters are each one line",
+    "05_Software/frontend/e2e/field-display.spec.ts::1920x1080: the activity header keeps Export at its right edge",
+    "05_Software/frontend/e2e/field-display.spec.ts::1024x600: the activity header keeps Export at its right edge",
 ]
 
 
@@ -45,4 +45,4 @@ priority = "normal"   # low | normal | high
 rationale = "A page reached by its own tab does not need a sentence saying what it is."
 
 created = 2026-09-15
-updated = 2026-09-15
+updated = 2026-09-25

@@ -47,7 +47,8 @@ fields are username, role, enabled state and Actions, whose created time is
 available through Details, and whose Actions dialog offers role, enable,
 disable and password-reset workflows as applicable, keeps unavailable actions
 visible with their reason, separates access-impacting actions, protects the
-last enabled administrator and offers no identity deletion.
+last enabled administrator and offers permanent deletion only through a separate
+destructive confirmation that names the identity.
 """
 
 # The observation that settles whether the behavior holds - not a
@@ -61,7 +62,7 @@ last enabled administrator and offers no identity deletion.
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "A component test loads enabled and disabled users including the last administrator, asserts the wide columns and compact-card labels, opens Details and Actions by pointer and keyboard, checks each enabled or disabled action and reason, confirms access-impacting grouping and the absence of Delete, dismisses a workflow without a request, and proves the Users page never calls the token listing endpoint."
+verification = "Component tests load enabled and disabled users including the last administrator, check the responsive records and permitted Actions, then dismiss deletion without a request, refuse deletion of the last enabled administrator, and submit deletion of an eligible identity only after its username is typed. The Users page does not call the token listing endpoint."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
@@ -76,8 +77,10 @@ affected_paths = [
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::administration listings > lets the Users destination own identity loading without fetching tokens",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::lets the Users destination own identity loading without fetching tokens",
     "05_Software/frontend/src/components/AuthenticationPage.test.tsx::identity administration",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::holds the deletion back until the exact username is typed",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::says why the last enabled administrator cannot be deleted",
 ]
 
 # --- optional below this line ---
@@ -89,4 +92,4 @@ priority = "high"   # low | normal | high
 rationale = "The field display must make identity state scannable without making a row itself an accidental activation target."
 
 created = 2026-09-04
-updated = 2026-09-04
+updated = 2026-09-25

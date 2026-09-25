@@ -21,7 +21,10 @@ func TestRootUsageNamesEveryCommandGroup(t *testing.T) {
 		t.Fatalf("unknown command error = %v, want exit code 2", err)
 	}
 	for _, want := range []string{
-		"nilo serve", "nilo admin", "nilo network", "nilo activity",
+		"nilo version", "nilo discover", "nilo open", "nilo serve",
+		"nilo serve-foundation-check", "nilo development", "nilo seed-admin",
+		"nilo maintenance", "nilo admin", "nilo network", "nilo plugin",
+		"nilo bench", "nilo activity",
 		"--data-dir", "--server", "--token-file", "--management-interface", "--management-port", "--management-reconfigure",
 	} {
 		if !strings.Contains(stderr.String(), want) {

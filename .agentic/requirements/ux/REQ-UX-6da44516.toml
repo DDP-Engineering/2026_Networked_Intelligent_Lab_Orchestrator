@@ -67,8 +67,7 @@ linked_tests = [
     "05_Software/frontend/src/layout.test.ts::bounds the document to the viewport and refuses page-level scrolling",
     "05_Software/frontend/src/layout.test.ts::paints no decorative background behind the workspace",
     "05_Software/frontend/src/layout.test.ts::gives the workspace the space that is left, and its own overflow",
-    "05_Software/frontend/src/layout.test.ts::scrolls long listings inside their own compartments",
-    "05_Software/frontend/src/layout.test.ts::narrows the navigation rather than clipping it on a small viewport",
+    "05_Software/frontend/src/layout.test.ts::narrows the navigation to a labeled compact rail on a field viewport",
 ]
 
 # --- optional below this line ---
@@ -80,4 +79,4 @@ priority = "high"   # low | normal | high
 rationale = "The workspace is the product; everything around it is overhead that an instrument view pays for."
 
 created = 2026-09-02
-updated = 2026-09-02
+updated = 2026-09-25

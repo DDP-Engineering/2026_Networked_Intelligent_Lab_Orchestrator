@@ -36,7 +36,6 @@ affected_paths = [
 
 linked_tests = [
     "05_Software/frontend/src/components/network/ManagementAccessPanel.test.tsx::keeps a recovered outcome visible until refresh supersedes it",
-    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx::localizes structured adapter-role conflicts from a device preview",
     "05_Software/frontend/src/components/pages/NetworkPage.test.tsx::retains a structured role conflict until observed state supersedes it",
     "05_Software/frontend/src/components/pages/NetworkPage.test.tsx::never renders backend prose for malformed structured role conflicts",
     "05_Software/frontend/src/components/pages/NetworkPage.test.tsx::preserves typed adapter detail when acknowledgement finds a new role conflict",
@@ -56,4 +55,4 @@ priority = "high"
 rationale = "Asynchronous and startup recovery outcomes must remain understandable without opening transient help."
 
 created = 2026-09-11
-updated = 2026-09-12
+updated = 2026-09-25

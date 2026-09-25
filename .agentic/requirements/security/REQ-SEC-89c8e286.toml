@@ -14,7 +14,7 @@ schema = 1
 # and must match the category folder this file sits in.
 id = "REQ-SEC-89c8e286"
 
-title = "Refuse every MCP request that is not an authorized read"
+title = "Reject MCP requests without an eligible read credential or origin"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
@@ -38,7 +38,7 @@ status = "draft"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-If an MCP request arrives without a valid unrevoked NILO bearer token carrying the network read permission, or carries an Origin the endpoint does not accept, then the endpoint shall refuse the request without returning any network data.
+If an MCP request lacks a valid unrevoked NILO bearer token, carries an Origin the endpoint does not accept, or its token has neither `network.read` nor `bench.read` when bench tools are configured, then the endpoint shall refuse the request without returning network or bench data.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -49,7 +49,7 @@ If an MCP request arrives without a valid unrevoked NILO bearer token carrying t
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "An automated test calls the MCP endpoint with no token, an unknown token, a revoked token, a token lacking the network read permission and a disallowed Origin, and asserts each is refused and that the response body contains no network data; a control case with a valid scoped token and an accepted Origin asserts the same request succeeds."
+verification = "Tests call a network-only and a bench-configured MCP endpoint with no token, an unknown or revoked token, an insufficiently scoped token and a disallowed Origin; each refusal contains no network or bench data. Valid network-read and bench-read credentials succeed only for their respective tools."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
@@ -63,6 +63,7 @@ affected_paths = [
 linked_tests = [
     "05_Software/core/internal/mcp/server_test.go::TestEveryUnauthorizedRequestIsRefusedWithoutNetworkData",
     "05_Software/core/internal/mcp/protocol_test.go::TestStreamableDiscoveryReadsAndRevocationWithRealToken",
+    "05_Software/core/internal/mcp/bench_test.go::TestBenchToolsUseCurrentTokenScopes",
 ]
 
 # --- optional below this line ---
@@ -74,7 +75,7 @@ priority = "high"   # low | normal | high
 rationale = ""        # why this behavior exists, if not obvious
 
 created = 2026-09-02
-updated = 2026-09-03
+updated = 2026-09-25
 
 # Planned files not implemented at the 2026-09-03 audit:
 # 05_Software/core/internal/mcp/auth.go

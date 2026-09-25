@@ -111,7 +111,7 @@ runtime status.
   disclosure where the viewport collapses the panel.
 - `REQ-UX-0291ba55` - places the administrator Activity retention disclosure
   between the header and the filters.
-- `REQ-UX-7781cc4e` - offers 10, 25, 50, 100 and all records a page and opens
+- `REQ-UX-7781cc4e` - offers 10, 25, 50 and 100 records a page, plus an explicit whole-selection response and opens
   Activity at 10.
 - `REQ-PLAT-e1a2a591` - pins direct and transitive dependencies with exact
   versions, integrity metadata, and a static Vite production build.
@@ -531,10 +531,9 @@ The authenticated shell uses one SIM/LIVE badge, without a footer disclaimer. Ne
 ## Device networks, adapter configuration and Activity (2026-09-04)
 
 - `src/api/devicenetworks.ts`, `src/api/activity.ts`, `src/api/settings.ts`
-  parse the device-network, activity/diagnostics and adapter-settings resources;
+  parse the device-network, activity and adapter-settings resources;
   `contract.ts` gained `adapter_id`, `ssid` and `settings` on an interface, the
-  operations listing, and the `activity.read`, `activity.export` and
-  `diagnostics.manage` permissions; `wireguard.ts` gained the `rename` change.
+  operations listing, and the `activity.read` and `activity.export` permissions; `wireguard.ts` gained the `rename` change.
   The client exposes one method per route and `exportActivity` returns the
   export as the text the appliance wrote.
 - `src/api/mock.ts` answers every new route through the same acknowledged
@@ -608,12 +607,15 @@ permission or confirmation behaviour changed with it.
   `isAddress`, `isPrefix` and `subnetOf`.
 - `REQ-UX-ff989933` - one `table.data-table.record-table` per list with
   `data-label` on each cell; below 56rem the stylesheet turns rows into labelled
-  cards. Secondary values live in an explicit details row announced as a region;
-  `components/RowActions.tsx` gives each row one Actions control that opens a
-  compact `Modal` attached to the document body. It identifies the object type
+  cards. Secondary values live in an explicit details row announced as a region.
+- `REQ-UX-61eb69f2` - `components/RowActions.tsx` gives each row one Actions
+  control that opens a compact `Modal` attached to the document body. It identifies the object type
   and status, gives every choice a full-width target, keeps disabled entries and
   their reasons visible, separates destructive actions, and cannot be clipped
   by the table scroll compartment.
+- `REQ-UX-7d9cf7a1` - record rows have no activation handler; technical
+  addresses, prefixes and ports remain plain selectable text beside explicit
+  Details and Actions controls.
 - `REQ-UX-8859ce12` - the device-network editor is Identity, Device side, Access
   path, Addressing, Services, a collapsed Advanced and a Review that names the
   adapter and address, the authorized sources and target, whether WireGuard is
@@ -741,7 +743,7 @@ decided by `useViewportClass`: inside the form and first on the line while the
 panel is inline, and above the closed drawer while the viewport collapses it,
 so a bench panel keeps scope selection one tap away (REQ-UX-ba46f6d3).
 
-The listing offers 10, 25, 50, 100 and all records a page and opens at 10
+The listing offers 10, 25, 50 and 100 records a page, plus an explicit whole-selection response and opens at 10
 (REQ-UX-7781cc4e); Bench Core accepts any limit up to its maximum, so the
 default is a client decision. Together these keep the whole first record inside
 a 1024x600 viewport before anything is scrolled (REQ-UX-dd4b2c16).

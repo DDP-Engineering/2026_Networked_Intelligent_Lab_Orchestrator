@@ -8,12 +8,14 @@ status = "active"
 
 requirement = """
 When `nilo` is invoked without a recognized command, the command-line interface shall print a
-usage on standard error that names the `serve`, `admin`, `network`, `activity` and `diagnostics`
-command groups, states that `admin` runs locally with `--data-dir` or remotely with `--server`
+usage on standard error that names every supported top-level command, including
+`version`, `discover`, `open`, `serve`, `serve-foundation-check`, `development`,
+`seed-admin`, `maintenance`, `admin`, `network`, `plugin`, `bench` and `activity`,
+states that `admin` runs locally with `--data-dir` or remotely with `--server`
 and `--token-file`, and exit 2.
 """
 
-verification = "A command test runs the built binary with an unknown command and asserts exit 2 and that standard error names serve, admin, network, activity and diagnostics together with --data-dir, --server and --token-file."
+verification = "A command test runs the built binary with an unknown command and asserts exit 2, that standard error names every supported command and both administration modes, and that it does not advertise a diagnostics group."
 
 affected_paths = [
     "05_Software/core/cmd/nilo/main.go",
@@ -28,7 +30,7 @@ linked_tests = [
 spec = ""
 
 priority = "normal"
-rationale = "The activity and diagnostics groups exist but the root usage does not mention them, so an operator at the console cannot find them."
+rationale = "An operator at the console needs one current entry point for the supported command groups and administration modes."
 
 created = 2026-09-04
-updated = 2026-09-04
+updated = 2026-09-25

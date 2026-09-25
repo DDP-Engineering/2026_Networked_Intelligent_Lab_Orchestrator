@@ -28,7 +28,7 @@ affected_paths = [
 ]
 
 linked_tests = [
-    "05_Software/frontend/src/components/pages/ActivityPage.test.tsx::opens with the given filters, pages by cursor and discloses the gap",
+    "05_Software/frontend/src/components/pages/ActivityPage.test.tsx::opens with the given filters, changes pages and discloses the gap",
     "05_Software/frontend/e2e/field-display.spec.ts::the other pages stay readable without sideways scrolling",
 ]
 
@@ -37,4 +37,4 @@ priority = "normal"
 rationale = ""
 
 created = 2026-09-04
-updated = 2026-09-04
+updated = 2026-09-25

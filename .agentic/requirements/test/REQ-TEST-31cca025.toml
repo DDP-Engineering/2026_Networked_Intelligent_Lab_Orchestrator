@@ -9,15 +9,15 @@ schema = 1
 
 id = "REQ-TEST-31cca025"
 
-title = "Verify appliance discovery on real network and hardware paths"
+title = "Verify appliance discovery in the repository stages"
 
 status = "active"
 
 requirement = """
-The repository verification shall exercise appliance identity, certificate custody, mDNS, SSDP, DHCP identity, commissioning access point, Identify, CLI discovery/open/label and local/About status through focused unit tests, the isolated privileged network stage, the real appliance-browser stage and recorded Raspberry Pi hardware checks, including measured convergence times for each externally discovered or withdrawn presence.
+The repository verification shall exercise appliance identity, certificate custody, mDNS, SSDP, DHCP identity, commissioning access point, Identify, CLI discovery/open/label and local/About status through focused unit tests, the isolated privileged network stage and the real appliance-browser stage.
 """
 
-verification = "Run the focused Go/GUI suites, `02_Tools/tests/network/check.sh`, `02_Tools/tests/appliance/check.sh`, the repository strict gate and the documented Pi/Windows/macOS/Ubuntu/phone matrix; all automated commands exit zero, host network before/after evidence matches, and the delivery record contains observed timestamps for serial mDNS, SSDP appearance/byebye, DHCP lease/DNS, AP/captive portal, button reannouncement and CLI discovery rather than inferred bounds."
+verification = "Run the focused Go/GUI suites, `02_Tools/tests/network/check.sh`, `02_Tools/tests/appliance/check.sh` and the repository test gate; each automated command exits zero and the isolated stage reports unchanged host network state before and after its run."
 
 affected_paths = [
     "02_Tools/tests/network/run.sh",
@@ -33,6 +33,8 @@ affected_paths = [
 ]
 
 linked_tests = [
+    "02_Tools/tests/network/check.sh",
+    "02_Tools/tests/appliance/check.sh",
     "05_Software/core/internal/discovery/client_test.go::*",
     "05_Software/core/internal/httpapi/appliance_identity_test.go::*",
     "05_Software/core/internal/nethelper/commissioning_services_test.go::*",
@@ -44,7 +46,7 @@ linked_tests = [
 spec = ""
 
 priority = "high"   # low | normal | high
-rationale = "Discovery and GPIO behavior depend on real multicast, routing, NetworkManager, browser and hardware boundaries that unit tests cannot prove alone."
+rationale = "Isolated network and appliance-browser stages exercise boundaries that unit tests cannot prove alone; physical client and GPIO acceptance is tracked separately."
 
 created = 2026-09-15
-updated = 2026-09-15
+updated = 2026-09-25

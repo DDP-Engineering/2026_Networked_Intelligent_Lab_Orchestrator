@@ -79,7 +79,7 @@ linked_tests = [
     "05_Software/core/internal/httpapi/power_test.go::TestOperatorAndAdministratorSessionsDispatchExactPowerActionsAfterAudit",
     "05_Software/core/internal/nethelper/power_linux_test.go::TestLoginManagerMapsPowerActionsToExactDBusMethods",
     "05_Software/frontend/src/components/PowerConfirmation.test.tsx::requires one explicit confirmation and reports acceptance",
-    "05_Software/frontend/e2e/bench-core.spec.ts::signs in with a development token and shows the simulated bench",
+    "05_Software/frontend/e2e/bench-core.spec.ts::signs in with a human session and shows the appliance bench",
 ]
 
 # --- optional below this line ---
@@ -91,4 +91,4 @@ priority = "high"   # low | normal | high
 rationale = "Deterministic tests can prove contracts and safety boundaries, but only real boot and halt observations can establish the target Linux behavior."
 
 created = 2026-09-08
-updated = 2026-09-08
+updated = 2026-09-25

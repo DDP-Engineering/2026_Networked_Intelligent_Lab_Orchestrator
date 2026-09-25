@@ -5,6 +5,10 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ## [Unreleased]
 
+### Changed
+
+- Requirements now reflect current MCP, CLI, Activity and administrator UI behavior; pending integration and hardware acceptance are tracked separately.
+
 ## [0.9.0] - 2026-09-25
 
 ### Added

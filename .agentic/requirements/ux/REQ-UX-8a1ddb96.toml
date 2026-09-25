@@ -71,7 +71,7 @@ affected_paths = [
 linked_tests = [
     "05_Software/frontend/src/App.test.tsx::presents the final product login and canonical version as the only credential path",
     "05_Software/frontend/e2e/authentication.spec.ts::signs a real administrator in with a password",
-    "05_Software/frontend/e2e/bench-core.spec.ts::signs in with a human session and shows the simulated bench",
+    "05_Software/frontend/e2e/bench-core.spec.ts::signs in with a human session and shows the appliance bench",
 ]
 
 # --- optional below this line ---
@@ -83,4 +83,4 @@ priority = "high"   # low | normal | high
 rationale = "The visible project version tells a user which CLI, HTTP, and MCP contracts accompany the installed NILO build before authentication."
 
 created = 2026-09-10
-updated = 2026-09-10
+updated = 2026-09-25

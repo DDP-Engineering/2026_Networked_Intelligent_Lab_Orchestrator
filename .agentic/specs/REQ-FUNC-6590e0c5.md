@@ -1,7 +1,9 @@
 # REQ-FUNC-6590e0c5 — Administer identities and API tokens remotely from the command line
 
-This spec also carries the confirmation contract of REQ-SEC-bfd1cf86, because
-the two are one command surface.
+This spec covers remote operations (REQ-FUNC-6590e0c5), mode selection
+(REQ-FUNC-4da35b94), result output (REQ-FUNC-94648466), applied-outcome
+reporting (REQ-FUNC-38138ea8), and deletion confirmation (REQ-SEC-bfd1cf86)
+on one command surface.
 
 ## Behavior
 

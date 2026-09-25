@@ -1,0 +1,26 @@
+schema = 1
+id = "REQ-FUNC-94648466"
+title = "Render remote administration results and one-time token secrets"
+status = "active"
+
+requirement = """
+When a remote `nilo admin` request completes, the command-line interface shall preserve the appliance's document under `--json` and render a readable result otherwise, showing a newly created API token secret exactly once with a warning that it cannot be retrieved later.
+"""
+
+verification = "Command tests request JSON and readable output for remote user and token operations, assert JSON contains only the appliance document, and assert a newly created token secret appears exactly once with its retrieval warning."
+
+affected_paths = [
+    "05_Software/core/cmd/nilo/admin_remote.go",
+    "05_Software/core/cmd/nilo/admin_remote_test.go",
+    "05_Software/core/cmd/nilo/admin_test.go",
+]
+linked_tests = [
+    "05_Software/core/cmd/nilo/admin_remote_test.go::TestRemoteJSONOutputIsTheAppliancesDocument",
+    "05_Software/core/cmd/nilo/admin_remote_test.go::TestRemoteTokenCommandsCallTheAdministrationRoutes",
+    "05_Software/core/cmd/nilo/admin_test.go::TestAdminTokenCommandsDiscloseTheSecretOnceAndNeverAgain",
+]
+spec = ""
+priority = "high"
+rationale = "Administrative automation needs predictable documents and one-time credentials need clear disclosure."
+created = 2026-09-25
+updated = 2026-09-25

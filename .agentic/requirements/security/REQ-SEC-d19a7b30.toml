@@ -8,15 +8,15 @@ schema = 1
 
 id = "REQ-SEC-d19a7b30"
 
-title = "Gate activity history and diagnostics behind three fixed permissions"
+title = "Gate Activity reads and exports behind fixed permissions"
 
 status = "active"
 
 requirement = """
-The appliance shall authorize activity reads with activity.read, activity exports with activity.export and diagnostic session and policy changes with diagnostics.manage, shall grant all three only to the administrator role, and shall apply them to every door including API tokens narrowed by scope.
+The appliance shall authorize activity reads with `activity.read` and activity exports with `activity.export`, grant both permissions only to the Administrator role, and intersect API token scopes with that role on every request.
 """
 
-verification = "Negative HTTP and CLI tests assert each route refuses a viewer, an operator, a scoped token lacking the permission and a revoked token."
+verification = "An HTTP test requests activity reads and exports as a Viewer, Operator, scope-narrowed Administrator token, revoked token and unauthenticated caller, asserts the corresponding forbidden or unauthorized response, and reads the recorded denials with an Administrator token."
 
 affected_paths = [
     "05_Software/core/internal/auth/role.go",
@@ -27,8 +27,7 @@ affected_paths = [
 
 linked_tests = [
     "05_Software/core/internal/auth/role_test.go",
-    "05_Software/core/internal/httpapi/activity_test.go",
-    "05_Software/core/cmd/nilo/network_vpn_test.go",
+    "05_Software/core/internal/httpapi/activity_test.go::TestActivityRoutesAreAuthorized",
 ]
 
 spec = "specs/REQ-FUNC-2f8d63b5.md"
@@ -36,4 +35,4 @@ priority = "high"
 rationale = ""
 
 created = 2026-09-03
-updated = 2026-09-04
+updated = 2026-09-25

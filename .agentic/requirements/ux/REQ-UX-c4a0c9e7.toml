@@ -66,8 +66,8 @@ affected_paths = [
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/frontend/src/layout.test.ts::single-viewport layout > keeps focused administration listings in natural page flow",
-    "05_Software/frontend/src/layout.test.ts::single-viewport layout > turns record tables into labeled cards below 56rem",
+    "05_Software/frontend/src/layout.test.ts::keeps focused administration listings in natural page flow",
+    "05_Software/frontend/src/layout.test.ts::turns record tables into labeled cards below 56rem",
 ]
 
 # --- optional below this line ---
@@ -79,4 +79,4 @@ priority = "normal"   # low | normal | high
 rationale = "Field displays need natural page scrolling so action and help overlays are not clipped inside independently scrolling record compartments."
 
 created = 2026-09-02
-updated = 2026-09-04
+updated = 2026-09-25

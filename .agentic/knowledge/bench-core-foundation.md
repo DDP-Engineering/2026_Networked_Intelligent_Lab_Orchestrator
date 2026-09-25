@@ -4,7 +4,7 @@
 
 Select this page for the Go Bench Core under `05_Software/core/`:
 the `nilo` command line (`serve`, `discover`, `open`, `admin` in local and remote mode, `network`,
-`activity`, `diagnostics`, `maintenance`, `seed-admin`), the authenticated `/api/v1` HTTP routes and their
+`activity`, `maintenance`, `seed-admin`), the authenticated `/api/v1` HTTP routes and their
 permissions, identities, sessions, API tokens and their audit events, network
 operations, the simulation catalog, and the SQLite repositories. Start at
 `cmd/nilo/main.go` for a command, `internal/httpapi/server.go` for a route
@@ -48,7 +48,7 @@ every request and `user delete` / `token delete` exist behind a typed
 confirmation or `--confirm-delete`). Ambiguous or incomplete mode options exit 2
 before anything is opened or contacted. The root usage names every group.
 
-`cmd/nilo` provides version reporting, the `serve-foundation-check` composition smoke command, development token issuance, the `nilo admin` local and remote administration commands, the `network`, `activity` and `diagnostics` API clients, and explicit simulation/appliance servers. Protected HTTP contracts provide login, logout, the current session, status, deterministic integration and device inventory for the selected simulation scenario, the identity listing, and the identity and token administration routes the browser Authentication page drives. Internal consumers compose the foundation with `app.Open` and authorize through `app.IdentityService()`, submit work through `operation.Service`, resolve policy through `policy.Resolver`, and use the narrow repository interfaces owned by the domain packages. Only a starting server composes with `app.New`, which is `app.Open` followed by startup reconciliation; every other command opens the appliance without touching the operations recorded in it.
+`cmd/nilo` provides version reporting, the `serve-foundation-check` composition smoke command, development token issuance, the `nilo admin` local and remote administration commands, the `network` and `activity` API clients, and explicit simulation/appliance servers. Protected HTTP contracts provide login, logout, the current session, status, deterministic integration and device inventory for the selected simulation scenario, the identity listing, and the identity and token administration routes the browser Authentication page drives. Internal consumers compose the foundation with `app.Open` and authorize through `app.IdentityService()`, submit work through `operation.Service`, resolve policy through `policy.Resolver`, and use the narrow repository interfaces owned by the domain packages. Only a starting server composes with `app.New`, which is `app.Open` followed by startup reconciliation; every other command opens the appliance without touching the operations recorded in it.
 
 `nilo discover` merges validated mDNS and SSDP records by appliance UUID and
 emits a stable table, JSON record or printable label; `nilo open` and remote
@@ -273,7 +273,8 @@ exchange before another maintenance operation can observe it.
 - `REQ-FUNC-a1cefd8f` - `nilo network operation list` reads the operation
   listing the browser reattaches with; the route has no filters, so the command
   offers none.
-- `REQ-FUNC-6590e0c5`, `REQ-SEC-7861a0b2` and `REQ-UX-3f48f396` - administer
+- `REQ-FUNC-6590e0c5`, `REQ-FUNC-4da35b94`, `REQ-FUNC-94648466`,
+  `REQ-FUNC-38138ea8`, `REQ-SEC-7861a0b2` and `REQ-UX-3f48f396` - administer
   identities and tokens remotely over the administration routes with the token
   read only from a file, in exactly one mode per command, with readable or
   `--json` output, and name every command group in the root usage.
@@ -583,7 +584,7 @@ Network interface readings expose Gateway4 and Gateway6 from the active NetworkM
   listening record, the authenticated boundary, and that every adapter Bench
   Core reports is one NetworkManager detected in the stage's own namespace.
 
-## Device networks, forwarding, Activity and diagnostics (2026-09-04)
+## Device networks, forwarding and Activity
 
 Added under TASK-943403e2, P2 to P9. Packages and the seams between them:
 
@@ -619,10 +620,9 @@ Added under TASK-943403e2, P2 to P9. Packages and the seams between them:
   digest) and adapter settings (`nilo-if-<mac>` profiles, `ipv6.method=link-local`,
   scan classification, join).
 - `internal/activity`: `Service.Query`/`Export`, `Policy`, `Housekeeper`,
-  `Monitor` (audit health); `internal/diagnostics`: timed sessions and the
-  `Trace` debug sink the operation manager calls. `internal/store/sqlite`
-  migrations 008 (interface settings), 009 (device networks), 010 (activity
-  policy, retention watermarks, diagnostic sessions).
+  `Monitor` (audit health); `internal/store/sqlite` migrations 008
+  (interface settings), 009 (device networks), 010 (activity policy and
+  retention watermarks).
 - HTTP: `network_operations.go` (settings, Wi-Fi and device-network previews with
   the request origin), `device_networks.go`, `activity.go` (`accessGuard` records
   refusals; exports and policy changes are recorded with the requesting actor).

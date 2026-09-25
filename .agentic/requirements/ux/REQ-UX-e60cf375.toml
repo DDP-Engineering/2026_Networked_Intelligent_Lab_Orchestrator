@@ -63,7 +63,7 @@ affected_paths = [
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::API token creation > discloses the secret once, copies it, and never shows it again",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::discloses the secret once, copies it, and never shows it again",
     "05_Software/frontend/e2e/authentication.spec.ts::creates an API token and shows its secret exactly once",
 ]
 
@@ -76,4 +76,4 @@ priority = "high"   # low | normal | high
 rationale = "Bench Core keeps only the verifier, so a secret the interface holds on to after its one showing is a credential copy nobody asked it to keep."
 
 created = 2026-09-02
-updated = 2026-09-04
+updated = 2026-09-25

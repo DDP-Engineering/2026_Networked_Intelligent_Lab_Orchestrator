@@ -53,7 +53,7 @@ showing an illustrative address, link speed or traffic figure as measured.
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "A component test opens the network summary and the Network page against a backend that reports no network data, and asserts both state that appliance network reporting is not yet available, that no address, link speed or traffic value appears, and that any statement about Bench Core is labelled as HTTP reachability and not as VPN, LAN or Wi-Fi state; a source test asserts the interface contains none of the illustrative addresses or traffic figures from the design references."
+verification = "A shell test observes unreported network facts and an unreadable network response, checks that neither produces illustrative addresses, speeds or traffic, and labels the independent Bench Core fact as HTTP reachability; a Network-page test reports an unreadable response as unavailable instead of an empty appliance."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
@@ -65,8 +65,9 @@ affected_paths = [
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/frontend/src/components/shell/shell.test.tsx::says appliance network reporting is unavailable, in the summary",
-    "05_Software/frontend/src/components/shell/shell.test.tsx::says the same on the Network page, and reports only HTTP reachability",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::keeps the four network facts separate in the summary",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::says the network state is unreadable, and still reports HTTP reachability",
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx::reports an unreadable status as unavailable instead of as an empty appliance",
 ]
 
 # --- optional below this line ---
@@ -78,4 +79,4 @@ priority = "high"   # low | normal | high
 rationale = "An invented interface address or a green VPN light read off an HTTP request is a diagnosis an operator would act on, and it would be wrong."
 
 created = 2026-09-02
-updated = 2026-09-02
+updated = 2026-09-25

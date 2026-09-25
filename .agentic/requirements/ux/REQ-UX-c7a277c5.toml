@@ -68,7 +68,7 @@ affected_paths = [
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/frontend/src/components/shell/shell.test.tsx::the navigation > expands Authentication into distinct Users and API tokens workspaces",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::expands Authentication into distinct Users and API tokens workspaces",
     "05_Software/frontend/e2e/shell.spec.ts::keeps one runtime indicator on every screen",
 ]
 
@@ -81,4 +81,4 @@ priority = "normal"   # low | normal | high
 rationale = "Administration is a distinct task from watching the bench, and an operator should not be shown a page every one of whose controls the server would refuse."
 
 created = 2026-09-02
-updated = 2026-09-04
+updated = 2026-09-25

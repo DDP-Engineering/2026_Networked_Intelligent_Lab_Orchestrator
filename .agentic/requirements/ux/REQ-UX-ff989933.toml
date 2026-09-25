@@ -13,10 +13,10 @@ title = "Present Network lists as responsive tables, details and cards"
 status = "active"
 
 requirement = """
-The Network workspace's focused Network adapters, VPN profiles and Device access pages shall present their respective Interfaces, WireGuard profiles and Device networks from one markup each that renders as a table with a bounded set of essential columns on wide viewports, keeps the essential columns and places secondary values behind an explicit Details control on a 1024 by 600 viewport, and renders each item as a compact record of label and value pairs below 56rem; essential columns are name and type, state, IP address with prefix and gateway for an interface, name, state, tunnel address and startup selection for a profile, and name, device-side adapter, target or device subnet, access method, exposed address and state for a device network; every other value is available in the details; several actions on one item are offered from an Actions control that opens a compact modal dialog above the page, identifies the object and current status, uses large action buttons, keeps disabled entries visible with their reason, separates destructive actions and offers Cancel without changing page scroll; the item itself is not an activation target; and exact addresses, prefixes and ports remain selectable text.
+The Network adapters, VPN profiles and Device access pages shall render each item from one markup as a table row on wide screens and a labeled compact record below 56rem. At 1024 by 600, each shall keep its essential values visible and place secondary values behind Details: name, type, state, address, prefix and gateway for an interface; name, state, tunnel address and startup selection for a profile; and name, device-side adapter, target or subnet, access method, exposed address and state for a device network.
 """
 
-verification = "A RowActions component test opens the compact dialog and asserts its title, object type, status, large actions, disabled reason, separated destructive action and Cancel, then selects an action and confirms focus returns to the trigger; component tests for each of the three panels open the Details control and assert every secondary value remains present and every permitted action remains offered; a stylesheet test asserts the record-table rule turns rows into labeled cards below 56rem and the dialog is viewport-bounded; a browser test at 1024x600 and 800x480 opens an interface, profile and device-network action dialog and asserts it is fully inside the viewport without changing page scroll."
+verification = "Component tests for each of the three pages assert essential values in the wide row and secondary values behind Details; a stylesheet and browser test assert the same markup becomes labeled cards below 56rem without horizontal page overflow."
 
 affected_paths = [
     "05_Software/frontend/src/components/pages/NetworkPage.tsx",
@@ -40,14 +40,9 @@ affected_paths = [
 
 linked_tests = [
     "05_Software/frontend/src/components/pages/NetworkPage.test.tsx::keeps the essential columns and puts the secondary values behind Details",
-    "05_Software/frontend/src/components/RowActions.test.tsx::opens a compact dialog outside the scrolling table and keeps every action clear",
-    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx::offers every interface action from one dialog, with visible object context",
     "05_Software/frontend/src/components/network/WireGuardPanel.test.tsx::keeps the essential profile data in the row and the rest behind Details",
-    "05_Software/frontend/src/components/network/WireGuardPanel.test.tsx::offers every permitted profile action from one dialog and says why one is withheld",
     "05_Software/frontend/src/components/network/DeviceNetworksPanel.test.tsx::shows the essential columns, keeps the rest in Details and every action in one dialog",
-    "05_Software/frontend/src/components/network/DeviceNetworksPanel.test.tsx::withholds a change while an operation is in flight, and says so",
     "05_Software/frontend/src/layout.test.ts::turns record tables into labeled cards below 56rem",
-    "05_Software/frontend/src/layout.test.ts::keeps row actions in a compact viewport-bounded dialog",
     "05_Software/frontend/e2e/field-display.spec.ts::the shell and the Network page are readable and complete",
 ]
 
@@ -56,4 +51,4 @@ priority = "high"
 rationale = "A seven-column table at 16px does not fit 864 pixels; shrinking it is forbidden, so columns must be chosen and the rest kept reachable."
 
 created = 2026-09-04
-updated = 2026-09-04
+updated = 2026-09-25

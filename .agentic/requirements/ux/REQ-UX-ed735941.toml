@@ -76,7 +76,7 @@ affected_paths = [
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::API token creation > states that a token cannot exceed its owner's current role",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::states that a token cannot exceed its owner’s current role",
     "05_Software/frontend/src/components/AuthenticationPage.test.tsx::the dialog keyboard boundary",
 ]
 
@@ -89,4 +89,4 @@ priority = "high"   # low | normal | high
 rationale = "Credential and role choices are unsafe when labels are the only explanation, but warnings must not disappear inside optional help."
 
 created = 2026-09-04
-updated = 2026-09-04
+updated = 2026-09-25

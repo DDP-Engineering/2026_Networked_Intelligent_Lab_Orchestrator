@@ -1,0 +1,26 @@
+schema = 1
+id = "REQ-FUNC-4da35b94"
+title = "Select exactly one command-line identity administration mode"
+status = "active"
+
+requirement = """
+When `nilo admin user` or `nilo admin token` is invoked, the command-line interface shall select local mode from `--data-dir` or remote mode from the complete `--server` and `--token-file` pair, and exit with a usage error before any request or data-directory access when the modes are combined or incomplete.
+"""
+
+verification = "Command tests invoke each valid mode and each mixed, missing or incomplete combination; the latter exit 2 without opening the data directory or sending an HTTP request."
+
+affected_paths = [
+    "05_Software/core/cmd/nilo/admin.go",
+    "05_Software/core/cmd/nilo/admin_remote.go",
+    "05_Software/core/cmd/nilo/admin_remote_test.go",
+    "05_Software/core/cmd/nilo/admin_test.go",
+]
+linked_tests = [
+    "05_Software/core/cmd/nilo/admin_remote_test.go::TestRemoteAdminRejectsAmbiguousOrIncompleteModes",
+    "05_Software/core/cmd/nilo/admin_test.go::TestAdminUserCommandsManageIdentitiesWithoutPrintingPasswords",
+]
+spec = ""
+priority = "high"
+rationale = "Mode ambiguity could otherwise direct an administrative command to the wrong authority boundary."
+created = 2026-09-25
+updated = 2026-09-25

@@ -1,0 +1,23 @@
+schema = 1
+id = "REQ-FUNC-38138ea8"
+title = "Preserve an applied administration outcome when its listing re-read fails"
+status = "active"
+
+requirement = """
+When a remote `nilo admin` mutation succeeds but the listing re-read that follows it fails, the command-line interface shall report the change as applied and identify the later read failure without claiming that the mutation failed.
+"""
+
+verification = "A command test returns success for the mutation and failure for the following listing request, then asserts the command output preserves the applied outcome and names the read failure."
+
+affected_paths = [
+    "05_Software/core/cmd/nilo/admin_remote.go",
+    "05_Software/core/cmd/nilo/admin_review_test.go",
+]
+linked_tests = [
+    "05_Software/core/cmd/nilo/admin_review_test.go::TestAnAppliedChangeIsReportedEvenWhenTheListingCannotBeReread",
+]
+spec = ""
+priority = "high"
+rationale = "An administrator must not retry a change that was already applied because a later read failed."
+created = 2026-09-25
+updated = 2026-09-25

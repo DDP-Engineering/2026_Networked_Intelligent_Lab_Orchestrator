@@ -13,10 +13,10 @@ title = "Return filtered activity history through a server-paginated query"
 status = "active"
 
 requirement = """
-The appliance shall answer an authorized activity query filtered by category, time range, function, target, actor, severity, outcome and operation identity, returning a bounded page with a cursor for the next page and the retained window the answer was drawn from.
+When an authorized activity query does not request the whole selection, the appliance shall filter by category, time range, function, target, actor, severity, outcome and operation identity and return a bounded page with a cursor for the next page and the retained window it was drawn from.
 """
 
-verification = "An API test asserts filtering on each field, a bounded page size, stable cursor paging across a full result set, and the reported retained window."
+verification = "Service and API tests query each filter, reject a requested page above the maximum, follow a stable cursor across a result set and inspect the reported retained window."
 
 affected_paths = [
     "05_Software/core/internal/activity/activity.go",
@@ -26,8 +26,9 @@ affected_paths = [
 ]
 
 linked_tests = [
-    "05_Software/core/internal/activity/activity_test.go",
-    "05_Software/core/internal/httpapi/activity_test.go",
+    "05_Software/core/internal/activity/activity_test.go::TestQueryFiltersEveryFieldAndPages",
+    "05_Software/core/internal/activity/activity_test.go::TestQuerySortsAndPagesWithAnOpaqueCursor",
+    "05_Software/core/internal/httpapi/activity_test.go::TestActivityExplainsAChangeFromIntentToOutcome",
 ]
 
 spec = "specs/REQ-FUNC-2f8d63b5.md"
@@ -35,4 +36,4 @@ priority = "high"
 rationale = ""
 
 created = 2026-09-03
-updated = 2026-09-04
+updated = 2026-09-25

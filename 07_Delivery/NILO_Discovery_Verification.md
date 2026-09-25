@@ -18,6 +18,9 @@ certificate; verify the printed permanent name before accepting it.
 
 ## Automated evidence routes
 
+These routes cover `REQ-TEST-31cca025`. Physical acceptance is tracked by
+`REQ-TEST-c94d3680` below.
+
 - Go unit and contract tests: `go test ./...` from
   `05_Software/core` through the pinned toolchain.
 - GUI component and production build: `npm run test:ci` and `npm run build`
@@ -29,6 +32,8 @@ certificate; verify the printed permanent name before accepting it.
   TASK-2361ce94 --strict --run` during AEGIS validation.
 
 ## Hardware and client observations
+
+`REQ-TEST-c94d3680` remains pending until the observations below are recorded.
 
 The following are acceptance evidence only after they are observed and dated;
 source code or a lower-level test is not a substitute.

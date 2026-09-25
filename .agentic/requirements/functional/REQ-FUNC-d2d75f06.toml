@@ -29,7 +29,6 @@ affected_paths = [
     "05_Software/core/internal/nethelper/store.go",
     "05_Software/core/internal/nethelper/engine.go",
     "05_Software/core/internal/nethelper/networkmanager_linux.go",
-    "05_Software/core/internal/nethelper/networkmanager_commissioning_linux.go",
     "05_Software/core/internal/network/model.go",
     "02_Tools/tests/network/run.sh",
 ]
@@ -46,4 +45,4 @@ priority = "high"   # low | normal | high
 rationale = "A new appliance must be reachable through either Ethernet port even when a direct cable has no DHCP server."
 
 created = 2026-09-13
-updated = 2026-09-14
+updated = 2026-09-25

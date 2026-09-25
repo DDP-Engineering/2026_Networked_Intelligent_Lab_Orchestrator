@@ -1,0 +1,21 @@
+schema = 1
+id = "REQ-TEST-c94d3680"
+title = "Record appliance discovery acceptance on physical clients and Raspberry Pi"
+status = "draft"
+
+requirement = """
+Before appliance discovery is accepted on hardware, the delivery record shall contain dated observations from Raspberry Pi and the documented Windows, macOS, Ubuntu, router and phone paths, including measured appearance and withdrawal times for each externally advertised presence and physical GPIO gesture results, with unperformed cases explicitly marked unverified.
+"""
+
+verification = "Manual: execute the client and Raspberry Pi matrix in the discovery delivery record, record target revision, hardware and network interfaces, observed outcomes and packet timestamps for each case, and leave every case not performed marked unverified."
+
+affected_paths = [
+    "07_Delivery/NILO_Discovery_Verification.md",
+    "06_SoftwareDocu/Local_Hardware_Access.md",
+]
+linked_tests = []
+spec = ""
+priority = "high"
+rationale = "Container and unit results cannot establish physical multicast, radio, DHCP, browser or GPIO behavior."
+created = 2026-09-25
+updated = 2026-09-25

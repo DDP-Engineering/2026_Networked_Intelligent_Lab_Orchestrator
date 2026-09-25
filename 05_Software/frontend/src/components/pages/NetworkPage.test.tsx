@@ -666,6 +666,19 @@ describe('NetworkPage', () => {
     expect(screen.getByRole('button', { name: 'Details lo' })).toBeVisible();
   });
 
+  it('keeps record text inert and leaves actions behind explicit controls', async () => {
+    renderPage({ canManageInterfaces: true }, 'overview');
+    await screen.findAllByText('enp1s0');
+
+    const address = screen.getByText('192.168.10.24/24');
+    const row = address.closest('tr');
+    expect(row).not.toBeNull();
+    expect(address.closest('button')).toBeNull();
+    fireEvent.click(address);
+    fireEvent.click(row!);
+    expect(screen.queryByRole('dialog', { name: 'Actions for enp1s0' })).toBeNull();
+  });
+
   // REQ-UX-cde0b9e2: one overview, and only the facts that decide the next step.
   it('summarizes the uplink, the device side, the active profile and what is pending', async () => {
     renderPage({

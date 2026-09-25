@@ -1,0 +1,24 @@
+schema = 1
+id = "REQ-FUNC-1027c66b"
+title = "Return the whole retained Activity selection on explicit request"
+status = "active"
+
+requirement = """
+When an authorized Activity query explicitly requests `limit=all`, the appliance shall return the complete filtered selection remaining within its configured retention budgets as one response rather than applying the ordinary page-size limit.
+"""
+
+verification = "Service and HTTP tests store several matching events, request `limit=all`, assert the response contains the whole filtered retained set, and reject a request for a second page of that selection."
+
+affected_paths = [
+    "05_Software/core/internal/activity/activity.go",
+    "05_Software/core/internal/httpapi/activity.go",
+]
+linked_tests = [
+    "05_Software/core/internal/activity/activity_test.go::TestQuerySortsAndPagesWithAnOpaqueCursor",
+    "05_Software/core/internal/httpapi/activity_test.go::TestActivityExplainsAChangeFromIntentToOutcome",
+]
+spec = ""
+priority = "normal"
+rationale = "The explicit All action is distinct from cursor paging and can produce a larger response up to the retained data budget."
+created = 2026-09-25
+updated = 2026-09-25

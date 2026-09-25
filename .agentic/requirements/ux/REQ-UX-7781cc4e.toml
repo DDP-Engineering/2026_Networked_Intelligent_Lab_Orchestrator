@@ -15,11 +15,11 @@ status = "active"
 
 requirement = """
 The Activity listing shall offer 10, 25, 50 and 100 records a page and the whole
-selection, and shall open at 10 records a page until the reader chooses another
-size.
+retained selection as an explicit larger response, and shall open at 10 records
+a page until the reader chooses another size.
 """
 
-verification = "A component test renders the Activity page and asserts the first query carries a limit of 10 and that the page-size control offers 10, 25, 50, 100 and all; selecting 50 asserts the next query carries a limit of 50 from page 1, and selecting all asserts the query carries the whole selection."
+verification = "A component test asserts the first query requests 10 records, the control offers 10, 25, 50, 100 and All, selecting 50 requests that page size from page 1, and selecting All makes a distinct whole-retained-selection request."
 
 affected_paths = [
     "05_Software/frontend/src/components/pages/ActivityPage.tsx",
@@ -39,4 +39,4 @@ priority = "normal"   # low | normal | high
 rationale = "Ten rows fit the bench panel, and a smaller first page is a faster first screen."
 
 created = 2026-09-15
-updated = 2026-09-15
+updated = 2026-09-25

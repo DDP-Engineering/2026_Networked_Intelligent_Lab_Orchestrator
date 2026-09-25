@@ -70,7 +70,7 @@ affected_paths = [
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/frontend/src/components/shell/shell.test.tsx::the navigation > opens Activity from Authentication with the identity component applied",
+    "05_Software/frontend/src/components/shell/shell.test.tsx::opens Activity from Authentication with the identity component applied",
     "05_Software/core/internal/httpapi/activity_test.go::TestActivityListsAndExportsIdentityMutationsByCommonComponent",
 ]
 
@@ -83,4 +83,4 @@ priority = "normal"   # low | normal | high
 rationale = "The common Activity component already supports identity filtering and must remain the sole investigation surface."
 
 created = 2026-09-04
-updated = 2026-09-04
+updated = 2026-09-25

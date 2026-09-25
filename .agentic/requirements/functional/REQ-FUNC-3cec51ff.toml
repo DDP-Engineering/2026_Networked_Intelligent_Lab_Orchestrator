@@ -38,7 +38,7 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-The MCP endpoint shall expose exactly the three read tools that return network status, network statistics and WireGuard status, each implemented so that it performs no change to the host.
+The MCP endpoint shall expose network status, network statistics and WireGuard status as its three built-in network read tools, each implemented without a host-changing capability; configured bench tools remain available on the same endpoint under their own permissions.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -49,7 +49,7 @@ The MCP endpoint shall expose exactly the three read tools that return network s
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "An automated test performs MCP tool discovery and asserts the returned tool list is exactly those three names; a second test calls each tool and asserts it returns a bounded structured result containing no private key, no preshared key and no raw profile text; a third asserts that the registered tool set contains no handler that reaches a mutating service method, independently of any read-only annotation."
+verification = "A network-only handler test discovers exactly the three built-in network tools, calls each for bounded secret-free data, and checks that the network reader has no mutating method. A handler configured with the bench manager also discovers the bench tools, which retain their separate permission checks."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
@@ -65,8 +65,9 @@ affected_paths = [
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/core/internal/mcp/server_test.go::TestTheEndpointOffersExactlyThreeReadTools",
-    "05_Software/core/internal/mcp/server_test.go::TestTheEndpointHoldsNoMutatingCapability",
+    "05_Software/core/internal/mcp/server_test.go::TestTheNetworkSurfaceOffersExactlyThreeReadTools",
+    "05_Software/core/internal/mcp/server_test.go::TestTheNetworkReaderHoldsNoMutatingCapability",
+    "05_Software/core/internal/mcp/bench_test.go::TestBenchToolsUseCurrentTokenScopes",
     "05_Software/core/internal/mcp/server_test.go::TestNewHandlerRequiresItsCollaborators",
     "05_Software/core/internal/mcp/protocol_test.go::TestStreamableDiscoveryReadsAndRevocationWithRealToken",
 ]
@@ -80,7 +81,7 @@ priority = "high"   # low | normal | high
 rationale = "An annotation is a label a client may ignore; the guarantee has to hold in the handler."
 
 created = 2026-09-02
-updated = 2026-09-03
+updated = 2026-09-25
 
 # Planned files not implemented at the 2026-09-03 audit:
 # 05_Software/core/internal/mcp/tools.go

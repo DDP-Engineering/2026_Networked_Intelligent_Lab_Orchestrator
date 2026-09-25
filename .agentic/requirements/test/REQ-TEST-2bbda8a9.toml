@@ -14,7 +14,7 @@ schema = 1
 # and must match the category folder this file sits in.
 id = "REQ-TEST-2bbda8a9"
 
-title = "Verify integrations with a common contract"
+title = "Verify the integration protocol with an install-shaped fixture"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
@@ -38,7 +38,7 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-Every enabled integration package shall pass the common contract suite for lifecycle handshake, description, health, strict messages, event ordering, terminal response, cancellation, safe shutdown, and diagnostic separation.
+The common contract suite shall run an installed copy of the test-only integration package through lifecycle handshake, description, health, strict messages, event ordering, terminal response, cancellation, safe shutdown, and diagnostic separation.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -76,7 +76,7 @@ linked_tests = [
 spec = ""
 
 priority = "high"   # low | normal | high
-rationale = "A common suite prevents each hardware family from inventing an incompatible control boundary."        # why this behavior exists, if not obvious
+rationale = "The install-shaped fixture proves the shared runner protocol independently of any particular hardware package."        # why this behavior exists, if not obvious
 
 created = 2026-08-30
 updated = 2026-09-25

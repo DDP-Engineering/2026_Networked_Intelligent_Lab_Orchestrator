@@ -29,7 +29,7 @@ affected_paths = [
 ]
 
 linked_tests = [
-    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::Authentication identities page prose > carries no signed-in sentence and no paragraph about the actions",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::carries no signed-in sentence and no paragraph about the actions",
 ]
 
 
@@ -39,4 +39,4 @@ priority = "normal"   # low | normal | high
 rationale = "Standing prose above a listing is read once and then skipped, while it pushes the records it describes below the fold on a field display."        # why this behavior exists, if not obvious
 
 created = 2026-09-16
-updated = 2026-09-16
+updated = 2026-09-25

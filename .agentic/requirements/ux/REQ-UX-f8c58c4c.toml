@@ -34,7 +34,7 @@ affected_paths = [
 linked_tests = [
     "05_Software/frontend/src/components/pages/ActivityPage.test.tsx::puts the scope chips on the filter line on a wide display",
     "05_Software/frontend/src/layout.test.ts::wraps the activity filter line and stacks the head below 56rem",
-    "05_Software/frontend/e2e/field-display.spec.ts::1366: the activity header and its filters are each one line",
+    "05_Software/frontend/e2e/field-display.spec.ts::1366: the activity filters are one wrapping line",
 ]
 
 
@@ -44,4 +44,4 @@ priority = "normal"   # low | normal | high
 rationale = "Each control on its own row costs a line of the first screen and buys nothing."
 
 created = 2026-09-15
-updated = 2026-09-15
+updated = 2026-09-25

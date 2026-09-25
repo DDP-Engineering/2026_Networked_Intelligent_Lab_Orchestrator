@@ -35,7 +35,7 @@ affected_paths = [
 linked_tests = [
   "05_Software/frontend/src/components/AuthenticationPage.test.tsx::page-scoped Activity placement",
   "05_Software/frontend/e2e/field-display.spec.ts::expectPageActivityBesideTitle",
-  "05_Software/frontend/src/components/shell/shell.test.tsx::the navigation > opens Activity from Authentication with the identity component applied",
+  "05_Software/frontend/src/components/shell/shell.test.tsx::opens Activity from Authentication with the identity component applied",
 ]
 
 
@@ -45,4 +45,4 @@ priority = "normal"   # low | normal | high
 rationale = "Page-scoped investigation belongs beside the page identity, consistently for human operators and future page authors."
 
 created = 2026-09-12
-updated = 2026-09-12
+updated = 2026-09-25

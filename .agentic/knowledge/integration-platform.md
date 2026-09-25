@@ -13,7 +13,7 @@ The integration platform loads bounded runtime packages and supervises their ext
 
 ## Public interface
 
-Go callers use `manifest.Load`, protocol codecs and registries, and `supervisor.ProcessSupervisor` methods `Describe`, `Execute`, `Cancel`, and `Shutdown`. Python integration authors implement the asynchronous SDK lifecycle interface and launch its NDJSON server. Every enabled package is expected to pass the common contract harness. `build-sigrok-bundle.py` accepts an explicit architecture-matched runtime root, requires an observed Linux namespace with loopback as its only interface and no default route, executes the fixed target interpreter/version/import and Sigrok driver-scan health checks with a confined `PATH`, and emits the runner, SDK, schemas, component/runtime inventory, before/after network observations, hashed health results and third-party notices as one bounded package.
+Go callers use `manifest.Load`, protocol codecs and registries, and `supervisor.ProcessSupervisor` methods `Describe`, `Execute`, `Cancel`, and `Shutdown`. Python integration authors implement the asynchronous SDK lifecycle interface and launch its NDJSON server. The common contract harness runs an install-shaped test fixture. `build-sigrok-bundle.py` accepts an explicit architecture-matched runtime root, requires an observed Linux namespace with loopback as its only interface and no default route, executes the fixed target interpreter/version/import and Sigrok driver-scan health checks with a confined `PATH`, and emits the runner, SDK, schemas, component/runtime inventory, before/after network observations, hashed health results and third-party notices as one bounded package.
 
 ## Invariants
 
@@ -38,7 +38,7 @@ Go callers use `manifest.Load`, protocol codecs and registries, and `supervisor.
 - `REQ-FUNC-39397f99` - provides the asynchronous Python authoring boundary.
 - `REQ-NFR-6b5de8e9` and `REQ-NFR-c4c70f53` - bound all untrusted inputs and confine commands and paths.
 - `REQ-NFR-1ad0cee7` and `REQ-REL-31cc1e94` - contain crashes and perform bounded cancel, safe shutdown, then termination.
-- `REQ-TEST-2bbda8a9` - proves packages with the common contract suite.
+- `REQ-TEST-2bbda8a9` - proves the shared lifecycle protocol with an installed copy of the test fixture.
 - `REQ-REL-c2695283` - contains experimental native Sigrok work in a separately
   supervised child with bounded `nilo.sigrok.worker/1` records.
 - `REQ-PLAT-532864ed` - builds the production Sigrok integration with its

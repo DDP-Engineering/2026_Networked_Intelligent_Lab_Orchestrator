@@ -1,0 +1,22 @@
+schema = 1
+id = "REQ-TEST-2a8fa219"
+title = "Run the common contract against each enabled integration package"
+status = "draft"
+
+requirement = """
+When an integration package is enabled, the release verification shall run the common lifecycle contract against that package's declared installed runner and report a failure for any package that fails handshake, description, health, strict messages, event ordering, terminal response, cancellation, safe shutdown or diagnostic separation.
+"""
+
+verification = "Build or install each enabled production package for the selected target, launch its declared runner through the common contract harness, and assert every lifecycle case passes; a deliberately malformed package makes the gate fail and identifies that package."
+
+affected_paths = [
+    "05_Software/tests/contract/",
+    "05_Software/integrations/",
+    "02_Tools/scripts/aegis_test.py",
+]
+linked_tests = []
+spec = ""
+priority = "high"
+rationale = "The fixture proves the protocol harness, while this gate must prove compatibility of each production package."
+created = 2026-09-25
+updated = 2026-09-25

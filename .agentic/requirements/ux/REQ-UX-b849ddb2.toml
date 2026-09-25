@@ -64,7 +64,7 @@ affected_paths = [
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::reports each listing as loading before it answers",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::reports the focused listing as loading before it answers",
     "05_Software/frontend/src/components/AuthenticationPage.test.tsx::creates an identity and reports what changed",
     "05_Software/frontend/src/components/AuthenticationPage.test.tsx::changes a role through a focused dialog",
     "05_Software/frontend/src/components/AuthenticationPage.test.tsx::carries the reason Bench Core gave for refusing a change",
@@ -81,4 +81,4 @@ priority = "normal"   # low | normal | high
 rationale = "An administrative change that silently succeeds or silently fails leaves the administrator guessing whether to try again, which is how a change is applied twice."
 
 created = 2026-09-02
-updated = 2026-09-02
+updated = 2026-09-25

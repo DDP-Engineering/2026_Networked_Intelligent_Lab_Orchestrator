@@ -35,12 +35,12 @@ affected_paths = [
 ]
 
 linked_tests = [
-    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::appliance password policy > starts collapsed, with the listing visible behind it",
-    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::appliance password policy > shows the stored policy once opened",
-    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::appliance password policy > submits the whole policy when requirements are ticked",
-    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::appliance password policy > reports the appliance's refusal and keeps the stored policy shown",
-    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::appliance password policy > is absent for a session without the permission",
-    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::appliance password policy > is editable for a session holding only the policy permission",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::starts collapsed, with the listing visible behind it",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::shows the stored policy once opened",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::submits the whole policy when requirements are ticked",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::reports the appliance's refusal and keeps the stored policy shown",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::is absent for a session without the permission",
+    "05_Software/frontend/src/components/AuthenticationPage.test.tsx::is editable for a session holding only the policy permission",
 ]
 
 
@@ -50,4 +50,4 @@ priority = "normal"   # low | normal | high
 rationale = "An administrator who never opens a shell should still be able to see and set the rule their appliance applies to passwords."        # why this behavior exists, if not obvious
 
 created = 2026-09-15
-updated = 2026-09-16
+updated = 2026-09-25

@@ -400,6 +400,9 @@ func TestQuerySortsAndPagesWithAnOpaqueCursor(t *testing.T) {
 	if all.Total != 3 || len(all.Items) != 3 || all.Items[0].Action != "middle" {
 		t.Fatalf("all records = total %d, items %+v", all.Total, all.Items)
 	}
+	if _, err := f.service.Query(ctx, Filter{All: true, Page: 2}); err == nil {
+		t.Fatal("a second page was accepted for the whole selection")
+	}
 }
 
 // TestExportCarriesMetadataAndStaysBounded covers REQ-FUNC-6ba25f39: both

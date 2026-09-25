@@ -1,0 +1,33 @@
+schema = 1
+id = "REQ-UX-61eb69f2"
+title = "Offer Network record actions in a bounded contextual dialog"
+status = "active"
+
+requirement = """
+When a Network record has several actions, its Actions control shall open a viewport-bounded dialog that identifies the record and current state, shows available actions as large controls, explains disabled actions, separates destructive actions and offers Cancel without moving page scroll.
+"""
+
+verification = "RowActions and page tests open each record's dialog and assert context, available and disabled actions, destructive separation and Cancel. Browser tests at 1024 by 600 and 800 by 480 keep the dialog inside the viewport without moving page scroll."
+
+affected_paths = [
+    "05_Software/frontend/src/components/RowActions.tsx",
+    "05_Software/frontend/src/components/RowActions.test.tsx",
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx",
+    "05_Software/frontend/src/components/network/WireGuardPanel.test.tsx",
+    "05_Software/frontend/src/components/network/DeviceNetworksPanel.test.tsx",
+    "05_Software/frontend/src/layout.test.ts",
+    "05_Software/frontend/e2e/field-display.spec.ts",
+]
+linked_tests = [
+    "05_Software/frontend/src/components/RowActions.test.tsx::opens a compact dialog outside the scrolling table and keeps every action clear",
+    "05_Software/frontend/src/components/pages/NetworkPage.test.tsx::offers every interface action from one dialog, with visible object context",
+    "05_Software/frontend/src/components/network/WireGuardPanel.test.tsx::offers every permitted profile action from one dialog and says why one is withheld",
+    "05_Software/frontend/src/components/network/DeviceNetworksPanel.test.tsx::withholds a change while an operation is in flight, and says so",
+    "05_Software/frontend/src/layout.test.ts::keeps row actions in a compact viewport-bounded dialog",
+    "05_Software/frontend/e2e/field-display.spec.ts::the shell and the Network page are readable and complete",
+]
+spec = ""
+priority = "high"
+rationale = "Actions must remain reachable on compact screens without a clipped menu or ambiguous controls."
+created = 2026-09-25
+updated = 2026-09-25
