@@ -1,0 +1,30 @@
+schema = 1
+id = "REQ-TEST-dcc25f09"
+title = "Prove camera binding on target architectures"
+status = "draft"
+requirement = "Before a production V4L2 binding is selected, the camera feasibility probe shall record comparable observed discovery, physical-node grouping, MJPEG and YUYV capture, typed control enumeration/set/read-back, cancellation, warm-up and locked dependency closure for a UVC webcam and HDMI capture device on Raspberry Pi OS/Debian 13 arm64 and Ubuntu 24.04 amd64."
+verification = "Manual: run the same probe with both devices on each target, preserve raw outputs and dependency hashes, then inspect the four device/target records against the acceptance matrix; absent target runs remain unverified."
+affected_paths = ["02_Tools/tests/camera/probe.py", "02_Tools/tests/camera/candidate_probe.py", "02_Tools/tests/camera/test_probe.py", "02_Tools/tests/camera/evidence.schema.json", "02_Tools/tests/camera/README.md", "05_Software/scripts/aegis_test.py", "05_Software/scripts/tests/test_aegis_test.py"]
+linked_tests = [
+    "02_Tools/tests/camera/test_probe.py::ProbeFixtureTests.test_fixture_groups_nodes_without_claiming_target_acceptance",
+    "02_Tools/tests/camera/test_probe.py::ProbeFixtureTests.test_oversized_fixture_fails_without_evidence",
+    "02_Tools/tests/camera/test_probe.py::ProbeFixtureTests.test_hardware_inspection_selects_capture_node_before_capture",
+    "02_Tools/tests/camera/test_probe.py::ProbeFixtureTests.test_candidate_worker_self_check_is_structured",
+    "02_Tools/tests/camera/test_probe.py::ProbeFixtureTests.test_cancellation_stops_a_ready_child",
+    "02_Tools/tests/camera/test_probe.py::ProbeFixtureTests.test_cancellation_does_not_pass_after_child_exits_on_its_own",
+    "02_Tools/tests/camera/test_probe.py::ProbeFixtureTests.test_pyrav4l2_fourcc_is_normalized_from_numeric_format",
+    "02_Tools/tests/camera/test_probe.py::ProbeFixtureTests.test_linuxpy_image_format_uses_current_pixel_format_field",
+    "02_Tools/tests/camera/test_probe.py::ProbeFixtureTests.test_linuxpy_node_capabilities_and_capture_formats",
+    "02_Tools/tests/camera/test_probe.py::ProbeFixtureTests.test_generic_debian_arm64_is_not_claimed_as_raspberry_pi",
+    "02_Tools/tests/camera/test_probe.py::ProbeFixtureTests.test_empty_wheel_lock_cannot_prove_offline_closure",
+    "02_Tools/tests/camera/test_probe.py::ProbeFixtureTests.test_oversized_decoded_image_is_rejected_before_load",
+    "02_Tools/tests/camera/test_probe.py::ProbeFixtureTests.test_usb_interface_is_read_from_resolved_device_directory",
+    "02_Tools/tests/camera/test_probe.py::ProbeFixtureTests.test_incomplete_hardware_run_returns_nonzero_with_evidence",
+    "05_Software/scripts/tests/test_aegis_test.py::AegisTestRouterTests.test_camera_probe_tests_are_part_of_full_gate",
+    "02_Tools/tests/camera/test_probe.py::ProbeFixtureTests.test_fixture_records_exact_probe_source_digests",
+    "02_Tools/tests/camera/test_probe.py::ProbeFixtureTests.test_wsl_ubuntu_is_not_claimed_as_mini_pc",
+]
+spec = "specs/REQ-TEST-dcc25f09.md"
+priority = "high"
+created = 2026-09-21
+updated = 2026-09-24

@@ -54,12 +54,16 @@ default_branch = "master"
 
 # Globs used by the traceability heuristics of `aegis check`.
 source = [
+    "05_Software/integrations/fake_python/",
     "05_Software/integrations/sigrok/",
+    "05_Software/integrations/camera/",
     "05_Software/nilo_assistant/",
     "05_Software/nilo_gui/",
+    "05_Software/schemas/integration/v1/",
 ]
 tests = [
     "05_Software/integrations/sigrok/tests/",
+    "05_Software/integrations/camera/tests/",
     "05_Software/tests/",
     "05_Software/scripts/",
     "05_Software/nilo_assistant/**/*_test.go",

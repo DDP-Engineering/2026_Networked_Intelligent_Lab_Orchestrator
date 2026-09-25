@@ -1,12 +1,17 @@
 # NILO camera plugin plan
 
-**Status:** Proposed. Brainstorm consolidated on 2026-09-18 and architecture
-review incorporated on 2026-09-19; no implementation has started. Open product
-decisions are collected in section 12 and must be settled before their dependent
-work package starts. This document is temporary: delete it once the work
+**Status:** In progress. Brainstorm consolidated on 2026-09-18 and architecture
+review incorporated on 2026-09-19. The physical camera path is implemented on
+the Raspberry Pi; remaining work and hardware acceptance are tracked in the
+task journals. This document is temporary: delete it once the work
 packages are delivered, because its durable outcomes then live in requirements,
 the knowledge pages and `06_SoftwareDocu/`.
 **Date:** 2026-09-19
+**2026-09-24 user decision:** Camera simulation code and data are excluded from
+the implementation. Physical V4L2 cameras are the only camera runtime source;
+isolated test doubles may stand in for hardware in automated tests. All
+simulation requirements and work-package clauses below are superseded by this
+decision.
 **Scope:** The first feature plugin after sigrok: USB cameras on the appliance,
 including HDMI-to-USB capture devices, which Linux exposes the same way. It
 covers device discovery and naming, snapshots, device controls, image
@@ -57,8 +62,7 @@ not touch the waveform workspace.
 - **Runner in Python on V4L2**, with Pillow and a binding selected by the
   CAM-00 feasibility spike, packaged self-contained. A pure-Python binding is
   preferred but not promised before it has captured and controlled the target
-  hardware on `arm64` and `amd64`. A deterministic simulation backend is
-  mandatory because the development host has no camera access.
+  hardware on `arm64` and `amd64`. Automated tests use isolated test doubles.
 - **No new approval model.** Camera operations are `auto_eligible`; the
   plugin's Ask or Auto mode remains the only approval gate for user-submitted
   jobs. Core-owned initialization resets restore administrator configuration,
@@ -302,10 +306,7 @@ the resulting state.
 
 `05_Software/integrations/camera/` with `manifest.json`, `schemas/`, `runner`,
 `src/nilo_camera/`, `tests/`, `pyproject.toml` and `uv.lock`, mirroring the
-sigrok package. The runner takes `--stdio`, `--simulation` and a
-`--simulation-source` directory of images for replay, and nothing else. The
-source is selected by the core from a configured core-owned or package-owned
-directory; it is never a request parameter.
+sigrok package. The runner takes `--stdio` and reads physical V4L2 devices.
 
 ### Backends
 
@@ -317,13 +318,8 @@ directory; it is never a request parameter.
   required fallback. Other formats may be discovered as unsupported with a
   reason. OpenCV is not the default because phase 1 needs none of its wider
   computer-vision surface; adopting it requires measured packaging evidence.
-- **Simulation:** a synthetic test pattern carrying the device name, a
-  timestamp and a frame counter, plus optional replay from image files. Tests
-  inject a fixed clock, seed and initial frame number so the encoded bytes are
-  deterministic; interactive simulation may use the live clock. Two simulated
-  cameras exist by default, one with a weak serial and multiple reported video
-  nodes, so identity, endpoint selection and rebind can be exercised. Contract
-  tests and the browser suite run against this backend.
+Tests isolate camera hardware at the V4L2 boundary with test doubles. Product
+code and data contain only physical camera discovery and capture.
 
 ### Operations
 
@@ -379,7 +375,7 @@ The result carries the device id and configuration revision, capture time,
 selected endpoint identity without a public node path, format, size and frame
 interval, effective and actual read-back controls, warm-up behavior, the
 processing and encoding actually applied, mounting correction, calibration
-revision, artifact size and simulation flag. The artifact id is `image`, its
+revision and artifact size. The artifact id is `image`, its
 media type is `image/jpeg` or `image/png`, and its presentation hint names the
 file after the device and the time.
 
@@ -561,10 +557,9 @@ contract rather than being a client-only safety measure.
   `amd64`. Pillow, the selected V4L2 binding and any separately approved font
   asset are pinned, checksum-verified and licence-reviewed; CAM-00 determines
   the actual dependency closure rather than assuming it.
-- **Development host.** WSL2 has no UVC support in its stock kernel. The
-  simulation backend carries all browser and contract work; real cameras are
-  exercised on the bench Pi and the mini PC. A usbipd setup is optional and
-  not a prerequisite.
+- **Development host.** WSL2 has no UVC support in its stock kernel. Isolated
+  tests cover the browser and protocol contracts; physical cameras are exercised
+  on the bench Pi and available development hosts. A usbipd setup is optional.
 - **Bench hardware needed:** two UVC webcams, one of them without a serial, one
   HDMI-to-USB capture dongle, connected to the Pi 4 and the mini PC in turn.
 
@@ -581,14 +576,14 @@ contract rather than being a client-only safety measure.
   rejection, control persistence after a snapshot, reset to configured and
   factory levels, automatic/manual control ordering, warm-up bounds, endpoint
   selection, overlay and calibrated scale rendering at the boundaries, encoded
-  and decoded image limits, metadata stripping and byte-deterministic simulation
-  under an injected clock and seed.
+  and decoded image limits and metadata stripping, using isolated V4L2 test
+  doubles where hardware is unavailable.
 - **Interfaces:** CLI tests for the generic submit and the camera sugar; MCP
   tests for completed image content, Ask-mode pending results, disconnect
   without cancellation and image bounds; browser component tests for the
   overview, camera page and administration; owner/admin image visibility,
-  destructive confirmations and the browser suite against the simulated runner
-  in WSL2 across viewports, themes and languages. Signing in or out in another
+  destructive confirmations and the browser suite across viewports, themes and
+  languages. Signing in or out in another
   browser must not change camera controls.
 - **Hardware acceptance** on the Pi 4 and the mini PC: discovery of two
   cameras and their capture endpoints, a snapshot from each with controls
@@ -604,8 +599,8 @@ contract rather than being a client-only safety measure.
 ## 11. Work packages
 
 Phase 1 delivers CAM-00 to CAM-09. Contract work precedes both core storage and
-the package; after CAM-00, CAM-03's simulation backend may proceed alongside
-CAM-01 and CAM-02, but it may not invent a second contract.
+the package; CAM-03 may proceed alongside CAM-01 and CAM-02 after CAM-00, but
+it may not invent a second contract.
 
 **CAM-00 — Contract freeze and camera feasibility.** Specify the managed-device,
 hardware/endpoint identity, capability, configuration, operation, artifact and
@@ -636,11 +631,10 @@ provisional record with history cannot be rebound, and every route enforces its
 permission.
 
 **CAM-03 — Camera package.** Implement the frozen manifest and schemas, runner,
-selected real backend, deterministic simulation backend, physical-node grouping,
+selected physical backend, physical-node grouping,
 `discover_devices`, `snapshot`, typed controls and package tests.
-*Done when* the package passes the contract suite and its own tests, simulated
-snapshots are byte-deterministic under a fixed clock/seed, and the real backend
-passes the CAM-00 capture/control subset on both targets.
+*Done when* the package passes the contract suite and its own tests, and the
+physical backend passes the CAM-00 capture/control subset on both targets.
 
 **CAM-04 — Camera adapter and generic submission.** The camera adapter in the
 core, device initialization/reset orchestration, the free operation string in
@@ -661,15 +655,15 @@ next snapshot honours it on all three surfaces, while an operator is refused.
 camera page with clearly separated viewer/composition state, local zoom and
 markers, generated controls pane, bounded lazy previews and owner-scoped
 per-camera history.
-*Done when* the browser suite covers the workflow with two simulated cameras
-across viewports, themes and languages.
+*Done when* the browser suite covers the workflow across viewports, themes and
+languages, with physical camera acceptance on available hardware.
 
 **CAM-07 — Browser device administration.** The Camera administration page
 with the device table, rename, configure, enable, disable, rebind and forget,
 with revisions and confirmations, plus the shared components the Plugins page
 needs for it.
-*Done when* the rebind flow for the serial-less simulated camera passes in the
-browser, stale edits conflict, destructive actions require the exact id, and
+*Done when* the rebind flow for a serial-less camera passes in the browser,
+stale edits conflict, destructive actions require the exact id, and
 every action is audited.
 
 **CAM-08 — Packaging and device access.** The camera recipe in the PKG-04
@@ -689,15 +683,15 @@ Phase 2:
 and decide go/no-go. Specify preview-session creation/deletion, CSRF and session
 authority, long-lived supervision, frame protocol and bounds, backpressure,
 cleanup, leases, disconnect behavior and snapshot arbitration.
-*Done when* measurements from two simulated and two real cameras exist for both
-targets and an accepted design either authorizes CAM-11 or records why preview
+*Done when* measurements from available physical cameras exist and an accepted
+design either authorizes CAM-11 or records why preview
 is deferred. No browser interface is promised by this package.
 
 **CAM-11 — Live-preview implementation.** Only after CAM-10 approval, implement
 the long-lived runner registry, bounded side channel, preview-session routes,
 lease handling and browser Live toggle.
-*Done when* two simulated and two real cameras preview concurrently within the
-accepted bounds, cross-site GET cannot create a preview, disconnect cleanup is
+*Done when* two physical cameras preview concurrently within the accepted
+bounds, cross-site GET cannot create a preview, disconnect cleanup is
 proved, and snapshot-during-preview follows the measured device behavior.
 
 **CAM-12 — Secondary artifacts.** Generalise jobs to more than one artifact so
@@ -758,8 +752,8 @@ and calibration workflows beyond the manual factor and scale bar.
 
 - **Cameras without a serial, or with duplicate serials,** are common in cheap
   hardware. Persisted weak-serial classification, the port-path fallback and
-  explicit constrained rebind exist for this; the simulation includes such a
-  camera so the flow is tested from the start.
+  explicit constrained rebind exist for this; isolated tests cover such a
+  camera from the start.
 - **One physical camera can expose several video nodes.** Treating a node as a
   camera creates duplicate records or selects metadata-only input. Physical and
   endpoint identity are separate contracts and CAM-00 verifies real examples.

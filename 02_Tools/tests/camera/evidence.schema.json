@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "nilo.camera.feasibility/2",
+  "title": "CAM-00 camera feasibility observation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "probe_sources", "mode", "target_eligible", "target_profile",
+    "device_kind", "observed_at", "host", "devices", "candidates",
+    "wheel_closure", "acceptance_matrix"
+  ],
+  "properties": {
+    "schema_version": {"const": 2},
+    "probe_sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["probe_sha256", "worker_sha256"],
+      "properties": {
+        "probe_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "worker_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "mode": {"enum": ["fixture", "hardware"]},
+    "target_eligible": {"type": "boolean"},
+    "target_profile": {"type": ["string", "null"], "enum": ["pi-arm64", "ubuntu-amd64", null]},
+    "device_kind": {"type": ["string", "null"], "enum": ["webcam", "hdmi", null]},
+    "observed_at": {"type": "string", "format": "date-time"},
+    "host": {
+      "type": "object",
+      "required": ["system", "machine", "kernel", "python"],
+      "properties": {
+        "system": {"type": "string"},
+        "machine": {"type": "string"},
+        "kernel": {"type": "string"},
+        "python": {"type": "string"}
+      }
+    },
+    "devices": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "required": ["usb_parent", "vendor", "product", "serial", "endpoints", "selected_endpoint", "unusable_reason"],
+        "properties": {
+          "usb_parent": {"type": "string"},
+          "vendor": {"type": "string", "pattern": "^[0-9a-f]{4}$"},
+          "product": {"type": "string", "pattern": "^[0-9a-f]{4}$"},
+          "serial": {"type": "string", "maxLength": 128},
+          "endpoints": {"type": "array", "maxItems": 32},
+          "selected_endpoint": {"type": ["string", "null"]},
+          "unusable_reason": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "candidates": {
+      "type": "array",
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["candidate", "status", "checks"],
+        "properties": {
+          "candidate": {"enum": ["linuxpy", "pyrav4l2"]},
+          "status": {"type": "string"},
+          "selected_endpoint": {"type": "string"},
+          "reason": {"type": "string"},
+          "checks": {"type": "array", "maxItems": 40}
+        }
+      }
+    },
+    "wheel_closure": {
+      "type": "object",
+      "required": ["status", "wheels"],
+      "properties": {
+        "status": {"enum": ["not_run", "verified", "failed"]},
+        "wheels": {"type": "array", "maxItems": 128}
+      }
+    },
+    "acceptance_matrix": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": ["target", "device_kind", "status"],
+        "properties": {
+          "target": {"enum": ["pi-arm64", "ubuntu-amd64"]},
+          "device_kind": {"enum": ["webcam", "hdmi"]},
+          "status": {"enum": ["not_run", "incomplete", "needs_review"]}
+        }
+      }
+    }
+  }
+}

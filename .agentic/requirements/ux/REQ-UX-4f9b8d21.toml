@@ -1,0 +1,21 @@
+# Copyright (c) 2026 DDP Engineering
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+schema = 1
+id = "REQ-UX-4f9b8d21"
+title = "Navigate installed Camera packages and named physical devices"
+status = "active"
+requirement = """
+When an authenticated plugin inventory reports an installed Camera package, the
+System Plugins tree shall expose its administration page; while Camera is
+enabled, the Bench tree shall expose its overview and each configured physical
+camera by stable record ID with Snapshot and Settings destinations. A failed
+inventory refresh retains the last known tree and open pages.
+"""
+verification = "Supply installed, disabled, renamed, unconfigured and absent Camera records to the route builder; assert stable nested IDs, displayed names and System/Bench visibility. Render the recursive sidebar and open a nested Settings page."
+affected_paths = ["05_Software/nilo_gui/src/components/shell/pages.ts", "05_Software/nilo_gui/src/components/shell/SideNav.tsx", "05_Software/nilo_gui/src/components/shell/AppShell.tsx"]
+linked_tests = ["05_Software/nilo_gui/src/components/shell/pages.test.ts", "05_Software/nilo_gui/src/components/shell/SideNav.test.tsx"]
+spec = ""
+priority = "high"
+rationale = "Plugin state and configured names are owned by the appliance."
+created = 2026-09-25
+updated = 2026-09-25

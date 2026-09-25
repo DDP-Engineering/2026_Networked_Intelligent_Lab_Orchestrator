@@ -342,7 +342,11 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 			for _, p := range plugins {
 				if p.Installed {
 					for _, d := range p.Devices {
-						items = append(items, simulation.Device{ID: d.ID, IntegrationID: p.ID, DisplayName: d.DisplayName, Kind: "logic-analyzer", Status: p.Status, Simulation: p.Simulation, Capabilities: d.Channels})
+						kind := d.Kind
+						if kind == "" {
+							kind = "logic-analyzer"
+						}
+						items = append(items, simulation.Device{ID: d.ID, IntegrationID: p.ID, DisplayName: d.DisplayName, Kind: kind, Status: p.Status, Simulation: p.Simulation, Capabilities: d.Channels, Configured: d.Configured})
 					}
 				}
 			}

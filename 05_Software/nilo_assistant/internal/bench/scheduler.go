@@ -7,8 +7,27 @@ import (
 
 	"nilo.local/nilo/internal/audit"
 	"nilo.local/nilo/internal/domain"
+	"nilo.local/nilo/internal/integration/supervisor"
 	"nilo.local/nilo/internal/store/sqlite"
 )
+
+var publicTerminalCodes = map[string]struct{}{
+	"device_not_ready": {}, "device_initializing": {}, "device_absent": {},
+	"device_busy": {}, "unsupported_endpoint": {}, "unsupported_format": {},
+	"control_out_of_range": {}, "control_unsupported": {}, "frame_timeout": {},
+	"invalid_parameters": {}, "runtime_unavailable": {}, "device_not_found": {},
+	"image_too_large": {}, "capture_failed": {},
+}
+
+func terminalErrorCode(err error) string {
+	var remote *supervisor.RemoteExecutionError
+	if errors.Is(err, supervisor.ErrRunnerRemote) && errors.As(err, &remote) {
+		if _, allowed := publicTerminalCodes[remote.Code]; allowed {
+			return remote.Code
+		}
+	}
+	return "execution_failed"
+}
 
 func (m *Manager) schedule(ctx context.Context) {
 	defer close(m.done)
@@ -105,7 +124,7 @@ func (m *Manager) dispatch(ctx context.Context) {
 			if readErr == nil {
 				message := ""
 				if runErr != nil {
-					message = "execution_failed"
+					message = terminalErrorCode(runErr)
 				}
 				if timeout {
 					message = "deadline_exceeded"

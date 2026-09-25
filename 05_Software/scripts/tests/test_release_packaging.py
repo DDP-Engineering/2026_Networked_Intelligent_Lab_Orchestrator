@@ -58,6 +58,7 @@ def fixture_payload(root: Path) -> Path:
         "usr/libexec/nilo/nilo-nethelper": b"helper-binary\n",
         "usr/share/nilo/gui/index.html": b"<title>NILO</title>\n",
         "usr/lib/nilo/integration-bundles/sigrok/manifest.json": b'{"schema":1}\n',
+        "usr/lib/udev/rules.d/60-nilo-instruments.rules": b'SUBSYSTEM=="video4linux", GROUP="video", MODE="0660"\n',
         "etc/nilo/nilo.env": b"NILO_GPIO_RECOVERY=disabled\n",
     }
     for relative, contents in files.items():
@@ -431,6 +432,7 @@ class DebianPackageTests(unittest.TestCase):
             self.assertIn("Version: 0.8.0\n", metadata)
             self.assertIn("Architecture: amd64\n", metadata)
             self.assertIn("policy-rc.d", postinst)
+            self.assertIn("adduser nilo video", postinst)
             self.assertIn("maintenance remove", prerm)
             self.assertLess(prerm.index("maintenance remove"), prerm.index("stop nilo-nethelper.service"))
             self.assertIn("/etc/nilo/nilo.env", conffiles)
@@ -438,6 +440,7 @@ class DebianPackageTests(unittest.TestCase):
                 names = data.getnames()
                 self.assertEqual(names, sorted(names))
                 self.assertIn("./usr/bin/nilo", names)
+                self.assertIn("./usr/lib/udev/rules.d/60-nilo-instruments.rules", names)
                 self.assertIn("./usr/lib/systemd/system/nilo.service", names)
                 self.assertIn("./usr/lib/systemd/system/nilo-nethelper.socket", names)
                 self.assertIn("./usr/lib/systemd/system/nilo-firstboot.service", names)
@@ -1215,6 +1218,7 @@ class ReleaseEvidenceTests(unittest.TestCase):
             "gui-npm-cache": "npm-cache-tar",
             "os-package-pool": "debian-pool-tar",
             "sigrok-runtime": "sigrok-runtime-tar",
+            "camera-build-input": "camera-build-input-tar",
             "source-offers": "source-offers-tar",
         }
         inputs = []
@@ -1280,6 +1284,17 @@ class ReleaseEvidenceTests(unittest.TestCase):
                     }
                     contents = builder._archive_bytes(
                         [("runtime-manifest.json", json.dumps(runtime_manifest, sort_keys=True).encode() + b"\n", 0o644)],
+                        1_700_000_000,
+                    )
+                elif name == "camera-build-input":
+                    contents = builder._archive_bytes(
+                        [
+                            ("dependencies/nilo_integration/__init__.py", b"", 0o644),
+                            ("dependencies/pydantic/__init__.py", b"", 0o644),
+                            ("wheelhouse/pyrav4l2-1.0-py3-none-any.whl", b"wheel", 0o644),
+                            ("wheelhouse/pillow-11.3.0-fixture.whl", b"wheel", 0o644),
+                            ("THIRD_PARTY_NOTICES.txt", b"camera dependency notices\n", 0o644),
+                        ],
                         1_700_000_000,
                     )
                 if name == "os-package-pool":
@@ -1413,12 +1428,14 @@ class ReleaseEvidenceTests(unittest.TestCase):
             "pi_pool": str((root / "rpi-debian13-arm64" / "pool").resolve()),
             "pi_receipt": str((root / "rpi-debian13-arm64" / "rpi-debian13-arm64-preparation.json").resolve()),
             "pi_sigrok_runtime": str((fixture_root / "rpi-debian13-arm64--sigrok-runtime").resolve()),
+            "pi_camera_build_input": str((fixture_root / "rpi-debian13-arm64--camera-build-input").resolve()),
             "schema": 1,
             "source_root": str(REPOSITORY_ROOT.resolve()),
             "npm_cache": str((fixture_root / "shared--gui-npm-cache").resolve()),
             "ubuntu_pool": str((root / "ubuntu-24.04-amd64" / "pool").resolve()),
             "ubuntu_receipt": str((root / "ubuntu-24.04-amd64" / "ubuntu-24.04-amd64-preparation.json").resolve()),
             "ubuntu_sigrok_runtime": str((fixture_root / "ubuntu-24.04-amd64--sigrok-runtime").resolve()),
+            "ubuntu_camera_build_input": str((fixture_root / "ubuntu-24.04-amd64--camera-build-input").resolve()),
         }
         path = root / "candidate-build-inputs.json"
         path.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -2310,6 +2327,9 @@ class OperatorScriptTests(unittest.TestCase):
         self.assertIn('$($node_command --version)', source)
         self.assertIn('$($npm_command --version)', source)
         self.assertNotIn('$source_root/02_Tools/env/with-go.sh', source)
+        self.assertIn('build-camera-bundle.py', source)
+        self.assertIn('--runtime-root "$ubuntu_sigrok_runtime"', source)
+        self.assertIn('--runtime-root "$pi_sigrok_runtime"', source)
 
     @unittest.skipUnless(os.name == "posix", "target harness execution requires a POSIX host")
     def test_target_acceptance_harness_constructs_isolated_exact_target_command(self) -> None:

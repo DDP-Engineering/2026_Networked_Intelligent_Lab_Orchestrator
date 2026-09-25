@@ -46,3 +46,37 @@ it('rejects malformed replies and exposed PWM inventory', () => {
     false,
   );
 });
+
+it('accepts a managed physical camera without analyzer channels', () => {
+  const parsed = parsePlugins({
+    plugins: [
+      {
+        id: 'camera',
+        display_name: 'Camera',
+        version: '0.1.0',
+        installed: true,
+        enabled: true,
+        mode: 'auto',
+        status: 'ready',
+        simulation: false,
+        operations: ['discover_devices', 'snapshot'],
+        error: '',
+        digest: 'digest',
+        devices: [
+          {
+            id: 'cam-1',
+            display_name: 'Bench Camera',
+            kind: 'camera',
+            presence: 'present',
+            readiness: 'ready',
+            configured: true,
+            enabled: true,
+            revision: 2,
+            capabilities: { formats: ['MJPG'] },
+          },
+        ],
+      },
+    ],
+  });
+  expect(parsed.ok).toBe(true);
+});

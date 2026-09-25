@@ -161,7 +161,14 @@ class SigrokIntegration:
         return HealthResult(status="ok")
 
     async def configure(self, request: ConfigureRequest) -> ConfigureResult:
-        parameters(request.configuration, set())
+        configuration = request.configuration
+        if configuration:
+            fields = parameters(configuration, {"schema_version", "plugin", "device"})
+            if fields.get("schema_version") != 1 or fields.get("device") is not None:
+                raise ExecuteFailure("invalid_parameters", "Unsupported configuration")
+            plugin = parameters(fields.get("plugin"), {"revision", "settings"})
+            if not isinstance(plugin.get("revision"), int) or plugin.get("settings") != {}:
+                raise ExecuteFailure("invalid_parameters", "Unsupported plugin settings")
         return ConfigureResult(status="ok")
 
     async def cancel(self, request_id: UUID) -> None:

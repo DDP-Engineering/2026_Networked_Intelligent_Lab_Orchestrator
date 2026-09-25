@@ -97,6 +97,25 @@ def _python_test_command(suite_root: Path) -> list[str]:
 
 
 def _run_full(root: Path) -> int:
+    camera_tests = root.parent / "02_Tools" / "tests" / "camera"
+    if camera_tests.is_dir():
+        result = _run(
+            [
+                sys.executable,
+                "-m",
+                "unittest",
+                "discover",
+                "-s",
+                "02_Tools/tests/camera",
+                "-p",
+                "test_*.py",
+                "-v",
+            ],
+            root.parent,
+        )
+        if result:
+            return result
+
     script_tests = root / "scripts" / "tests"
     if script_tests.is_dir():
         result = _run(

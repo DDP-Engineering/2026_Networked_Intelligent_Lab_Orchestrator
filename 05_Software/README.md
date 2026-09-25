@@ -19,6 +19,7 @@ the current HTTP service and GUI remain development foundations.
 │   └── python/              Python integration authoring SDK
 ├── integrations/
 │   └── fake_python/         Deterministic reference integration package
+│   └── camera/              Physical V4L2 camera integration package
 ├── schemas/
 │   └── integration/v1/      Public integration-package JSON schemas
 ├── scripts/                 Repository verification and portability scripts

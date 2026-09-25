@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-09873862"
+
+title = "Show a camera simulation workspace"
+
+status = "retired"
+
+requirement = """When the signed-in browser receives the simulated camera integration and devices, it shall show a Camera workspace where the user can choose either camera and inspect its generated preview, with a clear simulation label and a clear indication that retained snapshot capture is unavailable."""
+
+verification = "GUI component and browser checks open the reported Camera navigation entry, select both simulated devices, inspect preview and simulation labels, and verify no camera entry for an empty inventory."
+
+affected_paths = ["05_Software/nilo_gui/src/components/shell/AppShell.tsx", "05_Software/nilo_gui/src/components/pages/CameraSimulationPage.tsx", "05_Software/nilo_gui/src/api/client.ts", "05_Software/nilo_gui/src/styles/shell.css", "05_Software/nilo_gui/src/i18n/en.ts", "05_Software/nilo_gui/src/i18n/de.ts", "05_Software/nilo_gui/src/i18n/ro.ts"]
+
+linked_tests = ["05_Software/nilo_gui/src/components/shell/shell.test.tsx::camera simulation workspace"]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = "Retired 2026-09-24 at the user's explicit request to remove camera simulation code and data."
+
+created = 2026-09-21
+updated = 2026-09-24

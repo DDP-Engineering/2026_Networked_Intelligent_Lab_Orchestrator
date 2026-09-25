@@ -5,19 +5,19 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 
 	"github.com/google/uuid"
 	"nilo.local/nilo/internal/artifact"
 	"nilo.local/nilo/internal/domain"
+	"nilo.local/nilo/internal/integration/manifest"
 	"nilo.local/nilo/internal/integration/protocol"
 	"nilo.local/nilo/internal/integration/supervisor"
 	"nilo.local/nilo/internal/operation"
-	"nilo.local/nilo/internal/policy"
 	"nilo.local/nilo/internal/session"
 	"nilo.local/nilo/internal/store/sqlite"
 )
@@ -32,7 +32,11 @@ type jobRunner struct {
 }
 
 func (m *Manager) operationService(job Job, p Plugin) (operation.Service, *jobRunner, error) {
-	runner, err := m.process(p)
+	deviceID := ""
+	if job.PluginID == "camera" {
+		deviceID = job.Submission.DeviceID
+	}
+	runner, err := m.processConfigured(p, deviceID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -47,11 +51,37 @@ func (m *Manager) operationService(job Job, p Plugin) (operation.Service, *jobRu
 }
 
 func (r *jobRunner) validation() (operation.Validation, error) {
-	validation := operation.Validation{PackageID: r.plugin.ID, ManifestPolicy: policy.AutoEligible}
-	if resource := resourceFor(r.job); resource != "" {
-		validation.Resources = []string{r.plugin.InstanceID + strings.TrimPrefix(resource, r.plugin.ID)}
-		validation.RequiredArtifacts = []string{"capture"}
+	root, err := r.manager.packageRoot(r.plugin.ID)
+	if err != nil {
+		return operation.Validation{}, err
 	}
+	descriptor, err := manifest.Load(root)
+	if err != nil {
+		return operation.Validation{}, err
+	}
+	adapter, err := adapterFor(r.plugin.ID)
+	if err != nil {
+		return operation.Validation{}, err
+	}
+	validation := operation.Validation{PackageID: r.plugin.ID, RequiredArtifacts: append([]string(nil), adapter.requiredArtifacts[r.job.Submission.Operation]...)}
+	found := false
+	for _, declared := range descriptor.Operations {
+		if declared.ID != r.job.Submission.Operation {
+			continue
+		}
+		found = true
+		validation.ManifestPolicy = declared.Policy
+		for _, resource := range declared.Resources {
+			validation.Resources = append(validation.Resources, r.plugin.InstanceID+strings.TrimPrefix(string(resource), r.plugin.ID))
+		}
+	}
+	if !found {
+		return operation.Validation{}, ErrInvalid
+	}
+	if resource := resourceFor(r.job); resource != "" {
+		validation.Resources = append(validation.Resources, r.plugin.InstanceID+strings.TrimPrefix(resource, r.plugin.ID))
+	}
+	sort.Strings(validation.Resources)
 	return validation, nil
 }
 func (r *jobRunner) Validate(context.Context, operation.SubmitCommand) (operation.Validation, error) {
@@ -75,53 +105,16 @@ func (r *jobRunner) Execute(ctx context.Context, request protocol.ExecuteRequest
 	if err := os.Mkdir(r.stage, 0700); err != nil {
 		return protocol.ExecuteResult{}, err
 	}
-	var parameters map[string]any
-	if err := json.Unmarshal(request.Parameters, &parameters); err != nil {
+	adapter, err := adapterFor(r.plugin.ID)
+	if err != nil {
 		return protocol.ExecuteResult{}, err
 	}
-	if request.Operation == "capture" {
-		conn := ""
-		for _, device := range r.plugin.Devices {
-			if device.ID == r.job.Submission.DeviceID {
-				conn = device.Connection
-			}
-		}
-		if !connectionPattern.MatchString(conn) {
-			return protocol.ExecuteResult{}, ErrNotFound
-		}
-		parameters["conn"] = conn
-		parameters["staging_directory"] = r.stage
-	} else {
-		var input decodeInput
-		if strict(request.Parameters, &input) != nil {
-			return protocol.ExecuteResult{}, ErrInvalid
-		}
-		source, err := r.manager.job(ctx, input.CaptureID)
+	if adapter.prepareExecution != nil {
+		request, err = adapter.prepareExecution(ctx, r, request)
 		if err != nil {
 			return protocol.ExecuteResult{}, err
 		}
-		artifactID, err := domain.ParseArtifactID(source.ArtifactID)
-		if err != nil {
-			return protocol.ExecuteResult{}, err
-		}
-		content, _, err := r.manager.artifacts.Open(ctx, artifactID)
-		if err != nil {
-			return protocol.ExecuteResult{}, err
-		}
-		path := filepath.Join(r.stage, "input.sr")
-		file, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
-		if err != nil {
-			content.Close()
-			return protocol.ExecuteResult{}, err
-		}
-		_, copyErr := io.Copy(file, content)
-		err = errors.Join(copyErr, file.Close(), content.Close())
-		if err != nil {
-			return protocol.ExecuteResult{}, err
-		}
-		parameters = map[string]any{"input_path": path, "channel": input.Channel, "baudrate": input.Baudrate}
 	}
-	request.Parameters, _ = json.Marshal(parameters)
 	result, err := r.Supervisor.Execute(ctx, request, protocol.EventSinkFunc(func(ctx context.Context, event protocol.Envelope) error {
 		if err := r.reply(ctx, event); err != nil {
 			return err
@@ -164,7 +157,49 @@ func (r *jobRunner) reply(ctx context.Context, event protocol.Envelope) error {
 
 func (r *jobRunner) Persist(ctx context.Context, evidence operation.Evidence) error {
 	var declaration protocol.ArtifactDeclaration
-	if json.Unmarshal(evidence.Event.Payload, &declaration) != nil || declaration.ID != "capture" || r.job.Submission.Operation != "capture" {
+	if json.Unmarshal(evidence.Event.Payload, &declaration) != nil {
+		return ErrInvalid
+	}
+	adapter, err := adapterFor(r.plugin.ID)
+	if err != nil {
+		return err
+	}
+	if _, ok := adapter.artifacts[declaration.ID]; !ok {
+		return ErrInvalid
+	}
+	required := false
+	for _, id := range adapter.requiredArtifacts[r.job.Submission.Operation] {
+		if id == declaration.ID {
+			required = true
+		}
+	}
+	if !required || adapter.artifactFile == nil {
+		return ErrInvalid
+	}
+	root, err := r.manager.packageRoot(r.plugin.ID)
+	if err != nil {
+		return err
+	}
+	descriptor, err := manifest.Load(root)
+	if err != nil {
+		return err
+	}
+	declared := false
+	for _, artifact := range descriptor.Artifacts {
+		if artifact.ID != declaration.ID {
+			continue
+		}
+		for _, mediaType := range artifact.MediaTypes {
+			if mediaType == declaration.MediaType {
+				declared = true
+			}
+		}
+	}
+	if !declared {
+		return ErrInvalid
+	}
+	stagedName, presentationName, err := adapter.artifactFile(declaration.ID, declaration.MediaType)
+	if err != nil || !artifactBasename.MatchString(stagedName) || !artifactBasename.MatchString(presentationName) || strings.Contains(stagedName, "..") || strings.Contains(presentationName, "..") {
 		return ErrInvalid
 	}
 	digest, err := hex.DecodeString(strings.TrimPrefix(declaration.Digest, "sha256:"))
@@ -173,7 +208,8 @@ func (r *jobRunner) Persist(ctx context.Context, evidence operation.Evidence) er
 	}
 	var hash [32]byte
 	copy(hash[:], digest)
-	saved, err := r.manager.artifacts.Register(ctx, artifact.RegisterInput{StagedPath: filepath.Join(r.stage, "capture.sr"), RequestID: evidence.Request.ID(), SessionID: evidence.Session.ID, DeviceID: evidence.Request.DeviceID(), IntegrationID: evidence.Request.IntegrationID(), MediaType: declaration.MediaType, DeclaredDigest: hash, DeclaredSize: declaration.SizeBytes, TerminalState: domain.Completed, PresentationHints: json.RawMessage(`{"filename":"capture.sr"}`)})
+	hints, _ := json.Marshal(map[string]string{"filename": presentationName})
+	saved, err := r.manager.artifacts.Register(ctx, artifact.RegisterInput{StagedPath: filepath.Join(r.stage, stagedName), RequestID: evidence.Request.ID(), SessionID: evidence.Session.ID, DeviceID: evidence.Request.DeviceID(), IntegrationID: evidence.Request.IntegrationID(), MediaType: declaration.MediaType, DeclaredDigest: hash, DeclaredSize: declaration.SizeBytes, TerminalState: domain.Completed, PresentationHints: hints})
 	if err != nil {
 		return err
 	}

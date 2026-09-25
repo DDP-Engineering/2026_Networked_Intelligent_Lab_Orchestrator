@@ -16,6 +16,35 @@ ROUTER_PATH = SOFTWARE_ROOT / "scripts" / "aegis_test.py"
 
 
 class AegisTestRouterTests(unittest.TestCase):
+    def test_camera_probe_tests_are_part_of_full_gate(self) -> None:
+        """A probe regression must fail the repository's full test command."""
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            repository = Path(temporary_directory)
+            software = repository / "05_Software"
+            software.mkdir()
+            camera_tests = repository / "02_Tools" / "tests" / "camera"
+            camera_tests.mkdir(parents=True)
+            (camera_tests / "test_probe.py").write_text("", encoding="utf-8")
+
+            module = self._load_router()
+            with patch.object(module, "_run", return_value=7) as run:
+                self.assertEqual(module._run_full(software), 7)
+
+            run.assert_called_once_with(
+                [
+                    sys.executable,
+                    "-m",
+                    "unittest",
+                    "discover",
+                    "-s",
+                    "02_Tools/tests/camera",
+                    "-p",
+                    "test_*.py",
+                    "-v",
+                ],
+                repository,
+            )
+
     def test_discover_suites_finds_windows_frontend_and_ignores_generated_packages(
         self,
     ) -> None:

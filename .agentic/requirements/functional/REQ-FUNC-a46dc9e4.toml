@@ -1,0 +1,36 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-a46dc9e4"
+
+title = "Configure and administer managed cameras"
+
+status = "draft"
+
+requirement = """
+When an administrator changes a managed camera record or Camera package
+settings, Bench Core shall validate the installed schemas and observed revision,
+persist the accepted change and audit it, refuse stale or active-device edits,
+and require exact record confirmation for rebind and forget.
+"""
+
+verification = "Use HTTP, CLI and MCP admin paths with current and stale revisions and an operator role; assert validated settings, active-work conflict, audit and exact-ID rebind/forget. Exercise a serial-less rebind in the browser."
+
+affected_paths = ["05_Software/nilo_assistant/internal/bench/managed_devices.go", "05_Software/nilo_assistant/internal/store/sqlite/managed_device_repository.go", "05_Software/nilo_assistant/internal/httpapi/bench.go", "05_Software/nilo_assistant/internal/mcp/bench.go", "05_Software/nilo_assistant/cmd/nilo/bench.go", "05_Software/nilo_gui/src/components/pages/CameraSection.tsx"]
+
+linked_tests = ["05_Software/nilo_assistant/internal/store/sqlite/managed_device_repository_test.go::TestManagedDeviceConfigurationRefusesActiveWork", "05_Software/nilo_gui/src/components/pages/PluginsPage.test.tsx::saves camera mounting and capture defaults with the current device revision", "05_Software/nilo_gui/src/components/pages/PluginsPage.test.tsx::requires the exact camera ID before rebinding a serial-less record"]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-25
+updated = 2026-09-25

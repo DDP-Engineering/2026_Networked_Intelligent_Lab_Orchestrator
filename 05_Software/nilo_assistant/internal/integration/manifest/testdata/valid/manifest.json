@@ -29,7 +29,7 @@
   ],
   "cancellation": {"supported": true, "safe_shutdown": "capture"},
   "events": [{"id": "capture_completed", "schema": "schemas/result.json"}],
-  "artifacts": [{"id": "waveform", "schema": "schemas/result.json"}],
+  "artifacts": [{"id": "waveform", "schema": "schemas/result.json", "media_types": ["application/octet-stream"]}],
   "health_checks": [{"id": "runner", "timeout": "5s"}],
   "contract_fixtures": ["fixtures/capture.json"]
 }

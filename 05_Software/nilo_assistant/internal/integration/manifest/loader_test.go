@@ -29,6 +29,33 @@ func TestLoadAcceptsValidPackage(t *testing.T) {
 	}
 }
 
+func TestLoadResolvesOptionalDeviceConfigurationSchema(t *testing.T) {
+	root := writePackage(t, func(t *testing.T, document map[string]any) {
+		document["device_configuration_schema"] = "schemas/config.json"
+	})
+	loaded, err := Load(root)
+	if err != nil {
+		t.Fatalf("Load() device schema error = %v", err)
+	}
+	if loaded.DeviceConfigurationSchema != filepath.Join(root, "schemas", "config.json") {
+		t.Fatalf("device configuration schema = %q", loaded.DeviceConfigurationSchema)
+	}
+}
+
+func TestLoadArtifactMediaTypes(t *testing.T) {
+	root := writePackage(t, func(t *testing.T, document map[string]any) {
+		artifact := document["artifacts"].([]any)[0].(map[string]any)
+		artifact["media_types"] = []any{"image/jpeg", "image/png"}
+	})
+	loaded, err := Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := loaded.Artifacts[0].MediaTypes; !sameStrings(got, []string{"image/jpeg", "image/png"}) {
+		t.Fatalf("media types = %v", got)
+	}
+}
+
 func TestResourceClaimGrammar(t *testing.T) {
 	valid := []ResourceClaim{
 		"fake/device/stable-001",
@@ -524,4 +551,20 @@ func jsonString(value string) string {
 		panic(err)
 	}
 	return string(encoded)
+}
+
+func TestValidateConfigurationAgainstPackageSchema(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "device.schema.json")
+	if err := os.WriteFile(path, []byte(`{"type":"object","additionalProperties":false,"properties":{"brightness":{"type":"integer","minimum":0,"maximum":10}}}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := ValidateConfiguration(root, path, []byte(`{"brightness":3}`)); err != nil {
+		t.Fatalf("valid settings: %v", err)
+	}
+	for _, value := range []string{`{"brightness":11}`, `{"path":"/dev/video0"}`, `[]`} {
+		if err := ValidateConfiguration(root, path, []byte(value)); err == nil {
+			t.Fatalf("accepted invalid configuration %s", value)
+		}
+	}
 }

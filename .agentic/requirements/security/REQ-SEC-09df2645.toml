@@ -1,0 +1,12 @@
+schema = 1
+id = "REQ-SEC-09df2645"
+title = "Keep device paths outside public requests"
+status = "draft"
+requirement = "When a client submits a camera operation, Bench Core shall resolve the capture endpoint from its validated managed-device record and refuse client-supplied device-node paths or arbitrary ioctl identifiers."
+verification = "Submit a valid device id and hostile path/control parameters through HTTP, CLI and MCP; assert only the stored validated endpoint reaches the runner."
+affected_paths = ["05_Software/nilo_assistant/internal/bench/", "05_Software/nilo_assistant/internal/httpapi/bench.go", "05_Software/nilo_assistant/internal/mcp/", "05_Software/integrations/camera/"]
+linked_tests = []
+spec = ""
+priority = "high"
+created = 2026-09-21
+updated = 2026-09-21

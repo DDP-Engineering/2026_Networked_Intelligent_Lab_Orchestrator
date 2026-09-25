@@ -2,7 +2,7 @@
 
 ## Routing
 
-Select this page for Plugins, sigrok/ATK-DL16, `nilo plugin`, `nilo bench`, durable
+Select this page for Plugins, sigrok/ATK-DL16, physical Camera, `nilo plugin`, `nilo bench`, durable
 instrument commands, transaction IDs, queues, delayed replies and timeouts.
 Start at `05_Software/nilo_assistant/internal/bench/manager.go` and `jobs_test.go`.
 Wire protocols and process termination belong to [Integration platform](integration-platform.md);
@@ -13,12 +13,21 @@ visual structure belongs to [Browser GUI](gui-foundation.md).
 
 The manager owns curated package installation, persisted enablement and device
 inventory, command admission, scheduling and retained instrument evidence.
-The first typed adapter wraps the installed sigrok CLI for ATK digital captures
+The Sigrok adapter wraps the installed sigrok CLI for ATK digital captures
 and saved UART analysis. It excludes PWM, arbitrary command/config/path access,
 continuous capture, a marketplace and signal/decoder correctness qualification.
+The Camera adapter uses physical USB V4L2 capture nodes. Each discovered camera
+has a revisioned managed record, a stable `cam-N` identifier, device settings,
+and readiness gated by a core-owned control reset. Camera snapshots retain a
+JPEG or PNG image; authenticated preview reads decode and bound that image.
 The Sigrok package also contains an unwired SW-01 feasibility worker that proves
 structured native metadata, mixed Demo packets and decoder callbacks; it does
 not add or replace any public Bench operation.
+
+The package registry checks a typed adapter against manifest operation and
+artifact declarations before runner launch. Adapter hooks canonicalise inputs,
+derive per-device resource claims and prepare runner arguments; manifest static
+claims remain additive. Sigrok's two analyzers use independent dynamic claims.
 
 ## Public interface
 
@@ -26,6 +35,10 @@ not add or replace any public Bench operation.
 waits for its workers. `ListPlugins`, `Lifecycle`, `Discover`, `Submit`, `GetJob`,
 `ListJobs`, `Action`, `OpenArtifact` are shared by HTTP and MCP; CLI/GUI use HTTP.
 `app.StartBench` composes this only for a server, after startup reconciliation.
+Camera device configuration, enablement, rebind and forget use revision checks
+and administrator authority. A serial-less camera binds to its USB port; rebind
+requires an absent configured record, a present provisional record and exact-ID
+confirmation. Active camera work blocks configuration and record changes.
 The lifecycle surface also accepts `upgrade`: it waits a bounded interval for
 the installed integration to become idle, verifies and stages the replacement
 on the same filesystem, preserves enablement/mode/database state, health-checks
@@ -37,8 +50,8 @@ the package digest that SQLite still declares authoritative before serving it.
 `/api/v1/plugins` exposes curated availability and lifecycle; `/api/v1/bench/jobs`
 returns durable transaction acknowledgements and summaries. Individual reads
 return ordered replies/results, actions approve/cancel, and artifact download.
-The eight MCP tools and CLI equivalents are listed in
-`06_SoftwareDocu/Sigrok_Integration.md`. Human approval requires a browser session.
+The MCP and CLI operations are listed in `06_SoftwareDocu/Sigrok_Integration.md`
+and `06_SoftwareDocu/Camera_Integration.md`. Human approval requires a browser session.
 
 ## Invariants
 
@@ -59,6 +72,9 @@ The eight MCP tools and CLI equivalents are listed in
   scopes per call, never a cached actor or human approval authority.
 - Verified curated package copies and core-owned paths bound execution and
   artifacts. PWM and unknown parameters are refused in core and runner.
+- Terminal jobs retain allowlisted runner failure codes. Artifact media types
+  must match the installed manifest, and HTTP serves verified JPEG/PNG as inline
+  images with safe filenames while retaining Sigrok downloads as attachments.
 - The feasibility worker accepts only fixed Demo/UART-fixture commands, emits
   bounded `nilo.sigrok.worker/1` JSONL, and remains a child process outside
   Bench Core; its retained fixtures are not electrical qualification.
@@ -139,6 +155,12 @@ curated typed adapter and resource claims; transport handlers remain shared.
   locked dependency graph and package/adapter tests; `structured_worker.py`,
   `worker/nilo_sigrok_worker.c`, `evidence/`, and `tests/test_worker.py` hold the
   feasibility-only structured worker boundary and proof.
+- `05_Software/integrations/camera/`: physical V4L2 runner, manifest, schemas,
+  bounded image processing and isolated package tests.
+- `internal/store/sqlite/migrations/019_managed_devices.sql` and
+  `020_bench_plugin_configuration.sql`: revisioned camera and package settings.
+- `05_Software/nilo_gui/src/components/pages/CameraSection.tsx`: camera workspace
+  and administrator device settings.
 - `05_Software/nilo_gui/src/api/bench.ts`, `bench.test.ts`, `client.ts`: client contract.
 - `05_Software/nilo_gui/src/components/pages/PluginsPage.tsx`, `PluginsPage.test.tsx`:
   managed workspace; shell routing, i18n and layout follow gui-foundation.md.

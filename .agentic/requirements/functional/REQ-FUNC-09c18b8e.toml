@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-09c18b8e"
+
+title = "Expose simulated camera inventory and preview"
+
+status = "retired"
+
+requirement = """In the simulation profile, the camera preview service shall report two stable simulated camera devices and serve a bounded deterministic PNG test pattern for a selected available device to an authenticated inventory reader, refusing unknown or unavailable devices and remaining absent from the appliance profile."""
+
+verification = "Go catalog and HTTP tests compare stable inventory and PNG bytes, check authentication, unknown and unavailable devices, and confirm the route is absent in the appliance profile."
+
+affected_paths = ["05_Software/nilo_assistant/internal/simulation/catalog.go", "05_Software/nilo_assistant/internal/simulation/camera.go", "05_Software/nilo_assistant/internal/httpapi/server.go"]
+
+linked_tests = ["05_Software/nilo_assistant/internal/simulation/catalog_test.go::TestCatalogExposesTwoStableSimulationCameras", "05_Software/nilo_assistant/internal/simulation/catalog_test.go::TestCatalogReturnsStableScenarioIntegrationInventory", "05_Software/nilo_assistant/internal/simulation/catalog_test.go::TestCatalogReturnsStableScenarioDeviceInventory", "05_Software/nilo_assistant/internal/httpapi/server_test.go::TestSimulationCameraPreviewRequiresInventoryAccessAndReturnsPNG", "05_Software/nilo_assistant/internal/httpapi/server_test.go::TestIntegrationInventoryReturnsExactDeterministicSimulationEnvelope", "05_Software/nilo_assistant/internal/httpapi/server_test.go::TestDeviceInventoryReturnsExactDeterministicSimulationEnvelope", "05_Software/nilo_assistant/cmd/nilo/main_test.go::TestNiloServeCommandSelectsUnavailableScenario"]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = "Retired 2026-09-24 at the user's explicit request to remove camera simulation code and data."
+
+created = 2026-09-21
+updated = 2026-09-24

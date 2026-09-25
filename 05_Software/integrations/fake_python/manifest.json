@@ -30,7 +30,7 @@
   ],
   "cancellation": {"supported": true, "safe_shutdown": "sleep"},
   "events": [{"id": "progress", "schema": "schemas/progress.event.schema.json"}],
-  "artifacts": [{"id": "fake_artifact", "schema": "schemas/artifact.event.schema.json"}],
+  "artifacts": [{"id": "fake_artifact", "schema": "schemas/artifact.event.schema.json", "media_types": ["application/octet-stream"]}],
   "health_checks": [{"id": "runner", "timeout": "5s"}],
   "contract_fixtures": []
 }

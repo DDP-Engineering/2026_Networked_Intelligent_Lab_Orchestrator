@@ -233,7 +233,8 @@ replacements without an explicit override.
   `05_Software/nilo_gui/e2e/topology.ts`; keep its component tests and
   prerequisite contracts synchronized.
 - Change repository routing in `05_Software/scripts/aegis_test.py`; its unit
-  tests prove native and Windows/WSL invocation and failure propagation.
+  tests prove camera probe inclusion, native and Windows/WSL invocation, and
+  failure propagation.
 - Change target, lock, cache, or receipt contracts in
   `02_Tools/packaging/package_inputs.py` and `config/`, then update
   `05_Software/scripts/tests/test_packaging_inputs.py` and the packaging README
@@ -503,6 +504,9 @@ only durable state, and they live on the WSL Linux filesystem.
 - `02_Tools/tests/packaging/` - complete-fixture OCI execution of the actual
   package action, including network-none, read-only cache, and receipt checks;
   its temporary image and volume use unique names and are removed after use.
+- `02_Tools/tests/camera/` - bounded, non-production V4L2 binding probe with
+  fixture checks, isolated candidate workers, an evidence schema and target
+  run guide; fixture records remain separate from target hardware evidence.
 - `02_Tools/scripts/build_environment.py` and adjacent shell scripts - lock and
   manifest validation, streaming multipart archive operations, build/export/
   restore verification, metadata collection, and replica preflight.
@@ -522,9 +526,9 @@ only durable state, and they live on the WSL Linux filesystem.
   and browser boundaries.
 - `02_Tools/README.md` - usage, support, cache, offline-kit, lifecycle option,
   and exit-code guidance.
-- `05_Software/scripts/aegis_test.py` - Go, Python, integration, and Windows
-  frontend suite discovery that excludes generated environments and outputs, and
-  the WSL2 appliance-stage browser step that follows the frontend build.
+- `05_Software/scripts/aegis_test.py` - camera probe, Go, Python, integration,
+  and Windows frontend suite discovery that excludes generated environments and
+  outputs, and the WSL2 appliance-stage browser step after the frontend build.
 - `05_Software/scripts/tests/test_appliance_stage.py` - the appliance stage's
   image definition, prerequisite refusals and host-isolation contract, driven
   against the real entry point.

@@ -97,6 +97,18 @@ func New(options Options) (*Manager, error) {
 		cancel()
 		return nil, err
 	}
+	if err := sqlite.NewManagedDeviceRepository(options.Database).MarkUnknown(ctx, "camera"); err != nil {
+		cancel()
+		return nil, err
+	}
+	if camera, err := m.loadPlugin(ctx, "camera"); err == nil && camera.Installed && camera.Enabled {
+		startupCtx, finish := context.WithTimeout(ctx, 15*time.Second)
+		_, discoveryErr := m.discoverCamera(startupCtx, camera)
+		finish()
+		m.report(discoveryErr)
+	} else if err != nil && !errors.Is(err, ErrNotFound) {
+		m.report(err)
+	}
 	go m.schedule(ctx)
 	return m, nil
 }

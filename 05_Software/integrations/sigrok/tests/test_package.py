@@ -22,6 +22,13 @@ def test_package_declares_digital_capture_contract():
         schema = json.loads((root / operation["input_schema"]).read_text())
         assert schema["additionalProperties"] is False
         assert "pwm" not in schema.get("properties", {})
+    assert value["artifacts"] == [
+        {
+            "id": "capture",
+            "schema": "schemas/event.schema.json",
+            "media_types": ["application/x-sigrok-session"],
+        }
+    ]
 
 
 # END OF FILE
