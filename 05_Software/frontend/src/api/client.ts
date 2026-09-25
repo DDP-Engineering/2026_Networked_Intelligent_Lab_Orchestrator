@@ -2,10 +2,13 @@ import {
   parsePlugins,
   parsePlugin,
   parseInstrumentDevices,
+  parseInstrumentDevice,
+  parsePluginConfiguration,
   parseInstrumentJobs,
   parseInstrumentJob,
   type InstrumentPlugin,
   type InstrumentDevice,
+  type PluginConfiguration,
   type InstrumentJob,
   type InstrumentSubmission,
   type PluginAction,
@@ -232,6 +235,48 @@ export interface BenchCoreClient {
     mode?: string,
   ): Promise<InstrumentPlugin>;
   discoverInstruments(credential: Credential, id: string): Promise<InstrumentDevice[]>;
+  configureInstrumentDevice?(
+    credential: Credential,
+    pluginId: string,
+    deviceId: string,
+    revision: number,
+    name: string,
+    purpose: string,
+    settings: Record<string, unknown>,
+  ): Promise<InstrumentDevice>;
+  rebindInstrumentDevice?(
+    credential: Credential,
+    pluginId: string,
+    deviceId: string,
+    revision: number,
+    provisionalId: string,
+    provisionalRevision: number,
+    confirmation: string,
+  ): Promise<InstrumentDevice>;
+  forgetInstrumentDevice?(
+    credential: Credential,
+    pluginId: string,
+    deviceId: string,
+    revision: number,
+    confirmation: string,
+  ): Promise<void>;
+  instrumentDeviceAction?(
+    credential: Credential,
+    pluginId: string,
+    deviceId: string,
+    action: 'enable' | 'disable' | 'retry',
+    revision: number,
+  ): Promise<InstrumentDevice>;
+  getPluginConfiguration?(
+    credential: Credential,
+    pluginId: string,
+  ): Promise<PluginConfiguration>;
+  savePluginConfiguration?(
+    credential: Credential,
+    pluginId: string,
+    revision: number,
+    settings: Record<string, unknown>,
+  ): Promise<PluginConfiguration>;
   listInstrumentJobs(credential: Credential): Promise<InstrumentJob[]>;
   getInstrumentJob(credential: Credential, id: string): Promise<InstrumentJob>;
   submitInstrumentJob(
@@ -244,6 +289,7 @@ export interface BenchCoreClient {
     action: 'approve' | 'cancel',
   ): Promise<InstrumentJob>;
   downloadInstrumentArtifact(credential: Credential, id: string): Promise<Blob>;
+  previewInstrumentArtifact?(credential: Credential, id: string): Promise<Blob>;
 
   getStatus(credential: Credential): Promise<BenchCoreStatus>;
   getIntegrations(credential: Credential): Promise<IntegrationInventory>;
@@ -527,6 +573,72 @@ export function createBenchCoreClient(
         body: {},
         parse: parseInstrumentDevices,
       }),
+    configureInstrumentDevice: (
+      credential,
+      pluginId,
+      deviceId,
+      revision,
+      name,
+      purpose,
+      settings,
+    ) =>
+      exchange({
+        path: `/api/v1/plugins/${encodeURIComponent(pluginId)}/devices/${encodeURIComponent(deviceId)}/configure`,
+        credential,
+        method: 'POST',
+        body: { revision, name, purpose, settings },
+        parse: parseInstrumentDevice,
+      }),
+    rebindInstrumentDevice: (
+      credential,
+      pluginId,
+      deviceId,
+      revision,
+      provisionalId,
+      provisionalRevision,
+      confirmation,
+    ) =>
+      exchange({
+        path: `/api/v1/plugins/${encodeURIComponent(pluginId)}/devices/${encodeURIComponent(deviceId)}/rebind`,
+        credential,
+        method: 'POST',
+        body: {
+          revision,
+          provisional_id: provisionalId,
+          provisional_revision: provisionalRevision,
+          confirm_device_id: confirmation,
+        },
+        parse: parseInstrumentDevice,
+      }),
+    forgetInstrumentDevice: (credential, pluginId, deviceId, revision, confirmation) =>
+      exchange<void>({
+        path: `/api/v1/plugins/${encodeURIComponent(pluginId)}/devices/${encodeURIComponent(deviceId)}`,
+        credential,
+        method: 'DELETE',
+        body: { revision, confirm_device_id: confirmation },
+      }),
+    instrumentDeviceAction: (credential, pluginId, deviceId, action, revision) =>
+      exchange({
+        path: `/api/v1/plugins/${encodeURIComponent(pluginId)}/devices/${encodeURIComponent(deviceId)}/${action}`,
+        credential,
+        method: 'POST',
+        body: { revision },
+        parse: parseInstrumentDevice,
+      }),
+    getPluginConfiguration: (credential, pluginId) =>
+      exchange({
+        path: `/api/v1/plugins/${encodeURIComponent(pluginId)}/configuration`,
+        credential,
+        parse: parsePluginConfiguration,
+      }),
+    savePluginConfiguration: (credential, pluginId, revision, settings) =>
+      exchange({
+        path: `/api/v1/plugins/${encodeURIComponent(pluginId)}/configuration`,
+        credential,
+        method: 'PUT',
+        body: { revision, settings },
+        parse: parsePluginConfiguration,
+      }),
     getInstrumentJob: (credential, id) =>
       exchange({
         path: `/api/v1/bench/jobs/${encodeURIComponent(id)}`,
@@ -564,6 +676,22 @@ export function createBenchCoreClient(
         throw new BenchCoreError('unavailable', 'Binary download is unavailable');
       return response.blob();
     },
+    previewInstrumentArtifact: async (credential, id) => {
+      const headers: Record<string, string> = {};
+      if (credential.kind === 'bearer')
+        headers.Authorization = `Bearer ${credential.token}`;
+      const response = await transport(
+        resourceUrl(
+          baseUrl,
+          `/api/v1/bench/jobs/${encodeURIComponent(id)}/artifact/preview`,
+        ),
+        { method: 'GET', headers, credentials: 'same-origin' },
+      );
+      if (!response.ok) throw await refusalOf(response);
+      if (!response.blob)
+        throw new BenchCoreError('unavailable', 'Image preview is unavailable');
+      return response.blob();
+    },
 
     getStatus: (credential) =>
       exchange({ path: STATUS_PATH, credential, parse: parseStatusBody }),
@@ -571,7 +699,6 @@ export function createBenchCoreClient(
       exchange({ path: INTEGRATIONS_PATH, credential, parse: parseIntegrationsBody }),
     getDevices: (credential) =>
       exchange({ path: DEVICES_PATH, credential, parse: parseDevicesBody }),
-
     getAppliance: (credential) =>
       exchange({ path: APPLIANCE_PATH, credential, parse: parseApplianceMetadata }),
     setApplianceFriendlyName: (credential, friendlyName) =>

@@ -1,6 +1,10 @@
 # Plugin administration and virtual bench workflow plan
 
-Status: proposed; planning only. No implementation or deployment authorized by this plan request.
+Status: deferred; this Sigrok workflow proposal is outside the current Camera
+navigation work and will be reconsidered during Sigrok reimplementation. No
+implementation or deployment is authorized by this document. The current
+Camera navigation and appliance administration plan is
+`00_Planning/Plugin_Navigation_and_Administration_Plan.md`.
 
 ## 1. Intent and evidence
 

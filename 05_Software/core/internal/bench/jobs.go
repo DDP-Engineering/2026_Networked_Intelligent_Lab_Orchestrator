@@ -128,39 +128,13 @@ func (m *Manager) Submit(ctx context.Context, actor identity.Actor, input Submis
 	if count >= QueueLimit {
 		return Job{}, ErrQueueFull
 	}
-	if input.Operation == "capture" {
-		found := false
-		for _, d := range p.Devices {
-			if d.ID == input.DeviceID {
-				found = true
-			}
-		}
-		if !found {
-			return Job{}, ErrNotFound
-		}
-	} else {
-		var parameters decodeInput
-		_ = json.Unmarshal(input.Parameters, &parameters)
-		source, err := m.job(ctx, parameters.CaptureID)
-		if err != nil {
+	adapter, err := adapterFor(input.PluginID)
+	if err != nil {
+		return Job{}, err
+	}
+	if adapter.validateSubmission != nil {
+		if err := adapter.validateSubmission(ctx, m, actor, p, input); err != nil {
 			return Job{}, err
-		}
-		if !canRead(actor, source) {
-			return Job{}, ErrForbidden
-		}
-		if source.State != "completed" || source.ArtifactID == "" || source.Submission.Operation != "capture" {
-			return Job{}, ErrInvalid
-		}
-		var captured captureInput
-		_ = json.Unmarshal(source.Submission.Parameters, &captured)
-		found := false
-		for _, ch := range captured.Channels {
-			if ch == parameters.Channel {
-				found = true
-			}
-		}
-		if !found {
-			return Job{}, ErrInvalid
 		}
 	}
 	id, err := uuid.NewV7()

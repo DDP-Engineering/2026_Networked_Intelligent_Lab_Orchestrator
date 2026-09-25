@@ -21,13 +21,22 @@ var (
 const QueueLimit = 32
 
 type Device struct {
-	ID             string   `json:"id"`
-	Connection     string   `json:"connection"`
-	DisplayName    string   `json:"display_name"`
-	Driver         string   `json:"driver"`
-	Channels       []string `json:"channels"`
-	SampleRates    []int    `json:"samplerates"`
-	MaximumSamples int      `json:"maximum_samples"`
+	ID             string          `json:"id"`
+	Connection     string          `json:"connection"`
+	DisplayName    string          `json:"display_name"`
+	Kind           string          `json:"kind,omitempty"`
+	Purpose        string          `json:"purpose,omitempty"`
+	Presence       string          `json:"presence"`
+	Readiness      string          `json:"readiness"`
+	Configured     bool            `json:"configured"`
+	Enabled        bool            `json:"enabled"`
+	Revision       int64           `json:"revision"`
+	Capabilities   json.RawMessage `json:"capabilities,omitempty"`
+	Settings       json.RawMessage `json:"settings,omitempty"`
+	Driver         string          `json:"driver"`
+	Channels       []string        `json:"channels"`
+	SampleRates    []int           `json:"samplerates"`
+	MaximumSamples int             `json:"maximum_samples"`
 }
 
 type Plugin struct {

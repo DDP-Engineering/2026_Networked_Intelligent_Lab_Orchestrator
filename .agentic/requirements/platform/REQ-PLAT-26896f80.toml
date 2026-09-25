@@ -1,0 +1,36 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-PLAT-26896f80"
+
+title = "Package camera access and runtime closure"
+
+status = "draft"
+
+requirement = """
+When Camera is selected for an offline appliance bundle, the builder shall
+index an arm64 or amd64 package containing a verified matching interpreter,
+locked Camera dependencies and package schemas, without resolving packages
+during installation or runner start.
+"""
+
+verification = "Build both target bundles from locked offline inputs, inspect their runtime inventories and hashes, run their interpreters on each target and execute the Camera contract suite without host Python or network access."
+
+affected_paths = ["02_Tools/scripts/build-camera-bundle.py", "02_Tools/scripts/build-appliance.sh", "02_Tools/packaging/package_inputs.py", "02_Tools/packaging/release_builder.py", "02_Tools/packaging/build/build-candidate-set.sh", "05_Software/integrations/camera/manifest.json"]
+
+linked_tests = ["02_Tools/tests/camera/test_bundle.py::test_camera_runtime_copy_requires_matching_interpreter_and_notices", "02_Tools/tests/software/test_release_packaging.py::ReleaseEvidenceTests", "02_Tools/tests/software/test_release_packaging.py::OperatorScriptTests.test_candidate_builder_uses_archived_revision_and_pinned_tools"]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-25
+updated = 2026-09-25

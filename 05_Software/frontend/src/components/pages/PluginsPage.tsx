@@ -12,17 +12,37 @@ import {
   type InstrumentSubmission,
 } from '../../api/bench';
 import { useTranslate } from '../../i18n/languages';
+import { CameraSection } from './CameraSection';
 
 interface Props {
   client: BenchCoreClient;
   credential: Credential;
   session: BenchCoreSession;
   onSessionEnded: () => void;
+  view?:
+    | 'catalog'
+    | 'legacy-sigrok'
+    | 'overview'
+    | 'snapshot'
+    | 'settings'
+    | 'administration';
+  focusDevice?: string;
+  onPluginsChanged?: () => void;
+  onOpenCameraAdmin?: () => void;
 }
 
 /** Managed plugins and server-owned transactions. Polling reattaches to durable
  * work after reload; a failed submission keeps its key for an identical retry. */
-export function PluginsPage({ client, credential, session, onSessionEnded }: Props) {
+export function PluginsPage({
+  client,
+  credential,
+  session,
+  onSessionEnded,
+  view = 'catalog',
+  focusDevice,
+  onPluginsChanged,
+  onOpenCameraAdmin,
+}: Props) {
   const t = useTranslate();
   const [plugins, setPlugins] = useState<InstrumentPlugin[]>([]);
   const [jobs, setJobs] = useState<InstrumentJob[]>([]);
@@ -45,13 +65,27 @@ export function PluginsPage({ client, credential, session, onSessionEnded }: Pro
   const canExecute = session.permissions.includes('bench.execute');
   const canApprove =
     credential.kind === 'session' && session.permissions.includes('bench.approve');
-  const sigrok = plugins.find((plugin) => plugin.id === 'sigrok');
+  const cameraView =
+    view === 'overview' ||
+    view === 'snapshot' ||
+    view === 'settings' ||
+    view === 'administration';
+  const sigrok = cameraView
+    ? undefined
+    : plugins.find((plugin) => plugin.id === 'sigrok');
+  const camera = plugins.find((plugin) => plugin.id === 'camera');
+  const visibleJobs = jobs.filter(
+    (job) =>
+      (cameraView ? job.plugin_id === 'camera' : job.plugin_id === 'sigrok') &&
+      (focusDevice === undefined || job.submission.device_id === focusDevice),
+  );
   const devices = sigrok?.devices ?? [];
   const activeDevice = devices.find((item) => item.id === device) ?? devices[0];
   const current =
-    detail?.transaction_id === selected
+    detail?.transaction_id === selected &&
+    (cameraView ? detail.plugin_id === 'camera' : detail.plugin_id === 'sigrok')
       ? detail
-      : jobs.find((job) => job.transaction_id === selected);
+      : visibleJobs.find((job) => job.transaction_id === selected);
   const capturedChannels = Array.isArray(current?.submission.parameters.channels)
     ? (current.submission.parameters.channels as string[])
     : [];
@@ -112,6 +146,7 @@ export function PluginsPage({ client, credential, session, onSessionEnded }: Pro
     try {
       await action();
       await refresh();
+      onPluginsChanged?.();
     } catch (cause) {
       report(cause);
     } finally {
@@ -134,19 +169,35 @@ export function PluginsPage({ client, credential, session, onSessionEnded }: Pro
       ...previous.filter((item) => item.transaction_id !== job.transaction_id),
     ]);
   }
-  async function download(id: string) {
-    const blob = await client.downloadInstrumentArtifact(credential, id);
+  async function download(job: InstrumentJob) {
+    const blob = await client.downloadInstrumentArtifact(
+      credential,
+      job.transaction_id,
+    );
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `capture-${id}.sr`;
+    link.download =
+      job.plugin_id === 'camera'
+        ? `camera-${job.submission.device_id}-${job.transaction_id}.${blob.type === 'image/png' ? 'png' : 'jpg'}`
+        : `capture-${job.transaction_id}.sr`;
     link.click();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   return (
     <div className="page">
       <header className="page-head">
-        <h2>{t('nav.plugins')}</h2>
+        <h2>
+          {view === 'administration'
+            ? t('camera.admin')
+            : view === 'overview'
+              ? t('camera.overview')
+              : focusDevice
+                ? `${camera?.devices.find((item) => item.id === focusDevice)?.display_name ?? focusDevice} · ${view === 'settings' ? t('camera.settings') : t('camera.snapshot')}`
+                : view === 'legacy-sigrok'
+                  ? (sigrok?.display_name ?? 'Sigrok')
+                  : t('nav.plugins')}
+        </h2>
         <button
           type="button"
           onClick={() => {
@@ -156,6 +207,17 @@ export function PluginsPage({ client, credential, session, onSessionEnded }: Pro
         >
           {t('instrument.refresh')}
         </button>
+        {view === 'overview' && canExecute && (
+          <button
+            type="button"
+            disabled={busy || !camera?.enabled}
+            onClick={() =>
+              void act(() => client.discoverInstruments(credential, 'camera'))
+            }
+          >
+            {t('camera.discover')}
+          </button>
+        )}
       </header>
       <div className="page-body instrument-workspace">
         {error && (
@@ -164,114 +226,167 @@ export function PluginsPage({ client, credential, session, onSessionEnded }: Pro
           </p>
         )}
         {plugins.length === 0 && <p>{t('instrument.noPackages')}</p>}
-        <section className="instrument-packages" aria-label={t('nav.plugins')}>
-          {plugins.map((plugin) => (
-            <article className="instrument-card" key={plugin.id}>
-              <h3>
-                {plugin.display_name} <small>{plugin.version}</small>
-              </h3>
-              <p>
-                {plugin.status} · {plugin.mode}{' '}
-                {plugin.simulation && <strong>· {t('instrument.simulation')}</strong>}
-              </p>
-              {plugin.error && <p role="status">{plugin.error}</p>}
-              {canManage && (
-                <div className="instrument-actions">
-                  {!plugin.installed && (
+        {(view === 'catalog' || view === 'administration') && (
+          <section className="instrument-packages" aria-label={t('nav.plugins')}>
+            {plugins
+              .filter((plugin) => view === 'catalog' || plugin.id === 'camera')
+              .map((plugin) => (
+                <article className="instrument-card" key={plugin.id}>
+                  <h3>
+                    {plugin.display_name} <small>{plugin.version}</small>
+                  </h3>
+                  <p>
+                    {plugin.status} · {plugin.mode}{' '}
+                    {plugin.simulation && (
+                      <strong>· {t('instrument.simulation')}</strong>
+                    )}
+                  </p>
+                  {plugin.error && <p role="status">{plugin.error}</p>}
+                  {view === 'catalog' && plugin.id === 'camera' && plugin.installed && (
+                    <button type="button" onClick={onOpenCameraAdmin}>
+                      {t('camera.configure')}
+                    </button>
+                  )}
+                  {canManage &&
+                    (view === 'administration' ||
+                      plugin.id !== 'camera' ||
+                      !plugin.installed) && (
+                      <div className="instrument-actions">
+                        {!plugin.installed && (
+                          <button
+                            disabled={busy}
+                            onClick={() =>
+                              void act(() =>
+                                client.pluginAction(credential, plugin.id, 'install'),
+                              )
+                            }
+                          >
+                            {t('instrument.install')}
+                          </button>
+                        )}
+                        {plugin.installed && (
+                          <>
+                            {plugin.id === 'camera' && (
+                              <button
+                                disabled={busy}
+                                onClick={() =>
+                                  void act(() =>
+                                    client.pluginAction(
+                                      credential,
+                                      plugin.id,
+                                      'upgrade',
+                                    ),
+                                  )
+                                }
+                              >
+                                {t('camera.updatePackage')}
+                              </button>
+                            )}
+                            {!plugin.enabled && (
+                              <>
+                                <label>
+                                  {t('instrument.policy')}{' '}
+                                  <select
+                                    value={mode}
+                                    onChange={(event) => setMode(event.target.value)}
+                                  >
+                                    <option value="ask">{t('instrument.ask')}</option>
+                                    <option value="auto">{t('instrument.auto')}</option>
+                                  </select>
+                                </label>
+                                <button
+                                  disabled={busy}
+                                  onClick={() =>
+                                    void act(() =>
+                                      client.pluginAction(
+                                        credential,
+                                        plugin.id,
+                                        'enable',
+                                        mode,
+                                      ),
+                                    )
+                                  }
+                                >
+                                  {t('instrument.enable')}
+                                </button>
+                              </>
+                            )}
+                            {plugin.enabled && (
+                              <>
+                                <button
+                                  disabled={busy}
+                                  onClick={() =>
+                                    void act(() =>
+                                      client.pluginAction(
+                                        credential,
+                                        plugin.id,
+                                        'disable',
+                                      ),
+                                    )
+                                  }
+                                >
+                                  {t('instrument.disable')}
+                                </button>
+                                <button
+                                  disabled={busy}
+                                  onClick={() =>
+                                    void act(() =>
+                                      client.pluginAction(
+                                        credential,
+                                        plugin.id,
+                                        'restart',
+                                      ),
+                                    )
+                                  }
+                                >
+                                  {t('instrument.restart')}
+                                </button>
+                              </>
+                            )}
+                            <button
+                              disabled={busy}
+                              onClick={() =>
+                                window.confirm(
+                                  plugin.id === 'camera'
+                                    ? t('camera.confirmUninstall', {
+                                        name: plugin.display_name,
+                                      })
+                                    : `${t('instrument.uninstall')} ${plugin.display_name}?`,
+                                ) &&
+                                void act(() =>
+                                  client.pluginAction(
+                                    credential,
+                                    plugin.id,
+                                    'uninstall',
+                                  ),
+                                )
+                              }
+                            >
+                              {t('instrument.uninstall')}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  {plugin.enabled && canExecute && view === 'administration' && (
                     <button
                       disabled={busy}
                       onClick={() =>
                         void act(() =>
-                          client.pluginAction(credential, plugin.id, 'install'),
+                          client.discoverInstruments(credential, plugin.id),
                         )
                       }
                     >
-                      {t('instrument.install')}
+                      {plugin.id === 'camera'
+                        ? t('camera.discover')
+                        : t('instrument.discover')}
                     </button>
                   )}
-                  {plugin.installed && (
-                    <>
-                      {!plugin.enabled && (
-                        <>
-                          <label>
-                            {t('instrument.policy')}{' '}
-                            <select
-                              value={mode}
-                              onChange={(event) => setMode(event.target.value)}
-                            >
-                              <option value="ask">{t('instrument.ask')}</option>
-                              <option value="auto">{t('instrument.auto')}</option>
-                            </select>
-                          </label>
-                          <button
-                            disabled={busy}
-                            onClick={() =>
-                              void act(() =>
-                                client.pluginAction(
-                                  credential,
-                                  plugin.id,
-                                  'enable',
-                                  mode,
-                                ),
-                              )
-                            }
-                          >
-                            {t('instrument.enable')}
-                          </button>
-                        </>
-                      )}
-                      {plugin.enabled && (
-                        <>
-                          <button
-                            disabled={busy}
-                            onClick={() =>
-                              void act(() =>
-                                client.pluginAction(credential, plugin.id, 'disable'),
-                              )
-                            }
-                          >
-                            {t('instrument.disable')}
-                          </button>
-                          <button
-                            disabled={busy}
-                            onClick={() =>
-                              void act(() =>
-                                client.pluginAction(credential, plugin.id, 'restart'),
-                              )
-                            }
-                          >
-                            {t('instrument.restart')}
-                          </button>
-                        </>
-                      )}
-                      <button
-                        disabled={busy}
-                        onClick={() =>
-                          void act(() =>
-                            client.pluginAction(credential, plugin.id, 'uninstall'),
-                          )
-                        }
-                      >
-                        {t('instrument.uninstall')}
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
-              {plugin.enabled && canExecute && (
-                <button
-                  disabled={busy}
-                  onClick={() =>
-                    void act(() => client.discoverInstruments(credential, plugin.id))
-                  }
-                >
-                  {t('instrument.discover')}
-                </button>
-              )}
-            </article>
-          ))}
-        </section>
-        {sigrok?.enabled && (
+                </article>
+              ))}
+          </section>
+        )}
+        {view === 'legacy-sigrok' && sigrok?.enabled && (
           <section className="instrument-card">
             <h3>{t('instrument.capture')}</h3>
             {devices.length === 0 ? (
@@ -371,44 +486,66 @@ export function PluginsPage({ client, credential, session, onSessionEnded }: Pro
             )}
           </section>
         )}
-        <section className="instrument-card">
-          <h3>{t('instrument.transactions')}</h3>
-          <p>{t('instrument.queueHelp')}</p>
-          {jobs.length === 0 ? (
-            <p>{t('instrument.noJobs')}</p>
-          ) : (
-            <div className="table-scroll">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>{t('instrument.transaction')}</th>
-                    <th>{t('instrument.operation')}</th>
-                    <th>{t('instrument.state')}</th>
-                    <th>{t('instrument.deadline')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {jobs.map((job) => (
-                    <tr key={job.transaction_id}>
-                      <td>
-                        <button
-                          onClick={() => setSelected(job.transaction_id)}
-                          aria-pressed={selected === job.transaction_id}
-                        >
-                          {job.transaction_id}
-                        </button>
-                      </td>
-                      <td>{job.submission.operation}</td>
-                      <td>{job.state}</td>
-                      <td>{new Date(job.deadline).toLocaleTimeString()}</td>
+        {camera && cameraView && (
+          <CameraSection
+            client={client}
+            credential={credential}
+            focusDevice={focusDevice}
+            view={view}
+            devices={camera.devices}
+            jobs={visibleJobs}
+            busy={busy}
+            canManage={canManage}
+            canExecute={canExecute}
+            run={(action) => {
+              void act(action);
+            }}
+            submit={submit}
+          />
+        )}
+        {(view === 'legacy-sigrok' ||
+          view === 'overview' ||
+          view === 'snapshot' ||
+          view === 'settings') && (
+          <section className="instrument-card">
+            <h3>{t('instrument.transactions')}</h3>
+            <p>{t('instrument.queueHelp')}</p>
+            {visibleJobs.length === 0 ? (
+              <p>{t('instrument.noJobs')}</p>
+            ) : (
+              <div className="table-scroll">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>{t('instrument.transaction')}</th>
+                      <th>{t('instrument.operation')}</th>
+                      <th>{t('instrument.state')}</th>
+                      <th>{t('instrument.deadline')}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-        {current && (
+                  </thead>
+                  <tbody>
+                    {visibleJobs.map((job) => (
+                      <tr key={job.transaction_id}>
+                        <td>
+                          <button
+                            onClick={() => setSelected(job.transaction_id)}
+                            aria-pressed={selected === job.transaction_id}
+                          >
+                            {job.transaction_id}
+                          </button>
+                        </td>
+                        <td>{job.submission.operation}</td>
+                        <td>{job.state}</td>
+                        <td>{new Date(job.deadline).toLocaleTimeString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        )}
+        {view !== 'catalog' && view !== 'administration' && current && (
           <section className="instrument-card">
             <h3>{t('instrument.transaction')}</h3>
             <code className="instrument-id">{current.transaction_id}</code>
@@ -452,7 +589,7 @@ export function PluginsPage({ client, credential, session, onSessionEnded }: Pro
               {current.state === 'completed' && current.artifact_id && (
                 <button
                   disabled={busy}
-                  onClick={() => void act(() => download(current.transaction_id))}
+                  onClick={() => void act(() => download(current))}
                 >
                   {t('instrument.download')}
                 </button>
@@ -477,7 +614,9 @@ export function PluginsPage({ client, credential, session, onSessionEnded }: Pro
             {current.state === 'completed' &&
               current.artifact_id &&
               canExecute &&
-              sigrok?.enabled && (
+              sigrok?.enabled &&
+              current.plugin_id === 'sigrok' &&
+              current.submission.operation === 'capture' && (
                 <form
                   onSubmit={(event) => {
                     event.preventDefault();

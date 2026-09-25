@@ -128,7 +128,8 @@
   "artifacts": [
     {
       "id": "contract_artifact",
-      "schema": "schemas/artifact.event.schema.json"
+      "schema": "schemas/artifact.event.schema.json",
+      "media_types": ["application/octet-stream"]
     }
   ],
   "health_checks": [

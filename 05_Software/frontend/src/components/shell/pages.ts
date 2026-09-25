@@ -1,5 +1,10 @@
 import { mayReadActivity, mayReadTokens, mayReadUsers } from '../../api/permissions';
-import type { BenchCoreIntegration, BenchCoreSession } from '../../api/contract';
+import type {
+  BenchCoreDevice,
+  BenchCoreIntegration,
+  BenchCoreSession,
+} from '../../api/contract';
+import type { InstrumentPlugin } from '../../api/bench';
 import type { MessageKey } from '../../i18n/en';
 import type { IconName } from './Icon';
 import type { NetworkView } from '../network/views';
@@ -36,6 +41,10 @@ export interface PageDescriptor {
   networkView?: NetworkView;
   /** The focused Authentication content this page renders. */
   authenticationView?: AuthenticationView;
+  /** Managed physical camera selected by a child page. */
+  cameraDeviceID?: string;
+  /** Camera workspace owned by this destination. */
+  cameraView?: 'overview' | 'snapshot' | 'settings' | 'administration';
   /**
    * Whether the page does something. An entry that is not available is still
    * shown, because the navigation shape is agreed, but it is marked so that
@@ -158,14 +167,60 @@ export function integrationPageId(integrationId: string): string {
 export function buildPages(
   session: BenchCoreSession | null,
   integrations: readonly BenchCoreIntegration[],
+  _devices: readonly BenchCoreDevice[] = [],
+  plugins: readonly InstrumentPlugin[] = [],
 ): PageDescriptor[] {
-  const instruments: PageDescriptor[] = integrations.map((integration) => ({
-    id: integrationPageId(integration.id),
-    cluster: 'instruments',
-    icon: 'instrument',
-    title: integration.displayName,
-    available: true,
-  }));
+  void _devices;
+  const instruments: PageDescriptor[] = integrations
+    .filter((integration) => integration.id !== 'camera')
+    .map((integration) => ({
+      id: integrationPageId(integration.id),
+      cluster: 'instruments',
+      icon: 'instrument',
+      title: integration.displayName,
+      available: true,
+    }));
+  const camera = plugins.find((plugin) => plugin.id === 'camera' && plugin.installed);
+  const cameraPages: PageDescriptor[] = !camera?.enabled
+    ? []
+    : [
+        {
+          id: integrationPageId('camera'),
+          cluster: 'working',
+          icon: 'instrument',
+          title: camera.display_name,
+          overviewTitleKey: 'nav.camera.overview',
+          cameraView: 'overview',
+          expandTitleKey: 'nav.camera.expand',
+          collapseTitleKey: 'nav.camera.collapse',
+          available: true,
+        },
+        ...camera.devices
+          .filter((device) => device.configured)
+          .flatMap((device): PageDescriptor[] => [
+            {
+              id: `camera:${device.id}`,
+              parentId: integrationPageId('camera'),
+              cluster: 'working',
+              icon: 'instrument',
+              title: device.display_name,
+              overviewTitleKey: 'camera.snapshot',
+              cameraDeviceID: device.id,
+              cameraView: 'snapshot',
+              available: true,
+            },
+            {
+              id: `camera:${device.id}:settings`,
+              parentId: `camera:${device.id}`,
+              cluster: 'working',
+              icon: 'instrument',
+              titleKey: 'camera.settings',
+              cameraDeviceID: device.id,
+              cameraView: 'settings',
+              available: true,
+            },
+          ]),
+      ];
 
   const canReadUsers = mayReadUsers(session);
   const canReadTokens = mayReadTokens(session);
@@ -184,7 +239,23 @@ export function buildPages(
     };
   });
 
-  return [BENCH_PAGE, ...instruments, ...core];
+  const corePages: PageDescriptor[] = core.flatMap((page) =>
+    page.id === 'plugins' && camera
+      ? [
+          page,
+          {
+            id: 'plugins:camera',
+            parentId: 'plugins',
+            cluster: 'core',
+            icon: 'plugins',
+            titleKey: 'camera.admin',
+            cameraView: 'administration',
+            available: true,
+          },
+        ]
+      : [page],
+  );
+  return [BENCH_PAGE, ...cameraPages, ...instruments, ...corePages];
 }
 
 /** Find one page in a built navigation. */

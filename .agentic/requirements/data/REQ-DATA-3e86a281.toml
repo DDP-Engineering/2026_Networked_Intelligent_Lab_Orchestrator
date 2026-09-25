@@ -1,0 +1,12 @@
+schema = 1
+id = "REQ-DATA-3e86a281"
+title = "Validate revisioned plugin and device settings"
+status = "draft"
+requirement = "When an administrator changes plugin or managed-device settings, Bench Core shall validate the installed package schema, enforce unique NFKC Casefold device names and the last-observed revision, and persist the next revision or return a conflict without changing the stored value."
+verification = "Submit valid and invalid settings, canonically equivalent Unicode names and concurrent stale revisions; assert one successful update and unchanged values on each refusal."
+affected_paths = ["05_Software/core/internal/bench/", "05_Software/core/internal/store/sqlite/", "05_Software/core/internal/httpapi/"]
+linked_tests = ["05_Software/core/internal/store/sqlite/managed_device_repository_test.go::TestManagedDeviceNamesAndStaleRevisionsConflict"]
+spec = "specs/REQ-DATA-3e86a281.md"
+priority = "high"
+created = 2026-09-21
+updated = 2026-09-24

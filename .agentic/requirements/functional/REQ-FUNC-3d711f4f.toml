@@ -1,0 +1,12 @@
+schema = 1
+id = "REQ-FUNC-3d711f4f"
+title = "Validate manifest and adapter agreement"
+status = "draft"
+requirement = "When an integration package is loaded, Bench Core shall reject any manifest whose declared operation ids, schemas, policy, timeouts, state-changing flags or artifact declarations disagree with its registered typed adapter, while allowing the adapter to supply family-specific canonicalisation, dynamic resources, device identity and core-owned paths."
+verification = "Load matching and deliberately mismatched Sigrok and camera fixtures; assert mismatches fail before execution and matching fixtures retain the existing Sigrok public behavior."
+affected_paths = ["05_Software/core/internal/bench/", "05_Software/core/internal/integration/manifest/", "05_Software/integrations/sigrok/manifest.json"]
+linked_tests = ["05_Software/core/internal/bench/adapter_test.go::TestSigrokAdapterRequiresManifestAgreement", "05_Software/core/internal/bench/adapter_test.go::TestSubmissionAndResourceDispatchThroughAdapter", "05_Software/core/internal/bench/adapter_test.go::TestValidationAddsManifestResourcesToAdapterResource", "05_Software/core/internal/bench/adapter_test.go::TestRunnerArgumentsDispatchThroughAdapter", "05_Software/core/internal/bench/adapter_test.go::TestExecutionUsesAdapterForPackageSpecificParameters", "05_Software/core/internal/bench/adapter_test.go::TestSubmissionAdmissionUsesAdapter"]
+spec = "specs/REQ-FUNC-3d711f4f.md"
+priority = "high"
+created = 2026-09-21
+updated = 2026-09-24

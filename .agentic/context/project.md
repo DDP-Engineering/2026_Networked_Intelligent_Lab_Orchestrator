@@ -42,6 +42,9 @@ one of three fixed roles - Administrator, Operator or Viewer.
   restarted and uninstalled explicitly. The sigrok adapter exposes ATK-DL16
   discovery, finite digital capture on D0-D15 and UART decoding of saved
   captures; PWM is refused at both the core and the runner.
+- **Physical Camera integration.** The Camera package discovers V4L2 devices,
+  manages persistent camera records and controls, and retains real snapshots.
+  The browser displays bounded previews of authorized snapshot artifacts.
 - **Instrument transactions.** Durable transaction identities, a bounded queue,
   two executing workers with per-analyzer serialization, absolute deadlines,
   ordered bounded replies, cancellation, and digest-verified retained artifacts.

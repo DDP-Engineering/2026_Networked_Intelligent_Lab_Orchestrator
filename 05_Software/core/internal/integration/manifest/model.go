@@ -74,8 +74,9 @@ type Event struct {
 }
 
 type Artifact struct {
-	ID     string `json:"id"`
-	Schema string `json:"schema"`
+	ID         string   `json:"id"`
+	Schema     string   `json:"schema"`
+	MediaTypes []string `json:"media_types"`
 }
 
 type HealthCheck struct {
@@ -93,17 +94,18 @@ type StateMigration struct {
 
 // Manifest is the validated, package-root-confined integration contract.
 type Manifest struct {
-	Package                Package          `json:"package"`
-	Protocol               string           `json:"protocol"`
-	Platforms              []Platform       `json:"platforms"`
-	Runner                 Runner           `json:"runner"`
-	AppConfigurationSchema string           `json:"app_configuration_schema"`
-	Operations             []Operation      `json:"operations"`
-	Cancellation           Cancellation     `json:"cancellation"`
-	Events                 []Event          `json:"events"`
-	Artifacts              []Artifact       `json:"artifacts"`
-	HealthChecks           []HealthCheck    `json:"health_checks"`
-	ContractFixtures       []string         `json:"contract_fixtures"`
-	StateSchema            int              `json:"state_schema,omitempty"`
-	StateMigrations        []StateMigration `json:"state_migrations,omitempty"`
+	Package                   Package          `json:"package"`
+	Protocol                  string           `json:"protocol"`
+	Platforms                 []Platform       `json:"platforms"`
+	Runner                    Runner           `json:"runner"`
+	AppConfigurationSchema    string           `json:"app_configuration_schema"`
+	DeviceConfigurationSchema string           `json:"device_configuration_schema,omitempty"`
+	Operations                []Operation      `json:"operations"`
+	Cancellation              Cancellation     `json:"cancellation"`
+	Events                    []Event          `json:"events"`
+	Artifacts                 []Artifact       `json:"artifacts"`
+	HealthChecks              []HealthCheck    `json:"health_checks"`
+	ContractFixtures          []string         `json:"contract_fixtures"`
+	StateSchema               int              `json:"state_schema,omitempty"`
+	StateMigrations           []StateMigration `json:"state_migrations,omitempty"`
 }

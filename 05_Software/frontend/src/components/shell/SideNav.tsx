@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useTranslate } from '../../i18n/languages';
 import { Icon } from './Icon';
@@ -29,7 +29,33 @@ export function SideNav({ pages, active, onOpen, nameOf }: SideNavProps) {
   const working = pages.filter((page) => page.cluster === 'working');
   const instruments = pages.filter((page) => page.cluster === 'instruments');
   const core = pages.filter((page) => page.cluster === 'core');
-  const coreRoots = core.filter((page) => page.parentId === undefined);
+  const roots = (entries: PageDescriptor[]) =>
+    entries.filter((page) => page.parentId === undefined);
+  const childrenOf = (id: string) => pages.filter((page) => page.parentId === id);
+  const containsActive = (page: PageDescriptor): boolean =>
+    page.id === active || childrenOf(page.id).some(containsActive);
+
+  useEffect(() => {
+    const ancestors: string[] = [];
+    let parentId = pages.find((page) => page.id === active)?.parentId;
+    while (parentId !== undefined) {
+      ancestors.push(parentId);
+      parentId = pages.find((page) => page.id === parentId)?.parentId;
+    }
+    if (ancestors.length > 0) {
+      const timer = window.setTimeout(
+        () =>
+          setExpandedGroups((current) =>
+            Object.fromEntries([
+              ...Object.entries(current),
+              ...ancestors.map((id) => [id, true] as const),
+            ]),
+          ),
+        0,
+      );
+      return () => window.clearTimeout(timer);
+    }
+  }, [active, pages]);
 
   function entry(
     page: PageDescriptor,
@@ -59,13 +85,12 @@ export function SideNav({ pages, active, onOpen, nameOf }: SideNavProps) {
   }
 
   function groupedEntry(page: PageDescriptor) {
-    const children = core.filter((candidate) => candidate.parentId === page.id);
+    const children = childrenOf(page.id);
     if (children.length === 0 && page.overviewTitleKey === undefined) {
-      return entry(page);
+      return entry(page, { child: page.parentId !== undefined });
     }
     const expanded = expandedGroups[page.id] ?? true;
-    const groupActive =
-      active === page.id || children.some((child) => child.id === active);
+    const groupActive = containsActive(page);
     const groupName =
       page.navigationTitleKey === undefined ? nameOf(page) : t(page.navigationTitleKey);
     const overviewName =
@@ -76,7 +101,7 @@ export function SideNav({ pages, active, onOpen, nameOf }: SideNavProps) {
         <div className="nav-group-row">
           <button
             type="button"
-            className={`nav-entry ${groupActive ? 'nav-entry-context' : ''} ${!expanded && groupActive ? 'nav-entry-active' : ''}`}
+            className={`nav-entry ${page.parentId !== undefined ? 'nav-entry-child' : ''} ${groupActive ? 'nav-entry-context' : ''} ${!expanded && groupActive ? 'nav-entry-active' : ''}`}
             aria-current={!expanded && groupActive ? 'page' : undefined}
             aria-label={groupName}
             onClick={() => onOpen(page.id)}
@@ -87,11 +112,15 @@ export function SideNav({ pages, active, onOpen, nameOf }: SideNavProps) {
           <button
             type="button"
             className="nav-group-toggle"
-            aria-label={t(
+            aria-label={
               expanded
-                ? (page.collapseTitleKey ?? 'nav.network.collapse')
-                : (page.expandTitleKey ?? 'nav.network.expand'),
-            )}
+                ? page.collapseTitleKey
+                  ? t(page.collapseTitleKey)
+                  : t('nav.group.collapse', { name: groupName })
+                : page.expandTitleKey
+                  ? t(page.expandTitleKey)
+                  : t('nav.group.expand', { name: groupName })
+            }
             aria-expanded={expanded}
             aria-controls={listId}
             onClick={() =>
@@ -106,8 +135,9 @@ export function SideNav({ pages, active, onOpen, nameOf }: SideNavProps) {
         </div>
         {expanded ? (
           <ul className="nav-list nav-sublist" id={listId}>
-            {entry(page, { child: true, name: overviewName })}
-            {children.map((child) => entry(child, { child: true }))}
+            {page.overviewTitleKey !== undefined &&
+              entry(page, { child: true, name: overviewName })}
+            {children.map(groupedEntry)}
           </ul>
         ) : null}
       </li>
@@ -117,17 +147,17 @@ export function SideNav({ pages, active, onOpen, nameOf }: SideNavProps) {
   return (
     <nav className="sidenav" aria-label={t('nav.label')}>
       <div className="nav-upper">
-        <ul className="nav-list">{working.map((page) => entry(page))}</ul>
+        <ul className="nav-list">{roots(working).map(groupedEntry)}</ul>
         {instruments.length === 0 ? null : (
           <>
             <p className="nav-section">{t('nav.section.instruments')}</p>
-            <ul className="nav-list">{instruments.map((page) => entry(page))}</ul>
+            <ul className="nav-list">{roots(instruments).map(groupedEntry)}</ul>
           </>
         )}
       </div>
       <div className="nav-lower">
         <p className="nav-section">{t('nav.section.core')}</p>
-        <ul className="nav-list">{coreRoots.map(groupedEntry)}</ul>
+        <ul className="nav-list">{roots(core).map(groupedEntry)}</ul>
       </div>
     </nav>
   );

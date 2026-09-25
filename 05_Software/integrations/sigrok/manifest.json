@@ -42,9 +42,7 @@
       "timeout": "35s",
       "cancellable": true,
       "state_changing": true,
-      "resources": [
-        "sigrok/device/atk"
-      ]
+      "resources": []
     },
     {
       "id": "decode_uart",
@@ -70,7 +68,8 @@
   "artifacts": [
     {
       "id": "capture",
-      "schema": "schemas/event.schema.json"
+      "schema": "schemas/event.schema.json",
+      "media_types": ["application/x-sigrok-session"]
     }
   ],
   "health_checks": [

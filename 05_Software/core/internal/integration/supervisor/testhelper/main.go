@@ -54,6 +54,45 @@ func main() {
 	if err := json.Unmarshal(second, &execute); err != nil {
 		return
 	}
+	if execute.Method == protocol.Configure || mode == "require-configure" || mode == "reject-configure" {
+		if execute.Method != protocol.Configure {
+			mark(marker, "work-before-configure")
+			return
+		}
+		var request protocol.ConfigureRequest
+		if json.Unmarshal(execute.Payload, &request) != nil || request.Validate() != nil {
+			mark(marker, "invalid-configure")
+			return
+		}
+		var configuration struct {
+			SchemaVersion int             `json:"schema_version"`
+			Plugin        json.RawMessage `json:"plugin"`
+			Device        json.RawMessage `json:"device"`
+		}
+		if json.Unmarshal(request.Configuration, &configuration) != nil || configuration.SchemaVersion != 1 || len(configuration.Plugin) == 0 || len(configuration.Device) == 0 {
+			mark(marker, "invalid-versioned-configure")
+			return
+		}
+		if mode == "require-configure" || mode == "reject-configure" {
+			mark(marker, "configured")
+		}
+		if mode == "reject-configure" {
+			write(protocol.Response, "configure-rejected", execute.MessageID, protocol.Configure, map[string]any{"type": "error", "code": "invalid_configuration", "message": "rejected", "retryable": false})
+			line, err := reader.ReadBytes('\n')
+			if err == nil {
+				var later protocol.Envelope
+				if json.Unmarshal(line, &later) == nil && (later.Method == protocol.Describe || later.Method == protocol.Execute) {
+					mark(marker, "work-after-rejection")
+				}
+			}
+			return
+		}
+		write(protocol.Response, "configure-response", execute.MessageID, protocol.Configure, map[string]any{"type": "configure", "status": "ok"})
+		third, err := reader.ReadBytes('\n')
+		if err != nil || json.Unmarshal(third, &execute) != nil {
+			return
+		}
+	}
 	if mode == "describe" && execute.Method == protocol.Describe {
 		write(protocol.Response, "describe-response", execute.MessageID, protocol.Describe, map[string]any{"type": "describe", "status": "ok"})
 		return

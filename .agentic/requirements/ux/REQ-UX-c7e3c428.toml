@@ -1,0 +1,36 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-c7e3c428"
+
+title = "Operate physical cameras in the browser"
+
+status = "draft"
+
+requirement = """
+When the signed-in browser loads an enabled physical Camera package, it shall
+show discovered camera status and per-camera snapshot composition, generated
+hardware controls, owner-visible saved images and a local-only zoom/pan/marker
+viewer, with unavailable cameras unable to submit work.
+"""
+
+verification = "Exercise the Camera overview and device page with authorized and viewer sessions; assert composition submission, per-camera history, bounded image preview and unavailable-device admission. On the Pi, capture and inspect a physical image in Chrome."
+
+affected_paths = ["05_Software/frontend/src/components/pages/CameraSection.tsx", "05_Software/frontend/src/components/pages/cameraGeometry.ts", "05_Software/frontend/src/components/pages/PluginsPage.tsx", "05_Software/frontend/src/components/shell/", "05_Software/frontend/src/i18n/en.ts", "05_Software/frontend/src/i18n/de.ts", "05_Software/frontend/src/i18n/ro.ts"]
+
+linked_tests = ["05_Software/frontend/src/components/pages/PluginsPage.test.tsx::submits physical camera composition and encoding options", "05_Software/frontend/src/components/pages/PluginsPage.test.tsx::offers a ready camera quick snapshot and two saved images for comparison", "05_Software/frontend/src/components/pages/PluginsPage.test.tsx::projects a placed image marker into the next physical snapshot request", "05_Software/frontend/src/components/pages/cameraGeometry.test.ts", "05_Software/frontend/src/components/shell/pages.test.ts", "05_Software/frontend/src/i18n/messages.test.ts"]
+
+
+spec = ""
+
+priority = "high"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-25
+updated = 2026-09-25

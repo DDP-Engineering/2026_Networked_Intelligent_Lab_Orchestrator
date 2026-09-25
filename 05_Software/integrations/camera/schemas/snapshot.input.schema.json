@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["device_id", "staging_directory"],
+  "properties": {
+    "device_id": {"type":"string","pattern":"^cam-[1-9][0-9]*$"},
+    "staging_directory": {"type":"string","minLength":1},
+    "width": {"type":"integer","minimum":16,"maximum":4096},
+    "height": {"type":"integer","minimum":16,"maximum":4096},
+    "format": {"enum":["MJPG","YUYV"]},
+    "frame_interval": {"type":"object","additionalProperties":false,"required":["numerator","denominator"],"properties":{"numerator":{"type":"integer","minimum":1,"maximum":10000},"denominator":{"type":"integer","minimum":1,"maximum":10000}}},
+    "controls": {"type":"object","maxProperties":64},
+    "processing": {"type":"object","additionalProperties":false,"properties":{
+      "zoom": {"type":"number","minimum":1,"maximum":8},
+      "center_x": {"type":"number","minimum":0,"maximum":1},
+      "center_y": {"type":"number","minimum":0,"maximum":1},
+      "rotation": {"enum":[0,90,180,270]},
+      "flip_horizontal": {"type":"boolean"},
+      "flip_vertical": {"type":"boolean"},
+      "grayscale": {"type":"boolean"},
+      "invert": {"type":"boolean"},
+      "overlays": {"type":"array","maxItems":32}
+    }},
+    "encoding": {"enum":["jpeg","png"]},
+    "jpeg_quality": {"type":"integer","minimum":1,"maximum":95},
+    "maximum_dimension": {"type":"integer","minimum":16,"maximum":4096}
+  }
+}

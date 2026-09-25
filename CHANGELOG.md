@@ -5,9 +5,29 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ## [Unreleased]
 
+### Added
+
+- Physical Camera integration with managed devices, controls, retained snapshots,
+  bounded previews, composition and browser, CLI and MCP access in three languages.
+- Offline Camera candidate builds require locked target dependencies and embed
+  a verified interpreter and third-party notices.
+- A bounded Camera feasibility probe records binding and device evidence for
+  later Raspberry Pi and mini PC acceptance runs.
+
 ### Changed
 
 - Requirements now reflect current MCP, CLI, Activity and administrator UI behavior; pending integration and hardware acceptance are tracked separately.
+- Camera has separate appliance administration and named physical-device work
+  pages, with nested Bench navigation and a full-width page scrollbar.
+- Integration adapters validate manifest operations and artifacts, derive
+  per-device resources, and configure supervised runners before use.
+
+### Fixed
+
+- Terminal jobs retain approved runner error codes, and artifact downloads use
+  verified media types and safe filenames.
+- Camera configuration refuses active work and preserves camera-specific errors
+  in terminal transactions.
 
 ## [0.9.0] - 2026-09-25
 

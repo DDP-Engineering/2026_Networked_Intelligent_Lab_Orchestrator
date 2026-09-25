@@ -25,6 +25,7 @@ import type { InterfaceSettingsDraft, WiFiJoinDraft } from '../../api/settings';
 import type { WireGuardStatus, WireGuardChange } from '../../api/wireguard';
 import { APPLIANCE_PATH, type ApplianceMetadata } from '../../api/appliance';
 import type { Resource } from '../../api/resource';
+import type { InstrumentPlugin } from '../../api/bench';
 import {
   mayManageTokens,
   mayManageUsers,
@@ -104,6 +105,24 @@ export function AppShell({
   const [wireGuard, setWireGuard] = useState<WireGuardStatus | null>(null);
   const [benchCoreReachable, setBenchCoreReachable] = useState(true);
   const [appliance, setAppliance] = useState<ApplianceMetadata | null>(null);
+  const [pluginInventory, setPluginInventory] = useState<InstrumentPlugin[] | null>(
+    null,
+  );
+  const refreshPluginInventory = useCallback(async () => {
+    try {
+      setPluginInventory(await client.listPlugins(credential));
+    } catch {
+      // Keep the last known inventory: a transient read failure must not close tabs.
+    }
+  }, [client, credential]);
+  useEffect(() => {
+    const initial = window.setTimeout(() => void refreshPluginInventory(), 0);
+    const timer = window.setInterval(() => void refreshPluginInventory(), 5000);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(timer);
+    };
+  }, [refreshPluginInventory]);
   useEffect(() => {
     let abandoned = false;
     const refresh = async () => {
@@ -151,11 +170,22 @@ export function AppShell({
     () => (integrations.ok ? integrations.value.items : []),
     [integrations],
   );
-  const pages = useMemo(
-    () => buildPages(session, reportedIntegrations),
-    [session, reportedIntegrations],
+  const reportedDevices = useMemo(
+    () => (devices.ok ? devices.value.items : []),
+    [devices],
   );
-  const pageIds = useMemo(() => pages.map((page) => page.id), [pages]);
+  const pages = useMemo(
+    () =>
+      buildPages(session, reportedIntegrations, reportedDevices, pluginInventory ?? []),
+    [session, reportedIntegrations, reportedDevices, pluginInventory],
+  );
+  const pageIds = useMemo(
+    () =>
+      pluginInventory === null
+        ? [...pages.map((page) => page.id), ...workspace.open]
+        : pages.map((page) => page.id),
+    [pages, pluginInventory, workspace.open],
+  );
 
   usePruneClosedPages(workspace, pageIds);
 
@@ -491,13 +521,27 @@ export function AppShell({
         />
       );
     }
-    if (page.id === 'plugins' || page.id === integrationPageId('sigrok')) {
+    if (
+      page.id === 'plugins' ||
+      page.id === integrationPageId('sigrok') ||
+      page.cameraView !== undefined
+    ) {
       return (
         <PluginsPage
           client={client}
           credential={credential}
           session={session}
           onSessionEnded={onSessionEnded}
+          view={
+            page.id === 'plugins'
+              ? 'catalog'
+              : page.id === integrationPageId('sigrok')
+                ? 'legacy-sigrok'
+                : page.cameraView
+          }
+          focusDevice={page.cameraDeviceID}
+          onPluginsChanged={refreshPluginInventory}
+          onOpenCameraAdmin={() => workspace.open_('plugins:camera')}
         />
       );
     }

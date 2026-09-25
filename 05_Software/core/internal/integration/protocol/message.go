@@ -66,6 +66,9 @@ func validatePayload(message Envelope) error {
 			return decodePayload(message.Payload, func(value ControlPayload) error { return value.Validate(PayloadType(message.Method), false) })
 		}
 	case Response:
+		if discriminator, err := payloadDiscriminator(message.Payload); err == nil && discriminator.Type == payloadError {
+			return decodePayload(message.Payload, func(value Error) error { return value.Validate() })
+		}
 		if message.Method == Describe {
 			return decodePayload(message.Payload, func(value DescribeResult) error { return value.Validate() })
 		}

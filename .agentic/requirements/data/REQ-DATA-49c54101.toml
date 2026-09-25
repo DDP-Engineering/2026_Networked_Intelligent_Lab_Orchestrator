@@ -1,0 +1,12 @@
+schema = 1
+id = "REQ-DATA-49c54101"
+title = "Preserve managed device identity"
+status = "draft"
+requirement = "When physical hardware is discovered, Bench Core shall assign or reuse a never-reused per-plugin record id by a persistently classified strong vendor/product/serial key or otherwise by vendor/product/port path, while keeping the selected validated capture endpoint separate from that record and physical identity."
+verification = "Reconcile fixtures with stable serials, moved ports, duplicate and junk serials, and multiple video nodes; assert record ids and persisted weak-serial decisions remain stable across restarts."
+affected_paths = ["05_Software/core/internal/bench/", "05_Software/core/internal/store/sqlite/"]
+linked_tests = ["05_Software/core/internal/store/sqlite/db_test.go::TestOpenConfiguresDurableDatabaseAndMigratesAllFoundationTables", "05_Software/core/internal/store/sqlite/managed_device_repository_test.go::TestManagedDeviceReconcileKeepsSerialAndPortIdentities", "05_Software/core/internal/store/sqlite/managed_device_repository_test.go::TestManagedDeviceDuplicateSerialStaysWeak"]
+spec = "specs/REQ-DATA-49c54101.md"
+priority = "high"
+created = 2026-09-21
+updated = 2026-09-24

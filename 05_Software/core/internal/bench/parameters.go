@@ -25,7 +25,7 @@ type decodeInput struct {
 // canonicalSubmission rejects unexposed capabilities before policy, queuing or
 // subprocess creation. Only the core can supply paths and USB connections.
 func canonicalSubmission(input Submission) (Submission, error) {
-	if input.PluginID != "sigrok" || !keyPattern.MatchString(input.IdempotencyKey) {
+	if !keyPattern.MatchString(input.IdempotencyKey) {
 		return input, ErrInvalid
 	}
 	if input.TimeoutSeconds == 0 {
@@ -34,6 +34,14 @@ func canonicalSubmission(input Submission) (Submission, error) {
 	if input.TimeoutSeconds < 1 || input.TimeoutSeconds > 300 {
 		return input, ErrInvalid
 	}
+	adapter, err := adapterFor(input.PluginID)
+	if err != nil || adapter.canonicalize == nil {
+		return input, ErrInvalid
+	}
+	return adapter.canonicalize(input)
+}
+
+func sigrokCanonicalSubmission(input Submission) (Submission, error) {
 	var value any
 	switch input.Operation {
 	case "capture":
@@ -63,6 +71,14 @@ func canonicalSubmission(input Submission) (Submission, error) {
 }
 
 func resourceFor(job Job) string {
+	adapter, err := adapterFor(job.PluginID)
+	if err != nil || adapter.resource == nil {
+		return ""
+	}
+	return adapter.resource(job)
+}
+
+func sigrokResource(job Job) string {
 	if job.Submission.Operation == "capture" {
 		return fmt.Sprintf("%s/device/%s", job.PluginID, job.Submission.DeviceID)
 	}

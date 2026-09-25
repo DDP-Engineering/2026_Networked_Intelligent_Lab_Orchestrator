@@ -131,12 +131,13 @@ INPUT_ARTIFACT_TYPES = {
     "gui-npm-cache": "npm-cache-tar",
     "os-package-pool": "debian-pool-tar",
     "sigrok-runtime": "sigrok-runtime-tar",
+    "camera-build-input": "camera-build-input-tar",
     "source-offers": "source-offers-tar",
 }
 REQUIRED_RELEASE_INPUTS = {
     "shared": ("go-module-cache", "gui-npm-cache", "source-offers"),
-    "rpi-debian13-arm64": ("base-image", "os-package-pool", "sigrok-runtime"),
-    "ubuntu-24.04-amd64": ("os-package-pool", "sigrok-runtime"),
+    "rpi-debian13-arm64": ("base-image", "os-package-pool", "sigrok-runtime", "camera-build-input"),
+    "ubuntu-24.04-amd64": ("os-package-pool", "sigrok-runtime", "camera-build-input"),
 }
 DOWNLOAD_CHUNK_SIZE = 1024 * 1024
 DOWNLOAD_TIMEOUT_SECONDS = 60
@@ -1406,6 +1407,18 @@ def _validate_resolved_artifact(
         required = {"runtime-manifest.json", "THIRD_PARTY_NOTICES.txt", "bin/python3", "bin/sigrok-cli"}
         if not required.issubset(members):
             raise PackagingError(f"{item.name}: Sigrok runtime inventory is incomplete")
+    elif item.artifact_type == "camera-build-input-tar":
+        required = {
+            "THIRD_PARTY_NOTICES.txt",
+            "dependencies/nilo_integration/__init__.py",
+            "dependencies/pydantic/__init__.py",
+            "wheelhouse/pyrav4l2-1.0-py3-none-any.whl",
+        }
+        if not required.issubset(members) or not any(
+            name.startswith("wheelhouse/pillow-11.3.0-") and name.endswith(".whl")
+            for name in members
+        ):
+            raise PackagingError(f"{item.name}: Camera build input inventory is incomplete")
     elif item.artifact_type == "source-offers-tar":
         if not any(name.endswith(("SOURCE_OFFER.txt", ".tar.gz", ".tar.xz", ".zip")) for name in members):
             raise PackagingError(f"{item.name}: source-offer archive contains no source offer")
@@ -1774,12 +1787,12 @@ def resolve_inputs(
             if temporary_path is not None:
                 temporary_path.unlink(missing_ok=True)
 
-    incomplete_reasons = [
+    incomplete_reasons = sorted([
         f"{scope} is missing required input class {name}"
         for scope, names in sorted(REQUIRED_RELEASE_INPUTS.items())
         for name in names
         if (scope, name) not in seen
-    ]
+    ])
     proposal = {
         "complete": not incomplete_reasons,
         "incomplete_reasons": incomplete_reasons,

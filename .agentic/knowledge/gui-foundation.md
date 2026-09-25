@@ -7,6 +7,9 @@ localization. Start at `src/components/shell/AppShell.tsx`; focused tests sit
 beside each page. Instrument lifecycle and transaction views start at
 `src/components/pages/PluginsPage.tsx` and `PluginsPage.test.tsx`. Core scheduling,
 permissions and runner behavior belong to [Managed bench integrations](bench-integrations.md).
+Camera navigation starts at `src/components/shell/pages.ts` and `SideNav.tsx`;
+physical controls, appliance configuration and snapshot viewing start at
+`src/components/pages/CameraSection.tsx`.
 
 ## Purpose and boundaries
 
@@ -91,12 +94,23 @@ runtime status.
   and refresh actions in their existing list toolbar and record actions local.
 - All live requests use the same-origin authenticated client and its CSRF rules.
 - Simulation labels stay explicit; browser state never proves physical accuracy.
+- The Camera page reads managed physical devices and bounded previews of
+  authorized retained snapshots from the authenticated Bench API.
+- Camera navigation reads authenticated plugin inventory. System owns package
+  and persistent device configuration; Bench owns enabled, named physical
+  devices and their working views. A failed inventory refresh retains the last
+  successful tree until an authoritative read succeeds.
 - Instrument submission retries preserve a command key until a response arrives;
   history reattaches by transaction ID and polling never submits work.
 - The server authorizes every action even when UI controls are hidden or disabled.
 
 ## Key behaviors
 
+- `REQ-UX-4f9b8d21` - presents nested Camera routes by stable plugin and device
+  IDs, with configured device names shown in navigation and tabs.
+- `REQ-UX-37d846a0` - presents administrator Camera lifecycle and persistent
+  configuration in System, and physical Camera work in Bench.
+- `REQ-UX-6ab5e73f` - places the page scrollport at the workspace edge.
 - `REQ-UX-b75fbbc3` - associates page-scoped Activity with the title using the
   shared responsive header group, while preserving existing Activity context.
 - `REQ-UX-dd4b2c16` - keeps the whole first Activity record inside a 1024x600
@@ -271,6 +285,7 @@ runtime status.
 | Appliance identity, system facts, embedded label, friendly name and Identify | SimplePages.tsx `AboutPage`; api/appliance.ts; api/contract.ts status parser | AboutPage.test.tsx; api/client.test.ts; api/appliance.test.ts; field-display.spec.ts |
 | Identity/token forms | authentication/ and AdministrationForms.tsx | AuthenticationPage.test.tsx; authentication.spec.ts |
 | Appliance password policy | authentication/PasswordPolicyPanel.tsx; `.admin-policy*` in shell.css; `getPasswordPolicy`/`setPasswordPolicy` in api/client.ts | AuthenticationPage.test.tsx |
+| Camera routes, administration and working views | shell/pages.ts, SideNav.tsx, AppShell.tsx; pages/PluginsPage.tsx and CameraSection.tsx | pages.test.ts; SideNav.test.tsx; PluginsPage.test.tsx |
 
 ## Architecture
 
@@ -280,8 +295,8 @@ flowchart LR
     signin["SignInScreen: product version, password sign-in and visibility"]
     shell["AppShell: one grid, four cells"]
     toprow["TopRow: tabs, network, SIM, appearance, language, account"]
-    sidenav["SideNav: working entries plus keyed Network and Authentication groups"]
-    pages["Bench, four Network views, Activity, focused Authentication views, About, integrations"]
+    sidenav["SideNav: recursive working and System destination tree"]
+    pages["Bench, Camera administration and physical views, Network, Activity, Authentication, About"]
     tokens["styles/tokens.css: one semantic palette, three themes"]
     catalogue["i18n: en, de, ro over one key set"]
     prefs["preferences/store: nilo.theme and nilo.language"]
@@ -302,8 +317,10 @@ flowchart LR
     shell --> toprow
     shell --> sidenav
     shell --> pages
-    pages --> instruments["PluginsPage: lifecycle, acquisition, transaction detail"]
+    pages --> instruments["PluginsPage: package catalog, Camera System and working views, legacy Sigrok"]
     instruments --> client
+    pages --> camera["CameraSection: scoped configuration, physical controls and snapshots"]
+    camera --> client
     pages --> admin
     admin --> users
     admin --> apitokens
@@ -405,8 +422,8 @@ visible.
   origin-relative paths, the status, integration, device, session, identity and
   token types, and the strict parsers shared by the client and the mock.
 - `05_Software/frontend/src/api/client.ts` - the typed client's fourteen methods
-  over one shared exchange, the `Credential` union, and `BenchCoreError` with
-  its five causes.
+  over one shared exchange plus a binary camera preview read, the `Credential`
+  union, and `BenchCoreError` with its five causes.
 - `05_Software/frontend/src/api/csrf.ts` - reads the readable `nilo_csrf`
   cookie, the only part of the session credential the page can see.
 - `05_Software/frontend/src/version.ts` - exposes the checked-in GUI package
@@ -418,6 +435,11 @@ visible.
   store enforcing the same role matrix, CSRF rule and last-administrator rule
   the backend does; the ready and unavailable inventories reproduce the Go
   simulation catalog exactly.
+- `05_Software/frontend/src/components/pages/CameraSection.tsx` - physical
+  camera controls, System configuration and bounded snapshot preview.
+- `05_Software/frontend/src/components/shell/pages.ts`, `SideNav.tsx` and
+  `AppShell.tsx` - authenticated Camera inventory routing and recursive
+  navigation.
 - `05_Software/frontend/src/config/environment.ts` - environment reader,
   `GuiConfigurationError`, and the configured-client factory.
 - `05_Software/frontend/src/App.tsx` - session restoration, the held credential,

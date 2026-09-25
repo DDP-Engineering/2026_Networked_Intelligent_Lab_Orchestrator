@@ -1,0 +1,12 @@
+schema = 1
+id = "REQ-FUNC-a9657141"
+title = "Return bounded camera snapshot result or pending id"
+status = "draft"
+requirement = "When a CLI or MCP camera snapshot is accepted, the client shall wait only a bounded interval and return accessible image content on completion or a durable transaction id with pending status while approval, queueing or execution continues, without cancelling the accepted job on timeout or disconnect."
+verification = "Use completed, Ask-mode and delayed fixture jobs; assert bounded completed-image or pending-id responses, no output image file on pending CLI completion, and continued job execution after client timeout or disconnect."
+affected_paths = ["05_Software/core/cmd/nilo/bench.go", "05_Software/core/internal/mcp/bench.go", "05_Software/core/internal/bench/"]
+linked_tests = []
+spec = "specs/REQ-FUNC-a9657141.md"
+priority = "high"
+created = 2026-09-21
+updated = 2026-09-21

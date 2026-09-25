@@ -129,8 +129,8 @@ PRIOR_INSTALLER_CHECKS = {
 }
 REQUIRED_RELEASE_INPUTS = {
     "shared": {"go-module-cache", "gui-npm-cache", "source-offers"},
-    "rpi-debian13-arm64": {"base-image", "os-package-pool", "sigrok-runtime"},
-    "ubuntu-24.04-amd64": {"os-package-pool", "sigrok-runtime"},
+    "rpi-debian13-arm64": {"base-image", "os-package-pool", "sigrok-runtime", "camera-build-input"},
+    "ubuntu-24.04-amd64": {"os-package-pool", "sigrok-runtime", "camera-build-input"},
 }
 
 
@@ -473,6 +473,8 @@ Description: Networked Intelligent Lab Orchestrator
 set -e
 if ! getent group nilo >/dev/null 2>&1; then addgroup --system nilo; fi
 if ! id nilo >/dev/null 2>&1; then adduser --system --ingroup nilo --home /var/lib/nilo --no-create-home nilo; fi
+if ! getent group video >/dev/null 2>&1; then addgroup --system video; fi
+adduser nilo video
 install -d -o nilo -g nilo -m 0750 /var/lib/nilo /var/log/nilo /run/nilo
 install -d -o root -g root -m 0700 /var/lib/nilo-installer /var/lib/nilo-installer/transactions
 service_uid=$(id -u nilo)
@@ -1950,7 +1952,8 @@ def _load_candidate_build_inputs(
     )
     file_fields = {
         "admin_password", "base_image", "go_module_cache", "input_lock", "npm_cache",
-        "pi_receipt", "pi_sigrok_runtime", "ubuntu_receipt", "ubuntu_sigrok_runtime",
+        "pi_receipt", "pi_sigrok_runtime", "pi_camera_build_input",
+        "ubuntu_receipt", "ubuntu_sigrok_runtime", "ubuntu_camera_build_input",
     }
     directory_fields = {
         "pi_pool", "source_root", "ubuntu_pool",
@@ -1985,6 +1988,8 @@ def _load_candidate_build_inputs(
         "npm_cache": ("shared", "gui-npm-cache"),
         "pi_sigrok_runtime": ("rpi-debian13-arm64", "sigrok-runtime"),
         "ubuntu_sigrok_runtime": ("ubuntu-24.04-amd64", "sigrok-runtime"),
+        "pi_camera_build_input": ("rpi-debian13-arm64", "camera-build-input"),
+        "ubuntu_camera_build_input": ("ubuntu-24.04-amd64", "camera-build-input"),
     }
     for field, identity in locked_fields.items():
         matches = [
@@ -2072,6 +2077,7 @@ def verify_reproducible_candidate(
         extracted_inputs: dict[str, Path] = {}
         for field in (
             "go_module_cache", "npm_cache", "ubuntu_sigrok_runtime", "pi_sigrok_runtime",
+            "ubuntu_camera_build_input", "pi_camera_build_input",
         ):
             extracted = temporary_root / f"input-{field}"
             _extract_locked_archive(inputs[field], extracted, field.replace("_", " "))
@@ -2087,6 +2093,8 @@ def verify_reproducible_candidate(
                 str(extracted_inputs["pi_sigrok_runtime"]),
                 str(inputs["base_image"]), str(inputs["admin_password"]),
                 str(inputs["input_lock"]),
+                str(extracted_inputs["ubuntu_camera_build_input"]),
+                str(extracted_inputs["pi_camera_build_input"]),
             ]
             environment = dict(os.environ)
             environment["SOURCE_DATE_EPOCH"] = str(source_date_epoch)

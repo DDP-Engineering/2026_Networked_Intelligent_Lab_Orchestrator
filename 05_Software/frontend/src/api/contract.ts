@@ -312,6 +312,7 @@ export interface BenchCoreDevice {
   status: string;
   simulation: boolean;
   capabilities: string[];
+  configured?: boolean;
 }
 
 /** The integration inventory for one deterministic simulation scenario. */
@@ -634,6 +635,9 @@ export function parseDevicesBody(body: unknown): ParseResult<DeviceInventory> {
     if (!capabilities.ok) {
       return capabilities;
     }
+    if (entry.configured !== undefined && typeof entry.configured !== 'boolean') {
+      return { ok: false, violation: `${where}.configured must be a boolean` };
+    }
     return {
       ok: true,
       value: {
@@ -644,6 +648,7 @@ export function parseDevicesBody(body: unknown): ParseResult<DeviceInventory> {
         status: status.value,
         simulation: simulation.value,
         capabilities: capabilities.value,
+        configured: entry.configured as boolean | undefined,
       },
     };
   });

@@ -1,0 +1,12 @@
+schema = 1
+id = "REQ-FUNC-ac306a12"
+title = "Configure runner before device use"
+status = "draft"
+requirement = "At every integration runner start, the supervisor shall deliver one versioned, schema-validated plugin and target-device configuration after hello and before describe, discovery or execution, and refuse hardware use when configuration is rejected."
+verification = "Run a recording runner through startup and assert configure precedes every hardware method; malformed or rejected configuration prevents the method call."
+affected_paths = ["05_Software/core/internal/integration/supervisor/", "05_Software/core/internal/integration/protocol/", "05_Software/core/internal/integration/manifest/", "05_Software/integrations/sigrok/src/nilo_sigrok/plugin.py", "05_Software/integrations/camera/src/nilo_camera/plugin.py", "05_Software/contracts/integration/v1/manifest.schema.json"]
+linked_tests = ["05_Software/core/internal/integration/supervisor/supervisor_test.go::TestSupervisorConfiguresBeforeUse", "05_Software/core/internal/integration/supervisor/supervisor_test.go::TestSupervisorRefusesWorkAfterConfigureRejection", "05_Software/core/internal/integration/manifest/loader_test.go::TestLoadResolvesOptionalDeviceConfigurationSchema", "05_Software/integrations/camera/tests/test_plugin.py::test_configured_limit_and_control_baseline_apply_before_work"]
+spec = "specs/REQ-FUNC-ac306a12.md"
+priority = "high"
+created = 2026-09-21
+updated = 2026-09-24

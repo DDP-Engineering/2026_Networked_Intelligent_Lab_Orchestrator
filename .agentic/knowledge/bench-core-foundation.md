@@ -48,7 +48,7 @@ every request and `user delete` / `token delete` exist behind a typed
 confirmation or `--confirm-delete`). Ambiguous or incomplete mode options exit 2
 before anything is opened or contacted. The root usage names every group.
 
-`cmd/nilo` provides version reporting, the `serve-foundation-check` composition smoke command, development token issuance, the `nilo admin` local and remote administration commands, the `network` and `activity` API clients, and explicit simulation/appliance servers. Protected HTTP contracts provide login, logout, the current session, status, deterministic integration and device inventory for the selected simulation scenario, the identity listing, and the identity and token administration routes the browser Authentication page drives. Internal consumers compose the foundation with `app.Open` and authorize through `app.IdentityService()`, submit work through `operation.Service`, resolve policy through `policy.Resolver`, and use the narrow repository interfaces owned by the domain packages. Only a starting server composes with `app.New`, which is `app.Open` followed by startup reconciliation; every other command opens the appliance without touching the operations recorded in it.
+`cmd/nilo` provides version reporting, the `serve-foundation-check` composition smoke command, development token issuance, the `nilo admin` local and remote administration commands, the `network` and `activity` API clients, and explicit simulation/appliance servers. Protected HTTP contracts provide login, logout, the current session, status, deterministic integration and device inventory for the selected simulation scenario, and the identity and token administration routes the browser Authentication page drives. Physical cameras enter inventory through the managed Camera integration. Internal consumers compose the foundation with `app.Open` and authorize through `app.IdentityService()`, submit work through `operation.Service`, resolve policy through `policy.Resolver`, and use the narrow repository interfaces owned by the domain packages. Only a starting server composes with `app.New`, which is `app.Open` followed by startup reconciliation; every other command opens the appliance without touching the operations recorded in it.
 
 `nilo discover` merges validated mDNS and SSDP records by appliance UUID and
 emits a stable table, JSON record or printable label; `nilo open` and remote
@@ -215,6 +215,7 @@ exchange before another maintenance operation can observe it.
   from current publication rather than a false unavailable snapshot.
 
 ## Key behaviors
+
 
 - `REQ-FUNC-880eac8d` - preserves immutable operation requests and defined session transitions.
 - `REQ-DATA-b2e24314` - atomically activates and reloads one digest-checked configuration version.
@@ -508,9 +509,12 @@ browser session is inserted by a statement conditional on the identity still
 carrying the password verifier the login checked and still being enabled, so a
 completed password reset cannot be overtaken by a login already in flight.
 
-The simulation catalog is deliberately dependency-free and cannot discover or contact physical equipment; runner-backed discovery remains later work.
+The simulation catalog is dependency-free and does not contact physical equipment. Camera discovery and capture run through the managed Camera package.
 
 ## Files
+
+- `internal/simulation/catalog.go` - deterministic non-camera development inventory.
+- `internal/httpapi/bench.go` - authenticated Camera artifact and bounded preview routes.
 
 - `internal/nethelper/`, `cmd/nilo-nethelper/` - bounded privileged D-Bus interface operations, root-only durable recovery/event records, process-owned Avahi publication, and the explicitly enabled Pi GPIO path.
 - `internal/nethelper/cleanup.go`, `protocol.go`, `client.go`, `socket_linux.go`

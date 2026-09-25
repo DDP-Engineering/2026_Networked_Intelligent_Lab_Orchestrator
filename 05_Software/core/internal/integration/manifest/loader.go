@@ -56,6 +56,51 @@ func Load(packageRoot string) (Manifest, error) {
 	return result, nil
 }
 
+// ValidateConfiguration applies an installed package's confined schema to a
+// versioned settings object before Bench Core stores or sends it to a runner.
+func ValidateConfiguration(packageRoot, schemaPath string, raw json.RawMessage) error {
+	if len(raw) == 0 || len(raw) > 16<<10 {
+		return ErrInvalidManifest
+	}
+	root, err := canonicalPackageRoot(packageRoot)
+	if err != nil {
+		return fmt.Errorf("%w: package root: %v", ErrInvalidManifest, err)
+	}
+	path, err := physicalPathWithin(root, schemaPath, true)
+	if err != nil {
+		return fmt.Errorf("%w: configuration schema path: %v", ErrInvalidManifest, err)
+	}
+	document, err := readJSONDocument(path)
+	if err != nil {
+		return err
+	}
+	schemaValue, err := decodeJSONDocument(document)
+	if err != nil {
+		return fmt.Errorf("%w: configuration schema: %v", ErrInvalidManifest, err)
+	}
+	if err := validateSchemaURIs(root, path, schemaValue); err != nil {
+		return err
+	}
+	value, err := decodeJSONDocument(raw)
+	if err != nil {
+		return fmt.Errorf("%w: configuration JSON: %v", ErrInvalidManifest, err)
+	}
+	compiler := jsonschema.NewCompiler()
+	compiler.DefaultDraft(jsonschema.Draft2020)
+	compiler.UseLoader(confinedSchemaLoader{root: root})
+	if err := compiler.AddResource(path, schemaValue); err != nil {
+		return fmt.Errorf("%w: add configuration schema: %v", ErrInvalidManifest, err)
+	}
+	schema, err := compiler.Compile(path)
+	if err != nil {
+		return fmt.Errorf("%w: compile configuration schema: %v", ErrInvalidManifest, err)
+	}
+	if err := schema.Validate(value); err != nil {
+		return fmt.Errorf("%w: invalid configuration: %v", ErrInvalidManifest, err)
+	}
+	return nil
+}
+
 func canonicalPackageRoot(packageRoot string) (string, error) {
 	absRoot, err := filepath.Abs(packageRoot)
 	if err != nil {
@@ -89,7 +134,7 @@ func validateManifestDocument(document []byte) error {
 	compiler := jsonschema.NewCompiler()
 	compiler.DefaultDraft(jsonschema.Draft2020)
 	compiler.UseLoader(denySchemaLoader{})
-	for _, name := range []string{"manifest.schema.json", "operation.schema.json", "event.schema.json"} {
+	for _, name := range []string{"manifest.schema.json", "operation.schema.json", "event.schema.json", "artifact.schema.json"} {
 		schemaDocument, err := builtinSchemaFS.ReadFile("schemas/" + name)
 		if err != nil {
 			return fmt.Errorf("%w: read embedded schema %s: %v", ErrInvalidManifest, name, err)
@@ -169,6 +214,11 @@ func validateManifest(manifest *Manifest, root string) error {
 	if err := resolveSchema(root, &manifest.AppConfigurationSchema); err != nil {
 		return fmt.Errorf("%w: app configuration schema: %w", ErrInvalidManifest, err)
 	}
+	if manifest.DeviceConfigurationSchema != "" {
+		if err := resolveSchema(root, &manifest.DeviceConfigurationSchema); err != nil {
+			return fmt.Errorf("%w: device configuration schema: %w", ErrInvalidManifest, err)
+		}
+	}
 
 	operationIDs := make(map[string]struct{}, len(manifest.Operations))
 	for index := range manifest.Operations {
@@ -211,6 +261,13 @@ func validateManifest(manifest *Manifest, root string) error {
 	for index := range manifest.Artifacts {
 		if err := resolveSchema(root, &manifest.Artifacts[index].Schema); err != nil {
 			return fmt.Errorf("%w: artifact %q schema: %w", ErrInvalidManifest, manifest.Artifacts[index].ID, err)
+		}
+		seenTypes := make(map[string]struct{}, len(manifest.Artifacts[index].MediaTypes))
+		for _, mediaType := range manifest.Artifacts[index].MediaTypes {
+			if _, duplicate := seenTypes[mediaType]; duplicate {
+				return fmt.Errorf("%w: artifact %q has duplicate media type", ErrInvalidManifest, manifest.Artifacts[index].ID)
+			}
+			seenTypes[mediaType] = struct{}{}
 		}
 	}
 	for index := range manifest.ContractFixtures {

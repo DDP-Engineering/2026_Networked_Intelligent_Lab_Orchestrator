@@ -1,0 +1,12 @@
+schema = 1
+id = "REQ-DATA-8082c1dc"
+title = "Retain validated camera image evidence"
+status = "draft"
+requirement = "When a snapshot completes, Bench Core shall retain one digest-verified image artifact with a validated JPEG or PNG media type, sanitized presentation filename, effective parameters, actual control read-back and configuration revision, while enforcing the 8 MiB artifact ceiling."
+verification = "Submit a physical-camera snapshot through the runner and malformed artifact declarations through isolated tests; assert one authorized retained image with matching digest and provenance, and reject oversized, mislabelled or browser-active media."
+affected_paths = ["05_Software/core/internal/bench/", "05_Software/core/internal/httpapi/bench.go", "05_Software/core/internal/httpapi/bench_artifact_test.go", "05_Software/core/internal/integration/manifest/", "05_Software/contracts/integration/v1/", "05_Software/integrations/fake_python/manifest.json", "05_Software/integrations/camera/"]
+linked_tests = ["05_Software/core/internal/integration/manifest/loader_test.go::TestLoadArtifactMediaTypes", "05_Software/core/internal/bench/jobs_test.go::TestArtifactMediaTypeMustMatchManifest", "05_Software/core/internal/bench/adapter_test.go::TestAdapterDeclaredImageArtifactPersists", "05_Software/core/internal/httpapi/bench_artifact_test.go::TestArtifactPresentationUsesVerifiedMediaType", "05_Software/integrations/sigrok/tests/test_package.py::test_package_declares_digital_capture_contract", "05_Software/integrations/camera/tests/test_plugin.py::test_snapshot_revalidates_physical_binding_and_retains_image", "05_Software/integrations/camera/tests/test_v4l2.py::test_decode_frame_rejects_oversize_and_strips_source_metadata"]
+spec = "specs/REQ-DATA-8082c1dc.md"
+priority = "high"
+created = 2026-09-21
+updated = 2026-09-24
