@@ -1,3 +1,4 @@
+import { MessageBanner } from '../MessageBanner';
 import { useCallback, useEffect, useState } from 'react';
 
 import type {
@@ -572,14 +573,12 @@ export function NetworkPage({
 
       <div className="page-body">
         {refusal !== null && (
-          <p role="alert" className="notice notice-unknown">
+          <MessageBanner tone="error">
             {t('network.change.refused')} {refusal.detail}
-          </p>
+          </MessageBanner>
         )}
         {operationUnavailable && (
-          <p role="alert" className="notice notice-unknown">
-            {t('network.wg.pollFailed')}
-          </p>
+          <MessageBanner tone="error">{t('network.wg.pollFailed')}</MessageBanner>
         )}
         {/*
           The change in flight, above everything else. An administrator who has
@@ -639,9 +638,9 @@ export function NetworkPage({
         )}
         {running !== null &&
           (running.state === 'rollback_failed' || running.state === 'failed') && (
-            <p className="notice notice-unknown" role="alert">
+            <MessageBanner tone="error">
               {t('network.change.failed')} {running.failure}
-            </p>
+            </MessageBanner>
           )}
 
         {proposal !== null && (
@@ -680,7 +679,7 @@ export function NetworkPage({
           <p>{t('network.reading')}</p>
         )}
         {view === 'overview' && status.state === 'failed' && (
-          <p className="notice notice-unknown">{t('network.unreadable')}</p>
+          <MessageBanner tone="warning">{t('network.unreadable')}</MessageBanner>
         )}
         {view === 'overview' && status.state === 'read' && (
           <NetworkOverview
@@ -904,16 +903,16 @@ export function NetworkPage({
 
               {statistics.state === 'reading' && <p>{t('network.reading')}</p>}
               {statistics.state === 'failed' && (
-                <p className="notice notice-unknown">
+                <MessageBanner tone="warning">
                   {t('network.statistics.unreadable')}
-                </p>
+                </MessageBanner>
               )}
               {statistics.state === 'read' && (
                 <>
                   {statistics.value.stale && (
-                    <p className="notice notice-unknown">
+                    <MessageBanner tone="warning">
                       {t('network.statistics.stale')}
-                    </p>
+                    </MessageBanner>
                   )}
                   {statistics.value.points.length === 0 ? (
                     <p>{t('network.statistics.empty')}</p>
@@ -929,9 +928,9 @@ export function NetworkPage({
         )}
 
         {!benchCoreReachable && (
-          <p className="notice notice-unknown" role="alert">
+          <MessageBanner tone="error">
             {t('network.reachability.unreachable')}
-          </p>
+          </MessageBanner>
         )}
       </div>
     </div>

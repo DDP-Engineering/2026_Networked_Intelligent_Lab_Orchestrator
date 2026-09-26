@@ -50,6 +50,10 @@ the package digest that SQLite still declares authoritative before serving it.
 `/api/v1/plugins` exposes curated availability and lifecycle; `/api/v1/bench/jobs`
 returns durable transaction acknowledgements and summaries. Individual reads
 return ordered replies/results, actions approve/cancel, and artifact download.
+Plugin inventory includes `available_version` and `update_available`: only a
+newer SemVer version from a manifest-, adapter- and integrity-verified local
+bundle is advertised. Equal versions, build metadata alone, older versions and
+invalid bundles leave update disabled. No online catalog is contacted.
 The MCP and CLI operations are listed in `06_SoftwareDocu/Sigrok_Integration.md`
 and `06_SoftwareDocu/Camera_Integration.md`. Human approval requires a browser session.
 

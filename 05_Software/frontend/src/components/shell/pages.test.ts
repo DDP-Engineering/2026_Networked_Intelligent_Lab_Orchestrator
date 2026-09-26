@@ -1,8 +1,17 @@
+import type { BenchCoreSession } from '../../api/contract';
 import { describe, expect, it } from 'vitest';
 
 import { buildPages, integrationPageId } from './pages';
 
 describe('physical Camera navigation', () => {
+  const admin: BenchCoreSession = {
+    apiVersion: 'nilo.http/1',
+    username: 'admin',
+    role: 'administrator',
+    permissions: ['plugins.manage'],
+    credential: 'session',
+    csrfToken: 'csrf',
+  };
   const camera = {
     id: 'camera',
     displayName: 'Camera',
@@ -64,10 +73,10 @@ describe('physical Camera navigation', () => {
     },
   ];
 
-  it('groups configured physical cameras under Bench when Camera is enabled', () => {
-    const pages = buildPages(null, [camera], devices, [packageRecord]);
+  it('groups configured physical cameras under Instruments when Camera is enabled', () => {
+    const pages = buildPages(admin, [camera], devices, [packageRecord]);
     expect(pages.find((page) => page.id === integrationPageId('camera'))).toMatchObject(
-      { cluster: 'working' },
+      { cluster: 'instruments' },
     );
     expect(pages.find((page) => page.id === 'plugins:camera')).toMatchObject({
       cluster: 'core',
@@ -76,7 +85,7 @@ describe('physical Camera navigation', () => {
       pluginId: 'camera',
     });
     expect(pages.find((page) => page.id === 'camera:cam-1')).toMatchObject({
-      cluster: 'working',
+      cluster: 'instruments',
       parentId: integrationPageId('camera'),
       title: 'Board view',
       cameraDeviceID: 'cam-1',
@@ -89,8 +98,18 @@ describe('physical Camera navigation', () => {
     expect(pages.some((page) => page.id === 'camera:cam-2')).toBe(false);
   });
 
+  it('hides Camera administration from operators and unauthenticated sessions', () => {
+    for (const session of [null, { ...admin, role: 'operator' as const }]) {
+      expect(
+        buildPages(session, [camera], devices, [packageRecord]).some(
+          (page) => page.id === 'plugins:camera',
+        ),
+      ).toBe(false);
+    }
+  });
+
   it('omits the working group when Camera is disabled', () => {
-    const pages = buildPages(null, [{ ...camera, status: 'ready' }], devices, [
+    const pages = buildPages(admin, [{ ...camera, status: 'ready' }], devices, [
       { ...packageRecord, enabled: false, status: 'disabled' },
     ]);
     expect(pages.some((page) => page.id === integrationPageId('camera'))).toBe(false);
@@ -98,13 +117,13 @@ describe('physical Camera navigation', () => {
   });
 
   it('uses installed package state when the older integration inventory disagrees', () => {
-    const pages = buildPages(null, [camera], devices, []);
+    const pages = buildPages(admin, [camera], devices, []);
     expect(pages.some((page) => page.id === integrationPageId('camera'))).toBe(false);
   });
 
   it('shows every installed plugin under System > Plugins, including disabled ones', () => {
     const pages = buildPages(
-      null,
+      admin,
       [],
       [],
       [

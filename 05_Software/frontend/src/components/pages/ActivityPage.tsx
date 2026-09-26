@@ -1,3 +1,4 @@
+import { MessageBanner } from '../MessageBanner';
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
 import type {
@@ -620,7 +621,7 @@ export function ActivityPage({
 
         {page.state === 'reading' && <p>{t('activity.reading')}</p>}
         {page.state === 'failed' && (
-          <p className="notice notice-unknown">{t('activity.unreadable')}</p>
+          <MessageBanner tone="warning">{t('activity.unreadable')}</MessageBanner>
         )}
         {page.state === 'read' && (
           <>

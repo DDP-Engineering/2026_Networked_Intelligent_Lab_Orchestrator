@@ -6,16 +6,16 @@ title = "Separate Camera appliance administration from physical work"
 status = "active"
 requirement = """
 The System Camera page shall expose package lifecycle and persistent device
-configuration only to actors with plugins.manage; Bench Camera pages shall
+configuration only to administrators with plugins.manage; Instruments Camera pages shall
 offer authorized physical Snapshot, retained results and working controls
 without appliance mutation controls. The server enforces the same permission
 on every direct mutation request.
 """
-verification = "Render Camera System and Bench views as administrator and viewer; assert lifecycle and configuration controls appear only in System for the administrator, while Snapshot remains a physical-device action. Exercise direct forbidden plugin and device mutation requests against Bench Core."
-affected_paths = ["05_Software/frontend/src/components/pages/PluginsPage.tsx", "05_Software/frontend/src/components/pages/CameraSection.tsx", "05_Software/core/internal/httpapi/bench.go"]
-linked_tests = ["05_Software/frontend/src/components/pages/PluginsPage.test.tsx::keeps Camera appliance controls in System for administrators", "05_Software/core/internal/httpapi/bench_artifact_test.go"]
+verification = "Render Camera System and Instruments views as administrator and viewer; assert lifecycle and configuration controls appear only in System for the administrator, while Snapshot remains a physical-device action. Exercise direct forbidden plugin and device mutation requests against Bench Core."
+affected_paths = ["05_Software/frontend/src/components/pages/CameraPluginPage.tsx", "05_Software/frontend/src/components/pages/CameraSection.tsx", "05_Software/core/internal/httpapi/bench.go"]
+linked_tests = ["05_Software/frontend/src/components/pages/CameraPluginPage.test.tsx", "05_Software/core/internal/httpapi/bench_artifact_test.go"]
 spec = ""
 priority = "high"
 rationale = "Appliance administration and device work have different actors and authority."
 created = 2026-09-25
-updated = 2026-09-25
+updated = 2026-09-26

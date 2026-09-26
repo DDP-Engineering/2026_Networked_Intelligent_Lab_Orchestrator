@@ -7,6 +7,28 @@
  * language choice into a failure nobody associates with the language menu.
  */
 export const en = {
+  'message.info': 'Info',
+  'message.warning': 'Warning',
+  'message.error': 'Error',
+  'camera.pluginTitle': 'Camera plugin',
+  'camera.adminOnly': 'Only administrators can configure the Camera plugin.',
+  'camera.currentVersion': 'Current version',
+  'camera.updatePlugin': 'Update plugin',
+  'camera.noUpdate': 'No newer verified plugin bundle is available.',
+  'camera.updated': 'The Camera plugin was updated.',
+  'camera.pluginEnabled': 'Camera plugin enabled.',
+  'camera.needsAttention':
+    'Camera initialization failed: {names}. Disable and enable the camera to retry.',
+  'camera.pluginDisabled': 'The Camera plugin is disabled and hidden from Instruments.',
+  'camera.policySaved': 'Approval policy saved.',
+  'camera.discoveryDone': 'Camera discovery completed.',
+  'camera.enableToDiscover': 'Enable the plugin to discover cameras.',
+  'camera.userName': 'User name',
+  'camera.configurationSaved': 'Camera configuration saved.',
+  'camera.deviceEnabled': 'Camera enabled.',
+  'camera.deviceDisabled': 'Camera disabled.',
+  'camera.unavailable': 'The service is unavailable.',
+
   'instrument.configure': 'Configure',
   'camera.title': 'Camera',
   'camera.admin': 'Camera configuration',

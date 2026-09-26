@@ -1,3 +1,4 @@
+import { MessageBanner } from '../MessageBanner';
 import { useCallback, useEffect, useState } from 'react';
 import {
   BenchCoreError,
@@ -173,15 +174,9 @@ export function PasswordPolicyPanel({
                 ))}
               </fieldset>
             </div>
-            {notice === '' ? null : (
-              <p className="field-notice" role="status">
-                {notice}
-              </p>
-            )}
+            {notice === '' ? null : <MessageBanner tone="info">{notice}</MessageBanner>}
             {failure === '' ? null : (
-              <p className="field-error" role="alert">
-                {failure}
-              </p>
+              <MessageBanner tone="error">{failure}</MessageBanner>
             )}
             <div className="admin-policy-actions">
               <button

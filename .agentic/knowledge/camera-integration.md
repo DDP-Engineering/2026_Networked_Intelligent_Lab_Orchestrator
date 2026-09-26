@@ -28,8 +28,7 @@ The installed package declares `discover_devices`, `snapshot`, `get_controls`,
 exposes managed-device configuration and revisioned actions to an Administrator.
 Bench work uses the shared job route, `nilo bench submit --plugin camera`, the
 Camera CLI commands and Camera MCP tools. The browser places appliance settings
-under **System > Plugins** and enabled physical-device work under **Bench >
-Camera**.
+under **System > Plugins** and enabled physical-device work under **Instruments > Camera**.
 
 Snapshots retain a verified JPEG or PNG artifact. Authorized readers receive
 bounded previews; a complete artifact is downloaded through its transaction.
@@ -85,7 +84,7 @@ flowchart LR
   and `020_bench_plugin_configuration.sql` - persistent device and package
   configuration.
 - `05_Software/frontend/src/components/pages/CameraSection.tsx` and
-  `PluginsPage.tsx` - physical-device work and appliance administration.
+  `CameraPluginPage.tsx` - physical-device work and administrator-only appliance configuration.
 - `02_Tools/scripts/build-camera-bundle.py` - verified target bundle assembly.
 - `02_Tools/tests/camera/` - isolated binding tests and physical target probes;
   `.agentic/evidence/camera/pi-webcam/` records the Pi webcam observation.
@@ -94,3 +93,23 @@ Package and GUI tests cover the software contract. The release input lock in
 `02_Tools/packaging/config/inputs.lock.json` is incomplete, so this checkout
 cannot build a production release candidate. Physical Camera and live-view
 acceptance remain separate from isolated package and probe tests.
+
+## Camera administration
+
+System > Plugins > Camera is visible only to administrators with plugins.manage.
+The header groups Camera plugin and View activity, with the installed version
+and Update plugin at the right. Update is enabled only when Core reports a
+newer SemVer bundle in its local catalog after manifest, adapter and inventory
+verification. It performs the existing offline package upgrade with rollback.
+Enable/Disable control the Instruments entry; approval policy is selected before
+enabling or saved immediately for an enabled plugin. Discovery lists stable
+camera records with a user-assigned name and revisioned enable/disable controls.
+The controls and connected-camera list share one frame. Enable, Disable, the
+inline approval-policy selector and Discover cameras form a wrapping toolbar.
+Disconnected and unknown-presence records are hidden; connected unconfigured
+and disabled cameras remain available for setup and re-enabling. Per-camera
+presence/readiness labels are omitted; initialization failures use a shared
+warning banner. The persistent plugin-enabled sentence is omitted.
+Naming preserves purpose and device settings. Configured, enabled cameras appear
+beneath Instruments > Camera. MessageBanner provides labelled and colored
+Info/Warning/Error feedback shared with Network, Authentication and Activity.

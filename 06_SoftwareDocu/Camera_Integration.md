@@ -43,9 +43,13 @@ state changing; a snapshot may also change controls when it includes overrides.
 
 ## Use
 
-The Camera workspace under **Bench** shows configured camera records. The
-**System > Plugins** page manages the installed package, camera configuration
-and package limits. Overview tiles show a bounded recent image and a quick
+The Camera workspace under **Instruments** shows configured, enabled camera records. The
+administrator-only **System > Plugins > Camera** page manages plugin enablement,
+approval policy, discovery, camera names and camera enablement. Advanced package
+and device settings remain available through the authorized configuration API.
+The header shows the installed version. **Update plugin** is enabled only when a
+newer verified bundle has been staged in the local catalog; it needs no internet
+connection. **View activity** opens the Camera package activity filter. Overview tiles show a bounded recent image and a quick
 snapshot action; two accessible saved images can be compared side by side.
 Snapshot width, height, pixel format, an advertised frame interval, crop centre,
 digital zoom, rotation, flips, grayscale, invert, JPEG/PNG encoding, output dimension,

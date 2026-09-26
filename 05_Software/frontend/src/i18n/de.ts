@@ -9,6 +9,29 @@ import type { Catalogue } from './en';
  * are deliberately left as they are.
  */
 export const de: Catalogue = {
+  'message.info': 'Information',
+  'message.warning': 'Warnung',
+  'message.error': 'Fehler',
+  'camera.pluginTitle': 'Kamera-Plugin',
+  'camera.adminOnly': 'Nur Administratoren können das Kamera-Plugin konfigurieren.',
+  'camera.currentVersion': 'Aktuelle Version',
+  'camera.updatePlugin': 'Plugin aktualisieren',
+  'camera.noUpdate': 'Kein neueres geprüftes Plugin-Paket verfügbar.',
+  'camera.updated': 'Das Kamera-Plugin wurde aktualisiert.',
+  'camera.pluginEnabled': 'Kamera-Plugin aktiviert.',
+  'camera.needsAttention':
+    'Kamerainitialisierung fehlgeschlagen: {names}. Deaktivieren und aktivieren Sie die Kamera, um es erneut zu versuchen.',
+  'camera.pluginDisabled':
+    'Das Kamera-Plugin ist deaktiviert und unter Instrumente ausgeblendet.',
+  'camera.policySaved': 'Freigaberichtlinie gespeichert.',
+  'camera.discoveryDone': 'Kamerasuche abgeschlossen.',
+  'camera.enableToDiscover': 'Aktivieren Sie das Plugin, um Kameras zu suchen.',
+  'camera.userName': 'Benutzerdefinierter Name',
+  'camera.configurationSaved': 'Kamerakonfiguration gespeichert.',
+  'camera.deviceEnabled': 'Kamera aktiviert.',
+  'camera.deviceDisabled': 'Kamera deaktiviert.',
+  'camera.unavailable': 'Der Dienst ist nicht verfügbar.',
+
   'instrument.configure': 'Konfigurieren',
   'camera.title': 'Kamera',
   'camera.admin': 'Kamerakonfiguration',

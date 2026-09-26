@@ -40,19 +40,21 @@ type Device struct {
 }
 
 type Plugin struct {
-	ID          string   `json:"id"`
-	InstanceID  string   `json:"-"`
-	DisplayName string   `json:"display_name"`
-	Version     string   `json:"version"`
-	Installed   bool     `json:"installed"`
-	Enabled     bool     `json:"enabled"`
-	Mode        string   `json:"mode"`
-	Status      string   `json:"status"`
-	Simulation  bool     `json:"simulation"`
-	Operations  []string `json:"operations"`
-	Devices     []Device `json:"devices"`
-	Error       string   `json:"error"`
-	Digest      string   `json:"digest"`
+	AvailableVersion string   `json:"available_version"`
+	UpdateAvailable  bool     `json:"update_available"`
+	ID               string   `json:"id"`
+	InstanceID       string   `json:"-"`
+	DisplayName      string   `json:"display_name"`
+	Version          string   `json:"version"`
+	Installed        bool     `json:"installed"`
+	Enabled          bool     `json:"enabled"`
+	Mode             string   `json:"mode"`
+	Status           string   `json:"status"`
+	Simulation       bool     `json:"simulation"`
+	Operations       []string `json:"operations"`
+	Devices          []Device `json:"devices"`
+	Error            string   `json:"error"`
+	Digest           string   `json:"digest"`
 }
 
 // Submission never carries executable, filesystem, driver or arbitrary config values.

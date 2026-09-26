@@ -313,6 +313,55 @@ a session.
 An authenticated live browser showed Camera and Sigrok Instruments beneath
 System > Plugins. A scrollable Camera view reached the 1920-pixel viewport edge.
 
+On 2026-09-26, Camera administration and the current ARM64 Core were deployed
+to `ddp-remote` at `10.205.148.11`. The prior Core rejected the Camera manifest's
+`device_configuration_schema` and artifact `media_types` fields; deploying the
+current Core restored enablement without modifying the installed bundle.
+Core SHA-256 is
+`686e8472635091ec01f1e383f18e87cfb8fa5f8329a15dc8f6a404b6b7b710b8`.
+The root-only runtime/state backup is
+`/var/backups/nilo/pre-camera-admin-20260926T035020/runtime-and-state.tar.gz`,
+verified SHA-256
+`6bf63b131b5d2b3f9aa932ffbf8b137dea35dfa9ae7d993bc17cf1e3fa1ad4fd`.
+The project version remains 0.9.0 and the installed Camera bundle remains 0.1.0.
+Final GUI assets are `index-D-cmzIfi.js` (SHA-256
+`d5b647720659532848e19dbdba8799afbfc7f2e352030b6eda813c413f28aa45`)
+and `index-BIKcA3US.css` (SHA-256
+`fc7e4106740a3bd7e39cc0476cbcfebe6f39afe8a714b3bc7386d29b033bec5c`).
+The served JavaScript matches the deployment hash. The final GUI also labels
+a disabled camera as disabled rather than exposing its internal failed readiness.
+
+The accepted build container passed the full Core Go suite, 533 frontend tests,
+lint, formatting and production builds. Its offline cache needed the existing
+locked go-qrcode and goqr downloads copied from the verified local Go cache.
+Authenticated Chrome checks confirmed plugin and device enable/disable,
+discovery (`cam-1`, present/ready), name persistence and sidebar updates, and
+the Camera-filtered View activity link. The original camera name was restored;
+Camera and its device were left enabled with approval policy `ask` for live testing.
+Update plugin is disabled because the catalog has no newer Camera version;
+newer/older/prerelease/integrity cases are covered by automated tests.
+HTTPS checks ran from the Windows management client; self-connections
+from the Pi timed out. Both NILO
+services remained active; existing device settings and retained artifacts were preserved.
+
+Later on 2026-09-26, the compact Camera GUI was deployed without changing Core
+or plugin versions. Controls and connected cameras now share one frame, with
+an inline approval selector and a wrapping toolbar. The previous GUI is backed
+up at `/var/backups/nilo/pre-camera-compact-20260926T070635/gui.tar.gz`
+(SHA-256 `ae1a4708c8c847347d7c63de123347f79dec35f03a448c06cff82fd5ad3c0175`).
+The served `index-COdv7rnN.js` matches SHA-256
+`a8126d803e71021f98adeb65def76dd4912b0cf1ca4aa50c0a1b9d4a7b317081`;
+`index-qqfVNH4g.css` matches
+`211f51560d9d251e5cb88ab58cf29d68b34a4fde49e891105a5db1b2c0aa7b4c`.
+The accepted container passed 534 frontend tests, lint, formatting and build.
+Live Chrome layout checks at 1920 pixels, 800x480 and 320x568 confirmed wrapping
+and no horizontal overflow. Connected cameras needing setup or re-enabling stay
+visible; disconnected and unknown-presence records are hidden. Device state and
+the user-assigned camera name were preserved.
+
+The Camera administration adjustments and Pi deployment task were closed on
+2026-09-26 at the user's request, with the verification recorded above.
+
 The optional GPIO recovery path remains disabled until the BCM17 button and
 BCM27 LED circuit is physically confirmed.
 

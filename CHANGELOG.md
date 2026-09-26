@@ -16,13 +16,19 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Changed
 
+- Camera configuration uses one responsive frame with a wrapping toolbar and
+  connected-camera rows, retaining setup and re-enable access without status clutter.
+- Camera administration now has aligned lifecycle controls, verified update availability,
+  per-camera names and enablement, and administrator-only access.
+- Shared Info, Warning and Error banners distinguish application feedback.
+
 - Installed plugins now have focused management pages under System > Plugins;
   page scrollbars extend to the workspace edge.
 - Requirements now reflect current MCP, CLI, Activity and administrator UI behavior; pending integration and hardware acceptance are tracked separately.
 - Component knowledge and context now cover Camera, Network and field interfaces and reflect the current code and release state.
 - Specs now reflect current permissions, simulation identities, integration bundles and delivery status; draft Camera verification gaps remain explicit.
 - Camera has separate appliance administration and named physical-device work
-  pages, with nested Bench navigation and a full-width page scrollbar.
+  pages, with nested Instruments navigation and a full-width page scrollbar.
 - Integration adapters validate manifest operations and artifacts, derive
   per-device resources, and configure supervised runners before use.
 

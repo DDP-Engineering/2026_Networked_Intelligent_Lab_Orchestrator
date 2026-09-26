@@ -188,7 +188,7 @@ export function buildPages(
     : [
         {
           id: integrationPageId('camera'),
-          cluster: 'working',
+          cluster: 'instruments',
           icon: 'instrument',
           title: camera.display_name,
           overviewTitleKey: 'nav.camera.overview',
@@ -198,12 +198,12 @@ export function buildPages(
           available: true,
         },
         ...camera.devices
-          .filter((device) => device.configured)
+          .filter((device) => device.configured && device.enabled)
           .flatMap((device): PageDescriptor[] => [
             {
               id: `camera:${device.id}`,
               parentId: integrationPageId('camera'),
-              cluster: 'working',
+              cluster: 'instruments',
               icon: 'instrument',
               title: device.display_name,
               overviewTitleKey: 'camera.snapshot',
@@ -214,7 +214,7 @@ export function buildPages(
             {
               id: `camera:${device.id}:settings`,
               parentId: `camera:${device.id}`,
-              cluster: 'working',
+              cluster: 'instruments',
               icon: 'instrument',
               titleKey: 'camera.settings',
               cameraDeviceID: device.id,
@@ -246,7 +246,13 @@ export function buildPages(
       ? [
           page,
           ...plugins
-            .filter((plugin) => plugin.installed)
+            .filter(
+              (plugin) =>
+                plugin.installed &&
+                (plugin.id !== 'camera' ||
+                  (session?.role === 'administrator' &&
+                    session.permissions.includes('plugins.manage'))),
+            )
             .map((plugin): PageDescriptor => ({
               id: `plugins:${plugin.id}`,
               parentId: 'plugins',

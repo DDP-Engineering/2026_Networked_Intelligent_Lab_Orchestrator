@@ -223,6 +223,7 @@ func (m *Manager) ListPlugins(ctx context.Context, actor identity.Actor) ([]Plug
 		} else if err != nil {
 			return nil, err
 		}
+		m.describeUpdate(&p)
 		result = append(result, p)
 	}
 	return result, nil

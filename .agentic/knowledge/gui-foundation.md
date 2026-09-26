@@ -9,7 +9,7 @@ beside each page. Instrument lifecycle and transaction views start at
 permissions and runner behavior belong to [Managed bench integrations](bench-integrations.md).
 Camera navigation starts at `src/components/shell/pages.ts` and `SideNav.tsx`;
 physical controls, appliance configuration and snapshot viewing start at
-`src/components/pages/CameraSection.tsx`; Camera-specific behavior is mapped in
+`src/components/pages/CameraSection.tsx` and `CameraPluginPage.tsx`; Camera-specific behavior is mapped in
 [Camera integration](camera-integration.md).
 Network workflows and shared small-screen rules are mapped in
 [Network GUI](network-gui.md) and [Compact field interface](field-interface.md).
@@ -111,7 +111,7 @@ runtime status.
 - `REQ-UX-4f9b8d21` - presents nested Camera routes by stable plugin and device
   IDs, with configured device names shown in navigation and tabs.
 - `REQ-UX-37d846a0` - presents administrator Camera lifecycle and persistent
-  configuration in System, and physical Camera work in Bench.
+  configuration in System, and physical Camera work in Instruments.
 - `REQ-UX-6ab5e73f` - places the page scrollport at the workspace edge.
 - `REQ-UX-b75fbbc3` - associates page-scoped Activity with the title using the
   shared responsive header group, while preserving existing Activity context.

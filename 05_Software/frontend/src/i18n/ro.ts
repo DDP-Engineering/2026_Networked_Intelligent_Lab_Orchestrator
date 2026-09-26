@@ -9,6 +9,29 @@ import type { Catalogue } from './en';
  * RX, TX — are deliberately left as they are.
  */
 export const ro: Catalogue = {
+  'message.info': 'Informație',
+  'message.warning': 'Avertizare',
+  'message.error': 'Eroare',
+  'camera.pluginTitle': 'Plugin cameră',
+  'camera.adminOnly': 'Numai administratorii pot configura pluginul camerei.',
+  'camera.currentVersion': 'Versiune curentă',
+  'camera.updatePlugin': 'Actualizează pluginul',
+  'camera.noUpdate': 'Nu este disponibil un pachet verificat mai nou.',
+  'camera.updated': 'Pluginul camerei a fost actualizat.',
+  'camera.pluginEnabled': 'Pluginul camerei a fost activat.',
+  'camera.needsAttention':
+    'Inițializarea camerei a eșuat: {names}. Dezactivează și activează camera pentru a reîncerca.',
+  'camera.pluginDisabled':
+    'Pluginul camerei este dezactivat și ascuns din Instrumente.',
+  'camera.policySaved': 'Politica de aprobare a fost salvată.',
+  'camera.discoveryDone': 'Descoperirea camerelor s-a încheiat.',
+  'camera.enableToDiscover': 'Activează pluginul pentru a descoperi camere.',
+  'camera.userName': 'Nume ales de utilizator',
+  'camera.configurationSaved': 'Configurația camerei a fost salvată.',
+  'camera.deviceEnabled': 'Cameră activată.',
+  'camera.deviceDisabled': 'Cameră dezactivată.',
+  'camera.unavailable': 'Serviciul nu este disponibil.',
+
   'instrument.configure': 'Configurează',
   'camera.title': 'Cameră',
   'camera.admin': 'Configurare cameră',

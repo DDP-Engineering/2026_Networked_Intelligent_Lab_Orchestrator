@@ -1,3 +1,4 @@
+import { MessageBanner } from '../MessageBanner';
 import { Fragment, useCallback, useEffect, useState, type ReactNode } from 'react';
 import {
   BenchCoreError,
@@ -154,15 +155,9 @@ export function UsersPage({
       </header>
       <div className="page-body">
         {credential.kind === 'session' && credential.csrfToken === '' ? (
-          <p className="field-error" role="alert">
-            {t('auth.csrfMissing')}
-          </p>
+          <MessageBanner tone="error">{t('auth.csrfMissing')}</MessageBanner>
         ) : null}
-        {notice === '' ? null : (
-          <p className="field-notice" role="status">
-            {notice}
-          </p>
-        )}
+        {notice === '' ? null : <MessageBanner tone="info">{notice}</MessageBanner>}
         {canManagePasswordPolicy ? (
           <PasswordPolicyPanel
             client={client}

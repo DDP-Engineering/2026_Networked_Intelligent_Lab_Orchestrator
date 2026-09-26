@@ -1,3 +1,4 @@
+import { MessageBanner } from '../MessageBanner';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   BenchCoreError,
@@ -226,9 +227,9 @@ export function PluginsPage({
       </header>
       <div className="page-body instrument-workspace">
         {error && (
-          <p className="notice notice-unknown" role="alert">
+          <MessageBanner tone="error">
             {t('instrument.error')} <code>{error}</code>
-          </p>
+          </MessageBanner>
         )}
         {plugins.length === 0 && <p>{t('instrument.noPackages')}</p>}
         {(view === 'catalog' || view === 'administration') && (
@@ -247,16 +248,19 @@ export function PluginsPage({
                     )}
                   </p>
                   {plugin.error && <p role="status">{plugin.error}</p>}
-                  {view === 'catalog' && plugin.installed && (
-                    <button
-                      type="button"
-                      onClick={() => onOpenPluginAdmin?.(plugin.id)}
-                    >
-                      {plugin.id === 'camera'
-                        ? t('camera.configure')
-                        : t('instrument.configure')}
-                    </button>
-                  )}
+                  {view === 'catalog' &&
+                    plugin.installed &&
+                    (plugin.id !== 'camera' ||
+                      (session.role === 'administrator' && canManage)) && (
+                      <button
+                        type="button"
+                        onClick={() => onOpenPluginAdmin?.(plugin.id)}
+                      >
+                        {plugin.id === 'camera'
+                          ? t('camera.configure')
+                          : t('instrument.configure')}
+                      </button>
+                    )}
                   {canManage &&
                     (view === 'administration' ||
                       plugin.id !== 'camera' ||

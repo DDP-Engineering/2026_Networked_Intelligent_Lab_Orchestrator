@@ -26,6 +26,8 @@ export interface InstrumentPlugin {
   id: string;
   display_name: string;
   version: string;
+  available_version?: string;
+  update_available?: boolean;
   installed: boolean;
   enabled: boolean;
   mode: 'ask' | 'auto';
@@ -117,6 +119,10 @@ const plugin = (value: unknown): value is InstrumentPlugin =>
   ['installed', 'enabled', 'simulation'].every(
     (key) => typeof value[key] === 'boolean',
   ) &&
+  (value.available_version === undefined ||
+    typeof value.available_version === 'string') &&
+  (value.update_available === undefined ||
+    typeof value.update_available === 'boolean') &&
   (value.mode === 'ask' || value.mode === 'auto') &&
   strings(value.operations) &&
   Array.isArray(value.devices) &&

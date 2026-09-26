@@ -34,6 +34,7 @@ import {
 import { useTranslate } from '../../i18n/languages';
 import { AuthenticationPage } from '../AuthenticationPage';
 import { PowerConfirmation } from '../PowerConfirmation';
+import { CameraPluginPage } from '../pages/CameraPluginPage';
 import { PluginsPage } from '../pages/PluginsPage';
 import { BenchPage } from '../pages/BenchPage';
 import { ActivityPage } from '../pages/ActivityPage';
@@ -517,6 +518,22 @@ export function AppShell({
                   setAppliance(updated);
                   return updated;
                 }
+          }
+        />
+      );
+    }
+    if (page.pluginId === 'camera') {
+      return (
+        <CameraPluginPage
+          client={client}
+          credential={credential}
+          session={session}
+          onSessionEnded={onSessionEnded}
+          onPluginsChanged={refreshPluginInventory}
+          onOpenActivity={
+            mayReadActivity(session)
+              ? () => openActivity({ component: 'bench', target: 'camera' })
+              : undefined
           }
         />
       );

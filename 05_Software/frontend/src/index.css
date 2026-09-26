@@ -44,6 +44,7 @@ select {
 }
 
 .instrument-workspace {
+  align-content: start;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
@@ -114,4 +115,84 @@ select {
 .instrument-preview svg {
   height: 2rem;
   width: 100%;
+}
+.message-banner {
+  padding: 0.75rem 1rem;
+  border: 1px solid;
+  border-left-width: 4px;
+  border-radius: 0.35rem;
+  align-self: stretch;
+  margin: 0;
+}
+.message-banner-info {
+  background: color-mix(in srgb, #168bba 12%, var(--surface-raised));
+  border-color: #168bba;
+}
+.message-banner-warning {
+  background: color-mix(in srgb, #d59b18 12%, var(--surface-raised));
+  border-color: #b07b09;
+}
+.message-banner-error {
+  background: color-mix(in srgb, #d04444 12%, var(--surface-raised));
+  border-color: #d04444;
+}
+.camera-plugin-head {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.camera-plugin-update {
+  margin-left: auto;
+  align-items: center;
+}
+.camera-plugin-panel {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+.camera-plugin-panel > p {
+  margin: 0;
+}
+.camera-plugin-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.camera-plugin-controls .camera-approval-policy {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+}
+.camera-approval-policy > span {
+  flex-shrink: 0;
+}
+.camera-approval-policy select {
+  width: 16rem;
+  min-width: 0;
+}
+.camera-configuration-row {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 1rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+.camera-configuration-row .field {
+  flex: 1 1 15rem;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+}
+.camera-configuration-row > strong {
+  align-self: center;
+}
+.camera-configuration-row .form-actions {
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
 }
