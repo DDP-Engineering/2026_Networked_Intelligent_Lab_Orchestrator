@@ -5,6 +5,11 @@ discovers capture nodes and hardware controls, keeps a stable managed record for
 each camera, and provides processed live preview, JPEG/PNG snapshots and
 MP4/H.264 normal video or time-lapse. Camera has no generated frames or camera replay data.
 
+For exact commands and JSON examples, see the
+[CLI reference](CLI_Reference.md#camera-live-workspace-and-recording) and
+[MCP reference](MCP_Reference.md). These describe the shared Core interfaces,
+including generic workspace submissions and current transport differences.
+
 ## Appliance setup
 
 Install the indexed Camera bundle into the integration catalog, then install
@@ -88,21 +93,11 @@ oldest-first automatic cleanup. Policy changes show eligible counts
 and bytes; eviction happens on subsequent capture admission. Incomplete captures
 remain accounted for and can be deleted explicitly. Active downloads block deletion.
 
-The overview retains older snapshot tools and comparisons. Overview tiles show a bounded recent image and a quick
-snapshot action; two accessible saved images can be compared side by side.
-Snapshot width, height, pixel format, an advertised frame interval, crop centre,
-digital zoom, rotation, flips, grayscale, invert, JPEG/PNG encoding, output dimension,
-crosshair, grid, text, line, rectangle and calibrated scale-bar overlays are
-available in the browser. A scale bar requires the camera's millimetres-per-pixel
-calibration setting. Text and scale labels use the DejaVu Sans font bundled with
-the Camera package, so rendering does not depend on an appliance font install.
-Hardware controls are generated from descriptors returned by the physical device. The latest
-retained image and per-camera history use authenticated bounded previews; the
-viewer provides local zoom, pan and markers. The complete
-artifact remains downloadable from its transaction.
-In the older overview viewer, rotation, flips and invert are local to the browser. A placed marker is
-mapped through the viewer and requested composition into a bounded crosshair
-overlay on the next retained snapshot.
+The Instruments Camera group expands its configured devices and does not open an
+overview page. Open RealTime View or Recordings directly under a named camera.
+Hardware controls are generated from descriptors returned by the physical device.
+A scale bar requires the camera's millimetres-per-pixel calibration setting.
+Text and scale labels use the DejaVu Sans font bundled with the Camera package.
 The frame interval selector appears when the physical camera advertises an
 interval for the chosen format and size. The runner verifies the selected
 interval against V4L2 and rejects a changed or unavailable setting before

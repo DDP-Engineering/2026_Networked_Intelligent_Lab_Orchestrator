@@ -13,7 +13,7 @@ describe('nested plugin navigation', () => {
       cluster: 'working',
       icon: 'instrument',
       title: 'Camera',
-      overviewTitleKey: 'nav.camera.overview',
+      navigationOnly: true,
       available: true,
     },
     {
@@ -22,15 +22,15 @@ describe('nested plugin navigation', () => {
       cluster: 'working',
       icon: 'instrument',
       title: 'Board view',
-      overviewTitleKey: 'camera.snapshot',
+      overviewTitleKey: 'cw.realtime',
       available: true,
     },
     {
-      id: 'camera:cam-1:settings',
+      id: 'camera:cam-1:recordings',
       parentId: 'camera:cam-1',
       cluster: 'working',
       icon: 'instrument',
-      title: 'Settings',
+      title: 'Recordings',
       available: true,
     },
   ];
@@ -41,15 +41,22 @@ describe('nested plugin navigation', () => {
       <LanguageProvider initial="en">
         <SideNav
           pages={pages}
-          active="camera:cam-1:settings"
+          active="camera:cam-1:recordings"
           onOpen={onOpen}
           nameOf={(page) => page.title ?? page.id}
         />
       </LanguageProvider>,
     );
     expect(screen.getByRole('button', { name: 'Board view' })).toBeVisible();
-    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
-    expect(onOpen).toHaveBeenCalledWith('camera:cam-1:settings');
+    expect(screen.queryByRole('button', { name: 'Overview' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Camera' }));
+    expect(onOpen).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole('button', { name: 'Board view' }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Camera' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Recordings' }));
+    expect(onOpen).toHaveBeenCalledWith('camera:cam-1:recordings');
   });
 });
 

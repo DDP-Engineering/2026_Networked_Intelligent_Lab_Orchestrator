@@ -5,6 +5,10 @@ documentation that accompanies the application.
 
 ## Official documentation
 
+- [CLI reference](../06_SoftwareDocu/CLI_Reference.md) - implemented commands,
+  Camera workflows, recording, export and retention.
+- [MCP reference](../06_SoftwareDocu/MCP_Reference.md) - authenticated endpoint,
+  tool catalog, inputs, permissions and examples.
 - [NILO — Command Line and Authentication](NILO_CLI_and_Authentication.md) -
   the administrator's reference for the `nilo` command line, the fixed role and
   permission model, first-run setup, browser sessions versus API tokens, the

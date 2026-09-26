@@ -5,8 +5,12 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-09-27
+
 ### Added
 
+- CLI and MCP references cover Camera workflows, tool permissions and current
+  interface differences; the authentication guide now lists implemented permissions.
 - Per-camera live view, processed snapshots and MP4/time-lapse recording, with
   hardware controls, overlays, a media library and bounded storage retention.
 - Resizable navigation with pointer and keyboard controls, a remembered width,
@@ -20,6 +24,8 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Changed
 
+- The Instruments Camera group expands directly to its devices; the redundant
+  Camera overview page is removed.
 - RealTime View combines the title and capture toolbar with three collapsible
   settings sections, replacing the separate camera Settings page.
 

@@ -35,9 +35,20 @@ nilo admin user list|create|set-role|enable|disable|reset-password|delete ... --
 nilo admin token list|create|revoke|delete ... --server <url> --token-file <path> [--ca-file <pem>] [--json] [--confirm-delete]
 
 nilo network ... --server <url> --token-file <path>
-nilo activity list|export ... --server <url> --token-file <path>
-nilo diagnostics ... --server <url> --token-file <path>
+nilo activity list|export|retention ... --server <url> --token-file <path>
+nilo plugin ... --server <url> --token-file <path>
+nilo bench ... --server <url> --token-file <path>
+nilo camera ... --server <url> --token-file <path>
+nilo discover [--json]
+nilo open <name>
+nilo maintenance ... --data-dir <absolute-path>
 ```
+
+See the [CLI reference](../../06_SoftwareDocu/CLI_Reference.md) for command
+forms and Camera workflows, and the
+[MCP reference](../../06_SoftwareDocu/MCP_Reference.md) for the shared
+`/mcp` endpoint and its tool catalog. Network diagnostic checks are under
+`nilo network`; there is no top-level `nilo diagnostics` command.
 
 The simulation server exposes `POST /api/v1/auth/login`, and the authenticated
 `POST /api/v1/auth/logout`, `GET /api/v1/auth/session`, `GET /api/v1/status`,

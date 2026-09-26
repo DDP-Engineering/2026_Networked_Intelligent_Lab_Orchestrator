@@ -195,7 +195,7 @@ export function AppShell({
     () =>
       pluginInventory === null
         ? [...pages.map((page) => page.id), ...workspace.open]
-        : pages.map((page) => page.id),
+        : pages.filter((page) => !page.navigationOnly).map((page) => page.id),
     [pages, pluginInventory, workspace.open],
   );
 

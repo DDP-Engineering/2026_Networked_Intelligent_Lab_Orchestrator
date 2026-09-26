@@ -17,6 +17,8 @@ and offers two work destinations:
 | Recordings | Image/video output settings, normal-video/time-lapse settings, thumbnail library, playback, deletion, export and retention controls |
 
 The user accepted the name Recordings for the combined image/video library.
+The Instruments Camera entry is an expandable navigation group only; it has no
+overview page. Its configured devices open RealTime View and Recordings directly.
 System > Plugins > Camera retains administrator discovery, naming, device and
 plugin enablement, and approval-policy management. Disabled or unconfigured
 devices remain discoverable there rather than becoming instrument pages.

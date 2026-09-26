@@ -8,7 +8,7 @@ type Info struct {
 
 // Version mirrors the project-level semantic version declared in the
 // repository-root VERSION file.
-var Version = "0.9.0"
+var Version = "0.10.0"
 
 func Current() Info {
 	return Info{Name: "nilo", Version: Version, IntegrationProtocol: "nilo.integration/1"}

@@ -5,8 +5,13 @@ Official NILO documentation. This is the administrator's reference for the
 that request is allowed to ask for.
 
 It describes the capabilities present in this release. Where a capability is
-deliberately absent, section 8 says so plainly rather than leaving you to
+deliberately absent, section 9 says so plainly rather than leaving you to
 discover it in production.
+
+For plugin, camera, Bench, network and Activity commands, see the
+[CLI reference](../06_SoftwareDocu/CLI_Reference.md). The
+[MCP reference](../06_SoftwareDocu/MCP_Reference.md) documents the shared
+authenticated `/mcp` endpoint, its tool catalog and Camera workflows.
 
 ## Find an appliance before its address is known
 
@@ -65,6 +70,18 @@ editor, and no policy language: the table below is built into NILO.
 |---|---|---|---|---|
 | `status.read` | Read the backend status | yes | yes | yes |
 | `inventory.read` | Read the integration and device inventories | yes | yes | yes |
+| `bench.read` | Read authorized plugins, jobs, artifacts and camera workspace/media state | yes | yes | yes |
+| `bench.execute` | Discover devices, submit/cancel operations and manage owned camera captures | no | yes | yes |
+| `bench.approve` | Approve operations through a human browser session | no | no | yes |
+| `plugins.manage` | Manage plugin/device configuration and camera retention; access other owners' Bench work | no | no | yes |
+| `network.read` | Read network status, traffic and WireGuard readiness | yes | yes | yes |
+| `network.manage` | Change appliance networking and device networks | no | no | yes |
+| `vpn.manage` | Manage WireGuard profiles and tunnel activation | no | no | yes |
+| `vpn.install` | Install WireGuard tooling | no | no | yes |
+| `activity.read` | Read shared audit and operational-event history | no | no | yes |
+| `activity.export` | Export a bounded Activity selection | no | no | yes |
+| `activity.retention.manage` | Change Activity retention policy | no | no | yes |
+| `system.power.manage` | Restart or power off through an interactive browser session | no | yes | yes |
 | `tokens.read.self` | List one's own API tokens | no | yes | yes |
 | `tokens.manage.self` | Create and revoke one's own API tokens | no | yes | yes |
 | `users.read` | List identities, their roles and their state | no | no | yes |
@@ -73,9 +90,11 @@ editor, and no policy language: the table below is built into NILO.
 | `tokens.manage.all` | Revoke or permanently delete any identity's API token | no | no | yes |
 | `password.policy.manage` | Read and change the appliance password policy | no | no | yes |
 
-The set covers the functionality this release exposes. Hardware operations,
-firmware flashing, MCP access and artifact retrieval receive their permissions
-when those interfaces ship.
+These permissions cover the implemented interfaces. MCP uses the same network
+and Bench permissions; there is no separate `mcp.access` permission. Artifact
+retrieval uses `bench.read`. Operations remain subject to integration policy
+and ownership checks. Approval and system power routes require an interactive
+browser session and cannot be automated by an API token.
 
 One caveat worth knowing before you assign roles: the two `tokens.*.self`
 permissions are enforced wherever token management is reachable, but both
@@ -833,7 +852,6 @@ Do not plan around these; they are not in this release.
 - Token rotation, and permanent deletion in local mode: the `--data-dir`
   commands disable and revoke only. Permanent deletion is in the HTTP API, the
   browser page and the remote command line.
-- MCP transport and operation endpoints.
 - Suppressed terminal echo while typing a password. NILO never echoes or prints
   a password itself, but your terminal does while you type it. Prefer piping
   from a secret manager over interactive typing where that matters.

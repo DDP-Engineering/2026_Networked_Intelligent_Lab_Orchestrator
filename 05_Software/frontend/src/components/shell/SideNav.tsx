@@ -86,7 +86,11 @@ export function SideNav({ pages, active, onOpen, nameOf }: SideNavProps) {
 
   function groupedEntry(page: PageDescriptor) {
     const children = childrenOf(page.id);
-    if (children.length === 0 && page.overviewTitleKey === undefined) {
+    if (
+      children.length === 0 &&
+      page.overviewTitleKey === undefined &&
+      !page.navigationOnly
+    ) {
       return entry(page, { child: page.parentId !== undefined });
     }
     const expanded = expandedGroups[page.id] ?? true;
@@ -102,9 +106,17 @@ export function SideNav({ pages, active, onOpen, nameOf }: SideNavProps) {
           <button
             type="button"
             className={`nav-entry ${page.parentId !== undefined ? 'nav-entry-child' : ''} ${groupActive ? 'nav-entry-context' : ''} ${!expanded && groupActive ? 'nav-entry-active' : ''}`}
-            aria-current={!expanded && groupActive ? 'page' : undefined}
+            aria-current={
+              !page.navigationOnly && !expanded && groupActive ? 'page' : undefined
+            }
             aria-label={groupName}
-            onClick={() => onOpen(page.id)}
+            aria-expanded={page.navigationOnly ? expanded : undefined}
+            aria-controls={page.navigationOnly ? listId : undefined}
+            onClick={() =>
+              page.navigationOnly
+                ? setExpandedGroups((current) => ({ ...current, [page.id]: !expanded }))
+                : onOpen(page.id)
+            }
           >
             <Icon name={page.icon} />
             <span className="nav-label">{groupName}</span>

@@ -7,6 +7,12 @@ phase reports and deployment snapshots remain in Git history and task journals.
 
 ## Developer guides
 
+- [CLI reference](CLI_Reference.md): implemented command families, Camera
+  workflows, hardware controls, recording, export and retention.
+- [MCP reference](MCP_Reference.md): connection/authentication, all registered
+  tools, inputs, permissions, results and Camera examples.
+- [Camera integration](Camera_Integration.md): physical-device management,
+  live workspace, media storage and runner contracts.
 - [Development and Simulation Flow](Development_and_Simulation_Flow.md) - the
   approved Windows GUI plus WSL2 backend topology, simulation boundary, daily
   workflow, and verification levels used before Raspberry Pi deployment.

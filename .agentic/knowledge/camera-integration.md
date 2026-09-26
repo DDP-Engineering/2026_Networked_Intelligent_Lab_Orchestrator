@@ -100,8 +100,9 @@ flowchart LR
 - `05_Software/core/internal/store/sqlite/migrations/019_managed_devices.sql`
   and `020_bench_plugin_configuration.sql` - persistent device and package
   configuration.
-- `05_Software/frontend/src/components/pages/CameraSection.tsx` and
-  `CameraWorkspacePage.tsx` - overview/legacy comparison and the two camera work pages;
+- `05_Software/frontend/src/components/pages/CameraWorkspacePage.tsx` - the two
+  per-camera work pages. The Instruments Camera group only expands its devices;
+  it has no overview page.
   `CameraPluginPage.tsx` owns administrator-only appliance configuration.
 - `camera_workspace.go`, `camera_media.go`, `camera_legacy.go` in the Bench package
   and migration `021_camera_workspace.sql` - stream ownership, settings revisions,
@@ -118,6 +119,11 @@ cannot build a production release candidate. Physical Camera and live-view
 acceptance remain separate from isolated package and probe tests.
 
 ## Camera administration
+
+Public command/tool contracts and examples are maintained in the
+[CLI reference](../../06_SoftwareDocu/CLI_Reference.md) and
+[MCP reference](../../06_SoftwareDocu/MCP_Reference.md). Camera uses Core's shared
+MCP endpoint; workspace start/settings/record-start use generic Bench submission.
 
 System > Plugins > Camera is visible only to administrators with plugins.manage.
 The header groups Camera plugin and View activity, with the installed version

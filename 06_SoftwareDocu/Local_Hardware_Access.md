@@ -261,12 +261,18 @@ selection would have stranded the board until somebody reached it physically.
 
 ### 2.8 Current NILO deployment
 
-The board runs NILO 0.9.0 with runtime state in `/var/lib/nilo`. `nilo.service`,
+The board runs NILO 0.10.0 with runtime state in `/var/lib/nilo`. `nilo.service`,
 `nilo-nethelper.service` and the independent recovery timer are active and
 enabled. The core service uses the helper-managed TLS identity and has no
 file-backed certificate or private-key argument. Its served certificate covers
 `nilo-n0hzmysj9v.local` and the provisioning-only `nilo.local`; the helper's
 private key remains root-owned and unreadable by the Core service account.
+
+The 2026-09-27 live-test deployment installed NILO 0.10.0 Core and GUI.
+Its rollback backup is `/var/backups/nilo-0.10.0-20260927-001101`.
+The deployed version, service health, served asset checksums and retained
+capture checksums were verified. See the
+[deployment record](../.agentic/evidence/releases/0.10.0-rpi-20260927.md).
 
 The persisted management allowlist is `wlan0` and `nilo0`. The DDP Wi-Fi and
 NILO-owned WireGuard profiles remain installed, while `eth0` remains the
@@ -284,7 +290,7 @@ check; that is an availability observation, not evidence that its preserved
 NILO configuration changed.
 
 The 2026-09-25 development deployment replaced the ARM64 core, helper, and GUI
-after archiving the prior runtime and state. The current root-only rollback
+after archiving the prior runtime and state. The root-only rollback
 directory is `/var/backups/nilo/pre-0.9.0-20260925T202739`; its
 `runtime-and-state.tar.gz` has SHA-256
 `415f6126f0a90278e3c595fc9912c6f8177199986de230a5f7f2eecbed3495df`.
@@ -323,7 +329,7 @@ The root-only runtime/state backup is
 `/var/backups/nilo/pre-camera-admin-20260926T035020/runtime-and-state.tar.gz`,
 verified SHA-256
 `6bf63b131b5d2b3f9aa932ffbf8b137dea35dfa9ae7d993bc17cf1e3fa1ad4fd`.
-The project version remains 0.9.0 and the installed Camera bundle remains 0.1.0.
+At that deployment, the project version was 0.9.0 and the Camera bundle was 0.1.0.
 Final GUI assets are `index-D-cmzIfi.js` (SHA-256
 `d5b647720659532848e19dbdba8799afbfc7f2e352030b6eda813c413f28aa45`)
 and `index-BIKcA3US.css` (SHA-256

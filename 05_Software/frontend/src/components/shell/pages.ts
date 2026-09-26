@@ -30,6 +30,8 @@ export interface PageDescriptor {
   title?: string;
   /** Parent page whose nested navigation list contains this destination. */
   parentId?: string;
+  /** Expandable navigation container with no workspace page of its own. */
+  navigationOnly?: boolean;
   /** A shorter label for a group row than the page's workspace-tab title. */
   navigationTitleKey?: MessageKey;
   /** The label used when a page-owning group repeats its landing page below. */
@@ -192,8 +194,7 @@ export function buildPages(
           cluster: 'instruments',
           icon: 'instrument',
           title: camera.display_name,
-          overviewTitleKey: 'nav.camera.overview',
-          cameraView: 'overview',
+          navigationOnly: true,
           expandTitleKey: 'nav.camera.expand',
           collapseTitleKey: 'nav.camera.collapse',
           available: true,
@@ -274,5 +275,5 @@ export function findPage(
   pages: readonly PageDescriptor[],
   id: string,
 ): PageDescriptor | undefined {
-  return pages.find((page) => page.id === id);
+  return pages.find((page) => page.id === id && !page.navigationOnly);
 }

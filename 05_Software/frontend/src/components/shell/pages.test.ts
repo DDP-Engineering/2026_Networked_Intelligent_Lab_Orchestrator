@@ -1,7 +1,7 @@
 import type { BenchCoreSession } from '../../api/contract';
 import { describe, expect, it } from 'vitest';
 
-import { buildPages, integrationPageId } from './pages';
+import { buildPages, findPage, integrationPageId } from './pages';
 
 describe('physical Camera navigation', () => {
   const admin: BenchCoreSession = {
@@ -76,8 +76,9 @@ describe('physical Camera navigation', () => {
   it('groups configured physical cameras under Instruments when Camera is enabled', () => {
     const pages = buildPages(admin, [camera], devices, [packageRecord]);
     expect(pages.find((page) => page.id === integrationPageId('camera'))).toMatchObject(
-      { cluster: 'instruments' },
+      { cluster: 'instruments', navigationOnly: true },
     );
+    expect(findPage(pages, integrationPageId('camera'))).toBeUndefined();
     expect(pages.find((page) => page.id === 'plugins:camera')).toMatchObject({
       cluster: 'core',
       parentId: 'plugins',

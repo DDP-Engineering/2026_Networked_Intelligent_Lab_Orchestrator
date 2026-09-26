@@ -142,6 +142,8 @@ and backend.
 | [Development and simulation](06_SoftwareDocu/Development_and_Simulation_Flow.md) | Daily workflow, environments and verification levels |
 | [Repository tools](02_Tools/README.md) | Bootstrap, pinned toolchains, build and diagnostic commands |
 | [CLI and authentication](07_Delivery/NILO_CLI_and_Authentication.md) | Command-line access, identities, roles and tokens |
+| [CLI reference](06_SoftwareDocu/CLI_Reference.md) | Commands, Camera workflows, recording, media export and retention |
+| [MCP reference](06_SoftwareDocu/MCP_Reference.md) | Server connection, tool catalog, permissions and examples |
 | [Network operations](06_SoftwareDocu/Network_Operations.md) | Network workflows, recovery, isolated tests and appliance setup |
 | [Sigrok integration](06_SoftwareDocu/Sigrok_Integration.md) | Current operations, limits, shared interfaces and packaging |
 | [Code style](01_Documentation/Code_Style.md) | Production-code and test conventions |
