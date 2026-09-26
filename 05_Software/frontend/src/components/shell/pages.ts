@@ -45,6 +45,8 @@ export interface PageDescriptor {
   cameraDeviceID?: string;
   /** Camera workspace owned by this destination. */
   cameraView?: 'overview' | 'snapshot' | 'settings' | 'administration';
+  /** Installed plugin whose management view this destination opens. */
+  pluginId?: string;
   /**
    * Whether the page does something. An entry that is not available is still
    * shown, because the navigation shape is agreed, but it is marked so that
@@ -240,18 +242,20 @@ export function buildPages(
   });
 
   const corePages: PageDescriptor[] = core.flatMap((page) =>
-    page.id === 'plugins' && camera
+    page.id === 'plugins'
       ? [
           page,
-          {
-            id: 'plugins:camera',
-            parentId: 'plugins',
-            cluster: 'core',
-            icon: 'plugins',
-            titleKey: 'camera.admin',
-            cameraView: 'administration',
-            available: true,
-          },
+          ...plugins
+            .filter((plugin) => plugin.installed)
+            .map((plugin): PageDescriptor => ({
+              id: `plugins:${plugin.id}`,
+              parentId: 'plugins',
+              cluster: 'core',
+              icon: 'plugins',
+              title: plugin.display_name,
+              pluginId: plugin.id,
+              available: true,
+            })),
         ]
       : [page],
   );

@@ -9,6 +9,7 @@ import type { Catalogue } from './en';
  * RX, TX — are deliberately left as they are.
  */
 export const ro: Catalogue = {
+  'instrument.configure': 'Configurează',
   'camera.title': 'Cameră',
   'camera.admin': 'Configurare cameră',
   'camera.confirmUninstall':

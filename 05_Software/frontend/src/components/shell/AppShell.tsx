@@ -524,6 +524,7 @@ export function AppShell({
     if (
       page.id === 'plugins' ||
       page.id === integrationPageId('sigrok') ||
+      page.pluginId !== undefined ||
       page.cameraView !== undefined
     ) {
       return (
@@ -537,11 +538,14 @@ export function AppShell({
               ? 'catalog'
               : page.id === integrationPageId('sigrok')
                 ? 'legacy-sigrok'
-                : page.cameraView
+                : page.pluginId !== undefined
+                  ? 'administration'
+                  : page.cameraView
           }
+          focusPluginId={page.pluginId}
           focusDevice={page.cameraDeviceID}
           onPluginsChanged={refreshPluginInventory}
-          onOpenCameraAdmin={() => workspace.open_('plugins:camera')}
+          onOpenPluginAdmin={(pluginId) => workspace.open_(`plugins:${pluginId}`)}
         />
       );
     }

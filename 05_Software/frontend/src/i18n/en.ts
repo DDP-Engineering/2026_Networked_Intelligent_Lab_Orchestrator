@@ -7,6 +7,7 @@
  * language choice into a failure nobody associates with the language menu.
  */
 export const en = {
+  'instrument.configure': 'Configure',
   'camera.title': 'Camera',
   'camera.admin': 'Camera configuration',
   'camera.confirmUninstall':

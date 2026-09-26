@@ -16,6 +16,8 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Changed
 
+- Installed plugins now have focused management pages under System > Plugins;
+  page scrollbars extend to the workspace edge.
 - Requirements now reflect current MCP, CLI, Activity and administrator UI behavior; pending integration and hardware acceptance are tracked separately.
 - Component knowledge and context now cover Camera, Network and field interfaces and reflect the current code and release state.
 - Specs now reflect current permissions, simulation identities, integration bundles and delivery status; draft Camera verification gaps remain explicit.

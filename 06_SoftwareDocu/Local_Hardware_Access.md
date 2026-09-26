@@ -299,6 +299,20 @@ byte. This bench smoke test did not sign in, exercise the PLC, or test GPIO.
 
 The preceding 0.8.0 helper-TLS rollback remains at
 `/var/backups/nilo/pre-helper-tls-0.8.0-20260917T114203Z`.
+
+On 2026-09-25, a GUI-only development candidate was deployed from the current
+worktree without changing the 0.9.0 project version or the Core and helper
+binaries. The previous GUI is preserved at
+`/var/backups/nilo/pre-gui-20260925T232139` (including a root-only archive).
+The served JavaScript and CSS SHA-256 digests match the local build:
+`69ca5eb0682c603bac86174da62f7633d6b3b7f3ac82e014e46dbfb229617582`
+and `9b58c7b6b22a3e5a338ebfcb45a0d346f43fabe06d488856a0842ef09abb9e51`.
+After the Core restart, the Core, helper and recovery timer were active; the
+GUI returned HTTP 200, and the protected status API returned HTTP 401 without
+a session.
+An authenticated live browser showed Camera and Sigrok Instruments beneath
+System > Plugins. A scrollable Camera view reached the 1920-pixel viewport edge.
+
 The optional GPIO recovery path remains disabled until the BCM17 button and
 BCM27 LED circuit is physically confirmed.
 

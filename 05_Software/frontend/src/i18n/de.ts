@@ -9,6 +9,7 @@ import type { Catalogue } from './en';
  * are deliberately left as they are.
  */
 export const de: Catalogue = {
+  'instrument.configure': 'Konfigurieren',
   'camera.title': 'Kamera',
   'camera.admin': 'Kamerakonfiguration',
   'camera.confirmUninstall':

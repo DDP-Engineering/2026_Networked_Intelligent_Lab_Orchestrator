@@ -27,8 +27,9 @@ interface Props {
     | 'settings'
     | 'administration';
   focusDevice?: string;
+  focusPluginId?: string;
   onPluginsChanged?: () => void;
-  onOpenCameraAdmin?: () => void;
+  onOpenPluginAdmin?: (pluginId: string) => void;
 }
 
 /** Managed plugins and server-owned transactions. Polling reattaches to durable
@@ -40,8 +41,9 @@ export function PluginsPage({
   onSessionEnded,
   view = 'catalog',
   focusDevice,
+  focusPluginId,
   onPluginsChanged,
-  onOpenCameraAdmin,
+  onOpenPluginAdmin,
 }: Props) {
   const t = useTranslate();
   const [plugins, setPlugins] = useState<InstrumentPlugin[]>([]);
@@ -65,15 +67,18 @@ export function PluginsPage({
   const canExecute = session.permissions.includes('bench.execute');
   const canApprove =
     credential.kind === 'session' && session.permissions.includes('bench.approve');
+  const managedPluginId =
+    view === 'administration' ? (focusPluginId ?? 'camera') : undefined;
   const cameraView =
     view === 'overview' ||
     view === 'snapshot' ||
     view === 'settings' ||
-    view === 'administration';
+    (view === 'administration' && managedPluginId === 'camera');
   const sigrok = cameraView
     ? undefined
     : plugins.find((plugin) => plugin.id === 'sigrok');
   const camera = plugins.find((plugin) => plugin.id === 'camera');
+  const focusedPlugin = plugins.find((plugin) => plugin.id === managedPluginId);
   const visibleJobs = jobs.filter(
     (job) =>
       (cameraView ? job.plugin_id === 'camera' : job.plugin_id === 'sigrok') &&
@@ -189,7 +194,7 @@ export function PluginsPage({
       <header className="page-head">
         <h2>
           {view === 'administration'
-            ? t('camera.admin')
+            ? (focusedPlugin?.display_name ?? t('camera.admin'))
             : view === 'overview'
               ? t('camera.overview')
               : focusDevice
@@ -229,7 +234,7 @@ export function PluginsPage({
         {(view === 'catalog' || view === 'administration') && (
           <section className="instrument-packages" aria-label={t('nav.plugins')}>
             {plugins
-              .filter((plugin) => view === 'catalog' || plugin.id === 'camera')
+              .filter((plugin) => view === 'catalog' || plugin.id === managedPluginId)
               .map((plugin) => (
                 <article className="instrument-card" key={plugin.id}>
                   <h3>
@@ -242,9 +247,14 @@ export function PluginsPage({
                     )}
                   </p>
                   {plugin.error && <p role="status">{plugin.error}</p>}
-                  {view === 'catalog' && plugin.id === 'camera' && plugin.installed && (
-                    <button type="button" onClick={onOpenCameraAdmin}>
-                      {t('camera.configure')}
+                  {view === 'catalog' && plugin.installed && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenPluginAdmin?.(plugin.id)}
+                    >
+                      {plugin.id === 'camera'
+                        ? t('camera.configure')
+                        : t('instrument.configure')}
                     </button>
                   )}
                   {canManage &&

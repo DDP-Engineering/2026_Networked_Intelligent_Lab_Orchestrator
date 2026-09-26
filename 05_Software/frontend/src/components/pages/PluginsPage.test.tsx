@@ -69,6 +69,38 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+it('shows only the selected plugin in its management view', async () => {
+  installColorScheme('light');
+  const camera: InstrumentPlugin = {
+    ...plugin,
+    id: 'camera',
+    display_name: 'Camera',
+    devices: [],
+  };
+  const client = {
+    ...createBenchCoreClient({ baseUrl: '' }),
+    listPlugins: async () => [camera, plugin],
+    listInstrumentJobs: async () => [],
+  };
+  renderInShell(
+    <PluginsPage
+      client={client}
+      credential={sessionCredential('csrf')}
+      session={session}
+      onSessionEnded={() => {}}
+      view="administration"
+      focusPluginId="sigrok"
+    />,
+  );
+  expect(
+    await screen.findByRole('heading', { name: 'Sigrok Instruments', level: 2 }),
+  ).toBeVisible();
+  expect(
+    screen.getByRole('heading', { name: 'Sigrok Instruments 0.1.0', level: 3 }),
+  ).toBeVisible();
+  expect(screen.queryByRole('heading', { name: 'Camera', level: 3 })).toBeNull();
+});
+
 it('submits only digital channels and retains the key across an uncertain retry', async () => {
   installColorScheme('light');
   const submit = vi

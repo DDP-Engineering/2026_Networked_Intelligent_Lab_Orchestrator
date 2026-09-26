@@ -72,6 +72,8 @@ describe('physical Camera navigation', () => {
     expect(pages.find((page) => page.id === 'plugins:camera')).toMatchObject({
       cluster: 'core',
       parentId: 'plugins',
+      title: 'Camera',
+      pluginId: 'camera',
     });
     expect(pages.find((page) => page.id === 'camera:cam-1')).toMatchObject({
       cluster: 'working',
@@ -98,5 +100,40 @@ describe('physical Camera navigation', () => {
   it('uses installed package state when the older integration inventory disagrees', () => {
     const pages = buildPages(null, [camera], devices, []);
     expect(pages.some((page) => page.id === integrationPageId('camera'))).toBe(false);
+  });
+
+  it('shows every installed plugin under System > Plugins, including disabled ones', () => {
+    const pages = buildPages(
+      null,
+      [],
+      [],
+      [
+        packageRecord,
+        {
+          ...packageRecord,
+          id: 'sigrok',
+          display_name: 'Sigrok Instruments',
+          enabled: false,
+          devices: [],
+        },
+        { ...packageRecord, id: 'available', installed: false, devices: [] },
+      ],
+    );
+    expect(
+      pages
+        .filter((page) => page.parentId === 'plugins')
+        .map((page) => ({
+          id: page.id,
+          title: page.title,
+          pluginId: page.pluginId,
+        })),
+    ).toEqual([
+      { id: 'plugins:camera', title: 'Camera', pluginId: 'camera' },
+      {
+        id: 'plugins:sigrok',
+        title: 'Sigrok Instruments',
+        pluginId: 'sigrok',
+      },
+    ]);
   });
 });
