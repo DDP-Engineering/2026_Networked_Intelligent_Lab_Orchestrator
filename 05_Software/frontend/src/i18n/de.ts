@@ -178,6 +178,10 @@ export const de: Catalogue = {
 
   'app.name': 'NILO',
   'nav.label': 'Hauptnavigation',
+  'nav.resize': 'Navigationsbreite',
+  'nav.resize.value': '{width} Pixel',
+  'nav.resize.help':
+    'Zum Anpassen ziehen. Pfeiltasten ändern die Breite; Pos1/Ende setzen die Grenzen. Doppelklick oder Eingabe setzt zurück.',
   'nav.section.working': 'Arbeitsbereich',
   'nav.section.instruments': 'Instrumente',
   'nav.section.core': 'System',

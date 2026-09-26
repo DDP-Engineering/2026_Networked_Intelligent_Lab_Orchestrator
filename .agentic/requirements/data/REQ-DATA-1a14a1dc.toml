@@ -38,7 +38,7 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-The browser interface shall persist the selected theme and language across page loads,
+The browser interface shall persist the selected theme, language and navigation width across page loads,
 and shall write nothing else to durable browser storage, so that no password, session
 secret, cross-site request forgery token or API token secret is stored beside them.
 """
@@ -51,7 +51,7 @@ secret, cross-site request forgery token or API token secret is stored beside th
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "A shell test reloads after selecting theme and language and checks both preferences persist. A sign-in test records durable-storage writes and checks they use only preference keys and contain no password or CSRF token; a token-creation test checks neither browser storage area contains the one-time secret."
+verification = "Shell and splitter tests remount after selecting theme, language and navigation width and check persistence; splitter tests also cover invalid storage, refused writes and temporary viewport bounds. A sign-in test records durable-storage writes and checks they use only preference keys and contain no password or CSRF token; a token-creation test checks neither browser storage area contains the one-time secret."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
@@ -60,11 +60,13 @@ affected_paths = [
     "05_Software/frontend/src/i18n/LanguageProvider.tsx",
     "05_Software/frontend/src/App.test.tsx",
     "05_Software/frontend/src/components/shell/shell.test.tsx",
+    "05_Software/frontend/src/components/shell/useNavigationWidth.ts",
 ]
 
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
+    "05_Software/frontend/src/components/shell/NavigationSplitter.test.tsx::resizes with the keyboard, persists across remounts and resets",
     "05_Software/frontend/src/components/shell/shell.test.tsx::stamps the selected theme on the document root and keeps it",
     "05_Software/frontend/src/App.test.tsx::never writes a password or a CSRF token to a durable store or the console",
     "05_Software/frontend/src/components/AuthenticationPage.test.tsx::discloses the secret once, copies it, and never shows it again",
@@ -79,4 +81,4 @@ priority = "high"   # low | normal | high
 rationale = "Preferences are worth keeping and credentials are not; the storage that survives a reload is exactly the wrong place for anything that authenticates."
 
 created = 2026-09-02
-updated = 2026-09-25
+updated = 2026-09-26

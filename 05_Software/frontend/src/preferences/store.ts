@@ -1,7 +1,7 @@
 /**
  * The only durable browser storage this interface uses.
  *
- * Exactly two keys, both preferences. Routing every write through here is what
+ * Only display preferences. Routing every write through here is what
  * makes the credential rule checkable rather than a habit: a password, a session
  * secret, a cross-site request forgery token and a created API token secret have
  * no path to `localStorage` because no other module touches it.
@@ -16,9 +16,10 @@
 export const PREFERENCE_KEYS = {
   theme: 'nilo.theme',
   language: 'nilo.language',
+  navigationWidth: 'nilo.navigationWidth',
 } as const;
 
-/** One of the two persisted preferences. */
+/** One of the persisted display preferences. */
 export type PreferenceName = keyof typeof PREFERENCE_KEYS;
 
 /** Read a persisted preference, or null when it is absent or unreadable. */

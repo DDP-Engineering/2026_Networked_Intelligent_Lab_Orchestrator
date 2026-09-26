@@ -563,11 +563,18 @@ single `SIM`/`LIVE` indicator stay in the row.
 **System**; System follows the operating system or browser preference and
 changes with it without a reload. The language menu offers **English**,
 **Deutsch** and **Română**. Both selections are stored in `localStorage` under
-`nilo.theme` and `nilo.language`, which are the only two keys this interface
-ever writes: no password, session secret, request-forgery token or API token
+`nilo.theme` and `nilo.language`. Navigation width is stored under
+`nilo.navigationWidth`. These are the only durable keys this interface
+writes: no password, session secret, request-forgery token or API token
 secret is stored beside them. Identifiers, permission names, protocol names,
 API values and everything Bench Core reports stay as sent, whatever the
 language.
+
+**Navigation width.** On wide and compact layouts, drag the vertical splitter
+between navigation and workspace. Its central grip also supports touch. Focus
+the divider and use Left/Right (Shift for larger steps), Home/End for bounds,
+or Enter to reset; double-click also resets. Width stays between 168 and 480
+pixels and below 40% of the viewport. Constrained layouts retain the Menu drawer.
 
 **Network.** The real simulation server reports simulated interfaces and
 WireGuard profiles, applies acknowledged in-memory changes and samples traffic

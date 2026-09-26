@@ -203,6 +203,19 @@ afterEach(() => {
 });
 
 describe('the one compact top row', () => {
+  it('offers a width splitter only when navigation is beside the workspace', async () => {
+    installViewportClass('compact');
+    const shell = renderShell();
+    await benchPage();
+    expect(screen.getByRole('separator', { name: 'Navigation width' })).toBeVisible();
+    shell.unmount();
+    installViewportClass('constrained');
+    renderShell();
+    await benchPage();
+    expect(screen.queryByRole('separator', { name: 'Navigation width' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Menu' })).toBeVisible();
+  });
+
   it('offers appliance power actions only to permitted browser sessions', async () => {
     const api = client(administrator);
     api.getStatus = () =>

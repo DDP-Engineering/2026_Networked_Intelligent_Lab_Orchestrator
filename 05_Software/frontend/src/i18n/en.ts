@@ -175,6 +175,10 @@ export const en = {
   // Shell and navigation
   'app.name': 'NILO',
   'nav.label': 'Main',
+  'nav.resize': 'Navigation width',
+  'nav.resize.value': '{width} pixels',
+  'nav.resize.help':
+    'Drag to resize. Arrow keys adjust width; Home/End set limits. Double-click or Enter resets.',
   'nav.section.working': 'Workspace',
   'nav.section.instruments': 'Instruments',
   'nav.section.core': 'System',

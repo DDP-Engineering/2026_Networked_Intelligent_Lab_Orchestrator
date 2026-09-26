@@ -1,4 +1,11 @@
-import { useCallback, useMemo, useEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
 
 import type { BenchCoreClient, Credential } from '../../api/client';
 import type {
@@ -43,6 +50,8 @@ import { AboutPage, IntegrationPage } from '../pages/SimplePages';
 import { Icon } from './Icon';
 import { NavDrawer } from './NavDrawer';
 import { SideNav } from './SideNav';
+import { NavigationSplitter } from './NavigationSplitter';
+import { useNavigationWidth } from './useNavigationWidth';
 import { TopRow } from './TopRow';
 import { useViewportClass } from './useViewportClass';
 import { buildPages, findPage, integrationPageId, type PageDescriptor } from './pages';
@@ -89,6 +98,7 @@ export function AppShell({
 }: AppShellProps) {
   const t = useTranslate();
   const viewport = useViewportClass();
+  const navigation = useNavigationWidth(viewport);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [powerAction, setPowerAction] = useState<PowerAction | null>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
@@ -331,7 +341,15 @@ export function AppShell({
   };
 
   return (
-    <div className="shell">
+    <div
+      className="shell"
+      style={
+        {
+          '--nav-width': `${navigation.width}px`,
+          '--nav-width-compact': `${navigation.width}px`,
+        } as CSSProperties
+      }
+    >
       <div className="shell-brand">
         {viewport === 'constrained' && (
           <button
@@ -373,12 +391,21 @@ export function AppShell({
       />
 
       {viewport !== 'constrained' && (
-        <SideNav
-          pages={pages}
-          active={workspace.active}
-          onOpen={workspace.open_}
-          nameOf={nameOf}
-        />
+        <div className="shell-navigation" id="main-navigation">
+          <SideNav
+            pages={pages}
+            active={workspace.active}
+            onOpen={workspace.open_}
+            nameOf={nameOf}
+          />
+          <NavigationSplitter
+            width={navigation.width}
+            min={navigation.min}
+            max={navigation.max}
+            onResize={navigation.setWidth}
+            onReset={navigation.reset}
+          />
+        </div>
       )}
       {drawerOpen && (
         <NavDrawer onDismiss={() => setDrawerOpen(false)}>

@@ -179,6 +179,10 @@ export const ro: Catalogue = {
 
   'app.name': 'NILO',
   'nav.label': 'Navigare principală',
+  'nav.resize': 'Lățimea navigării',
+  'nav.resize.value': '{width} pixeli',
+  'nav.resize.help':
+    'Trageți pentru redimensionare. Săgețile ajustează lățimea; Home/End setează limitele. Dublu clic sau Enter resetează.',
   'nav.section.working': 'Spațiu de lucru',
   'nav.section.instruments': 'Instrumente',
   'nav.section.core': 'Sistem',

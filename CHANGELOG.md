@@ -7,6 +7,8 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Added
 
+- Resizable navigation with pointer and keyboard controls, a remembered width,
+  and responsive limits that preserve workspace space.
 - Physical Camera integration with managed devices, controls, retained snapshots,
   bounded previews, composition and browser, CLI and MCP access in three languages.
 - Offline Camera candidate builds require locked target dependencies and embed

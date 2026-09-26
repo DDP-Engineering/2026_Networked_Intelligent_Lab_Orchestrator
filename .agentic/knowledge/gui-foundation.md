@@ -16,6 +16,14 @@ Network workflows and shared small-screen rules are mapped in
 
 ## Purpose and boundaries
 
+The wide and compact shells have a vertical navigation splitter. Drag its rail
+or 44-pixel grip, use Left/Right arrows (Shift for larger steps), or Home/End
+for the limits. Double-click or Enter restores the viewport's default width.
+Width is bounded to 168-480 pixels and at most 40% of the viewport; a temporary
+window shrink preserves the saved preference. Constrained screens use the menu
+drawer. `NavigationSplitter.test.tsx` covers dragging, cancellation, keyboard
+controls, persistence, reset and window bounds.
+
 The browser GUI foundation provides NILO's native Windows development
 interface while keeping the deployed appliance boundary static. It gives
 developers a locked, testable React and TypeScript project in which a human
@@ -266,7 +274,7 @@ runtime status.
   key set, selected from the top row, leaving identifiers untranslated.
 - `REQ-UX-811bdde9` - reports appliance network state only where the backend
   reported it, and says so plainly where it did not.
-- `REQ-DATA-1a14a1dc` - persists exactly the theme and the language, and nothing
+- `REQ-DATA-1a14a1dc` - persists theme, language and navigation width, and nothing
   that authenticates.
 - `REQ-UX-144bf035` - About places permanent identity beside its title and the
   friendly-name/Identify controls first, then groups software/API/protocol,
@@ -301,7 +309,7 @@ flowchart LR
     pages["Bench, Camera administration and physical views, Network, Activity, Authentication, About"]
     tokens["styles/tokens.css: one semantic palette, three themes"]
     catalogue["i18n: en, de, ro over one key set"]
-    prefs["preferences/store: nilo.theme and nilo.language"]
+    prefs["preferences/store: theme, language and navigation width"]
     admin["AuthenticationPage(view): fetch-free dispatcher"]
     users["UsersPage: identities and user mutations"]
     apitokens["ApiTokensPage: safe token records and one-time disclosure"]
@@ -452,7 +460,7 @@ visible.
 - `05_Software/frontend/src/styles/shell.css` - the shell grid and every
   component in it, declaring no literal colour.
 - `05_Software/frontend/src/preferences/store.ts` - the only durable browser
-  storage this interface uses, and the two keys it holds.
+  storage this interface uses, holding theme, language and navigation width.
 - `05_Software/frontend/src/theme/` and `src/i18n/` - the theme and language
   providers, their contexts, and the three message catalogues.
 - `05_Software/frontend/src/components/shell/` - `AppShell`, `TopRow`,

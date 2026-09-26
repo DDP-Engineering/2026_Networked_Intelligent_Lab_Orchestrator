@@ -362,6 +362,22 @@ the user-assigned camera name were preserved.
 The Camera administration adjustments and Pi deployment task were closed on
 2026-09-26 at the user's request, with the verification recorded above.
 
+The navigation splitter GUI was deployed on 2026-09-26 with the project still
+at 0.9.0. The production build used the accepted container; its implementation
+had passed 539 frontend tests, lint and formatting. The previous GUI is retained
+at `/var/backups/nilo/pre-navigation-splitter-20260926T083902/gui.tar.gz`, with
+verified SHA-256
+`12b1fb6674a8dfc99a5481412a8a85075de34b32813e1ab4c3a90747c3ac6c02`.
+The served `index-BG2EI9Kr.js` matches SHA-256
+`c4ba044eb464fbddbaf0d06bca04ac3f18b5569aabbf09eed82efdb3c2295d85`;
+installed `index-CRztB_4g.css` matches
+`c9daaf234d09f7e01a287ac0f8f77f2ca905e1d5fbc2c5fa6b27c0df1110c622`.
+Both services are active and HTTPS returns 200. Authenticated Chrome confirmed
+dragging from 216 to 336 pixels and preserving that width after reload. Camera
+settings then showed full navigation labels. Core, helper and plugin binaries
+were unchanged; no active queued, running or pending-approval work was present
+at the deployment check.
+
 The optional GPIO recovery path remains disabled until the BCM17 button and
 BCM27 LED circuit is physically confirmed.
 
