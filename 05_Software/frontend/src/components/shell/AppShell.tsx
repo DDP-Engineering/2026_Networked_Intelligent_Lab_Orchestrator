@@ -42,6 +42,7 @@ import { useTranslate } from '../../i18n/languages';
 import { AuthenticationPage } from '../AuthenticationPage';
 import { PowerConfirmation } from '../PowerConfirmation';
 import { CameraPluginPage } from '../pages/CameraPluginPage';
+import { CameraWorkspacePage } from '../pages/CameraWorkspacePage';
 import { PluginsPage } from '../pages/PluginsPage';
 import { BenchPage } from '../pages/BenchPage';
 import { ActivityPage } from '../pages/ActivityPage';
@@ -455,6 +456,26 @@ export function AppShell({
   );
 
   function renderPage(page: PageDescriptor) {
+    if (
+      page.cameraDeviceID &&
+      (page.cameraView === 'live' ||
+        page.cameraView === 'settings' ||
+        page.cameraView === 'recordings')
+    ) {
+      const device = pluginInventory
+        ?.find((plugin) => plugin.id === 'camera')
+        ?.devices.find((item) => item.id === page.cameraDeviceID);
+      return device ? (
+        <CameraWorkspacePage
+          key={device.id}
+          client={client}
+          credential={credential}
+          session={session}
+          device={device}
+          view={page.cameraView === 'settings' ? 'live' : page.cameraView}
+        />
+      ) : null;
+    }
     if (page.id === 'bench') {
       return (
         <BenchPage
@@ -584,7 +605,9 @@ export function AppShell({
                 ? 'legacy-sigrok'
                 : page.pluginId !== undefined
                   ? 'administration'
-                  : page.cameraView
+                  : page.cameraView === 'live' || page.cameraView === 'recordings'
+                    ? 'overview'
+                    : page.cameraView
           }
           focusPluginId={page.pluginId}
           focusDevice={page.cameraDeviceID}

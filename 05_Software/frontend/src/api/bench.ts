@@ -41,6 +41,7 @@ export interface InstrumentPlugin {
 export interface InstrumentSubmission {
   plugin_id: string;
   operation:
+    | 'workspace'
     | 'capture'
     | 'decode_uart'
     | 'snapshot'

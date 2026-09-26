@@ -102,6 +102,13 @@ func (r *jobRunner) Revalidate(ctx context.Context, request domain.OperationRequ
 }
 
 func (r *jobRunner) Execute(ctx context.Context, request protocol.ExecuteRequest, sink protocol.EventSink) (protocol.ExecuteResult, error) {
+	if r.plugin.ID == "camera" && request.Operation == "workspace" {
+		result, err := r.manager.executeCameraCommand(ctx, r.job, r.plugin)
+		if err == nil {
+			_, err = r.manager.db().ExecContext(ctx, `UPDATE bench_jobs SET result_json=? WHERE id=?`, string(result.Data), r.job.ID)
+		}
+		return result, err
+	}
 	if err := os.Mkdir(r.stage, 0700); err != nil {
 		return protocol.ExecuteResult{}, err
 	}

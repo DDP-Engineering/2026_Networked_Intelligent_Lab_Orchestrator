@@ -1,0 +1,28 @@
+schema = 1
+id = "REQ-FUNC-9fe624bc"
+title = "Operate a bounded physical camera workspace"
+status = "draft"
+requirement = """
+Each enabled configured camera shall provide RealTime View and Recordings.
+RealTime View shall combine the live image and capture buttons with three
+initially collapsed sections: Camera settings, Overlays and Hardware controls.
+The title and capture buttons shall share a wrapping row. One owned physical stream supplies processed preview, JPEG/PNG
+snapshots and MP4/H.264 normal video or time-lapse. Settings include advertised
+resolution/format/frame rates, zoom, grayscale, inversion, flips, overlays and
+available hardware controls. Saved media embeds the preview's transforms and
+capture-time overlays. Recordings expose thumbnails, playback, export and
+confirmed deletion. Capture settings remain fixed during an active recording.
+Policy approval and settings revisions govern commands; stopping owned work
+requires no new approval. Administrator retention defaults are 100 snapshots,
+2 GiB per camera, 500 MiB or 600 seconds per video, and a disk reserve of at
+least 2 GiB or 10 percent. All captures shall appear in one chronological library and follow the same
+retention policy, including captures created before the workspace was introduced.
+Incomplete files remain accounted for and active downloads prevent deletion.
+"""
+verification = "Run workspace unit/component tests, then verify processed live view, normal/time-lapse files, hardware controls, stop/disconnect, limits and media actions on the physical Pi. Browser acceptance includes narrow and large viewports; unit tests alone do not establish hardware acceptance."
+affected_paths = ["05_Software/integrations/camera/", "05_Software/core/internal/bench/camera_workspace.go", "05_Software/core/internal/bench/camera_media.go", "05_Software/core/internal/httpapi/camera_workspace.go", "05_Software/frontend/src/components/pages/CameraWorkspacePage.tsx"]
+linked_tests = ["05_Software/integrations/camera/tests/test_workspace.py", "05_Software/core/internal/bench/camera_workspace_test.go", "05_Software/core/internal/bench/camera_library_test.go", "05_Software/frontend/src/components/pages/CameraWorkspacePage.test.tsx", "02_Tools/tests/camera/verify_workspace.py"]
+spec = "specs/camera-workspace-plan.md"
+priority = "high"
+created = 2026-09-26
+updated = 2026-09-26

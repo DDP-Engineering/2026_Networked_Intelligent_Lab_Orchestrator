@@ -1,3 +1,4 @@
+import { cameraEn } from './camera';
 /**
  * The English catalogue, and the key set every other language must satisfy.
  *
@@ -7,6 +8,7 @@
  * language choice into a failure nobody associates with the language menu.
  */
 export const en = {
+  ...cameraEn,
   'message.info': 'Info',
   'message.warning': 'Warning',
   'message.error': 'Error',

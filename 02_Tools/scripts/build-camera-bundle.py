@@ -81,9 +81,10 @@ def copy_target_runtime(source: Path, target: Path, architecture: str) -> str:
         raise ValueError("Target runtime must be a regular directory")
     manifest = source / "runtime-manifest.json"
     python = source / "bin/python3"
+    media_tools = [source / "bin" / name for name in ("ffmpeg", "ffprobe")]
     notices = source / "THIRD_PARTY_NOTICES.txt"
-    if any(not item.is_file() or item.is_symlink() for item in (manifest, python, notices)):
-        raise ValueError("Target runtime is missing its manifest, Python or notices")
+    if any(not item.is_file() or item.is_symlink() for item in (manifest, python, notices, *media_tools)):
+        raise ValueError("Target runtime is missing its manifest, Python, FFmpeg/FFprobe or notices")
     details = json.loads(manifest.read_text(encoding="utf-8"))
     if details.get("architecture") != architecture or not notices.read_text(encoding="utf-8").strip():
         raise ValueError("Target runtime architecture or notices are invalid")
@@ -91,6 +92,10 @@ def copy_target_runtime(source: Path, target: Path, architecture: str) -> str:
     machine = {"arm64": 183, "amd64": 62}[architecture]
     if len(header) < 20 or header[:6] != b"\x7fELF\x02\x01" or int.from_bytes(header[18:20], "little") != machine:
         raise ValueError("Target interpreter architecture is invalid")
+    for executable in media_tools:
+        header = executable.read_bytes()[:20]
+        if len(header) < 20 or header[:6] != b"\x7fELF\x02\x01" or int.from_bytes(header[18:20], "little") != machine:
+            raise ValueError("Target media-tool architecture is invalid")
     total = 0
     observed = []
     for item in sorted(source.rglob("*")):
@@ -138,14 +143,13 @@ def build(project: Path, dependency_root: Path, wheelhouse: Path, destination: P
             "from nilo_camera.__main__ import main\n"
             "main()\n"
         )
-        runtime_manifest_sha256 = None
         if runtime_root is not None:
             dependency_notices = dependency_root.parent / "THIRD_PARTY_NOTICES.txt"
             if (not dependency_notices.is_file() or dependency_notices.is_symlink()
                     or not dependency_notices.read_text(encoding="utf-8").strip()):
                 raise ValueError("Camera dependencies require nonempty third-party notices")
             copy_tree(dependency_notices, stage / "THIRD_PARTY_NOTICES.txt")
-            runtime_manifest_sha256 = copy_target_runtime(runtime_root, stage / "runtime", architecture)
+            copy_target_runtime(runtime_root, stage / "runtime", architecture)
             (stage / "bootstrap.py").write_text(bootstrap, encoding="utf-8", newline="\n")
             (stage / "runner").write_text(
                 "#!/bin/sh\n"
@@ -158,10 +162,14 @@ def build(project: Path, dependency_root: Path, wheelhouse: Path, destination: P
             (stage / "runner").write_text("#!/usr/bin/env python3\n" + bootstrap,
                                           encoding="utf-8", newline="\n")
         (stage / "runner").chmod(0o755)
+        runtime_bytes = sum(p.stat().st_size for p in (stage / "runtime").rglob("*") if p.is_file())
         (stage / "runtime.json").write_text(json.dumps({
             "architecture": architecture,
             "self_contained": runtime_root is not None,
-            "source_manifest_sha256": runtime_manifest_sha256,
+            "backend": "v4l2-ffmpeg",
+            "measured_bytes": runtime_bytes,
+            "maximum_bytes": (runtime_bytes * 120 + 99) // 100,
+            "project_version": (project.parents[2] / "VERSION").read_text().strip(),
         }, sort_keys=True, indent=2) + "\n", encoding="utf-8")
         descriptor = json.loads((project / "manifest.json").read_text(encoding="utf-8"))
         descriptor["platforms"] = [{"os": "linux", "architecture": architecture}]
@@ -188,16 +196,68 @@ def build(project: Path, dependency_root: Path, wheelhouse: Path, destination: P
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project", type=Path, required=True)
-    parser.add_argument("--dependency-root", type=Path, required=True)
-    parser.add_argument("--wheelhouse", type=Path, required=True)
+    parser.add_argument("--dependency-root", type=Path)
+    parser.add_argument("--wheelhouse", type=Path)
+    parser.add_argument("--base-bundle", type=Path,
+                        help="reuse a fully verified bench bundle's existing target dependencies")
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--architecture", choices=sorted(PILLOW_WHEELS), required=True)
     parser.add_argument("--runtime-root", type=Path,
                         help="preverified architecture-matched interpreter closure")
     arguments = parser.parse_args()
-    build(arguments.project, arguments.dependency_root, arguments.wheelhouse,
-          arguments.out, arguments.architecture, arguments.runtime_root)
+    if arguments.base_bundle:
+        if arguments.runtime_root or arguments.dependency_root or arguments.wheelhouse:
+            parser.error("--base-bundle is exclusive with fresh build inputs")
+        refresh_bench_bundle(arguments.project, arguments.base_bundle, arguments.out, arguments.architecture)
+    else:
+        if not arguments.dependency_root or not arguments.wheelhouse:
+            parser.error("fresh builds require --dependency-root and --wheelhouse")
+        build(arguments.project, arguments.dependency_root, arguments.wheelhouse,
+              arguments.out, arguments.architecture, arguments.runtime_root)
     print(arguments.out.resolve())
+
+
+def refresh_bench_bundle(project: Path, base: Path, destination: Path, architecture: str) -> None:
+    """Replace first-party code while retaining a verified bench dependency closure."""
+    if destination.exists():
+        raise ValueError("Bundle destination already exists")
+    runtime = json.loads((base / "runtime.json").read_text(encoding="utf-8"))
+    if runtime.get("self_contained") is not False or runtime.get("architecture") != architecture:
+        raise ValueError("Base must be a matching bench bundle")
+    index_bytes = (base / "files.sha256.json").read_bytes()
+    index = json.loads(index_bytes)
+    observed = {}
+    for item in base.rglob("*"):
+        if item.is_symlink() or not (item.is_file() or item.is_dir()):
+            raise ValueError("Base contains a linked or special file")
+        if item.is_file() and item.name != "files.sha256.json":
+            observed[item.relative_to(base).as_posix()] = hashlib.sha256(item.read_bytes()).hexdigest()
+    if observed != index:
+        raise ValueError("Base inventory integrity mismatch")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="nilo-camera-refresh-", dir=destination.parent) as temporary:
+        stage = Path(temporary) / "camera"
+        shutil.copytree(base, stage)
+        for item in [stage, *stage.rglob("*")]:
+            item.chmod(0o755 if item.is_dir() or item.name == "runner" else 0o644)
+        for relative in ("python/nilo_camera", "schemas"):
+            target = (stage / relative).resolve()
+            if not target.is_relative_to(stage.resolve()):
+                raise ValueError("Unconfined refresh target")
+            shutil.rmtree(target)
+        copy_tree(project / "src/nilo_camera", stage / "python/nilo_camera")
+        copy_tree(project / "schemas", stage / "schemas")
+        descriptor = json.loads((project / "manifest.json").read_text(encoding="utf-8"))
+        descriptor["platforms"] = [{"os": "linux", "architecture": architecture}]
+        payload = {p.relative_to(stage).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+                   for p in sorted(stage.rglob("*")) if p.is_file() and p.name not in ("manifest.json", "files.sha256.json")}
+        descriptor["package"]["integrity"] = "sha256:" + hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
+        (stage / "manifest.json").write_text(json.dumps(descriptor, indent=2) + "\n", encoding="utf-8")
+        inventory = {p.relative_to(stage).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+                     for p in sorted(stage.rglob("*")) if p.is_file() and p.name != "files.sha256.json"}
+        (stage / "files.sha256.json").write_text(json.dumps(inventory, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        assert_native_architecture(stage / "python", architecture)
+        stage.rename(destination)
 
 
 if __name__ == "__main__":

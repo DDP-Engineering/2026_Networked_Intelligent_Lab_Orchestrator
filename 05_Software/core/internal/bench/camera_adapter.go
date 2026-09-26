@@ -114,6 +114,10 @@ func cameraCanonicalSubmission(input Submission) (Submission, error) {
 	}
 	allowed := map[string]bool{"width": true, "height": true, "format": true, "frame_interval": true, "controls": true, "processing": true, "encoding": true, "jpeg_quality": true, "maximum_dimension": true}
 	switch input.Operation {
+	case "workspace":
+		if _, err := validateCameraCommand(input.Parameters); err != nil {
+			return input, err
+		}
 	case "snapshot":
 		for key := range value {
 			if !allowed[key] {
@@ -185,6 +189,9 @@ func cameraRecord(ctx context.Context, manager *Manager, id string) (sqlite.Mana
 }
 
 func cameraValidateSubmission(ctx context.Context, manager *Manager, _ identity.Actor, _ Plugin, input Submission) error {
+	if input.Operation != "workspace" && manager.cameraBusy(input.DeviceID) {
+		return ErrBusy
+	}
 	record, err := cameraRecord(ctx, manager, input.DeviceID)
 	if err != nil {
 		return err

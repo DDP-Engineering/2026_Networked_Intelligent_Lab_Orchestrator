@@ -9,12 +9,13 @@ When an authenticated plugin inventory reports an installed Camera package, the
 System Plugins tree shall expose its administration page only to administrators
 with plugins.manage; while Camera is enabled, the Instruments tree shall expose
 its overview and each configured, enabled physical
-camera by stable record ID with Snapshot and Settings destinations. A failed
+camera by stable record ID with RealTime View and Recordings destinations. Camera
+settings, overlays and hardware controls are collapsible within RealTime View. A failed
 inventory refresh retains the last known tree and open pages.
 """
-verification = "Supply installed, disabled, renamed, unconfigured and absent Camera records to the route builder; assert stable nested IDs, displayed names and System/Instruments visibility. Render the recursive sidebar and open a nested Settings page."
+verification = "Supply installed, disabled, renamed, unconfigured and absent Camera records to the route builder; assert stable nested IDs, displayed names and System/Instruments visibility. Render the recursive sidebar and open a nested camera page; verify the three settings groups start collapsed in RealTime View."
 affected_paths = ["05_Software/frontend/src/components/shell/pages.ts", "05_Software/frontend/src/components/shell/SideNav.tsx", "05_Software/frontend/src/components/shell/AppShell.tsx"]
-linked_tests = ["05_Software/frontend/src/components/shell/pages.test.ts", "05_Software/frontend/src/components/shell/SideNav.test.tsx"]
+linked_tests = ["05_Software/frontend/src/components/shell/pages.test.ts", "05_Software/frontend/src/components/shell/SideNav.test.tsx", "05_Software/frontend/src/components/pages/CameraWorkspacePage.test.tsx"]
 spec = ""
 priority = "high"
 rationale = "Plugin state and configured names are owned by the appliance."

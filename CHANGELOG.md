@@ -7,6 +7,8 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Added
 
+- Per-camera live view, processed snapshots and MP4/time-lapse recording, with
+  hardware controls, overlays, a media library and bounded storage retention.
 - Resizable navigation with pointer and keyboard controls, a remembered width,
   and responsive limits that preserve workspace space.
 - Physical Camera integration with managed devices, controls, retained snapshots,
@@ -17,6 +19,12 @@ one project-level Semantic Version, declared in the root `VERSION` file.
   later Raspberry Pi and mini PC acceptance runs.
 
 ### Changed
+
+- RealTime View combines the title and capture toolbar with three collapsible
+  settings sections, replacing the separate camera Settings page.
+
+- All camera captures now share one library and retention policy, including
+  snapshots saved before the camera workspace was introduced.
 
 - Camera configuration uses one responsive frame with a wrapping toolbar and
   connected-camera rows, retaining setup and re-enable access without status clutter.

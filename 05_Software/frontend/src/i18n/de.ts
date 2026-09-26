@@ -1,3 +1,4 @@
+import { cameraDe } from './camera';
 import type { Catalogue } from './en';
 
 /**
@@ -9,6 +10,7 @@ import type { Catalogue } from './en';
  * are deliberately left as they are.
  */
 export const de: Catalogue = {
+  ...cameraDe,
   'message.info': 'Information',
   'message.warning': 'Warnung',
   'message.error': 'Fehler',

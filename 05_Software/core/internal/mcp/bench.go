@@ -54,6 +54,58 @@ func registerBenchTools(server *sdk.Server, options HandlerOptions) {
 		})
 	}
 	text := func() map[string]any { return map[string]any{"type": "string"} }
+	register("camera_workspace_status", "Read camera workspace state, settings revision, recording progress and storage limits.", true, map[string]any{"device_id": text()}, []string{"device_id"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID string `json:"device_id"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.CameraWorkspace(ctx, a, input.ID)
+	})
+	register("camera_workspace_stop", "Stop an owned camera recording or live session without approving a new operation.", false, map[string]any{"device_id": text(), "action": map[string]any{"type": "string", "enum": []string{"stop", "record_stop"}}}, []string{"device_id", "action"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID     string `json:"device_id"`
+			Action string `json:"action"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		err := options.Bench.StopCamera(ctx, a, input.ID, input.Action)
+		return map[string]bool{"stopped": err == nil}, err
+	})
+	register("camera_media_list", "List 24 authorized captures. Content downloads use the authenticated /api/v1/camera-media/{id}/content HTTP endpoint.", true, map[string]any{"device_id": text(), "offset": map[string]any{"type": "integer", "minimum": 0}}, []string{"device_id"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID     string `json:"device_id"`
+			Offset int    `json:"offset"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.CameraMediaList(ctx, a, input.ID, input.Offset)
+	})
+	register("camera_media_delete", "Permanently delete an owned completed or incomplete capture. Active media is refused.", false, map[string]any{"media_id": text()}, []string{"media_id"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID string `json:"media_id"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		err := options.Bench.DeleteCameraMedia(ctx, a, input.ID)
+		return map[string]bool{"deleted": err == nil}, err
+	})
+	register("camera_retention_configure", "Set camera retention limits at the observed revision. Requires plugins.manage and a stopped camera. All completed captures share the same automatic retention policy.", false, map[string]any{"device_id": text(), "revision": map[string]any{"type": "integer", "minimum": 0}, "limits": map[string]any{"type": "object"}}, []string{"device_id", "revision", "limits"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID       string                `json:"device_id"`
+			Revision int64                 `json:"revision"`
+			Limits   bench.CameraRetention `json:"limits"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		err := options.Bench.SetCameraRetention(ctx, a, input.ID, input.Revision, input.Limits)
+		return map[string]bool{"saved": err == nil}, err
+	})
 	register("plugins_list", "List available and installed plugins and enabled state.", true, map[string]any{}, []string{}, func(ctx context.Context, a identity.Actor, _ json.RawMessage) (any, error) {
 		return options.Bench.ListPlugins(ctx, a)
 	})

@@ -233,6 +233,8 @@ func (m *Manager) Action(ctx context.Context, actor identity.Actor, id, action s
 }
 
 func (m *Manager) OpenArtifact(ctx context.Context, actor identity.Actor, id string) (io.ReadCloser, domain.Artifact, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	job, err := m.GetJob(ctx, actor, id)
 	if err != nil {
 		return nil, domain.Artifact{}, err
@@ -244,5 +246,10 @@ func (m *Manager) OpenArtifact(ctx context.Context, actor identity.Actor, id str
 	if err != nil {
 		return nil, domain.Artifact{}, err
 	}
-	return m.artifacts.Open(ctx, artifactID)
+	reader, metadata, err := m.artifacts.Open(ctx, artifactID)
+	if err == nil && job.PluginID == "camera" {
+		m.cameraReads[id]++
+		return &cameraLegacyReader{ReadCloser: reader, manager: m, id: id}, metadata, nil
+	}
+	return reader, metadata, err
 }

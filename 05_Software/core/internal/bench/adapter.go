@@ -42,7 +42,7 @@ var familyAdapters = map[string]familyAdapter{
 	},
 	"camera": {
 		displayName:        "Camera",
-		operations:         map[string]bool{"discover_devices": false, "snapshot": true, "get_controls": false, "set_controls": true, "reset_controls": true},
+		operations:         map[string]bool{"discover_devices": false, "snapshot": true, "get_controls": false, "set_controls": true, "reset_controls": true, "workspace": true, "stream": true},
 		artifacts:          map[string]struct{}{"image": {}},
 		canonicalize:       cameraCanonicalSubmission,
 		resource:           cameraResource,

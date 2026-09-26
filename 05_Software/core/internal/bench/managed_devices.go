@@ -36,6 +36,7 @@ func (manager *Manager) ConfigurePlugin(ctx context.Context, actor identity.Acto
 	}
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
+	if manager.cameraBusy(pluginID) { return sqlite.PluginConfiguration{}, ErrBusy }
 	plugin, err := manager.loadPlugin(ctx, pluginID)
 	if err != nil {
 		return sqlite.PluginConfiguration{}, err
@@ -92,6 +93,7 @@ func (manager *Manager) ConfigureDevice(ctx context.Context, actor identity.Acto
 	}
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
+	if manager.cameraBusy(deviceID) { return Device{}, ErrBusy }
 	plugin, err := manager.loadPlugin(ctx, pluginID)
 	if err != nil {
 		return Device{}, err
@@ -187,6 +189,7 @@ func (manager *Manager) RebindDevice(ctx context.Context, actor identity.Actor, 
 	}
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
+	if manager.cameraBusy(deviceID) { return Device{}, ErrBusy }
 	plugin, err := manager.loadPlugin(ctx, pluginID)
 	if err != nil {
 		return Device{}, err
@@ -235,6 +238,7 @@ func (manager *Manager) ForgetDevice(ctx context.Context, actor identity.Actor, 
 	}
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
+	if manager.cameraBusy(deviceID) { return ErrBusy }
 	if err := manager.record(ctx, actor, "device.forget_requested", pluginID+"/"+deviceID, map[string]any{"revision": revision}); err != nil {
 		return err
 	}
@@ -258,6 +262,7 @@ func (manager *Manager) SetDeviceEnabled(ctx context.Context, actor identity.Act
 	}
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
+	if manager.cameraBusy(deviceID) { return Device{}, ErrBusy }
 	plugin, err := manager.loadPlugin(ctx, pluginID)
 	if err != nil {
 		return Device{}, err
@@ -307,6 +312,7 @@ func (manager *Manager) RetryDevice(ctx context.Context, actor identity.Actor, p
 	}
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
+	if manager.cameraBusy(deviceID) { return Device{}, ErrBusy }
 	plugin, err := manager.loadPlugin(ctx, pluginID)
 	if err != nil {
 		return Device{}, err

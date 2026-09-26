@@ -57,7 +57,7 @@ func TestBenchToolsUseCurrentTokenScopes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(list.Tools) != 22 {
+	if len(list.Tools) != 27 {
 		t.Fatalf("tools: %d", len(list.Tools))
 	}
 	for _, expected := range []string{"camera_snapshot", "camera_get_controls", "camera_set_controls", "camera_reset_controls", "plugin_devices", "plugin_configuration", "plugin_configure", "plugin_device_configure", "plugin_device_rebind", "plugin_device_forget", "plugin_device_action"} {
@@ -82,6 +82,8 @@ func TestBenchToolsUseCurrentTokenScopes(t *testing.T) {
 		{"bench_list_jobs", map[string]any{}, false},
 		{"plugin_lifecycle", map[string]any{"plugin_id": "sigrok", "action": "install"}, true},
 		{"network_get_status", map[string]any{}, true},
+		{"camera_workspace_stop", map[string]any{"device_id": "cam-1", "action": "record_stop"}, true},
+		{"camera_media_delete", map[string]any{"media_id": "other-capture"}, true},
 	} {
 		result, err := session.CallTool(ctx, &sdk.CallToolParams{Name: test.name, Arguments: test.input})
 		if err != nil {

@@ -77,6 +77,7 @@ func registerBench(mux *http.ServeMux, manager *bench.Manager, guard accessGuard
 			handler(w, r)
 		}))
 	}
+	registerCameraWorkspace(register, manager)
 	register("GET /api/v1/plugins", auth.PermissionBenchRead, func(w http.ResponseWriter, r *http.Request) {
 		actor, _ := actorFrom(r.Context())
 		plugins, err := manager.ListPlugins(r.Context(), actor)

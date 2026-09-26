@@ -18,6 +18,8 @@ def test_camera_manifest_declares_phase_one_operations():
         "get_controls",
         "set_controls",
         "reset_controls",
+        "workspace",
+        "stream",
     }
     assert manifest["artifacts"] == [
         {
@@ -70,4 +72,6 @@ def test_camera_runner_answers_protocol_hello_and_describe():
         "get_controls",
         "set_controls",
         "reset_controls",
+        "workspace",
+        "stream",
     ]

@@ -444,7 +444,7 @@ func copyCameraBundle(t *testing.T, bundleDir string) {
 	source := filepath.Join("..", "..", "..", "integrations", "camera")
 	target := filepath.Join(bundleDir, "camera")
 	files := map[string]string{}
-	for _, name := range []string{"manifest.json", "runner", "schemas/plugin.schema.json", "schemas/device.schema.json", "schemas/discover.input.schema.json", "schemas/snapshot.input.schema.json", "schemas/controls.input.schema.json", "schemas/reset.input.schema.json", "schemas/result.schema.json", "schemas/event.schema.json"} {
+	for _, name := range []string{"manifest.json", "runner", "schemas/plugin.schema.json", "schemas/device.schema.json", "schemas/discover.input.schema.json", "schemas/snapshot.input.schema.json", "schemas/controls.input.schema.json", "schemas/reset.input.schema.json", "schemas/workspace.input.schema.json", "schemas/stream.input.schema.json", "schemas/result.schema.json", "schemas/event.schema.json"} {
 		content, err := os.ReadFile(filepath.Join(source, name))
 		if err != nil {
 			t.Fatal(err)

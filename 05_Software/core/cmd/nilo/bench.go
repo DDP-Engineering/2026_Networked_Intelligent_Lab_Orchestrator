@@ -25,6 +25,9 @@ const benchUsage = `usage: nilo plugin list|install|enable|disable|restart|unins
        nilo bench decode --capture TRANSACTION [--channel D0] [--baudrate 115200]
        nilo camera snapshot --device ID [--width 640 --height 480 --zoom 1]
        nilo camera controls get|set|reset --device ID [--controls-file JSON]
+       nilo camera workspace-status|stop-live|stop-recording|media --device ID
+       nilo camera media-delete|media-download --id MEDIA [--out FILE]
+       nilo camera retention --device ID --revision REV --file limits.json
 
 Shared: --server URL --token-file PATH [--ca-file PATH] [--json]
 Submit: [--key IDEMPOTENCY_KEY] [--timeout-seconds 60]
@@ -83,6 +86,49 @@ func runBenchCommand(ctx context.Context, group string, args []string, streams n
 	})
 	if !ok || len(remaining) > 0 {
 		return 2
+	}
+	if group == "camera" {
+		base := "/api/v1/cameras/" + url.PathEscape(device)
+		switch action {
+		case "workspace-status", "media", "stop-live", "stop-recording", "retention":
+			if device == "" {
+				fmt.Fprintln(streams.stderr, "--device is required")
+				return 2
+			}
+			switch action {
+			case "workspace-status":
+				return networkRequest(ctx, options, streams, http.MethodGet, base+"/workspace", nil)
+			case "media":
+				return networkRequest(ctx, options, streams, http.MethodGet, base+"/media", nil)
+			case "stop-live", "stop-recording":
+				command := "stop"
+				if action == "stop-recording" {
+					command = "record_stop"
+				}
+				return networkRequest(ctx, options, streams, http.MethodPost, base+"/stop", map[string]string{"action": command})
+			case "retention":
+				limits, err := readBenchJSONObject(configFile)
+				if err != nil {
+					fmt.Fprintln(streams.stderr, err)
+					return 2
+				}
+				return networkRequest(ctx, options, streams, http.MethodPut, base+"/retention", map[string]any{"revision": revision, "limits": limits})
+			}
+		case "media-delete", "media-download":
+			if id == "" {
+				fmt.Fprintln(streams.stderr, "--id is required")
+				return 2
+			}
+			path := "/api/v1/camera-media/" + url.PathEscape(id)
+			if action == "media-delete" {
+				return networkRequest(ctx, options, streams, http.MethodDelete, path, nil)
+			}
+			if out == "" {
+				fmt.Fprintln(streams.stderr, "--out is required")
+				return 2
+			}
+			return downloadBenchArtifact(ctx, options, streams, path+"/content", out, 100<<30)
+		}
 	}
 	method, path := http.MethodGet, ""
 	var body any
@@ -335,13 +381,19 @@ func readBenchJSONObject(path string) (map[string]any, error) {
 	return result, nil
 }
 
-func downloadBenchArtifact(ctx context.Context, options networkOptions, streams networkIO, path, out string) int {
+func downloadBenchArtifact(ctx context.Context, options networkOptions, streams networkIO, path, out string, maximum ...int64) int {
+	limit := int64(8 << 20)
+	timeout := 30 * time.Second
+	if len(maximum) > 0 {
+		limit = maximum[0]
+		timeout = 10 * time.Minute
+	}
 	resolvedServer, err := resolveServerForRemoteCommand(ctx, options.server)
 	if err != nil {
 		fmt.Fprintln(streams.stderr, discoveryErrorCode(err))
 		return 1
 	}
-	client, err := apiclient.New(apiclient.Options{BaseURL: resolvedServer, TokenFile: options.tokenFile, CAFile: options.caFile, Timeout: 30 * time.Second})
+	client, err := apiclient.New(apiclient.Options{BaseURL: resolvedServer, TokenFile: options.tokenFile, CAFile: options.caFile, Timeout: timeout})
 	if err != nil {
 		fmt.Fprintln(streams.stderr, err)
 		return 1
@@ -357,9 +409,9 @@ func downloadBenchArtifact(ctx context.Context, options networkOptions, streams 
 		fmt.Fprintln(streams.stderr, err)
 		return 1
 	}
-	written, copyErr := io.Copy(file, io.LimitReader(content, (8<<20)+1))
+	written, copyErr := io.Copy(file, io.LimitReader(content, limit+1))
 	closeErr := file.Close()
-	if written > 8<<20 {
+	if written > limit {
 		copyErr = fmt.Errorf("artifact exceeds download size limit")
 	}
 	if copyErr != nil || closeErr != nil {

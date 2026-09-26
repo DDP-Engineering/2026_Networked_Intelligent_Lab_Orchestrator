@@ -72,6 +72,12 @@ const SHARED = new Set([
   'network.role.uplink',
   'network.fact.control',
   'network.settings.group.dns',
+  // These camera nouns are shared with German or Romanian.
+  'cw.live',
+  'cw.position',
+  'cw.background.transparent',
+  'cw.videos',
+  'cw.timelapse',
 ]);
 
 describe('the message catalogues', () => {

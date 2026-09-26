@@ -20,6 +20,8 @@ def runtime_input(root: Path, architecture: str) -> None:
     header[:6] = b"\x7fELF\x02\x01"
     header[18:20] = {"arm64": 183, "amd64": 62}[architecture].to_bytes(2, "little")
     (root / "bin/python3").write_bytes(header)
+    (root / "bin/ffmpeg").write_bytes(header)
+    (root / "bin/ffprobe").write_bytes(header)
     (root / "THIRD_PARTY_NOTICES.txt").write_text("Runtime licences\n", encoding="utf-8")
     files = [{"path": item.relative_to(root).as_posix(),
               "sha256": hashlib.sha256(item.read_bytes()).hexdigest(),

@@ -44,15 +44,19 @@ type execution struct {
 
 // Manager serializes admission and lifecycle changes while scheduling independent jobs.
 type Manager struct {
-	options   Options
-	mu        sync.Mutex
-	active    map[string]execution
-	cancel    context.CancelFunc
-	wake      chan struct{}
-	done      chan struct{}
-	workers   sync.WaitGroup
-	artifacts artifact.Store
-	closed    bool
+	options       Options
+	mu            sync.Mutex
+	active        map[string]execution
+	cancel        context.CancelFunc
+	wake          chan struct{}
+	done          chan struct{}
+	workers       sync.WaitGroup
+	artifacts     artifact.Store
+	closed        bool
+	cameras       map[string]*cameraSession
+	cameraWorkers sync.WaitGroup
+	cameraReads   map[string]int
+	cameraSpace   func(string) (int64, int64, error)
 }
 
 // New starts one manager after app startup reconciliation; never share its data directory with another server.
@@ -90,6 +94,13 @@ func New(options Options) (*Manager, error) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	m := &Manager{options: options, active: make(map[string]execution), cancel: cancel, wake: make(chan struct{}, 1), done: make(chan struct{}), artifacts: storage}
+	m.cameras = make(map[string]*cameraSession)
+	m.cameraReads = make(map[string]int)
+	m.cameraSpace = cameraDiskSpace
+	if err := m.recoverCameraMedia(ctx); err != nil {
+		cancel()
+		return nil, err
+	}
 	// app.New reconciles sessions first; also handle previously pending/queued
 	// jobs because a restarted server must not replay instrument actions.
 	_, err = options.Database.SQL().ExecContext(ctx, `UPDATE sessions SET state='incomplete',updated_at=?,terminal_at=? WHERE id IN (SELECT session_id FROM bench_jobs) AND state IN ('pending_approval','queued','running')`, m.now().Format(time.RFC3339Nano), m.now().Format(time.RFC3339Nano))
@@ -126,10 +137,17 @@ func (m *Manager) signal() {
 func (m *Manager) Close() error {
 	m.mu.Lock()
 	m.closed = true
+	for _, camera := range m.cameras {
+		shutdown, finish := context.WithTimeout(context.Background(), 12*time.Second)
+		_, _ = cameraCall(shutdown, camera, "POST", "/command", map[string]string{"action": "stop"})
+		finish()
+		camera.cancel()
+	}
 	m.cancel()
 	m.mu.Unlock()
 	<-m.done
 	m.workers.Wait()
+	m.cameraWorkers.Wait()
 	return nil
 }
 

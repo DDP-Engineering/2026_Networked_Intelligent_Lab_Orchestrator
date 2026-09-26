@@ -44,7 +44,8 @@ export interface PageDescriptor {
   /** Managed physical camera selected by a child page. */
   cameraDeviceID?: string;
   /** Camera workspace owned by this destination. */
-  cameraView?: 'overview' | 'snapshot' | 'settings' | 'administration';
+  cameraView?:
+    'overview' | 'snapshot' | 'live' | 'recordings' | 'settings' | 'administration';
   /** Installed plugin whose management view this destination opens. */
   pluginId?: string;
   /**
@@ -206,19 +207,19 @@ export function buildPages(
               cluster: 'instruments',
               icon: 'instrument',
               title: device.display_name,
-              overviewTitleKey: 'camera.snapshot',
+              overviewTitleKey: 'cw.realtime',
               cameraDeviceID: device.id,
-              cameraView: 'snapshot',
+              cameraView: 'live',
               available: true,
             },
             {
-              id: `camera:${device.id}:settings`,
+              id: `camera:${device.id}:recordings`,
               parentId: `camera:${device.id}`,
               cluster: 'instruments',
               icon: 'instrument',
-              titleKey: 'camera.settings',
+              titleKey: 'cw.recordings',
               cameraDeviceID: device.id,
-              cameraView: 'settings',
+              cameraView: 'recordings',
               available: true,
             },
           ]),

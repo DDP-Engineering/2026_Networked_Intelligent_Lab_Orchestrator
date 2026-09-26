@@ -23,8 +23,8 @@ administrator explicitly rebinds it.
 
 ## Public interface
 
-The installed package declares `discover_devices`, `snapshot`, `get_controls`,
-`set_controls` and `reset_controls` through `nilo.integration/1`. Bench Core
+The package declares `discover_devices`, `snapshot`, `get_controls`,
+`set_controls`, `reset_controls`, `workspace` and Core-only `stream` through `nilo.integration/1`. Bench Core
 exposes managed-device configuration and revisioned actions to an Administrator.
 Bench work uses the shared job route, `nilo bench submit --plugin camera`, the
 Camera CLI commands and Camera MCP tools. The browser places appliance settings
@@ -32,9 +32,26 @@ under **System > Plugins** and enabled physical-device work under **Instruments 
 
 Snapshots retain a verified JPEG or PNG artifact. Authorized readers receive
 bounded previews; a complete artifact is downloaded through its transaction.
-The browser offers capture options, hardware controls, retained history and
-local viewer transformations. The runner validates requested formats and frame
+Each camera offers RealTime View and Recordings. A persistent physical
+stream supplies processed preview, JPEG/PNG snapshots and MP4/H.264 normal video
+or time-lapse. Settings retain hardware controls and advanced composition.
+Effects and capture-time overlays are embedded in every output. The runner validates requested formats and frame
 intervals against the observed device before retaining an image.
+
+Core supervises at most two streams, one controller per camera. Each session
+expires after 55 minutes; an idle preview closes after 30 seconds without a
+viewer. A recording continues after browser disconnect until its time/size limit
+or Stop. Settings remain fixed during recording. Mutations use revision-bound
+policy-approved Bench jobs; an owner or administrator can stop without a new
+approval. A private Unix socket transports commands and bounded JPEG previews.
+
+Media settings default to 100 images, 2 GiB per camera and 500 MiB or 600 seconds
+per video. Admission reserves space across cameras and preserves at least 2 GiB
+or 10% of the filesystem. All captures appear in one chronological library and share one retention policy,
+including snapshots stored in the artifact layout. Files remain in place. Active downloads, pending and incomplete
+media are not automatically evicted. Interrupted deletions resume from tombstones;
+verified completed files recover after restart and incomplete files retain their
+reservations. The library permits confirmed individual/selected deletion and export.
 
 ## Invariants
 
@@ -84,7 +101,13 @@ flowchart LR
   and `020_bench_plugin_configuration.sql` - persistent device and package
   configuration.
 - `05_Software/frontend/src/components/pages/CameraSection.tsx` and
-  `CameraPluginPage.tsx` - physical-device work and administrator-only appliance configuration.
+  `CameraWorkspacePage.tsx` - overview/legacy comparison and the two camera work pages;
+  `CameraPluginPage.tsx` owns administrator-only appliance configuration.
+- `camera_workspace.go`, `camera_media.go`, `camera_legacy.go` in the Bench package
+  and migration `021_camera_workspace.sql` - stream ownership, settings revisions,
+  media reservations, recovery, library access and retention.
+- `src/nilo_camera/workspace.py` - shared physical capture/composition and bounded
+  FFmpeg encoding; `tests/test_workspace.py` covers its validation and processing.
 - `02_Tools/scripts/build-camera-bundle.py` - verified target bundle assembly.
 - `02_Tools/tests/camera/` - isolated binding tests and physical target probes;
   `.agentic/evidence/camera/pi-webcam/` records the Pi webcam observation.

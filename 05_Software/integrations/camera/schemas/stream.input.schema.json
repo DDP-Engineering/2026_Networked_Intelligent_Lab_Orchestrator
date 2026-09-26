@@ -1,0 +1,1 @@
+{"type":"object","properties":{"device_id":{"type":"string"},"workspace_directory":{"type":"string"},"endpoint_id":{"type":"string"},"hardware_identity":{"type":"object"},"display_name":{"type":"string"},"settings":{"type":"object"}},"required":["device_id","workspace_directory","endpoint_id","hardware_identity","display_name","settings"],"additionalProperties":false}

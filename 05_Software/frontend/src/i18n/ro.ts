@@ -1,3 +1,4 @@
+import { cameraRo } from './camera';
 import type { Catalogue } from './en';
 
 /**
@@ -9,6 +10,7 @@ import type { Catalogue } from './en';
  * RX, TX — are deliberately left as they are.
  */
 export const ro: Catalogue = {
+  ...cameraRo,
   'message.info': 'Informație',
   'message.warning': 'Avertizare',
   'message.error': 'Eroare',

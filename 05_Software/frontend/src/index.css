@@ -1,5 +1,6 @@
 @import './styles/tokens.css';
 @import './styles/shell.css';
+@import './styles/camera-workspace.css';
 
 /*
  * The document itself. It is bounded to the viewport and never scrolls: every

@@ -73,8 +73,7 @@ def snapshot_parameters(value: object) -> dict:
     if frame_interval is not None and (
         not isinstance(frame_interval, dict)
         or set(frame_interval) != {"numerator", "denominator"}
-        or any(type(item) is not int or not 1 <= item <= 10000
-               for item in frame_interval.values())
+        or any(type(item) is not int or not 1 <= item <= 10000 for item in frame_interval.values())
     ):
         raise ExecuteFailure("invalid_parameters", "Invalid capture frame interval")
     encoding = value.get("encoding", "jpeg")
@@ -119,6 +118,7 @@ class CameraIntegration:
         self.baseline: dict[str, dict] = {}
         self.device_revisions: dict[str, int] = {}
         self.device_settings: dict[str, dict] = {}
+        self.workspace = None
 
     @staticmethod
     def device_id(value: object, allowed: set[str]) -> tuple[str, dict]:
@@ -139,6 +139,8 @@ class CameraIntegration:
                 "get_controls",
                 "set_controls",
                 "reset_controls",
+                "workspace",
+                "stream",
             ],
         )
 
@@ -210,11 +212,28 @@ class CameraIntegration:
 
     async def cancel(self, request_id: UUID) -> None:
         del request_id
+        if self.workspace:
+            self.workspace.stop.set()
 
     async def safe_shutdown(self) -> None:
-        return None
+        if self.workspace:
+            import asyncio
+
+            await asyncio.to_thread(self.workspace.command, {"action": "stop"})
 
     async def execute(self, request: ExecuteRequest, events: EventSink) -> ExecuteResult:
+        if request.operation == "stream":
+            import asyncio
+
+            from nilo_camera.workspace import Workspace
+
+            device_id = request.parameters["device_id"]
+            self.workspace = Workspace(
+                request.parameters, self.device_settings.get(device_id, {}), self.plugin_settings
+            )
+            await asyncio.to_thread(self.workspace.run)
+            return ExecuteResult(status="completed", data={"state": "stopped"})
+
         if request.operation == "discover_devices":
             if request.parameters != {}:
                 raise ExecuteFailure("invalid_parameters", "Discovery takes no request parameters")
@@ -339,7 +358,8 @@ class CameraIntegration:
                 "device_revision": self.device_revisions.get(data["device_id"], 0),
                 "calibration_revision": (
                     self.device_revisions.get(data["device_id"], 0)
-                    if settings.get("calibration_mm_per_pixel") is not None else None
+                    if settings.get("calibration_mm_per_pixel") is not None
+                    else None
                 ),
                 "effective": {
                     "width": data["width"],

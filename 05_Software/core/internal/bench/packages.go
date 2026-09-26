@@ -233,7 +233,7 @@ func (m *Manager) process(p Plugin) (supervisor.Supervisor, error) {
 	return m.processConfigured(p, "")
 }
 
-func (m *Manager) processConfigured(p Plugin, deviceID string) (supervisor.Supervisor, error) {
+func (m *Manager) processConfigured(p Plugin, deviceID string, shutdownGrace ...time.Duration) (supervisor.Supervisor, error) {
 	root, err := m.packageRoot(p.ID)
 	if err != nil {
 		return nil, err
@@ -261,7 +261,11 @@ func (m *Manager) processConfigured(p Plugin, deviceID string) (supervisor.Super
 		return nil, err
 	}
 	descriptor.Runner.Arguments = args
-	return supervisor.NewProcessSupervisor(supervisor.ProcessConfig{PackageID: p.ID, PackageRoot: root, Runner: descriptor.Runner, Configuration: configuration, GracePeriod: time.Second, Environment: map[string]string{"LANG": "C.UTF-8", "LC_ALL": "C.UTF-8"}})
+	grace := time.Second
+	if len(shutdownGrace) > 0 {
+		grace = shutdownGrace[0]
+	}
+	return supervisor.NewProcessSupervisor(supervisor.ProcessConfig{PackageID: p.ID, PackageRoot: root, Runner: descriptor.Runner, Configuration: configuration, GracePeriod: grace, Environment: map[string]string{"LANG": "C.UTF-8", "LC_ALL": "C.UTF-8"}})
 }
 
 func (m *Manager) health(ctx context.Context, p Plugin) error {
@@ -519,6 +523,9 @@ func (m *Manager) Lifecycle(ctx context.Context, actor identity.Actor, id, actio
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.cameraBusy(id) {
+		return Plugin{}, ErrBusy
+	}
 	if m.closed {
 		return Plugin{}, ErrUnavailable
 	}
@@ -668,6 +675,9 @@ func (m *Manager) Discover(ctx context.Context, actor identity.Actor, id string)
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.cameraBusy(id) {
+		return nil, ErrBusy
+	}
 	p, err := m.loadPlugin(ctx, id)
 	if err != nil {
 		return nil, err

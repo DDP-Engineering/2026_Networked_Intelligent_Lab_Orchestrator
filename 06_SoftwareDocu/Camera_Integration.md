@@ -2,8 +2,8 @@
 
 The Camera integration uses physical USB cameras exposed by Linux V4L2. It
 discovers capture nodes and hardware controls, keeps a stable managed record for
-each camera, captures a JPEG or PNG snapshot, and retains the image as a Bench
-artifact. Camera has no generated frames or camera replay data.
+each camera, and provides processed live preview, JPEG/PNG snapshots and
+MP4/H.264 normal video or time-lapse. Camera has no generated frames or camera replay data.
 
 ## Appliance setup
 
@@ -13,7 +13,8 @@ access to the selected `/dev/video*` capture node. On the current Pi bench the
 service account is in the `video` group. Appliance package staging includes
 `60-nilo-instruments.rules` (group `video`, mode `0660`), and its service unit
 uses that supplementary group. The current bench bundle requires Python 3.13
-on the target. Press **Discover cameras** after
+on the target, plus FFmpeg and ffprobe for recording. Self-contained bundles carry
+the encoder tools in their verified runtime. Press **Discover cameras** after
 connecting a device. A new `cam-N` record must be configured by an
 administrator before capture. Name and purpose are persistent metadata; the
 record ID remains the address for jobs and history.
@@ -49,7 +50,45 @@ approval policy, discovery, camera names and camera enablement. Advanced package
 and device settings remain available through the authorized configuration API.
 The header shows the installed version. **Update plugin** is enabled only when a
 newer verified bundle has been staged in the local catalog; it needs no internet
-connection. **View activity** opens the Camera package activity filter. Overview tiles show a bounded recent image and a quick
+connection. **View activity** opens the Camera package activity filter.
+
+Each enabled camera has **RealTime View** and **Recordings**:
+
+- RealTime View starts an owned live session, takes snapshots and starts/stops
+  recordings. Normal, fill-workspace and browser fullscreen modes retain capture
+  controls. The normal approval policy applies to start and capture commands;
+  Stop needs no new approval. A recording continues after closing the browser,
+  until its configured limit or explicit Stop.
+- RealTime View includes three initially collapsed sections: Camera settings,
+  Overlays and Hardware controls. Its title and capture buttons share one wrapping
+  row. These sections provide advertised resolution, capture format/frame rate, a zoom
+  slider, effects, timestamp/name/custom-text overlays and the camera's hardware
+  controls. Read, Apply and Reset operate on the active physical device.
+  Changes are shown in the live preview and embedded in saved files. An active
+  recording freezes its settings; stop it before changing them. Advanced
+  composition retains crop, rotation, lines, rectangles and calibrated scale bars.
+- Recordings provides image quality/encoding, video quality and normal/time-lapse
+  settings, a paginated thumbnail library, playback, export and confirmed deletion
+  of individual or selected items. Start live view to apply output settings.
+  Time-lapse has separate acquisition interval and playback frame rate.
+
+Only modes within the 2,000,000-pixel processing bound and integer 1–30 FPS are
+offered. Preview is bounded to 960×720. Actual unique-frame throughput depends
+on the camera, resolution and effects; normal video maintains real elapsed time
+by duplicating frames when needed. Sessions expire after 55 minutes and idle
+previews stop after 30 seconds. At most two camera streams can be active.
+The recording limit is shortened when the session has less time remaining.
+
+Administrator retention defaults are 100 snapshots and 2 GiB per camera, with
+each video stopped at 500 MiB or 10 minutes acquisition time. Core reserves
+storage before capture and protects the greater of 2 GiB or 10% free disk space.
+All captures share one library and one retention policy, regardless of capture date
+or storage layout. Existing files remain in place and are eligible for the same
+oldest-first automatic cleanup. Policy changes show eligible counts
+and bytes; eviction happens on subsequent capture admission. Incomplete captures
+remain accounted for and can be deleted explicitly. Active downloads block deletion.
+
+The overview retains older snapshot tools and comparisons. Overview tiles show a bounded recent image and a quick
 snapshot action; two accessible saved images can be compared side by side.
 Snapshot width, height, pixel format, an advertised frame interval, crop centre,
 digital zoom, rotation, flips, grayscale, invert, JPEG/PNG encoding, output dimension,
@@ -61,7 +100,7 @@ Hardware controls are generated from descriptors returned by the physical device
 retained image and per-camera history use authenticated bounded previews; the
 viewer provides local zoom, pan and markers. The complete
 artifact remains downloadable from its transaction.
-Viewer rotation, flips and invert are local to the browser. A placed marker is
+In the older overview viewer, rotation, flips and invert are local to the browser. A placed marker is
 mapped through the viewer and requested composition into a bounded crosshair
 overlay on the next retained snapshot.
 The frame interval selector appears when the physical camera advertises an
@@ -73,11 +112,21 @@ controls, output size and configuration revisions.
 
 The generic job route accepts `plugin_id: "camera"`, an operation, a `cam-N`
 device ID and a parameters object. Operations are `snapshot`, `get_controls`,
-`set_controls`, and `reset_controls`. `discover_devices` is the explicit plugin
+`set_controls`, `reset_controls`, and `workspace`. Workspace commands include
+start, settings, controls, snapshot and record_start; their settings revision
+binds the approval to the requested configuration. `stream` is Core-owned and
+cannot be submitted by callers. `discover_devices` is the explicit plugin
 control call. The CLI exposes `nilo bench submit --plugin camera` and
 `nilo camera snapshot|controls`. MCP exposes corresponding camera tools. Normal
 Bench permissions, approval policy, owner scoped job reads and artifact digest
 verification apply.
+
+Workspace endpoints live under `/api/v1/cameras/{id}` (workspace, frame,
+media, stop and retention), with authorized media content/deletion under
+`/api/v1/camera-media/{id}`. The CLI includes `camera workspace-status`,
+`stop-live`, `stop-recording`, `media`, `media-download`, `media-delete` and
+`retention`; MCP exposes the corresponding state/stop/media/retention services.
+Browser exports use the browser's download/save settings.
 
 Captured input and output are bounded by package and administrator limits.
 Images retain no source EXIF metadata. A preview is a smaller transient view of

@@ -20,6 +20,19 @@ var publicTerminalCodes = map[string]struct{}{
 }
 
 func terminalErrorCode(err error) string {
+	var cameraError cameraOperationError
+	if errors.As(err, &cameraError) {
+		return string(cameraError)
+	}
+	if errors.Is(err, errCameraStorage) {
+		return "camera_storage_limit"
+	}
+	if errors.Is(err, ErrConflict) {
+		return "configuration_changed"
+	}
+	if errors.Is(err, ErrBusy) {
+		return "device_busy"
+	}
 	var remote *supervisor.RemoteExecutionError
 	if errors.Is(err, supervisor.ErrRunnerRemote) && errors.As(err, &remote) {
 		if _, allowed := publicTerminalCodes[remote.Code]; allowed {
@@ -84,6 +97,10 @@ func (m *Manager) dispatch(ctx context.Context) {
 			continue
 		}
 		resource := resourceFor(job)
+		if job.PluginID == "camera" && job.Submission.Operation != "workspace" && m.cameraBusy(job.Submission.DeviceID) {
+			m.report(m.settle(ctx, job, "failed", "device_busy"))
+			continue
+		}
 		busy := false
 		for _, run := range m.active {
 			if resource != "" && resource == run.resource {

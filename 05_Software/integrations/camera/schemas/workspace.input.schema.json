@@ -1,0 +1,1 @@
+{"type":"object","properties":{"action":{"type":"string"},"settings":{"type":"object"},"controls":{"type":"object"},"revision":{"type":"integer"}},"required":["action"],"additionalProperties":false}

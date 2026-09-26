@@ -90,10 +90,9 @@ describe('physical Camera navigation', () => {
       title: 'Board view',
       cameraDeviceID: 'cam-1',
     });
-    expect(pages.find((page) => page.id === 'camera:cam-1:settings')).toMatchObject({
-      parentId: 'camera:cam-1',
-      cameraDeviceID: 'cam-1',
-      cameraView: 'settings',
+    expect(pages.some((page) => page.id === 'camera:cam-1:settings')).toBe(false);
+    expect(pages.find((page) => page.id === 'camera:cam-1')).toMatchObject({
+      cameraView: 'live',
     });
     expect(pages.some((page) => page.id === 'camera:cam-2')).toBe(false);
   });
