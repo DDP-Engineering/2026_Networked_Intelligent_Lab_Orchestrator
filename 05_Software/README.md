@@ -13,6 +13,7 @@ tools live in `02_Tools`.
     sdk/python/             Python runner authoring SDK
     sigrok/                 Current curated instrument integration
     camera/                 Physical V4L2 camera integration
+    serial/                 Physical USB serial terminals and session logs
   contracts/integration/v1/ Public integration-package JSON schemas
   tests/
     contract/               Black-box runner contract suite

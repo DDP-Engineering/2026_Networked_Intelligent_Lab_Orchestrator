@@ -4,7 +4,7 @@ import type {
   BenchCoreIntegration,
   BenchCoreSession,
 } from '../../api/contract';
-import type { InstrumentPlugin } from '../../api/bench';
+import type { InstrumentDevice, InstrumentPlugin } from '../../api/bench';
 import type { MessageKey } from '../../i18n/en';
 import type { IconName } from './Icon';
 import type { NetworkView } from '../network/views';
@@ -45,6 +45,8 @@ export interface PageDescriptor {
   authenticationView?: AuthenticationView;
   /** Managed physical camera selected by a child page. */
   cameraDeviceID?: string;
+  serialDeviceID?: string;
+  serialView?: 'live' | 'sessions';
   /** Camera workspace owned by this destination. */
   cameraView?:
     'overview' | 'snapshot' | 'live' | 'recordings' | 'settings' | 'administration';
@@ -160,6 +162,17 @@ export function integrationPageId(integrationId: string): string {
   return `integration:${integrationId}`;
 }
 
+function readyManagedDevices(plugin: InstrumentPlugin | undefined): InstrumentDevice[] {
+  if (!plugin?.installed || !plugin.enabled || plugin.status !== 'ready') return [];
+  return plugin.devices.filter(
+    (device) =>
+      device.configured &&
+      device.enabled &&
+      device.presence === 'present' &&
+      device.readiness === 'ready',
+  );
+}
+
 /**
  * Build the navigation for one session and one reported inventory.
  *
@@ -172,12 +185,23 @@ export function integrationPageId(integrationId: string): string {
 export function buildPages(
   session: BenchCoreSession | null,
   integrations: readonly BenchCoreIntegration[],
-  _devices: readonly BenchCoreDevice[] = [],
+  devices: readonly BenchCoreDevice[] = [],
   plugins: readonly InstrumentPlugin[] = [],
 ): PageDescriptor[] {
-  void _devices;
   const instruments: PageDescriptor[] = integrations
-    .filter((integration) => integration.id !== 'camera')
+    .filter((integration) => !['camera', 'serial'].includes(integration.id))
+    .filter((integration) => {
+      const plugin = plugins.find((item) => item.id === integration.id);
+      return (
+        ['healthy', 'ready'].includes(integration.status) &&
+        (!plugin ||
+          (plugin.installed && plugin.enabled && plugin.status === 'ready')) &&
+        devices.some(
+          (device) =>
+            device.integrationId === integration.id && device.status === 'ready',
+        )
+      );
+    })
     .map((integration) => ({
       id: integrationPageId(integration.id),
       cluster: 'instruments',
@@ -186,22 +210,22 @@ export function buildPages(
       available: true,
     }));
   const camera = plugins.find((plugin) => plugin.id === 'camera' && plugin.installed);
-  const cameraPages: PageDescriptor[] = !camera?.enabled
-    ? []
-    : [
-        {
-          id: integrationPageId('camera'),
-          cluster: 'instruments',
-          icon: 'instrument',
-          title: camera.display_name,
-          navigationOnly: true,
-          expandTitleKey: 'nav.camera.expand',
-          collapseTitleKey: 'nav.camera.collapse',
-          available: true,
-        },
-        ...camera.devices
-          .filter((device) => device.configured && device.enabled)
-          .flatMap((device): PageDescriptor[] => [
+  const cameraDevices = readyManagedDevices(camera);
+  const cameraPages: PageDescriptor[] =
+    !camera || cameraDevices.length === 0
+      ? []
+      : [
+          {
+            id: integrationPageId('camera'),
+            cluster: 'instruments',
+            icon: 'instrument',
+            title: camera.display_name,
+            navigationOnly: true,
+            expandTitleKey: 'nav.camera.expand',
+            collapseTitleKey: 'nav.camera.collapse',
+            available: true,
+          },
+          ...cameraDevices.flatMap((device): PageDescriptor[] => [
             {
               id: `camera:${device.id}`,
               parentId: integrationPageId('camera'),
@@ -224,7 +248,46 @@ export function buildPages(
               available: true,
             },
           ]),
-      ];
+        ];
+
+  const serial = plugins.find((plugin) => plugin.id === 'serial' && plugin.installed);
+  const serialDevices = readyManagedDevices(serial);
+  const serialPages: PageDescriptor[] =
+    !serial || serialDevices.length === 0
+      ? []
+      : [
+          {
+            id: integrationPageId('serial'),
+            cluster: 'instruments',
+            icon: 'instrument',
+            title: serial.display_name,
+            navigationOnly: true,
+            available: true,
+          },
+          ...serialDevices.flatMap((device): PageDescriptor[] => [
+            {
+              id: `serial:${device.id}`,
+              parentId: integrationPageId('serial'),
+              cluster: 'instruments',
+              icon: 'instrument',
+              title: device.display_name,
+              overviewTitleKey: 'sw.realtime',
+              serialDeviceID: device.id,
+              serialView: 'live',
+              available: true,
+            },
+            {
+              id: `serial:${device.id}:sessions`,
+              parentId: `serial:${device.id}`,
+              cluster: 'instruments',
+              icon: 'instrument',
+              titleKey: 'sw.sessions',
+              serialDeviceID: device.id,
+              serialView: 'sessions',
+              available: true,
+            },
+          ]),
+        ];
 
   const canReadUsers = mayReadUsers(session);
   const canReadTokens = mayReadTokens(session);
@@ -251,7 +314,7 @@ export function buildPages(
             .filter(
               (plugin) =>
                 plugin.installed &&
-                (plugin.id !== 'camera' ||
+                (!['camera', 'serial'].includes(plugin.id) ||
                   (session?.role === 'administrator' &&
                     session.permissions.includes('plugins.manage'))),
             )
@@ -267,7 +330,7 @@ export function buildPages(
         ]
       : [page],
   );
-  return [BENCH_PAGE, ...cameraPages, ...instruments, ...corePages];
+  return [BENCH_PAGE, ...cameraPages, ...serialPages, ...instruments, ...corePages];
 }
 
 /** Find one page in a built navigation. */

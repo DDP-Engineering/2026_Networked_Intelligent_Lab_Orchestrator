@@ -1,0 +1,12 @@
+schema = 1
+id = "REQ-DATA-a67947e3"
+title = "Preserve serial port identity"
+status = "active"
+requirement = "When USB serial ports are rediscovered, Core shall reconcile stable per-port records using strong USB identity with persistent duplicate-serial fallback, preserving names and refusing stale revisions."
+verification = "Reconcile moved, multiport, duplicate-serial and absent metadata; assert stable IDs, distinct ports, revision conflicts and administrator-only changes."
+affected_paths = ["05_Software/core/internal/bench/", "05_Software/core/internal/httpapi/", "05_Software/core/internal/store/sqlite/"]
+linked_tests = ["05_Software/core/internal/bench/serial_test.go", "05_Software/core/internal/bench/serial_lifecycle_test.go"]
+spec = "specs/usb-serial.md"
+priority = "high"
+created = 2026-09-27
+updated = 2026-09-27

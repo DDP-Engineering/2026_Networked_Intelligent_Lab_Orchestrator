@@ -1,3 +1,4 @@
+import { MessageBanner } from '../MessageBanner';
 import { Fragment, useState, type ReactNode } from 'react';
 
 import type { NetworkInterface, NetworkOperation } from '../../api/contract';
@@ -510,7 +511,7 @@ export function DeviceNetworksPanel({
         )}
       </div>
       {unreadable && (
-        <p className="notice notice-unknown">{t('network.dn.unreadable')}</p>
+        <MessageBanner tone="warning">{t('network.dn.unreadable')}</MessageBanner>
       )}
       {networks !== null && networks.length === 0 && !unreadable && (
         <p>{t('network.dn.empty')}</p>

@@ -24,7 +24,7 @@ func TestRootUsageNamesEveryCommandGroup(t *testing.T) {
 		"nilo version", "nilo discover", "nilo open", "nilo serve",
 		"nilo serve-foundation-check", "nilo development", "nilo seed-admin",
 		"nilo maintenance", "nilo admin", "nilo network", "nilo plugin",
-		"nilo bench", "nilo activity",
+		"nilo bench", "nilo activity", "nilo serial",
 		"--data-dir", "--server", "--token-file", "--management-interface", "--management-port", "--management-reconfigure",
 	} {
 		if !strings.Contains(stderr.String(), want) {

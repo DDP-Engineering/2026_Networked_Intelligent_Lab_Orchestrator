@@ -138,7 +138,9 @@ inline approval-policy selector and Discover cameras form a wrapping toolbar.
 Disconnected and unknown-presence records are hidden; connected unconfigured
 and disabled cameras remain available for setup and re-enabling. Per-camera
 presence/readiness labels are omitted; initialization failures use a shared
-warning banner. The persistent plugin-enabled sentence is omitted.
+warning callout.
 Naming preserves purpose and device settings. Configured, enabled cameras appear
 beneath Instruments > Camera. MessageBanner provides labelled and colored
-Info/Warning/Error feedback shared with Network, Authentication and Activity.
+Info/Warning/Error callouts shared with Network, Authentication and Activity.
+General feedback uses the shared dismissible workspace overlay; pending physical
+operation approvals remain inline with their Approve and Cancel actions.

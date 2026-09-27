@@ -156,6 +156,12 @@ func (m *Manager) dispatch(ctx context.Context) {
 					}
 					m.report(m.settle(final, current, state, message))
 				}
+				if job.PluginID == "camera" || job.PluginID == "serial" {
+					switch message {
+					case "device_absent", "device_not_found", "capture_failed", "frame_timeout":
+						m.markHardwareFailed(final, job.PluginID, job.Submission.DeviceID)
+					}
+				}
 				if message != "" {
 					_, saveErr := m.db().ExecContext(final, `UPDATE bench_jobs SET error=? WHERE id=?`, message, job.ID)
 					m.report(saveErr)

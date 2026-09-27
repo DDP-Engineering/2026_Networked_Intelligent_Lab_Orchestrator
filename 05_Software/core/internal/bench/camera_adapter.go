@@ -48,7 +48,7 @@ type cameraDiscovery struct {
 func managedCameraDevices(records []sqlite.ManagedDeviceRecord) []Device {
 	devices := make([]Device, 0, len(records))
 	for _, record := range records {
-		devices = append(devices, Device{ID: record.ID, DisplayName: record.DisplayName, Kind: "camera", Purpose: record.Purpose, Presence: record.Presence, Readiness: record.Readiness, Configured: record.Configured, Enabled: record.Enabled, Revision: record.Revision, Capabilities: record.Capabilities, Settings: record.Settings, Channels: []string{}, SampleRates: []int{}})
+		devices = append(devices, Device{ID: record.ID, DisplayName: record.DisplayName, Kind: record.Kind, Purpose: record.Purpose, Presence: record.Presence, Readiness: record.Readiness, Configured: record.Configured, Enabled: record.Enabled, Revision: record.Revision, Capabilities: record.Capabilities, Settings: record.Settings, Channels: []string{}, SampleRates: []int{}})
 	}
 	return devices
 }

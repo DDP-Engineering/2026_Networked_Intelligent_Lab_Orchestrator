@@ -28,6 +28,7 @@ type familyAdapter struct {
 }
 
 var familyAdapters = map[string]familyAdapter{
+	"serial": {displayName: "USB to Serial", operations: map[string]bool{"discover_devices": false, "connect": true, "stream": true}, artifacts: map[string]struct{}{}, canonicalize: serialCanonicalSubmission, resource: func(j Job) string { return "serial/device/" + j.Submission.DeviceID }, validateSubmission: serialValidateSubmission},
 	"sigrok": {
 		displayName:        "Sigrok Instruments",
 		operations:         map[string]bool{"discover_devices": false, "capture": true, "decode_uart": false},

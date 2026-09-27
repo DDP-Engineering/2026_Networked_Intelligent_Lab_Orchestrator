@@ -247,10 +247,12 @@ export function PluginsPage({
                       <strong>· {t('instrument.simulation')}</strong>
                     )}
                   </p>
-                  {plugin.error && <p role="status">{plugin.error}</p>}
+                  {plugin.error && (
+                    <MessageBanner tone="warning">{plugin.error}</MessageBanner>
+                  )}
                   {view === 'catalog' &&
                     plugin.installed &&
-                    (plugin.id !== 'camera' ||
+                    (!['camera', 'serial'].includes(plugin.id) ||
                       (session.role === 'administrator' && canManage)) && (
                       <button
                         type="button"

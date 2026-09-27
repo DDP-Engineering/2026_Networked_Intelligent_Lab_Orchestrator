@@ -10,6 +10,9 @@ identity/SQLite composition belongs to [Bench Core](bench-core-foundation.md);
 visual structure belongs to [Browser GUI](gui-foundation.md). Physical capture,
 device records and Camera verification belong to [Camera integration](camera-integration.md).
 
+USB serial terminal, connection and log changes route to
+[USB to Serial integration](serial-integration.md).
+
 ## Purpose and boundaries
 
 The manager owns curated package installation, persisted enablement and device
@@ -95,6 +98,15 @@ and `06_SoftwareDocu/Camera_Integration.md`. Human approval requires a browser s
 
 ## Key behaviors
 
+- `REQ-UX-74d4256e`: appliance Core refreshes Camera/Serial hardware inventory
+  on a five-second timer with bounded discovery calls. Metadata reads run outside
+  the admission lock; results from replaced/disabled packages are discarded.
+  Unchanged observations preserve configuration revisions. Unplugged hardware and
+  detected acquisition/transport faults lose readiness; normal stops preserve it.
+  Configured reconnected hardware returns after initialization. Active cameras
+  retain their controls; initialization waits until their stream ends.
+
+
 - REQ-FUNC-26332084, REQ-FUNC-74c69ce6, REQ-FUNC-8a6445ff,
   REQ-FUNC-1707e62e, REQ-FUNC-b198e8c0: explicit managed lifecycle.
 - REQ-FUNC-d21b7686, REQ-FUNC-93c2ec4b, REQ-FUNC-28779550: digital
@@ -122,6 +134,9 @@ flowchart TD
     http --> manager
     manager --> packages[packages: verified catalog, staged install and atomic upgrade]
     packages --> journal[(durable activation journal)]
+    manager --> monitor[hardware_monitor: bounded Camera and Serial presence polling]
+    monitor --> supervisor
+    monitor --> db
     manager --> queue[scheduler: two workers and device serialization]
     manager --> db[(SQLite plugins/jobs/sessions)]
     queue --> operation[operation.Service Prepare/Run and policy]
@@ -143,6 +158,9 @@ capture/decode are queued commands. New hardware families require their own
 curated typed adapter and resource claims; transport handlers remain shared.
 
 ## Files
+
+- `05_Software/core/internal/bench/hardware_monitor.go` and its tests own background
+  Camera/Serial availability and failure propagation.
 
 - `05_Software/core/internal/bench/`: model, manager, packages,
   parameters, jobs, execution and scheduler; `jobs_test.go` covers state/concurrency,

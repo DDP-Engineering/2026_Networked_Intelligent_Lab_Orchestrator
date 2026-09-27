@@ -57,6 +57,27 @@ async def test_discovery_uses_physical_v4l2_scan(monkeypatch):
     assert result.data["devices"][0]["selected_endpoint"] == "video0"
 
 
+@pytest.mark.parametrize("failure", ["", "capture_failed"])
+async def test_stream_reports_capture_failure(monkeypatch, failure):
+    from types import SimpleNamespace
+
+    from nilo_integration import ExecuteFailure
+    from nilo_integration.models import ExecuteRequest
+
+    from nilo_camera import workspace
+    from nilo_camera.plugin import CameraIntegration
+
+    monkeypatch.setattr(
+        workspace, "Workspace", lambda *args: SimpleNamespace(run=lambda: None, error=failure)
+    )
+    request = ExecuteRequest(type="execute", operation="stream", parameters={"device_id": "cam-1"})
+    if failure:
+        with pytest.raises(ExecuteFailure):
+            await CameraIntegration().execute(request, Events())
+    else:
+        assert (await CameraIntegration().execute(request, Events())).status == "completed"
+
+
 async def test_snapshot_revalidates_physical_binding_and_retains_image(tmp_path, monkeypatch):
     from nilo_integration import ExecuteFailure
     from nilo_integration.models import ExecuteRequest
@@ -113,8 +134,7 @@ async def test_snapshot_requested_maximum_dimension_resizes_retained_image(tmp_p
         ExecuteRequest(
             type="execute",
             operation="snapshot",
-            parameters={**BINDING, "staging_directory": str(tmp_path),
-                        "maximum_dimension": 320},
+            parameters={**BINDING, "staging_directory": str(tmp_path), "maximum_dimension": 320},
         ),
         Events(),
     )
@@ -140,19 +160,31 @@ async def test_snapshot_frame_interval_reaches_physical_capture(tmp_path, monkey
 
     monkeypatch.setattr(v4l2, "capture_image", capture)
     result = await CameraIntegration().execute(
-        ExecuteRequest(type="execute", operation="snapshot", parameters={
-            **BINDING, "staging_directory": str(tmp_path),
-            "frame_interval": {"numerator": 1, "denominator": 30},
-        }), Events(),
+        ExecuteRequest(
+            type="execute",
+            operation="snapshot",
+            parameters={
+                **BINDING,
+                "staging_directory": str(tmp_path),
+                "frame_interval": {"numerator": 1, "denominator": 30},
+            },
+        ),
+        Events(),
     )
     assert selected == [{"numerator": 1, "denominator": 30}]
     assert result.data["effective"]["frame_interval"] == selected[0]
     with pytest.raises(ExecuteFailure) as error:
         await CameraIntegration().execute(
-            ExecuteRequest(type="execute", operation="snapshot", parameters={
-                **BINDING, "staging_directory": str(tmp_path),
-                "frame_interval": {"numerator": 0, "denominator": 30},
-            }), Events(),
+            ExecuteRequest(
+                type="execute",
+                operation="snapshot",
+                parameters={
+                    **BINDING,
+                    "staging_directory": str(tmp_path),
+                    "frame_interval": {"numerator": 0, "denominator": 30},
+                },
+            ),
+            Events(),
         )
     assert error.value.code == "invalid_parameters"
 

@@ -1,0 +1,12 @@
+schema = 1
+id = "REQ-FUNC-455b5fe2"
+title = "Discover USB serial endpoints"
+status = "active"
+requirement = "When USB serial discovery is requested, the integration shall enumerate only validated USB-backed tty endpoints without opening them, reporting multiport identity metadata and an empty collection when no adapter is present."
+verification = "Exercise injected USB metadata and real Linux pseudo-terminal I/O separately; assert non-USB endpoints are excluded and discovery never opens a port."
+affected_paths = ["05_Software/core/internal/bench/", "05_Software/core/internal/httpapi/", "05_Software/core/internal/store/sqlite/", "05_Software/integrations/serial/", "02_Tools/scripts/"]
+linked_tests = ["05_Software/integrations/serial/tests/test_discovery.py", "05_Software/integrations/serial/tests/test_plugin.py::test_configure_and_discovery_do_not_open_ports", "05_Software/core/internal/bench/serial_test.go", "05_Software/core/internal/bench/serial_lifecycle_test.go"]
+spec = "specs/usb-serial.md"
+priority = "high"
+created = 2026-09-27
+updated = 2026-09-27

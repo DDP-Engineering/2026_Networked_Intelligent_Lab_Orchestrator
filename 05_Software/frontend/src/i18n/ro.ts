@@ -1,3 +1,4 @@
+import { serialRo } from './serial';
 import { cameraRo } from './camera';
 import type { Catalogue } from './en';
 
@@ -11,9 +12,13 @@ import type { Catalogue } from './en';
  */
 export const ro: Catalogue = {
   ...cameraRo,
+  ...serialRo,
   'message.info': 'Informație',
   'message.warning': 'Avertizare',
   'message.error': 'Eroare',
+  'message.notifications': 'Notificări',
+  'message.dismiss': 'Închide notificarea',
+  'message.connectionDetails': 'Detalii conexiune',
   'camera.pluginTitle': 'Plugin cameră',
   'camera.adminOnly': 'Numai administratorii pot configura pluginul camerei.',
   'camera.currentVersion': 'Versiune curentă',

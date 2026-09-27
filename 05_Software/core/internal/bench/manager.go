@@ -50,11 +50,15 @@ type Manager struct {
 	cancel        context.CancelFunc
 	wake          chan struct{}
 	done          chan struct{}
+	hardwareDone  chan struct{}
 	workers       sync.WaitGroup
 	artifacts     artifact.Store
 	closed        bool
 	cameras       map[string]*cameraSession
 	cameraWorkers sync.WaitGroup
+	serials       map[string]*serialSession
+	serialWorkers sync.WaitGroup
+	serialReads   map[string]int
 	cameraReads   map[string]int
 	cameraSpace   func(string) (int64, int64, error)
 }
@@ -97,6 +101,12 @@ func New(options Options) (*Manager, error) {
 	m.cameras = make(map[string]*cameraSession)
 	m.cameraReads = make(map[string]int)
 	m.cameraSpace = cameraDiskSpace
+	m.serials = make(map[string]*serialSession)
+	m.serialReads = make(map[string]int)
+	if err := m.recoverSerialLogs(ctx); err != nil {
+		cancel()
+		return nil, err
+	}
 	if err := m.recoverCameraMedia(ctx); err != nil {
 		cancel()
 		return nil, err
@@ -120,6 +130,22 @@ func New(options Options) (*Manager, error) {
 	} else if err != nil && !errors.Is(err, ErrNotFound) {
 		m.report(err)
 	}
+	if err := sqlite.NewManagedDeviceRepository(options.Database).MarkUnknown(ctx, "serial"); err != nil {
+		cancel()
+		return nil, err
+	}
+	if p, err := m.loadPlugin(ctx, "serial"); err == nil && p.Installed && p.Enabled {
+		c, done := context.WithTimeout(ctx, 10*time.Second)
+		_, e := m.discoverSerial(c, p)
+		done()
+		m.report(e)
+	}
+	m.hardwareDone = make(chan struct{})
+	if !options.Simulation {
+		go m.monitorHardware(ctx)
+	} else {
+		close(m.hardwareDone)
+	}
 	go m.schedule(ctx)
 	return m, nil
 }
@@ -137,6 +163,7 @@ func (m *Manager) signal() {
 func (m *Manager) Close() error {
 	m.mu.Lock()
 	m.closed = true
+	m.stopSerialLocked("serial", "shutdown")
 	for _, camera := range m.cameras {
 		shutdown, finish := context.WithTimeout(context.Background(), 12*time.Second)
 		_, _ = cameraCall(shutdown, camera, "POST", "/command", map[string]string{"action": "stop"})
@@ -146,8 +173,10 @@ func (m *Manager) Close() error {
 	m.cancel()
 	m.mu.Unlock()
 	<-m.done
+	<-m.hardwareDone
 	m.workers.Wait()
 	m.cameraWorkers.Wait()
+	m.serialWorkers.Wait()
 	return nil
 }
 

@@ -1,0 +1,12 @@
+schema = 1
+id = "REQ-SEC-a15f6f76"
+title = "Bind serial session authority"
+status = "active"
+requirement = "When a serial connection is approved, Core shall bind its bounded receive/transmit lease to the initiating credential, physical identity, configuration revision and expiry, rejecting other controllers and terminating revoked or expired authority."
+verification = "Approve a connect job once, transmit repeatedly; assert token/browser isolation, changed identity/revision, revocation, expiry and owner/admin stop."
+affected_paths = ["05_Software/core/internal/bench/", "05_Software/core/internal/httpapi/", "05_Software/core/internal/store/sqlite/"]
+linked_tests = ["05_Software/core/internal/httpapi/serial_test.go", "05_Software/core/internal/bench/serial_test.go", "05_Software/core/internal/bench/serial_lifecycle_test.go"]
+spec = "specs/usb-serial.md"
+priority = "high"
+created = 2026-09-27
+updated = 2026-09-27

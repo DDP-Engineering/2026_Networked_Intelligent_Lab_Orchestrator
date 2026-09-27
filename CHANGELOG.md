@@ -5,6 +5,30 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ## [Unreleased]
 
+### Changed
+
+- Plugin and system feedback uses shared dismissible callouts; realtime action
+  headers align right and serial connection details collapse to save display space.
+
+### Fixed
+
+- Instruments navigation shows only active plugins with ready current hardware;
+  unavailable and historical devices remain in administrator configuration.
+- Camera/Serial presence refreshes automatically; detected hardware failures clear
+  readiness, while unchanged polls preserve configuration revisions.
+
+- Serial pages follow Camera's collapsible settings layout; expanded views retain
+  send controls, fullscreen offers an exit action, and plugin policy text fits.
+- Serial status reconciles reads that finish after disconnect; saved-session
+  selection labels have consistent spacing.
+
+## [0.11.0] - 2026-09-27
+
+### Added
+
+- USB to Serial plugin with approved per-port terminals, ASCII/hex transmission,
+  bounded session logs, retention and export through the GUI, CLI and MCP.
+
 ## [0.10.0] - 2026-09-27
 
 ### Added

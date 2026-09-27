@@ -1,0 +1,18 @@
+schema = 1
+id = "REQ-UX-7338451f"
+title = "Provide responsive serial terminal and sessions"
+status = "active"
+requirement = "When an enabled named serial port is selected, the GUI shall provide RealTime View and Sessions with collapsible settings, bounded text/hex display, transmit and logging controls, keyboard access and responsive wrapping."
+verification = "Component/browser checks exercise discovery empty state, navigation, terminal formatting, send options, signals, session exports and 320/800/1024/desktop layout bounds."
+affected_paths = ["05_Software/frontend/"]
+linked_tests = [
+  "05_Software/frontend/src/components/shell/serialNavigation.test.ts",
+  "05_Software/frontend/src/components/pages/serialBuffer.test.ts",
+  "05_Software/frontend/src/components/pages/SerialWorkspacePage.test.tsx",
+  "05_Software/frontend/src/api/serial.test.ts",
+  "05_Software/frontend/e2e/serial-layout.check.ts",
+]
+spec = "specs/usb-serial.md"
+priority = "high"
+created = 2026-09-27
+updated = 2026-09-27

@@ -49,6 +49,9 @@ one of three fixed roles - Administrator, Operator or Viewer.
 - **Physical Camera integration.** The Camera package discovers V4L2 devices,
   manages persistent camera records and controls, and retains real snapshots.
   The browser displays bounded previews of authorized snapshot artifacts.
+- **USB serial terminals.** Managed USB ports use credential-bound connection
+  approvals, bounded ASCII/hex RX/TX, supported modem controls and retained
+  JSONL sessions with quotas and streaming exports across GUI, CLI and MCP.
 - **Instrument transactions.** Durable transaction identities, a bounded queue,
   two executing workers with per-analyzer serialization, absolute deadlines,
   ordered bounded replies, cancellation, and digest-verified retained artifacts.
@@ -161,7 +164,7 @@ one of three fixed roles - Administrator, Operator or Viewer.
   CGO. `cmd/nilo/main.go` is the command surface (`version`, `serve`,
   `serve-foundation-check`, `discover`, `open`, `development issue-token`,
   `admin`, `seed-admin`, `maintenance`, `network`, `plugin`, `bench`, `camera`,
-  `activity`); `cmd/nilo-nethelper/` is the privileged Linux
+  `serial`, `activity`); `cmd/nilo-nethelper/` is the privileged Linux
   helper. `internal/httpapi/server.go` holds the one route table where every
   route declares its permission, with `internal/httpapi/bench.go` beside it.
   `internal/identity/service.go` owns identity rules, `internal/auth/role.go`
@@ -175,7 +178,8 @@ one of three fixed roles - Administrator, Operator or Viewer.
   `src/preferences/store.ts` is the only module that touches browser storage.
 - `05_Software/integrations/sdk/python/` is the supported Python authoring
   surface; `05_Software/integrations/sigrok/` and
-  `05_Software/integrations/camera/` are the current curated packages.
+  `05_Software/integrations/camera/` and `05_Software/integrations/serial/` are
+  the current curated packages.
   `05_Software/contracts/integration/v1/` is the public, language-neutral
   package contract mirrored by the Go loader. The test-only Go runner in
   `05_Software/tests/fixtures/contract_runner/` exercises the shared boundary.

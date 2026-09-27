@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "revision",
+    "settings"
+  ],
+  "properties": {
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "settings": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "baud_rate": {
+          "type": "integer",
+          "minimum": 50,
+          "maximum": 4000000
+        },
+        "data_bits": {
+          "enum": [
+            5,
+            6,
+            7,
+            8
+          ]
+        },
+        "parity": {
+          "enum": [
+            "none",
+            "odd",
+            "even",
+            "mark",
+            "space"
+          ]
+        },
+        "stop_bits": {
+          "enum": [
+            1,
+            1.5,
+            2
+          ]
+        },
+        "flow_control": {
+          "enum": [
+            "none",
+            "rtscts",
+            "xonxoff"
+          ]
+        },
+        "rts": {
+          "type": "boolean"
+        },
+        "dtr": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

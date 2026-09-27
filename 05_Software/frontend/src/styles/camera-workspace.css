@@ -145,5 +145,7 @@
   overflow-wrap: anywhere;
 }
 .camera-view-heading .camera-live-toolbar {
+  margin-inline-start: auto;
+  justify-content: flex-end;
   min-width: 0;
 }

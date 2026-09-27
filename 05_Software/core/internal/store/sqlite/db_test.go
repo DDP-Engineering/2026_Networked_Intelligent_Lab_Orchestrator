@@ -46,7 +46,7 @@ func TestOpenConfiguresDurableDatabaseAndMigratesAllFoundationTables(t *testing.
 		"config_versions", "device_networks", "device_policies", "identify_operations", "management_access", "mcp_tokens", "network_interface_settings", "network_operations", "network_recovery",
 		"network_traffic_minute",
 		"operation_policy_overrides",
-		"operation_requests", "password_policy", "policy_snapshots", "resource_leases", "retention_watermarks", "schema_migrations", "sessions",
+		"operation_requests", "password_policy", "policy_snapshots", "resource_leases", "retention_watermarks", "schema_migrations", "serial_connections", "serial_logs", "serial_retention", "serial_sends", "sessions",
 		"user_sessions", "users", "vpn_profiles",
 	}
 	if gotTables := nonInternalTableNames(t, db.SQL()); !slices.Equal(gotTables, wantTables) {

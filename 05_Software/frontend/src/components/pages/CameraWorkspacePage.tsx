@@ -313,7 +313,7 @@ export function CameraWorkspacePage({
         : t('cw.stopped');
   const bytes = (n: number) => `${(n / 1048576).toFixed(1)} MiB`;
   const liveToolbar = (
-    <div className="camera-live-toolbar">
+    <div className="camera-live-toolbar workspace-actions">
       <strong
         title={
           live && status?.expires_at
@@ -425,7 +425,7 @@ export function CameraWorkspacePage({
           <MessageBanner tone="error">{t('cw.failed')}</MessageBanner>
         )}
         {pending && (
-          <MessageBanner tone="warning">
+          <MessageBanner tone="warning" presentation="inline">
             {t('cw.approval')}{' '}
             <button
               disabled={!session.permissions.includes('bench.approve')}

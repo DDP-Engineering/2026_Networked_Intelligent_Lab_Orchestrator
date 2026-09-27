@@ -17,6 +17,8 @@ export const PREFERENCE_KEYS = {
   theme: 'nilo.theme',
   language: 'nilo.language',
   navigationWidth: 'nilo.navigationWidth',
+  serialSettings: 'nilo.serialSettings',
+  serialDisplay: 'nilo.serialDisplay',
 } as const;
 
 /** One of the persisted display preferences. */

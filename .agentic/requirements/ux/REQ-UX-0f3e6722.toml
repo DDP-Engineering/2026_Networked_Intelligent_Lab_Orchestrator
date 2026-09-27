@@ -1,0 +1,12 @@
+schema = 1
+id = "REQ-UX-0f3e6722"
+title = "Shared dismissible workspace notifications"
+status = "active"
+requirement = "When a plugin or system page reports general action feedback, NILO shall present it in a shared responsive upper-right workspace notification area with a severity prefix, color and left-side dismiss control, preserving actionable approvals and contextual validation inline."
+verification = "Component tests verify severity, dismissal, duplicate coalescing, info timeout paused during interaction, persistent warnings/errors, changed messages, unmount cleanup, inline approvals and fullscreen placement; browser layout tests verify overlays consume no workspace height and remain within narrow and wide viewports."
+affected_paths = ["05_Software/frontend/"]
+linked_tests = ["05_Software/frontend/e2e/network.spec.ts", "05_Software/frontend/e2e/field-display.spec.ts", "05_Software/frontend/src/components/MessageBanner.test.tsx", "05_Software/frontend/src/components/pages/NetworkPage.test.tsx", "05_Software/frontend/src/components/AuthenticationPage.test.tsx", "05_Software/frontend/src/components/pages/AboutPage.test.tsx", "05_Software/frontend/src/components/pages/ActivityPage.test.tsx", "05_Software/frontend/e2e/serial-layout.check.ts"]
+spec = "specs/workspace-notifications.md"
+priority = "normal"
+created = 2026-09-27
+updated = 2026-09-27

@@ -232,6 +232,8 @@ class CameraIntegration:
                 request.parameters, self.device_settings.get(device_id, {}), self.plugin_settings
             )
             await asyncio.to_thread(self.workspace.run)
+            if self.workspace.error == "capture_failed":
+                raise ExecuteFailure("capture_failed", "Camera acquisition failed")
             return ExecuteResult(status="completed", data={"state": "stopped"})
 
         if request.operation == "discover_devices":

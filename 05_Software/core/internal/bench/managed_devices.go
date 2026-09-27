@@ -20,7 +20,7 @@ func (manager *Manager) runnerConfiguration(ctx context.Context, pluginID, devic
 	}
 	var device any
 	if deviceID != "" {
-		record, err := cameraRecord(ctx, manager, deviceID)
+		record, err := managedRecord(ctx, manager, pluginID, deviceID)
 		if err != nil || record.PluginID != pluginID {
 			return nil, ErrNotFound
 		}
@@ -36,7 +36,9 @@ func (manager *Manager) ConfigurePlugin(ctx context.Context, actor identity.Acto
 	}
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
-	if manager.cameraBusy(pluginID) { return sqlite.PluginConfiguration{}, ErrBusy }
+	if manager.serialBusy(pluginID) || manager.cameraBusy(pluginID) {
+		return sqlite.PluginConfiguration{}, ErrBusy
+	}
 	plugin, err := manager.loadPlugin(ctx, pluginID)
 	if err != nil {
 		return sqlite.PluginConfiguration{}, err
@@ -93,12 +95,14 @@ func (manager *Manager) ConfigureDevice(ctx context.Context, actor identity.Acto
 	}
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
-	if manager.cameraBusy(deviceID) { return Device{}, ErrBusy }
+	if manager.serialBusy(deviceID) || manager.cameraBusy(deviceID) {
+		return Device{}, ErrBusy
+	}
 	plugin, err := manager.loadPlugin(ctx, pluginID)
 	if err != nil {
 		return Device{}, err
 	}
-	if !plugin.Installed || !plugin.Enabled || pluginID != "camera" {
+	if !plugin.Installed || !plugin.Enabled || (pluginID != "camera" && pluginID != "serial") {
 		return Device{}, ErrUnavailable
 	}
 	root, err := manager.packageRoot(pluginID)
@@ -125,6 +129,13 @@ func (manager *Manager) ConfigureDevice(ctx context.Context, actor identity.Acto
 	}
 	if record.Presence != "present" || record.EndpointID == "" || !record.Enabled {
 		return managedCameraDevices([]sqlite.ManagedDeviceRecord{record})[0], nil
+	}
+	if pluginID == "serial" {
+		ready, err := repository.MarkReady(ctx, pluginID, deviceID, record.Revision)
+		if err != nil {
+			return Device{}, err
+		}
+		return managedCameraDevices([]sqlite.ManagedDeviceRecord{ready})[0], nil
 	}
 	runner, err := manager.processConfigured(plugin, deviceID)
 	if err != nil {
@@ -166,7 +177,7 @@ func (manager *Manager) ListManagedDevices(ctx context.Context, actor identity.A
 	if err := require(actor, auth.PermissionBenchRead); err != nil {
 		return nil, err
 	}
-	if pluginID != "camera" {
+	if pluginID != "camera" && pluginID != "serial" {
 		return nil, ErrNotFound
 	}
 	plugin, err := manager.loadPlugin(ctx, pluginID)
@@ -184,12 +195,14 @@ func (manager *Manager) RebindDevice(ctx context.Context, actor identity.Actor, 
 	if err := require(actor, auth.PermissionPluginsManage); err != nil {
 		return Device{}, err
 	}
-	if pluginID != "camera" || confirmation != deviceID {
+	if (pluginID != "camera" && pluginID != "serial") || confirmation != deviceID {
 		return Device{}, ErrInvalid
 	}
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
-	if manager.cameraBusy(deviceID) { return Device{}, ErrBusy }
+	if manager.serialBusy(deviceID) || manager.cameraBusy(deviceID) {
+		return Device{}, ErrBusy
+	}
 	plugin, err := manager.loadPlugin(ctx, pluginID)
 	if err != nil {
 		return Device{}, err
@@ -211,7 +224,7 @@ func (manager *Manager) RebindDevice(ctx context.Context, actor identity.Actor, 
 		return Device{}, err
 	}
 	if record.Enabled && record.EndpointID != "" {
-		if err := manager.resetCameraBaseline(ctx, plugin, record); err != nil {
+		if err := manager.initializeDevice(ctx, plugin, record); err != nil {
 			manager.report(err)
 			_ = sqlite.NewManagedDeviceRepository(manager.options.Database).MarkFailed(ctx, plugin.ID, record.ID, record.Revision)
 		}
@@ -233,12 +246,14 @@ func (manager *Manager) ForgetDevice(ctx context.Context, actor identity.Actor, 
 	if err := require(actor, auth.PermissionPluginsManage); err != nil {
 		return err
 	}
-	if pluginID != "camera" || confirmation != deviceID {
+	if (pluginID != "camera" && pluginID != "serial") || confirmation != deviceID {
 		return ErrInvalid
 	}
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
-	if manager.cameraBusy(deviceID) { return ErrBusy }
+	if manager.serialBusy(deviceID) || manager.cameraBusy(deviceID) {
+		return ErrBusy
+	}
 	if err := manager.record(ctx, actor, "device.forget_requested", pluginID+"/"+deviceID, map[string]any{"revision": revision}); err != nil {
 		return err
 	}
@@ -249,6 +264,9 @@ func (manager *Manager) ForgetDevice(ctx context.Context, actor identity.Actor, 
 	if err != nil {
 		return err
 	}
+	if pluginID == "serial" {
+		delete(manager.serials, deviceID)
+	}
 	return manager.record(ctx, actor, "device.forgotten", pluginID+"/"+deviceID, map[string]any{"old_revision": revision, "revision": revision + 1})
 }
 
@@ -257,12 +275,14 @@ func (manager *Manager) SetDeviceEnabled(ctx context.Context, actor identity.Act
 	if err := require(actor, auth.PermissionPluginsManage); err != nil {
 		return Device{}, err
 	}
-	if pluginID != "camera" {
+	if pluginID != "camera" && pluginID != "serial" {
 		return Device{}, ErrNotFound
 	}
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
-	if manager.cameraBusy(deviceID) { return Device{}, ErrBusy }
+	if (manager.serialBusy(deviceID) && (pluginID != "serial" || enabled)) || manager.cameraBusy(deviceID) {
+		return Device{}, ErrBusy
+	}
 	plugin, err := manager.loadPlugin(ctx, pluginID)
 	if err != nil {
 		return Device{}, err
@@ -281,8 +301,11 @@ func (manager *Manager) SetDeviceEnabled(ctx context.Context, actor identity.Act
 	if err != nil {
 		return Device{}, err
 	}
+	if pluginID == "serial" && !enabled {
+		manager.stopSerialLocked(deviceID, "device_disabled")
+	}
 	if enabled && record.Presence == "present" && record.EndpointID != "" {
-		if err := manager.resetCameraBaseline(ctx, plugin, record); err != nil {
+		if err := manager.initializeDevice(ctx, plugin, record); err != nil {
 			manager.report(err)
 			_ = repository.MarkFailed(ctx, pluginID, deviceID, record.Revision)
 		}
@@ -307,12 +330,14 @@ func (manager *Manager) RetryDevice(ctx context.Context, actor identity.Actor, p
 	if err := require(actor, auth.PermissionPluginsManage); err != nil {
 		return Device{}, err
 	}
-	if pluginID != "camera" {
+	if pluginID != "camera" && pluginID != "serial" {
 		return Device{}, ErrNotFound
 	}
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
-	if manager.cameraBusy(deviceID) { return Device{}, ErrBusy }
+	if manager.serialBusy(deviceID) || manager.cameraBusy(deviceID) {
+		return Device{}, ErrBusy
+	}
 	plugin, err := manager.loadPlugin(ctx, pluginID)
 	if err != nil {
 		return Device{}, err
@@ -331,7 +356,7 @@ func (manager *Manager) RetryDevice(ctx context.Context, actor identity.Actor, p
 	if err != nil {
 		return Device{}, err
 	}
-	if err := manager.resetCameraBaseline(ctx, plugin, record); err != nil {
+	if err := manager.initializeDevice(ctx, plugin, record); err != nil {
 		_ = repository.MarkFailed(ctx, pluginID, deviceID, record.Revision)
 		return Device{}, ErrUnavailable
 	}
@@ -345,4 +370,12 @@ func (manager *Manager) RetryDevice(ctx context.Context, actor identity.Actor, p
 		}
 	}
 	return Device{}, ErrNotFound
+}
+
+func (manager *Manager) initializeDevice(ctx context.Context, plugin Plugin, record sqlite.ManagedDeviceRecord) error {
+	if plugin.ID == "serial" {
+		_, err := sqlite.NewManagedDeviceRepository(manager.options.Database).MarkReady(ctx, plugin.ID, record.ID, record.Revision)
+		return err
+	}
+	return manager.resetCameraBaseline(ctx, plugin, record)
 }

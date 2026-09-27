@@ -11,6 +11,12 @@ Camera navigation starts at `src/components/shell/pages.ts` and `SideNav.tsx`;
 physical controls, appliance configuration and snapshot viewing start at
 `src/components/pages/CameraSection.tsx` and `CameraPluginPage.tsx`; Camera-specific behavior is mapped in
 [Camera integration](camera-integration.md).
+USB serial navigation uses the same shell tree. `SerialWorkspacePage.tsx` owns
+connection approvals, port settings, transmissions and signals; `SerialTerminal.tsx`
+and `serialBuffer.ts` own bounded plain-text/hex projection and virtualized rows;
+`SerialSessionsPage.tsx` owns saved-log viewing, exports and confirmed deletion.
+`CameraPluginPage.tsx` parameterizes the shared Camera/USB serial administration
+layout while the plugin-specific vocabulary stays in the language catalogue.
 Network workflows and shared small-screen rules are mapped in
 [Network GUI](network-gui.md) and [Compact field interface](field-interface.md).
 
@@ -32,6 +38,25 @@ reads backend status and the selected runtime's integration and device inventory
 and — as an administrator — administers identities and API tokens, including
 their permanent deletion, without ever
 suggesting that a simulated result came from physical equipment.
+
+## USB serial workspace
+
+`REQ-UX-7338451f` provides administrator-only System configuration and per-device
+RealTime View/Sessions destinations. The Core remains authoritative for connection
+ownership, approval, live bytes, logging and retention. The browser escapes control
+bytes, decodes split UTF-8, offers ASCII/hex, timestamps, filters, pause and clear,
+and bounds history to 2 MiB/10,000 rows. Only viewport rows are mounted. Changing
+port settings requires a disconnected port; send retries retain the original key.
+Port and display preferences go through `preferences/store.ts`; transmitted text
+and credentials are volatile. Cookie-session exports use authenticated attachment
+URLs and browser streaming. Selected completed/incomplete logs require confirmation
+before deletion; Core protects active/download-leased files.
+
+Focused component/API/terminal tests are beside their sources. The test-only
+`playwright.serial.config.ts` runs `e2e/serial-layout.check.ts` against the isolated
+frontend fixture with mocked HTTP responses at 320, 800, 1024 and 1920 pixels.
+This verifies reflow and keyboard behavior; physical serial behavior is verified
+by the runner/Core and later hardware acceptance.
 
 ## Public interface
 
@@ -83,6 +108,23 @@ Bench Core itself, where the same paths are already same-origin.
 
 ## Runtime presentation
 
+Plugin and system pages share `MessageBanner` and a page-scoped
+`NotificationProvider` in AppShell. General feedback appears in a bounded overlay
+at the workspace's upper right, below the responsive page header. Each callout
+has a severity prefix, theme-aware color and a 44-pixel dismiss button on its
+left. Info expires after five seconds, paused by hover or focus; warnings and
+errors persist until dismissed or their source clears. Duplicate messages
+coalesce, and identical polling does not reverse dismissal. Notifications follow
+fullscreen instruments and retain dismissal across fullscreen transitions.
+`presentation="inline"` preserves approval controls and contextual warnings.
+Form errors, destructive confirmations and operation progress remain beside
+their controls. Notification state is volatile; page changes reset its scope
+while preserving the page components' existing lifecycle.
+
+Camera and Serial realtime headers align their wrapping action groups to the
+right. Serial RX/TX counters share the terminal toolbar; connection ownership
+and expiry are available through a compact disclosure.
+
 Built assets served by Bench Core receive a `nilo-runtime-profile` HTML meta tag.
 Authenticated status remains authoritative for the workspace runtime badge and
 reported inventory. The metadata contains no network inventory and grants no
@@ -107,14 +149,20 @@ runtime status.
 - The Camera page reads managed physical devices and bounded previews of
   authorized retained snapshots from the authenticated Bench API.
 - Camera navigation reads authenticated plugin inventory. System owns package
-  and persistent device configuration; Bench owns enabled, named physical
-  devices and their working views. A failed inventory refresh retains the last
-  successful tree until an authoritative read succeeds.
+  and persistent device configuration. Instruments shows installed, enabled, ready
+  plugins with configured, enabled, present, ready devices. Empty groups are hidden.
+  Legacy integrations require healthy/ready status and a ready device. Failed plugin
+  refreshes hide Instruments in both navigation layouts while preserving open tabs;
+  a successful authoritative inventory restores eligible entries. Camera and Serial presence
+  refreshes automatically in Core; browser polling reads the reported inventory.
 - Instrument submission retries preserve a command key until a response arrives;
   history reattaches by transaction ID and polling never submits work.
 - The server authorizes every action even when UI controls are hidden or disabled.
 
 ## Key behaviors
+
+- `REQ-UX-74d4256e` - limits operator navigation to active plugins and currently
+  ready hardware while preserving administrator configuration access.
 
 - `REQ-UX-4f9b8d21` - presents nested Camera routes by stable plugin and device
   IDs, with configured device names shown in navigation and tabs.
@@ -304,12 +352,16 @@ flowchart LR
     app["App: credential, identity and connection state"]
     signin["SignInScreen: product version, password sign-in and visibility"]
     shell["AppShell: one grid, four cells"]
+    notifications["NotificationProvider: scoped stack and fullscreen host"]
+    feedback["MessageBanner: notification or contextual inline feedback"]
+    shell --> notifications
+    feedback --> notifications
     toprow["TopRow: tabs, network, SIM, appearance, language, account"]
     sidenav["SideNav: recursive working and System destination tree"]
     pages["Bench, Camera administration and physical views, Network, Activity, Authentication, About"]
     tokens["styles/tokens.css: one semantic palette, three themes"]
     catalogue["i18n: en, de, ro over one key set"]
-    prefs["preferences/store: theme, language and navigation width"]
+    prefs["preferences/store: theme, language, navigation width and serial display/port choices"]
     admin["AuthenticationPage(view): fetch-free dispatcher"]
     users["UsersPage: identities and user mutations"]
     apitokens["ApiTokensPage: safe token records and one-time disclosure"]
@@ -331,6 +383,9 @@ flowchart LR
     instruments --> client
     pages --> camera["CameraSection: scoped configuration, physical controls and snapshots"]
     camera --> client
+    pages --> serial["Serial workspace, virtualized terminal and sessions"]
+    serial --> serialapi["api/serial: authenticated serial requests"]
+    serialapi --> backend
     pages --> admin
     admin --> users
     admin --> apitokens
@@ -417,6 +472,19 @@ from an unusable device inventory while the status and the other inventory stay
 visible.
 
 ## Files
+
+- `src/components/MessageBanner.tsx` and `MessageBanner.test.tsx` - shared
+  notification registration, coalescing, dismissal, timing, fullscreen placement
+  and inline contextual feedback. Responsive geometry is checked by
+  `e2e/serial-layout.check.ts` through the same shell provider.
+
+- `05_Software/frontend/src/api/serial.ts` - finite serial service and wire types.
+- `05_Software/frontend/src/components/pages/SerialWorkspacePage.tsx`,
+  `SerialTerminal.tsx`, `serialBuffer.ts`, `SerialSessionsPage.tsx` - serial
+  connection, bounded display and retained sessions.
+- `05_Software/frontend/src/i18n/serial.ts` and
+  `src/styles/serial-workspace.css` - serial translations and responsive layout.
+- `05_Software/frontend/e2e/serial-layout.check.ts` - isolated browser layout checks.
 
 - `src/components/network/CommissioningPanel.tsx` - the first-boot workflow: the standing temporary-exposure alert, the eligible adapters with their stable identities and addresses, the current browser path, the usable URLs and their scope, and the completion control with its confirmation step.
 

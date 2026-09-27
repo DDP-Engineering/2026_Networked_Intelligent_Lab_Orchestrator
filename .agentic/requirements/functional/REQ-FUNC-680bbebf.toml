@@ -1,0 +1,12 @@
+schema = 1
+id = "REQ-FUNC-680bbebf"
+title = "Control serial port settings and signals"
+status = "active"
+requirement = "When a serial connection opens or a supported modem-line operation is requested, NILO shall apply the approved port settings and report effective or unavailable hardware controls without fabricating support."
+verification = "Validate all settings and signal ownership combinations; pseudo-terminal checks cover real opening while unsupported modem ioctl results remain unavailable."
+affected_paths = ["05_Software/core/internal/bench/", "05_Software/core/internal/httpapi/", "05_Software/core/internal/store/sqlite/", "05_Software/integrations/serial/", "02_Tools/scripts/"]
+linked_tests = ["05_Software/integrations/serial/tests/test_transport.py", "05_Software/integrations/serial/tests/test_workspace.py", "05_Software/core/internal/bench/serial_test.go", "05_Software/core/internal/bench/serial_lifecycle_test.go"]
+spec = "specs/usb-serial.md"
+priority = "high"
+created = 2026-09-27
+updated = 2026-09-27

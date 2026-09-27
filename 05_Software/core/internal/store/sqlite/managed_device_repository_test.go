@@ -7,6 +7,29 @@ import (
 	"time"
 )
 
+func TestUnchangedHardwarePollPreservesRevision(t *testing.T) {
+	repository := NewManagedDeviceRepository(openTemporaryDatabase(t))
+	observed := ManagedDeviceObservation{Kind: "camera", Vendor: "046d", Product: "0825", Serial: "ABC", PortPath: "1-1.2", EndpointID: "video0"}
+	first, err := repository.Reconcile(t.Context(), "camera", []ManagedDeviceObservation{observed}, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := repository.Reconcile(t.Context(), "camera", []ManagedDeviceObservation{observed}, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if second[0].Revision != first[0].Revision {
+		t.Fatal("unchanged presence invalidated configuration revision")
+	}
+	third, err := repository.Reconcile(t.Context(), "camera", nil, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if third[0].Presence != "absent" || third[0].Revision <= second[0].Revision {
+		t.Fatal("unplug did not change presence and revision")
+	}
+}
+
 func TestManagedDeviceReconcileKeepsSerialAndPortIdentities(t *testing.T) {
 	database := openTemporaryDatabase(t)
 	repository := NewManagedDeviceRepository(database)

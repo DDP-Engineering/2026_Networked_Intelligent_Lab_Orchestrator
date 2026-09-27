@@ -1,0 +1,12 @@
+schema = 1
+id = "REQ-FUNC-f3baf991"
+title = "Administer USB serial plugin"
+status = "active"
+requirement = "When an administrator changes USB serial plugin or device enablement, Core shall apply the existing curated lifecycle and policy model and close disabled active serial connections with log finalization."
+verification = "Exercise enable/disable/discover/configure with operator/admin actors and an active connection; assert state and device release, plus Camera regression."
+affected_paths = ["05_Software/core/internal/bench/", "05_Software/core/internal/httpapi/", "05_Software/core/internal/store/sqlite/"]
+linked_tests = ["05_Software/core/internal/bench/serial_test.go", "05_Software/core/internal/bench/serial_lifecycle_test.go"]
+spec = "specs/usb-serial.md"
+priority = "high"
+created = 2026-09-27
+updated = 2026-09-27

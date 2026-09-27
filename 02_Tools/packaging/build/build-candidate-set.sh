@@ -87,6 +87,15 @@ python3 "$work/source/02_Tools/scripts/build-camera-bundle.py" \
   --wheelhouse "$pi_camera_build_input/wheelhouse" \
   --out "$work/bundles/arm64/camera" --architecture arm64 \
   --runtime-root "$pi_sigrok_runtime"
+serial_wheels=${NILO_SERIAL_WHEELHOUSE:-/outputs/python-packages}
+python3 "$work/source/02_Tools/scripts/build-serial-bundle.py" \
+  --project "$work/source/05_Software/integrations/serial" \
+  --dependency-root "$ubuntu_camera_build_input/dependencies" --wheelhouse "$serial_wheels" \
+  --out "$work/bundles/amd64/serial" --architecture amd64 --runtime-root "$ubuntu_sigrok_runtime"
+python3 "$work/source/02_Tools/scripts/build-serial-bundle.py" \
+  --project "$work/source/05_Software/integrations/serial" \
+  --dependency-root "$pi_camera_build_input/dependencies" --wheelhouse "$serial_wheels" \
+  --out "$work/bundles/arm64/serial" --architecture arm64 --runtime-root "$pi_sigrok_runtime"
 sh "$work/source/02_Tools/packaging/build/stage-payload.sh" ubuntu-24.04-amd64 \
   "$work/bin/amd64" "$work/gui" "$work/bundles/amd64" "$work/stage-amd64"
 sh "$work/source/02_Tools/packaging/build/stage-payload.sh" rpi-debian13-arm64 \

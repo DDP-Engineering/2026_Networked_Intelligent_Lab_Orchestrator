@@ -2,6 +2,9 @@
 
 Project goals, architecture decisions, milestones, and implementation plans.
 
+- [USB to Serial plugin](USB_to_Serial_Plugin_Plan.md): terminal, session
+  approval, bounded RX/TX, saved logs and retention; implementation uses AEGIS,
+  with physical Pi acceptance after the user supplies an adapter and requests deployment.
 - [Sigrok waveform workspace](Sigrok_Waveform_Workspace/README.md):
   current PulseView feature research, NILO workflow and contracts, and a
   multi-task implementation plan for the native browser waveform interface.

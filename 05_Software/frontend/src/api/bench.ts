@@ -90,7 +90,7 @@ const device = (value: unknown): value is InstrumentDevice => {
     typeof value.display_name !== 'string'
   )
     return false;
-  if (value.kind === 'camera')
+  if (value.kind === 'camera' || value.kind === 'usb-serial')
     return (
       ['unknown', 'present', 'absent'].includes(String(value.presence)) &&
       ['unconfigured', 'initializing', 'ready', 'failed'].includes(

@@ -178,15 +178,22 @@ func (m *Manager) executeCameraCommand(ctx context.Context, job Job, p Plugin) (
 		m.cameraWorkers.Add(1)
 		go func(s *cameraSession) {
 			defer m.cameraWorkers.Done()
-			defer close(s.done)
 			defer cancel()
 			defer transport.CloseIdleConnections()
 			_, runErr := runner.Execute(runCtx, protocol.ExecuteRequest{Type: "execute", Operation: "stream", Parameters: parameters}, discardEvents{})
 			shutdown, finish := context.WithTimeout(context.Background(), 3*time.Second)
 			defer finish()
 			_ = runner.Shutdown(shutdown)
+			close(s.done)
 			if runErr != nil && runCtx.Err() == nil {
 				m.report(runErr)
+				m.mu.Lock()
+				if m.cameras[id] == s {
+					final, finish := context.WithTimeout(context.Background(), 2*time.Second)
+					m.markHardwareFailed(final, "camera", id)
+					finish()
+				}
+				m.mu.Unlock()
 			}
 		}(session)
 		ready := time.NewTicker(100 * time.Millisecond)
@@ -324,6 +331,9 @@ func (m *Manager) CameraWorkspace(ctx context.Context, actor identity.Actor, id 
 				if callErr == nil {
 					var live map[string]any
 					if json.Unmarshal(raw, &live) == nil {
+						if live["error"] == "capture_failed" {
+							m.markHardwareFailed(ctx, "camera", id)
+						}
 						for key, value := range live {
 							result[key] = value
 						}

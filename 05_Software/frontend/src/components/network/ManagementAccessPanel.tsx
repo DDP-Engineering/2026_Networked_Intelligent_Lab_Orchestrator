@@ -1,3 +1,4 @@
+import { MessageBanner } from '../MessageBanner';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type {
@@ -239,22 +240,24 @@ export function ManagementAccessPanel({
 
   return (
     <section aria-label={t('network.management.title')} className="management-access">
-      <p
-        className={`management-status ${failure !== null || readState === 'failed' || status?.state === 'failed' ? 'notice notice-unknown' : ''}`}
-        role={
-          failure !== null || readState === 'failed' || status?.state === 'failed'
-            ? 'alert'
-            : 'status'
-        }
-      >
-        {failure !== null
-          ? failure.detail
-          : readState === 'failed'
-            ? t('network.management.unreadable')
-            : status === null
-              ? t('network.reading')
-              : outcomeDetail || t(ACCESS_STATE_KEYS[status.state])}
-      </p>
+      {failure !== null || readState === 'failed' || status?.state === 'failed' ? (
+        <MessageBanner tone="error">
+          {failure?.detail ??
+            (readState === 'failed'
+              ? t('network.management.unreadable')
+              : outcomeDetail || t('network.management.state.failed'))}
+        </MessageBanner>
+      ) : status === null || status.state === 'pending' ? (
+        <p className="management-status" role="status">
+          {status === null
+            ? t('network.reading')
+            : outcomeDetail || t(ACCESS_STATE_KEYS[status.state])}
+        </p>
+      ) : (
+        <MessageBanner tone="info">
+          {outcomeDetail || t(ACCESS_STATE_KEYS[status.state])}
+        </MessageBanner>
+      )}
       <NetworkInterfacesTable
         interfaces={interfaces}
         deviceNetworks={deviceNetworks}

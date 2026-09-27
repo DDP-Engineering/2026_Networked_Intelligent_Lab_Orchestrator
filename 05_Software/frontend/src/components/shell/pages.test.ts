@@ -121,6 +121,52 @@ describe('physical Camera navigation', () => {
     expect(pages.some((page) => page.id === integrationPageId('camera'))).toBe(false);
   });
 
+  it.each([
+    { presence: 'absent' },
+    { presence: 'unknown' },
+    { readiness: 'failed' },
+    { readiness: 'initializing' },
+    { readiness: 'unconfigured' },
+    { enabled: false },
+    { configured: false },
+    { presence: undefined },
+  ])('hides unusable cameras and empty groups: %j', (change) => {
+    const pages = buildPages(admin, [camera], devices, [
+      { ...packageRecord, devices: [{ ...packageRecord.devices[0], ...change }] },
+    ]);
+    expect(pages.filter((page) => page.cluster === 'instruments')).toEqual([]);
+    expect(pages.some((page) => page.id === 'plugins:camera')).toBe(true);
+  });
+
+  it('requires a ready plugin even when its saved devices say ready', () => {
+    const pages = buildPages(admin, [camera], devices, [
+      { ...packageRecord, status: 'unavailable' },
+    ]);
+    expect(pages.filter((page) => page.cluster === 'instruments')).toEqual([]);
+  });
+
+  it('filters legacy instruments by plugin and hardware availability', () => {
+    const integration = { ...camera, id: 'sigrok' };
+    const hardware = { ...devices[0], integrationId: 'sigrok' };
+    const plugin = { ...packageRecord, id: 'sigrok' };
+    const menu = (state: string, ready: string, enabled: boolean) =>
+      buildPages(
+        admin,
+        [{ ...integration, status: state }],
+        [{ ...hardware, status: ready }],
+        [{ ...plugin, enabled }],
+      ).filter((page) => page.cluster === 'instruments');
+    expect(menu('ready', 'ready', true)).toHaveLength(1);
+    expect(menu('ready', 'ready', false)).toEqual([]);
+    expect(menu('unavailable', 'ready', true)).toEqual([]);
+    expect(menu('ready', 'unavailable', true)).toEqual([]);
+    expect(
+      buildPages(admin, [integration], [], [plugin]).filter(
+        (page) => page.cluster === 'instruments',
+      ),
+    ).toEqual([]);
+  });
+
   it('shows every installed plugin under System > Plugins, including disabled ones', () => {
     const pages = buildPages(
       admin,

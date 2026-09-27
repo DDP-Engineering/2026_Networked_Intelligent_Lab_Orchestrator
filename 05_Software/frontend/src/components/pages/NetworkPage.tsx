@@ -615,7 +615,7 @@ export function NetworkPage({
           <InstallationProgress progress={running.progress} />
         )}
         {running !== null && running.state === 'confirmed' && (
-          <p className="notice network-notice" role="status">
+          <MessageBanner tone="info" onDismiss={() => setRunning(null)}>
             <span>
               {t(
                 running.action === 'wireguard.install'
@@ -623,18 +623,12 @@ export function NetworkPage({
                   : 'network.change.kept',
               )}
             </span>
-            <button type="button" onClick={() => setRunning(null)}>
-              {t('network.dismiss')}
-            </button>
-          </p>
+          </MessageBanner>
         )}
         {running !== null && running.state === 'rolled_back' && (
-          <p className="notice network-notice" role="status">
+          <MessageBanner tone="info" onDismiss={() => setRunning(null)}>
             <span>{t('network.change.restored')}</span>
-            <button type="button" onClick={() => setRunning(null)}>
-              {t('network.dismiss')}
-            </button>
-          </p>
+          </MessageBanner>
         )}
         {running !== null &&
           (running.state === 'rollback_failed' || running.state === 'failed') && (

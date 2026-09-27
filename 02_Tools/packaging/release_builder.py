@@ -475,6 +475,8 @@ if ! getent group nilo >/dev/null 2>&1; then addgroup --system nilo; fi
 if ! id nilo >/dev/null 2>&1; then adduser --system --ingroup nilo --home /var/lib/nilo --no-create-home nilo; fi
 if ! getent group video >/dev/null 2>&1; then addgroup --system video; fi
 adduser nilo video
+if ! getent group dialout >/dev/null 2>&1; then addgroup --system dialout; fi
+adduser nilo dialout
 install -d -o nilo -g nilo -m 0750 /var/lib/nilo /var/log/nilo /run/nilo
 install -d -o root -g root -m 0700 /var/lib/nilo-installer /var/lib/nilo-installer/transactions
 service_uid=$(id -u nilo)

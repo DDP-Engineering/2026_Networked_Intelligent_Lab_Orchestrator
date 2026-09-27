@@ -33,7 +33,7 @@ type jobRunner struct {
 
 func (m *Manager) operationService(job Job, p Plugin) (operation.Service, *jobRunner, error) {
 	deviceID := ""
-	if job.PluginID == "camera" {
+	if job.PluginID == "camera" || job.PluginID == "serial" {
 		deviceID = job.Submission.DeviceID
 	}
 	runner, err := m.processConfigured(p, deviceID)
@@ -102,6 +102,9 @@ func (r *jobRunner) Revalidate(ctx context.Context, request domain.OperationRequ
 }
 
 func (r *jobRunner) Execute(ctx context.Context, request protocol.ExecuteRequest, sink protocol.EventSink) (protocol.ExecuteResult, error) {
+	if r.plugin.ID == "serial" && request.Operation == "connect" {
+		return r.manager.executeSerialConnect(ctx, r.job, r.plugin)
+	}
 	if r.plugin.ID == "camera" && request.Operation == "workspace" {
 		result, err := r.manager.executeCameraCommand(ctx, r.job, r.plugin)
 		if err == nil {

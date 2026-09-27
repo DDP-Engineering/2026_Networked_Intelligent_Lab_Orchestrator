@@ -30,6 +30,7 @@ func toolActor(ctx context.Context, request *sdk.CallToolRequest, options Handle
 }
 
 func registerBenchTools(server *sdk.Server, options HandlerOptions) {
+	registerSerialTools(server, options)
 	register := func(name, description string, readOnly bool, properties map[string]any, required []string, call func(context.Context, identity.Actor, json.RawMessage) (any, error)) {
 		server.AddTool(&sdk.Tool{Name: name, Description: description, Annotations: &sdk.ToolAnnotations{ReadOnlyHint: readOnly}, InputSchema: map[string]any{"type": "object", "properties": properties, "required": required, "additionalProperties": false}}, func(ctx context.Context, request *sdk.CallToolRequest) (*sdk.CallToolResult, error) {
 			actor, err := toolActor(ctx, request, options)
@@ -174,7 +175,7 @@ func registerBenchTools(server *sdk.Server, options HandlerOptions) {
 		}
 		return options.Bench.PluginConfiguration(ctx, a, input.ID)
 	})
-	register("plugin_device_configure", "Name and configure a managed camera at its current revision. Requires plugins.manage.", false, map[string]any{"plugin_id": text(), "device_id": text(), "revision": map[string]any{"type": "integer", "minimum": 1}, "name": text(), "purpose": text(), "settings": map[string]any{"type": "object"}}, []string{"plugin_id", "device_id", "revision", "name", "settings"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+	register("plugin_device_configure", "Name and configure a managed device at its current revision. Requires plugins.manage.", false, map[string]any{"plugin_id": text(), "device_id": text(), "revision": map[string]any{"type": "integer", "minimum": 1}, "name": text(), "purpose": text(), "settings": map[string]any{"type": "object"}}, []string{"plugin_id", "device_id", "revision", "name", "settings"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
 		var input struct {
 			PluginID string          `json:"plugin_id"`
 			DeviceID string          `json:"device_id"`
@@ -188,7 +189,7 @@ func registerBenchTools(server *sdk.Server, options HandlerOptions) {
 		}
 		return options.Bench.ConfigureDevice(ctx, a, input.PluginID, input.DeviceID, input.Revision, input.Name, input.Purpose, input.Settings)
 	})
-	register("plugin_device_rebind", "Rebind a provisional physical camera to an absent record. Requires current revisions and exact record-ID confirmation.", false,
+	register("plugin_device_rebind", "Rebind a provisional physical device to an absent record. Requires current revisions and exact record-ID confirmation.", false,
 		map[string]any{"plugin_id": text(), "device_id": text(), "revision": map[string]any{"type": "integer", "minimum": 1}, "provisional_id": text(), "provisional_revision": map[string]any{"type": "integer", "minimum": 1}, "confirm_device_id": text()},
 		[]string{"plugin_id", "device_id", "revision", "provisional_id", "provisional_revision", "confirm_device_id"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
 			var input struct {
@@ -204,7 +205,7 @@ func registerBenchTools(server *sdk.Server, options HandlerOptions) {
 			}
 			return options.Bench.RebindDevice(ctx, a, input.PluginID, input.DeviceID, input.Revision, input.ProvisionalID, input.ProvisionalRevision, input.Confirmation)
 		})
-	register("plugin_device_forget", "Forget a managed camera record after checking its revision and exact record-ID confirmation. History remains retained.", false,
+	register("plugin_device_forget", "Forget a managed device record after checking its revision and exact record-ID confirmation. History remains retained.", false,
 		map[string]any{"plugin_id": text(), "device_id": text(), "revision": map[string]any{"type": "integer", "minimum": 1}, "confirm_device_id": text()},
 		[]string{"plugin_id", "device_id", "revision", "confirm_device_id"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
 			var input struct {
@@ -221,7 +222,7 @@ func registerBenchTools(server *sdk.Server, options HandlerOptions) {
 			}
 			return map[string]any{"forgotten": input.DeviceID}, nil
 		})
-	register("plugin_device_action", "Enable, disable or retry initialization for one physical camera at its current revision. Requires plugins.manage.", false,
+	register("plugin_device_action", "Enable, disable or retry initialization for one physical device at its current revision. Requires plugins.manage.", false,
 		map[string]any{"plugin_id": text(), "device_id": text(), "revision": map[string]any{"type": "integer", "minimum": 1}, "action": map[string]any{"type": "string", "enum": []string{"enable", "disable", "retry"}}},
 		[]string{"plugin_id", "device_id", "revision", "action"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
 			var input struct {

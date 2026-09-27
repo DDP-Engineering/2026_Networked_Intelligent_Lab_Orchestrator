@@ -25,7 +25,7 @@ and the environment wrappers change `PATH` only for their child process.
 - Each locked Python project pins its own graph, including Ruff, in its
   `uv.lock`: `05_Software/integrations/sdk/python/` and
   `05_Software/integrations/sigrok/` and
-  `05_Software/integrations/camera/`.
+  `05_Software/integrations/camera/` and `05_Software/integrations/serial/`.
 - The reproducible build and test boundary is one Linux amd64 OCI image,
   generation `noble-20260905-01`, defined by `02_Tools/containers/build/` and
   run through Docker Engine or Podman. It carries the pinned language tools,
@@ -315,3 +315,7 @@ physical operation occurred.
 - `05_Software/INCREMENT_1_ACCEPTANCE.md` - foundation gate scope, commands and
   the outstanding native Raspberry Pi ARM64 run.
 - `.agentic/knowledge/repository-toolchain.md` - toolchain component detail.
+
+Serial verification uses real Linux pseudo-terminals. The pinned pySerial wheel
+is prepared by `02_Tools/scripts/prepare-serial-dependency.py` and consumed
+offline from the output wheelhouse; see `06_SoftwareDocu/USB_to_Serial_Integration.md`.

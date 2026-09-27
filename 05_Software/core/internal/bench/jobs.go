@@ -169,7 +169,7 @@ func (m *Manager) Submit(ctx context.Context, actor identity.Actor, input Submis
 	if err != nil {
 		return Job{}, err
 	}
-	_, err = m.db().ExecContext(ctx, `INSERT INTO bench_jobs(id,session_id,plugin_id,owner_id,credential_id,idempotency_key,submission_json,deadline,created_at) VALUES(?,?,?,?,?,?,?,?,?)`, job.ID, created.ID.String(), p.ID, actor.User.ID, actor.TokenID, input.IdempotencyKey, string(canonical), job.Deadline.Format(time.RFC3339Nano), now.Format(time.RFC3339Nano))
+	_, err = m.db().ExecContext(ctx, `INSERT INTO bench_jobs(id,session_id,plugin_id,owner_id,credential_id,browser_session_id,idempotency_key,submission_json,deadline,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)`, job.ID, created.ID.String(), p.ID, actor.User.ID, actor.TokenID, actor.SessionID, input.IdempotencyKey, string(canonical), job.Deadline.Format(time.RFC3339Nano), now.Format(time.RFC3339Nano))
 	if err != nil {
 		_, cleanupErr := m.db().ExecContext(context.WithoutCancel(ctx), `UPDATE sessions SET state='incomplete',terminal_at=?,updated_at=? WHERE id=?`, now.Format(time.RFC3339Nano), now.Format(time.RFC3339Nano), created.ID.String())
 		return Job{}, errors.Join(err, cleanupErr)

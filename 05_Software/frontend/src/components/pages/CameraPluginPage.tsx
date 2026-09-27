@@ -10,6 +10,7 @@ import { useTranslate } from '../../i18n/languages';
 import { MessageBanner } from '../MessageBanner';
 
 interface Props {
+  pluginId?: 'camera' | 'serial';
   client: BenchCoreClient;
   credential: Credential;
   session: BenchCoreSession;
@@ -20,7 +21,11 @@ interface Props {
 
 /** Administrator-only configuration; capture remains in the instrument workspace. */
 export function CameraPluginPage(props: Props) {
-  const t = useTranslate();
+  const translate = useTranslate();
+  const t = (
+    key: Parameters<typeof translate>[0],
+    values?: Parameters<typeof translate>[1],
+  ) => translate(props.pluginId === 'serial' ? serialAdminKey(key) : key, values);
   if (
     props.session.role !== 'administrator' ||
     !props.session.permissions.includes('plugins.manage')
@@ -41,11 +46,17 @@ export function CameraPluginPage(props: Props) {
 function CameraPluginConfiguration({
   client,
   credential,
+  pluginId = 'camera',
   onSessionEnded,
   onPluginsChanged,
   onOpenActivity,
 }: Props) {
-  const t = useTranslate();
+  const translate = useTranslate();
+  const t = useCallback(
+    (key: Parameters<typeof translate>[0], values?: Parameters<typeof translate>[1]) =>
+      translate(pluginId === 'serial' ? serialAdminKey(key) : key, values),
+    [translate, pluginId],
+  );
   const [plugin, setPlugin] = useState<InstrumentPlugin>();
   const [busy, setBusy] = useState(false);
   const [modeDraft, setModeDraft] = useState<string>();
@@ -63,15 +74,15 @@ function CameraPluginConfiguration({
   );
   const refresh = useCallback(async () => {
     const inventory = await client.listPlugins(credential);
-    setPlugin(inventory.find((item) => item.id === 'camera'));
-  }, [client, credential]);
+    setPlugin(inventory.find((item) => item.id === pluginId));
+  }, [client, credential, pluginId]);
   useEffect(() => {
     let active = true;
     const load = () =>
       client
         .listPlugins(credential)
         .then((items) => {
-          if (active) setPlugin(items.find((item) => item.id === 'camera'));
+          if (active) setPlugin(items.find((item) => item.id === pluginId));
         })
         .catch((cause) => {
           if (active) report(cause);
@@ -84,7 +95,7 @@ function CameraPluginConfiguration({
       active = false;
       window.clearInterval(timer);
     };
-  }, [client, credential, report]);
+  }, [client, credential, report, pluginId]);
   async function run(action: () => Promise<unknown>, success: string) {
     setBusy(true);
     setFeedback(undefined);
@@ -127,7 +138,7 @@ function CameraPluginConfiguration({
             }
             onClick={() =>
               void run(
-                () => client.pluginAction(credential, 'camera', 'upgrade'),
+                () => client.pluginAction(credential, pluginId, 'upgrade'),
                 t('camera.updated'),
               )
             }
@@ -150,7 +161,7 @@ function CameraPluginConfiguration({
                   () =>
                     client.pluginAction(
                       credential,
-                      'camera',
+                      pluginId,
                       'enable',
                       modeDraft ?? plugin?.mode,
                     ),
@@ -165,7 +176,7 @@ function CameraPluginConfiguration({
               disabled={busy || !plugin?.enabled}
               onClick={() =>
                 void run(
-                  () => client.pluginAction(credential, 'camera', 'disable'),
+                  () => client.pluginAction(credential, pluginId, 'disable'),
                   t('camera.pluginDisabled'),
                 )
               }
@@ -183,7 +194,7 @@ function CameraPluginConfiguration({
                   else {
                     setModeDraft(undefined);
                     void run(
-                      () => client.pluginAction(credential, 'camera', 'enable', mode),
+                      () => client.pluginAction(credential, pluginId, 'enable', mode),
                       t('camera.policySaved'),
                     );
                   }
@@ -198,7 +209,7 @@ function CameraPluginConfiguration({
               disabled={busy || !plugin?.enabled}
               onClick={() =>
                 void run(
-                  () => client.discoverInstruments(credential, 'camera'),
+                  () => client.discoverInstruments(credential, pluginId),
                   t('camera.discoveryDone'),
                 )
               }
@@ -224,6 +235,7 @@ function CameraPluginConfiguration({
           {connectedCameras.map((device) => (
             <CameraConfigurationRow
               key={device.id}
+              pluginId={pluginId}
               device={device}
               client={client}
               credential={credential}
@@ -238,19 +250,23 @@ function CameraPluginConfiguration({
 }
 
 function CameraConfigurationRow({
+  pluginId,
   device,
   client,
   credential,
   busy,
   run,
 }: {
+  pluginId: 'camera' | 'serial';
   device: InstrumentDevice;
   client: BenchCoreClient;
   credential: Credential;
   busy: boolean;
   run: (action: () => Promise<unknown>, success: string) => Promise<void>;
 }) {
-  const t = useTranslate();
+  const translate = useTranslate();
+  const t = (key: Parameters<typeof translate>[0]) =>
+    translate(pluginId === 'serial' ? serialAdminKey(key) : key);
   const [draft, setDraft] = useState<string>();
   const name = draft ?? device.display_name;
   return (
@@ -278,12 +294,12 @@ function CameraConfigurationRow({
             void run(async () => {
               await client.configureInstrumentDevice!(
                 credential,
-                'camera',
+                pluginId,
                 device.id,
                 device.revision ?? 0,
                 name.trim(),
                 device.purpose ?? '',
-                device.settings ?? {},
+                pluginId === 'serial' ? {} : (device.settings ?? {}),
               );
               setDraft(undefined);
             }, t('camera.configurationSaved'))
@@ -304,7 +320,7 @@ function CameraConfigurationRow({
               () =>
                 client.instrumentDeviceAction!(
                   credential,
-                  'camera',
+                  pluginId,
                   device.id,
                   'enable',
                   device.revision ?? 0,
@@ -323,7 +339,7 @@ function CameraConfigurationRow({
               () =>
                 client.instrumentDeviceAction!(
                   credential,
-                  'camera',
+                  pluginId,
                   device.id,
                   'disable',
                   device.revision ?? 0,
@@ -337,4 +353,32 @@ function CameraConfigurationRow({
       </div>
     </div>
   );
+}
+
+function serialAdminKey(
+  key: Parameters<ReturnType<typeof useTranslate>>[0],
+): Parameters<ReturnType<typeof useTranslate>>[0] {
+  const aliases: Partial<
+    Record<
+      Parameters<ReturnType<typeof useTranslate>>[0],
+      Parameters<ReturnType<typeof useTranslate>>[0]
+    >
+  > = {
+    'camera.adminOnly': 'sw.adminOnly',
+    'instrument.ask': 'sw.askSessions',
+    'camera.needsAttention': 'sw.needsAttention',
+    'camera.pluginTitle': 'sw.pluginTitle',
+    'camera.discover': 'sw.discover',
+    'camera.none': 'sw.none',
+    'camera.enableToDiscover': 'sw.enableToDiscover',
+    'camera.configurationSaved': 'sw.saved',
+    'camera.saveConfiguration': 'sw.saveConfiguration',
+    'camera.pluginEnabled': 'sw.enabled',
+    'camera.pluginDisabled': 'sw.disabled',
+    'camera.deviceEnabled': 'sw.deviceEnabled',
+    'camera.deviceDisabled': 'sw.deviceDisabled',
+    'camera.discoveryDone': 'sw.discoveryDone',
+    'camera.updated': 'sw.updated',
+  };
+  return aliases[key] ?? key;
 }

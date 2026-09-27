@@ -1,3 +1,4 @@
+import { serialEn } from './serial';
 import { cameraEn } from './camera';
 /**
  * The English catalogue, and the key set every other language must satisfy.
@@ -9,9 +10,13 @@ import { cameraEn } from './camera';
  */
 export const en = {
   ...cameraEn,
+  ...serialEn,
   'message.info': 'Info',
   'message.warning': 'Warning',
   'message.error': 'Error',
+  'message.notifications': 'Notifications',
+  'message.dismiss': 'Dismiss notification',
+  'message.connectionDetails': 'Connection details',
   'camera.pluginTitle': 'Camera plugin',
   'camera.adminOnly': 'Only administrators can configure the Camera plugin.',
   'camera.currentVersion': 'Current version',

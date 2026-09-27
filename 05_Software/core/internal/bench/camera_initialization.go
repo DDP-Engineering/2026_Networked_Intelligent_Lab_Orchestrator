@@ -38,7 +38,7 @@ func (manager *Manager) initializeDiscoveredCameraRecords(ctx context.Context, p
 		return nil, err
 	}
 	for _, record := range records {
-		if !record.Configured || !record.Enabled || record.Presence != "present" || record.Readiness != "initializing" || record.EndpointID == "" {
+		if manager.cameraBusy(record.ID) || !record.Configured || !record.Enabled || record.Presence != "present" || record.Readiness != "initializing" || record.EndpointID == "" {
 			continue
 		}
 		if err := manager.resetCameraBaseline(ctx, plugin, record); err != nil {

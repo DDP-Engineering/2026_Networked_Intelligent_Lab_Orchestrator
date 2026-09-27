@@ -214,6 +214,7 @@ export function ActivityPage({
   }));
   const [page, setPage] = useState<Reading<ActivityPageBody>>({ state: 'reading' });
   const [exportNote, setExportNote] = useState('');
+  const [exportFailed, setExportFailed] = useState(false);
   // The disclosure opens on its own whenever one of the filters behind it is
   // in effect, so a count of one is never a count of something hidden.
   const [moreOpen, setMoreOpen] = useState(() =>
@@ -221,6 +222,7 @@ export function ActivityPage({
   );
   const [settings, setSettings] = useState<ActivityRetentionSettings | null>(null);
   const [retentionNote, setRetentionNote] = useState('');
+  const [retentionFailed, setRetentionFailed] = useState(false);
 
   // On a field display the records come first: the whole filter panel sits
   // behind a disclosure that opens only when it is wanted.
@@ -295,6 +297,7 @@ export function ActivityPage({
 
   const runExport = async (format: 'jsonl' | 'csv') => {
     if (exportActivity === undefined) return;
+    setExportNote('');
     try {
       // The applied filter, never the draft: an export must contain what the
       // listing above it contains.
@@ -304,6 +307,7 @@ export function ActivityPage({
           ? Math.max(text.trim().split('\n').length - 2, 0)
           : text.split('\n').filter((line) => line !== '' && !line.startsWith('#'))
               .length - 1;
+      setExportFailed(false);
       setExportNote(t('activity.export.done', { rows: rowCount }));
       const blob = new Blob([text], {
         type: format === 'csv' ? 'text/csv' : 'application/x-ndjson',
@@ -315,16 +319,20 @@ export function ActivityPage({
       anchor.click();
       URL.revokeObjectURL(url);
     } catch {
+      setExportFailed(true);
       setExportNote(t('activity.export.failed'));
     }
   };
 
   const save = async () => {
     if (saveRetention === undefined || settings === null) return;
+    setRetentionNote('');
     try {
       setSettings(await saveRetention(settings));
+      setRetentionFailed(false);
       setRetentionNote(t('activity.retention.saved'));
     } catch (error) {
+      setRetentionFailed(true);
       setRetentionNote(t('activity.retention.failed', { detail: describe(error) }));
     }
   };
@@ -574,7 +582,11 @@ export function ActivityPage({
               </button>
             </div>
           </form>
-          {retentionNote !== '' && <p role="status">{retentionNote}</p>}
+          {retentionNote !== '' && (
+            <MessageBanner tone={retentionFailed ? 'error' : 'info'}>
+              {retentionNote}
+            </MessageBanner>
+          )}
         </section>
       </details>
     );
@@ -594,9 +606,9 @@ export function ActivityPage({
         )}
 
         {exportNote !== '' && (
-          <p className="activity-export-note" role="status">
+          <MessageBanner tone={exportFailed ? 'error' : 'info'}>
             {exportNote}
-          </p>
+          </MessageBanner>
         )}
 
         {retention}

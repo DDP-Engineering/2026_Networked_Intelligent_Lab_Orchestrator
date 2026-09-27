@@ -120,12 +120,10 @@ export function PasswordPolicyPanel({
               {t('auth.reading', { resource: t('auth.resource.passwordPolicy') })}
             </p>
           ) : (
-            <div className="admin-message">
-              <p role="alert">
-                {t('auth.readFailed', { resource: t('auth.resource.passwordPolicy') })}
-              </p>
-              <p className="failure-detail">{failure}</p>
-            </div>
+            <MessageBanner tone="error">
+              {t('auth.readFailed', { resource: t('auth.resource.passwordPolicy') })}{' '}
+              {failure}
+            </MessageBanner>
           )
         ) : (
           <form className="admin-policy-form" onSubmit={(event) => void submit(event)}>

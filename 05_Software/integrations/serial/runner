@@ -1,0 +1,3 @@
+#!/usr/bin/env python3
+from nilo_serial.__main__ import main
+main()

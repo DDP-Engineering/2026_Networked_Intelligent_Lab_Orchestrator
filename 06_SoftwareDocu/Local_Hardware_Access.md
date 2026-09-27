@@ -261,18 +261,19 @@ selection would have stranded the board until somebody reached it physically.
 
 ### 2.8 Current NILO deployment
 
-The board runs NILO 0.10.0 with runtime state in `/var/lib/nilo`. `nilo.service`,
+The board runs NILO 0.11.0 with runtime state in `/var/lib/nilo`. `nilo.service`,
 `nilo-nethelper.service` and the independent recovery timer are active and
 enabled. The core service uses the helper-managed TLS identity and has no
 file-backed certificate or private-key argument. Its served certificate covers
 `nilo-n0hzmysj9v.local` and the provisioning-only `nilo.local`; the helper's
 private key remains root-owned and unreadable by the Core service account.
 
-The 2026-09-27 live-test deployment installed NILO 0.10.0 Core and GUI.
-Its rollback backup is `/var/backups/nilo-0.10.0-20260927-001101`.
-The deployed version, service health, served asset checksums and retained
-capture checksums were verified. See the
-[deployment record](../.agentic/evidence/releases/0.10.0-rpi-20260927.md).
+The 2026-09-27 live-test deployment installed NILO 0.11.0 Core, GUI and the
+USB to Serial plugin. Both connected serial adapters are configured and ready
+with Ask session approval. Its rollback backup is
+`/var/backups/nilo-0.11.0-20260927-092635`. Version, service health, served asset
+checksums, serial discovery/configuration and retained capture checksums passed.
+See the [deployment record](../07_Delivery/NILO_0.11.0_RPi_Live_Test.md).
 
 The persisted management allowlist is `wlan0` and `nilo0`. The DDP Wi-Fi and
 NILO-owned WireGuard profiles remain installed, while `eth0` remains the

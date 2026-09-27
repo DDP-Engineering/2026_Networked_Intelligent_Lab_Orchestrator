@@ -30,6 +30,20 @@ for arch in arm64 amd64; do
    --out "$out/linux-$arch/integration-bundles/camera" --architecture "$arch" \
    --runtime-root "$camera_runtime/$arch"
  fi
+ if [ "${NILO_BUNDLE_SERIAL:-0}" = "1" ]; then
+  serial_runtime=${NILO_SERIAL_RUNTIME_ROOT:-}
+  serial_wheels=${NILO_SERIAL_WHEELHOUSE:-}
+  serial_dependencies=${NILO_SERIAL_DEPENDENCY_ROOT:-}
+  [ -n "$serial_runtime" ] && [ -n "$serial_wheels" ] && [ -n "$serial_dependencies" ] || {
+   echo "Serial bundle requires NILO_SERIAL_RUNTIME_ROOT, NILO_SERIAL_WHEELHOUSE and NILO_SERIAL_DEPENDENCY_ROOT" >&2
+   exit 2
+  }
+  ../../02_Tools/env/with-tools.sh python ../../02_Tools/scripts/build-serial-bundle.py \
+   --project "$repo/05_Software/integrations/serial" \
+   --dependency-root "$serial_dependencies/$arch" --wheelhouse "$serial_wheels" \
+   --out "$out/linux-$arch/integration-bundles/serial" --architecture "$arch" \
+   --runtime-root "$serial_runtime/$arch"
+ fi
 done
 echo "built:"
 find "$out" -type f -name 'nilo*' -exec ls -l {} \;

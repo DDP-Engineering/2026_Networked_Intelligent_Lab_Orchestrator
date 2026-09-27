@@ -1,0 +1,12 @@
+schema = 1
+id = "REQ-DATA-c9766274"
+title = "Enforce serial log retention"
+status = "active"
+requirement = "When admitting or rotating serial logs, Core shall enforce administrator limits of 100 retained files, 2 GiB per device and 100 MiB per file by default, preserving active/incomplete/download-leased files and appliance free-space reserve."
+verification = "Use small injected quotas to force rotation, deletion and storage exhaustion across owners/devices; assert bounded disk use, protected files and visible logging stop."
+affected_paths = ["05_Software/core/internal/bench/", "05_Software/core/internal/httpapi/", "05_Software/core/internal/store/sqlite/"]
+linked_tests = ["05_Software/core/internal/bench/serial_test.go", "05_Software/core/internal/bench/serial_lifecycle_test.go"]
+spec = "specs/usb-serial.md"
+priority = "high"
+created = 2026-09-27
+updated = 2026-09-27

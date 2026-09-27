@@ -1,0 +1,12 @@
+schema = 1
+id = "REQ-FUNC-8bf074b9"
+title = "Expose USB serial CLI and MCP"
+status = "active"
+requirement = "When serial operations are requested through CLI or MCP, NILO shall route them through the shared Core permission and session services with bounded reads, validated sends and authorized log access."
+verification = "CLI HTTP fixtures and MCP protocol tests assert command/tool inventory, wire arguments, auth failures, cursor limits and result parity."
+affected_paths = ["05_Software/core/cmd/nilo/", "05_Software/core/internal/mcp/"]
+linked_tests = ["05_Software/core/cmd/nilo/serial_test.go::TestSerialCLIStatusUsesAuthenticatedHTTP", "05_Software/core/cmd/nilo/serial_test.go::TestSerialCLICommandsKeepSessionAndPayload", "05_Software/core/cmd/nilo/serial_test.go::TestSerialCLIRejectsUnboundedOrAmbiguousInput", "05_Software/core/cmd/nilo/serial_test.go::TestSerialCLIReadFollowsCursorAndCancels", "05_Software/core/internal/mcp/bench_test.go::TestBenchToolsUseCurrentTokenScopes", "05_Software/core/cmd/nilo/serial_test.go::TestSerialCLIExportAndDeletionUseLogRoutes", "05_Software/core/cmd/nilo/serial_test.go::TestSerialCLIUnknownSendIsNeverAutomaticallyRetried", "05_Software/core/cmd/nilo/main_usage_test.go::TestRootUsageNamesEveryCommandGroup"]
+spec = "specs/usb-serial.md"
+priority = "high"
+created = 2026-09-27
+updated = 2026-09-27

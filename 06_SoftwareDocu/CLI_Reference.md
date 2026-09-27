@@ -49,6 +49,7 @@ Accepted jobs continue after the CLI disconnects.
 | `nilo plugin ...` | Manage installed plugins and physical device records. |
 | `nilo bench ...` | Submit, inspect, cancel and download durable transactions. |
 | `nilo camera ...` | Camera snapshots, hardware controls, workspace state and retained media. |
+| `nilo serial ...` | Approved USB serial sessions, bounded reads/sends and retained session logs. |
 | `nilo network ...` | Network status, interfaces, Wi-Fi, VPN and device networks. |
 | `nilo activity ...` | Read/export activity and configure its retention. |
 | `nilo maintenance ...` | Local data inventory, migrations, snapshots, restore, removal and purge. |
@@ -59,10 +60,10 @@ There is no top-level `nilo diagnostics` command. Network checks are described
 under `network` below. Development and maintenance commands are local appliance
 or test-environment operations; they do not take the shared remote arguments.
 
-## Plugins and managed cameras
+## Plugins and managed devices
 
 Append the shared remote arguments to each command. Plugin selection defaults
-to `sigrok`; always specify `--plugin camera` for Camera administration.
+to `sigrok`; specify `--plugin camera` for Camera or `--plugin serial` for USB to Serial administration.
 
 ```text
 nilo plugin list
@@ -358,3 +359,76 @@ Workspace validation is in
 [workspace.py](../05_Software/integrations/camera/src/nilo_camera/workspace.py).
 Update this reference and the MCP reference together when public operations,
 flags, permissions or parameter schemas change.
+
+
+## USB to Serial
+
+Use `nilo plugin discover --plugin serial` and `nilo plugin devices --plugin serial`
+to find physical USB serial adapters connected to the appliance. Configure a
+managed device through `nilo plugin device configure --plugin serial` with a
+JSON file containing `name`, `purpose` and `settings: {}`. Port parameters are
+chosen explicitly when connecting. Append the shared remote options to every
+command below.
+
+```text
+nilo serial status --device serial-1
+nilo serial connect --device serial-1 --revision 3 --baud-rate 115200 --data-bits 8 --parity none --stop-bits 1 --flow-control none --rts=true --dtr=true --key connection-request-1
+nilo bench get --id TRANSACTION
+nilo serial read --device serial-1 --connection CONNECTION --after 0 --wait-ms 10000 --follow
+nilo serial send --device serial-1 --connection CONNECTION --data-file message.txt --encoding utf8 --ending crlf --key send-request-1
+nilo serial send --device serial-1 --connection CONNECTION --data-file bytes.hex --encoding hex --ending none --key send-request-2
+nilo serial signals --device serial-1 --connection CONNECTION --dtr=false
+nilo serial logging --device serial-1 --connection CONNECTION --action start
+nilo serial logging --device serial-1 --connection CONNECTION --action stop
+nilo serial disconnect --device serial-1 --connection CONNECTION
+nilo serial logs --device serial-1 --offset 0
+nilo serial log-read --id LOG --after 0
+nilo serial export --id LOG --format jsonl --out NEW_FILE
+nilo serial delete --id LOG --confirm LOG
+nilo serial retention --device serial-1
+nilo serial retention --device serial-1 --revision 1 --file limits.json
+```
+
+`connect` returns an approval transaction. After it completes, read `status` to
+obtain `connection_id`. The connection belongs to the exact initiating token
+and user; a browser approval authorizes its configured session rather than each
+send. The lease lasts 60 minutes. An unrecorded connection closes after 60 seconds
+without an authenticated read/control request. Token revocation or permission
+loss closes it. Administrators can stop another user's connection but cannot
+transmit as that user.
+
+Port choices: baud 50..4000000, data bits 5..8, parity
+`none|odd|even|mark|space`, stop bits `1|1.5|2`, flow `none|rtscts|xonxoff`.
+Hardware may reject unsupported combinations. Manual RTS is refused while
+RTS/CTS flow control owns it. Use `--rts=false` / `--dtr=false` syntax for false.
+
+Send input comes from `--data-file PATH` or standard input (`--data-file -`, the
+default). The CLI preserves whitespace and final newlines. Encoding is
+`ascii|utf8|hex`; endings are `none|cr|lf|crlf`. A hex file contains byte pairs,
+optionally separated by whitespace. Source input is bounded to 16 KiB and the
+encoded transmission, including the appended ending, to 4096 bytes. A send
+result reports bytes accepted by the OS, not acknowledgement by the target.
+Retain its idempotency key: repeat only the identical request with that key;
+never use a new key to retry an unknown delivery.
+
+`read` emits bounded JSON batches with base64 data, direction, timestamps,
+`next_cursor` and `gap`. Reuse the cursor to avoid duplicate display. `--follow`
+is cancellable with Ctrl+C and does not itself disconnect the session. It keeps
+memory bounded and does not render received terminal control sequences.
+`logs` returns at most 100 entries; `log-read` returns one bounded event page.
+
+Exports stream to a newly created file (existing files are refused). Formats
+are `jsonl`, escaped readable `text`, and original `rx` or `tx` bytes. Logs are
+visible to their owner and administrators. Active or currently downloading logs
+cannot be deleted. `--confirm` must exactly match the deleted log's ID.
+
+Retention writes require `plugins.manage` and the observed revision. A default
+`limits.json` is:
+
+```json
+{"files":100,"total_bytes":2147483648,"file_bytes":104857600}
+```
+
+The file limit counts rotated segments. Automatic cleanup selects oldest
+completed logs and protects active, incomplete and currently downloading logs.
+Disk reserve is enforced by Core; logging warnings are returned by `status`.

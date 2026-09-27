@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -407,6 +408,9 @@ func weakSerial(serial string) bool {
 }
 
 func recordPrefix(kind string) string {
+	if kind == "usb-serial" {
+		return "serial"
+	}
 	if kind == "camera" {
 		return "cam"
 	}
@@ -414,6 +418,9 @@ func recordPrefix(kind string) string {
 }
 
 func suggestedName(kind, id string) string {
+	if kind == "usb-serial" {
+		return "USB Serial (" + id + ")"
+	}
 	if kind == "camera" {
 		return "USB Camera (" + id + ")"
 	}
@@ -576,6 +583,17 @@ func (repository *ManagedDeviceRepository) Reconcile(ctx context.Context, plugin
 				readiness = "failed"
 			} else if matched.Presence != "present" {
 				readiness = "initializing"
+			}
+			if observed.EndpointID == "" && matched.Configured {
+				readiness = "failed"
+			}
+			// Polls must not invalidate configuration forms or approved sessions
+			// when only the last-seen timestamp changed.
+			if matched.Vendor == observed.Vendor && matched.Product == observed.Product && matched.Serial == observed.Serial && matched.PortPath == observed.PortPath && matched.IdentityRule == rule && matched.SerialWeak == serialWeak && matched.EndpointID == observed.EndpointID && bytes.Equal(matched.Endpoints, observed.Endpoints) && bytes.Equal(matched.Capabilities, observed.Capabilities) && matched.Presence == "present" && matched.Readiness == readiness {
+				if _, err := tx.ExecContext(ctx, `UPDATE bench_devices SET last_seen_at=? WHERE plugin_id=? AND record_id=?`, stamp, pluginID, matched.ID); err != nil {
+					return nil, err
+				}
+				continue
 			}
 			if _, err := tx.ExecContext(ctx, `UPDATE bench_devices SET vendor=?,product=?,serial=?,port_path=?,identity_rule=?,serial_weak=?,endpoint_id=?,endpoints_json=?,capabilities_json=?,presence='present',readiness=?,last_seen_at=?,revision=revision+1 WHERE plugin_id=? AND record_id=?`, observed.Vendor, observed.Product, observed.Serial, observed.PortPath, rule, serialWeak, observed.EndpointID, observed.Endpoints, observed.Capabilities, readiness, stamp, pluginID, matched.ID); err != nil {
 				return nil, err

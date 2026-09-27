@@ -78,6 +78,9 @@ var benchPluginConfigurationMigration string
 //go:embed migrations/021_camera_workspace.sql
 var cameraWorkspaceMigration string
 
+//go:embed migrations/022_serial_workspace.sql
+var serialWorkspaceMigration string
+
 var migrations = []migration{
 	{version: "001_initial", sql: initialMigration},
 	{version: "002_policy_snapshots", sql: policySnapshotsMigration},
@@ -100,6 +103,7 @@ var migrations = []migration{
 	{version: "019_managed_devices", sql: managedDevicesMigration},
 	{version: "020_bench_plugin_configuration", sql: benchPluginConfigurationMigration},
 	{version: "021_camera_workspace", sql: cameraWorkspaceMigration},
+	{version: "022_serial_workspace", sql: serialWorkspaceMigration},
 }
 
 func applyMigrations(ctx context.Context, database *sql.DB) error {

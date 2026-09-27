@@ -348,7 +348,7 @@
     {
       "name": "playwright-lock",
       "version": "1.62.1",
-      "sha256": "54e29e8c61022b42563a8cb516c66c4bccb574f1f18be818537df06de790a3f6",
+      "sha256": "bc6abc4590fbf021b3146bd30dc50816f515c2d03394b50754095872864b85a4",
       "source": "05_Software/frontend/package-lock.json",
       "license": "Apache-2.0 and dependency notices"
     },

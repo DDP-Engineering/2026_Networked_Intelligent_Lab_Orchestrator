@@ -19,6 +19,9 @@ verification stage's proof is `cmd/nilo/appliance_stage_linux_test.go`, run by
 [Camera integration](camera-integration.md); appliance Network operations and
 commissioning are mapped in [Appliance Network](appliance-network.md).
 
+USB serial terminal, connection and log changes route to
+[USB to Serial integration](serial-integration.md).
+
 ## Purpose and boundaries
 
 The Go Bench Core owns validated configuration, immutable operation state, identity and access control, policy and approvals, durable sessions and evidence, application startup reconciliation, and the authenticated HTTP boundary. It exposes read-only Network MCP tools; live interface networking and WireGuard readiness use a separate privileged NetworkManager helper; managed instrument operations use the bench integration service.

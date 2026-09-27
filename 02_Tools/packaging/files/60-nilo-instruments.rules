@@ -1,2 +1,4 @@
 # Camera capture and metadata nodes remain accessible only to the video group.
 SUBSYSTEM=="video4linux", GROUP="video", MODE="0660"
+# USB serial endpoints stay restricted to the appliance service's serial group.
+SUBSYSTEM=="tty", SUBSYSTEMS=="usb", GROUP="dialout", MODE="0660"

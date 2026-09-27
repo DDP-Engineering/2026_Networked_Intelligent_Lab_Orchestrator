@@ -1,0 +1,12 @@
+schema = 1
+id = "REQ-UX-020a1c13"
+title = "Compact instrument action headers"
+status = "active"
+requirement = "When a Camera or Serial realtime workspace is displayed, NILO shall align its primary actions to the right of the title with responsive wrapping, and present Serial traffic counters within the terminal toolbar with connection details available through a disclosure."
+verification = "Browser geometry checks verify right alignment at desktop width, wrapping without horizontal overflow at narrow widths, counters within the toolbar, and keyboard access to connection details."
+affected_paths = ["05_Software/frontend/"]
+linked_tests = ["05_Software/frontend/src/components/pages/CameraWorkspacePage.test.tsx", "05_Software/frontend/src/components/pages/SerialWorkspacePage.test.tsx", "05_Software/frontend/e2e/serial-layout.check.ts"]
+spec = "specs/workspace-notifications.md"
+priority = "normal"
+created = 2026-09-27
+updated = 2026-09-27

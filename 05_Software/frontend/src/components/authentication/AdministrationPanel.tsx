@@ -1,3 +1,4 @@
+import { MessageBanner } from '../MessageBanner';
 import type { ReactNode } from 'react';
 import { useTranslate } from '../../i18n/languages';
 
@@ -35,10 +36,9 @@ export function AdministrationPanel<T>({
           {t('auth.reading', { resource })}
         </p>
       ) : listing.phase === 'failed' ? (
-        <div className="admin-message">
-          <p role="alert">{t('auth.readFailed', { resource })}</p>
-          <p className="failure-detail">{listing.detail}</p>
-        </div>
+        <MessageBanner tone="error">
+          {t('auth.readFailed', { resource })} {listing.detail}
+        </MessageBanner>
       ) : listing.items.length === 0 ? (
         <p className="admin-message">{empty}</p>
       ) : (

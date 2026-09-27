@@ -310,10 +310,15 @@ test('keeps opposite-role adapters visible and explains sequential repurposing',
     management.getByRole('checkbox', { name: 'Allow management access on wlan0' }),
   ).toBeDisabled();
   await expect(management.getByText(/Device side: PLC line/i)).toBeVisible();
-  await expect(management.getByRole('status')).toHaveCount(1);
+  const notifications = page.getByRole('region', { name: 'Notifications' });
+  await expect(
+    notifications
+      .getByRole('status')
+      .filter({ hasText: /Management access was removed from wlan0/i }),
+  ).toHaveCount(1);
   await expect(page.getByRole('table')).toHaveCount(1);
   await expect(
-    management.getByText(
+    notifications.getByText(
       /Management access was removed from wlan0 because PLC line owns its device role/i,
     ),
   ).toBeVisible();
@@ -374,7 +379,9 @@ test('keeps opposite-role adapters visible and explains sequential repurposing',
   await management.getByRole('button', { name: 'Apply management access' }).click();
   await expect(management.getByRole('status')).toHaveText(/Pending confirmation/i);
   await management.getByRole('button', { name: 'Keep change' }).click();
-  await expect(management.getByRole('status')).toHaveText(/Applied/i);
+  await expect(
+    notifications.getByRole('status').filter({ hasText: /Applied/i }),
+  ).toBeVisible();
 
   // Removing the browser's current path requires the explicit second warning,
   // and the interface offers no one-click role swap around either guard.
@@ -389,7 +396,9 @@ test('keeps opposite-role adapters visible and explains sequential repurposing',
     .click();
   await expect(management.getByRole('status')).toHaveText(/Pending confirmation/i);
   await management.getByRole('button', { name: 'Keep change' }).click();
-  await expect(management.getByRole('status')).toHaveText(/Applied/i);
+  await expect(
+    notifications.getByRole('status').filter({ hasText: /Applied/i }),
+  ).toBeVisible();
 
   // Only after both confirmations does eth0 become device-facing availability.
   await page

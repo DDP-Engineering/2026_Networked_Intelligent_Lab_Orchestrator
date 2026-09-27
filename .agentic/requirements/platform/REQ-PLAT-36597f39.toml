@@ -1,0 +1,12 @@
+schema = 1
+id = "REQ-PLAT-36597f39"
+title = "Package supervised USB serial integration"
+status = "active"
+requirement = "When a USB serial bundle is built or loaded, NILO shall verify its manifest, pinned dependencies, target runtime and inventory before launching the non-root supervised runner."
+verification = "Build a verified bundle offline, reject modified/missing inputs, validate serial manifest and runner handshake, and check target permissions installation metadata."
+affected_paths = ["05_Software/core/internal/bench/", "05_Software/core/internal/httpapi/", "05_Software/core/internal/store/sqlite/", "05_Software/integrations/serial/", "02_Tools/scripts/", "02_Tools/packaging/", "02_Tools/tests/build-environment/prepare-python-environments.sh", "06_SoftwareDocu/USB_to_Serial_Integration.md"]
+linked_tests = ["05_Software/integrations/serial/tests/test_package.py", "05_Software/integrations/serial/tests/test_plugin.py::test_supervised_process_hello_and_describe", "02_Tools/tests/software/test_serial_bundle.py"]
+spec = "specs/usb-serial.md"
+priority = "high"
+created = 2026-09-27
+updated = 2026-09-27

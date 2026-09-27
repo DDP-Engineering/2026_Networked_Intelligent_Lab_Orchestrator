@@ -1,0 +1,12 @@
+schema = 1
+id = "REQ-DATA-317db2cc"
+title = "Retain recoverable serial logs"
+status = "active"
+requirement = "While serial logging is enabled, NILO shall retain versioned ordered RX/TX byte records and metadata, finalizing stopped logs and recovering valid prefixes as incomplete after interruption."
+verification = "Record binary exchanges, reopen storage after truncated/corrupt trailing records and assert byte-exact valid prefix, ownership and incomplete state."
+affected_paths = ["05_Software/core/internal/bench/", "05_Software/core/internal/httpapi/", "05_Software/core/internal/store/sqlite/"]
+linked_tests = ["05_Software/core/internal/bench/serial_test.go", "05_Software/core/internal/bench/serial_lifecycle_test.go"]
+spec = "specs/usb-serial.md"
+priority = "high"
+created = 2026-09-27
+updated = 2026-09-27

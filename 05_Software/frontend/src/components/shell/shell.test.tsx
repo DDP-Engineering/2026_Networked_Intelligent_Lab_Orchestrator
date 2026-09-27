@@ -1,5 +1,5 @@
 import packageJson from '../../../package.json';
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import App from '../../App';
@@ -203,6 +203,48 @@ afterEach(() => {
 });
 
 describe('the one compact top row', () => {
+  it('hides stale instrument navigation while keeping open tabs until inventory recovers', async () => {
+    const intervals: (() => void)[] = [];
+    vi.spyOn(window, 'setInterval').mockImplementation((handler) => {
+      if (typeof handler === 'function') intervals.push(() => handler());
+      return intervals.length as unknown as ReturnType<typeof window.setInterval>;
+    });
+    const api = client();
+    let unavailable = false;
+    api.listPlugins = async () => {
+      if (unavailable) throw new Error('Inventory unavailable');
+      return [];
+    };
+    document.cookie = 'nilo_csrf=csrf-token-fixture';
+    renderInShell(<App client={api} apiMode="live" endpoint="http://127.0.0.1:8090" />);
+    await benchPage();
+    await nav().findByRole('button', { name: 'SIMULATION - Demo Integration' });
+    openFromNav('SIMULATION - Demo Integration');
+    expect(
+      tabs().getByRole('tab', { name: /SIMULATION - Demo Integration/ }),
+    ).toBeVisible();
+    unavailable = true;
+    await act(async () => {
+      intervals.forEach((refresh) => refresh());
+    });
+    await waitFor(() =>
+      expect(
+        nav().queryByRole('button', { name: 'SIMULATION - Demo Integration' }),
+      ).toBeNull(),
+    );
+    expect(
+      tabs().getByRole('tab', { name: /SIMULATION - Demo Integration/ }),
+    ).toBeVisible();
+    unavailable = false;
+    await act(async () => {
+      intervals.forEach((refresh) => refresh());
+    });
+    await waitFor(() =>
+      expect(
+        nav().getByRole('button', { name: 'SIMULATION - Demo Integration' }),
+      ).toBeVisible(),
+    );
+  });
   it('offers a width splitter only when navigation is beside the workspace', async () => {
     installViewportClass('compact');
     const shell = renderShell();
@@ -629,7 +671,7 @@ describe('the navigation', () => {
     const upper = within(container.querySelector('.nav-upper') as HTMLElement);
     expect(upper.getByRole('button', { name: 'Bench' })).toBeVisible();
     expect(
-      upper.getByRole('button', { name: 'SIMULATION - Demo Integration' }),
+      await upper.findByRole('button', { name: 'SIMULATION - Demo Integration' }),
     ).toBeVisible();
     // Nothing the appliance does not have is advertised.
     expect(upper.queryByRole('button', { name: /logic analyzer/i })).toBeNull();
@@ -674,6 +716,7 @@ describe('the navigation', () => {
     renderShell();
     await benchPage();
 
+    await nav().findByRole('button', { name: 'SIMULATION - Demo Integration' });
     openFromNav('SIMULATION - Demo Integration');
 
     expect(screen.getAllByText('simulation.bench').length).toBeGreaterThan(0);
@@ -691,7 +734,9 @@ describe('the navigation', () => {
     );
     await benchPage();
 
-    openFromNav('SIMULATION - Demo Integration');
+    expect(
+      nav().queryByRole('button', { name: 'SIMULATION - Demo Integration' }),
+    ).toBeNull();
 
     expect(screen.getByText(/device inventory could not be read/i)).toBeVisible();
     expect(screen.queryByText(/reports no devices/i)).toBeNull();
@@ -701,6 +746,7 @@ describe('the navigation', () => {
     const { container } = renderShell();
     await benchPage();
 
+    await nav().findByRole('button', { name: 'SIMULATION - Demo Integration' });
     openFromNav('SIMULATION - Demo Integration');
 
     const name = 'SIMULATION - Demo Integration';

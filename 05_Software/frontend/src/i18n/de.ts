@@ -1,3 +1,4 @@
+import { serialDe } from './serial';
 import { cameraDe } from './camera';
 import type { Catalogue } from './en';
 
@@ -11,9 +12,13 @@ import type { Catalogue } from './en';
  */
 export const de: Catalogue = {
   ...cameraDe,
+  ...serialDe,
   'message.info': 'Information',
   'message.warning': 'Warnung',
   'message.error': 'Fehler',
+  'message.notifications': 'Benachrichtigungen',
+  'message.dismiss': 'Benachrichtigung schließen',
+  'message.connectionDetails': 'Verbindungsdetails',
   'camera.pluginTitle': 'Kamera-Plugin',
   'camera.adminOnly': 'Nur Administratoren können das Kamera-Plugin konfigurieren.',
   'camera.currentVersion': 'Aktuelle Version',

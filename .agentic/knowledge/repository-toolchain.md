@@ -25,6 +25,9 @@ foundation*; this page owns those runs only as verification entry points and
 owns the shared image definition they build. Product behavior belongs to the
 component that implements it.
 
+USB serial terminal, connection and log changes route to
+[USB to Serial integration](serial-integration.md).
+
 ## Purpose and boundaries
 
 The toolchain component gives a fresh supported checkout pinned Go, uv,

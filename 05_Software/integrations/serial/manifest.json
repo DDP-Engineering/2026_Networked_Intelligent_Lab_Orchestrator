@@ -1,0 +1,77 @@
+{
+  "package": {
+    "id": "serial",
+    "version": "0.11.0",
+    "publisher": "DDP Engineering",
+    "integrity": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "protocol": "nilo.integration/1",
+  "platforms": [
+    {
+      "os": "linux",
+      "architecture": "arm64"
+    },
+    {
+      "os": "linux",
+      "architecture": "amd64"
+    }
+  ],
+  "runner": {
+    "executable": "runner",
+    "arguments": [
+      "--stdio"
+    ]
+  },
+  "app_configuration_schema": "schemas/plugin.schema.json",
+  "device_configuration_schema": "schemas/device.schema.json",
+  "operations": [
+    {
+      "id": "discover_devices",
+      "policy": "auto_eligible",
+      "input_schema": "schemas/discover_devices.input.schema.json",
+      "result_schema": "schemas/result.schema.json",
+      "timeout": "10s",
+      "cancellable": true,
+      "state_changing": false,
+      "resources": []
+    },
+    {
+      "id": "connect",
+      "policy": "auto_eligible",
+      "input_schema": "schemas/connect.input.schema.json",
+      "result_schema": "schemas/result.schema.json",
+      "timeout": "35s",
+      "cancellable": true,
+      "state_changing": true,
+      "resources": []
+    },
+    {
+      "id": "stream",
+      "policy": "auto_eligible",
+      "input_schema": "schemas/stream.input.schema.json",
+      "result_schema": "schemas/result.schema.json",
+      "timeout": "1h",
+      "cancellable": true,
+      "state_changing": true,
+      "resources": []
+    }
+  ],
+  "cancellation": {
+    "supported": true,
+    "safe_shutdown": "connect"
+  },
+  "events": [
+    {
+      "id": "progress",
+      "schema": "schemas/event.schema.json"
+    }
+  ],
+  "artifacts": [],
+  "health_checks": [
+    {
+      "id": "runner",
+      "timeout": "5s"
+    }
+  ],
+  "contract_fixtures": []
+}

@@ -34,6 +34,9 @@ Submit: [--key IDEMPOTENCY_KEY] [--timeout-seconds 60]
 Submission returns immediately; get retrieves delayed results. Human approval is available in the GUI.`
 
 func runBenchCommand(ctx context.Context, group string, args []string, streams networkIO) int {
+	if group == "serial" {
+		return runSerialCommand(ctx, args, streams)
+	}
 	if len(args) == 0 {
 		fmt.Fprintln(streams.stderr, benchUsage)
 		return 2

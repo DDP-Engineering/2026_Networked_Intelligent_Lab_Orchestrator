@@ -132,7 +132,7 @@ func verifyPackage(root string) (string, error) {
 }
 
 func (m *Manager) loadPlugin(ctx context.Context, id string) (Plugin, error) {
-	p := Plugin{ID: id, DisplayName: id, Simulation: m.options.Simulation && id != "camera", Devices: []Device{}, Operations: []string{}, Status: "available"}
+	p := Plugin{ID: id, DisplayName: id, Simulation: m.options.Simulation && id == "sigrok", Devices: []Device{}, Operations: []string{}, Status: "available"}
 	if adapter, err := adapterFor(id); err == nil {
 		p.DisplayName = adapter.displayName
 	}
@@ -144,7 +144,7 @@ func (m *Manager) loadPlugin(ctx context.Context, id string) (Plugin, error) {
 	if err = json.Unmarshal(devices, &p.Devices); err != nil {
 		return p, err
 	}
-	if id == "camera" {
+	if id == "camera" || id == "serial" {
 		records, recordErr := sqlite.NewManagedDeviceRepository(m.options.Database).List(ctx, id)
 		if recordErr != nil {
 			return p, recordErr
@@ -523,6 +523,12 @@ func (m *Manager) Lifecycle(ctx context.Context, actor identity.Actor, id, actio
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.serialBusy(id) {
+		if action != "disable" {
+			return Plugin{}, ErrBusy
+		}
+		m.stopSerialLocked(id, "plugin_disabled")
+	}
 	if m.cameraBusy(id) {
 		return Plugin{}, ErrBusy
 	}
@@ -706,6 +712,9 @@ func (m *Manager) Discover(ctx context.Context, actor identity.Actor, id string)
 	}
 	if result.Status != "completed" {
 		return nil, ErrUnavailable
+	}
+	if id == "serial" {
+		return m.reconcileSerialDiscovery(ctx, result.Data)
 	}
 	if id == "camera" {
 		if _, err := m.reconcileCameraDiscovery(ctx, result.Data); err != nil {

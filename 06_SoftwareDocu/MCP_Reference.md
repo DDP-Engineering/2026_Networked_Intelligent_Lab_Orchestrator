@@ -31,8 +31,8 @@ then call `tools/list`. A client sending an `Origin` header must use an allowed
 origin; native clients can omit it. An invalid, expired or revoked credential
 receives HTTP 401; insufficient transport permission receives HTTP 403.
 
-The normal Bench-enabled server exposes **27 tools**: 3 network, 10 plugin,
-5 Bench, 4 standalone Camera and 5 Camera workspace/media tools. A server
+The normal Bench-enabled server exposes **40 tools**: 3 network, 10 plugin,
+5 Bench, 4 standalone Camera, 5 Camera workspace/media and 13 USB serial tools. A server
 constructed without Bench exposes only the network tools. `tools/list` exposes
 registered schemas, not a filtered list of permissions granted to the caller.
 Use those schemas as the authoritative input contract for the running build.
@@ -89,7 +89,7 @@ MCP tools. See [Network operations](Network_Operations.md).
 | `plugin_device_rebind` | `plugin_id`, `device_id`, `revision` ≥ 1, `provisional_id`, `provisional_revision` ≥ 1, `confirm_device_id` | `plugins.manage`; rebound device. |
 | `plugin_device_forget` | `plugin_id`, `device_id`, `revision` ≥ 1, `confirm_device_id` | `plugins.manage`; `{"forgotten":"ID"}`. |
 
-Use `plugin_id: "camera"` for Camera. Configuration must conform to the installed
+Use `plugin_id: "camera"` for Camera or `plugin_id: "serial"` for USB to Serial. Configuration must conform to the installed
 plugin/device schema. Read current revisions before writes; refresh on conflict.
 Rebind/forget confirmation must exactly match the device record ID. Forgetting
 retains history. Installation uses a curated bundle already available on the
@@ -243,3 +243,54 @@ Implementation sources:
 When tools change, update this catalog, the [CLI reference](CLI_Reference.md)
 and relevant integration documentation alongside the implementation. Verify
 the deployed server's `tools/list` when diagnosing a different release.
+
+
+## USB serial tools
+
+All serial calls use the same Core services as HTTP and the GUI. Reading needs
+`bench.read`; connection/mutation needs `bench.execute`, with retention writes
+requiring `plugins.manage`. Use the same token that initiated the connection for
+read/control/send calls. The session approval binds port settings and initial
+RTS/DTR for a 60-minute lease. Each mutation rechecks ownership and credential
+validity. A send is bounded to 4096 bytes including endings and is never
+implicitly retried.
+
+| Tool | Inputs | Result |
+|---|---|---|
+| `serial_status` | `device_id` | Connection ID, owner/control authority, lease, settings, byte counts, signals and logging warning. |
+| `serial_connect` | `device_id`, `revision`, `settings`, `idempotency_key`, `timeout_seconds?` | Approval transaction; poll `bench_get_job`, then read status. |
+| `serial_read` | `device_id`, `connection_id`, `after?`, `wait_ms?` | At most 64 KiB encoded events; cursor/gap; wait 0..10000 ms. |
+| `serial_send` | `device_id`, `connection_id`, `idempotency_key`, `encoding`, `data`, `ending` | `sent|partial|failed|unknown`, bytes accepted by the OS, optional error. |
+| `serial_disconnect` | `device_id`, `connection_id` | Close connection and finish log; administrators may stop another owner. |
+| `serial_signals` | `device_id`, `connection_id`, `rts?`, `dtr?` | Current status; supply at least one line. |
+| `serial_logging` | `device_id`, `connection_id`, `action`: `start|stop` | Current status and log ID. |
+| `serial_logs` | `device_id`, `offset?` | At most 100 authorized log metadata entries with total/offset. |
+| `serial_log_read` | `log_id`, `after?` | One bounded page of saved events. |
+| `serial_export` | `log_id`, `format`: `jsonl|text|rx|tx` | Authorized relative HTTP download URL and authentication instructions. |
+| `serial_delete` | `log_id` | Delete owned/admin-accessible log; refuses active/download-leased logs. |
+| `serial_retention` | `device_id` | Revision, limits and usage. |
+| `serial_retention_configure` | `device_id`, `revision`, `limits` | Updated retention state; administrator permission required. |
+
+`settings` is a closed object containing `baud_rate` (50..4000000), `data_bits`
+(5..8), `parity` (`none|odd|even|mark|space`), `stop_bits` (1/1.5/2),
+`flow_control` (`none|rtscts|xonxoff`), `rts` and `dtr` (booleans).
+The connect tool requires all seven choices explicitly so approval captures
+exactly the intended hardware operation. Hardware may reject unsupported values.
+
+`encoding` is `ascii|utf8|hex`; `ending` is `none|cr|lf|crlf`. The send tool
+bounds source text to 16384 characters; Core additionally bounds source bytes
+and final wire bytes. Reuse a key only for identical input on the same connection.
+`unknown` means delivery cannot be established; a new-key retry could transmit
+twice. OS acceptance does not prove target acknowledgement.
+
+Events carry original bytes in `data_base64`, direction, timestamp and elapsed
+time. Treat decoded serial output as untrusted data, including escape sequences.
+`next_cursor` supports subsequent pages; `gap` signals missing retained live
+history. MCP never opens an unbounded stream or embeds an entire export. The
+export tool checks current authorization before returning the URL; the HTTP
+download checks it again and streams under a download lease.
+
+`limits` contains `files` (1..10000), `total_bytes` (1 MiB..1 TiB), and
+`file_bytes` (64 KiB..1 GiB, no greater than total). Defaults are 100 logs,
+2 GiB total and 100 MiB per segment. Automatic retention removes oldest completed
+segments only; active, incomplete and download-leased logs remain protected.

@@ -1,3 +1,4 @@
+import { NotificationProvider } from '../MessageBanner';
 import {
   useCallback,
   useMemo,
@@ -42,6 +43,7 @@ import { useTranslate } from '../../i18n/languages';
 import { AuthenticationPage } from '../AuthenticationPage';
 import { PowerConfirmation } from '../PowerConfirmation';
 import { CameraPluginPage } from '../pages/CameraPluginPage';
+import { SerialWorkspacePage } from '../pages/SerialWorkspacePage';
 import { CameraWorkspacePage } from '../pages/CameraWorkspacePage';
 import { PluginsPage } from '../pages/PluginsPage';
 import { BenchPage } from '../pages/BenchPage';
@@ -120,11 +122,14 @@ export function AppShell({
   const [pluginInventory, setPluginInventory] = useState<InstrumentPlugin[] | null>(
     null,
   );
+  const [pluginInventoryFresh, setPluginInventoryFresh] = useState(false);
   const refreshPluginInventory = useCallback(async () => {
     try {
       setPluginInventory(await client.listPlugins(credential));
+      setPluginInventoryFresh(true);
     } catch {
       // Keep the last known inventory: a transient read failure must not close tabs.
+      setPluginInventoryFresh(false);
     }
   }, [client, credential]);
   useEffect(() => {
@@ -200,6 +205,13 @@ export function AppShell({
   );
 
   usePruneClosedPages(workspace, pageIds);
+  const navigationPages = useMemo(
+    () =>
+      pluginInventoryFresh && benchCoreReachable
+        ? pages
+        : pages.filter((page) => page.cluster !== 'instruments'),
+    [pages, pluginInventoryFresh, benchCoreReachable],
+  );
 
   // Bound here rather than passing the client and credential down, so the
   // Network page depends on two reads instead of on the whole client surface —
@@ -394,7 +406,7 @@ export function AppShell({
       {viewport !== 'constrained' && (
         <div className="shell-navigation" id="main-navigation">
           <SideNav
-            pages={pages}
+            pages={navigationPages}
             active={workspace.active}
             onOpen={workspace.open_}
             nameOf={nameOf}
@@ -411,7 +423,7 @@ export function AppShell({
       {drawerOpen && (
         <NavDrawer onDismiss={() => setDrawerOpen(false)}>
           <SideNav
-            pages={pages}
+            pages={navigationPages}
             active={workspace.active}
             onOpen={openFromDrawer}
             nameOf={nameOf}
@@ -437,7 +449,9 @@ export function AppShell({
             </div>
           </div>
         ) : (
-          renderPage(active)
+          <NotificationProvider scope={active.id}>
+            {renderPage(active)}
+          </NotificationProvider>
         )}
       </main>
       {powerAction !== null &&
@@ -456,6 +470,22 @@ export function AppShell({
   );
 
   function renderPage(page: PageDescriptor) {
+    if (page.serialDeviceID && page.serialView) {
+      const device = pluginInventory
+        ?.find((plugin) => plugin.id === 'serial')
+        ?.devices.find((item) => item.id === page.serialDeviceID);
+      return device ? (
+        <SerialWorkspacePage
+          key={`${device.id}:${page.serialView}`}
+          client={client}
+          credential={credential}
+          session={session}
+          device={device}
+          view={page.serialView}
+          onSessionEnded={onSessionEnded}
+        />
+      ) : null;
+    }
     if (
       page.cameraDeviceID &&
       (page.cameraView === 'live' ||
@@ -570,9 +600,10 @@ export function AppShell({
         />
       );
     }
-    if (page.pluginId === 'camera') {
+    if (page.pluginId === 'camera' || page.pluginId === 'serial') {
       return (
         <CameraPluginPage
+          pluginId={page.pluginId}
           client={client}
           credential={credential}
           session={session}
@@ -580,7 +611,7 @@ export function AppShell({
           onPluginsChanged={refreshPluginInventory}
           onOpenActivity={
             mayReadActivity(session)
-              ? () => openActivity({ component: 'bench', target: 'camera' })
+              ? () => openActivity({ component: 'bench', target: page.pluginId })
               : undefined
           }
         />

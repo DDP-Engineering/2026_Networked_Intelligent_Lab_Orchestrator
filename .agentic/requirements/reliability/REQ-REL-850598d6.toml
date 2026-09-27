@@ -1,0 +1,12 @@
+schema = 1
+id = "REQ-REL-850598d6"
+title = "Transmit serial bytes without replay"
+status = "active"
+requirement = "When an authorized serial send is accepted, NILO shall validate and serialize its bounded payload with idempotent status, reporting partial or unknown delivery without replay after an uncertain write."
+verification = "Exercise ASCII/UTF-8/hex, terminators, duplicate keys, invalid input, partial writes, timeout, crash and queue limits; assert exact peer bytes and no retry duplication."
+affected_paths = ["05_Software/core/internal/bench/", "05_Software/core/internal/httpapi/", "05_Software/core/internal/store/sqlite/"]
+linked_tests = ["05_Software/core/internal/bench/serial_test.go", "05_Software/core/internal/bench/serial_lifecycle_test.go"]
+spec = "specs/usb-serial.md"
+priority = "high"
+created = 2026-09-27
+updated = 2026-09-27

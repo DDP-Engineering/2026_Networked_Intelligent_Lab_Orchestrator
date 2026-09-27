@@ -1,3 +1,4 @@
+import { MessageBanner } from '../MessageBanner';
 import { useState, type FormEvent } from 'react';
 
 import { useTranslate } from '../../i18n/languages';
@@ -53,13 +54,17 @@ export function AboutPage({
   const t = useTranslate();
   const [friendlyName, setFriendlyName] = useState(appliance?.friendlyName ?? '');
   const [actionStatus, setActionStatus] = useState('');
+  const [actionTone, setActionTone] = useState<'info' | 'warning' | 'error'>('info');
   const [working, setWorking] = useState(false);
 
   const identify = async () => {
     if (onIdentify === undefined) return;
     setWorking(true);
+    setActionStatus('');
+    setActionTone('info');
     try {
       const result = await onIdentify();
+      setActionTone(result.supported ? 'info' : 'warning');
       setActionStatus(
         result.supported
           ? t('about.identify.active', {
@@ -68,6 +73,7 @@ export function AboutPage({
           : t('about.identify.unsupported'),
       );
     } catch {
+      setActionTone('error');
       setActionStatus(t('about.identify.failed'));
     } finally {
       setWorking(false);
@@ -78,11 +84,14 @@ export function AboutPage({
     event.preventDefault();
     if (onFriendlyName === undefined) return;
     setWorking(true);
+    setActionStatus('');
+    setActionTone('info');
     try {
       const updated = await onFriendlyName(friendlyName);
       setFriendlyName(updated.friendlyName);
       setActionStatus(t('about.friendly.updated'));
     } catch {
+      setActionTone('error');
       setActionStatus(t('about.friendly.failed'));
     } finally {
       setWorking(false);
@@ -134,7 +143,9 @@ export function AboutPage({
                   {t('about.identify')}
                 </button>
               )}
-              {actionStatus !== '' && <p role="status">{actionStatus}</p>}
+              {actionStatus !== '' && (
+                <MessageBanner tone={actionTone}>{actionStatus}</MessageBanner>
+              )}
             </section>
           )}
         {status === null && (appliance === undefined || appliance === null) ? (
