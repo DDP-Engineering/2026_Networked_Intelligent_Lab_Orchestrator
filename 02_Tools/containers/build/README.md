@@ -3,14 +3,29 @@
 Build from the repository root with
 `../../scripts/build-build-environment.sh --engine docker` (or `podman`). The
 script validates `build-environment.lock.json` and refuses to start while its
-`reconstruction` record is incomplete. The first-generation reconstruction is a
-complete 650-record Linux amd64 closure in `reconstruction-inputs.json`: 235 apt
-packages, 264 npm tarballs, 126 Go proxy objects, 18 Python wheels, three browser
-payloads, and one archive each for Go, uv, Node, and managed CPython. The
+`reconstruction` record is incomplete. Generation `noble-20260928-01` has a
+complete 677-record Linux amd64 closure in `reconstruction-inputs.json`: 244 apt
+packages, 264 npm tarballs, 138 Go proxy objects, 23 Python wheels, one pinned
+Git source archive, three browser payloads, and one archive each for Go, uv,
+Node, and managed CPython. The
 materializer rejects missing, extra, symlinked, size-mismatched, or SHA-256-
 mismatched content before the engine starts. The Containerfile consumes the
 verified directory through the `nilo_inputs` named context while the engine
 build runs with `--network=none`.
+
+`locked_build_inputs.py verify` checks every source Go checksum lock, Python
+lock and frontend tarball URL/version against this inventory before build and
+export. Go restore checks
+the module content against `go.sum`. Python preparation verifies wheel and Git
+archive hashes before creating environments, installs each project's exact
+locked wheels and local dependencies, builds the pinned Git archive offline
+with pinned setuptools/wheel, and checks the installed dependency closure.
+The image includes `iproute2` for unprivileged preflight checks.
+
+The archive's `current.json` continues to describe its existing immutable
+generation. Rebuild, offline verification, export and import must succeed before
+replacing it with an archive for this recipe; publication and independent
+backup readback remain human operations.
 
 The tracked SBOM and provenance files describe the reviewed source definition.
 A real build must replace their pending image fields with generated image

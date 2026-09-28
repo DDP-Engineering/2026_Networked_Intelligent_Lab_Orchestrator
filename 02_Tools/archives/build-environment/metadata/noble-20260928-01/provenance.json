@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "image_digest": "sha256:84578c0371424ee15cf43bb78083cadd45e9bda2ba2bdd6926f0c00b1d0f0568",
+  "source": {
+    "base_commit": "a89db2fa89b0fdf8a77f24833555b617122cb344",
+    "tree_sha256": "1543b8c06bb7f72b639c26ae3ed8930f8356933fe762404b9015c28d52bf2df9",
+    "status": "dirty"
+  },
+  "lock_sha256": "11d621f3a761f7e051d4920cda6fee332ce45caa651698f9e2e74b7b4ca63349",
+  "built_at": "2026-09-28T15:44:57+00:00",
+  "builder": "Windows x86-64 / Ubuntu 24.04 WSL2 / Docker Engine 29.8.0",
+  "definition": "02_Tools/containers/build/Containerfile"
+}

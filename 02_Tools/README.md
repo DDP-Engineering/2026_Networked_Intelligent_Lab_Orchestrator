@@ -33,7 +33,9 @@ runs headlessly in the Linux container.
 
 The tracked `containers/build/Containerfile`, lock, inventory, licence index,
 SBOM source record, and provenance source record define generation
-`noble-20260905-01`. Extracted engine state and caches remain on the WSL Linux
+`noble-20260928-01`; the archive manifest retains the previous generation until
+the new recipe passes rebuild, offline verification and archive round-trip.
+Extracted engine state and caches remain on the WSL Linux
 filesystem and are ignored. Only immutable `archives/**/.partNNN` payloads use
 Git LFS; `current.json` is ordinary Git metadata.
 
@@ -108,13 +110,17 @@ the affected file/OID and stops with three paths:
 3. explicitly select the networked fallback with
    `-RebuildFromPinnedInputs`.
 
-The third path validates and materializes the complete 650-record reconstruction
+The third path validates and materializes the complete 677-record reconstruction
 manifest into the ignored `02_Tools/cache/containers/upstream` directory before
 the engine starts. The manifest covers the apt closure, Go and module proxy,
-managed CPython and Python wheels, uv, Node and npm tarballs, and Playwright
+managed CPython, locked Python wheels and the pinned Camera Git source with its
+build tools, uv, Node and npm tarballs, and Playwright
 browser payloads. Every byte is checked for size and SHA-256; missing, extra,
 symlinked, or tampered input fails closed. The engine then receives that directory
 as the `nilo_inputs` named context and builds with `--network=none`.
+Source-lock coverage is checked before build and export. Offline preparation
+checks Python input hashes before clearing environments and checks installed
+dependency consistency before collecting tests. Go restore verifies `go.sum`.
 
 `-Offline`/`--offline` forbids the third path. Engine installation is also a separate host
 change: generate or obtain the checksum-verified Ubuntu host-bootstrap archive,
@@ -147,7 +153,7 @@ current local generation; external acceptance remains separate and still uses:
 
 ```sh
 ./02_Tools/scripts/build-host-bootstrap.sh
-./02_Tools/scripts/export-build-environment.sh --engine docker --image nilo/build-environment:noble-20260905-01 --generation noble-20260905-01
+./02_Tools/scripts/export-build-environment.sh --engine docker --image nilo/build-environment:noble-20260928-01 --generation noble-20260928-01
 ```
 
 No checksum, size, digest, hosted capacity, replica, or appliance observation

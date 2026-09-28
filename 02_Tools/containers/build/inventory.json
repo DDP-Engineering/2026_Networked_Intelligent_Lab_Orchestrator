@@ -1,17 +1,62 @@
 {
   "schema": 1,
-  "generation": "noble-20260905-01",
+  "generation": "noble-20260928-01",
   "platform": "linux/amd64",
   "commands": [
-    {"name":"go","command":"go version","contains":"go1.27.0"},
-    {"name":"python","command":"python --version","contains":"Python 3.12.10"},
-    {"name":"uv","command":"uv --version","contains":"0.11.25"},
-    {"name":"node","command":"node --version","contains":"v24.20.0"},
-    {"name":"npm","command":"npm --version","contains":"11.19.0"},
-    {"name":"gcc","command":"gcc -dumpfullversion","contains":"13.3.0"},
-    {"name":"ld","command":"ld --version","contains":"2.42"},
-    {"name":"aarch64-gcc","command":"aarch64-linux-gnu-gcc -dumpfullversion","contains":"13.3.0"},
-    {"name":"aarch64-ld","command":"aarch64-linux-gnu-ld --version","contains":"2.42"},
-    {"name":"chromium","command":"find /opt/nilo/playwright -type f -name chromium -o -name chrome | head -1","contains":"/opt/nilo/playwright/"}
+    {
+      "name": "go",
+      "command": "go version",
+      "contains": "go1.27.0"
+    },
+    {
+      "name": "python",
+      "command": "python --version",
+      "contains": "Python 3.12.10"
+    },
+    {
+      "name": "uv",
+      "command": "uv --version",
+      "contains": "0.11.25"
+    },
+    {
+      "name": "node",
+      "command": "node --version",
+      "contains": "v24.20.0"
+    },
+    {
+      "name": "npm",
+      "command": "npm --version",
+      "contains": "11.19.0"
+    },
+    {
+      "name": "gcc",
+      "command": "gcc -dumpfullversion",
+      "contains": "13.3.0"
+    },
+    {
+      "name": "ld",
+      "command": "ld --version",
+      "contains": "2.42"
+    },
+    {
+      "name": "aarch64-gcc",
+      "command": "aarch64-linux-gnu-gcc -dumpfullversion",
+      "contains": "13.3.0"
+    },
+    {
+      "name": "aarch64-ld",
+      "command": "aarch64-linux-gnu-ld --version",
+      "contains": "2.42"
+    },
+    {
+      "name": "chromium",
+      "command": "find /opt/nilo/playwright -type f -name chromium -o -name chrome | head -1",
+      "contains": "/opt/nilo/playwright/"
+    },
+    {
+      "name": "iproute2",
+      "command": "ip -Version",
+      "contains": "iproute2-6.1.0"
+    }
   ]
 }

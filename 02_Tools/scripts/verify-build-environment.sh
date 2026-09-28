@@ -46,22 +46,34 @@ file "$tmp/arm64" | grep -E "ARM aarch64|ARM64"
 
 # The offline suite runs against a read-only checkout copied into an isolated
 # container source root, so verification cannot mutate host dependency trees.
-"$engine" run --rm --network none --cap-drop all --security-opt no-new-privileges \
+set -- run --rm --network none --cap-drop all --security-opt no-new-privileges \
     --user "$(id -u):$(id -g)" -v "$repo_root:/workspace:ro" \
     -v "$repo_root/.git:/work/git-dir:ro" -e GIT_OPTIONAL_LOCKS=0 \
-    -e NILO_ISOLATED_SOURCE=/work/source -w /work \
+    -e NILO_ISOLATED_SOURCE=/work/source -w /work
+# A directory on the observed WSL backing volume supplies statvfs evidence.
+if [ -n "${NILO_WSL_HOST_VOLUME:-}" ]; then
+    [ -d "$NILO_WSL_HOST_VOLUME" ] || { printf '%s\n' "error: explicit WSL backing-volume evidence directory is missing: $NILO_WSL_HOST_VOLUME" >&2; exit 1; }
+    set -- "$@" -v "$NILO_WSL_HOST_VOLUME:/work/host-volume:ro" -e NILO_WSL_HOST_VOLUME=/work/host-volume
+fi
+if [ -n "${NILO_KERNEL_MODULES_PATH:-}" ]; then
+    [ -d "$NILO_KERNEL_MODULES_PATH" ] || { printf '%s\n' "error: explicit kernel module evidence directory is missing: $NILO_KERNEL_MODULES_PATH" >&2; exit 1; }
+    set -- "$@" -v "$NILO_KERNEL_MODULES_PATH:/lib/modules:ro"
+fi
+"$engine" "$@" \
     --entrypoint bash "$image" -lc '
 set -eu
 cp -R /opt/nilo/cache-seed/. /work/runtime-cache/
 mkdir -p "$NILO_ISOLATED_SOURCE"
 tar -C /workspace -cf - \
-    --exclude=./.git --exclude=./02_Tools/cache --exclude=./02_Tools/archives \
+    --exclude=./.git --exclude=./02_Tools/cache --exclude='*.part[0-9][0-9][0-9]' --exclude='*.oci.tar' --exclude='*.oci.tar.gz' --exclude='nilo-wsl-host-bootstrap-*.tar.gz' \
     --exclude=./02_Tools/runtime --exclude=./.playwright-cli \
     --exclude=./.pytest_cache --exclude=./.ruff_cache \
     --exclude=node_modules --exclude=.venv --exclude=.venv-\* \
     --exclude=dist --exclude=coverage --exclude=test-results \
     --exclude=playwright-report --exclude=__pycache__ \
     . | tar -C "$NILO_ISOLATED_SOURCE" -xf -
+# Git does not carry empty directories left by excluded dependency trees.
+find "$NILO_ISOLATED_SOURCE" -depth -type d -empty -delete
 # Git metadata stays read-only and outside the writable copy; optional locks
 # are disabled so read-only history queries never try to write an index.
 ln -sfn /work/git-dir "$NILO_ISOLATED_SOURCE/.git"

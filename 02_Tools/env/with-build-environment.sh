@@ -70,6 +70,15 @@ set -- run --rm --network none --cap-drop all --security-opt no-new-privileges \
     --mount "type=volume,source=$cache_volume,target=/work/runtime-cache" \
     -v "$output_root:/outputs:rw" -e NILO_OUTPUT_DIR=/outputs \
     -e NILO_ISOLATED_SOURCE=/work/source -w /work
+# A directory on the observed WSL backing volume supplies statvfs evidence.
+if [ -n "${NILO_WSL_HOST_VOLUME:-}" ]; then
+    [ -d "$NILO_WSL_HOST_VOLUME" ] || { printf '%s\n' "error: explicit WSL backing-volume evidence directory is missing: $NILO_WSL_HOST_VOLUME" >&2; exit 1; }
+    set -- "$@" -v "$NILO_WSL_HOST_VOLUME:/work/host-volume:ro" -e NILO_WSL_HOST_VOLUME=/work/host-volume
+fi
+if [ -n "${NILO_KERNEL_MODULES_PATH:-}" ]; then
+    [ -d "$NILO_KERNEL_MODULES_PATH" ] || { printf '%s\n' "error: explicit kernel module evidence directory is missing: $NILO_KERNEL_MODULES_PATH" >&2; exit 1; }
+    set -- "$@" -v "$NILO_KERNEL_MODULES_PATH:/lib/modules:ro"
+fi
 if [ "$action" = package ]; then
     set -- "$@" -v "$package_cache:/packaging-cache:ro"
 fi
@@ -84,7 +93,7 @@ mkdir -p "$NILO_ISOLATED_SOURCE"
 tar -C /workspace -cf - \
     --exclude=./.git \
     --exclude=./02_Tools/cache \
-    --exclude=./02_Tools/archives \
+    --exclude='*.part[0-9][0-9][0-9]' --exclude='*.oci.tar' --exclude='*.oci.tar.gz' --exclude='nilo-wsl-host-bootstrap-*.tar.gz' \
     --exclude=./02_Tools/runtime \
     --exclude=./.playwright-cli \
     --exclude=./.pytest_cache \
@@ -98,6 +107,8 @@ tar -C /workspace -cf - \
     --exclude=playwright-report \
     --exclude=__pycache__ \
     . | tar -C "$NILO_ISOLATED_SOURCE" -xf -
+# Git does not carry empty directories left by excluded dependency trees.
+find "$NILO_ISOLATED_SOURCE" -depth -type d -empty -delete
 # Git metadata stays read-only and outside the writable copy; optional locks
 # are disabled so read-only history queries never try to write an index.
 ln -sfn /work/git-dir "$NILO_ISOLATED_SOURCE/.git"

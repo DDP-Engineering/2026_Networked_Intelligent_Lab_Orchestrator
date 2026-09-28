@@ -1,9 +1,9 @@
 {
   "schema": 1,
-  "generation": "noble-20260905-01",
+  "generation": "noble-20260928-01",
   "toolchain_manifest": "02_Tools/toolchain.versions",
   "image": {
-    "reference": "nilo/build-environment:noble-20260905-01"
+    "reference": "nilo/build-environment:noble-20260928-01"
   },
   "oci": {
     "image_spec_version": "1.1.0",
@@ -23,8 +23,8 @@
   "reconstruction": {
     "status": "complete",
     "manifest": "02_Tools/containers/build/reconstruction-inputs.json",
-    "manifest_sha256": "66b1e14f0a02eef6be7b8c0437b259fae576373ae8959226f71d732ca60193be",
-    "input_count": 650,
+    "manifest_sha256": "9ce4d99ef0789c5da2f275fd93dff5b73d46bb8c78ac67099c45e5e16ef0f21a",
+    "input_count": 677,
     "note": "Every non-base payload is independently hashed and consumed through the verified nilo_inputs build context."
   },
   "apt_roots": [
@@ -321,6 +321,13 @@
       "sha256": "a2bc05cfef021fdb84285036f98eda5ebec3c4b7a378f5aa2bdba5c4d3d8d586",
       "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/f/fontconfig/libfontconfig1_2.15.0-1.1ubuntu2_amd64.deb",
       "license": "MIT"
+    },
+    {
+      "name": "iproute2",
+      "version": "6.1.0-1ubuntu6",
+      "sha256": "d63efc1b10db5c12c9b544bebbac894d6f0bd5d65bf2fc6acd4fdacb459efa6c",
+      "source": "https://snapshot.ubuntu.com/ubuntu/20260905T000000Z/pool/main/i/iproute2/iproute2_6.1.0-1ubuntu6_amd64.deb",
+      "license": "Ubuntu package copyright: /usr/share/doc/iproute2/copyright"
     }
   ],
   "downloads": [
@@ -410,6 +417,11 @@
       "name": "chromium",
       "version": "playwright-lock",
       "command": "chromium --version"
+    },
+    {
+      "name": "iproute2",
+      "version": "6.1.0",
+      "command": "ip -Version"
     }
   ],
   "oci_images": [

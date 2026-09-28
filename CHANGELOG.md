@@ -5,6 +5,11 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ## [Unreleased]
 
+### Added
+
+- Gitea CI runs the canonical offline suite on the shared Linux runner and
+  retains validation evidence and the GUI production build as artifacts.
+
 ### Changed
 
 - Plugin and system feedback uses shared dismissible callouts; realtime action
@@ -12,6 +17,10 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Fixed
 
+- Offline build preparation checks locked Go/Python input coverage and checksums;
+  the recipe includes Camera/Serial dependencies, iproute2 and executable Linux entry points.
+- Isolated offline checks retain archive control metadata and exclude runtime
+  payloads; frontend CI limits concurrency to two workers under its existing deadlines.
 - Instruments navigation shows only active plugins with ready current hardware;
   unavailable and historical devices remain in administrator configuration.
 - Camera/Serial presence refreshes automatically; detected hardware failures clear

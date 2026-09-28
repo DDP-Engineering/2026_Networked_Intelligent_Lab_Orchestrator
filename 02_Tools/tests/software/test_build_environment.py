@@ -319,8 +319,7 @@ class BuildEnvironmentTests(unittest.TestCase):
             "npm ci --offline",
             "GOPROXY=file:///opt/nilo/inputs/go-proxy",
             "GOSUMDB=off",
-            "uv pip install --offline --no-index",
-            "/opt/nilo/inputs/python-packages/*.whl",
+            "locked_build_inputs.py prepare-python",
         ):
             self.assertIn(offline_contract, containerfile)
 
@@ -433,13 +432,9 @@ class BuildEnvironmentTests(unittest.TestCase):
         )
         self.assertIn("UV_PROJECT_ENVIRONMENT=.venv-linux-x86_64", containerfile)
         self.assertIn("prepare-python-environments.sh", build_all)
-        for contract in (
-            "uv venv --clear",
-            "uv pip install --offline --no-index",
-            "/opt/nilo/inputs/python-packages/*.whl",
-            "--no-deps",
-        ):
-            self.assertIn(contract, preparer)
+        self.assertIn("locked_build_inputs.py prepare-python", preparer)
+        self.assertNotIn("prepare-serial-dependency.py", preparer)
+        self.assertIn("locked_build_inputs.py verify", build_all)
         self.assertNotIn("uv sync", build_all)
 
     def test_archive_round_trip_and_corruption_fail_closed(self) -> None:
@@ -1378,7 +1373,7 @@ class BuildEnvironmentTests(unittest.TestCase):
             report["BE-02"]["detail"],
         )
         self.assertEqual(report["BE-04"]["status"], "pending")
-        self.assertIn("closure-test", report["BE-04"]["detail"])
+        self.assertIn(lock["generation"], report["BE-04"]["detail"])
         for gate in (
             "BE-02",
             "BE-03",
@@ -1556,6 +1551,50 @@ class BuildEnvironmentTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn("NILO_OUTPUT_DIR", builder)
+
+    @unittest.skipIf(os.name == "nt", "requires POSIX tar")
+    def test_source_copy_preserves_control_metadata_without_runtime_payloads(self) -> None:
+        """Exercise both real copy commands against an archive/runtime fixture."""
+        retained = [
+            "02_Tools/archives/wsl-host-bootstrap/host-bootstrap.lock.json",
+            "02_Tools/archives/build-environment/current.json",
+            "05_Software/frontend/package.json",
+        ]
+        excluded = [
+            "02_Tools/archives/build-environment/nilo-build-env-test.oci.tar.gz.part000",
+            "02_Tools/archives/build-environment/nilo-build-env-test.oci.tar.gz",
+            "02_Tools/archives/wsl-host-bootstrap/nilo-wsl-host-bootstrap-test.tar.gz",
+            "02_Tools/cache/runtime.bin",
+            "05_Software/integrations/fake_python/.venv/dependency.py",
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workspace = root / "workspace"
+            for name in retained + excluded:
+                path = workspace / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("fixture", encoding="utf-8")
+            for index, name in enumerate([
+                "env/with-build-environment.sh", "scripts/verify-build-environment.sh",
+            ]):
+                with self.subTest(wrapper=name):
+                    output = root / f"isolated-{index}"
+                    output.mkdir()
+                    wrapper = (TOOLS_ROOT / name).read_text(encoding="utf-8")
+                    finish = 'find "$NILO_ISOLATED_SOURCE" -depth -type d -empty -delete'
+                    command = wrapper[wrapper.index("tar -C /workspace"):wrapper.index(finish) + len(finish)]
+                    command = command.replace("/workspace", '"$NILO_TEST_WORKSPACE"')
+                    result = subprocess.run(
+                        ["sh", "-eu", "-c", command], text=True, capture_output=True,
+                        env={**os.environ, "NILO_TEST_WORKSPACE": str(workspace),
+                             "NILO_ISOLATED_SOURCE": str(output)},
+                    )
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    for path in retained:
+                        self.assertEqual((output / path).read_text(), "fixture")
+                    for path in excluded:
+                        self.assertFalse((output / path).exists(), path)
+                    self.assertFalse((output / "05_Software/integrations/fake_python").exists())
 
     def test_host_isolation_gate_proves_dependencies_are_untouched(self) -> None:
         gate = TOOLS_ROOT / "tests/build-environment/verify-host-isolation.sh"
@@ -2233,7 +2272,7 @@ class BuildEnvironmentTests(unittest.TestCase):
         definition_readme = (TOOLS_ROOT / "containers/build/README.md").read_text(
             encoding="utf-8"
         )
-        self.assertIn("650-record", definition_readme)
+        self.assertIn("677-record", definition_readme)
         self.assertNotIn("deliberately incomplete", definition_readme)
         self.assertNotIn("not yet materialized", definition_readme)
 

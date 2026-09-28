@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated_at": "2026-09-05T00:00:00Z",
+  "generated_at": "2026-09-28T00:00:00Z",
   "maturity": {
     "implemented": true,
     "locally_integrity_checked": false,
@@ -13,7 +13,7 @@
   "gates": {
     "BE-01": {
       "status": "passed",
-      "command": "python -m unittest 05_Software.scripts.tests.test_build_environment.BuildEnvironmentTests.test_policy_lfs_and_documented_commands_match_the_plan",
+      "command": "python -m unittest 02_Tools.tests.software.test_build_environment.BuildEnvironmentTests.test_policy_lfs_and_documented_commands_match_the_plan",
       "evidence": "working-tree contract test",
       "detail": "narrow LFS escrow policy and ignored extracted runtimes"
     },
@@ -21,7 +21,7 @@
       "status": "pending",
       "command": "python 02_Tools/scripts/build_environment.py validate-reconstruction --lock 02_Tools/containers/build/build-environment.lock.json && python 02_Tools/scripts/build_environment.py verify-materialized-inputs --lock 02_Tools/containers/build/build-environment.lock.json --input-dir 02_Tools/cache/containers/upstream",
       "evidence": "the current manifest definition validates; complete materialized-input readback remains pending",
-      "detail": "reconstruction manifest SHA-256 66b1e14f0a02eef6be7b8c0437b259fae576373ae8959226f71d732ca60193be is current, but its complete 650-record materialized cache has not been verified"
+      "detail": "reconstruction manifest SHA-256 9ce4d99ef0789c5da2f275fd93dff5b73d46bb8c78ac67099c45e5e16ef0f21a is current, but its complete 677-record materialized cache has not been verified"
     },
     "BE-03": {
       "status": "pending",
@@ -33,7 +33,7 @@
       "status": "pending",
       "command": "./02_Tools/scripts/build-build-environment.sh --engine docker",
       "evidence": "pending canonical scripted build log, provenance labels, and inventory",
-      "detail": "nilo/build-environment:closure-test completed a network-none closure proof, but it is not the canonical lock reference and has no provenance labels"
+      "detail": "generation noble-20260928-01 requires canonical rebuild and generated provenance; image and archive verification remain pending"
     },
     "BE-05": {
       "status": "pending",
@@ -67,7 +67,7 @@
     },
     "BE-10": {
       "status": "passed",
-      "command": "python -m unittest 05_Software.scripts.tests.test_build_environment.BuildEnvironmentTests.test_policy_lfs_and_documented_commands_match_the_plan",
+      "command": "python -m unittest 02_Tools.tests.software.test_build_environment.BuildEnvironmentTests.test_policy_lfs_and_documented_commands_match_the_plan",
       "evidence": "working-tree documentation contract test",
       "detail": "setup, offline use, archive recovery and maintenance responsibilities are documented; materialized and external outcomes remain pending in BE-02, BE-03, BE-04, BE-05, BE-06, BE-07, BE-08 and BE-09"
     }
