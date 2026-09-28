@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-SEC-aa791b1e"
+
+title = "Authorize and audit operating settings changes"
+
+status = "active"
+
+requirement = """
+When operating settings are read or changed through the shared API, Core shall require administrator authority for replacement, reject unauthorized replacement, and record every accepted change in the audit history.
+"""
+
+verification = "Automated: call the API as administrator, operator, viewer and scoped tokens; verify only authorized writes succeed and one audit record appears for each accepted change."
+
+affected_paths = ["05_Software/core/internal/httpapi/operating_settings.go", "05_Software/core/internal/httpapi/server.go", "05_Software/core/internal/auth/role.go", "05_Software/core/internal/bench/operating_settings.go", "05_Software/core/internal/auth/role_test.go", "05_Software/core/internal/httpapi/operating_settings_test.go"]
+
+linked_tests = ["05_Software/core/internal/httpapi/operating_settings_test.go", "05_Software/core/internal/auth/role_test.go"]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-28
+updated = 2026-09-28

@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-ba9953bb"
+
+title = "Manage Nilo settings in an expandable browser table"
+
+status = "active"
+
+requirement = """
+When an administrator opens Nilo Settings, the browser shall show the platform job limits and timeouts as an editable table with a setting label, allowed range, value cell, and live usage where available, with a Save settings action above the list, contextual `?` help for each setting, visible validation and conflict outcomes, and a View activity action that opens Activity filtered to settings audit events when the session may read Activity.
+"""
+
+verification = "Automated: render Nilo Settings with a stub client, check its four platform rows, columns, help triggers, usage, and top save action; edit a value, save it, and observe invalid or stale edit feedback. In the shell, open Nilo Settings as an Activity-authorized administrator, choose View activity, and verify the Activity filter selects audited platform settings changes; verify the action is absent when Activity read authority is missing."
+
+affected_paths = ["05_Software/frontend/src/components/pages/OperatingSettingsPage.tsx", "05_Software/frontend/src/components/shell/AppShell.tsx", "05_Software/frontend/src/components/shell/pages.ts", "05_Software/frontend/src/api/operating-settings.ts", "05_Software/frontend/src/api/client.ts", "05_Software/frontend/src/api/contract.ts", "05_Software/frontend/src/api/mock.ts", "05_Software/frontend/src/i18n/platform.ts", "05_Software/frontend/src/styles/shell.css", "05_Software/frontend/src/App.test.tsx", "05_Software/frontend/src/components/AuthenticationPage.test.tsx", "05_Software/frontend/src/components/pages/OperatingSettingsPage.test.tsx", "05_Software/frontend/src/components/shell/shell.test.tsx", "05_Software/frontend/src/i18n/en.ts", "05_Software/frontend/src/i18n/de.ts", "05_Software/frontend/src/i18n/ro.ts", "05_Software/frontend/e2e/shell.spec.ts"]
+
+linked_tests = ["05_Software/frontend/src/components/pages/OperatingSettingsPage.test.tsx", "05_Software/frontend/src/components/shell/pages.test.ts", "05_Software/frontend/e2e/shell.spec.ts"]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-28
+updated = 2026-09-28

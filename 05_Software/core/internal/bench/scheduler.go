@@ -93,7 +93,7 @@ func (m *Manager) dispatch(ctx context.Context) {
 			m.report(m.settle(ctx, job, "incomplete", "deadline_exceeded"))
 			continue
 		}
-		if job.State != "queued" || len(m.active) >= 2 {
+		if job.State != "queued" || len(m.active) >= m.settings.ExecutingJobs {
 			continue
 		}
 		resource := resourceFor(job)

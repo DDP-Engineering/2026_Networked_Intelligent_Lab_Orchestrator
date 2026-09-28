@@ -1,0 +1,24 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+schema = 1
+id = "REQ-UX-7bf4e0c2"
+title = "Manage Camera and Serial limits on their plugin pages"
+status = "active"
+
+requirement = """
+When an administrator opens Camera or Serial plugin administration, the browser shall present only that plugin's capacity and lifetime settings as editable rows with allowed ranges, current usage where available, and contextual `?` explanations, explain non-obvious plugin controls with the same help pattern, and save those edits through the revisioned platform settings API while preserving the other settings.
+"""
+
+verification = "Automated: render each plugin administration page with a stub client, verify the relevant rows and help buttons appear and unrelated rows do not, open a plugin-control help button, change one value and save, and verify a stale revision reports a conflict without discarding the draft."
+
+affected_paths = ["05_Software/frontend/src/components/pages/CameraPluginPage.tsx", "05_Software/frontend/src/components/pages/CameraPluginPage.test.tsx", "05_Software/frontend/src/components/pages/OperatingSettingsPage.tsx", "05_Software/frontend/src/components/shell/AppShell.tsx", "05_Software/frontend/src/i18n/platform.ts", "05_Software/frontend/src/styles/shell.css"]
+linked_tests = ["05_Software/frontend/src/components/pages/CameraPluginPage.test.tsx", "05_Software/frontend/src/components/pages/OperatingSettingsPage.test.tsx"]
+spec = ""
+priority = "normal"
+rationale = "The controls belong to the plugin whose work they govern while the Core remains their common enforcement authority."
+created = 2026-09-28
+updated = 2026-09-28

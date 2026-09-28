@@ -14,7 +14,16 @@ from datetime import UTC, datetime
 import pytest
 from PIL import Image, ImageChops
 
+from nilo_camera import workspace
 from nilo_camera.workspace import compose, validate_settings
+
+
+def test_session_lifetime_is_a_bounded_core_parameter():
+    assert workspace.session_lifetime_seconds({"session_lifetime_seconds": 60}) == 60
+    assert workspace.session_lifetime_seconds({"session_lifetime_seconds": 14_400}) == 14_400
+    for value in (None, True, 59, 14_401):
+        with pytest.raises(ValueError):
+            workspace.session_lifetime_seconds({"session_lifetime_seconds": value})
 
 
 @pytest.mark.parametrize(

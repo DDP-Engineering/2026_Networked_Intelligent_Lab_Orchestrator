@@ -183,6 +183,45 @@ func TestSerialLifecycleSlowStartupAllowsOtherManagerRequests(t *testing.T) {
 	awaitJob(t, m, actor, job.ID, "completed")
 }
 
+func TestConfiguredSerialLifetimeIsCapturedWhenConnectionStarts(t *testing.T) {
+	m, actor, input, runner := serialLifecycleFixture(t, "auto")
+	state, err := m.OperatingSettings(t.Context(), actor)
+	if err != nil {
+		t.Fatal(err)
+	}
+	settings := state.Settings
+	settings.SerialLifetimeMinutes = 2
+	settings.SerialIdleMinutes = 2
+	state, err = m.ReplaceOperatingSettings(t.Context(), actor, state.Revision, settings)
+	if err != nil {
+		t.Fatal(err)
+	}
+	close(runner.ready)
+	job, err := m.ConnectSerial(t.Context(), actor, "serial-1", input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	awaitJob(t, m, actor, job.ID, "completed")
+	m.mu.Lock()
+	connection := m.serials["serial-1"]
+	expiry := connection.expires
+	idle := connection.idleTimeout
+	m.mu.Unlock()
+	if idle != 2*time.Minute || time.Until(expiry) < time.Minute || time.Until(expiry) > 2*time.Minute {
+		t.Fatalf("new connection lifetime = %v, idle = %v", time.Until(expiry), idle)
+	}
+	settings.SerialLifetimeMinutes = 1
+	settings.SerialIdleMinutes = 1
+	if _, err := m.ReplaceOperatingSettings(t.Context(), actor, state.Revision, settings); err != nil {
+		t.Fatal(err)
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if connection.expires != expiry || connection.idleTimeout != idle {
+		t.Fatal("existing connection lifetime changed with platform settings")
+	}
+}
+
 func waitSerialLifecycle(t *testing.T, maximum time.Duration, condition func() bool, description string) {
 	t.Helper()
 	deadline := time.Now().Add(maximum)

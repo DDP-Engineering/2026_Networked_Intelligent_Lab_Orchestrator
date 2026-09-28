@@ -93,6 +93,7 @@ export const BENCH_CORE_TOKEN_SCOPES = [
   'activity.export',
   'activity.retention.manage',
   'password.policy.manage',
+  'platform.settings.manage',
 ] as const;
 
 /** Every fixed permission, including session-only appliance power control. */
@@ -126,6 +127,9 @@ export const PERMISSION_NETWORK_READ: BenchCorePermission = 'network.read';
 /** Permission required to read and change the appliance password policy. Administrators only. */
 export const PERMISSION_PASSWORD_POLICY_MANAGE: BenchCorePermission =
   'password.policy.manage';
+
+export const PERMISSION_PLATFORM_SETTINGS_MANAGE: BenchCorePermission =
+  'platform.settings.manage';
 
 /**
  * The appliance's one rule for a password being set. It is never applied when a

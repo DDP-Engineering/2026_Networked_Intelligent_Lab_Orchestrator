@@ -14,15 +14,18 @@ them requires reconnecting. The public Bench operation `connect` changes state.
 submission validation. The manifest declares these three operations and no
 artifacts.
 
-Core permits one connection per port and four per appliance. Each connection
+Core permits one connection per port and the administrator-configured number per
+appliance (default four). Each connection
 belongs to its requesting user and exact browser-session or API-token ID. Core
 retains credential IDs only. Every mutation checks authority. Background checks
 run once per second and close the connection on revocation, expiry, user disable
 or permission loss, plugin disable, or a change to device identity or revision.
 Administrators may inspect or stop a connection but cannot send as another owner.
 
-A session lease lasts 3600 seconds. An unrecorded connection closes after
-60 seconds without an authenticated read or control request. Restart never
+A session lease uses the administrator-configured lifetime (default 3600 seconds).
+An unrecorded connection closes after the configured idle interval (default
+60 seconds) without an authenticated read or control request. Existing
+connections retain their assigned values. Restart never
 restores a connection or replays TX. Disable stops acquisition and logging.
 
 ## Public data
@@ -39,7 +42,7 @@ Bench Job, Device and Plugin objects retain their shapes.
 - `SerialConnect`: `revision` is the device revision; `settings` is
   `SerialSettings`; `idempotency_key` contains 8..128 safe characters;
   `timeout_seconds` is the optional Bench timeout. The approval description
-  includes the settings, initial line states and 60-minute lease.
+  includes the settings, initial line states and configured lease duration.
 - `SerialStatus`: `device_id`, `connected`, `connection_id`, `owner_id`,
   `expires_at`, `settings`, `logging`, `log_id`, `rx_bytes`, `tx_bytes`,
   `warning`, `signals` and `can_control`. The `signals` object contains
