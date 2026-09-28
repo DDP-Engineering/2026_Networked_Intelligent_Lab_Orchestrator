@@ -21,14 +21,14 @@ opened: 2026-09-28
 
 ## Done checklist (current stage)
 
-- [ ] diff reviewed against scope, requirements, design, error paths,
+- [x] diff reviewed against scope, requirements, design, error paths,
       portability, security, and unrequested work
-- [ ] knowledge pages updated for every materially changed component
-- [ ] requirements re-read: status, prose, verification, paths, and links true
-- [ ] manual or inspection verification completed and recorded where applicable
-- [ ] final evolution report refreshed after the last candidate edit
-- [ ] final `check --strict --run` result recorded truthfully after all edits
-- [ ] remaining warnings and pre-existing failures explained
+- [x] knowledge pages updated for every materially changed component
+- [ ] requirements re-read: status, prose, verification, paths, and links true (appliance-browser observations outstanding)
+- [ ] manual or inspection verification completed and recorded where applicable (browser inspection outstanding)
+- [x] final evolution report refreshed after the last candidate edit
+- [x] final `check --strict --run` result recorded truthfully after all edits
+- [x] remaining warnings and pre-existing failures explained
 - [ ] `stage: deliver`
 
 ## Frame
@@ -141,27 +141,30 @@ Expected files (frontend prefix `05_Software/frontend/`): `src/App.tsx`, `src/Ap
 
 - 2026-09-28 build review fix: Corrected only the recorded hidden Overview browser oracle: assert Network remains collapsed after selecting its root, then disclose the group before clicking Overview. Prior build red/anchor and requirement links remain applicable; evolution refreshed (four expected modified paths). Focused `npm exec vitest -- run src/components/shell/shell.test.tsx src/components/shell/SideNav.test.tsx --reporter=dot` exit=0 (42 tests); `npm exec playwright -- test --list e2e/shell.spec.ts` exit=0 (7 discovered, not executed); `npm run format:check` and `npm run lint` exit=0. Appliance prerequisite check exit=2: no Docker/Podman, so focused browser execution and final browser proof remain owed. Deviation accepted for this stage only: component coverage/listing cannot prove the corrected browser journey. Advisory check zero errors, seven unrelated warnings (stale data path, tracked sidecars, three other-task deliver/scope warnings and another task's scope drift), four unrelated manual notes. Advance to validate for fresh round-2 verdicts and final proof; no prior verdict carries over.
 
+- 2026-09-28 validate round 2: Reviewed corrected Network Overview browser oracle and navigation/session/inventory implementation against frame, design and 13 linked active requirements, including permission filtering, failures, responsive disclosure, translations and security boundary. Both static verdicts approved for current candidate. Knowledge page already reconciled; requirement statuses/prose/paths/links inspected and consistent with source and component tests, but browser clauses in verification cannot yet be observed. No linked requirement declares a Manual:/Inspection: method; appliance-browser inspection specified by the verification prose remains outstanding. Evolution report refreshed: four expected modified paths since build anchor, no added/removed files; merge-base diff includes unrelated 02_Tools executable modes and integration runners, excluded. No ticket code changed in validation.
+- 2026-09-28 validate final local gate: `PATH=/tmp/nilo-git-isolated:$PATH python .agentic/aegis.py check --task TASK-1b87ad8a --strict --run` exit 0 (`test` and `lint` both ok; strict ok). The temporary Git wrapper leaves checkout commands in the conductor-provided worktree and clears its Git environment only for temporary fixture repositories; without it the Git fixture tests target the wrong repository. Linux configured suite does not execute frontend/browser tests; focused frontend 42 tests, lint/format and browser test listing passed in build. No Docker, Podman or Chromium executable on host: appliance-browser run and browser-specific layout observation cannot be claimed. Gate warnings: stale data requirement path, tracked fingerprint sidecars, other tasks' deliver checklists and uncovered serial/sigrok runners are unrelated; review-state warning reflects the as-yet-unrecorded verdict at gate time. Four unrelated manual notes. No candidate warning accepted. Validation remains blocked on required appliance-browser execution; no transition to deliver.
+
 ## Rulings
 
 
 ## Handoff
 
 current: validate
-status: ready
-next: Review corrected browser oracle in round 2 and run isolated final strict proof; obtain appliance browser execution when engine is available.
-must_read: .agentic/steps/5_validate.md; .agentic/tasks/TASK-1b87ad8a.md; 05_Software/frontend/e2e/shell.spec.ts
-blockers: Appliance browser stage lacks Docker/Podman; strict gate needs temporary Git fixture environment isolation. No publication until final proof.
+status: blocked
+next: On an appliance-stage-capable host, run the browser suite for this candidate, resolve any failures and finish validation before transitioning.
+must_read: .agentic/steps/5_validate.md; .agentic/tasks/TASK-1b87ad8a.md; 05_Software/frontend/e2e/shell.spec.ts; .agentic/context/environment.md
+blockers: No Docker/Podman engine or Chromium on this host; required appliance-browser proof and browser layout observation outstanding. Strict Linux suite passed with temporary Git fixture isolation.
 
 ## Stage report
 
-stage: build
-result: completed
+stage: validate
+result: blocked
 current: validate
-changed: Fixed hidden Overview e2e oracle in 05_Software/frontend/e2e/shell.spec.ts only.
-evidence: Focused shell/SideNav component tests 42/42, frontend format and lint exit 0; Playwright lists 7 tests; evolution 4 expected modified paths; check zero errors.
-issues: Appliance browser execution unavailable (no Docker/Podman, prerequisite exit 2); strict full gate still requires Git environment isolation. Seven unrelated check warnings remain.
-next: Validate round 2 review and final strict proof; browser stage needs a container engine.
-needs_user: no
-spec_compliance:
-implementation_quality:
-review_round: 1
+changed: No candidate changes; static round-2 review reconciled requirements and existing GUI knowledge.
+evidence: Evolution 4 expected modified paths; isolated strict gate test and lint exit 0, strict ok; focused frontend 42 tests, format and lint exit 0 from build; Playwright tests listed but not executed.
+issues: Appliance browser/layout proof unavailable (no Docker/Podman or Chromium). Eight gate warnings: unrelated catalog/repository items plus review-state recorded after gate; four unrelated manual notes. See Log.
+next: Run appliance-stage browser proof on capable host, resolve failures, then repeat final strict gate if candidate changes and complete validate.
+needs_user: yes
+spec_compliance: approved
+implementation_quality: approved
+review_round: 2
