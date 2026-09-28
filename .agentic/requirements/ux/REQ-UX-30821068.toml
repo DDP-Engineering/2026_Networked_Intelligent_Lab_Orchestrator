@@ -14,7 +14,7 @@ schema = 1
 # and must match the category folder this file sits in.
 id = "REQ-UX-30821068"
 
-title = "Group the navigation into working entries and a core cluster"
+title = "Organize destinations beneath Instruments and System"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
@@ -38,10 +38,7 @@ status = "active"
 # Do not contort prose to fit a pattern - a constraint that reads better
 # plainly is better plainly.
 requirement = """
-The browser interface's left navigation shall present the working and instrument
-entries in its upper area and a bottom-anchored core group ordered, from the top,
-Plugins, Network, Authentication, Activity and About, showing an entry only where
-the signed-in identity holds the permission its page needs.
+The authenticated browser interface's left navigation shall contain exactly two top-level sections, Instruments and System, with no standalone Bench destination; the System destinations include Plugins, Network, Authentication, Activity, About and Inventory in a stable order, and each destination appears only when the signed-in identity holds its required permission.
 """
 
 # The observation that settles whether the behavior holds — not a
@@ -52,7 +49,7 @@ the signed-in identity holds the permission its page needs.
 # "Inspection:" and name the method, and `check` records the requirement
 # as verified by hand instead of counting it among the tests still owed.
 # The prefix alone is not enough — it has to say what someone does.
-verification = "A component test signs in as an administrator, renders the shell, and asserts the lower navigation group contains exactly Plugins, Network, Authentication, Activity and About in that top-to-bottom order, that Network is in the lower group and not among the instrument entries, and that the instrument entries name the integrations the backend actually reported; a browser test asserts the same order in the running interface; a boundary case renders as a viewer holding neither the users, tokens nor activity permission and asserts the Authentication and Activity entries are absent while the remaining entries keep that relative order."
+verification = "Render Administrator, Operator and Viewer shells with ready instruments; expand both sections and assert only Instruments and System are top-level, no Bench entry is present, and System contains Plugins, Network, Authentication, Activity, About and Inventory in the declared relative order where authorized. Repeat with restricted scopes and check Authentication and Activity are absent when permissions do not allow them; inspect the running browser navigation at wide and drawer widths."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
@@ -85,7 +82,7 @@ linked_tests = [
 spec = ""
 
 priority = "high"   # low | normal | high
-rationale = "Network is a built-in appliance capability, and filing it among integrations would teach an operator to look for it in the wrong place."
+rationale = "Appliance work stays under System, independent of reported hardware; navigation permission filtering is presentation, not authorization."
 
 created = 2026-09-02
-updated = 2026-09-05
+updated = 2026-09-28

@@ -14,7 +14,7 @@ schema = 1
 # and must match the category folder this file sits in.
 id = "REQ-UX-8fa0c15e"
 
-title = "Display simulated integrations and devices after authentication"
+title = "Show backend status and inventories in System Inventory"
 
 # draft while being written, active once it is built and tested,
 # retired when the behavior is deliberately removed.
@@ -24,17 +24,19 @@ status = "active"
 # understand and check it. No ticket numbers, no run IDs, no references
 # to other requirements.
 requirement = """
-While the browser GUI holds a bearer token the backend has accepted, it shall present on one screen the reported backend status, every integration the backend reports together with that integration's state, and every device the backend reports together with the integration that owns it and that device's availability.
+When an authenticated user opens the System Inventory destination, the browser GUI shall present on one screen the reported backend status, every integration the backend reports together with that integration's state, and every device the backend reports together with the integration that owns it and that device's availability, with an action to refresh those resources.
 """
 
 # The observation that settles whether the behavior holds — not a
 # restatement of the requirement.
-verification = "Component tests render the authenticated screen with a stub client returning the ready inventory and again with one returning the unavailable inventory, and assert that in each case the backend status, every integration's display name and state, and every device's display name, owning integration identity, and availability are all visible at once, and that the state shown for each entry changes with the inventory the stub returned."
+verification = "Render an authenticated shell with ready and unavailable inventory stubs; expand System, open Inventory and assert status, each integration's name and state, each device name, owner and availability are visible together. Trigger Refresh and assert updated reported states are displayed without closing its tab."
 
 # Repo-relative, forward slashes. The source files this behavior lives in.
 affected_paths = [
     "05_Software/frontend/src/App.tsx",
     "05_Software/frontend/src/components/pages/BenchPage.tsx",
+    "05_Software/frontend/src/components/shell/pages.ts",
+    "05_Software/frontend/src/components/shell/AppShell.tsx",
     "05_Software/frontend/src/styles/tokens.css",
     "05_Software/frontend/src/styles/shell.css",
     "05_Software/frontend/src/App.test.tsx",
@@ -58,4 +60,4 @@ priority = "high"   # low | normal | high
 rationale = "A bench operator decides what to run against what; seeing which integration owns a device and whether it is available is the whole point of the inventory screen."
 
 created = 2026-09-01
-updated = 2026-09-02
+updated = 2026-09-28

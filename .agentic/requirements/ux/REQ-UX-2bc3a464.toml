@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-2bc3a464"
+
+title = "Open About for each authenticated session"
+
+status = "draft"
+
+requirement = """
+When an authenticated browser session is restored or a person signs in after another session, the browser interface shall open About as the sole active workspace tab, with both Instruments and System collapsed even though About belongs to System; this session start does not inherit the previous person's tabs or navigation expansion.
+"""
+
+verification = "Component tests restore an authenticated Administrator session and sign in as a Viewer after an Administrator has opened extra tabs and expanded sections; assert About is the only tab and both section controls report collapsed in each session. A browser reload with a valid session yields the same starting state, without expanding System for About."
+
+affected_paths = ["05_Software/frontend/src/App.tsx", "05_Software/frontend/src/components/shell/useWorkspace.ts", "05_Software/frontend/src/components/shell/pages.ts", "05_Software/frontend/src/components/shell/AppShell.tsx", "05_Software/frontend/src/components/shell/SideNav.tsx", "05_Software/frontend/src/App.test.tsx", "05_Software/frontend/src/components/shell/shell.test.tsx"]
+
+linked_tests = []
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-28
+updated = 2026-09-28

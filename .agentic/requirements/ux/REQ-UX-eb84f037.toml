@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-eb84f037"
+
+title = "Control top-level and nested navigation expansion"
+
+status = "draft"
+
+requirement = """
+While an authenticated shell is shown in the wide rail, compact rail or constrained drawer, the Instruments and System headings shall be keyboard-operable section controls with translated visible and accessible names and an announced expanded state; each toggles its destinations without changing the active workspace tab, nested groups begin collapsed, and selecting a destination within an open section exposes its ancestor groups without forcing a closed top-level section open.
+"""
+
+verification = "Render each viewport with ready nested Camera and Network entries; check both section controls' names and aria-expanded in English, German and Romanian, toggle by Enter and Space, open a nested destination, switch tabs, collapse its section, and assert the tab remains open while its section stays closed. Verify nested groups start closed and can be expanded with the keyboard."
+
+affected_paths = ["05_Software/frontend/src/components/shell/SideNav.tsx", "05_Software/frontend/src/components/shell/AppShell.tsx", "05_Software/frontend/src/components/shell/NavDrawer.tsx", "05_Software/frontend/src/i18n/en.ts", "05_Software/frontend/src/i18n/de.ts", "05_Software/frontend/src/i18n/ro.ts", "05_Software/frontend/src/styles/shell.css", "05_Software/frontend/src/components/shell/SideNav.test.tsx", "05_Software/frontend/e2e/shell.spec.ts"]
+
+linked_tests = []
+
+
+spec = "specs/REQ-UX-eb84f037.md"
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-28
+updated = 2026-09-28
