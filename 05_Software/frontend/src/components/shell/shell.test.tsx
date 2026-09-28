@@ -131,6 +131,8 @@ function client(session: BenchCoreSession = administrator): BenchCoreClient {
         requireSpecial: false,
       }),
     setPasswordPolicy: (_credential, policy) => Promise.resolve(policy),
+    getOperatingSettings: () => Promise.reject(new Error('not part of this fixture')),
+    setOperatingSettings: () => Promise.reject(new Error('not part of this fixture')),
     getStatus: () => Promise.resolve(status),
     getIntegrations: () => Promise.resolve(integrations),
     getDevices: () => Promise.resolve(devices),
@@ -618,6 +620,74 @@ describe('the navigation', () => {
     fireEvent.click(screen.getByRole('button', { name: 'View activity' }));
 
     expect(await screen.findByLabelText('Component')).toHaveValue('identity');
+  });
+
+  it('opens audited Nilo Settings activity with its settings filter', async () => {
+    const session = {
+      ...administrator,
+      permissions: [...administrator.permissions, 'platform.settings.manage'],
+    };
+    const api = client(session);
+    api.getOperatingSettings = () =>
+      Promise.resolve({
+        revision: 1,
+        settings: {
+          executing_jobs: 2,
+          outstanding_jobs: 32,
+          serial_connections: 4,
+          camera_streams: 2,
+          default_job_timeout_seconds: 60,
+          max_job_timeout_seconds: 300,
+          serial_lifetime_minutes: 60,
+          serial_idle_minutes: 1,
+          camera_lifetime_minutes: 55,
+        },
+        usage: {
+          executing_jobs: 0,
+          outstanding_jobs: 0,
+          serial_connections: 0,
+          camera_streams: 0,
+        },
+      });
+    document.cookie = 'nilo_csrf=csrf-token-fixture';
+    renderInShell(
+      <App client={api} apiMode="live" endpoint="http://127.0.0.1:8090" />,
+      { theme: 'light', language: 'en' },
+    );
+    await benchPage();
+    openFromNav('Nilo Settings');
+    await screen.findByRole('heading', { name: 'Nilo Settings' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'View activity' }));
+
+    expect(
+      within(await screen.findByRole('group', { name: 'Category' })).getByRole(
+        'button',
+        {
+          name: 'Audit',
+        },
+      ),
+    ).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByLabelText('Component')).toHaveValue('platform');
+    expect(screen.getByLabelText('Action')).toHaveValue('operating_settings.changed');
+  });
+
+  it('hides Nilo Settings Activity when the session lacks activity.read', async () => {
+    const session = {
+      ...administrator,
+      permissions: [
+        ...administrator.permissions.filter(
+          (permission) => permission !== 'activity.read',
+        ),
+        'platform.settings.manage',
+      ],
+    };
+    renderShell(session);
+    await benchPage();
+    openFromNav('Nilo Settings');
+    await screen.findByRole('heading', { name: 'Nilo Settings' });
+
+    expect(screen.queryByRole('button', { name: 'View activity' })).toBeNull();
   });
 
   // REQ-UX-b718864e: one nested Network group, four routable destinations.

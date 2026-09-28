@@ -294,6 +294,8 @@ func NewHandler(options HandlerOptions) (http.Handler, error) {
 	authorize := guard.authorize
 	protected := http.NewServeMux()
 	registerBench(protected, options.Bench, guard)
+	protected.Handle("GET /api/v1/platform/operating-settings", authorize(auth.PermissionPlatformSettingsManage, handleOperatingSettings(options.Bench)))
+	protected.Handle("PUT /api/v1/platform/operating-settings", authorize(auth.PermissionPlatformSettingsManage, handleOperatingSettings(options.Bench)))
 	protected.Handle("GET /api/v1/status", authorize(auth.PermissionStatusRead, func(response http.ResponseWriter, _ *http.Request) {
 		var system *systeminfo.Info
 		if options.SystemInformation != nil {

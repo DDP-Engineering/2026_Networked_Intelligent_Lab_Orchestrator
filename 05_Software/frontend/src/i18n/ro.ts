@@ -1,5 +1,6 @@
 import { serialRo } from './serial';
 import { cameraRo } from './camera';
+import { platformRo } from './platform';
 import type { Catalogue } from './en';
 
 /**
@@ -12,6 +13,7 @@ import type { Catalogue } from './en';
  */
 export const ro: Catalogue = {
   ...cameraRo,
+  ...platformRo,
   ...serialRo,
   'message.info': 'Informație',
   'message.warning': 'Avertizare',

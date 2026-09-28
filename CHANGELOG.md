@@ -5,8 +5,17 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-09-28
+
+### Added
+
+- Administrators can tune appliance job, serial and camera capacity and lifetimes through revisioned, audited operating settings.
+
 ### Changed
 
+- Nilo Settings now lists platform job controls in an editable table; Camera and
+  Serial limits appear on their plugin pages with contextual help.
+- Nilo Settings links directly to its filtered Activity audit events.
 - Plugin and system feedback uses shared dismissible callouts; realtime action
   headers align right and serial connection details collapse to save display space.
 

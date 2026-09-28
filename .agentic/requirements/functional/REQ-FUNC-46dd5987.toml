@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-46dd5987"
+
+title = "Enforce configurable work capacity"
+
+status = "active"
+
+requirement = """
+When a new finite job, serial connection, or camera stream is admitted, Core shall enforce the corresponding configured appliance-wide capacity while preserving existing work after a limit reduction and exclusive ownership of each physical device.
+"""
+
+verification = "Automated: run multiple distinct jobs/devices at and above configured limits, lower and raise limits with work active, and observe rejection, continued work, and admission after capacity releases."
+
+affected_paths = ["05_Software/core/internal/bench/scheduler.go", "05_Software/core/internal/bench/jobs.go", "05_Software/core/internal/bench/model.go", "05_Software/core/internal/bench/jobs_test.go", "05_Software/core/internal/bench/serial_session.go", "05_Software/core/internal/bench/camera_workspace.go", "05_Software/core/internal/bench/operating_settings.go"]
+
+linked_tests = ["05_Software/core/internal/bench/operating_settings_test.go", "05_Software/core/internal/bench/jobs_test.go"]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-28
+updated = 2026-09-28

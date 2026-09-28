@@ -32,8 +32,11 @@ The operational guide is `06_SoftwareDocu/USB_to_Serial_Integration.md`.
   stable `serial-N` records; Core supplies endpoint and hardware identity.
 - Connection approval binds settings, device revision, owner and credential.
   Sends require that same credential and current read/execute authority.
-- A connection expires after one hour; an unrecorded unattended connection
-  closes after one minute. Four simultaneous ports are admitted per appliance.
+- Administrator operating settings set the lifetime, unrecorded idle disconnect
+  and appliance-wide connection capacity (defaults one hour, one minute and four).
+  Each connection retains its assigned lifetime and idle rule after a change.
+- The browser edits these three settings under **System > Plugins > Serial**;
+  Core stores them in the shared revisioned platform settings record.
 - TX reservations are persisted before writing. Retry returns the stored result;
   an uncertain write remains unknown and never triggers an automatic resend.
 - Rings, reads, sends, queues, retained files and exports have explicit bounds.
@@ -57,6 +60,8 @@ The operational guide is `06_SoftwareDocu/USB_to_Serial_Integration.md`.
 
 ## Key behaviors
 
+- `REQ-FUNC-46dd5987` and `REQ-FUNC-5d897991`: configured connection
+  capacity and new-session lifetime/idle snapshots preserve active sessions.
 - `REQ-UX-74d4256e`: appliance Core refreshes Camera/Serial hardware inventory
   on a five-second timer with bounded discovery calls. Metadata reads run outside
   the admission lock; results from replaced/disabled packages are discarded.

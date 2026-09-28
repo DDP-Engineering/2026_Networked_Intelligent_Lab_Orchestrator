@@ -25,6 +25,7 @@ type serialSession struct {
 	revision                            int64
 	settings                            SerialSettings
 	expires, lastAccess                 time.Time
+	idleTimeout                         time.Duration
 	transport                           *cameraSession
 	runnerDone                          chan struct{}
 	stopped                             bool
@@ -154,7 +155,7 @@ func (m *Manager) executeSerialConnect(ctx context.Context, job Job, p Plugin) (
 			count++
 		}
 	}
-	if count >= 4 {
+	if count >= m.settings.SerialConnections {
 		return protocol.ExecuteResult{}, ErrBusy
 	}
 	var params serialConnectParameters
@@ -189,11 +190,12 @@ func (m *Manager) executeSerialConnect(ctx context.Context, job Job, p Plugin) (
 		_ = runner.Shutdown(context.Background())
 		return protocol.ExecuteResult{}, err
 	}
-	runCtx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Hour))
+	lifetime := time.Duration(m.settings.SerialLifetimeMinutes) * time.Minute
+	runCtx, cancel := context.WithDeadline(context.Background(), m.now().Add(lifetime))
 	transport := &http.Transport{DialContext: func(c context.Context, _, _ string) (net.Conn, error) {
 		return (&net.Dialer{}).DialContext(c, "unix", filepath.Join(root, "control.sock"))
 	}, MaxConnsPerHost: 3}
-	s := &serialSession{id: id, device: r.ID, owner: job.OwnerID, kind: kind, credential: credential, revision: r.Revision, settings: params.Settings, expires: m.now().Add(time.Hour), lastAccess: m.now(), runnerDone: make(chan struct{}), signals: map[string]*bool{}, events: []SerialEvent{}, transport: &cameraSession{cancel: cancel, client: &http.Client{Transport: transport, Timeout: 3 * time.Second}}}
+	s := &serialSession{id: id, device: r.ID, owner: job.OwnerID, kind: kind, credential: credential, revision: r.Revision, settings: params.Settings, expires: m.now().Add(lifetime), idleTimeout: time.Duration(m.settings.SerialIdleMinutes) * time.Minute, lastAccess: m.now(), runnerDone: make(chan struct{}), signals: map[string]*bool{}, events: []SerialEvent{}, transport: &cameraSession{cancel: cancel, client: &http.Client{Transport: transport, Timeout: 3 * time.Second}}}
 	rawSettings, _ := json.Marshal(params.Settings)
 	_, err = m.db().ExecContext(ctx, `INSERT INTO serial_connections(id,device_id,owner_id,credential_kind,credential_id,revision,settings_json,started_at,expires_at,state) VALUES(?,?,?,?,?,?,?,?,?,'active')`, id, r.ID, s.owner, kind, credential, r.Revision, string(rawSettings), m.now().Format(time.RFC3339Nano), s.expires.Format(time.RFC3339Nano))
 	if err != nil {
@@ -287,7 +289,7 @@ func (m *Manager) monitorSerial(s *serialSession) {
 				reason = "lease_expired"
 			} else if m.serialLeaseValid(context.Background(), s) != nil {
 				reason = "authorization_expired"
-			} else if s.log == nil && m.now().Sub(s.lastAccess) >= time.Minute {
+			} else if s.log == nil && m.now().Sub(s.lastAccess) >= s.idleTimeout {
 				reason = "idle_timeout"
 			}
 			if reason != "" {

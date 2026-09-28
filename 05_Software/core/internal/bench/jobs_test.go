@@ -25,6 +25,8 @@ import (
 	"nilo.local/nilo/internal/store/sqlite"
 )
 
+const defaultOutstandingJobs = 32
+
 type controlledRunner struct {
 	mu           sync.Mutex
 	calls        int
@@ -556,7 +558,7 @@ func TestApprovalDeadlineQueueBoundAndDisable(t *testing.T) {
 		t.Fatalf("token approved: %v", err)
 	}
 	awaitJob(t, m, a, pending.ID, "incomplete")
-	for i := 0; i < QueueLimit; i++ {
+	for i := 0; i < defaultOutstandingJobs; i++ {
 		queued := submission(fmt.Sprintf("queued-%03d", i))
 		queued.TimeoutSeconds = 300
 		if _, err = m.Submit(ctx, a, queued); err != nil {
@@ -576,7 +578,7 @@ func TestApprovalDeadlineQueueBoundAndDisable(t *testing.T) {
 		t.Fatal(err)
 	}
 	jobs, err := m.ListJobs(ctx, a)
-	if err != nil || len(jobs) != QueueLimit+1 {
+	if err != nil || len(jobs) != defaultOutstandingJobs+1 {
 		t.Fatalf("history: %d %v", len(jobs), err)
 	}
 }

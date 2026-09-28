@@ -206,7 +206,7 @@ operation directly. The live frame endpoint is authenticated
 `GET /api/v1/cameras/{id}/frame` (JPEG); the CLI does not render a live viewer.
 An idle preview without frame requests expires after 30 seconds. Recording
 continues without a browser until stopped or limited; sessions also have a
-55-minute bound. Settings cannot change during recording.
+configured lifetime (55 minutes by default). Settings cannot change during recording.
 
 ### Workspace settings and overlays
 

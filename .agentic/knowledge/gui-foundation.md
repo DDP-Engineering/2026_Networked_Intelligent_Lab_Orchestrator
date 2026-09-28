@@ -22,6 +22,14 @@ Network workflows and shared small-screen rules are mapped in
 
 ## Purpose and boundaries
 
+Administrators manage job capacity and timeouts through System > Nilo Settings,
+camera capacity and lifetime through System > Plugins > Camera, and serial
+capacity and lifetimes through System > Plugins > Serial. Each destination uses
+an editable table with label, range, value, usage, and contextual `?` help.
+All three submit a complete revisioned snapshot through the shared Core API.
+Nilo Settings offers View activity to sessions with Activity read authority;
+the destination opens Audit records for platform settings changes.
+
 The wide and compact shells have a vertical navigation splitter. Drag its rail
 or 44-pixel grip, use Left/Right arrows (Shift for larger steps), or Home/End
 for the limits. Double-click or Enter restores the viewport's default width.
@@ -145,6 +153,9 @@ runtime status.
   and future pages offering that action (REQ-UX-b75fbbc3). Keep resource-create
   and refresh actions in their existing list toolbar and record actions local.
 - All live requests use the same-origin authenticated client and its CSRF rules.
+- Settings and operations whose effect, timing, or safety is not clear from the
+  label carry the shared `HelpPopover` `?` beside that label; guidance stays out
+  of dense lists until a user asks for it.
 - Simulation labels stay explicit; browser state never proves physical accuracy.
 - The Camera page reads managed physical devices and bounded previews of
   authorized retained snapshots from the authenticated Bench API.
@@ -161,6 +172,11 @@ runtime status.
 
 ## Key behaviors
 
+- `REQ-UX-ba9953bb`: Nilo Settings presents platform job controls in an editable
+  table with contextual help, revision-aware save feedback, and authorized
+  navigation to its Activity audit records.
+- `REQ-UX-7bf4e0c2`: Camera and Serial plugin administration presents only its
+  own capacity and lifetime rows while preserving other fields on save.
 - `REQ-UX-74d4256e` - limits operator navigation to active plugins and currently
   ready hardware while preserving administrator configuration access.
 
@@ -387,6 +403,8 @@ flowchart LR
     serial --> serialapi["api/serial: authenticated serial requests"]
     serialapi --> backend
     pages --> admin
+    pages --> operating["OperatingSettingsPage: bounded limits and live usage"]
+    operating --> client
     admin --> users
     admin --> apitokens
     pages --> netpage
@@ -479,6 +497,12 @@ visible.
   `e2e/serial-layout.check.ts` through the same shell provider.
 
 - `05_Software/frontend/src/api/serial.ts` - finite serial service and wire types.
+- `05_Software/frontend/src/api/operating-settings.ts`,
+  `src/components/pages/OperatingSettingsPage.tsx`, and its test - bounded
+  shared settings table, scoped platform/Camera/Serial rows, help, and revision
+  feedback. `CameraPluginPage.tsx` mounts the Camera and Serial variants.
+- `05_Software/frontend/e2e/shell.spec.ts` - real-browser shell navigation
+  order and tab behavior, including the administrator settings destination.
 - `05_Software/frontend/src/components/pages/SerialWorkspacePage.tsx`,
   `SerialTerminal.tsx`, `serialBuffer.ts`, `SerialSessionsPage.tsx` - serial
   connection, bounded display and retained sessions.
@@ -635,16 +659,14 @@ English, German and Romanian share the instrument key set.
 The browser mock retains its pre-existing scope; exercise instruments against a
 real simulation-profile runner. Source paths above are relative to `05_Software/frontend/`.
 
-## Core navigation order without Settings
+## Core navigation order
 
 `CORE_PAGES` in `shell/pages.ts` is the top-to-bottom order the lower cluster
 renders, because `SideNav` maps the array as it stands: Plugins, Network with
-its three `network:*` children, Authentication with API tokens, Activity, About.
-The `settings` descriptor, its `AppShell` placeholder branch and the obsolete
-placeholder catalogue entries are gone, so no Settings destination exists to
-open; `Icon`'s `settings` glyph remains available in the glyph catalogue. The Plugins
-entry remains available through the managed instrument workspace added by
-TASK-f1f2d836.
+its `network:*` children, Authentication with API tokens, Activity, Operating
+  settings, and About. The Nilo Settings destination appears only for an
+administrator session and opens `OperatingSettingsPage` through `AppShell`.
+The Plugins entry remains available through the managed instrument workspace.
 
 ## Activity page furniture
 
