@@ -9,7 +9,7 @@ SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
 
 # TASK-1b87ad8a - Simplify Web UI navigation to collapsed Instruments and System sections; start on About
 
-stage: build
+stage: validate
 type: feature
 path: full
 interaction: autopilot
@@ -21,19 +21,15 @@ opened: 2026-09-28
 
 ## Done checklist (current stage)
 
-- [ ] each automated behavior increment has a pre-implementation red record
-      with requirement IDs, exact selector or command, non-zero exit, and
-      expected failure reason, plus one final focused green result; each manual
-      increment has a consolidated post-implementation observation
-- [ ] repository anchor recorded after red and evolution reviewed after implementation
-- [ ] implementation makes those tests pass
-- [ ] focused project tests green, with their actual scope recorded
-- [ ] `affected_paths` and `linked_tests` updated on every requirement
-- [ ] `status = "active"` on every requirement this task delivers — or
-      `"retired"`, with the reason in its prose, where this task
-      deliberately removed the behavior
-- [ ] `check` clean, or each remaining warning explained in the log
-- [ ] `stage: validate`
+- [ ] diff reviewed against scope, requirements, design, error paths,
+      portability, security, and unrequested work
+- [ ] knowledge pages updated for every materially changed component
+- [ ] requirements re-read: status, prose, verification, paths, and links true
+- [ ] manual or inspection verification completed and recorded where applicable
+- [ ] final evolution report refreshed after the last candidate edit
+- [ ] final `check --strict --run` result recorded truthfully after all edits
+- [ ] remaining warnings and pre-existing failures explained
+- [ ] `stage: deliver`
 
 ## Frame
 
@@ -123,26 +119,44 @@ Expected files (frontend prefix `05_Software/frontend/`): `src/App.tsx`, `src/Ap
 - 2026-09-28 specify: Four new draft UX requirements, three revised active UX requirements, six reused active requirements, none retired; coverage and disclosure spec recorded. Check reports zero format errors; unrelated tracked sidecar/stage-zone and other-task warnings remain.
 - 2026-09-28 design: Session-owned disclosure, System Inventory route and resource-aware pruning plan recorded in ## Design; expected paths reconciled. Check: zero errors; 21 unrelated warnings, four notes.
 
+- 2026-09-28 build red REQ-UX-30821068, REQ-UX-2bc3a464, REQ-UX-8fa0c15e: command=`cd 05_Software/frontend && npm exec vitest -- run src/components/shell/pages.test.ts`; exit=1; expected missing behavior=DEFAULT_PAGE is bench instead of about (registry also lacks Inventory).
+
+- 2026-09-28 build red REQ-UX-eb84f037, REQ-UX-57d10c15: command=`cd 05_Software/frontend && npm exec vitest -- run src/components/shell/SideNav.test.tsx`; exit=1; expected missing behavior=no Instruments section button with expanded state for empty inventory.
+
+- 2026-09-28 build partial green REQ-UX-30821068, REQ-UX-2bc3a464, REQ-UX-eb84f037, REQ-UX-57d10c15: `cd 05_Software/frontend && npm exec vitest -- run src/components/shell/pages.test.ts src/components/shell/SideNav.test.tsx` exit=0 (19 tests); `npm exec vitest -- run src/components/shell/shell.test.tsx -t 'opens About alone'` exit=0 (1 test); `npm run build` exit=0. Legacy shell and App tests still assert Bench startup or expanded navigation: shell=15 failures of 39, App=13 failures of 33; these require migration and additional refresh/session coverage before build completion.
+
+- 2026-09-28 build red REQ-UX-71cbafec, REQ-UX-74d4256e: command=`cd 05_Software/frontend && npm exec vitest -- run src/App.test.tsx -t 'keeps an open instrument tab and disclosure'`; exit=1; expected missing behavior=failed device refresh hides unverified navigation but also drops an existing instrument tab.
+- 2026-09-28 build partial green REQ-UX-71cbafec, REQ-UX-74d4256e: same focused selector exit=0 after preserving prior successful inventory for tab descriptors while hiding unverified navigation. Migrated App and shell test oracles; `cd 05_Software/frontend && npm exec vitest -- run src/App.test.tsx src/components/shell/shell.test.tsx src/components/shell/SideNav.test.tsx src/components/shell/pages.test.ts src/components/shell/serialNavigation.test.ts --reporter=dot` exit=0 (102 tests); `npm run build` exit=0. Browser tests, component coverage breadth, links and documentation reconciliation remain.
+
+- 2026-09-28 build red REQ-UX-71cbafec: command=`cd 05_Software/frontend && npm run lint`; exit=1; expected missing behavior=retained inventory is read from React refs during render instead of reactive state (react-hooks/refs); callback dependency also incomplete.
+
+- 2026-09-28 build red REQ-UX-71cbafec, REQ-UX-74d4256e: command=`cd 05_Software/frontend && npm exec vitest -- run src/App.test.tsx -t 'keeps a plugin-backed tab' --reporter=dot`; exit=1; expected missing behavior=plugin-backed Console tab disappears after inventory refresh with failed plugin read.
+
+- 2026-09-28 build red REQ-UX-2bc3a464: command=`cd 05_Software/frontend && npm exec vitest -- run src/components/shell/shell.test.tsx -t 'opens About alone' --reporter=dot`; exit=1; expected missing behavior=About startup renders duplicate React child key `about` in the notification provider.
+
+- 2026-09-28 build green REQ-UX-71cbafec, REQ-UX-74d4256e, REQ-UX-2bc3a464: focused selectors for plugin-backed refresh and About key exit=0; six-file `npm exec vitest -- run src/App.test.tsx src/components/shell/shell.test.tsx src/components/shell/SideNav.test.tsx src/components/shell/pages.test.ts src/components/shell/serialNavigation.test.ts src/layout.test.ts --reporter=dot` exit=0 (127 tests); `npm run lint`, `npm run format:check`, `npm run build` exit=0; Playwright test listing exit=0 (37 cases in four files), browser runtime awaits validate appliance-stage proof. Frontend build retains existing bundle-size advisory.
+- 2026-09-28 build: all 13 linked requirements active with updated tests for changed behaviors; after last red anchor, evolution lists three modified files (App test, AppShell, shell test), all expected. Git diff name review also covers earlier anchored navigation, browser tests, catalogues, docs, changelog and requirement files; no unexpected ticket candidate. Advisory check: zero errors, seven unrelated warnings (stale data path, tracked sidecars, three other tasks' deliver checklists, two uncovered integration runners) and four unrelated manual notes; none accepted as candidate limitation. No manual verification method declared on linked requirements. Advanced to validate for semantic review, knowledge reconciliation and full browser/strict proof.
+
 ## Rulings
 
 
 ## Handoff
 
-current: build
+current: validate
 status: ready
-next: Write and run a failing pages registry/initial-tab test before implementation, then anchor the candidate.
-must_read: .agentic/steps/4_build.md; .agentic/tasks/TASK-1b87ad8a.md; .agentic/specs/REQ-UX-eb84f037.md; .agentic/knowledge/gui-foundation.md
+next: Review complete candidate against requirements and design, reconcile GUI knowledge, then run final full strict proof.
+must_read: .agentic/steps/5_validate.md; .agentic/tasks/TASK-1b87ad8a.md; .agentic/knowledge/gui-foundation.md
 blockers: none
 
 ## Stage report
 
-stage: design
+stage: build
 result: completed
-current: build
-changed: Recorded design and proposed architecture; mapped 13 requirements to test seams and updated affected paths for expected edits.
-evidence: Audited App, AppShell, SideNav, pages, BenchPage, workspace and drawer seams; aegis check: errors=0, warnings=21, notes=4; no tests run in design.
-issues: Existing readiness pruning on failed reads needs guarded IDs; unrelated check warnings cover toolchain edits, tracked sidecars and other tasks.
-next: Begin test-first build at page registry, then session-owned disclosure and Inventory route.
+current: validate
+changed: Two collapsed sections, About startup/reset, System Inventory, session disclosure and refresh-safe tabs; updated browser/unit tests, three catalogues, UI docs, changelog and requirement links.
+evidence: Red records and anchors in Log; focused six-file frontend run exit=0 (127 tests), lint/format/build exit=0, browser suite list exit=0 (37 tests); evolution and advisory check (0 errors, 7 unrelated warnings, 4 notes).
+issues: Appliance browser runtime and full strict proof belong to validate; evolution reports only files since final red anchor, so validate must review full Git diff. Unrelated advisory findings listed in Log.
+next: Validate diff, reconcile GUI knowledge and run final full strict proof.
 needs_user: no
 spec_compliance:
 implementation_quality:

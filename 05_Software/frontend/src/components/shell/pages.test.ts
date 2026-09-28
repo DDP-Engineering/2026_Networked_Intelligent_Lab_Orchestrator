@@ -1,7 +1,16 @@
 import type { BenchCoreSession } from '../../api/contract';
 import { describe, expect, it } from 'vitest';
 
-import { buildPages, findPage, integrationPageId } from './pages';
+import { buildPages, DEFAULT_PAGE, findPage, integrationPageId } from './pages';
+
+it('starts on About and keeps inventory in System without a Bench destination', () => {
+  const pages = buildPages(null, []);
+  expect(DEFAULT_PAGE).toBe('about');
+  expect(pages.some((page) => page.id === 'bench')).toBe(false);
+  expect(pages.find((page) => page.id === 'inventory')).toMatchObject({
+    cluster: 'core',
+  });
+});
 
 describe('physical Camera navigation', () => {
   const admin: BenchCoreSession = {

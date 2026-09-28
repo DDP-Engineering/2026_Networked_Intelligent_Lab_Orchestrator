@@ -1,5 +1,3 @@
-import { useEffect, useState } from 'react';
-
 import { useTranslate } from '../../i18n/languages';
 import { Icon } from './Icon';
 import type { PageDescriptor } from './pages';
@@ -9,24 +7,26 @@ export interface SideNavProps {
   active: string | null;
   onOpen: (id: string) => void;
   nameOf: (page: PageDescriptor) => string;
+  expanded: Readonly<Record<string, boolean>>;
+  onToggle: (id: string) => void;
+  instrumentsUnavailable: boolean;
 }
 
 /**
- * The left navigation: working entries above, the core cluster anchored below.
- *
- * The gap between the two groups is the layout doing the work — the upper area
- * grows with however many integrations the appliance reports, and the core
- * cluster stays where the eye learned to find it. An entry whose page is not
- * built yet is marked rather than hidden, so the agreed navigation shape is
- * present without anything being advertised as working before it is.
- *
- * Every entry keeps its visible label on every viewport: the compact rail only
- * narrows, and the constrained drawer shows the same list.
+ * Two session-controlled sections share the same disclosure state in the rail
+ * and drawer. A section's presence never depends on its eligible children.
+ * The compact rail retains visible labels; the drawer shows the same list.
  */
-export function SideNav({ pages, active, onOpen, nameOf }: SideNavProps) {
+export function SideNav({
+  pages,
+  active,
+  onOpen,
+  nameOf,
+  expanded,
+  onToggle,
+  instrumentsUnavailable,
+}: SideNavProps) {
   const t = useTranslate();
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
-  const working = pages.filter((page) => page.cluster === 'working');
   const instruments = pages.filter((page) => page.cluster === 'instruments');
   const core = pages.filter((page) => page.cluster === 'core');
   const roots = (entries: PageDescriptor[]) =>
@@ -34,28 +34,6 @@ export function SideNav({ pages, active, onOpen, nameOf }: SideNavProps) {
   const childrenOf = (id: string) => pages.filter((page) => page.parentId === id);
   const containsActive = (page: PageDescriptor): boolean =>
     page.id === active || childrenOf(page.id).some(containsActive);
-
-  useEffect(() => {
-    const ancestors: string[] = [];
-    let parentId = pages.find((page) => page.id === active)?.parentId;
-    while (parentId !== undefined) {
-      ancestors.push(parentId);
-      parentId = pages.find((page) => page.id === parentId)?.parentId;
-    }
-    if (ancestors.length > 0) {
-      const timer = window.setTimeout(
-        () =>
-          setExpandedGroups((current) =>
-            Object.fromEntries([
-              ...Object.entries(current),
-              ...ancestors.map((id) => [id, true] as const),
-            ]),
-          ),
-        0,
-      );
-      return () => window.clearTimeout(timer);
-    }
-  }, [active, pages]);
 
   function entry(
     page: PageDescriptor,
@@ -93,7 +71,7 @@ export function SideNav({ pages, active, onOpen, nameOf }: SideNavProps) {
     ) {
       return entry(page, { child: page.parentId !== undefined });
     }
-    const expanded = expandedGroups[page.id] ?? true;
+    const isExpanded = expanded[page.id] ?? false;
     const groupActive = containsActive(page);
     const groupName =
       page.navigationTitleKey === undefined ? nameOf(page) : t(page.navigationTitleKey);
@@ -105,18 +83,14 @@ export function SideNav({ pages, active, onOpen, nameOf }: SideNavProps) {
         <div className="nav-group-row">
           <button
             type="button"
-            className={`nav-entry ${page.parentId !== undefined ? 'nav-entry-child' : ''} ${groupActive ? 'nav-entry-context' : ''} ${!expanded && groupActive ? 'nav-entry-active' : ''}`}
+            className={`nav-entry ${page.parentId !== undefined ? 'nav-entry-child' : ''} ${groupActive ? 'nav-entry-context' : ''} ${!isExpanded && groupActive ? 'nav-entry-active' : ''}`}
             aria-current={
-              !page.navigationOnly && !expanded && groupActive ? 'page' : undefined
+              !page.navigationOnly && !isExpanded && groupActive ? 'page' : undefined
             }
             aria-label={groupName}
-            aria-expanded={page.navigationOnly ? expanded : undefined}
+            aria-expanded={page.navigationOnly ? isExpanded : undefined}
             aria-controls={page.navigationOnly ? listId : undefined}
-            onClick={() =>
-              page.navigationOnly
-                ? setExpandedGroups((current) => ({ ...current, [page.id]: !expanded }))
-                : onOpen(page.id)
-            }
+            onClick={() => (page.navigationOnly ? onToggle(page.id) : onOpen(page.id))}
           >
             <Icon name={page.icon} />
             <span className="nav-label">{groupName}</span>
@@ -125,7 +99,7 @@ export function SideNav({ pages, active, onOpen, nameOf }: SideNavProps) {
             type="button"
             className="nav-group-toggle"
             aria-label={
-              expanded
+              isExpanded
                 ? page.collapseTitleKey
                   ? t(page.collapseTitleKey)
                   : t('nav.group.collapse', { name: groupName })
@@ -133,19 +107,14 @@ export function SideNav({ pages, active, onOpen, nameOf }: SideNavProps) {
                   ? t(page.expandTitleKey)
                   : t('nav.group.expand', { name: groupName })
             }
-            aria-expanded={expanded}
+            aria-expanded={isExpanded}
             aria-controls={listId}
-            onClick={() =>
-              setExpandedGroups((current) => ({
-                ...current,
-                [page.id]: !expanded,
-              }))
-            }
+            onClick={() => onToggle(page.id)}
           >
-            <Icon name={expanded ? 'chevronUp' : 'chevron'} size={16} />
+            <Icon name={isExpanded ? 'chevronUp' : 'chevron'} size={16} />
           </button>
         </div>
-        {expanded ? (
+        {isExpanded ? (
           <ul className="nav-list nav-sublist" id={listId}>
             {page.overviewTitleKey !== undefined &&
               entry(page, { child: true, name: overviewName })}
@@ -159,17 +128,47 @@ export function SideNav({ pages, active, onOpen, nameOf }: SideNavProps) {
   return (
     <nav className="sidenav" aria-label={t('nav.label')}>
       <div className="nav-upper">
-        <ul className="nav-list">{roots(working).map(groupedEntry)}</ul>
-        {instruments.length === 0 ? null : (
-          <>
-            <p className="nav-section">{t('nav.section.instruments')}</p>
-            <ul className="nav-list">{roots(instruments).map(groupedEntry)}</ul>
-          </>
+        <button
+          type="button"
+          className="nav-section nav-section-toggle"
+          aria-expanded={expanded.instruments ?? false}
+          aria-controls="nav-instruments"
+          onClick={() => onToggle('instruments')}
+        >
+          {t('nav.section.instruments')}
+          <Icon name={expanded.instruments ? 'chevronUp' : 'chevron'} size={16} />
+        </button>
+        {expanded.instruments && (
+          <ul className="nav-list" id="nav-instruments">
+            {roots(instruments).map(groupedEntry)}
+            {instruments.length === 0 && (
+              <li className="nav-empty">
+                {t(
+                  instrumentsUnavailable
+                    ? 'nav.instruments.unavailable'
+                    : 'nav.instruments.empty',
+                )}
+              </li>
+            )}
+          </ul>
         )}
       </div>
       <div className="nav-lower">
-        <p className="nav-section">{t('nav.section.core')}</p>
-        <ul className="nav-list">{roots(core).map(groupedEntry)}</ul>
+        <button
+          type="button"
+          className="nav-section nav-section-toggle"
+          aria-expanded={expanded.system ?? false}
+          aria-controls="nav-system"
+          onClick={() => onToggle('system')}
+        >
+          {t('nav.section.core')}
+          <Icon name={expanded.system ? 'chevronUp' : 'chevron'} size={16} />
+        </button>
+        {expanded.system && (
+          <ul className="nav-list" id="nav-system">
+            {roots(core).map(groupedEntry)}
+          </ul>
+        )}
       </div>
     </nav>
   );

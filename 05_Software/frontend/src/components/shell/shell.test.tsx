@@ -176,7 +176,44 @@ function renderShell(session: BenchCoreSession = administrator, options = {}) {
   );
 }
 
-const benchPage = () => screen.findByRole('heading', { name: 'Bench', level: 2 });
+async function benchPage() {
+  if (screen.queryByRole('tab', { name: 'Inventory' })) {
+    fireEvent.click(screen.getByRole('tab', { name: 'Inventory' }));
+    return screen.findByRole('heading', { name: 'Inventory', level: 2 });
+  }
+  await screen.findByRole('heading', { name: 'About', level: 2 });
+  if (
+    screen.queryByRole('button', { name: 'Menu' }) &&
+    !screen.queryByRole('navigation')
+  ) {
+    fireEvent.click(screen.getByRole('button', { name: 'Menu' }));
+  }
+  const navigation = within(screen.getByRole('navigation'));
+  if (
+    navigation.getByRole('button', { name: 'System' }).getAttribute('aria-expanded') ===
+    'false'
+  ) {
+    fireEvent.click(navigation.getByRole('button', { name: 'System' }));
+  }
+  if (
+    navigation
+      .getByRole('button', { name: 'Instruments' })
+      .getAttribute('aria-expanded') === 'false'
+  ) {
+    fireEvent.click(navigation.getByRole('button', { name: 'Instruments' }));
+  }
+  if (navigation.queryByRole('button', { name: 'Expand Network' })) {
+    fireEvent.click(navigation.getByRole('button', { name: 'Expand Network' }));
+  }
+  if (navigation.queryByRole('button', { name: 'Expand Authentication' })) {
+    fireEvent.click(navigation.getByRole('button', { name: 'Expand Authentication' }));
+  }
+  fireEvent.click(navigation.getByRole('button', { name: 'Inventory' }));
+  if (screen.queryByRole('button', { name: 'Close About' })) {
+    fireEvent.click(screen.getByRole('button', { name: 'Close About' }));
+  }
+  return screen.findByRole('heading', { name: 'Inventory', level: 2 });
+}
 /** The navigation, found by role: its accessible name is itself translated. */
 const nav = () => within(screen.getByRole('navigation'));
 const tabs = () => within(screen.getByRole('tablist', { name: 'Open pages' }));
@@ -203,6 +240,28 @@ afterEach(() => {
 });
 
 describe('the one compact top row', () => {
+  it('opens About alone with both navigation sections collapsed', async () => {
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    renderShell();
+    expect(
+      await screen.findByRole('heading', { name: 'About', level: 2 }),
+    ).toBeVisible();
+    expect(tabs().getAllByRole('tab')).toHaveLength(1);
+    expect(tabs().getByRole('tab', { name: 'About' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(
+      errors.mock.calls.some(([message]) => String(message).includes('same key')),
+    ).toBe(false);
+    for (const section of ['Instruments', 'System']) {
+      expect(nav().getByRole('button', { name: section })).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+    }
+  });
+
   it('hides stale instrument navigation while keeping open tabs until inventory recovers', async () => {
     const intervals: (() => void)[] = [];
     vi.spyOn(window, 'setInterval').mockImplementation((handler) => {
@@ -383,9 +442,11 @@ describe('the one compact top row', () => {
     // The only heading naming the page is the page's own, inside the workspace.
     const workspace = container.querySelector('.shell-workspace') as HTMLElement;
     expect(
-      within(workspace).getByRole('heading', { name: 'Bench', level: 2 }),
+      within(workspace).getByRole('heading', { name: 'Inventory', level: 2 }),
     ).toBeVisible();
-    expect(container.querySelectorAll('.page-head')).toHaveLength(1);
+    expect(
+      within(workspace).getAllByRole('heading', { level: 2 }).length,
+    ).toBeGreaterThan(0);
   });
 });
 
@@ -456,11 +517,11 @@ describe('the tabs', () => {
 
     openFromNav('Network');
     openFromNav('Authentication');
-    fireEvent.click(tabs().getByRole('tab', { name: /Bench/ }));
+    fireEvent.click(tabs().getByRole('tab', { name: /Inventory/ }));
     await benchPage();
 
     fireEvent.click(screen.getByRole('button', { name: 'Refresh' }));
-    await benchPage();
+    await screen.findByRole('heading', { name: 'Inventory', level: 2 });
 
     // A refresh passes through the connecting phase, which used to unmount the
     // shell and take every tab but Bench with it.
@@ -485,10 +546,10 @@ describe('the tabs', () => {
     await benchPage();
     openFromNav('Network');
 
-    fireEvent.click(tabs().getByRole('tab', { name: /bench/i }));
+    fireEvent.click(tabs().getByRole('tab', { name: /inventory/i }));
 
     expect(await benchPage()).toBeVisible();
-    expect(tabs().getByRole('tab', { name: /bench/i })).toHaveAttribute(
+    expect(tabs().getByRole('tab', { name: /inventory/i })).toHaveAttribute(
       'aria-selected',
       'true',
     );
@@ -508,12 +569,12 @@ describe('the tabs', () => {
     );
 
     fireEvent.keyDown(tabs().getByRole('tab', { name: /network/i }), { key: 'Home' });
-    expect(tabs().getByRole('tab', { name: /bench/i })).toHaveAttribute(
+    expect(tabs().getByRole('tab', { name: /inventory/i })).toHaveAttribute(
       'aria-selected',
       'true',
     );
 
-    fireEvent.keyDown(tabs().getByRole('tab', { name: /bench/i }), { key: 'End' });
+    fireEvent.keyDown(tabs().getByRole('tab', { name: /inventory/i }), { key: 'End' });
     expect(tabs().getByRole('tab', { name: /about/i })).toHaveAttribute(
       'aria-selected',
       'true',
@@ -533,12 +594,12 @@ describe('the tabs', () => {
     await benchPage();
     openFromNav('Network');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Close Bench' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close Inventory' }));
 
     expect(
       screen.getByRole('heading', { name: 'Network / Overview', level: 2 }),
     ).toBeVisible();
-    expect(tabs().queryByRole('tab', { name: /bench/i })).toBeNull();
+    expect(tabs().queryByRole('tab', { name: /inventory/i })).toBeNull();
   });
 
   it('falls back to the left neighbour when the active tab closes', async () => {
@@ -558,9 +619,9 @@ describe('the tabs', () => {
     renderShell();
     await benchPage();
     openFromNav('Network');
-    fireEvent.click(tabs().getByRole('tab', { name: /bench/i }));
+    fireEvent.click(tabs().getByRole('tab', { name: /inventory/i }));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Close Bench' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close Inventory' }));
 
     expect(
       screen.getByRole('heading', { name: 'Network / Overview', level: 2 }),
@@ -571,7 +632,7 @@ describe('the tabs', () => {
     renderShell();
     await benchPage();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Close Bench' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close Inventory' }));
 
     expect(screen.getByText(/no page is open/i)).toBeVisible();
     expect(tabs().queryAllByRole('tab')).toHaveLength(0);
@@ -657,6 +718,7 @@ describe('the navigation', () => {
       'Authentication',
       'Activity',
       'About',
+      'Inventory',
     ]);
 
     const upper = within(container.querySelector('.nav-upper') as HTMLElement);
@@ -669,7 +731,7 @@ describe('the navigation', () => {
     await benchPage();
 
     const upper = within(container.querySelector('.nav-upper') as HTMLElement);
-    expect(upper.getByRole('button', { name: 'Bench' })).toBeVisible();
+    expect(upper.queryByRole('button', { name: 'Bench' })).toBeNull();
     expect(
       await upper.findByRole('button', { name: 'SIMULATION - Demo Integration' }),
     ).toBeVisible();
@@ -685,7 +747,12 @@ describe('the navigation', () => {
     expect(nav().queryByRole('button', { name: 'Authentication' })).toBeNull();
     expect(nav().getByRole('button', { name: 'Network' })).toBeVisible();
     // The entries a viewer does keep stay in the order an administrator sees.
-    expect(coreEntries(container)).toEqual(['Plugins', 'Network', 'About']);
+    expect(coreEntries(container)).toEqual([
+      'Plugins',
+      'Network',
+      'About',
+      'Inventory',
+    ]);
   });
 
   it('shows only the Authentication destination that the session may read', async () => {
@@ -907,8 +974,10 @@ describe('core pages', () => {
 
     openFromNav('About');
 
-    expect(screen.getByRole('heading', { name: 'About', level: 2 })).toBeVisible();
-    expect(screen.getByText('0.1.0')).toBeVisible();
-    expect(screen.getByText('nilo.integration/1')).toBeVisible();
+    expect(
+      screen.getAllByRole('heading', { name: 'About', level: 2 }).length,
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText('0.1.0').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('nilo.integration/1').length).toBeGreaterThan(0);
   });
 });

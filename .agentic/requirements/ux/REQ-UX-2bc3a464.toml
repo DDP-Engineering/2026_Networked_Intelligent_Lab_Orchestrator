@@ -11,7 +11,7 @@ id = "REQ-UX-2bc3a464"
 
 title = "Open About for each authenticated session"
 
-status = "draft"
+status = "active"
 
 requirement = """
 When an authenticated browser session is restored or a person signs in after another session, the browser interface shall open About as the sole active workspace tab, with both Instruments and System collapsed even though About belongs to System; this session start does not inherit the previous person's tabs or navigation expansion.
@@ -19,9 +19,9 @@ When an authenticated browser session is restored or a person signs in after ano
 
 verification = "Component tests restore an authenticated Administrator session and sign in as a Viewer after an Administrator has opened extra tabs and expanded sections; assert About is the only tab and both section controls report collapsed in each session. A browser reload with a valid session yields the same starting state, without expanding System for About."
 
-affected_paths = ["05_Software/frontend/src/App.tsx", "05_Software/frontend/src/components/shell/useWorkspace.ts", "05_Software/frontend/src/components/shell/pages.ts", "05_Software/frontend/src/components/shell/AppShell.tsx", "05_Software/frontend/src/components/shell/SideNav.tsx", "05_Software/frontend/src/App.test.tsx", "05_Software/frontend/src/components/shell/shell.test.tsx", "05_Software/frontend/e2e/authentication.spec.ts", "05_Software/frontend/e2e/bench-core.spec.ts"]
+affected_paths = ["05_Software/frontend/src/App.tsx", "05_Software/frontend/src/components/shell/useWorkspace.ts", "05_Software/frontend/src/components/shell/pages.ts", "05_Software/frontend/src/components/shell/AppShell.tsx", "05_Software/frontend/src/components/shell/SideNav.tsx", "05_Software/frontend/src/App.test.tsx", "05_Software/frontend/src/components/shell/shell.test.tsx", "05_Software/frontend/e2e/authentication.spec.ts", "05_Software/frontend/e2e/bench-core.spec.ts", "CHANGELOG.md", "06_SoftwareDocu/Development_and_Simulation_Flow.md", "05_Software/frontend/README.md"]
 
-linked_tests = []
+linked_tests = ["05_Software/frontend/src/App.test.tsx::starts a second identity on About alone with both sections collapsed", "05_Software/frontend/src/App.test.tsx::restores the signed-in state on a fresh page without asking again", "05_Software/frontend/src/components/shell/shell.test.tsx::opens About alone with both navigation sections collapsed", "05_Software/frontend/e2e/authentication.spec.ts::signs a real administrator in with a password", "05_Software/frontend/e2e/bench-core.spec.ts::signs in with a human session and opens Inventory from System"]
 
 
 spec = ""

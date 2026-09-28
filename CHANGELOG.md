@@ -7,6 +7,7 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Changed
 
+- Authenticated navigation opens About alone with collapsed Instruments and System sections; detailed backend status and inventories remain available under System > Inventory.
 - Plugin and system feedback uses shared dismissible callouts; realtime action
   headers align right and serial connection details collapse to save display space.
 

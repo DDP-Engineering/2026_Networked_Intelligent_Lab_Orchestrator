@@ -193,6 +193,9 @@ export const ro: Catalogue = {
   'nav.section.working': 'Spațiu de lucru',
   'nav.section.instruments': 'Instrumente',
   'nav.section.core': 'Sistem',
+  'nav.inventory': 'Inventar',
+  'nav.instruments.empty': 'Nu sunt instrumente disponibile.',
+  'nav.instruments.unavailable': 'Inventarul instrumentelor nu este disponibil.',
   'nav.bench': 'Bench',
   'nav.network': 'Rețea',
   'nav.network.overview': 'Prezentare generală',
@@ -276,7 +279,7 @@ export const ro: Catalogue = {
   'restoring.title': 'Se restaurează sesiunea…',
   'restoring.body': 'Se întreabă Bench Core dacă acest browser este deja autentificat.',
 
-  'bench.title': 'Bench',
+  'bench.title': 'Inventar',
   'bench.connecting': 'Se contactează Bench Core…',
   'bench.connecting.body':
     'Se așteaptă răspunsurile autentificate pentru stare, integrări și dispozitive.',

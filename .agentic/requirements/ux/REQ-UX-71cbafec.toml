@@ -11,7 +11,7 @@ id = "REQ-UX-71cbafec"
 
 title = "Preserve navigation choices during inventory refresh"
 
-status = "draft"
+status = "active"
 
 requirement = """
 When the authenticated interface refreshes integration, device or plugin inventory during the same session, it shall preserve the user's section and nested-group expansion choices and open tabs while updating the eligible destinations from the refreshed inventory.
@@ -21,7 +21,7 @@ verification = "A shell test opens System and a nested group and a device tab, c
 
 affected_paths = ["05_Software/frontend/src/App.tsx", "05_Software/frontend/src/components/shell/AppShell.tsx", "05_Software/frontend/src/components/shell/SideNav.tsx", "05_Software/frontend/src/components/shell/useWorkspace.ts", "05_Software/frontend/src/components/shell/shell.test.tsx", "05_Software/frontend/src/components/shell/SideNav.test.tsx"]
 
-linked_tests = []
+linked_tests = ["05_Software/frontend/src/App.test.tsx::keeps an open instrument tab and disclosure when a refresh cannot read devices", "05_Software/frontend/src/App.test.tsx::keeps a plugin-backed tab through an unreadable plugin refresh", "05_Software/frontend/src/components/shell/shell.test.tsx"]
 
 
 spec = ""

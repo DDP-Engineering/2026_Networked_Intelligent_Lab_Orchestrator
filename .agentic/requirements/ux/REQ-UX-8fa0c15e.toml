@@ -48,7 +48,9 @@ affected_paths = [
 # "tests/path/test_file.py::test_name" entries. Kept current during build;
 # these select the impacted regression set.
 linked_tests = [
-    "05_Software/frontend/src/App.test.tsx",
+    "05_Software/frontend/src/App.test.tsx::shows every integration the backend reports, with its state",
+    "05_Software/frontend/src/App.test.tsx::shows every device with the integration that owns it and its availability",
+    "05_Software/frontend/e2e/bench-core.spec.ts::signs in with a human session and opens Inventory from System",
 ]
 
 # --- optional below this line ---

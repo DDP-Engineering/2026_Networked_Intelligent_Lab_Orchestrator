@@ -52,7 +52,18 @@ test('puts the wordmark, tabs and every control on one row', async () => {
 
   await expect(page.getByRole('heading', { name: 'Sign in to NILO' })).toBeVisible();
   await signIn(ADMINISTRATOR, ADMINISTRATOR_PASSWORD);
-  await expect(page.getByRole('heading', { name: 'Bench', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'About', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('tablist', { name: 'Open pages' }).getByRole('tab'),
+  ).toHaveCount(1);
+  for (const name of ['Instruments', 'System']) {
+    await expect(
+      page.getByRole('navigation').getByRole('button', { name, exact: true }),
+    ).toHaveAttribute('aria-expanded', 'false');
+  }
+  await expect(
+    page.locator('.sidenav').getByRole('button', { name: 'Bench', exact: true }),
+  ).toHaveCount(0);
 
   const row = page.locator('.toprow');
   await expect(row.getByRole('tablist', { name: 'Open pages' })).toBeVisible();
@@ -79,13 +90,24 @@ test('puts the wordmark, tabs and every control on one row', async () => {
 });
 
 test('anchors Network in the lower cluster, not among the instruments', async () => {
+  await page
+    .getByRole('navigation')
+    .getByRole('button', { name: 'System', exact: true })
+    .click();
   const lower = page.locator('.nav-lower');
 
   await expect(
     lower.locator(
       '> .nav-list > li > .nav-entry, > .nav-list > li > .nav-group-row > .nav-entry',
     ),
-  ).toHaveText(['Plugins', 'Network', 'Authentication', 'Activity', 'About']);
+  ).toHaveText([
+    'Plugins',
+    'Network',
+    'Authentication',
+    'Activity',
+    'About',
+    'Inventory',
+  ]);
   await expect(
     page.locator('.nav-upper').getByRole('button', { name: 'Network', exact: true }),
   ).toHaveCount(0);
@@ -107,14 +129,14 @@ test('opens and closes pages as tabs', async () => {
   await expect(tabs.getByRole('tab')).toHaveCount(2);
 
   await page.locator('.nav-lower').getByRole('button', { name: 'About' }).click();
-  await expect(tabs.getByRole('tab')).toHaveCount(3);
+  await expect(tabs.getByRole('tab')).toHaveCount(2);
 
   // Closing the active tab falls back to its left neighbour.
   await page.getByRole('button', { name: 'Close About' }).click();
   await expect(
     page.getByRole('heading', { name: 'Network / Overview', exact: true }),
   ).toBeVisible();
-  await expect(tabs.getByRole('tab')).toHaveCount(2);
+  await expect(tabs.getByRole('tab')).toHaveCount(1);
 });
 
 test('reports the appliance network state the backend actually served', async () => {
@@ -185,6 +207,10 @@ test('keeps the theme and the language across a reload, with the session', async
   await expect(page.locator('html')).toHaveAttribute('lang', 'de');
   await expect(page.getByRole('heading', { name: 'Sign in to NILO' })).toHaveCount(0);
   await expect(
+    page.getByRole('navigation').getByRole('button', { name: 'System' }),
+  ).toHaveAttribute('aria-expanded', 'false');
+  await page.getByRole('navigation').getByRole('button', { name: 'System' }).click();
+  await expect(
     page.locator('.nav-lower').getByRole('button', { name: 'Netzwerk', exact: true }),
   ).toBeVisible();
 
@@ -205,7 +231,7 @@ test('narrows the navigation to a labeled rail on a small viewport without clipp
     page.locator(
       '.nav-lower > .nav-list > li > .nav-entry, .nav-lower > .nav-list > li > .nav-group-row > .nav-entry',
     ),
-  ).toHaveCount(5);
+  ).toHaveCount(6);
   await expect(
     page.locator('.nav-lower').getByRole('button', { name: 'Network', exact: true }),
   ).toBeVisible();
@@ -228,7 +254,7 @@ test('narrows the navigation to a labeled rail on a small viewport without clipp
 });
 
 test('keeps one runtime indicator on every screen', async () => {
-  for (const entry of ['Bench', 'Authentication', 'About']) {
+  for (const entry of ['Inventory', 'Authentication', 'About']) {
     await page
       .locator('.sidenav')
       .getByRole('button', { name: entry, exact: true })

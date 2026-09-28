@@ -189,6 +189,9 @@ export const en = {
   'nav.section.working': 'Workspace',
   'nav.section.instruments': 'Instruments',
   'nav.section.core': 'System',
+  'nav.inventory': 'Inventory',
+  'nav.instruments.empty': 'No instruments are available.',
+  'nav.instruments.unavailable': 'Instrument inventory is unavailable.',
   'nav.bench': 'Bench',
   'nav.network': 'Network',
   'nav.network.overview': 'Overview',
@@ -277,7 +280,7 @@ export const en = {
   'restoring.body': 'Asking Bench Core whether this browser is already signed in.',
 
   // Bench page
-  'bench.title': 'Bench',
+  'bench.title': 'Inventory',
   'bench.connecting': 'Contacting Bench Core…',
   'bench.connecting.body':
     'Waiting for the authenticated status, integration, and device responses.',

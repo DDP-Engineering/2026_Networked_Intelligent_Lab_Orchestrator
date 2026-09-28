@@ -524,8 +524,9 @@ the browser's cookies belong to, and only shows the sign-in screen when the
 answer is that nobody is. **Sign out** ends the session server-side, so the
 cookie stops working for whoever holds it.
 
-The top bar names the signed-in identity and its role, and offers **Bench** and,
-for an identity holding the administration permissions, **Authentication**.
+The top bar names the signed-in identity and its role. Each authenticated entry
+opens About alone; the left navigation starts with Instruments and System closed.
+Authentication appears under System only for identities with its permissions.
 
 The sign-in screen provides labelled username and password fields, a control
 that reveals or masks the entered password without changing it, and one **Sign
@@ -540,10 +541,13 @@ Viewer and are not part of the browser sign-in interface.
 **The shell.** One compact row across the top carries the NILO wordmark, the
 open page tabs, and the network, `SIM`, appearance, language and account
 controls; there is no second tab strip and no page title above the workspace.
-The left navigation lists the working entries and the integrations Bench Core
-actually reports, with a bottom-anchored cluster of **Plugins, Network,
-Authentication, Activity** and **About**. Network is a collapsible
-built-in group with **Overview, Device access, VPN profiles** and **Diagnostics**.
+The left navigation has two keyboard-operable, initially collapsed sections:
+**Instruments**, listing ready hardware reported by Bench Core, and **System**,
+containing permission-filtered **Plugins, Network, Authentication, Activity,
+About** and **Inventory**. An expanded Instruments section explains a valid
+empty inventory separately from one that could not be verified. Expansion
+choices and open tabs survive an inventory refresh and reset for a new session.
+Nested groups begin collapsed. Network is a collapsible built-in group with **Overview, Device access, VPN profiles** and **Diagnostics**.
 Choosing the group root opens Overview; choosing any entry
 opens it as a tab; tabs activate on click, move with the arrow, Home and End
 keys, close from their own control, and fall back to the nearest remaining
@@ -593,7 +597,7 @@ the browser-only mock does not implement the full lifecycle. See
 **Plugins** opens the managed instrument workspace for installed integration
 packages and bench jobs. **About** reports the build identity Bench Core returns.
 
-**The Bench page** calls `GET /api/v1/status`, `GET /api/v1/integrations`, and
+**System → Inventory** calls `GET /api/v1/status`, `GET /api/v1/integrations`, and
 `GET /api/v1/devices` together with the credential in use, and displays:
 
 - the reported profile, service status, simulation flag, build version, API

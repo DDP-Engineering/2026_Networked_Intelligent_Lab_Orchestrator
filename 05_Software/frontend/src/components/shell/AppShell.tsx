@@ -67,12 +67,18 @@ export interface AppShellProps {
   status: BenchCoreStatus;
   integrations: Resource<IntegrationInventory>;
   devices: Resource<DeviceInventory>;
+  lastIntegrations: IntegrationInventory | null;
+  lastDevices: DeviceInventory | null;
+  lastPlugins: InstrumentPlugin[] | null;
+  onPluginsLoaded: (plugins: InstrumentPlugin[]) => void;
   /**
    * Owned above this component because a refresh replaces the active phase and
    * unmounts the shell; a workspace created in here would take the open tabs
    * down with it every time the bench was re-read.
    */
   workspace: Workspace;
+  expandedNavigation: Readonly<Record<string, boolean>>;
+  onToggleNavigation: (id: string) => void;
   onRefresh: () => void;
   onSignOut: () => void;
   onSessionEnded: () => void;
@@ -94,7 +100,13 @@ export function AppShell({
   status,
   integrations,
   devices,
+  lastIntegrations,
+  lastDevices,
+  lastPlugins,
+  onPluginsLoaded,
   workspace,
+  expandedNavigation,
+  onToggleNavigation,
   onRefresh,
   onSignOut,
   onSessionEnded,
@@ -120,18 +132,20 @@ export function AppShell({
   const [benchCoreReachable, setBenchCoreReachable] = useState(true);
   const [appliance, setAppliance] = useState<ApplianceMetadata | null>(null);
   const [pluginInventory, setPluginInventory] = useState<InstrumentPlugin[] | null>(
-    null,
+    lastPlugins,
   );
   const [pluginInventoryFresh, setPluginInventoryFresh] = useState(false);
   const refreshPluginInventory = useCallback(async () => {
     try {
-      setPluginInventory(await client.listPlugins(credential));
+      const plugins = await client.listPlugins(credential);
+      setPluginInventory(plugins);
+      onPluginsLoaded(plugins);
       setPluginInventoryFresh(true);
     } catch {
       // Keep the last known inventory: a transient read failure must not close tabs.
       setPluginInventoryFresh(false);
     }
-  }, [client, credential]);
+  }, [client, credential, onPluginsLoaded]);
   useEffect(() => {
     const initial = window.setTimeout(() => void refreshPluginInventory(), 0);
     const timer = window.setInterval(() => void refreshPluginInventory(), 5000);
@@ -184,12 +198,13 @@ export function AppShell({
   // integration inventory leaves the navigation without instrument entries,
   // which is the honest shape: nothing is known to exist.
   const reportedIntegrations = useMemo(
-    () => (integrations.ok ? integrations.value.items : []),
-    [integrations],
+    () =>
+      integrations.ok ? integrations.value.items : (lastIntegrations?.items ?? []),
+    [integrations, lastIntegrations],
   );
   const reportedDevices = useMemo(
-    () => (devices.ok ? devices.value.items : []),
-    [devices],
+    () => (devices.ok ? devices.value.items : (lastDevices?.items ?? [])),
+    [devices, lastDevices],
   );
   const pages = useMemo(
     () =>
@@ -198,19 +213,34 @@ export function AppShell({
   );
   const pageIds = useMemo(
     () =>
-      pluginInventory === null
-        ? [...pages.map((page) => page.id), ...workspace.open]
+      !integrations.ok || !devices.ok || !pluginInventoryFresh || !benchCoreReachable
+        ? [
+            ...pages.filter((page) => !page.navigationOnly).map((page) => page.id),
+            ...workspace.open.filter(
+              (id) =>
+                id.startsWith('integration:') ||
+                id.startsWith('camera:') ||
+                id.startsWith('serial:'),
+            ),
+          ]
         : pages.filter((page) => !page.navigationOnly).map((page) => page.id),
-    [pages, pluginInventory, workspace.open],
+    [
+      pages,
+      integrations,
+      devices,
+      pluginInventoryFresh,
+      benchCoreReachable,
+      workspace.open,
+    ],
   );
 
   usePruneClosedPages(workspace, pageIds);
   const navigationPages = useMemo(
     () =>
-      pluginInventoryFresh && benchCoreReachable
+      pluginInventoryFresh && benchCoreReachable && integrations.ok && devices.ok
         ? pages
         : pages.filter((page) => page.cluster !== 'instruments'),
-    [pages, pluginInventoryFresh, benchCoreReachable],
+    [pages, pluginInventoryFresh, benchCoreReachable, integrations, devices],
   );
 
   // Bound here rather than passing the client and credential down, so the
@@ -410,6 +440,14 @@ export function AppShell({
             active={workspace.active}
             onOpen={workspace.open_}
             nameOf={nameOf}
+            expanded={expandedNavigation}
+            onToggle={onToggleNavigation}
+            instrumentsUnavailable={
+              !integrations.ok ||
+              !devices.ok ||
+              !pluginInventoryFresh ||
+              !benchCoreReachable
+            }
           />
           <NavigationSplitter
             width={navigation.width}
@@ -427,6 +465,14 @@ export function AppShell({
             active={workspace.active}
             onOpen={openFromDrawer}
             nameOf={nameOf}
+            expanded={expandedNavigation}
+            onToggle={onToggleNavigation}
+            instrumentsUnavailable={
+              !integrations.ok ||
+              !devices.ok ||
+              !pluginInventoryFresh ||
+              !benchCoreReachable
+            }
           />
         </NavDrawer>
       )}
@@ -506,7 +552,7 @@ export function AppShell({
         />
       ) : null;
     }
-    if (page.id === 'bench') {
+    if (page.id === 'inventory') {
       return (
         <BenchPage
           status={status}
@@ -575,7 +621,7 @@ export function AppShell({
     if (page.id === 'about') {
       return (
         <AboutPage
-          key={currentAppliance?.serialName ?? 'about'}
+          key={`appliance:${currentAppliance?.serialName ?? 'about'}`}
           status={status}
           appliance={currentAppliance}
           labelUrl={resourceUrl(client.baseUrl, `${APPLIANCE_PATH}/label.svg`)}

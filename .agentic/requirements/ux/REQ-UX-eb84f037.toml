@@ -11,7 +11,7 @@ id = "REQ-UX-eb84f037"
 
 title = "Control top-level and nested navigation expansion"
 
-status = "draft"
+status = "active"
 
 requirement = """
 While an authenticated shell is shown in the wide rail, compact rail or constrained drawer, the Instruments and System headings shall be keyboard-operable section controls with translated visible and accessible names and an announced expanded state; each toggles its destinations without changing the active workspace tab, nested groups begin collapsed, and selecting a destination within an open section exposes its ancestor groups without forcing a closed top-level section open.
@@ -21,7 +21,7 @@ verification = "Render each viewport with ready nested Camera and Network entrie
 
 affected_paths = ["05_Software/frontend/src/components/shell/SideNav.tsx", "05_Software/frontend/src/components/shell/AppShell.tsx", "05_Software/frontend/src/i18n/en.ts", "05_Software/frontend/src/i18n/de.ts", "05_Software/frontend/src/i18n/ro.ts", "05_Software/frontend/src/styles/shell.css", "05_Software/frontend/src/components/shell/SideNav.test.tsx", "05_Software/frontend/src/components/shell/shell.test.tsx", "05_Software/frontend/src/App.tsx", "05_Software/frontend/e2e/shell.spec.ts"]
 
-linked_tests = []
+linked_tests = ["05_Software/frontend/src/components/shell/SideNav.test.tsx", "05_Software/frontend/src/components/shell/shell.test.tsx", "05_Software/frontend/e2e/shell.spec.ts::puts the wordmark, tabs and every control on one row"]
 
 
 spec = "specs/REQ-UX-eb84f037.md"

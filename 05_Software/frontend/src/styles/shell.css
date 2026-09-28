@@ -391,6 +391,27 @@ input[type='radio'] {
   font-weight: 600;
 }
 
+.nav-section-toggle {
+  display: flex;
+  width: 100%;
+  min-height: var(--control-height);
+  align-items: center;
+  justify-content: space-between;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nav-section-toggle:hover {
+  background: var(--surface-hover);
+}
+
+.nav-empty {
+  padding: var(--space-2) var(--space-4);
+  color: var(--text-muted);
+}
+
 .nav-list {
   display: flex;
   flex-direction: column;

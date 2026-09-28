@@ -15,10 +15,12 @@ import type {
 } from './api/contract';
 import { readCsrfToken } from './api/csrf';
 import type { Resource } from './api/resource';
+import type { InstrumentPlugin } from './api/bench';
 import { useTranslate } from './i18n/languages';
 import type { MessageKey } from './i18n/en';
 import { AppShell } from './components/shell/AppShell';
 import { useWorkspace } from './components/shell/useWorkspace';
+import { DEFAULT_PAGE } from './components/shell/pages';
 import { SignInScreen, type SignInRefusal } from './components/SignInScreen';
 import type { ApiMode, RuntimeProfile } from './config/environment';
 import { NILO_VERSION } from './version';
@@ -119,9 +121,26 @@ async function settle<T>(request: Promise<T>): Promise<Resource<T>> {
 function App({ client }: AppProps) {
   const t = useTranslate();
   const [shell, setShell] = useState<Shell>({ phase: 'restoring' });
+  const [lastIntegrations, setLastIntegrations] = useState<IntegrationInventory | null>(
+    null,
+  );
+  const [lastDevices, setLastDevices] = useState<DeviceInventory | null>(null);
+  const [lastPlugins, setLastPlugins] = useState<InstrumentPlugin[] | null>(null);
+  const clearInventory = useCallback(() => {
+    setLastIntegrations(null);
+    setLastDevices(null);
+    setLastPlugins(null);
+  }, []);
   // Owned here rather than in the shell so a refresh, which passes through the
   // connecting phase and unmounts the shell, does not close the open tabs.
-  const workspace = useWorkspace(['bench']);
+  const workspace = useWorkspace([DEFAULT_PAGE]);
+  const [expandedNavigation, setExpandedNavigation] = useState<Record<string, boolean>>(
+    {},
+  );
+  const toggleNavigation = useCallback((id: string) => {
+    setExpandedNavigation((current) => ({ ...current, [id]: !current[id] }));
+  }, []);
+  const resetNavigation = useCallback(() => setExpandedNavigation({}), []);
 
   /** Read the bench with a credential whose owner is already known. */
   const loadBench = useCallback(
@@ -152,6 +171,8 @@ function App({ client }: AppProps) {
         });
         return;
       }
+      if (integrations.ok) setLastIntegrations(integrations.value);
+      if (devices.ok) setLastDevices(devices.value);
       setShell({
         phase: 'active',
         credential,
@@ -216,6 +237,9 @@ function App({ client }: AppProps) {
         // The password exists only as an argument to this one call: it is in
         // one request body and in no store, URL or log.
         const session = await client.signIn(username, password);
+        workspace.reset();
+        resetNavigation();
+        clearInventory();
         await loadBench(
           sessionCredential(session.csrfToken ?? readCsrfToken()),
           session,
@@ -224,21 +248,22 @@ function App({ client }: AppProps) {
         setShell(signedOut(null, { message: signInRefusal(error) }));
       }
     },
-    [client, loadBench],
+    [client, loadBench, workspace, resetNavigation, clearInventory],
   );
 
   const signOut = useCallback(async () => {
     const credential = credentialOf(shell);
-    // The tabs go with the session: the next person to sign in starts at Bench
-    // rather than inheriting whatever the last one had open.
+    // A new identity inherits neither tabs nor disclosure choices.
     workspace.reset();
+    resetNavigation();
+    clearInventory();
     setShell(signedOut('signIn.signedOut'));
     if (credential?.kind === 'session') {
       // The session has to end at the server; forgetting it here would leave a
       // cookie that still works for whoever holds it.
       await settle(client.signOut(credential));
     }
-  }, [client, shell, workspace]);
+  }, [client, shell, workspace, resetNavigation, clearInventory]);
 
   const retry = useCallback(() => {
     if (shell.phase === 'refused' && shell.session !== null) {
@@ -260,10 +285,21 @@ function App({ client }: AppProps) {
         status={shell.status}
         integrations={shell.integrations}
         devices={shell.devices}
+        lastIntegrations={lastIntegrations}
+        lastDevices={lastDevices}
+        lastPlugins={lastPlugins}
+        onPluginsLoaded={setLastPlugins}
         workspace={workspace}
+        expandedNavigation={expandedNavigation}
+        onToggleNavigation={toggleNavigation}
         onRefresh={() => void loadBench(shell.credential, shell.session)}
         onSignOut={() => void signOut()}
-        onSessionEnded={() => setShell(signedOut('signIn.ended'))}
+        onSessionEnded={() => {
+          workspace.reset();
+          resetNavigation();
+          clearInventory();
+          setShell(signedOut('signIn.ended'));
+        }}
       />
     );
   }

@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import App from './App';
 import { BenchCoreError } from './api/client';
+import type { InstrumentPlugin } from './api/bench';
 import type { BenchCoreClient, BenchCoreFailure, Credential } from './api/client';
 import { PREFERENCE_KEYS } from './preferences/store';
 import { renderInShell } from './test/render';
@@ -232,9 +233,22 @@ function renderApp(client: BenchCoreClient, apiMode: 'live' | 'mock' = 'live') {
   });
 }
 
-/** The Bench page heading, which is what "connected" now looks like. */
+/** The default About workspace confirms the session is connected. */
 function benchPage(): Promise<HTMLElement> {
-  return screen.findByRole('heading', { name: 'Bench', level: 2 });
+  return screen.findByRole('heading', { name: 'About', level: 2 });
+}
+
+async function inventoryPage(): Promise<HTMLElement> {
+  await screen.findByRole('navigation', { name: 'Main' });
+  const navigation = within(screen.getByRole('navigation', { name: 'Main' }));
+  if (
+    navigation.getByRole('button', { name: 'System' }).getAttribute('aria-expanded') ===
+    'false'
+  ) {
+    fireEvent.click(navigation.getByRole('button', { name: 'System' }));
+  }
+  fireEvent.click(navigation.getByRole('button', { name: 'Inventory' }));
+  return screen.findByRole('heading', { name: 'Inventory', level: 2 });
 }
 
 /** Open the account menu, where sign-out and the role now live. */
@@ -432,6 +446,40 @@ describe('human sign-in and session', () => {
     expect(screen.queryByRole('heading', { name: 'Bench', level: 2 })).toBeNull();
   });
 
+  it('starts a second identity on About alone with both sections collapsed', async () => {
+    let nextSession = administratorSession;
+    const client = stubClient({ signIn: () => Promise.resolve(nextSession) });
+    await signInAs(client);
+    await benchPage();
+    await inventoryPage();
+    const navigation = within(screen.getByRole('navigation', { name: 'Main' }));
+    fireEvent.click(navigation.getByRole('button', { name: 'Instruments' }));
+    openAccountMenu();
+    fireEvent.click(screen.getByRole('menuitem', { name: /sign out/i }));
+    await signInScreen();
+    nextSession = viewerSession;
+    fireEvent.change(screen.getByLabelText('Username'), {
+      target: { value: 'bench-viewer' },
+    });
+    fireEvent.change(screen.getByLabelText('Password'), {
+      target: { value: 'viewer-secret' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /^sign in$/i }));
+    expect(await benchPage()).toBeVisible();
+    expect(screen.getAllByRole('tab')).toHaveLength(1);
+    expect(screen.getByRole('tab', { name: 'About' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    for (const section of ['Instruments', 'System']) {
+      expect(
+        within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', {
+          name: section,
+        }),
+      ).toHaveAttribute('aria-expanded', 'false');
+    }
+  });
+
   it('ends the session server-side when the human signs out', async () => {
     const client = signedInClient(administratorSession);
     const signOut = vi.spyOn(client, 'signOut');
@@ -481,6 +529,11 @@ describe('main navigation', () => {
 
     fireEvent.click(
       within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', {
+        name: 'System',
+      }),
+    );
+    fireEvent.click(
+      within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', {
         name: 'Authentication',
       }),
     );
@@ -495,7 +548,8 @@ describe('main navigation', () => {
     await benchPage();
 
     const navigation = within(screen.getByRole('navigation', { name: 'Main' }));
-    expect(navigation.getByRole('button', { name: /bench/i })).toBeVisible();
+    expect(navigation.getByRole('button', { name: 'System' })).toBeVisible();
+    fireEvent.click(navigation.getByRole('button', { name: 'System' }));
     expect(navigation.queryByRole('button', { name: /authentication/i })).toBeNull();
   });
 });
@@ -515,6 +569,7 @@ describe('connection states', () => {
     await connectWith(stubClient());
 
     expect(await benchPage()).toBeVisible();
+    await inventoryPage();
     const facts = within(document.querySelector('.fact-grid') as HTMLElement);
     expect(facts.getByText('simulation')).toBeVisible();
     expect(facts.getByText('healthy')).toBeVisible();
@@ -579,9 +634,8 @@ describe('simulated inventory', () => {
   it('shows every integration the backend reports, with its state', async () => {
     await connectWith(stubClient());
 
-    const integrations = within(
-      await screen.findByRole('region', { name: 'Integrations' }),
-    );
+    await inventoryPage();
+    const integrations = within(screen.getByRole('region', { name: 'Integrations' }));
     expect(integrations.getByText('SIMULATION - Demo Integration')).toBeVisible();
     expect(integrations.getByText('simulation.bench')).toBeVisible();
     expect(integrations.getByText('healthy')).toBeVisible();
@@ -591,7 +645,8 @@ describe('simulated inventory', () => {
   it('shows every device with the integration that owns it and its availability', async () => {
     await connectWith(stubClient());
 
-    const devices = within(await screen.findByRole('region', { name: 'Devices' }));
+    await inventoryPage();
+    const devices = within(screen.getByRole('region', { name: 'Devices' }));
     expect(devices.getByText('SIMULATION - Electronics Bench 001')).toBeVisible();
     expect(devices.getByText('simulation.bench.device.stable-001')).toBeVisible();
     expect(devices.getByText('simulation.bench')).toBeVisible();
@@ -607,7 +662,7 @@ describe('simulated inventory', () => {
       }),
     );
 
-    await screen.findByRole('region', { name: 'Integrations' });
+    await inventoryPage();
     expect(within(integrationsRegion()).getByText('unavailable')).toBeVisible();
     expect(within(devicesRegion()).getByText('unavailable')).toBeVisible();
     expect(within(devicesRegion()).queryByText('ready')).toBeNull();
@@ -625,7 +680,7 @@ describe('simulated inventory', () => {
       }),
     );
 
-    await screen.findByRole('region', { name: 'Integrations' });
+    await inventoryPage();
     expect(within(integrationsRegion()).getByText(/no integrations/i)).toBeVisible();
     expect(within(devicesRegion()).getByText(/no devices/i)).toBeVisible();
     expect(screen.queryByRole('alert')).toBeNull();
@@ -640,9 +695,128 @@ describe('simulated inventory', () => {
   it('counts the entries it is showing', async () => {
     await connectWith(stubClient());
 
-    await screen.findByRole('region', { name: 'Integrations' });
+    await inventoryPage();
     expect(within(integrationsRegion()).getByText(/1 entry/i)).toBeVisible();
     expect(within(devicesRegion()).getByText(/1 entry/i)).toBeVisible();
+  });
+});
+
+describe('in-session inventory refresh', () => {
+  it('keeps a plugin-backed tab through an unreadable plugin refresh', async () => {
+    const serial: InstrumentPlugin = {
+      id: 'serial',
+      display_name: 'USB to Serial',
+      version: '0.10.0',
+      installed: true,
+      enabled: true,
+      mode: 'ask',
+      status: 'ready',
+      simulation: false,
+      operations: ['connect'],
+      error: '',
+      digest: '',
+      devices: [
+        {
+          id: 'serial-1',
+          display_name: 'Console',
+          kind: 'usb-serial',
+          configured: true,
+          enabled: true,
+          presence: 'present',
+          readiness: 'ready',
+          revision: 1,
+          capabilities: {},
+          settings: {},
+        },
+      ],
+    };
+    let pluginReadFails = false;
+    renderRestoredApp(
+      signedInClient(administratorSession, {
+        listPlugins: () =>
+          pluginReadFails
+            ? Promise.reject(new Error('plugin inventory unavailable'))
+            : Promise.resolve([serial]),
+      }),
+    );
+    await inventoryPage();
+    const nav = within(screen.getByRole('navigation', { name: 'Main' }));
+    fireEvent.click(nav.getByRole('button', { name: 'Instruments' }));
+    fireEvent.click(await nav.findByRole('button', { name: 'USB to Serial' }));
+    fireEvent.click(nav.getByRole('button', { name: 'Console' }));
+    expect(screen.getByRole('tab', { name: /Console/ })).toBeVisible();
+    await inventoryPage();
+    pluginReadFails = true;
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh' }));
+    await screen.findByRole('heading', { name: 'Inventory', level: 2 });
+    await waitFor(() => {
+      expect(screen.getByRole('tab', { name: /Console/ })).toBeVisible();
+      expect(
+        within(screen.getByRole('navigation', { name: 'Main' })).queryByRole('button', {
+          name: 'Console',
+        }),
+      ).toBeNull();
+    });
+  });
+  it('keeps an open instrument tab and disclosure when a refresh cannot read devices', async () => {
+    let deviceReadFails = false;
+    const client = signedInClient(administratorSession, {
+      getDevices: () =>
+        deviceReadFails
+          ? Promise.reject(
+              new BenchCoreError('malformed', 'device inventory unreadable'),
+            )
+          : Promise.resolve(readyDevices),
+    });
+    renderRestoredApp(client);
+    await benchPage();
+    const nav = within(screen.getByRole('navigation', { name: 'Main' }));
+    fireEvent.click(nav.getByRole('button', { name: 'Instruments' }));
+    fireEvent.click(
+      await nav.findByRole('button', { name: 'SIMULATION - Demo Integration' }),
+    );
+    expect(
+      screen.getByRole('tab', { name: /SIMULATION - Demo Integration/ }),
+    ).toBeVisible();
+    await inventoryPage();
+    deviceReadFails = true;
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh' }));
+    await screen.findByRole('heading', { name: 'Inventory', level: 2 });
+    await waitFor(() =>
+      expect(
+        within(screen.getByRole('region', { name: 'Devices' })).getByText(
+          /device inventory could not be read/i,
+        ),
+      ).toBeVisible(),
+    );
+    const refreshedNav = within(screen.getByRole('navigation', { name: 'Main' }));
+    expect(refreshedNav.getByRole('button', { name: 'Instruments' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+    expect(
+      refreshedNav.queryByRole('button', { name: 'SIMULATION - Demo Integration' }),
+    ).toBeNull();
+    expect(
+      screen.getByRole('tab', { name: /SIMULATION - Demo Integration/ }),
+    ).toBeVisible();
+    deviceReadFails = false;
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh' }));
+    await waitFor(() =>
+      expect(
+        within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', {
+          name: 'SIMULATION - Demo Integration',
+        }),
+      ).toBeVisible(),
+    );
+    expect(
+      screen.getByRole('tab', { name: /SIMULATION - Demo Integration/ }),
+    ).toBeVisible();
+    expect(
+      within(screen.getByRole('navigation', { name: 'Main' })).getByRole('button', {
+        name: 'Instruments',
+      }),
+    ).toHaveAttribute('aria-expanded', 'true');
   });
 });
 
@@ -652,7 +826,7 @@ describe('unusable inventory responses', () => {
       stubClient({ getIntegrations: rejecting('malformed', 'items is not a list') }),
     );
 
-    await screen.findByRole('region', { name: 'Integrations' });
+    await inventoryPage();
     const integrations = within(integrationsRegion());
     expect(
       integrations.getByText(/integration inventory could not be read/i),
@@ -673,7 +847,7 @@ describe('unusable inventory responses', () => {
       stubClient({ getDevices: rejecting('malformed', 'entry 0 is missing kind') }),
     );
 
-    await screen.findByRole('region', { name: 'Devices' });
+    await inventoryPage();
     const devices = within(devicesRegion());
     expect(devices.getByText(/device inventory could not be read/i)).toBeVisible();
     expect(devices.getByText(/entry 0 is missing kind/i)).toBeVisible();
@@ -691,7 +865,9 @@ describe('unusable inventory responses', () => {
       stubClient({ getIntegrations: rejecting('malformed', 'items is not a list') }),
     );
     expect(
-      await screen.findByText(/integration inventory could not be read/i),
+      await inventoryPage().then(() =>
+        screen.getByText(/integration inventory could not be read/i),
+      ),
     ).toBeVisible();
     expect(screen.queryByText(/device inventory could not be read/i)).toBeNull();
   });
@@ -703,7 +879,7 @@ describe('unusable inventory responses', () => {
       }),
     );
 
-    await screen.findByRole('region', { name: 'Devices' });
+    await inventoryPage();
     expect(
       within(devicesRegion()).getByText(/device inventory is not reachable/i),
     ).toBeVisible();
@@ -760,7 +936,7 @@ describe('credential retention', () => {
 
   it('discards the inventory when the user signs out', async () => {
     await connectWith(stubClient());
-    await screen.findByRole('region', { name: 'Devices' });
+    await inventoryPage();
 
     openAccountMenu();
     fireEvent.click(screen.getByRole('menuitem', { name: /sign out/i }));

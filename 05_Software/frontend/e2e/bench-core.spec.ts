@@ -60,7 +60,7 @@ test.afterAll(async () => {
   }
 });
 
-test('signs in with a human session and shows the appliance bench', async () => {
+test('signs in with a human session and opens Inventory from System', async () => {
   const running = requireTopology();
   await page.goto(running.frontendUrl);
 
@@ -73,7 +73,23 @@ test('signs in with a human session and shows the appliance bench', async () => 
   );
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 
-  await expect(page.getByRole('heading', { name: 'Bench', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'About', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('tablist', { name: 'Open pages' }).getByRole('tab'),
+  ).toHaveCount(1);
+  const navigation = page.getByRole('navigation');
+  for (const section of ['Instruments', 'System']) {
+    await expect(
+      navigation.getByRole('button', { name: section, exact: true }),
+    ).toHaveAttribute('aria-expanded', 'false');
+  }
+  await navigation.getByRole('button', { name: 'Instruments', exact: true }).click();
+  await expect(navigation.getByText('No instruments are available.')).toBeVisible();
+  await navigation.getByRole('button', { name: 'System', exact: true }).click();
+  await navigation.getByRole('button', { name: 'Inventory', exact: true }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Inventory', exact: true }),
+  ).toBeVisible();
   await expectApplianceIdentity();
 
   await expect(statusValue('Profile')).toHaveText('appliance');
@@ -108,7 +124,9 @@ test('presents Bench Core as unreachable and recovers through the interface', as
   await page.getByRole('button', { name: 'Try again' }).click();
 
   // No reload and no second sign-in: the interface reuses the session it still holds.
-  await expect(page.getByRole('heading', { name: 'Bench', exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Inventory', exact: true }),
+  ).toBeVisible();
   await expectEmptyInventory();
 });
 

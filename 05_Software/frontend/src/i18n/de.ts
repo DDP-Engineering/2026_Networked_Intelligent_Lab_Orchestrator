@@ -192,6 +192,9 @@ export const de: Catalogue = {
   'nav.section.working': 'Arbeitsbereich',
   'nav.section.instruments': 'Instrumente',
   'nav.section.core': 'System',
+  'nav.inventory': 'Bestandsübersicht',
+  'nav.instruments.empty': 'Keine Instrumente verfügbar.',
+  'nav.instruments.unavailable': 'Instrumentenbestand nicht verfügbar.',
   'nav.bench': 'Bench',
   'nav.network': 'Netzwerk',
   'nav.network.overview': 'Übersicht',
@@ -277,7 +280,7 @@ export const de: Catalogue = {
   'restoring.body':
     'Bench Core wird gefragt, ob dieser Browser bereits angemeldet ist.',
 
-  'bench.title': 'Bench',
+  'bench.title': 'Bestandsübersicht',
   'bench.connecting': 'Bench Core wird kontaktiert…',
   'bench.connecting.body':
     'Warten auf die authentifizierten Status-, Integrations- und Geräteantworten.',

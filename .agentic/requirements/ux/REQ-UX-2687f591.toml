@@ -38,6 +38,7 @@ linked_tests = [
     "05_Software/frontend/src/layout.test.ts::narrows the navigation to a labeled compact rail on a field viewport",
     "05_Software/frontend/src/layout.test.ts::replaces the rail with a drawer on a constrained viewport",
     "05_Software/frontend/e2e/field-display.spec.ts::the shell and the Network page are readable and complete",
+    "05_Software/frontend/e2e/shell.spec.ts::narrows the navigation to a labeled rail on a small viewport without clipping it",
 ]
 
 spec = ""
@@ -45,4 +46,4 @@ priority = "high"
 rationale = "An unlabeled icon rail is not navigation an operator can learn on a panel they use occasionally."
 
 created = 2026-09-04
-updated = 2026-09-04
+updated = 2026-09-28

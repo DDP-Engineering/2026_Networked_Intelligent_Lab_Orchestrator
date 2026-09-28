@@ -17,7 +17,7 @@ import type { AuthenticationView } from '../AuthenticationPage';
  * built-in appliance capability; filing it with the integrations would teach an
  * operator to look for it in the wrong place.
  */
-export type NavCluster = 'working' | 'instruments' | 'core';
+export type NavCluster = 'instruments' | 'core';
 
 /** One page the shell can open as a tab. */
 export interface PageDescriptor {
@@ -144,18 +144,17 @@ const CORE_PAGES: PageDescriptor[] = [
     titleKey: 'nav.about',
     available: true,
   },
+  {
+    id: 'inventory',
+    cluster: 'core',
+    icon: 'bench',
+    titleKey: 'nav.inventory',
+    available: true,
+  },
 ];
 
-const BENCH_PAGE: PageDescriptor = {
-  id: 'bench',
-  cluster: 'working',
-  icon: 'bench',
-  titleKey: 'nav.bench',
-  available: true,
-};
-
 /** The page a signed-in session opens on. */
-export const DEFAULT_PAGE = BENCH_PAGE.id;
+export const DEFAULT_PAGE = 'about';
 
 /** Build the integration page identifier for one reported integration. */
 export function integrationPageId(integrationId: string): string {
@@ -330,7 +329,7 @@ export function buildPages(
         ]
       : [page],
   );
-  return [BENCH_PAGE, ...cameraPages, ...serialPages, ...instruments, ...corePages];
+  return [...cameraPages, ...serialPages, ...instruments, ...corePages];
 }
 
 /** Find one page in a built navigation. */

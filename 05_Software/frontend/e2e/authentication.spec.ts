@@ -81,7 +81,7 @@ test('signs a real administrator in with a password', async () => {
 
   await signIn(ADMINISTRATOR, ADMINISTRATOR_PASSWORD);
 
-  await expect(page.getByRole('heading', { name: 'Bench', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'About', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Account' })).toContainText(
     ADMINISTRATOR,
   );
@@ -381,10 +381,19 @@ test('hides the Authentication entry from an identity that may not administer', 
 
   await expect(page.getByRole('button', { name: 'Account' })).toContainText(OPERATOR);
   const navigation = page.getByRole('navigation');
-  await expect(navigation.getByRole('button', { name: 'Bench' })).toBeVisible();
+  await expect(navigation.getByRole('button', { name: 'Instruments' })).toHaveAttribute(
+    'aria-expanded',
+    'false',
+  );
+  await expect(navigation.getByRole('button', { name: 'System' })).toHaveAttribute(
+    'aria-expanded',
+    'false',
+  );
+  await navigation.getByRole('button', { name: 'System' }).click();
   await expect(navigation.getByRole('button', { name: 'Authentication' })).toHaveCount(
     0,
   );
+  await expect(navigation.getByRole('button', { name: 'Inventory' })).toBeVisible();
 });
 
 test('ends the session server-side when the human signs out', async () => {
@@ -418,6 +427,7 @@ async function fillSecret(field: Locator, secret: string): Promise<void> {
 }
 
 async function openAuthentication(): Promise<void> {
+  await expandSystem();
   await page
     .getByRole('navigation')
     .getByRole('button', { name: 'Authentication', exact: true })
@@ -426,9 +436,21 @@ async function openAuthentication(): Promise<void> {
 }
 
 async function openAuthenticationView(name: 'Users' | 'API tokens'): Promise<void> {
+  await expandSystem();
+  const group = page
+    .getByRole('navigation')
+    .getByRole('button', { name: 'Expand Authentication' });
+  if (await group.isVisible()) await group.click();
   await page.getByRole('navigation').getByRole('button', { name, exact: true }).click();
   const regionName = name === 'Users' ? 'Users' : 'API Tokens';
   await expect(page.getByRole('region', { name: regionName })).toBeVisible();
+}
+
+async function expandSystem(): Promise<void> {
+  const section = page
+    .getByRole('navigation')
+    .getByRole('button', { name: 'System', exact: true });
+  if ((await section.getAttribute('aria-expanded')) === 'false') await section.click();
 }
 
 /**

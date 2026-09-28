@@ -11,7 +11,7 @@ id = "REQ-UX-57d10c15"
 
 title = "Explain empty or unavailable Instruments navigation"
 
-status = "draft"
+status = "active"
 
 requirement = """
 When Instruments is expanded with no eligible destinations, the browser interface shall retain both section controls and show a localized, understandable Instruments empty state that distinguishes a successful zero-instrument inventory from an inventory whose availability could not be verified.
@@ -21,7 +21,7 @@ verification = "Render the shell with valid empty inventories and again with a f
 
 affected_paths = ["05_Software/frontend/src/components/shell/SideNav.tsx", "05_Software/frontend/src/components/shell/AppShell.tsx", "05_Software/frontend/src/i18n/en.ts", "05_Software/frontend/src/i18n/de.ts", "05_Software/frontend/src/i18n/ro.ts", "05_Software/frontend/src/components/shell/SideNav.test.tsx", "05_Software/frontend/src/components/shell/shell.test.tsx", "05_Software/frontend/src/App.tsx"]
 
-linked_tests = []
+linked_tests = ["05_Software/frontend/src/components/shell/SideNav.test.tsx", "05_Software/frontend/src/components/shell/shell.test.tsx::says an unreadable device inventory is unreadable, not that there are none", "05_Software/frontend/e2e/bench-core.spec.ts::signs in with a human session and opens Inventory from System"]
 
 
 spec = ""

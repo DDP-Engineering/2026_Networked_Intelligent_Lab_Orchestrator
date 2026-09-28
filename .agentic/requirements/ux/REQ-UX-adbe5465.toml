@@ -70,6 +70,8 @@ affected_paths = [
 linked_tests = [
     "05_Software/frontend/src/components/shell/shell.test.tsx::offers exactly the languages with a catalogue, and translates the shell",
     "05_Software/frontend/src/components/shell/shell.test.tsx::leaves identifiers, protocol names and reported values untranslated",
+    "05_Software/frontend/src/components/shell/SideNav.test.tsx",
+    "05_Software/frontend/e2e/shell.spec.ts::keeps the theme and the language across a reload, with the session",
 ]
 
 # --- optional below this line ---
@@ -81,4 +83,4 @@ priority = "normal"   # low | normal | high
 rationale = "Translating an identifier the backend matches on turns a language choice into a failure nobody associates with the language menu."
 
 created = 2026-09-02
-updated = 2026-09-02
+updated = 2026-09-28

@@ -154,16 +154,18 @@ for (const viewport of VIEWPORTS) {
     test.setTimeout(240_000);
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
     await page.reload();
-    await expect(page.getByRole('heading', { name: 'Bench', level: 2 })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'About', level: 2 })).toBeVisible();
 
     if (viewport.width <= 896 || viewport.height <= 520) {
       // The constrained shell: a labeled drawer replaces the rail.
       await expect(page.getByRole('navigation')).toHaveCount(0);
       await page.getByRole('button', { name: 'Menu', exact: true }).click();
       const drawer = page.getByRole('dialog', { name: 'Navigation' });
-      await expect(
-        drawer.getByRole('button', { name: 'Network', exact: true }),
-      ).toHaveText('Network');
+      await expect(drawer.getByRole('button', { name: 'System' })).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+      await drawer.getByRole('button', { name: 'System' }).click();
       await drawer.getByRole('button', { name: 'Network', exact: true }).click();
       await expect(drawer).toHaveCount(0);
       await expect(
@@ -171,10 +173,8 @@ for (const viewport of VIEWPORTS) {
       ).toBeFocused();
     } else {
       await expect(
-        page
-          .getByRole('navigation')
-          .getByRole('button', { name: 'Network', exact: true }),
-      ).toHaveText('Network');
+        page.getByRole('navigation').getByRole('button', { name: 'System' }),
+      ).toHaveAttribute('aria-expanded', 'false');
       await openNetwork('Overview');
     }
     await expect(
@@ -359,16 +359,13 @@ test('1024x600: the other pages stay readable without sideways scrolling', async
   await page.setViewportSize({ width: 1024, height: 600 });
   await openNetworkAfterReload({ width: 1024, height: 600 });
   for (const [entry, heading] of [
-    ['Bench', 'Bench'],
+    ['Inventory', 'Inventory'],
     ['Activity', 'Activity'],
     ['Authentication', 'Authentication / Users'],
     ['API tokens', 'Authentication / API tokens'],
     ['About', 'About'],
   ] as const) {
-    await page
-      .getByRole('navigation')
-      .getByRole('button', { name: entry, exact: true })
-      .click();
+    await openSystemDestination(entry, false);
     await expect(page.getByRole('heading', { name: heading, level: 2 })).toBeVisible();
     await expectNoDocumentOverflow();
     await expectReadableText();
@@ -593,22 +590,11 @@ function sharesRow(
  */
 async function openActivity(): Promise<void> {
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Bench', level: 2 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'About', level: 2 })).toBeVisible();
   const viewport = page.viewportSize();
   const constrained =
     viewport !== null && (viewport.width <= 896 || viewport.height <= 520);
-  if (constrained) {
-    await page.getByRole('button', { name: 'Menu', exact: true }).click();
-    await page
-      .getByRole('dialog', { name: 'Navigation' })
-      .getByRole('button', { name: 'Activity', exact: true })
-      .click();
-  } else {
-    await page
-      .getByRole('navigation')
-      .getByRole('button', { name: 'Activity', exact: true })
-      .click();
-  }
+  await openSystemDestination('Activity', constrained);
   await expect(page.getByRole('heading', { name: 'Activity', level: 2 })).toBeVisible();
 }
 
@@ -618,7 +604,7 @@ async function signIn(): Promise<void> {
     page.getByLabel('Password', { exact: true }).fill(ADMINISTRATOR_PASSWORD),
   );
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Bench', level: 2 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'About', level: 2 })).toBeVisible();
 }
 
 /** Wait until the appliance sampler has persisted a real interval for the chart. */
@@ -693,18 +679,7 @@ async function openNetwork(destination: NetworkDestination): Promise<void> {
   const viewport = page.viewportSize();
   const constrained =
     viewport !== null && (viewport.width <= 896 || viewport.height <= 520);
-  if (constrained) {
-    await page.getByRole('button', { name: 'Menu', exact: true }).click();
-    await page
-      .getByRole('dialog', { name: 'Navigation' })
-      .getByRole('button', { name: destination, exact: true })
-      .click();
-  } else {
-    await page
-      .getByRole('navigation')
-      .getByRole('button', { name: destination, exact: true })
-      .click();
-  }
+  await openSystemDestination(destination, constrained);
   await expect(
     page.getByRole('heading', { name: `Network / ${destination}`, level: 2 }),
   ).toBeVisible();
@@ -713,22 +688,38 @@ async function openNetwork(destination: NetworkDestination): Promise<void> {
 
 async function openNetworkAfterReload(viewport: { width: number; height: number }) {
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Bench', level: 2 })).toBeVisible();
-  if (viewport.width <= 896 || viewport.height <= 520) {
-    await page.getByRole('button', { name: 'Menu', exact: true }).click();
-    await page
-      .getByRole('dialog', { name: 'Navigation' })
-      .getByRole('button', { name: 'Overview', exact: true })
-      .click();
-  } else {
-    await page
-      .getByRole('navigation')
-      .getByRole('button', { name: 'Overview', exact: true })
-      .click();
-  }
+  await expect(page.getByRole('heading', { name: 'About', level: 2 })).toBeVisible();
+  await openSystemDestination(
+    'Overview',
+    viewport.width <= 896 || viewport.height <= 520,
+  );
   await expect(
     page.getByRole('heading', { name: 'Network / Overview', level: 2 }),
   ).toBeVisible();
+}
+
+async function openSystemDestination(
+  destination: string,
+  constrained: boolean,
+): Promise<void> {
+  if (constrained)
+    await page.getByRole('button', { name: 'Menu', exact: true }).click();
+  const nav = constrained
+    ? page.getByRole('dialog', { name: 'Navigation' })
+    : page.getByRole('navigation');
+  const system = nav.getByRole('button', { name: 'System', exact: true });
+  if ((await system.getAttribute('aria-expanded')) === 'false') await system.click();
+  if (
+    ['Overview', 'Device access', 'VPN profiles', 'Diagnostics'].includes(destination)
+  ) {
+    const network = nav.getByRole('button', { name: 'Expand Network' });
+    if (await network.isVisible()) await network.click();
+  }
+  if (destination === 'API tokens') {
+    const authentication = nav.getByRole('button', { name: 'Expand Authentication' });
+    if (await authentication.isVisible()) await authentication.click();
+  }
+  await nav.getByRole('button', { name: destination, exact: true }).click();
 }
 
 async function openAuthenticationView(
@@ -737,18 +728,7 @@ async function openAuthenticationView(
   const viewport = page.viewportSize();
   const constrained =
     viewport !== null && (viewport.width <= 896 || viewport.height <= 520);
-  if (constrained) {
-    await page.getByRole('button', { name: 'Menu', exact: true }).click();
-    await page
-      .getByRole('dialog', { name: 'Navigation' })
-      .getByRole('button', { name: destination, exact: true })
-      .click();
-  } else {
-    await page
-      .getByRole('navigation')
-      .getByRole('button', { name: destination, exact: true })
-      .click();
-  }
+  await openSystemDestination(destination, constrained);
   const title =
     destination === 'Users' ? 'Authentication / Users' : 'Authentication / API tokens';
   await expect(page.getByRole('heading', { name: title, level: 2 })).toBeVisible();

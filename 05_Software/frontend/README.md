@@ -176,9 +176,14 @@ in mock mode signs you out.
 
 ## What the signed-in screens show
 
-**Bench** carries the backend status, the integrations and their state, and the
+The signed-in interface opens **About** as its only tab. **Instruments** and
+**System** are initially collapsed, keyboard-operable navigation sections on
+both the rail and drawer. Open System → **Inventory** to see the backend status,
+the integrations and their state, and the
 devices with the integration that owns each one and its availability, inside one
-viewport. A status that cannot be read settles the whole screen, as one of a
+viewport. An expanded Instruments section explains when no eligible hardware is
+available or when its inventory cannot be verified. Refresh keeps open tabs and
+navigation expansion choices within the session; a new sign-in resets them. A status that cannot be read settles the whole screen, as one of a
 rejected token, a refused permission, an unreachable backend, or an unsupported
 status response. Once the status is in, each inventory carries its own outcome -
 entries, an explicit empty statement, or a message naming which inventory could

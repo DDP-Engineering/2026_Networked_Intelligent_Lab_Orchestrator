@@ -74,6 +74,8 @@ linked_tests = [
     "05_Software/frontend/src/components/shell/shell.test.tsx::hides the Authentication entry from an identity without the permission",
     "05_Software/frontend/src/components/shell/shell.test.tsx::opens an integration page showing what the backend reported",
     "05_Software/frontend/e2e/shell.spec.ts::anchors Network in the lower cluster, not among the instruments",
+    "05_Software/frontend/src/components/shell/pages.test.ts",
+    "05_Software/frontend/src/components/shell/SideNav.test.tsx",
 ]
 
 # --- optional below this line ---
