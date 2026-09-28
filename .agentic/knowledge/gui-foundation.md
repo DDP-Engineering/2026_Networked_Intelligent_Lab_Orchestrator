@@ -151,10 +151,17 @@ runtime status.
 - Camera navigation reads authenticated plugin inventory. System owns package
   and persistent device configuration. Instruments shows installed, enabled, ready
   plugins with configured, enabled, present, ready devices. Empty groups are hidden.
-  Legacy integrations require healthy/ready status and a ready device. Failed plugin
-  refreshes hide Instruments in both navigation layouts while preserving open tabs;
-  a successful authoritative inventory restores eligible entries. Camera and Serial presence
+  Legacy integrations require healthy/ready status and a ready device. Both section
+  controls remain present with no eligible hardware. An expanded Instruments section
+  distinguishes a verified empty inventory from unavailable inventory. Failed inventory
+  reads hide unverified instrument destinations while retaining open tabs; a successful
+  authoritative inventory restores eligible entries. Camera and Serial presence
   refreshes automatically in Core; browser polling reads the reported inventory.
+- Each authenticated session opens About alone with Instruments, System and nested
+  groups collapsed. Disclosure is session-local to App, shared across rail and drawer;
+  toggling it does not change tabs. Refresh preserves tabs and disclosure choices;
+  sign-out, ended session and a new sign-in reset them. System Inventory presents
+  backend status and independently resolved integration/device inventories with Refresh.
 - Instrument submission retries preserve a command key until a response arrives;
   history reattaches by transaction ID and polling never submits work.
 - The server authorizes every action even when UI controls are hidden or disabled.
@@ -307,8 +314,13 @@ runtime status.
   46-pixel row, with no second tab strip and no page title above the workspace.
 - `REQ-UX-f300b346` - activates, closes and keyboard-navigates the open page
   tabs, falling back to the nearest remaining neighbour.
-- `REQ-UX-30821068` - splits the navigation into the working entries and the
-  bottom-anchored Plugins, Network, Authentication, Activity, About cluster.
+- `REQ-UX-30821068` - groups eligible instrument routes and ordered, permission-filtered
+  System destinations under two section controls.
+- `REQ-UX-2bc3a464`, `REQ-UX-eb84f037`, `REQ-UX-71cbafec` - open About alone
+  at session entry, share collapsed keyboard-operable disclosure across layouts and
+  preserve in-session disclosure and tabs on inventory refresh.
+- `REQ-UX-57d10c15` - explains verified empty versus unavailable instrument inventory.
+- `REQ-UX-8fa0c15e` - presents status and inventories with Refresh in System Inventory.
 - `REQ-UX-b718864e` - expands Network into four focused, separately tabbed
   destinations and keeps the group usable in the rail and drawer.
 - `REQ-UX-b555166c` - combines the decision summary and adapter configuration on
@@ -344,12 +356,13 @@ runtime status.
 | Identity/token forms | authentication/ and AdministrationForms.tsx | AuthenticationPage.test.tsx; authentication.spec.ts |
 | Appliance password policy | authentication/PasswordPolicyPanel.tsx; `.admin-policy*` in shell.css; `getPasswordPolicy`/`setPasswordPolicy` in api/client.ts | AuthenticationPage.test.tsx |
 | Camera routes, administration and working views | shell/pages.ts, SideNav.tsx, AppShell.tsx; pages/PluginsPage.tsx and CameraSection.tsx | pages.test.ts; SideNav.test.tsx; PluginsPage.test.tsx |
+| Session entry, navigation disclosure, Inventory and refresh | App.tsx; shell/pages.ts, SideNav.tsx, AppShell.tsx; pages/BenchPage.tsx | App.test.tsx; shell/pages.test.ts, SideNav.test.tsx, shell.test.tsx; e2e/shell.spec.ts, bench-core.spec.ts |
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    app["App: credential, identity and connection state"]
+    app["App: session, workspace tabs, inventory cache and disclosure"]
     signin["SignInScreen: product version, password sign-in and visibility"]
     shell["AppShell: one grid, four cells"]
     notifications["NotificationProvider: scoped stack and fullscreen host"]
@@ -357,8 +370,11 @@ flowchart LR
     shell --> notifications
     feedback --> notifications
     toprow["TopRow: tabs, network, SIM, appearance, language, account"]
-    sidenav["SideNav: recursive working and System destination tree"]
-    pages["Bench, Camera administration and physical views, Network, Activity, Authentication, About"]
+    registry["pages.ts: role and readiness-filtered routes"]
+    sidenav["SideNav: Instruments/System disclosure and nested routes"]
+    drawer["NavDrawer: shared SideNav disclosure"]
+    inventory["BenchPage: System Inventory, resource states and Refresh"]
+    pages["Camera and Serial views, Network, Activity, Authentication, About"]
     tokens["styles/tokens.css: one semantic palette, three themes"]
     catalogue["i18n: en, de, ro over one key set"]
     prefs["preferences/store: theme, language, navigation width and serial display/port choices"]
@@ -377,7 +393,15 @@ flowchart LR
     app --> signin
     app --> shell
     shell --> toprow
+    app --> sidenav
+    app --> drawer
+    shell --> registry
+    registry --> sidenav
+    registry --> drawer
     shell --> sidenav
+    shell --> drawer
+    shell --> inventory
+    inventory --> app
     shell --> pages
     pages --> instruments["PluginsPage: package catalog, Camera System and working views, legacy Sigrok"]
     instruments --> client
@@ -420,8 +444,8 @@ flowchart LR
 ```
 
 `AppShell` binds the Network read/change callbacks and maps four page descriptors
-to one view-discriminated `NetworkPage`. `SideNav` renders Network as an expanded
-group by default, with Overview, Device access, VPN profiles and Diagnostics
+to one view-discriminated `NetworkPage`. `SideNav` starts Network collapsed
+inside System, with Overview, Device access, VPN profiles and Diagnostics
 opening independent workspace tabs. Overview puts the decision summary first,
 then one shared `NetworkInterfacesTable` with management selectors, adapter
 observations, and Details/Actions. Secondary URL guidance is collapsed; the
@@ -453,7 +477,9 @@ unfinished operation replaces any older terminal notice, preserving a rollback
 failure until the backend reports verified recovery.
 
 `App` owns the whole conversation: which credential is in use, who it belongs
-to, and which page is open. Its shell is `restoring`, `signed-out`,
+to, which tabs are open and the session's navigation disclosure. It caches the
+last successful inventories to keep tabs addressable through transient read failures;
+`AppShell` filters unverified destinations from the visible navigation. Its shell is `restoring`, `signed-out`,
 `connecting`, `refused`, or `active`. Every page load starts in `restoring`,
 because the only way to learn whether somebody is signed in is to ask Bench Core
 who the browser's cookies belong to. The API adapters own wire parsing; pages receive typed values and callbacks.
@@ -516,13 +542,15 @@ visible.
 - `05_Software/frontend/src/components/pages/CameraSection.tsx` - physical
   camera controls, System configuration and bounded snapshot preview.
 - `05_Software/frontend/src/components/shell/pages.ts`, `SideNav.tsx` and
-  `AppShell.tsx` - authenticated Camera inventory routing and recursive
-  navigation.
+  `AppShell.tsx` - permission/readiness-filtered destinations, two-section
+  navigation, shared disclosure and System Inventory routing.
+- `05_Software/frontend/src/components/shell/{pages.test.ts,SideNav.test.tsx,shell.test.tsx}` -
+  page eligibility, keyboard and translated disclosure, layouts, roles and tabs.
 - `05_Software/frontend/src/config/environment.ts` - environment reader,
   `GuiConfigurationError`, and the configured-client factory.
-- `05_Software/frontend/src/App.tsx` - session restoration, the held credential,
-  the concurrent three-resource request, and the unauthenticated and
-  not-yet-connected screens.
+- `05_Software/frontend/src/App.tsx` - session restoration, tabs, disclosure,
+  last successful inventories, the concurrent three-resource request, and the
+  unauthenticated and not-yet-connected screens.
 - `05_Software/frontend/src/styles/tokens.css` - the one semantic palette,
   defined for light, for dark, and for the system theme's dark branch.
 - `05_Software/frontend/src/styles/shell.css` - the shell grid and every
@@ -576,8 +604,8 @@ visible.
   built assets and runtime configuration checks, each failing with the stage
   action that supplies it.
 - `05_Software/frontend/e2e/bench-core.spec.ts` - the password-authenticated
-  appliance journey: status, empty fresh-appliance inventories, the unreachable
-  screen, and recovery.
+  appliance journey: About entry, System Inventory status, empty fresh-appliance
+  inventories, the unreachable screen, and recovery.
 - `05_Software/frontend/e2e/authentication.spec.ts` - the human browser journey
   against a real administrator the harness bootstraps through the real command
   line: password sign-in, identity creation, a role change, a token with its
@@ -635,16 +663,12 @@ English, German and Romanian share the instrument key set.
 The browser mock retains its pre-existing scope; exercise instruments against a
 real simulation-profile runner. Source paths above are relative to `05_Software/frontend/`.
 
-## Core navigation order without Settings
+## System navigation order
 
-`CORE_PAGES` in `shell/pages.ts` is the top-to-bottom order the lower cluster
-renders, because `SideNav` maps the array as it stands: Plugins, Network with
-its three `network:*` children, Authentication with API tokens, Activity, About.
-The `settings` descriptor, its `AppShell` placeholder branch and the obsolete
-placeholder catalogue entries are gone, so no Settings destination exists to
-open; `Icon`'s `settings` glyph remains available in the glyph catalogue. The Plugins
-entry remains available through the managed instrument workspace added by
-TASK-f1f2d836.
+`CORE_PAGES` in `shell/pages.ts` orders System destinations: Plugins, Network
+with Overview and three focused children, Authentication with API tokens,
+Activity, About and Inventory. `SideNav` renders this order when System is
+expanded. Plugins opens the managed instrument workspace.
 
 ## Activity page furniture
 

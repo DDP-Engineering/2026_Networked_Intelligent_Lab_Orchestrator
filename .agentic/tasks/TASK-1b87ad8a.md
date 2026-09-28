@@ -9,7 +9,7 @@ SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
 
 # TASK-1b87ad8a - Simplify Web UI navigation to collapsed Instruments and System sections; start on About
 
-stage: validate
+stage: build
 type: feature
 path: full
 interaction: autopilot
@@ -21,15 +21,19 @@ opened: 2026-09-28
 
 ## Done checklist (current stage)
 
-- [ ] diff reviewed against scope, requirements, design, error paths,
-      portability, security, and unrequested work
-- [ ] knowledge pages updated for every materially changed component
-- [ ] requirements re-read: status, prose, verification, paths, and links true
-- [ ] manual or inspection verification completed and recorded where applicable
-- [ ] final evolution report refreshed after the last candidate edit
-- [ ] final `check --strict --run` result recorded truthfully after all edits
-- [ ] remaining warnings and pre-existing failures explained
-- [ ] `stage: deliver`
+- [ ] each automated behavior increment has a pre-implementation red record
+      with requirement IDs, exact selector or command, non-zero exit, and
+      expected failure reason, plus one final focused green result; each manual
+      increment has a consolidated post-implementation observation
+- [ ] repository anchor recorded after red and evolution reviewed after implementation
+- [ ] implementation makes those tests pass
+- [ ] focused project tests green, with their actual scope recorded
+- [ ] `affected_paths` and `linked_tests` updated on every requirement
+- [ ] `status = "active"` on every requirement this task delivers — or
+      `"retired"`, with the reason in its prose, where this task
+      deliberately removed the behavior
+- [ ] `check` clean, or each remaining warning explained in the log
+- [ ] `stage: validate`
 
 ## Frame
 
@@ -137,27 +141,29 @@ Expected files (frontend prefix `05_Software/frontend/`): `src/App.tsx`, `src/Ap
 - 2026-09-28 build green REQ-UX-71cbafec, REQ-UX-74d4256e, REQ-UX-2bc3a464: focused selectors for plugin-backed refresh and About key exit=0; six-file `npm exec vitest -- run src/App.test.tsx src/components/shell/shell.test.tsx src/components/shell/SideNav.test.tsx src/components/shell/pages.test.ts src/components/shell/serialNavigation.test.ts src/layout.test.ts --reporter=dot` exit=0 (127 tests); `npm run lint`, `npm run format:check`, `npm run build` exit=0; Playwright test listing exit=0 (37 cases in four files), browser runtime awaits validate appliance-stage proof. Frontend build retains existing bundle-size advisory.
 - 2026-09-28 build: all 13 linked requirements active with updated tests for changed behaviors; after last red anchor, evolution lists three modified files (App test, AppShell, shell test), all expected. Git diff name review also covers earlier anchored navigation, browser tests, catalogues, docs, changelog and requirement files; no unexpected ticket candidate. Advisory check: zero errors, seven unrelated warnings (stale data path, tracked sidecars, three other tasks' deliver checklists, two uncovered integration runners) and four unrelated manual notes; none accepted as candidate limitation. No manual verification method declared on linked requirements. Advanced to validate for semantic review, knowledge reconciliation and full browser/strict proof.
 
+- 2026-09-28 validate review round 1: specification compliance approved against all 13 linked active requirements and design; implementation quality changes_required. Browser `e2e/shell.spec.ts` serial journey opens Network's group root (Overview tab) but then clicks the hidden Overview child in the following test without expanding the Network disclosure; nested groups now start closed. Return to build to fix only this browser oracle and rerun focused proof. GUI knowledge reconciled to candidate; no manual/inspection method declared on linked requirements. Full strict attempt exit 1: `test` failed in three unrelated temporary Git-fixture tests (`test_build_environment.py`) because conductor exports `GIT_DIR`, `GIT_WORK_TREE`, `GIT_COMMON_DIR` pointing at this checkout; fixture `git add`/`git commit` target the wrong repository. `lint` passed. No candidate test failure observed in this gate; final strict proof remains owed, with Git environment isolated for temporary fixture repos. Evolution refreshed since final build anchor: three expected App/AppShell/test paths; full merge-base diff includes unrelated executable-mode changes from other work, excluded from ticket scope.
+
 ## Rulings
 
 
 ## Handoff
 
-current: validate
+current: build
 status: ready
-next: Review complete candidate against requirements and design, reconcile GUI knowledge, then run final full strict proof.
-must_read: .agentic/steps/5_validate.md; .agentic/tasks/TASK-1b87ad8a.md; .agentic/knowledge/gui-foundation.md
-blockers: none
+next: Fix the recorded e2e/shell.spec.ts hidden Overview regression; rerun focused browser proof, then return to validate.
+must_read: .agentic/steps/4_build.md; .agentic/tasks/TASK-1b87ad8a.md; 05_Software/frontend/e2e/shell.spec.ts
+blockers: Strict gate needs Git fixture environment isolation; no publication until final proof.
 
 ## Stage report
 
-stage: build
-result: completed
-current: validate
-changed: Two collapsed sections, About startup/reset, System Inventory, session disclosure and refresh-safe tabs; updated browser/unit tests, three catalogues, UI docs, changelog and requirement links.
-evidence: Red records and anchors in Log; focused six-file frontend run exit=0 (127 tests), lint/format/build exit=0, browser suite list exit=0 (37 tests); evolution and advisory check (0 errors, 7 unrelated warnings, 4 notes).
-issues: Appliance browser runtime and full strict proof belong to validate; evolution reports only files since final red anchor, so validate must review full Git diff. Unrelated advisory findings listed in Log.
-next: Validate diff, reconcile GUI knowledge and run final full strict proof.
+stage: validate
+result: in_progress
+current: build
+changed: Reconciled .agentic/knowledge/gui-foundation.md; no executable candidate change in this stage.
+evidence: Thirteen requirements/spec and candidate reviewed; round 1: spec approved, quality changes_required. Strict exit 1 (three unrelated Git-fixture errors; lint passed); evolution refreshed.
+issues: e2e/shell.spec.ts clicks hidden Overview after opening Network root; Git environment breaks temporary fixture tests. Browser and final strict proof remain owed.
+next: Build fixes recorded browser oracle, then validate reviews again and runs isolated final full gate.
 needs_user: no
-spec_compliance:
-implementation_quality:
-review_round:
+spec_compliance: approved
+implementation_quality: changes_required
+review_round: 1
