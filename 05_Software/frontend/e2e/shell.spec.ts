@@ -150,10 +150,13 @@ test('reports the appliance network state the backend actually served', async ()
   await expect(page.getByRole('region', { name: 'Overview' })).toContainText(
     'eth0 · 192.0.2.2/24',
   );
-  await page
-    .getByRole('navigation')
-    .getByRole('button', { name: 'Overview', exact: true })
-    .click();
+  // Opening the Network workspace does not disclose its child navigation.
+  const navigation = page.getByRole('navigation');
+  await expect(
+    navigation.getByRole('button', { name: 'Expand Network' }),
+  ).toHaveAttribute('aria-expanded', 'false');
+  await navigation.getByRole('button', { name: 'Expand Network' }).click();
+  await navigation.getByRole('button', { name: 'Overview', exact: true }).click();
 
   // Bench Core serves the adapters NetworkManager detected, so the page reports
   // what it was given rather than saying nothing is available.

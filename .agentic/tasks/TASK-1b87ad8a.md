@@ -9,7 +9,7 @@ SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
 
 # TASK-1b87ad8a - Simplify Web UI navigation to collapsed Instruments and System sections; start on About
 
-stage: build
+stage: validate
 type: feature
 path: full
 interaction: autopilot
@@ -21,19 +21,15 @@ opened: 2026-09-28
 
 ## Done checklist (current stage)
 
-- [ ] each automated behavior increment has a pre-implementation red record
-      with requirement IDs, exact selector or command, non-zero exit, and
-      expected failure reason, plus one final focused green result; each manual
-      increment has a consolidated post-implementation observation
-- [ ] repository anchor recorded after red and evolution reviewed after implementation
-- [ ] implementation makes those tests pass
-- [ ] focused project tests green, with their actual scope recorded
-- [ ] `affected_paths` and `linked_tests` updated on every requirement
-- [ ] `status = "active"` on every requirement this task delivers — or
-      `"retired"`, with the reason in its prose, where this task
-      deliberately removed the behavior
-- [ ] `check` clean, or each remaining warning explained in the log
-- [ ] `stage: validate`
+- [ ] diff reviewed against scope, requirements, design, error paths,
+      portability, security, and unrequested work
+- [ ] knowledge pages updated for every materially changed component
+- [ ] requirements re-read: status, prose, verification, paths, and links true
+- [ ] manual or inspection verification completed and recorded where applicable
+- [ ] final evolution report refreshed after the last candidate edit
+- [ ] final `check --strict --run` result recorded truthfully after all edits
+- [ ] remaining warnings and pre-existing failures explained
+- [ ] `stage: deliver`
 
 ## Frame
 
@@ -143,27 +139,29 @@ Expected files (frontend prefix `05_Software/frontend/`): `src/App.tsx`, `src/Ap
 
 - 2026-09-28 validate review round 1: specification compliance approved against all 13 linked active requirements and design; implementation quality changes_required. Browser `e2e/shell.spec.ts` serial journey opens Network's group root (Overview tab) but then clicks the hidden Overview child in the following test without expanding the Network disclosure; nested groups now start closed. Return to build to fix only this browser oracle and rerun focused proof. GUI knowledge reconciled to candidate; no manual/inspection method declared on linked requirements. Full strict attempt exit 1: `test` failed in three unrelated temporary Git-fixture tests (`test_build_environment.py`) because conductor exports `GIT_DIR`, `GIT_WORK_TREE`, `GIT_COMMON_DIR` pointing at this checkout; fixture `git add`/`git commit` target the wrong repository. `lint` passed. No candidate test failure observed in this gate; final strict proof remains owed, with Git environment isolated for temporary fixture repos. Evolution refreshed since final build anchor: three expected App/AppShell/test paths; full merge-base diff includes unrelated executable-mode changes from other work, excluded from ticket scope.
 
+- 2026-09-28 build review fix: Corrected only the recorded hidden Overview browser oracle: assert Network remains collapsed after selecting its root, then disclose the group before clicking Overview. Prior build red/anchor and requirement links remain applicable; evolution refreshed (four expected modified paths). Focused `npm exec vitest -- run src/components/shell/shell.test.tsx src/components/shell/SideNav.test.tsx --reporter=dot` exit=0 (42 tests); `npm exec playwright -- test --list e2e/shell.spec.ts` exit=0 (7 discovered, not executed); `npm run format:check` and `npm run lint` exit=0. Appliance prerequisite check exit=2: no Docker/Podman, so focused browser execution and final browser proof remain owed. Deviation accepted for this stage only: component coverage/listing cannot prove the corrected browser journey. Advisory check zero errors, seven unrelated warnings (stale data path, tracked sidecars, three other-task deliver/scope warnings and another task's scope drift), four unrelated manual notes. Advance to validate for fresh round-2 verdicts and final proof; no prior verdict carries over.
+
 ## Rulings
 
 
 ## Handoff
 
-current: build
+current: validate
 status: ready
-next: Fix the recorded e2e/shell.spec.ts hidden Overview regression; rerun focused browser proof, then return to validate.
-must_read: .agentic/steps/4_build.md; .agentic/tasks/TASK-1b87ad8a.md; 05_Software/frontend/e2e/shell.spec.ts
-blockers: Strict gate needs Git fixture environment isolation; no publication until final proof.
+next: Review corrected browser oracle in round 2 and run isolated final strict proof; obtain appliance browser execution when engine is available.
+must_read: .agentic/steps/5_validate.md; .agentic/tasks/TASK-1b87ad8a.md; 05_Software/frontend/e2e/shell.spec.ts
+blockers: Appliance browser stage lacks Docker/Podman; strict gate needs temporary Git fixture environment isolation. No publication until final proof.
 
 ## Stage report
 
-stage: validate
-result: in_progress
-current: build
-changed: Reconciled .agentic/knowledge/gui-foundation.md; no executable candidate change in this stage.
-evidence: Thirteen requirements/spec and candidate reviewed; round 1: spec approved, quality changes_required. Strict exit 1 (three unrelated Git-fixture errors; lint passed); evolution refreshed.
-issues: e2e/shell.spec.ts clicks hidden Overview after opening Network root; Git environment breaks temporary fixture tests. Browser and final strict proof remain owed.
-next: Build fixes recorded browser oracle, then validate reviews again and runs isolated final full gate.
+stage: build
+result: completed
+current: validate
+changed: Fixed hidden Overview e2e oracle in 05_Software/frontend/e2e/shell.spec.ts only.
+evidence: Focused shell/SideNav component tests 42/42, frontend format and lint exit 0; Playwright lists 7 tests; evolution 4 expected modified paths; check zero errors.
+issues: Appliance browser execution unavailable (no Docker/Podman, prerequisite exit 2); strict full gate still requires Git environment isolation. Seven unrelated check warnings remain.
+next: Validate round 2 review and final strict proof; browser stage needs a container engine.
 needs_user: no
-spec_compliance: approved
-implementation_quality: changes_required
+spec_compliance:
+implementation_quality:
 review_round: 1
