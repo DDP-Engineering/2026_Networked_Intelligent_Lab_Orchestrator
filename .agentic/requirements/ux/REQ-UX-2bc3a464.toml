@@ -19,7 +19,7 @@ When an authenticated browser session is restored or a person signs in after ano
 
 verification = "Component tests restore an authenticated Administrator session and sign in as a Viewer after an Administrator has opened extra tabs and expanded sections; assert About is the only tab and both section controls report collapsed in each session. A browser reload with a valid session yields the same starting state, without expanding System for About."
 
-affected_paths = ["05_Software/frontend/src/App.tsx", "05_Software/frontend/src/components/shell/useWorkspace.ts", "05_Software/frontend/src/components/shell/pages.ts", "05_Software/frontend/src/components/shell/AppShell.tsx", "05_Software/frontend/src/components/shell/SideNav.tsx", "05_Software/frontend/src/App.test.tsx", "05_Software/frontend/src/components/shell/shell.test.tsx"]
+affected_paths = ["05_Software/frontend/src/App.tsx", "05_Software/frontend/src/components/shell/useWorkspace.ts", "05_Software/frontend/src/components/shell/pages.ts", "05_Software/frontend/src/components/shell/AppShell.tsx", "05_Software/frontend/src/components/shell/SideNav.tsx", "05_Software/frontend/src/App.test.tsx", "05_Software/frontend/src/components/shell/shell.test.tsx", "05_Software/frontend/e2e/authentication.spec.ts", "05_Software/frontend/e2e/bench-core.spec.ts"]
 
 linked_tests = []
 

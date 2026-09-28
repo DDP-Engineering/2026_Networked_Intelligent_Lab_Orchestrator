@@ -9,7 +9,7 @@ SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
 
 # TASK-1b87ad8a - Simplify Web UI navigation to collapsed Instruments and System sections; start on About
 
-stage: design
+stage: build
 type: feature
 path: full
 interaction: autopilot
@@ -21,16 +21,19 @@ opened: 2026-09-28
 
 ## Done checklist (current stage)
 
-- [ ] design note written, or its absence justified in one line
-- [ ] applicable component, interface, state, failure, security, concurrency,
-      compatibility, migration, observability, and operational effects covered
-- [ ] each decision cites a requirement ID or named technical constraint
-- [ ] every requirement maps to a decision and test seam, or no design impact
-- [ ] meaningful alternatives, risks, and open decisions recorded
-- [ ] `affected_paths` match the expected file list
-- [ ] proposed architecture is in the task when structure changes; current
-      component knowledge remains true until validate
-- [ ] `stage: build`
+- [ ] each automated behavior increment has a pre-implementation red record
+      with requirement IDs, exact selector or command, non-zero exit, and
+      expected failure reason, plus one final focused green result; each manual
+      increment has a consolidated post-implementation observation
+- [ ] repository anchor recorded after red and evolution reviewed after implementation
+- [ ] implementation makes those tests pass
+- [ ] focused project tests green, with their actual scope recorded
+- [ ] `affected_paths` and `linked_tests` updated on every requirement
+- [ ] `status = "active"` on every requirement this task delivers — or
+      `"retired"`, with the reason in its prose, where this task
+      deliberately removed the behavior
+- [ ] `check` clean, or each remaining warning explained in the log
+- [ ] `stage: validate`
 
 ## Frame
 
@@ -68,51 +71,78 @@ Behavior inventory (STATED unless noted):
 
 | Frame outcome | Atomic behavior | Requirement | Positive case | Boundary or failure | Verification | Design decision or no impact |
 | --- | --- | --- | --- | --- | --- | --- |
-| Two sections, roles | Section taxonomy/order and permission filtering | REQ-UX-30821068 (revised) | Authorized System routes in order | No Bench entry or unauthorized routes | Role-specific shell and browser assertions | Inventory follows About in System; retain former core relative order |
-| About landing/reset | Session initial tab and disclosure reset (inseparable session-entry presentation) | REQ-UX-2bc3a464 (new) | Restored and new sign-in show About only | Previous person's expansion not inherited; About does not open System | Restore, sign-out/sign-in and reload tests | About confirmed per proposed scope |
-| Hierarchy | Section and nested toggle interactions across layouts, keyboard and language (one disclosure control contract) | REQ-UX-eb84f037 (new; spec) | Open authorized nested page | Closed section not forced open by active tab | Keyboard, aria, language and layout tests | State transitions in spec |
-| Refresh | Preserve in-session tabs and expansion | REQ-UX-71cbafec (new) | Valid inventory changes eligible children | Failed refresh does not erase tab/choices | Shell refresh tests | State must outlive shell remount |
-| Empty instruments | Honest zero vs unknown section state | REQ-UX-57d10c15 (new) | Zero result explicitly empty | Unreadable inventory distinct; sections stay | Empty/failure language/layout tests | Unknown resource may coexist with zero eligible hardware |
-| Inventory status | Single-screen reported facts and refresh | REQ-UX-8fa0c15e (revised) | System Inventory screen | Missing resource | Stub resource and Refresh test | Keep BenchPage presentation via renamed System route; do not retire information |
-| Inventory empty | Explicit valid empty inventory and usable refresh | REQ-UX-afb79ae0 (reused) | Valid zero | No false failure | Existing empty component test plus System route | No semantic change |
-| Inventory failure | Resource-specific partial failure | REQ-UX-8169ea1d (reused) | Good resources remain | Malformed integration/device read | Existing resource failure test plus System route | No semantic change |
-| Instrument filtering | Readiness filtering and empty child groups | REQ-UX-74d4256e (reused) | Ready integrations/devices | Failed read hides children, not section | Route/shell tests | Section presence distinct from eligible child visibility |
-| Network nesting | Four focused Network destinations start closed | REQ-UX-b718864e (revised) | Expand Network, open child | Collapsing keeps tab | Existing shell/drawer tests updated | Other nested groups follow shared disclosure contract |
-| Tabs | Normal tab operation | REQ-UX-f300b346 (reused) | Activate/close | Last tab closed | Existing tab tests | No semantic change |
-| Viewports | Compact/drawer navigation | REQ-UX-2687f591 (reused) | Same routes across layouts | Drawer Escape/focus | Existing shell/browser tests updated | No semantic change |
-| Translations | Full catalogues | REQ-UX-adbe5465 (reused) | en/de/ro text | Identifiers unchanged | Catalogue/language tests | No semantic change |
+| Two sections, roles | Section taxonomy/order and permission filtering | REQ-UX-30821068 (revised) | Authorized System routes in order | No Bench entry or unauthorized routes | Role-specific shell and browser assertions | `pages.ts` keeps former core relative order, appends Inventory; SideNav partitions roots |
+| About landing/reset | Session initial tab and disclosure reset (inseparable session-entry presentation) | REQ-UX-2bc3a464 (new) | Restored and new sign-in show About only | Previous person's expansion not inherited; About does not open System | App restore, sign-out/sign-in, reload tests | `DEFAULT_PAGE=about`; App owns disclosure and workspace resets |
+| Hierarchy | Section and nested toggle interactions across layouts, keyboard and language (one disclosure control contract) | REQ-UX-eb84f037 (new; spec) | Open authorized nested page | Closed section not forced open by active tab | SideNav keyboard/aria, shell and browser layouts | Explicit App-owned section/group toggles; no active-page effect |
+| Refresh | Preserve in-session tabs and expansion | REQ-UX-71cbafec (new) | Valid inventory changes eligible children | Failed refresh does not erase tab/choices | App/shell refresh tests | App retains disclosure and workspace across shell remount |
+| Empty instruments | Honest zero vs unknown section state | REQ-UX-57d10c15 (new) | Zero result explicitly empty | Unreadable inventory distinct; sections stay | SideNav/shell empty and failure tests | Explicit inventory reliability input selects zero/unavailable copy |
+| Inventory status | Single-screen reported facts and refresh | REQ-UX-8fa0c15e (revised) | System Inventory screen | Missing resource | App Inventory and Refresh tests | Route `inventory` to retained BenchPage presentation, relabel screen |
+| Inventory empty | Explicit valid empty inventory and usable refresh | REQ-UX-afb79ae0 (reused) | Valid zero | No false failure | App Inventory empty test | Retain per-resource empty presentation |
+| Inventory failure | Resource-specific partial failure | REQ-UX-8169ea1d (reused) | Good resources remain | Malformed integration/device read | App Inventory partial failure tests | Retain independent resource rendering |
+| Instrument filtering | Readiness filtering and empty child groups | REQ-UX-74d4256e (reused) | Ready integrations/devices | Failed read hides children, not section | pages.test.ts, serialNavigation.test.ts, shell tests | Preserve buildPages eligibility; filter displayed children only |
+| Network nesting | Four focused Network destinations start closed | REQ-UX-b718864e (revised) | Expand Network, open child | Collapsing keeps tab | shell, layout and field-display tests | Nested groups default false in shared disclosure map |
+| Tabs | Normal tab operation | REQ-UX-f300b346 (reused) | Activate/close | Last tab closed | shell tab tests | No design impact beyond initial page constant |
+| Viewports | Compact/drawer navigation | REQ-UX-2687f591 (reused) | Same routes across layouts | Drawer Escape/focus | shell, layout and field-display tests | Same SideNav shared state through remount |
+| Translations | Full catalogues | REQ-UX-adbe5465 (reused) | en/de/ro text | Identifiers unchanged | shell language tests | Extend existing message key set |
 | Service boundary | Core APIs and execution continue | No frontend requirement: existing service contracts unaffected | Calls unchanged | No service modification | Diff review and existing service tests | No impact |
 
 UNKNOWN: placement within System and exact display label of the inventory route are design-level choices; Inventory is the proposed label in the revised draft requirements. OBSERVED: BenchPage.tsx owns status/inventories/Refresh and pages.ts owns permission/readiness filtering; existing active UX requirements preserve empty and resource-specific failure displays. INFERRED: a dedicated System Inventory route preserves these contracts without opening it initially. No backend contract or new persistence is proposed.
 
 ## Design
 
+**Requirements coverage:** The coverage table above maps all 13 linked IDs to decisions and test seams; service execution remains untouched. STATED: About is the proposed entry and two sections must stay present. OBSERVED: `App.tsx` holds workspace across the connecting phase; `AppShell.tsx` and drawer mount `SideNav` anew, while `SideNav.tsx` currently owns and auto-expands nested state. INFERRED: disclosure must live at App scope, not in a rail instance. UNKNOWN: none requiring product approval; Inventory label follows the revised requirement.
+
+**Component responsibilities / contracts:** `pages.ts` retains permission/readiness eligibility and core order, removes the Bench descriptor, appends a fixed `inventory` System page, and sets `DEFAULT_PAGE` to `about` [REQ-UX-30821068, REQ-UX-2bc3a464, REQ-UX-74d4256e]. `AppShell` dispatches `inventory` to the existing `BenchPage` data view, now titled Inventory; status, integration/device details, independent failures, legitimate empties and Refresh remain as they are [REQ-UX-8fa0c15e, REQ-UX-afb79ae0, REQ-UX-8169ea1d]. No API, permission or backend change. `App` owns one volatile disclosure map keyed by stable section/group IDs alongside `useWorkspace`, supplies value/toggle/reset to `AppShell`/both SideNav mounts and resets both on session end/sign-out and successful new sign-in; restoration starts from initial defaults [REQ-UX-2bc3a464, REQ-UX-71cbafec]. The already mounted App survives an in-session `loadBench` refresh, so no persistence or migration is needed.
+
+**State / execution / recovery:** Missing disclosure keys mean false. Top-level keys `instruments` and `system` exist independent of filtered page children. Toggling sections/groups updates only disclosure, not tabs; collapsing retains nested choices. Selecting a visible page opens its tab; tabs switching never auto-expand a closed section. Remove the active-page ancestor effect; reachable nested destinations are already visible through deliberately expanded ancestors. For non-nav programmatic child opens, retain closed section state and expand only its nested ancestors if their parent section is already open [REQ-UX-eb84f037, REQ-UX-b718864e, REQ-UX-f300b346]. `SideNav` renders semantic buttons (`aria-expanded`, `aria-controls`) and conditionally mounted child lists with translated names in wide, compact and drawer; a drawer toggle does not dismiss it, page selection retains existing dismissal/focus return [REQ-UX-eb84f037, REQ-UX-2687f591, REQ-UX-adbe5465].
+
+**Partial failure / trust / ordering:** Always render both section controls, even with zero destinations. When expanded and empty, use a distinct localized unavailable state if an integration/device resource failed, the plugin inventory is not fresh, or core reachability is unverified; only claim no eligible instruments after successful reads. A failed refresh hides unverified instrument children without pruning existing workspace tabs: compute prunable IDs from authoritative successful inventories, temporarily include already-open instrument IDs when any required resource is unreadable or plugin data is stale; still prune newly unauthorized System IDs on role change. A successful authoritative refresh reapplies existing readiness pruning and repopulates eligible entries [REQ-UX-57d10c15, REQ-UX-74d4256e, REQ-UX-71cbafec]. Backend authorization remains authoritative; `buildPages` still filters role-scoped destinations; `inventory` has the same authenticated status/inventory access as the former Bench view [REQ-UX-30821068]. No concurrent writers besides React state updates; use functional updates to avoid lost rapid toggles [REQ-UX-eb84f037].
+
+**Test seams / operations:** Start red tests in `pages.test.ts` for the registry, `App.test.tsx` for restore/new sign-in and Inventory partial reads, `SideNav.test.tsx`/`shell.test.tsx` for disclosure, role, refresh and focus, and update `e2e/shell.spec.ts`, `e2e/bench-core.spec.ts`, `e2e/authentication.spec.ts`, `e2e/field-display.spec.ts` and `layout.test.ts` for real-browser startup/layout assumptions [linked IDs in coverage table]. Inspect visible nav and tab state; no logging or telemetry added. Update three catalogues, `shell.css`, frontend README and development/simulation flow; reconcile GUI knowledge during validation [REQ-UX-2687f591, REQ-UX-adbe5465].
+
+**Alternatives / risks / open decisions:** Keeping state in SideNav fails during AppShell/drawer remount; storing it in browser preferences leaks one user's choices into another session. Removing BenchPage entirely strands single-screen diagnostics, so retain its view behind Inventory. Risk: legacy tests rely on Bench as the startup tab; adjust oracles rather than weakening them. Risk: `usePruneClosedPages` may close previously open tabs when a successful inventory removes their destination; preserve the existing role/readiness rule while verifying failed refresh does not close them. No blocking decision or new data format.
+
+### Proposed architecture - TASK-1b87ad8a
+
+```mermaid
+flowchart LR
+    App[App: session, Workspace, volatile disclosure] --> Shell[AppShell: eligible pages, Inventory route]
+    Shell --> Pages[pages.ts: permission/readiness tree]
+    Shell --> Rail[SideNav: rail/compact buttons and lists]
+    Shell --> Drawer[NavDrawer: SideNav shared disclosure]
+    Shell --> Inventory[BenchPage: System Inventory facts and Refresh]
+    Inventory --> App
+```
+
+Expected files (frontend prefix `05_Software/frontend/`): `src/App.tsx`, `src/App.test.tsx`, `src/components/shell/{pages.ts,pages.test.ts,SideNav.tsx,SideNav.test.tsx,AppShell.tsx,useWorkspace.ts,shell.test.tsx,serialNavigation.test.ts}`, `src/components/pages/BenchPage.tsx`, `src/i18n/{en,de,ro}.ts`, `src/styles/shell.css`, `src/layout.test.ts`, `e2e/{shell,bench-core,authentication,field-display}.spec.ts`, `README.md`; `06_SoftwareDocu/Development_and_Simulation_Flow.md`, `.agentic/knowledge/gui-foundation.md`. `NavDrawer.tsx` and permission predicates should remain unchanged: shared SideNav and existing predicates suffice. Tests may reveal a smaller final list.
+
 
 ## Log
 
 - 2026-09-28 frame: Autopilot scope accepted as requested, including proposed About landing and retention of Bench-only information; full path because observable navigation and startup change. Existing inventory/navigation requirement conflicts require reconciliation in specify. No children; unrelated dirty toolchain files excluded.
 - 2026-09-28 specify: Four new draft UX requirements, three revised active UX requirements, six reused active requirements, none retired; coverage and disclosure spec recorded. Check reports zero format errors; unrelated tracked sidecar/stage-zone and other-task warnings remain.
+- 2026-09-28 design: Session-owned disclosure, System Inventory route and resource-aware pruning plan recorded in ## Design; expected paths reconciled. Check: zero errors; 21 unrelated warnings, four notes.
 
 ## Rulings
 
 
 ## Handoff
 
-current: design
+current: build
 status: ready
-next: Design session-owned disclosure state and the System Inventory presentation route against the drafted requirements.
-must_read: .agentic/steps/3_design.md; .agentic/tasks/TASK-1b87ad8a.md; .agentic/specs/REQ-UX-eb84f037.md; .agentic/knowledge/gui-foundation.md
+next: Write and run a failing pages registry/initial-tab test before implementation, then anchor the candidate.
+must_read: .agentic/steps/4_build.md; .agentic/tasks/TASK-1b87ad8a.md; .agentic/specs/REQ-UX-eb84f037.md; .agentic/knowledge/gui-foundation.md
 blockers: none
 
 ## Stage report
 
-stage: specify
+stage: design
 result: completed
-current: design
-changed: Drafted four UX requirements and a disclosure-state spec; revised three active requirements and mapped six reused requirements to the Frame outcomes.
-evidence: Behavior inventory and coverage table audited against shell source and GUI/field knowledge; aegis check: errors=0, warnings=21, notes=4; no tests run in specify.
-issues: Inventory route placement/label is draft System Inventory proposal for design; check warnings concern unrelated working-tree toolchain edits, tracked sidecars and other tasks.
-next: Design expansion state ownership across remounts, System Inventory route and test seams.
+current: build
+changed: Recorded design and proposed architecture; mapped 13 requirements to test seams and updated affected paths for expected edits.
+evidence: Audited App, AppShell, SideNav, pages, BenchPage, workspace and drawer seams; aegis check: errors=0, warnings=21, notes=4; no tests run in design.
+issues: Existing readiness pruning on failed reads needs guarded IDs; unrelated check warnings cover toolchain edits, tracked sidecars and other tasks.
+next: Begin test-first build at page registry, then session-owned disclosure and Inventory route.
 needs_user: no
 spec_compliance:
 implementation_quality:

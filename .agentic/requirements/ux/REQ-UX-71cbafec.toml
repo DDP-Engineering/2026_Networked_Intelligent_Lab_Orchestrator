@@ -19,7 +19,7 @@ When the authenticated interface refreshes integration, device or plugin invento
 
 verification = "A shell test opens System and a nested group and a device tab, collapses Instruments, then refreshes both valid and failed inventory responses; assert expansion and open tabs remain unchanged while eligible menu destinations track each successful refresh and a failed read does not advertise unverified hardware."
 
-affected_paths = ["05_Software/frontend/src/App.tsx", "05_Software/frontend/src/components/shell/AppShell.tsx", "05_Software/frontend/src/components/shell/SideNav.tsx", "05_Software/frontend/src/components/shell/useWorkspace.ts", "05_Software/frontend/src/components/shell/shell.test.tsx"]
+affected_paths = ["05_Software/frontend/src/App.tsx", "05_Software/frontend/src/components/shell/AppShell.tsx", "05_Software/frontend/src/components/shell/SideNav.tsx", "05_Software/frontend/src/components/shell/useWorkspace.ts", "05_Software/frontend/src/components/shell/shell.test.tsx", "05_Software/frontend/src/components/shell/SideNav.test.tsx"]
 
 linked_tests = []
 

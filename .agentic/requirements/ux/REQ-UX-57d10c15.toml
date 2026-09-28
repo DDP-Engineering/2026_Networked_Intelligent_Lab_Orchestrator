@@ -19,7 +19,7 @@ When Instruments is expanded with no eligible destinations, the browser interfac
 
 verification = "Render the shell with valid empty inventories and again with a failed inventory read; expand Instruments in each of the three languages and check for distinct appropriate messages without a false claim of zero hardware; verify both section controls remain available in wide, compact and drawer layouts."
 
-affected_paths = ["05_Software/frontend/src/components/shell/SideNav.tsx", "05_Software/frontend/src/components/shell/AppShell.tsx", "05_Software/frontend/src/i18n/en.ts", "05_Software/frontend/src/i18n/de.ts", "05_Software/frontend/src/i18n/ro.ts", "05_Software/frontend/src/components/shell/SideNav.test.tsx", "05_Software/frontend/src/components/shell/shell.test.tsx"]
+affected_paths = ["05_Software/frontend/src/components/shell/SideNav.tsx", "05_Software/frontend/src/components/shell/AppShell.tsx", "05_Software/frontend/src/i18n/en.ts", "05_Software/frontend/src/i18n/de.ts", "05_Software/frontend/src/i18n/ro.ts", "05_Software/frontend/src/components/shell/SideNav.test.tsx", "05_Software/frontend/src/components/shell/shell.test.tsx", "05_Software/frontend/src/App.tsx"]
 
 linked_tests = []
 
