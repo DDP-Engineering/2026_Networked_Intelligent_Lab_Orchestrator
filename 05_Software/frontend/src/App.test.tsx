@@ -160,6 +160,8 @@ function stubClient(overrides: Partial<BenchCoreClient> = {}): BenchCoreClient {
         requireSpecial: false,
       }),
     setPasswordPolicy: (_credential, policy) => Promise.resolve(policy),
+    getOperatingSettings: () => Promise.reject(new Error('not part of this fixture')),
+    setOperatingSettings: () => Promise.reject(new Error('not part of this fixture')),
     getStatus: () => Promise.resolve(healthyStatus),
     getIntegrations: () => Promise.resolve(readyIntegrations),
     getDevices: () => Promise.resolve(readyDevices),

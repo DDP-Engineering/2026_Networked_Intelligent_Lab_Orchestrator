@@ -8,6 +8,8 @@ import type { BenchCoreSession } from '../../api/contract';
 import type { InstrumentDevice, InstrumentPlugin } from '../../api/bench';
 import { useTranslate } from '../../i18n/languages';
 import { MessageBanner } from '../MessageBanner';
+import { OperatingSettingsSection } from './OperatingSettingsPage';
+import { HelpPopover } from '../help/HelpPopover';
 
 interface Props {
   pluginId?: 'camera' | 'serial';
@@ -47,6 +49,7 @@ function CameraPluginConfiguration({
   client,
   credential,
   pluginId = 'camera',
+  session,
   onSessionEnded,
   onPluginsChanged,
   onOpenActivity,
@@ -61,6 +64,15 @@ function CameraPluginConfiguration({
   const [busy, setBusy] = useState(false);
   const [modeDraft, setModeDraft] = useState<string>();
   const [feedback, setFeedback] = useState<{ tone: 'info' | 'error'; text: string }>();
+  const readOperatingSettings = useCallback(
+    () => client.getOperatingSettings(credential),
+    [client, credential],
+  );
+  const saveOperatingSettings = useCallback(
+    (revision: number, settings: Parameters<typeof client.setOperatingSettings>[2]) =>
+      client.setOperatingSettings(credential, revision, settings),
+    [client, credential],
+  );
   const report = useCallback(
     (cause: unknown) => {
       if (cause instanceof BenchCoreError && cause.failure === 'unauthorized')
@@ -145,6 +157,9 @@ function CameraPluginConfiguration({
           >
             {t('camera.updatePlugin')}
           </button>
+          <HelpPopover name={t('camera.updatePlugin')}>
+            {t('platform.help.updatePlugin')}
+          </HelpPopover>
         </div>
       </header>
       <div className="page-body instrument-workspace">
@@ -183,9 +198,17 @@ function CameraPluginConfiguration({
             >
               {t('instrument.disable')}
             </button>
-            <label className="field camera-approval-policy">
-              <span>{t('instrument.policy')}</span>
+            <div className="field camera-approval-policy">
+              <span>
+                <label htmlFor={`${pluginId}-approval-policy`}>
+                  {t('instrument.policy')}
+                </label>
+                <HelpPopover name={t('instrument.policy')}>
+                  {t('platform.help.approvalPolicy')}
+                </HelpPopover>
+              </span>
               <select
+                id={`${pluginId}-approval-policy`}
                 value={modeDraft ?? plugin?.mode ?? 'ask'}
                 disabled={busy || !plugin?.installed}
                 onChange={(event) => {
@@ -203,7 +226,7 @@ function CameraPluginConfiguration({
                 <option value="ask">{t('instrument.ask')}</option>
                 <option value="auto">{t('instrument.auto')}</option>
               </select>
-            </label>
+            </div>
             <button
               type="button"
               disabled={busy || !plugin?.enabled}
@@ -216,6 +239,9 @@ function CameraPluginConfiguration({
             >
               {t('camera.discover')}
             </button>
+            <HelpPopover name={t('camera.discover')}>
+              {t('platform.help.discoverPlugin')}
+            </HelpPopover>
           </div>
           {feedback && (
             <MessageBanner tone={feedback.tone}>{feedback.text}</MessageBanner>
@@ -244,6 +270,13 @@ function CameraPluginConfiguration({
             />
           ))}
         </section>
+        {session.permissions.includes('platform.settings.manage') && (
+          <OperatingSettingsSection
+            scope={pluginId}
+            read={readOperatingSettings}
+            save={saveOperatingSettings}
+          />
+        )}
       </div>
     </div>
   );

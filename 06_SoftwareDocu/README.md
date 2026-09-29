@@ -13,6 +13,8 @@ phase reports and deployment snapshots remain in Git history and task journals.
   tools, inputs, permissions, results and Camera examples.
 - [Camera integration](Camera_Integration.md): physical-device management,
   live workspace, media storage and runner contracts.
+- [Nilo Settings](Operating_Settings.md): administrator capacity and
+  lifetime controls, API contract and parameter inventory.
 - [Development and Simulation Flow](Development_and_Simulation_Flow.md) - the
   approved Windows GUI plus WSL2 backend topology, simulation boundary, daily
   workflow, and verification levels used before Raspberry Pi deployment.

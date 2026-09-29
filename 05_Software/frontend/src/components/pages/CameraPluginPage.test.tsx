@@ -1,6 +1,10 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
-import { createBenchCoreClient, sessionCredential } from '../../api/client';
+import {
+  BenchCoreError,
+  createBenchCoreClient,
+  sessionCredential,
+} from '../../api/client';
 import type { InstrumentPlugin } from '../../api/bench';
 import type { BenchCoreSession } from '../../api/contract';
 import {
@@ -32,16 +36,46 @@ const camera: InstrumentPlugin = {
   error: '',
   digest: 'abc',
 };
+const operating = {
+  revision: 1,
+  settings: {
+    executing_jobs: 2,
+    outstanding_jobs: 32,
+    serial_connections: 4,
+    camera_streams: 2,
+    default_job_timeout_seconds: 60,
+    max_job_timeout_seconds: 300,
+    serial_lifetime_minutes: 60,
+    serial_idle_minutes: 1,
+    camera_lifetime_minutes: 55,
+  },
+  usage: {
+    executing_jobs: 0,
+    outstanding_jobs: 0,
+    serial_connections: 2,
+    camera_streams: 1,
+  },
+};
 afterEach(() => {
   restoreMatchMedia();
   vi.restoreAllMocks();
 });
 
-function setup(record = camera, actor = session) {
+function setup(
+  record = camera,
+  actor = session,
+  pluginId: 'camera' | 'serial' = 'camera',
+) {
   installColorScheme('light');
   let current = record;
   const client = {
     ...createBenchCoreClient({ baseUrl: '' }),
+    getOperatingSettings: vi.fn(async () => operating),
+    setOperatingSettings: vi.fn(async (_credential, revision, settings) => ({
+      ...operating,
+      revision: revision + 1,
+      settings,
+    })),
     listPlugins: vi.fn(async () => [current]),
     pluginAction: vi.fn(async (_credential, _id, action, mode) => {
       current = {
@@ -81,6 +115,7 @@ function setup(record = camera, actor = session) {
   const activity = vi.fn();
   renderInShell(
     <CameraPluginPage
+      pluginId={pluginId}
       client={client}
       credential={sessionCredential('csrf')}
       session={actor}
@@ -90,6 +125,65 @@ function setup(record = camera, actor = session) {
   );
   return { client, activity };
 }
+
+it('keeps camera settings on the Camera plugin page and preserves other fields when saving', async () => {
+  const { client } = setup(camera, {
+    ...session,
+    permissions: [...session.permissions, 'platform.settings.manage'],
+  });
+  expect(
+    await screen.findByRole('heading', { name: 'Camera settings' }),
+  ).toBeInTheDocument();
+  expect(screen.getByLabelText('Active camera streams')).toHaveValue(2);
+  expect(screen.getByLabelText('Camera session lifetime')).toHaveValue(55);
+  expect(screen.queryByLabelText('Active serial connections')).not.toBeInTheDocument();
+  expect(screen.getByText('1 of 2 in use')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Help for Approval policy' }));
+  expect(
+    screen.getByText(/Ask requires approval before each operation/),
+  ).toBeInTheDocument();
+  fireEvent.click(
+    screen.getByRole('button', { name: 'Help for Camera session lifetime' }),
+  );
+  expect(screen.getByText(/Maximum age of a new camera session/)).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('Active camera streams'), {
+    target: { value: '3' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Save settings' }));
+  await waitFor(() =>
+    expect(client.setOperatingSettings).toHaveBeenCalledWith(
+      sessionCredential('csrf'),
+      1,
+      { ...operating.settings, camera_streams: 3 },
+    ),
+  );
+});
+
+it('keeps serial settings on the Serial plugin page and retains edits after a conflict', async () => {
+  const { client } = setup(
+    { ...camera, id: 'serial', display_name: 'Serial' },
+    { ...session, permissions: [...session.permissions, 'platform.settings.manage'] },
+    'serial',
+  );
+  client.setOperatingSettings.mockRejectedValueOnce(
+    new BenchCoreError('rejected', 'conflict', 'operating_settings_conflict'),
+  );
+  expect(
+    await screen.findByRole('heading', { name: 'Serial settings' }),
+  ).toBeInTheDocument();
+  expect(screen.getByLabelText('Active serial connections')).toHaveValue(4);
+  expect(screen.getByLabelText('Serial connection lifetime')).toHaveValue(60);
+  expect(screen.getByLabelText('Serial idle disconnect')).toHaveValue(1);
+  expect(screen.queryByLabelText('Active camera streams')).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('Active serial connections'), {
+    target: { value: '5' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Save settings' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent(
+    'Settings changed in another session',
+  );
+  expect(screen.getByLabelText('Active serial connections')).toHaveValue(5);
+});
 
 it('enables with the selected approval policy and updates control states', async () => {
   const { client, activity } = setup();

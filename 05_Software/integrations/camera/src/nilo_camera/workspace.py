@@ -163,6 +163,14 @@ def compose(frame, settings: dict, device: dict, name: str, captured: datetime):
     return image
 
 
+def session_lifetime_seconds(parameters: dict) -> int:
+    """@brief Read the Core-owned bounded session lifetime."""
+    value = parameters.get("session_lifetime_seconds")
+    if type(value) is not int or not 60 <= value <= 14_400:
+        raise ValueError("invalid_parameters")
+    return value
+
+
 class Workspace:
     """@brief One physical stream, bounded latest frame, and at most one encoder."""
 
@@ -218,7 +226,7 @@ class Workspace:
         self.captured = ""
         self.error = ""
         self.last_access = time.monotonic()
-        self.expires = self.last_access + 55 * 60
+        self.expires = self.last_access + session_lifetime_seconds(parameters)
         self.recording = None
         self.revision = 1
         self.frame_revision = 0

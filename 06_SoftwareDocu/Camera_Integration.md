@@ -80,8 +80,9 @@ Each enabled camera has **RealTime View** and **Recordings**:
 Only modes within the 2,000,000-pixel processing bound and integer 1–30 FPS are
 offered. Preview is bounded to 960×720. Actual unique-frame throughput depends
 on the camera, resolution and effects; normal video maintains real elapsed time
-by duplicating frames when needed. Sessions expire after 55 minutes and idle
-previews stop after 30 seconds. At most two camera streams can be active.
+by duplicating frames when needed. Sessions use the configured lifetime (default
+55 minutes), and idle previews stop after 30 seconds. The configured stream
+capacity (default two) limits simultaneous cameras.
 The recording limit is shortened when the session has less time remaining.
 
 Administrator retention defaults are 100 snapshots and 2 GiB per camera, with

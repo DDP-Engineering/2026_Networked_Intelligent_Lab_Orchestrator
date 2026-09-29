@@ -261,12 +261,18 @@ selection would have stranded the board until somebody reached it physically.
 
 ### 2.8 Current NILO deployment
 
-The board runs NILO 0.11.0 with runtime state in `/var/lib/nilo`. `nilo.service`,
+The board runs NILO 0.12.0 with runtime state in `/var/lib/nilo`. `nilo.service`,
 `nilo-nethelper.service` and the independent recovery timer are active and
 enabled. The core service uses the helper-managed TLS identity and has no
 file-backed certificate or private-key argument. Its served certificate covers
 `nilo-n0hzmysj9v.local` and the provisioning-only `nilo.local`; the helper's
 private key remains root-owned and unreadable by the Core service account.
+
+The 2026-09-28 issue #25 update installed NILO 0.12.0 Core and GUI, including
+Nilo Settings and its audited View activity action. Certificate-verified HTTPS
+assets and the Core version match the build, and persistent settings were
+retained. See the [0.12.0 live-test record](../07_Delivery/NILO_0.12.0_RPi_Live_Test.md)
+for checksums and rollback.
 
 The 2026-09-27 live-test deployment installed NILO 0.11.0 Core, GUI and the
 USB to Serial plugin. Both connected serial adapters are configured and ready

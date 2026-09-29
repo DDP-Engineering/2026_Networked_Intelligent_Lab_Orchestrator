@@ -52,8 +52,8 @@ one of three fixed roles - Administrator, Operator or Viewer.
 - **USB serial terminals.** Managed USB ports use credential-bound connection
   approvals, bounded ASCII/hex RX/TX, supported modem controls and retained
   JSONL sessions with quotas and streaming exports across GUI, CLI and MCP.
-- **Instrument transactions.** Durable transaction identities, a bounded queue,
-  two executing workers with per-analyzer serialization, absolute deadlines,
+- **Instrument transactions.** Durable transaction identities, an administrator-
+  configured queue and finite-job worker capacity with per-analyzer serialization, absolute deadlines,
   ordered bounded replies, cancellation, and digest-verified retained artifacts.
 - **Appliance networking.** Adapter state and settings, Wi-Fi scan and join,
   managed WireGuard profiles and routed device networks, each through preview,
@@ -202,6 +202,8 @@ one of three fixed roles - Administrator, Operator or Viewer.
   limits, shared interfaces and bundle deployment.
 - `06_SoftwareDocu/Camera_Integration.md` - physical camera operation, bundle
   preparation and target evidence.
+- `06_SoftwareDocu/Operating_Settings.md` - appliance-wide capacity and lifetime
+  controls, API access and fixed-boundary inventory.
 - `07_Delivery/README.md` - packaging and deployment decisions.
 - `07_Delivery/NILO_CLI_and_Authentication.md` - command line, roles,
   permissions, sessions and tokens.

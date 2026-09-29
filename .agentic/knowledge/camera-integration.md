@@ -27,8 +27,9 @@ The package declares `discover_devices`, `snapshot`, `get_controls`,
 `set_controls`, `reset_controls`, `workspace` and Core-only `stream` through `nilo.integration/1`. Bench Core
 exposes managed-device configuration and revisioned actions to an Administrator.
 Bench work uses the shared job route, `nilo bench submit --plugin camera`, the
-Camera CLI commands and Camera MCP tools. The browser places appliance settings
-under **System > Plugins** and enabled physical-device work under **Instruments > Camera**.
+Camera CLI commands and Camera MCP tools. The browser places appliance settings,
+including stream capacity and session lifetime, under **System > Plugins > Camera**
+and enabled physical-device work under **Instruments > Camera**.
 
 Snapshots retain a verified JPEG or PNG artifact. Authorized readers receive
 bounded previews; a complete artifact is downloaded through its transaction.
@@ -38,8 +39,9 @@ or time-lapse. Settings retain hardware controls and advanced composition.
 Effects and capture-time overlays are embedded in every output. The runner validates requested formats and frame
 intervals against the observed device before retaining an image.
 
-Core supervises at most two streams, one controller per camera. Each session
-expires after 55 minutes; an idle preview closes after 30 seconds without a
+Core supervises the configured number of streams (default two), one controller
+per camera. Each session uses the configured lifetime (default 55 minutes); an
+idle preview closes after 30 seconds without a
 viewer. A recording continues after browser disconnect until its time/size limit
 or Stop. Settings remain fixed during recording. Mutations use revision-bound
 policy-approved Bench jobs; an owner or administrator can stop without a new
@@ -66,11 +68,14 @@ reservations. The library permits confirmed individual/selected deletion and exp
 - Source EXIF is not retained. Preview decoding and output dimensions are
   bounded; previews do not become separate evidence artifacts.
 
-## Requirements and verification
+## Key behaviors
 
 - `REQ-UX-4f9b8d21` and `REQ-UX-37d846a0` cover the installed Camera
   navigation and the boundary between appliance administration and physical
   work.
+- `REQ-FUNC-46dd5987`, `REQ-FUNC-5d897991`, and `REQ-REL-1d70d023`:
+  configured stream admission and new-session lifetime, with camera-local
+  control serialization that permits unrelated Core work during runner I/O.
 - Camera capability, managed-record, image, packaging and target-binding
   requirements remain draft while their release and physical acceptance is
   incomplete (`REQ-FUNC-0141b9d4`, `REQ-FUNC-a46dc9e4`, `REQ-DATA-8082c1dc`,
@@ -83,6 +88,9 @@ flowchart LR
     ui[Camera workspace and CLI] --> api[Bench HTTP API]
     mcp[Camera MCP tools] --> manager[Bench manager]
     api --> manager
+    manager --> gate[Per-camera control gate]
+    gate --> supervisor
+    manager --> settings[(Operating settings)]
     manager --> adapter[Camera adapter and managed devices]
     adapter --> supervisor[Process supervisor]
     supervisor --> runner[Python V4L2 runner]
@@ -90,7 +98,7 @@ flowchart LR
     manager --> store[(SQLite records and artifact store)]
 ```
 
-## Files and verification
+## Files
 
 - `05_Software/integrations/camera/` - manifest, runner, schemas, V4L2 capture,
   image processing and isolated package tests.

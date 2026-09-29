@@ -93,19 +93,24 @@ func (m *Manager) Submit(ctx context.Context, actor identity.Actor, input Submis
 	if err := require(actor, auth.PermissionBenchExecute); err != nil {
 		return Job{}, err
 	}
-	input, err := canonicalSubmission(input)
-	if err != nil {
-		return Job{}, err
-	}
-	canonical, _ := json.Marshal(input)
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.closed {
 		return Job{}, ErrUnavailable
 	}
+	if !keyPattern.MatchString(input.IdempotencyKey) {
+		return Job{}, ErrInvalid
+	}
 	existing, err := scanJob(m.db().QueryRowContext(ctx, `SELECT `+jobColumns+` FROM bench_jobs j JOIN sessions s ON s.id=j.session_id WHERE j.owner_id=? AND j.idempotency_key=?`, actor.User.ID, input.IdempotencyKey))
 	if err == nil {
+		// A retry retains the original normalized timeout even when the
+		// administrator has since changed the default or maximum.
+		retry, retryErr := canonicalSubmissionWithLimits(input, existing.Submission.TimeoutSeconds, 3600)
+		if retryErr != nil {
+			return Job{}, retryErr
+		}
 		previous, _ := json.Marshal(existing.Submission)
+		canonical, _ := json.Marshal(retry)
 		if !bytes.Equal(previous, canonical) {
 			return Job{}, ErrConflict
 		}
@@ -114,6 +119,11 @@ func (m *Manager) Submit(ctx context.Context, actor identity.Actor, input Submis
 	if !errors.Is(err, ErrNotFound) {
 		return Job{}, err
 	}
+	input, err = canonicalSubmissionWithLimits(input, m.settings.DefaultJobTimeoutSeconds, m.settings.MaxJobTimeoutSeconds)
+	if err != nil {
+		return Job{}, err
+	}
+	canonical, _ := json.Marshal(input)
 	p, err := m.loadPlugin(ctx, input.PluginID)
 	if err != nil {
 		return Job{}, err
@@ -125,7 +135,7 @@ func (m *Manager) Submit(ctx context.Context, actor identity.Actor, input Submis
 	if err = m.db().QueryRowContext(ctx, `SELECT count(*) FROM bench_jobs j JOIN sessions s ON s.id=j.session_id WHERE s.state IN ('pending_approval','queued','running')`).Scan(&count); err != nil {
 		return Job{}, err
 	}
-	if count >= QueueLimit {
+	if count >= m.settings.OutstandingJobs {
 		return Job{}, ErrQueueFull
 	}
 	adapter, err := adapterFor(input.PluginID)

@@ -158,3 +158,69 @@ At the user's request, removed 40 older NILO backup snapshots under
 `/var/backups/nilo-ready-instruments-20260927-195922`; older backup locations
 recorded above are historical and no longer available. Both services remained
 active after cleanup. Current application state and saved captures were retained.
+
+## Platform operating settings deployment - 2026-09-28
+
+Deployed issue #25 from the uncommitted `task/25-platform-operating-limits`
+working tree to the DDP Raspberry Pi 4 at `https://10.205.148.11:8443/`.
+The project version remains 0.11.0.
+
+- The candidate passed the AEGIS strict gate before deployment: full tests
+  (406.0s), lint (10.0s), and 0 errors. Built the Linux ARM64 Core and production
+  GUI with pinned repository tools. The Core SHA-256 is
+  `18f91240b856b7e93713dba4bfeade76130898011530e808ea0f4ca72769a4df`.
+- The 298-file transfer archive SHA-256 is
+  `33f00e99dc7c095aef354c33cd6ed32f6d69f30cf982cca91cb1fa3bcf1bcbdd`.
+  The Camera catalog was rebuilt from a verified base bundle; its installed
+  292-file index SHA-256 is
+  `ccd9aa93ad167224d5980dba6bc6471e143aea196549ce1b3386ee9e8071a96c`.
+  The installed Camera package upgrade reported ready.
+- The certificate-verified served JavaScript `assets/index-8KHtMGQf.js` matched
+  SHA-256 `8fab64f59d0d21d98075833afd46137f5303bd494eddeff46a43d2c99b6aa94c`.
+  The served CSS `assets/index-BuOjCF_x.css` matched SHA-256
+  `951f90bc78fbfaeaa4cb6bcfb84d2bd88d6f8f077db77100568995e922b5d0ab`;
+  the HTML referenced both.
+- The new settings API returned the nine defaults with zero current usage.
+  An authenticated live update raised `serial_connections` from 4 to 5 at
+  revision 2; a second update restored 4 at revision 3. Both changes have
+  consecutive `operating_settings.changed` audit events. Revision 3 and the
+  restored defaults survived a NILO restart. Both `nilo` and `nilo-nethelper`
+  are active. The temporary verification token was revoked, confirmed by HTTP
+  401, and its local and remote secret files were removed.
+- The predeployment Core, GUI, Camera catalog, and runtime state are backed up
+  at `/var/backups/nilo-issue25-20260928-183607/pre-deploy.tar.gz`, SHA-256
+  `2d5abf69f7845a1a791016db4f984c3072228bbbaa364df0118ac95672d410a6`.
+  The matching rollback script is staged at
+  `/var/tmp/nilo-issue25-nuNA6gLe/rollback.sh`.
+- No instrument command, serial payload, or camera capture was issued during
+  this deployment. Physical I/O acceptance remains for the live test. No Git
+  changes were staged, committed, or pushed.
+
+Implementation: [platform operating limits](../.agentic/tasks/TASK-95cf116e.md).
+
+## Nilo Settings GUI refresh - 2026-09-28
+
+Deployed the user-directed issue #25 browser revision to the same DDP Raspberry
+Pi. Nilo Settings now shows the four platform job controls in an editable table;
+Camera and Serial controls appear under their respective plugin administration
+pages with contextual help. The Core settings API, database and Camera package
+were retained.
+
+- Final AEGIS strict gate passed: full tests (441.3s), lint (9.4s), 0 errors.
+  The GUI transfer archive SHA-256 is
+  `25ab070e2a20292a8d218c2317259ada509df8e4ea32f7c87ccd5098a2e3b566`.
+- The certificate-verified served JavaScript `assets/index-ChpNCT5y.js` matched
+  SHA-256 `bbb3ce838c415fa11d23e2645a2ff7abfb67a8a2ef279ddae872c03d681c8b6b`.
+  The served CSS `assets/index-CmAWkln6.css` matched SHA-256
+  `e1a8e19d5b422741a6a8a1686d28fb7cf03de560d17c8671a81e850e8353b1bd`.
+  After restart, the served HTML referenced both assets.
+- The GUI directory swap retained a rollback copy under
+  `/var/backups/nilo-issue25-ui-20260928-195834`. The rollback script is
+  `/var/tmp/nilo-issue25-ui-CqzPO9oV/gui-rollback.sh`. Core cached the old HTML
+  index, so NILO was restarted to activate the new index. Preflight found zero
+  unfinished jobs, zero active serial connections and no active Camera/Serial
+  control sockets. Both `nilo` and `nilo-nethelper` are active after restart.
+- Core and installed Camera package hashes were unchanged. The settings row
+  remains at revision 3 with the default serial limit of four. No physical
+  instrument command or capture was issued, and no Git change was staged,
+  committed, or pushed.

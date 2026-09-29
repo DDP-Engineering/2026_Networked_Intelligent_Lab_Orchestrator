@@ -59,6 +59,8 @@ const (
 	// create identities should not be able to weaken the rule those identities
 	// are held to.
 	PermissionPasswordPolicyManage Permission = "password.policy.manage"
+	// PermissionPlatformSettingsManage reads and replaces appliance operating limits.
+	PermissionPlatformSettingsManage Permission = "platform.settings.manage"
 	// PermissionSystemPowerManage restarts or powers off the appliance from an
 	// interactive browser session. The HTTP boundary does not accept tokens for it.
 	PermissionSystemPowerManage Permission = "system.power.manage"
@@ -102,6 +104,7 @@ var rolePermissions = map[Role][]Permission{
 		PermissionNetworkManage,
 		PermissionNetworkRead,
 		PermissionPasswordPolicyManage,
+		PermissionPlatformSettingsManage,
 		PermissionStatusRead,
 		PermissionSystemPowerManage,
 		PermissionTokensManageAll,

@@ -44,23 +44,26 @@ type execution struct {
 
 // Manager serializes admission and lifecycle changes while scheduling independent jobs.
 type Manager struct {
-	options       Options
-	mu            sync.Mutex
-	active        map[string]execution
-	cancel        context.CancelFunc
-	wake          chan struct{}
-	done          chan struct{}
-	hardwareDone  chan struct{}
-	workers       sync.WaitGroup
-	artifacts     artifact.Store
-	closed        bool
-	cameras       map[string]*cameraSession
-	cameraWorkers sync.WaitGroup
-	serials       map[string]*serialSession
-	serialWorkers sync.WaitGroup
-	serialReads   map[string]int
-	cameraReads   map[string]int
-	cameraSpace   func(string) (int64, int64, error)
+	options          Options
+	mu               sync.Mutex
+	active           map[string]execution
+	cancel           context.CancelFunc
+	wake             chan struct{}
+	done             chan struct{}
+	hardwareDone     chan struct{}
+	workers          sync.WaitGroup
+	artifacts        artifact.Store
+	closed           bool
+	settings         OperatingSettingsValues
+	settingsRevision int64
+	cameras          map[string]*cameraSession
+	cameraWorkers    sync.WaitGroup
+	cameraGates      sync.Map // device ID to *sync.Mutex; same-camera commands serialize outside Manager.mu
+	serials          map[string]*serialSession
+	serialWorkers    sync.WaitGroup
+	serialReads      map[string]int
+	cameraReads      map[string]int
+	cameraSpace      func(string) (int64, int64, error)
 }
 
 // New starts one manager after app startup reconciliation; never share its data directory with another server.
@@ -98,6 +101,10 @@ func New(options Options) (*Manager, error) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	m := &Manager{options: options, active: make(map[string]execution), cancel: cancel, wake: make(chan struct{}, 1), done: make(chan struct{}), artifacts: storage}
+	if err := m.loadOperatingSettings(ctx); err != nil {
+		cancel()
+		return nil, err
+	}
 	m.cameras = make(map[string]*cameraSession)
 	m.cameraReads = make(map[string]int)
 	m.cameraSpace = cameraDiskSpace
@@ -164,14 +171,21 @@ func (m *Manager) Close() error {
 	m.mu.Lock()
 	m.closed = true
 	m.stopSerialLocked("serial", "shutdown")
-	for _, camera := range m.cameras {
+	cameras := make(map[string]*cameraSession, len(m.cameras))
+	for id, camera := range m.cameras {
+		cameras[id] = camera
+	}
+	m.cancel()
+	m.mu.Unlock()
+	for id, camera := range cameras {
+		gate := m.cameraGate(id)
+		gate.Lock()
 		shutdown, finish := context.WithTimeout(context.Background(), 12*time.Second)
 		_, _ = cameraCall(shutdown, camera, "POST", "/command", map[string]string{"action": "stop"})
 		finish()
 		camera.cancel()
+		gate.Unlock()
 	}
-	m.cancel()
-	m.mu.Unlock()
 	<-m.done
 	<-m.hardwareDone
 	m.workers.Wait()

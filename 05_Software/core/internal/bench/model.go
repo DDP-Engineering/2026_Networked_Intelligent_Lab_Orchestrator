@@ -18,8 +18,6 @@ var (
 	ErrConflict    = errors.New("transaction_conflict")
 )
 
-const QueueLimit = 32
-
 type Device struct {
 	ID             string          `json:"id"`
 	Connection     string          `json:"connection"`
