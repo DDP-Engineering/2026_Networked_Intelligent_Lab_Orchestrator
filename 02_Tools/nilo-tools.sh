@@ -94,9 +94,12 @@ case "$engine" in docker|podman) ;; *) bad 'engine must be docker or podman' ;; 
 if [ "$in_container" -eq 1 ]; then
     # CI and the outer wrapper share this route. Refuse it on an ordinary host;
     # it must not become an accidental way to bypass the container boundary.
+    # Source locks evolve independently of the image; offline preparation checks
+    # that the image's verified inputs cover the current source dependencies.
+    image_lock=/opt/nilo/environment/lock.json
     [ "${NILO_ISOLATED_SOURCE:-}" = "$repo" ] && \
-        cmp -s "$tools/containers/build/build-environment.lock.json" /opt/nilo/environment/lock.json || \
-        bad '--in-container requires an isolated source tree inside the matching canonical image'
+        [ -r "$image_lock" ] || \
+        bad '--in-container requires an isolated source tree inside the build environment'
 fi
 # Existing appliance lifecycle tests need observed kernel inventory. Supply it
 # read-only through the container wrapper; this grants no engine or capabilities.

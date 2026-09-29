@@ -280,6 +280,10 @@ sh ./02_Tools/nilo-tools.sh build
 accepted into the archive manifest; the caller is then responsible for having
 verified that image's digest itself. Every other invocation checks the
 canonical image digest and prints its generation.
+The shared CI/local test entry point does not require the source environment
+lock to equal the image's embedded copy. Project version bumps therefore reuse
+the existing image. Offline preparation verifies current dependency coverage
+and package integrity; missing cached dependencies still fail explicitly.
 The container has no network, privileges, added capabilities, engine socket, or
 credential mount. It receives the repository **read-only** at `/workspace` and
 copies it into an isolated container source root at `/work/source`, excluding

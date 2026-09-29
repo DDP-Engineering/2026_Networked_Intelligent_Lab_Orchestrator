@@ -124,3 +124,8 @@ planning and deployment documentation. Deployment is complete; this close-out
 adds no new appliance changes. The software source deployed remains merge
 commit `0d18497`. The accepted-image refresh remains a separate CI follow-up.
 No Git push or remote pipeline run is authorized by the commit request.
+
+The subsequent local CI compatibility change removes the image-refresh need
+for project version metadata alone. Dependency coverage and integrity checks
+remain; see section 10 of the tooling simplification plan. This changes no
+deployed software or appliance state.

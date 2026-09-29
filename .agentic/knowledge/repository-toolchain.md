@@ -54,6 +54,12 @@ and the GUI under the ignored container output root. Target packaging prepares
 inputs; release assembly and verification are separate actions. The existing
 bootstrap, environment and fixture files below implement these commands.
 
+CI and local offline test/build commands use the current checkout's source
+locks without requiring equality with the image's build-time lockfile. Project
+version and file-hash updates can reuse the existing build environment. The
+outer controller verifies the pinned image independently; offline preparation
+checks dependency coverage and package integrity against its verified inputs.
+
 Developers run `bootstrap.ps1` or `bootstrap.sh` for one host, or
 `bootstrap-development.ps1` to prepare both Windows and a selected WSL2
 distribution from one checkout. `setup-wsl.ps1` keeps host installation and

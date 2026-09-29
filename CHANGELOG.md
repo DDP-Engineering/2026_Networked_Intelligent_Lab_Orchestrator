@@ -17,6 +17,8 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Fixed
 
+- CI and local offline tests reuse the provisioned build image after project
+  version bumps while retaining dependency coverage and integrity checks.
 - Offline build preparation checks locked Go/Python input coverage and checksums;
   the recipe includes Camera/Serial dependencies, iproute2 and executable Linux entry points.
 - Isolated offline checks retain archive control metadata and exclude runtime

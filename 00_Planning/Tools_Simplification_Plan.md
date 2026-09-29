@@ -237,3 +237,27 @@ The accepted build-image/archive refresh identified in section 8 remains a
 separate follow-up. No push, new remote CI run or archive publication is part
 of this local close-out. Ignored runtimes, cache files, payloads and private
 appliance state are excluded from the commit.
+
+## 10. CI compatibility with version updates — 2026-09-29
+
+The user requested that routine version updates stop requiring an image refresh.
+The shared CI/local container entry point now requires isolated source and
+readable image evidence without comparing the source environment lock against
+the image's build-time copy. The outer controller still verifies the pinned OCI
+digest, and offline preparation verifies current dependency coverage and package
+integrity. New dependencies absent from the verified cache still need updated
+environment inputs.
+
+This supersedes the version-only image-refresh follow-up in sections 8 and 9.
+It does not publish or relabel an archive generation. Regression tests cover
+changed project metadata and continued refusal of host or missing-image context.
+The change is local; existing failed Gitea runs are historical results.
+
+The public `nilo-tools.ps1 test -Distribution Ubuntu` command passed with exit
+0 using the existing digest-verified, network-disabled image and the current
+0.12.0 source. It covered 220 tooling cases (35 skipped), Go amd64 tests and
+arm64 compilation checks, 112 Python integration/contract tests, and 596 frontend
+tests across 49 files. Lint and production builds passed. All 18 command
+regression cases passed across Windows and Linux with platform-specific skips.
+Shell syntax, new-test Ruff checks and `git diff --check` passed. The full log
+is retained under ignored `02_Tools/cache/ci-version-compatibility-offline.log`.

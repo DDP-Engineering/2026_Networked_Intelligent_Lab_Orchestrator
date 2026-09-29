@@ -19,6 +19,14 @@ explicit read-only host evidence mount. Source is copied into the container's
 writable work directory; the original checkout remains unchanged. The complete
 offline suite has a 45-minute deadline with a 30-second termination grace.
 
+CI does not compare the current project version or source-lock file hash with
+the image's build-time copy. Version bumps and their lockfile metadata changes
+use the existing provisioned image. Offline preparation checks the current
+source's dependency coverage and package integrity; dependencies absent from
+the image's verified input cache still require updated environment inputs.
+The provisioned OCI image digest remains pinned independently of the project
+version.
+
 `02_Tools/cache/ci/` holds the suite log, result JSON and production GUI output.
 The workflow attempts artifact upload on success and failure, retaining evidence
 for 14 days. Containers and volumes created by the helper are removed in its

@@ -75,7 +75,16 @@ class CommandFixture(unittest.TestCase):
 class LinuxCommands(CommandFixture):
     def setUp(self) -> None:
         super().setUp()
-        shutil.copyfile(TOOLS / "nilo-tools.sh", self.tools / "nilo-tools.sh")
+        self.image_lock = self.root / "image/environment/lock.json"
+        self.image_lock.parent.mkdir(parents=True)
+        # Relocate image evidence so the real dispatcher can run without Docker.
+        dispatcher = (TOOLS / "nilo-tools.sh").read_text(encoding="utf-8")
+        (self.tools / "nilo-tools.sh").write_text(
+            dispatcher.replace(
+                "/opt/nilo/environment/lock.json", f'"{self.image_lock.as_posix()}"'
+            ),
+            encoding="utf-8",
+        )
         for path in (
             "bootstrap/bootstrap.sh",
             "bootstrap/bootstrap-build-environment.sh",
@@ -200,6 +209,36 @@ class LinuxCommands(CommandFixture):
             with self.subTest(arguments=arguments):
                 self.assertEqual(self.run_tools(*arguments).returncode, 23)
                 self.assertEqual(self.calls()[-1][1:], tail)
+
+    def test_container_test_accepts_updated_project_metadata(self) -> None:
+        """@brief Version and lockfile digest updates do not require a new image."""
+        self.env["NILO_ISOLATED_SOURCE"] = str(self.root)
+        self.image_lock.write_text('{"project_version":"0.11.0","sha256":"old"}')
+        candidate = self.tools / "containers/build/build-environment.lock.json"
+        candidate.parent.mkdir(parents=True)
+        candidate.write_text('{"project_version":"0.12.0","sha256":"new"}')
+        self.shell_stub("tests/build-environment/verify-offline.sh")
+        result = self.run_tools("test", "--in-container")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(self.calls()[0][0].endswith("verify-offline.sh"))
+
+    def test_container_build_still_requires_isolated_image_context(self) -> None:
+        """@brief Removing lock equality keeps host and missing-image refusals."""
+        self.image_lock.write_text("{}")
+        self.env["NILO_ISOLATED_SOURCE"] = str(self.root / "wrong source")
+        self.shell_stub("tests/build-environment/build-all.sh")
+        refused = self.run_tools("build", "--in-container")
+        self.assertEqual(refused.returncode, 2, refused.stderr)
+        self.assertEqual(self.calls(), [])
+        self.env["NILO_ISOLATED_SOURCE"] = str(self.root)
+        self.image_lock.unlink()
+        refused = self.run_tools("build", "--in-container")
+        self.assertEqual(refused.returncode, 2, refused.stderr)
+        self.assertEqual(self.calls(), [])
+        self.image_lock.write_text("{}")
+        accepted = self.run_tools("build", "--in-container")
+        self.assertEqual(accepted.returncode, 0, accepted.stderr)
+        self.assertTrue(self.calls()[0][0].endswith("build-all.sh"))
 
     def test_focused_tools_check_does_not_expand_test_glob(self) -> None:
         result = self.run_tools("test", "tools")
