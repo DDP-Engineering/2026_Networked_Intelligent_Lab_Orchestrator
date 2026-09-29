@@ -44,6 +44,9 @@ func serialValidateSubmission(ctx context.Context, m *Manager, actor identity.Ac
 	if err != nil {
 		return err
 	}
+	if m.sharedDeviceBusyLocked(ctx, "serial", input.DeviceID) {
+		return ErrBusy
+	}
 	var p serialConnectParameters
 	_ = json.Unmarshal(input.Parameters, &p)
 	if r.Revision != p.Revision {
@@ -54,7 +57,7 @@ func serialValidateSubmission(ctx context.Context, m *Manager, actor identity.Ac
 	}
 	return m.serialCredentialValid(ctx, actor.User.ID, string(actor.Credential), serialCredentialID(actor))
 }
-func (m *Manager) reconcileSerialDiscovery(ctx context.Context, raw json.RawMessage) ([]Device, error) {
+func serialDiscoveryObservations(raw json.RawMessage) ([]sqlite.ManagedDeviceObservation, error) {
 	var data struct {
 		Devices []struct {
 			ID               string `json:"id"`
@@ -83,6 +86,14 @@ func (m *Manager) reconcileSerialDiscovery(ctx context.Context, raw json.RawMess
 			d.Capabilities = json.RawMessage(`{}`)
 		}
 		observations = append(observations, sqlite.ManagedDeviceObservation{Kind: "usb-serial", Vendor: h.Vendor, Product: h.Product, Serial: h.Serial, PortPath: h.PortPath, EndpointID: d.ID, Endpoints: endpoints, Capabilities: d.Capabilities})
+	}
+	return observations, nil
+}
+
+func (m *Manager) reconcileSerialDiscovery(ctx context.Context, raw json.RawMessage) ([]Device, error) {
+	observations, err := serialDiscoveryObservations(raw)
+	if err != nil {
+		return nil, err
 	}
 	repo := sqlite.NewManagedDeviceRepository(m.options.Database)
 	records, err := repo.Reconcile(ctx, "serial", observations, m.now())

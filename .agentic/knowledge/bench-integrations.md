@@ -10,6 +10,9 @@ identity/SQLite composition belongs to [Bench Core](bench-core-foundation.md);
 visual structure belongs to [Browser GUI](gui-foundation.md). Physical capture,
 device records and Camera verification belong to [Camera integration](camera-integration.md).
 
+Modbus endpoint/profile definitions and shared transport ownership route to
+[Modbus client foundation](modbus-integration.md).
+
 USB serial terminal, connection and log changes route to
 [USB to Serial integration](serial-integration.md).
 
@@ -68,6 +71,9 @@ and `06_SoftwareDocu/Camera_Integration.md`. Human approval requires a browser s
   before resource reuse. Disconnect does not cancel or duplicate admitted work.
 - Replies carry transaction IDs and monotonic sequence, with 100 records of at
   most 4 KiB each. Terminal data is bounded to 1 MiB; late replies cannot change it.
+- Live Serial and trusted Modbus consumers atomically claim canonical physical
+  ports or configured network buses independently of finite connection jobs.
+  Cleanup-confirmed release precedes reuse; failed cleanup keeps a fenced claim.
 - Restart marks unfinished jobs incomplete without replay. Disable prevents new
   and queued work; busy restart/uninstall refuse. History survives uninstall.
 - Upgrade refuses after a bounded busy wait and never exposes a partially copied
@@ -137,9 +143,13 @@ flowchart TD
     http --> manager
     manager --> packages[packages: verified catalog, staged install and atomic upgrade]
     packages --> journal[(durable activation journal)]
-    manager --> monitor[hardware_monitor: bounded Camera and Serial presence polling]
+    manager --> monitor[hardware_monitor: bounded family presence polling]
     monitor --> supervisor
     monitor --> db
+    manager --> transports[transport_lease: full lifetime claims]
+    transports --> resources[Canonical USB port and network bus keys]
+    manager --> modbus[Modbus definitions and trusted discovery]
+    modbus --> db
     manager --> limits[(SQLite operating settings)]
     limits --> queue[scheduler: configured workers and device serialization]
     manager --> audit[(audit events)]
@@ -166,7 +176,11 @@ curated typed adapter and resource claims; transport handlers remain shared.
 ## Files
 
 - `05_Software/core/internal/bench/hardware_monitor.go` and its tests own background
-  Camera/Serial availability and failure propagation.
+  Camera/Serial availability and the trusted Modbus discovery hook.
+- `05_Software/core/internal/bench/transport_lease.go` and tests: shared resource
+  admission, lifecycle cancellation and cleanup fences.
+- `05_Software/core/internal/bench/modbus_definitions.go`, `modbus_discovery.go`
+  and tests: administrator definition services and trusted presence updates.
 
 - `05_Software/core/internal/bench/`: model, manager, packages,
   parameters, jobs, execution and scheduler; `jobs_test.go` covers state/concurrency,

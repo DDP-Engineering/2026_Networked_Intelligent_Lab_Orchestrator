@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-REL-4e21290d"
+
+title = "Retain transport claims until cleanup confirmation"
+
+status = "active"
+
+requirement = """
+When a transport owner stops because of disable, runner failure, unplug, expiry or Core shutdown, Core shall retain its canonical claims until transport cleanup confirms completion, fencing claims whose cleanup fails.
+"""
+
+verification = "Use controlled cancellation and cleanup barriers with live Serial and trusted Modbus consumers; request each terminal event and assert busy through cleanup, reuse only on successful cleanup, and continued fencing on cleanup error; verify shutdown waits for cleanup."
+
+affected_paths = ["05_Software/core/internal/bench/transport_lease.go", "05_Software/core/internal/bench/manager.go", "05_Software/core/internal/bench/serial_session.go", "05_Software/core/internal/bench/serial_adapter.go", "05_Software/core/internal/bench/managed_devices.go", "05_Software/core/internal/bench/packages.go", "05_Software/core/internal/bench/hardware_monitor.go", "05_Software/core/internal/bench/modbus_definitions.go", "05_Software/core/internal/bench/modbus_discovery.go", "05_Software/core/internal/modbus/definitions.go", "05_Software/core/internal/bench/transport_lease_test.go", "05_Software/core/internal/bench/serial_lifecycle_test.go"]
+
+linked_tests = ["05_Software/core/internal/bench/transport_lease_test.go", "05_Software/core/internal/bench/serial_lifecycle_test.go"]
+
+
+spec = "specs/REQ-DATA-a8c75050.md"
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-29
+updated = 2026-09-29

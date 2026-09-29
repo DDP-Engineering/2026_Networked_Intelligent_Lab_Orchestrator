@@ -1,10 +1,15 @@
-# Modbus client feasibility
+# Modbus client foundation
 
 ## Routing
 
-Select this page for the Modbus development contracts, canonical initial
+Select this page for Core Modbus endpoints/profiles, trusted USB presence,
+shared Serial/Modbus ownership, development contracts and canonical initial
 requests, simulated RTU/TCP/RTU-over-TCP transactions and dependency evidence
-under `05_Software/integrations/modbus/`. Start at `src/nilo_modbus/requests.py`
+under `05_Software/integrations/modbus/`. Core services start at
+`05_Software/core/internal/bench/modbus_definitions.go`, `modbus_discovery.go`
+and `transport_lease.go`; models and storage live in `internal/modbus/definitions.go`
+and `internal/store/sqlite/modbus_repository.go`, with adjacent focused tests.
+Feasibility starts at `src/nilo_modbus/requests.py`
 and `feasibility.py`; focused tests live in `tests/` alongside independent peers.
 Managed production package lifecycle belongs to
 [Managed bench integrations](bench-integrations.md), shared runner lifecycle to
@@ -14,6 +19,11 @@ Managed production package lifecycle belongs to
 
 ## Purpose and boundaries
 
+Core owns revisioned endpoint/profile definitions, trusted USB reconciliation
+and shared full-lifetime transport claims. Internal trusted consumers supply
+transport lifetimes and cleanup; the curated production registry and public
+session adapters compose separate runner and policy services.
+
 This isolated Python package proves client protocol behavior against loopback
 TCP and Linux PTY fixtures and supplies a strict versioned development contract.
 Its direct test interface owns simulated requests and bounded observations.
@@ -21,6 +31,16 @@ Bench Core owns the production integration registry, identity, policy and
 persistence; the existing curated packages use the shared supervised lifecycle.
 
 ## Public interface
+
+- Core `ModbusEndpoints`/`ModbusProfiles` require Bench read permission;
+  `SaveModbusEndpoint`/`SaveModbusProfile` require plugin management authority,
+  expected revisions and audit records. Core assigns and retains profile creators.
+- `ModbusRepository` atomically publishes endpoint/profile definitions and trusted
+  USB projections. Network records carry explicit peer/unit/bus configuration;
+  USB records carry Core-owned identity and observed presence.
+- `runModbusConsumer` is an internal trusted admission seam: pinned endpoint/profile
+  revisions precede canonical claims, then the supplied lifetime function owns
+  transport work and confirms cleanup. Serial uses the same claim registry.
 
 - `Request(function, unit, address, count, values)` is an immutable canonical
   request; `encode(request, transport)` returns its validated PDU.
@@ -38,6 +58,17 @@ persistence; the existing curated packages use the shared supervised lifecycle.
   archives and notices; the README describes the commands and target gates.
 
 ## Invariants
+
+- Definition saves perform database/audit work; trusted observations establish
+  USB presence and network readiness. Startup requires fresh observations.
+- Strong USB identities survive tty/topology changes; weak duplicates remain
+  port-bound. Reconciliation retains names, disabled state and profiles on unplug.
+- USB claims include physical port and strong serial identity. Network claims
+  include configured bus and normalized peer socket; unit IDs do not divide ownership.
+- Cancellation retains claims through confirmed cleanup. Cleanup errors fence
+  reuse for the Manager lifetime and propagate through shutdown.
+- Live endpoint/profile edits wait for cleanup; endpoint disable cancels its own
+  consumer. Reader/admin permissions and creator ownership govern shared definitions.
 
 - Initial functions are 1/2/3/4/5/6/15/16 with function-specific quantity,
   value, unit and address checks before transmission.
@@ -59,12 +90,22 @@ persistence; the existing curated packages use the shared supervised lifecycle.
 
 | Change requested | Start with | Focused verification |
 |---|---|---|
+| Definitions/transport validation | Core `modbus_definitions.go`, `definitions.go`, `modbus_repository.go` | Adjacent definition/repository tests |
+| USB identity/presence | Core `modbus_discovery.go`, repository projection | Core/store `modbus_discovery_test.go` |
+| Claims and cleanup | Core `transport_lease.go`, `serial_session.go` | `transport_lease_test.go`, `serial_lifecycle_test.go` |
 | PDU limits or presentation addresses | `requests.py` | `test_requests.py` |
 | Transport, response validation or fencing | `feasibility.py` | `test_feasibility.py` and handwritten `peers.py` |
 | Entity or private-message grammar | `contracts.schema.json` and specification | `test_contracts.py` |
 | Dependency pins or notices | `dependencies.json`, lock and preparation helper | `test_dependencies.py` and explicit offline acquisition verification |
 
 ## Key behaviors
+
+- `REQ-DATA-a8c75050` — atomic durable endpoint/profile revisions and conflicts.
+- `REQ-DATA-2988e315` — retained stable USB definitions and trusted binding state.
+- `REQ-FUNC-eafa69bc` — exact transport/settings validation before publication.
+- `REQ-SEC-4b8a52fa` — shared read access, administrator mutation and retained creator.
+- `REQ-REL-5af947a8` — canonical cross-family ownership with independent resources.
+- `REQ-REL-4e21290d` — cleanup-confirmed release and failed-cleanup fences.
 
 - `REQ-DATA-6fcda58c` — strict development entities and authority/state contracts.
 - `REQ-FUNC-cfadd842` — exact bounded PDU encoding and explicit addressing.
@@ -77,6 +118,13 @@ persistence; the existing curated packages use the shared supervised lifecycle.
 
 ```mermaid
 flowchart LR
+    admin([Administrator / Bench reader]) --> definitions[Core definition services]
+    definitions --> storage[ModbusRepository and SQLite]
+    discovery[Trusted USB discovery] --> storage
+    serial[Serial session] --> claims[transport_lease registry]
+    consumer[Trusted Modbus lifetime] --> claims
+    claims --> keys[Canonical physical port / gateway keys]
+    definitions --> models[Typed transport validation]
     tests([Independent tests]) --> requests[Request and encode]
     tests --> client[SimulationClient]
     client --> requests
@@ -93,6 +141,16 @@ The prototype is invoked directly by tests. Its permanent failure fence
 provides the measured response boundary for the evaluated library.
 
 ## Files
+
+- `05_Software/core/internal/modbus/definitions.go` and tests — typed validation/keys.
+- `05_Software/core/internal/bench/modbus_definitions.go`, `modbus_discovery.go`
+  and tests — shared definition services and trusted state.
+- `05_Software/core/internal/bench/transport_lease.go` and tests — canonical claims.
+- `05_Software/core/internal/bench/serial_session.go`, `serial_lifecycle_test.go`
+  — live Serial claim ownership and exceptional cleanup.
+- `05_Software/core/internal/store/sqlite/modbus_repository.go`, adjacent tests
+  and `migrations/024_modbus_definitions.sql` — CAS, USB projection and startup state.
+- `.agentic/specs/REQ-DATA-a8c75050.md` — exact Core definitions/claim contract.
 
 - `05_Software/integrations/modbus/src/nilo_modbus/__init__.py` — package namespace.
 - `05_Software/integrations/modbus/src/nilo_modbus/requests.py` — validation and PDU encoding.

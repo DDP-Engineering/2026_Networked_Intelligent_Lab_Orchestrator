@@ -61,6 +61,8 @@ type Manager struct {
 	cameraGates      sync.Map // device ID to *sync.Mutex; same-camera commands serialize outside Manager.mu
 	serials          map[string]*serialSession
 	serialWorkers    sync.WaitGroup
+	transports       map[string]*transportLease
+	transportWorkers sync.WaitGroup
 	serialReads      map[string]int
 	cameraReads      map[string]int
 	cameraSpace      func(string) (int64, int64, error)
@@ -109,7 +111,16 @@ func New(options Options) (*Manager, error) {
 	m.cameraReads = make(map[string]int)
 	m.cameraSpace = cameraDiskSpace
 	m.serials = make(map[string]*serialSession)
+	m.transports = make(map[string]*transportLease)
 	m.serialReads = make(map[string]int)
+	if err := sqlite.NewManagedDeviceRepository(options.Database).MarkUnknown(ctx, "modbus"); err != nil {
+		cancel()
+		return nil, err
+	}
+	if err := sqlite.NewModbusRepository(options.Database).ResetReadiness(ctx); err != nil {
+		cancel()
+		return nil, err
+	}
 	if err := m.recoverSerialLogs(ctx); err != nil {
 		cancel()
 		return nil, err
@@ -171,6 +182,7 @@ func (m *Manager) Close() error {
 	m.mu.Lock()
 	m.closed = true
 	m.stopSerialLocked("serial", "shutdown")
+	m.cancelTransportsLocked("", "")
 	cameras := make(map[string]*cameraSession, len(m.cameras))
 	for id, camera := range m.cameras {
 		cameras[id] = camera
@@ -191,7 +203,10 @@ func (m *Manager) Close() error {
 	m.workers.Wait()
 	m.cameraWorkers.Wait()
 	m.serialWorkers.Wait()
-	return nil
+	m.transportWorkers.Wait()
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.transportCleanupErrorsLocked()
 }
 
 func (m *Manager) record(ctx context.Context, actor identity.Actor, action, id string, payload any) error {

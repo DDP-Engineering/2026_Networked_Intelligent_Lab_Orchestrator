@@ -52,6 +52,9 @@ one of three fixed roles - Administrator, Operator or Viewer.
 - **USB serial terminals.** Managed USB ports use credential-bound connection
   approvals, bounded ASCII/hex RX/TX, supported modem controls and retained
   JSONL sessions with quotas and streaming exports across GUI, CLI and MCP.
+- **Modbus Core foundation.** Revisioned explicit USB/network endpoints and shared
+  profiles use administrator mutation and reader access. Serial and trusted Modbus
+  consumers share canonical claims retained through confirmed transport cleanup.
 - **Instrument transactions.** Durable transaction identities, an administrator-
   configured queue and finite-job worker capacity with per-analyzer serialization, absolute deadlines,
   ordered bounded replies, cancellation, and digest-verified retained artifacts.
@@ -181,8 +184,8 @@ one of three fixed roles - Administrator, Operator or Viewer.
   `05_Software/integrations/camera/` and `05_Software/integrations/serial/` are
   the current curated packages.
   `05_Software/integrations/modbus/` supplies isolated client feasibility tests
-  and a versioned development contract; [Modbus client feasibility](../knowledge/modbus-integration.md)
-  owns that direct test interface.
+  and a versioned development contract; [Modbus client foundation](../knowledge/modbus-integration.md)
+  owns that direct test interface and the Core definition/ownership services.
   `05_Software/contracts/integration/v1/` is the public, language-neutral
   package contract mirrored by the Go loader. The test-only Go runner in
   `05_Software/tests/fixtures/contract_runner/` exercises the shared boundary.

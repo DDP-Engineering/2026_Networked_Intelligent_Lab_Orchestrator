@@ -7,6 +7,9 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Added
 
+- Modbus endpoints and shared profiles persist with revision checks; Serial and
+  Modbus share physical-port and gateway ownership through confirmed cleanup.
+
 - Modbus client feasibility package proves RTU, TCP and RTU over TCP with independent
   peers; versioned contracts and verified dependency inputs support implementation.
 

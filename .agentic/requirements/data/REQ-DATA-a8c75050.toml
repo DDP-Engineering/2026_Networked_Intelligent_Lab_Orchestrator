@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-DATA-a8c75050"
+
+title = "Persist revisioned Modbus endpoints and profiles"
+
+status = "active"
+
+requirement = """
+When an accepted Modbus endpoint or shared profile definition is saved with its expected revision, Core shall atomically persist that definition at the next revision, returning a conflict without changing stored data for a stale revision.
+"""
+
+verification = "Open a migrated temporary SQLite database; create endpoint and profile at expected revision zero, replace at the returned revision, reopen and compare all fields; stale and concurrent writes produce one winner and retain the winning definition."
+
+affected_paths = ["05_Software/core/internal/store/sqlite/modbus_repository.go", "05_Software/core/internal/store/sqlite/migrations.go", "05_Software/core/internal/store/sqlite/migrations/024_modbus_definitions.sql", "05_Software/core/internal/modbus/definitions.go", "05_Software/core/internal/store/sqlite/modbus_repository_test.go", "05_Software/core/internal/store/sqlite/db_test.go", "05_Software/core/internal/bench/modbus_definitions.go", "05_Software/core/internal/bench/transport_lease_test.go"]
+
+linked_tests = ["05_Software/core/internal/store/sqlite/modbus_repository_test.go", "05_Software/core/internal/store/sqlite/db_test.go", "05_Software/core/internal/bench/transport_lease_test.go::TestModbusClaimedDefinitionRevisionAndCanonicalEditAdmission"]
+
+
+spec = "specs/REQ-DATA-a8c75050.md"
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-29
+updated = 2026-09-29

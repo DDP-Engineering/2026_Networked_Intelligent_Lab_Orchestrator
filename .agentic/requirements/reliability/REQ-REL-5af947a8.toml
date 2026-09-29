@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-REL-5af947a8"
+
+title = "Serialize canonical cross-family transport ownership"
+
+status = "active"
+
+requirement = """
+When a trusted Serial or Modbus session claims a canonical physical port or configured network bus, Core shall atomically grant at most one live owner across families and aliases while allowing independent resources to be claimed concurrently.
+"""
+
+verification = "Race Serial and Modbus claims for the same USB identity, including differing plugin/device names; assert exactly one winner; exercise tty changes, gateway aliases, different units, same socket with different bus IDs and independent USB/network resources."
+
+affected_paths = ["05_Software/core/internal/bench/transport_lease.go", "05_Software/core/internal/bench/manager.go", "05_Software/core/internal/bench/serial_session.go", "05_Software/core/internal/bench/serial_adapter.go", "05_Software/core/internal/bench/managed_devices.go", "05_Software/core/internal/bench/packages.go", "05_Software/core/internal/bench/hardware_monitor.go", "05_Software/core/internal/bench/modbus_definitions.go", "05_Software/core/internal/bench/modbus_discovery.go", "05_Software/core/internal/modbus/definitions.go", "05_Software/core/internal/bench/transport_lease_test.go", "05_Software/core/internal/bench/serial_lifecycle_test.go"]
+
+linked_tests = ["05_Software/core/internal/bench/transport_lease_test.go", "05_Software/core/internal/bench/serial_lifecycle_test.go"]
+
+
+spec = "specs/REQ-DATA-a8c75050.md"
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-29
+updated = 2026-09-29

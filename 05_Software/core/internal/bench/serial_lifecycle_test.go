@@ -4,12 +4,14 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -23,9 +25,56 @@ import (
 // a private Unix socket. It is a test fixture and never opens physical hardware.
 type serialLifecycleRunner struct {
 	controlledRunner
-	streamStarted chan struct{}
-	ready         chan struct{}
-	cts           atomic.Bool
+	streamStarted   chan struct{}
+	ready           chan struct{}
+	cts             atomic.Bool
+	shutdownStarted chan struct{}
+	shutdownRelease chan struct{}
+	shutdownErr     error
+	crash           chan struct{}
+}
+
+func (r *serialLifecycleRunner) Shutdown(ctx context.Context) error {
+	if r.shutdownRelease == nil {
+		return r.shutdownErr
+	}
+	select {
+	case r.shutdownStarted <- struct{}{}:
+	default:
+	}
+	select {
+	case <-r.shutdownRelease:
+		return r.shutdownErr
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
+func TestSerialStoppedRemainsBusyUntilRunnerCleanup(t *testing.T) {
+	m, actor, input, runner := serialLifecycleFixture(t, "auto")
+	runner.shutdownStarted = make(chan struct{}, 1)
+	runner.shutdownRelease = make(chan struct{})
+	t.Cleanup(func() { close(runner.shutdownRelease) })
+	close(runner.ready)
+	job, err := m.ConnectSerial(t.Context(), actor, "serial-1", input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	awaitJob(t, m, actor, job.ID, "completed")
+	m.mu.Lock()
+	m.stopSerialLocked("serial-1", "disconnected")
+	m.mu.Unlock()
+	select {
+	case <-runner.shutdownStarted:
+	case <-time.After(2 * time.Second):
+		t.Fatal("cleanup did not start")
+	}
+	m.mu.Lock()
+	busy := m.serialBusy("serial-1")
+	m.mu.Unlock()
+	if !busy {
+		t.Fatal("stopped Serial session released physical admission before runner cleanup")
+	}
 }
 
 func (r *serialLifecycleRunner) Execute(ctx context.Context, request protocol.ExecuteRequest, _ protocol.EventSink) (protocol.ExecuteResult, error) {
@@ -63,7 +112,10 @@ func (r *serialLifecycleRunner) Execute(ctx context.Context, request protocol.Ex
 	})}
 	finished := make(chan struct{})
 	go func() { defer close(finished); _ = server.Serve(listener) }()
-	<-ctx.Done()
+	select {
+	case <-ctx.Done():
+	case <-r.crash:
+	}
 	_ = server.Close()
 	<-finished
 	return protocol.ExecuteResult{}, ctx.Err()
@@ -232,4 +284,137 @@ func waitSerialLifecycle(t *testing.T, maximum time.Duration, condition func() b
 		time.Sleep(20 * time.Millisecond)
 	}
 	t.Fatalf("timed out waiting for %s", description)
+}
+
+func TestSerialTerminalEventsKeepPhysicalClaimUntilCleanup(t *testing.T) {
+	for _, trigger := range []string{"plugin_disable", "device_disable", "unplug", "expiry", "crash", "shutdown"} {
+		t.Run(trigger, func(t *testing.T) {
+			m, a, input, runner := serialLifecycleFixture(t, "auto")
+			runner.shutdownStarted = make(chan struct{}, 1)
+			runner.shutdownRelease = make(chan struct{})
+			runner.crash = make(chan struct{})
+			var once sync.Once
+			release := func() { once.Do(func() { close(runner.shutdownRelease) }) }
+			t.Cleanup(release)
+			close(runner.ready)
+			job, err := m.ConnectSerial(t.Context(), a, "serial-1", input)
+			if err != nil {
+				t.Fatal(err)
+			}
+			awaitJob(t, m, a, job.ID, "completed")
+			shutdownDone := make(chan error, 1)
+			switch trigger {
+			case "plugin_disable":
+				if _, err = m.Lifecycle(t.Context(), a, "serial", "disable", ""); err != nil {
+					t.Fatal(err)
+				}
+			case "device_disable":
+				if _, err = m.SetDeviceEnabled(t.Context(), a, "serial", "serial-1", input.Revision, false); err != nil {
+					t.Fatal(err)
+				}
+			case "unplug":
+				m.mu.Lock()
+				_, err = m.reconcileSerialDiscovery(t.Context(), json.RawMessage(`{"devices":[]}`))
+				m.mu.Unlock()
+				if err != nil {
+					t.Fatal(err)
+				}
+			case "expiry":
+				m.mu.Lock()
+				m.serials["serial-1"].expires = m.now().Add(-time.Second)
+				m.mu.Unlock()
+			case "crash":
+				close(runner.crash)
+			case "shutdown":
+				go func() { shutdownDone <- m.Close() }()
+			}
+			select {
+			case <-runner.shutdownStarted:
+			case <-time.After(3 * time.Second):
+				t.Fatal("cleanup did not start", trigger)
+			}
+			m.mu.Lock()
+			session := m.serials["serial-1"]
+			busy := session.claim.held && m.transportBusyLocked(session.claim.keys)
+			m.mu.Unlock()
+			if !busy {
+				t.Fatal("terminal event released physical claim", trigger)
+			}
+			if trigger == "shutdown" {
+				select {
+				case <-shutdownDone:
+					t.Fatal("Core shutdown returned before cleanup")
+				default:
+				}
+			}
+			release()
+			awaitTransportDone(t, session.runnerDone)
+			m.mu.Lock()
+			busy = m.transportBusyLocked(session.claim.keys)
+			m.mu.Unlock()
+			if busy {
+				t.Fatal("successful cleanup retained claims")
+			}
+			if trigger == "shutdown" {
+				if err = <-shutdownDone; err != nil {
+					t.Fatal(err)
+				}
+			}
+		})
+	}
+}
+
+func TestSerialFailedCleanupFencesAndStartupFailureReleases(t *testing.T) {
+	t.Run("failed cleanup", func(t *testing.T) {
+		m, a, input, runner := serialLifecycleFixture(t, "auto")
+		failure := errors.New("cleanup unconfirmed")
+		runner.shutdownErr = failure
+		close(runner.ready)
+		job, err := m.ConnectSerial(t.Context(), a, "serial-1", input)
+		if err != nil {
+			t.Fatal(err)
+		}
+		awaitJob(t, m, a, job.ID, "completed")
+		m.mu.Lock()
+		session := m.serials["serial-1"]
+		m.stopSerialLocked("serial-1", "disconnected")
+		m.mu.Unlock()
+		awaitTransportDone(t, session.runnerDone)
+		m.mu.Lock()
+		busy := m.serialBusy("serial-1") && m.transportBusyLocked(session.claim.keys)
+		m.mu.Unlock()
+		if !busy {
+			t.Fatal("failed cleanup freed Serial port")
+		}
+		if err = m.Close(); !errors.Is(err, failure) {
+			t.Fatal("cleanup failure lost", err)
+		}
+	})
+	t.Run("failed startup", func(t *testing.T) {
+		m, a, input, _ := serialLifecycleFixture(t, "ask")
+		job, err := m.ConnectSerial(t.Context(), a, "serial-1", input)
+		if err != nil {
+			t.Fatal(err)
+		}
+		awaitJob(t, m, a, job.ID, "pending_approval")
+		plugin, err := m.loadPlugin(t.Context(), "serial")
+		if err != nil {
+			t.Fatal(err)
+		}
+		// Exercise the internal setup/cleanup seam after normal submission validation.
+		// The fixture never approves or executes a physical operation.
+		startupFailure := errors.New("startup refused")
+		m.mu.Lock()
+		m.options.runner = func(Plugin) (supervisor.Supervisor, error) { return nil, startupFailure }
+		m.mu.Unlock()
+		if _, err = m.executeSerialConnect(t.Context(), job, plugin); !errors.Is(err, startupFailure) {
+			t.Fatal("setup failure not observed", err)
+		}
+		m.mu.Lock()
+		claims := len(m.transports)
+		m.mu.Unlock()
+		if claims != 0 {
+			t.Fatal("pre-launch startup failure retained physical claim")
+		}
+	})
 }

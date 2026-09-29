@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"net"
 	"net/http"
 	"os"
@@ -16,6 +17,7 @@ import (
 	"nilo.local/nilo/internal/auth"
 	"nilo.local/nilo/internal/identity"
 	"nilo.local/nilo/internal/integration/protocol"
+	"nilo.local/nilo/internal/modbus"
 	"nilo.local/nilo/internal/store/sqlite"
 )
 
@@ -37,6 +39,7 @@ type serialSession struct {
 	log                                 *serialLogWriter
 	txGate                              chan struct{}
 	queued                              atomic.Int64
+	claim                               *transportLease
 }
 
 func serialCredentialID(actor identity.Actor) string {
@@ -85,7 +88,7 @@ func (m *Manager) serialCredentialValid(ctx context.Context, owner, kind, id str
 }
 func (m *Manager) serialBusy(id string) bool {
 	for device, s := range m.serials {
-		if !s.stopped && (id == "serial" || id == device) {
+		if (!s.stopped || (s.claim != nil && s.claim.held)) && (id == "serial" || id == device) {
 			return true
 		}
 	}
@@ -180,28 +183,44 @@ func (m *Manager) executeSerialConnect(ctx context.Context, job Job, p Plugin) (
 	if err = m.serialCredentialValid(ctx, job.OwnerID, kind, credential); err != nil {
 		return protocol.ExecuteResult{}, err
 	}
+	claim, err := m.claimTransportLocked("serial", r.ID, "", modbus.USBResourceKeys(managedUSBIdentity(r)))
+	if err != nil {
+		return protocol.ExecuteResult{}, err
+	}
 	runner, err := m.processConfigured(p, r.ID, 3*time.Second)
 	if err != nil {
+		m.finishTransportLocked(claim, nil)
 		return protocol.ExecuteResult{}, err
 	}
 	id := uuid.NewString()
 	root := filepath.Join(m.options.DataDir, "serial-workspaces", id)
 	if err = os.MkdirAll(root, 0700); err != nil {
-		_ = runner.Shutdown(context.Background())
+		shutdown, done := context.WithTimeout(context.Background(), 3*time.Second)
+		cleanupErr := runner.Shutdown(shutdown)
+		done()
+		m.finishTransportLocked(claim, cleanupErr)
+		m.report(cleanupErr)
 		return protocol.ExecuteResult{}, err
 	}
 	lifetime := time.Duration(m.settings.SerialLifetimeMinutes) * time.Minute
 	runCtx, cancel := context.WithDeadline(context.Background(), m.now().Add(lifetime))
+	claim.cancel = cancel
 	transport := &http.Transport{DialContext: func(c context.Context, _, _ string) (net.Conn, error) {
 		return (&net.Dialer{}).DialContext(c, "unix", filepath.Join(root, "control.sock"))
 	}, MaxConnsPerHost: 3}
 	s := &serialSession{id: id, device: r.ID, owner: job.OwnerID, kind: kind, credential: credential, revision: r.Revision, settings: params.Settings, expires: m.now().Add(lifetime), idleTimeout: time.Duration(m.settings.SerialIdleMinutes) * time.Minute, lastAccess: m.now(), runnerDone: make(chan struct{}), signals: map[string]*bool{}, events: []SerialEvent{}, transport: &cameraSession{cancel: cancel, client: &http.Client{Transport: transport, Timeout: 3 * time.Second}}}
+	s.claim = claim
 	rawSettings, _ := json.Marshal(params.Settings)
 	_, err = m.db().ExecContext(ctx, `INSERT INTO serial_connections(id,device_id,owner_id,credential_kind,credential_id,revision,settings_json,started_at,expires_at,state) VALUES(?,?,?,?,?,?,?,?,?,'active')`, id, r.ID, s.owner, kind, credential, r.Revision, string(rawSettings), m.now().Format(time.RFC3339Nano), s.expires.Format(time.RFC3339Nano))
 	if err != nil {
 		cancel()
-		_ = runner.Shutdown(context.Background())
-		_ = os.RemoveAll(root)
+		shutdown, done := context.WithTimeout(context.Background(), 3*time.Second)
+		cleanupErr := runner.Shutdown(shutdown)
+		done()
+		transport.CloseIdleConnections()
+		cleanupErr = errors.Join(cleanupErr, os.RemoveAll(root))
+		m.finishTransportLocked(claim, cleanupErr)
+		m.report(cleanupErr)
 		return protocol.ExecuteResult{}, err
 	}
 	m.serials[r.ID] = s
@@ -211,12 +230,13 @@ func (m *Manager) executeSerialConnect(ctx context.Context, job Job, p Plugin) (
 		defer m.serialWorkers.Done()
 		defer close(s.runnerDone)
 		defer cancel()
-		defer transport.CloseIdleConnections()
-		defer os.RemoveAll(root)
 		_, runErr := runner.Execute(runCtx, protocol.ExecuteRequest{Type: "execute", Operation: "stream", Parameters: raw}, discardEvents{})
 		shutdown, done := context.WithTimeout(context.Background(), 3*time.Second)
 		defer done()
-		_ = runner.Shutdown(shutdown)
+		cleanupErr := runner.Shutdown(shutdown)
+		transport.CloseIdleConnections()
+		cleanupErr = errors.Join(cleanupErr, os.RemoveAll(root))
+		m.finishTransport(claim, cleanupErr)
 		if runErr != nil && runCtx.Err() == nil {
 			m.report(runErr)
 		}

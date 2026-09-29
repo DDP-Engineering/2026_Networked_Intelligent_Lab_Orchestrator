@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-DATA-2988e315"
+
+title = "Reconcile stable Modbus USB identities"
+
+status = "active"
+
+requirement = """
+When trusted USB serial discovery is reconciled, Core shall retain revisioned Modbus adapter definitions by stable hardware identity, publishing changed presence or binding while retaining saved configuration for absent adapters.
+"""
+
+verification = "Reconcile trusted observations with Serial disabled; repeat unchanged, change tty alias, unplug and replug, and move a strong identity between ports; compare IDs, revisions and retained profiles; weak duplicate serials bind to separate physical ports."
+
+affected_paths = ["05_Software/core/internal/bench/modbus_discovery.go", "05_Software/core/internal/bench/serial_adapter.go", "05_Software/core/internal/bench/manager.go", "05_Software/core/internal/modbus/definitions.go", "05_Software/core/internal/store/sqlite/managed_device_repository.go", "05_Software/core/internal/store/sqlite/modbus_repository.go", "05_Software/core/internal/store/sqlite/migrations/024_modbus_definitions.sql", "05_Software/core/internal/store/sqlite/modbus_discovery_test.go", "05_Software/core/internal/bench/modbus_discovery_test.go"]
+
+linked_tests = ["05_Software/core/internal/store/sqlite/modbus_discovery_test.go", "05_Software/core/internal/bench/modbus_discovery_test.go"]
+
+
+spec = "specs/REQ-DATA-a8c75050.md"
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-29
+updated = 2026-09-29

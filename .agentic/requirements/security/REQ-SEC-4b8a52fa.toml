@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-SEC-4b8a52fa"
+
+title = "Authorize shared Modbus definitions"
+
+status = "active"
+
+requirement = """
+When a caller accesses shared Modbus definitions, Core shall permit Bench readers to browse and plugin administrators to change them, retaining the authenticated owner of each profile.
+"""
+
+verification = "Use administrator, operator and viewer actors against definition services; verify reader access, forbidden nonadministrator writes, persisted server-owned profile creator and audited accepted mutations."
+
+affected_paths = ["05_Software/core/internal/bench/modbus_definitions.go", "05_Software/core/internal/bench/modbus_definitions_test.go"]
+
+linked_tests = ["05_Software/core/internal/bench/modbus_definitions_test.go"]
+
+
+spec = "specs/REQ-DATA-a8c75050.md"
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-29
+updated = 2026-09-29

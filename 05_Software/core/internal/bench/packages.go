@@ -529,6 +529,12 @@ func (m *Manager) Lifecycle(ctx context.Context, actor identity.Actor, id, actio
 		}
 		m.stopSerialLocked(id, "plugin_disabled")
 	}
+	if m.transportFamilyBusyLocked(id) {
+		if action != "disable" {
+			return Plugin{}, ErrBusy
+		}
+		m.cancelTransportsLocked(id, "")
+	}
 	if m.cameraBusy(id) {
 		return Plugin{}, ErrBusy
 	}

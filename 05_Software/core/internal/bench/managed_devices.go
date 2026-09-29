@@ -36,7 +36,7 @@ func (manager *Manager) ConfigurePlugin(ctx context.Context, actor identity.Acto
 	}
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
-	if manager.serialBusy(pluginID) || manager.cameraBusy(pluginID) {
+	if manager.serialBusy(pluginID) || manager.transportFamilyBusyLocked(pluginID) || manager.cameraBusy(pluginID) {
 		return sqlite.PluginConfiguration{}, ErrBusy
 	}
 	plugin, err := manager.loadPlugin(ctx, pluginID)
@@ -95,7 +95,7 @@ func (manager *Manager) ConfigureDevice(ctx context.Context, actor identity.Acto
 	}
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
-	if manager.serialBusy(deviceID) || manager.cameraBusy(deviceID) {
+	if manager.serialBusy(deviceID) || manager.sharedDeviceBusyLocked(ctx, pluginID, deviceID) || manager.cameraBusy(deviceID) {
 		return Device{}, ErrBusy
 	}
 	plugin, err := manager.loadPlugin(ctx, pluginID)
@@ -200,7 +200,7 @@ func (manager *Manager) RebindDevice(ctx context.Context, actor identity.Actor, 
 	}
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
-	if manager.serialBusy(deviceID) || manager.cameraBusy(deviceID) {
+	if manager.serialBusy(deviceID) || (manager.sharedDeviceBusyLocked(ctx, pluginID, deviceID) || manager.sharedDeviceBusyLocked(ctx, pluginID, provisionalID)) || manager.cameraBusy(deviceID) {
 		return Device{}, ErrBusy
 	}
 	plugin, err := manager.loadPlugin(ctx, pluginID)
@@ -251,7 +251,7 @@ func (manager *Manager) ForgetDevice(ctx context.Context, actor identity.Actor, 
 	}
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
-	if manager.serialBusy(deviceID) || manager.cameraBusy(deviceID) {
+	if manager.serialBusy(deviceID) || manager.sharedDeviceBusyLocked(ctx, pluginID, deviceID) || manager.cameraBusy(deviceID) {
 		return ErrBusy
 	}
 	if err := manager.record(ctx, actor, "device.forget_requested", pluginID+"/"+deviceID, map[string]any{"revision": revision}); err != nil {
@@ -280,7 +280,7 @@ func (manager *Manager) SetDeviceEnabled(ctx context.Context, actor identity.Act
 	}
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
-	if (manager.serialBusy(deviceID) && (pluginID != "serial" || enabled)) || manager.cameraBusy(deviceID) {
+	if (manager.serialBusy(deviceID) && (pluginID != "serial" || enabled)) || (enabled && manager.sharedDeviceBusyLocked(ctx, pluginID, deviceID)) || manager.cameraBusy(deviceID) {
 		return Device{}, ErrBusy
 	}
 	plugin, err := manager.loadPlugin(ctx, pluginID)
@@ -335,7 +335,7 @@ func (manager *Manager) RetryDevice(ctx context.Context, actor identity.Actor, p
 	}
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
-	if manager.serialBusy(deviceID) || manager.cameraBusy(deviceID) {
+	if manager.serialBusy(deviceID) || manager.sharedDeviceBusyLocked(ctx, pluginID, deviceID) || manager.cameraBusy(deviceID) {
 		return Device{}, ErrBusy
 	}
 	plugin, err := manager.loadPlugin(ctx, pluginID)

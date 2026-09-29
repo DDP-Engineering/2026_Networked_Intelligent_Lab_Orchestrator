@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-eafa69bc"
+
+title = "Validate Modbus endpoint and profile transports"
+
+status = "active"
+
+requirement = """
+When a Modbus endpoint or profile definition is submitted, Core shall reject definitions inconsistent with its transport contract before storage or transport I/O.
+"""
+
+verification = "Submit TCP, RTU-over-TCP and RTU definitions and profiles; assert accepted canonical host/bus identities and framing; reject mixed USB/network fields, URLs, unsupported unit ranges, unknown settings, missing serial framing and invalid timing bounds; verify unchanged storage."
+
+affected_paths = ["05_Software/core/internal/modbus/definitions.go", "05_Software/core/internal/store/sqlite/modbus_repository.go", "05_Software/core/internal/modbus/definitions_test.go", "05_Software/core/internal/store/sqlite/modbus_repository_test.go"]
+
+linked_tests = ["05_Software/core/internal/modbus/definitions_test.go", "05_Software/core/internal/store/sqlite/modbus_repository_test.go::TestModbusRejectsInvalidTransportBeforePublication", "05_Software/core/internal/store/sqlite/modbus_repository_test.go::TestModbusProfilesRequireExplicitTransportSettings"]
+
+
+spec = "specs/REQ-DATA-a8c75050.md"
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-29
+updated = 2026-09-29

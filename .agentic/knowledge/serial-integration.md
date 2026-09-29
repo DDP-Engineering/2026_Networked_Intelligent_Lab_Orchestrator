@@ -30,6 +30,9 @@ The operational guide is `06_SoftwareDocu/USB_to_Serial_Integration.md`.
 
 - USB discovery observes metadata without opening ports. Public device IDs are
   stable `serial-N` records; Core supplies endpoint and hardware identity.
+- Shared transport claims reserve the physical port and strong serial identity
+  across Serial and Modbus. Cancellation retains ownership through runner and
+  workspace cleanup; failed cleanup fences reuse and is returned by Core shutdown.
 - Connection approval binds settings, device revision, owner and credential.
   Sends require that same credential and current read/execute authority.
 - Administrator operating settings set the lifetime, unrecorded idle disconnect
@@ -102,7 +105,9 @@ flowchart LR
   Core --> Jobs[Bench approval queue]
   Jobs --> Lease[serial connection]
   Core --> Lease
-  Lease --> Runner[Python serial runner]
+  Lease --> Claims[Shared transport_lease registry]
+  Claims --> Runner[Python serial runner]
+  Modbus[Trusted Modbus consumers] --> Claims
   Runner --> USB([USB tty])
   Lease --> Logs[serial log admission and rotation]
   Logs --> Files[(JSONL files)]
@@ -114,6 +119,8 @@ dedicated session workers own reception and bounded background checks.
 
 ## Files
 
+- `05_Software/core/internal/bench/transport_lease.go` and `transport_lease_test.go`:
+  canonical cross-family claims and cleanup-confirmed ownership.
 - `05_Software/core/internal/bench/serial_*.go`: model, identity adapter,
   session lifecycle, streaming, send control and log services with focused tests.
 - `05_Software/core/internal/store/sqlite/migrations/022_serial_workspace.sql`:

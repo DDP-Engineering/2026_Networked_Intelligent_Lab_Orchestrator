@@ -19,6 +19,10 @@ verification stage's proof is `cmd/nilo/appliance_stage_linux_test.go`, run by
 [Camera integration](camera-integration.md); appliance Network operations and
 commissioning are mapped in [Appliance Network](appliance-network.md).
 
+Modbus definition persistence and canonical transport admission route to
+[Modbus client foundation](modbus-integration.md). SQLite stores revisioned
+endpoint/profile records separately from finite operation leases.
+
 USB serial terminal, connection and log changes route to
 [USB to Serial integration](serial-integration.md).
 
@@ -519,6 +523,10 @@ completed password reset cannot be overtaken by a login already in flight.
 The simulation catalog is dependency-free and does not contact physical equipment. Camera discovery and capture run through the managed Camera package.
 
 ## Files
+
+- `internal/store/sqlite/modbus_repository.go`, `modbus_repository_test.go`,
+  `modbus_discovery_test.go` and migration `024_modbus_definitions.sql`: atomic
+  endpoint/profile CAS, retained USB projection and restart readiness.
 
 - `internal/simulation/catalog.go` - deterministic non-camera development inventory.
 - `internal/httpapi/bench.go` - authenticated Camera artifact and bounded preview routes.

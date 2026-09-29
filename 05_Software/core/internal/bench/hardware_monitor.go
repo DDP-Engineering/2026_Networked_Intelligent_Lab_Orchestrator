@@ -20,7 +20,7 @@ func (m *Manager) monitorHardware(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-tick.C:
-			for _, id := range []string{"camera", "serial"} {
+			for _, id := range []string{"camera", "serial", "modbus"} {
 				m.refreshHardware(ctx, id)
 			}
 		}
@@ -66,13 +66,19 @@ func (m *Manager) refreshHardware(ctx context.Context, id string) {
 				_, err = m.initializeDiscoveredCameraRecords(bounded, current)
 				cancel()
 			}
-		} else {
+		} else if id == "serial" {
 			_, err = m.reconcileSerialDiscovery(ctx, result.Data)
+		} else {
+			_, err = m.reconcileModbusDiscoveryLocked(ctx, result.Data)
 		}
 	}
 	if err != nil {
 		m.report(err)
 		m.report(sqlite.NewManagedDeviceRepository(m.options.Database).MarkUnknown(ctx, id))
+		if id == "modbus" {
+			_, invalidateErr := m.reconcileModbusDiscoveryLocked(ctx, json.RawMessage(`{"devices":[]}`))
+			m.report(invalidateErr)
+		}
 	}
 }
 

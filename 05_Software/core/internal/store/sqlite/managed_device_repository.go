@@ -472,6 +472,18 @@ func (repository *ManagedDeviceRepository) Reconcile(ctx context.Context, plugin
 		return nil, err
 	}
 	defer tx.Rollback()
+	result, err := reconcileManagedDevices(ctx, tx, pluginID, observations, now)
+	if err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// reconcileManagedDevices shares the caller's transaction with transport projections.
+func reconcileManagedDevices(ctx context.Context, tx *sql.Tx, pluginID string, observations []ManagedDeviceObservation, now time.Time) ([]ManagedDeviceRecord, error) {
 	existing, err := readManagedDevices(ctx, tx, pluginID)
 	if err != nil {
 		return nil, err
@@ -623,8 +635,5 @@ func (repository *ManagedDeviceRepository) Reconcile(ctx context.Context, plugin
 		return nil, err
 	}
 	sort.Slice(result, func(i, j int) bool { return result[i].Sequence < result[j].Sequence })
-	if err := tx.Commit(); err != nil {
-		return nil, err
-	}
 	return result, nil
 }
