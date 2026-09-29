@@ -44,8 +44,8 @@ output_root="$repo_root/02_Tools/cache/containers/outputs"
 mkdir -p "$output_root"
 printf '%s\n' "NILO build environment generation=$generation image digest=$actual"
 case "$action" in
-    test) command="./02_Tools/tests/build-environment/verify-offline.sh" ;;
-    build) command="./02_Tools/tests/build-environment/build-all.sh" ;;
+    test) command="sh ./02_Tools/nilo-tools.sh test --in-container" ;;
+    build) command="sh ./02_Tools/nilo-tools.sh build --in-container" ;;
     package)
         [ "$#" -eq 1 ] || usage
         target=$1
@@ -55,7 +55,9 @@ case "$action" in
         command="sh ./02_Tools/packaging/build/prepare-offline.sh $target /outputs/packaging/$target/preparation.json /packaging-cache"
         ;;
     shell) command="exec bash" ;;
-    run) [ "$#" -gt 0 ] || usage; command="$*" ;;
+    # Preserve argument boundaries, including spaces, quotes and shell syntax.
+    # The command is executed by the container shell after source preparation.
+    run) [ "$#" -gt 0 ] || usage; command=$(python3 -c 'import shlex,sys; print(shlex.join(sys.argv[1:]))' "$@") ;;
     *) usage ;;
 esac
 
@@ -70,6 +72,15 @@ set -- run --rm --network none --cap-drop all --security-opt no-new-privileges \
     --mount "type=volume,source=$cache_volume,target=/work/runtime-cache" \
     -v "$output_root:/outputs:rw" -e NILO_OUTPUT_DIR=/outputs \
     -e NILO_ISOLATED_SOURCE=/work/source -w /work
+# A directory on the observed WSL backing volume supplies statvfs evidence.
+if [ -n "${NILO_WSL_HOST_VOLUME:-}" ]; then
+    [ -d "$NILO_WSL_HOST_VOLUME" ] || { printf '%s\n' "error: explicit WSL backing-volume evidence directory is missing: $NILO_WSL_HOST_VOLUME" >&2; exit 1; }
+    set -- "$@" -v "$NILO_WSL_HOST_VOLUME:/work/host-volume:ro" -e NILO_WSL_HOST_VOLUME=/work/host-volume
+fi
+if [ -n "${NILO_KERNEL_MODULES_PATH:-}" ]; then
+    [ -d "$NILO_KERNEL_MODULES_PATH" ] || { printf '%s\n' "error: explicit kernel module evidence directory is missing: $NILO_KERNEL_MODULES_PATH" >&2; exit 1; }
+    set -- "$@" -v "$NILO_KERNEL_MODULES_PATH:/lib/modules:ro"
+fi
 if [ "$action" = package ]; then
     set -- "$@" -v "$package_cache:/packaging-cache:ro"
 fi
@@ -84,11 +95,12 @@ mkdir -p "$NILO_ISOLATED_SOURCE"
 tar -C /workspace -cf - \
     --exclude=./.git \
     --exclude=./02_Tools/cache \
-    --exclude=./02_Tools/archives \
+    --exclude=./02_Tools/tests/build-environment/evidence.local.json \
+    --exclude='*.part[0-9][0-9][0-9]' --exclude='*.oci.tar' --exclude='*.oci.tar.gz' --exclude='nilo-wsl-host-bootstrap-*.tar.gz' \
     --exclude=./02_Tools/runtime \
-    --exclude=./.playwright-cli \
-    --exclude=./.pytest_cache \
-    --exclude=./.ruff_cache \
+    --exclude=.playwright-cli \
+    --exclude=.pytest_cache \
+    --exclude=.ruff_cache \
     --exclude=node_modules \
     --exclude=.venv \
     --exclude=.venv-\* \
@@ -98,6 +110,8 @@ tar -C /workspace -cf - \
     --exclude=playwright-report \
     --exclude=__pycache__ \
     . | tar -C "$NILO_ISOLATED_SOURCE" -xf -
+# Git does not carry empty directories left by excluded dependency trees.
+find "$NILO_ISOLATED_SOURCE" -depth -type d -empty -delete
 # Git metadata stays read-only and outside the writable copy; optional locks
 # are disabled so read-only history queries never try to write an index.
 ln -sfn /work/git-dir "$NILO_ISOLATED_SOURCE/.git"

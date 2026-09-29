@@ -26,7 +26,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl xz-utils &
 
 # Node.js and the browser engine cannot come from the read-only repository
 # mount: 02_Tools/runtime/linux-x86_64/ carries only Go, uv and Python. The Go
-# toolchain still comes from that mount through 02_Tools/env/with-go.sh.
+# toolchain still comes from that mount through 02_Tools/env/with-tools.sh.
 RUN mkdir -p /opt/nilo/node /opt/nilo/playwright \
  && curl -fsSL -o /tmp/node.tar.xz "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
  && echo "${NODE_LINUX_AMD64_SHA256}  /tmp/node.tar.xz" | sha256sum -c - \

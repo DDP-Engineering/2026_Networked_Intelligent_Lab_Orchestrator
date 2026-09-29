@@ -24,6 +24,7 @@ repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 export NILO_BUILDER_ID
 [ -n "$output" ] || output="$repo_root/02_Tools/archives/build-environment"
 lock="$repo_root/02_Tools/containers/build/build-environment.lock.json"
+python3 "$repo_root/02_Tools/scripts/locked_build_inputs.py" verify --repository-root "$repo_root" --lock "$lock"
 locked_generation=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["generation"])' "$lock")
 [ "$generation" = "$locked_generation" ] || { printf '%s\n' "error: requested generation $generation does not match lock generation $locked_generation" >&2; exit 1; }
 source_identity=$(python3 "$repo_root/02_Tools/scripts/build_environment.py" verify-source-state --repository-root "$repo_root")

@@ -77,10 +77,10 @@ an initialized WSL2 distribution:
 
 ```powershell
 # Prepare the pinned Windows and WSL2 development tools.
-.\02_Tools\bootstrap\bootstrap-development.ps1
+.\02_Tools\nilo-tools.ps1 setup tools
 
 # Start the backend and browser interface in simulation mode.
-.\02_Tools\scripts\nilo-dev.ps1 start
+.\02_Tools\nilo-tools.ps1 dev start
 ```
 
 Open the browser URL printed by the launcher and sign in with:
@@ -103,8 +103,8 @@ There are two development paths, and they serve different purposes.
 
 | Path | Use it for | Entry point |
 |---|---|---|
-| Host-local interactive development | Day-to-day coding: run the app, iterate on the GUI, use a headed browser | `.\02_Tools\bootstrap\bootstrap-development.ps1` then `.\02_Tools\scripts\nilo-dev.ps1 start` |
-| Reproducible OCI build/test boundary | The build and test result that counts: lint, unit, contract, cross-architecture and headless browser gates | `.\02_Tools\bootstrap\bootstrap-build-environment.ps1` then `.\02_Tools\env\with-build-environment.ps1 test` |
+| Host-local interactive development | Day-to-day coding: run the app, iterate on the GUI, use a headed browser | `.\02_Tools\nilo-tools.ps1 setup tools` then `.\02_Tools\nilo-tools.ps1 dev start` |
+| Reproducible OCI build/test boundary | Offline lint, unit, contract and cross-architecture checks; browser acceptance is a separate privileged fixture | `.\02_Tools\nilo-tools.ps1 setup container -Distribution Ubuntu` then `.\02_Tools\nilo-tools.ps1 test` |
 
 Use the host-local path while you are working. Use the container path before
 you rely on a result, because it is the same locked Linux image on every

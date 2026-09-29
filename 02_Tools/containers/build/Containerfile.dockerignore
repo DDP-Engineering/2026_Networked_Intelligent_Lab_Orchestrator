@@ -1,6 +1,9 @@
 **
 !02_Tools/
 !02_Tools/toolchain.versions
+!02_Tools/scripts/
+!02_Tools/scripts/build_environment.py
+!02_Tools/scripts/locked_build_inputs.py
 !02_Tools/containers/
 !02_Tools/containers/build/
 !02_Tools/containers/build/**

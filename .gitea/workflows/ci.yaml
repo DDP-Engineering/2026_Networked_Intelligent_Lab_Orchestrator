@@ -1,0 +1,37 @@
+name: NILO offline CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    # Docker access is provided by the trusted instance runner. Fork pull
+    # requests do not execute repository code on this host Docker daemon.
+    if: gitea.event_name != 'pull_request' || gitea.event.pull_request.head.repo.full_name == gitea.repository
+    runs-on: linux-amd64
+    steps:
+      - name: Check out source
+        uses: https://github.com/actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          github-server-url: http://gitea:3000
+          fetch-depth: 0
+          lfs: false
+          persist-credentials: false
+
+      - name: Run canonical offline validation
+        shell: bash
+        run: python3 .gitea/scripts/offline_ci.py
+
+      - name: Upload validation evidence and application builds
+        if: always()
+        uses: https://github.com/actions/upload-artifact@c6a366c94c3e0affe28c06c8df20a878f24da3cf # v3.2.2 for act_runner 0.2.13
+        with:
+          name: nilo-offline-${{ gitea.run_number }}
+          path: 02_Tools/cache/ci/
+          if-no-files-found: warn
+          retention-days: 14

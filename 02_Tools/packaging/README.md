@@ -11,6 +11,17 @@ runtimes have approved HTTPS origins and redistribution evidence. Production
 commands fail closed while that review is incomplete; tests use temporary
 complete locks and never promote them into the shipped configuration.
 
+## Public commands
+
+Use `nilo-tools.ps1 package TARGET` on Windows or
+`sh 02_Tools/nilo-tools.sh package TARGET` on Linux for canonical offline input
+preparation. This writes a preparation receipt; it does not build a release.
+Use `package release ARTIFACTS ACCEPTANCE SOURCE_OFFERS UBUNTU_RECEIPT PI_RECEIPT OUTPUT`
+for release assembly and `package verify RELEASE_DIRECTORY` for verification.
+Windows paths are translated into the selected WSL distribution. Both actions
+use local pinned tools and the existing builder/verifier contracts described below.
+Input acquisition and privileged image construction remain explicit specialist actions.
+
 ## Exact targets
 
 `config/targets.json` is the target authority:
