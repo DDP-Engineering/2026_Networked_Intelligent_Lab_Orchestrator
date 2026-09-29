@@ -56,7 +56,7 @@ function Get-NiloWslDistributions {
     return @(
         $result.Output -replace "`0", '' -split "`r?`n" |
             ForEach-Object { $_.Trim().TrimStart('*').Trim() } |
-            Where-Object { $_.Length -gt 0 }
+            Where-Object { $_.Length -gt 0 -and $_ -notin @('docker-desktop', 'docker-desktop-data') }
     )
 }
 
@@ -93,4 +93,26 @@ function ConvertTo-NiloWslPath {
         throw "WSL could not translate the repository path '$WindowsPath': $path"
     }
     return $path
+}
+
+function Get-NiloWslHostVolume {
+    param(
+        [Parameter(Mandatory = $true)][string]$WslExecutable,
+        [Parameter(Mandatory = $true)][string]$Distribution
+    )
+
+    # Use the registered virtual disk location, not the checkout's drive.
+    $distributionRecord = @(
+        Get-ChildItem -LiteralPath 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss' |
+            ForEach-Object { Get-ItemProperty -LiteralPath $_.PSPath } |
+            Where-Object { $_.DistributionName -eq $Distribution }
+    ) | Select-Object -First 1
+    if ($null -eq $distributionRecord -or -not $distributionRecord.BasePath) {
+        throw "Cannot locate the backing virtual disk for WSL distribution '$Distribution'."
+    }
+    $expandedBasePath = (Resolve-Path -LiteralPath $distributionRecord.BasePath).Path
+    if ($expandedBasePath -notmatch '(?<Drive>[A-Za-z]:)\\') {
+        throw "Cannot determine the Windows volume backing WSL distribution '$Distribution' from '$expandedBasePath'."
+    }
+    return ConvertTo-NiloWslPath -WslExecutable $WslExecutable -Distribution $Distribution -WindowsPath "$($Matches.Drive)\"
 }

@@ -10,6 +10,11 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 - Gitea CI runs the canonical offline suite on the shared Linux runner and
   retains validation evidence and the GUI production build as artifacts.
 
+### Changed
+
+- Repository tooling has six discoverable public commands; shared tool wrappers
+  replace Go-only launchers, and container builds publish CLI/helper binaries and GUI.
+
 ### Fixed
 
 - Offline build preparation checks locked Go/Python input coverage and checksums;

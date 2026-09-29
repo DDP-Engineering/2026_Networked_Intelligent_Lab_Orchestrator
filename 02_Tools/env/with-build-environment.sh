@@ -44,8 +44,8 @@ output_root="$repo_root/02_Tools/cache/containers/outputs"
 mkdir -p "$output_root"
 printf '%s\n' "NILO build environment generation=$generation image digest=$actual"
 case "$action" in
-    test) command="./02_Tools/tests/build-environment/verify-offline.sh" ;;
-    build) command="./02_Tools/tests/build-environment/build-all.sh" ;;
+    test) command="sh ./02_Tools/nilo-tools.sh test --in-container" ;;
+    build) command="sh ./02_Tools/nilo-tools.sh build --in-container" ;;
     package)
         [ "$#" -eq 1 ] || usage
         target=$1
@@ -55,7 +55,9 @@ case "$action" in
         command="sh ./02_Tools/packaging/build/prepare-offline.sh $target /outputs/packaging/$target/preparation.json /packaging-cache"
         ;;
     shell) command="exec bash" ;;
-    run) [ "$#" -gt 0 ] || usage; command="$*" ;;
+    # Preserve argument boundaries, including spaces, quotes and shell syntax.
+    # The command is executed by the container shell after source preparation.
+    run) [ "$#" -gt 0 ] || usage; command=$(python3 -c 'import shlex,sys; print(shlex.join(sys.argv[1:]))' "$@") ;;
     *) usage ;;
 esac
 
@@ -93,11 +95,12 @@ mkdir -p "$NILO_ISOLATED_SOURCE"
 tar -C /workspace -cf - \
     --exclude=./.git \
     --exclude=./02_Tools/cache \
+    --exclude=./02_Tools/tests/build-environment/evidence.local.json \
     --exclude='*.part[0-9][0-9][0-9]' --exclude='*.oci.tar' --exclude='*.oci.tar.gz' --exclude='nilo-wsl-host-bootstrap-*.tar.gz' \
     --exclude=./02_Tools/runtime \
-    --exclude=./.playwright-cli \
-    --exclude=./.pytest_cache \
-    --exclude=./.ruff_cache \
+    --exclude=.playwright-cli \
+    --exclude=.pytest_cache \
+    --exclude=.ruff_cache \
     --exclude=node_modules \
     --exclude=.venv \
     --exclude=.venv-\* \

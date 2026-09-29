@@ -46,6 +46,8 @@ cp -R /opt/nilo/cache-seed/. /work/runtime-cache/
 mkdir -p /work/source
 tar -C /workspace -cf - \
   --exclude=./.git --exclude=./02_Tools/cache --exclude=./02_Tools/runtime \
+  --exclude=./02_Tools/tests/build-environment/evidence.local.json \
+  --exclude=.playwright-cli --exclude=.pytest_cache --exclude=.ruff_cache \
   --exclude='*.part[0-9][0-9][0-9]' --exclude='*.oci.tar' --exclude='*.oci.tar.gz' \
   --exclude='nilo-wsl-host-bootstrap-*.tar.gz' --exclude=node_modules \
   --exclude=.venv --exclude='.venv-*' --exclude=dist --exclude=coverage \
@@ -53,7 +55,7 @@ tar -C /workspace -cf - \
 find /work/source -depth -type d -empty -delete
 ln -s /workspace/.git /work/source/.git
 cd /work/source
-timeout --signal=TERM --kill-after=30s 45m ./02_Tools/tests/build-environment/verify-offline.sh
+timeout --signal=TERM --kill-after=30s 45m sh ./02_Tools/nilo-tools.sh test --in-container
 '''
 
 

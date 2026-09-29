@@ -47,7 +47,7 @@ Two paths, described in full in `02_Tools/README.md`.
 Host-local interactive development:
 
 ```powershell
-.\02_Tools\bootstrap\bootstrap-development.ps1
+.\02_Tools\nilo-tools.ps1 setup tools
 ```
 
 It verifies the selected WSL2 distribution, bootstraps the Windows and Linux
@@ -188,12 +188,12 @@ Iterate on the interface from the development host against that appliance, with
 Build inside the locked container, which is the result that counts:
 
 ```powershell
-.\02_Tools\env\with-build-environment.ps1 build
+.\02_Tools\nilo-tools.ps1 build
 .\02_Tools\env\with-build-environment.ps1 shell
 ```
 
 ```sh
-./02_Tools/env/with-build-environment.sh build
+sh ./02_Tools/nilo-tools.sh build
 ```
 
 The container runs with no network, no privileges, no engine socket and the
@@ -219,7 +219,7 @@ After adoption, fetch, verify and prepare each exact target:
 ```powershell
 .\02_Tools\packaging\fetch\fetch-all.ps1 ubuntu-24.04-amd64
 .\02_Tools\packaging\verify\verify-cache.ps1 ubuntu-24.04-amd64
-.\02_Tools\env\with-build-environment.ps1 package ubuntu-24.04-amd64
+.\02_Tools\nilo-tools.ps1 package ubuntu-24.04-amd64
 ```
 
 The equivalent POSIX entry points live under `02_Tools/packaging/{fetch,verify}`

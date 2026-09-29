@@ -75,7 +75,7 @@ else
     set -- --engine "$engine"
 fi
 "$repo_root/02_Tools/env/with-build-environment.sh" "$@" run \
-    'npm --prefix 05_Software/frontend ci --offline --ignore-scripts && ./02_Tools/tests/build-environment/prepare-python-environments.sh'
+    sh -c 'npm --prefix 05_Software/frontend ci --offline --ignore-scripts && ./02_Tools/tests/build-environment/prepare-python-environments.sh'
 
 fingerprint > "$work/after"
 

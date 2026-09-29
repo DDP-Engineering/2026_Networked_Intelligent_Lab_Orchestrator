@@ -9,7 +9,7 @@ documentation that accompanies the application.
   Camera workflows, recording, export and retention.
 - [MCP reference](../06_SoftwareDocu/MCP_Reference.md) - authenticated endpoint,
   tool catalog, inputs, permissions and examples.
-- [NILO — Command Line and Authentication](NILO_CLI_and_Authentication.md) -
+- [NILO â€” Command Line and Authentication](NILO_CLI_and_Authentication.md) -
   the administrator's reference for the `nilo` command line, the fixed role and
   permission model, first-run setup, browser sessions versus API tokens, the
   HTTP authentication routes, audit coverage, upgrade behavior, and what this
@@ -18,6 +18,11 @@ documentation that accompanies the application.
   the implemented security contract, automated acceptance evidence, base-state
   caveat, and remaining Raspberry Pi hardware checks.
 
+
+## Current bench deployment
+
+- [2026-09-29 NILO 0.12.0 deployment](NILO_0.12.0_RPi_Current_20260929.md) —
+  merged-source validation, Pi installation, HTTPS/API checks and rollback.
 
 ## Packaging and deployment decisions
 

@@ -798,7 +798,7 @@ class BuildEnvironmentTests(unittest.TestCase):
         self.assertIn("preserving existing selected engine", installer)
 
     def test_host_archive_uses_apts_selected_dependency_closure(self) -> None:
-        generator = (TOOLS_ROOT / "scripts/build-wsl-host-bootstrap.sh").read_text(
+        generator = (TOOLS_ROOT / "scripts/build-host-bootstrap.sh").read_text(
             encoding="utf-8"
         )
         self.assertNotIn("apt_cache depends", generator)
@@ -811,7 +811,7 @@ class BuildEnvironmentTests(unittest.TestCase):
         self.assertIn("Dir::Cache::archives=$staging/packages/$group", generator)
 
     def test_host_archive_reads_raw_deb_control_field_values(self) -> None:
-        generator = (TOOLS_ROOT / "scripts/build-wsl-host-bootstrap.sh").read_text(
+        generator = (TOOLS_ROOT / "scripts/build-host-bootstrap.sh").read_text(
             encoding="utf-8"
         )
         self.assertIn("def control_field(path, field):", generator)
@@ -954,7 +954,8 @@ class BuildEnvironmentTests(unittest.TestCase):
         generator = (TOOLS_ROOT / "scripts/build-host-bootstrap.sh").read_text(
             encoding="utf-8"
         )
-        self.assertIn("build-wsl-host-bootstrap.sh", generator)
+        self.assertIn("apt_get", generator)
+        self.assertIn("host-bootstrap.lock.json", generator)
 
     def test_pending_archive_reports_recovery_before_missing_tool_errors(self) -> None:
         result = self._run_linux_bootstrap("--engine", "podman", "--offline")
@@ -1554,7 +1555,7 @@ class BuildEnvironmentTests(unittest.TestCase):
 
     @unittest.skipIf(os.name == "nt", "requires POSIX tar")
     def test_source_copy_preserves_control_metadata_without_runtime_payloads(self) -> None:
-        """Exercise both real copy commands against an archive/runtime fixture."""
+        """Exercise local, verification and CI copies against a cache fixture."""
         retained = [
             "02_Tools/archives/wsl-host-bootstrap/host-bootstrap.lock.json",
             "02_Tools/archives/build-environment/current.json",
@@ -1565,7 +1566,11 @@ class BuildEnvironmentTests(unittest.TestCase):
             "02_Tools/archives/build-environment/nilo-build-env-test.oci.tar.gz",
             "02_Tools/archives/wsl-host-bootstrap/nilo-wsl-host-bootstrap-test.tar.gz",
             "02_Tools/cache/runtime.bin",
+            "02_Tools/tests/build-environment/evidence.local.json",
             "05_Software/integrations/fake_python/.venv/dependency.py",
+            "05_Software/integrations/fake_python/.venv-windows-x86_64/dependency.py",
+            "05_Software/integrations/fake_python/.pytest_cache/CACHEDIR.TAG",
+            "05_Software/integrations/fake_python/.ruff_cache/CACHEDIR.TAG",
         ]
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -1576,14 +1581,18 @@ class BuildEnvironmentTests(unittest.TestCase):
                 path.write_text("fixture", encoding="utf-8")
             for index, name in enumerate([
                 "env/with-build-environment.sh", "scripts/verify-build-environment.sh",
+                "../.gitea/scripts/offline_ci.py",
             ]):
                 with self.subTest(wrapper=name):
                     output = root / f"isolated-{index}"
                     output.mkdir()
                     wrapper = (TOOLS_ROOT / name).read_text(encoding="utf-8")
                     finish = 'find "$NILO_ISOLATED_SOURCE" -depth -type d -empty -delete'
+                    if name.endswith("offline_ci.py"):
+                        finish = 'find /work/source -depth -type d -empty -delete'
                     command = wrapper[wrapper.index("tar -C /workspace"):wrapper.index(finish) + len(finish)]
                     command = command.replace("/workspace", '"$NILO_TEST_WORKSPACE"')
+                    command = command.replace("/work/source", '"$NILO_ISOLATED_SOURCE"')
                     result = subprocess.run(
                         ["sh", "-eu", "-c", command], text=True, capture_output=True,
                         env={**os.environ, "NILO_TEST_WORKSPACE": str(workspace),
@@ -1984,8 +1993,9 @@ class BuildEnvironmentTests(unittest.TestCase):
         root_readme = (REPOSITORY_ROOT / "README.md").read_text(encoding="utf-8")
         # A new developer must be told which path serves which purpose.
         self.assertIn("Build environment", root_readme)
-        self.assertIn("bootstrap-build-environment", root_readme)
-        self.assertIn("nilo-dev.ps1", root_readme)
+        self.assertIn("nilo-tools.ps1 setup container", root_readme)
+        self.assertIn("nilo-tools.ps1 dev start", root_readme)
+        self.assertIn("nilo-tools.ps1 test", root_readme)
         self.assertIn("02_Tools/README.md", root_readme)
 
         readme = (TOOLS_ROOT / "README.md").read_text(encoding="utf-8")
@@ -2200,7 +2210,9 @@ class BuildEnvironmentTests(unittest.TestCase):
         windows = (TOOLS_ROOT / "bootstrap/bootstrap-build-environment.ps1").read_text(
             encoding="utf-8"
         )
-        self.assertIn("DistributionName", windows)
+        shared = (TOOLS_ROOT / "lib/Wsl.ps1").read_text(encoding="utf-8")
+        self.assertIn("Get-NiloWslHostVolume", windows)
+        self.assertIn("DistributionName", shared)
         self.assertIn("NILO_WSL_HOST_VOLUME", windows)
 
     def test_host_isolation_sentinel_cleanup_is_interruption_safe(self) -> None:

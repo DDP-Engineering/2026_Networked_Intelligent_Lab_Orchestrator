@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "description": "Components the appliance verification image must carry. The Go toolchain is deliberately absent: it comes from the repository's pinned Linux runtime through the read-only mount, via 02_Tools/env/with-go.sh.",
+  "description": "Components the appliance verification image must carry. The Go toolchain is deliberately absent: it comes from the repository's pinned Linux runtime through the read-only mount, via 02_Tools/env/with-tools.sh.",
   "tools": [
     {
       "name": "NetworkManager",

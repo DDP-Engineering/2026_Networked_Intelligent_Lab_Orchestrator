@@ -4,6 +4,80 @@
 verification, deployment, and diagnostic tooling beside the project without
 requiring a global installation or mixing tools into product source.
 
+## Everyday commands
+
+Use `nilo-tools.ps1` on Windows and `nilo-tools.sh` on native Ubuntu. Help works
+before any runtime, WSL distribution or container engine is installed:
+
+```powershell
+.\02_Tools\nilo-tools.ps1 help
+.\02_Tools\nilo-tools.ps1 setup -Distribution Ubuntu -Offline
+.\02_Tools\nilo-tools.ps1 dev start -Distribution Ubuntu
+.\02_Tools\nilo-tools.ps1 dev status -Distribution Ubuntu
+.\02_Tools\nilo-tools.ps1 doctor -Distribution Ubuntu
+.\02_Tools\nilo-tools.ps1 test -Distribution Ubuntu
+.\02_Tools\nilo-tools.ps1 build -Distribution Ubuntu
+.\02_Tools\nilo-tools.ps1 package ubuntu-24.04-amd64 -Distribution Ubuntu
+```
+
+| Command | Result |
+|---|---|
+| `setup` | Prepare pinned Windows/WSL host tools and the canonical image. `tools` or `container` selects only that part. Offline restoration requires already-acquired verified inputs. |
+| `dev` | Windows `start`/`status` preserves the real simulation backend and GUI in visible consoles. Login is `admin` / `admin_password`; stop each server with Ctrl+C in its console. |
+| `doctor` | Inspect host tools and the accepted container inventory/digest. `tools` or `container` selects one boundary. |
+| `test` | Run the complete canonical offline suite. `tools` selects tooling tests; `network`, `appliance` and `packaging` explicitly run their host acceptance fixtures. |
+| `build` | Publish `core/linux-amd64/{nilo,nilo-nethelper}`, `core/linux-arm64/{nilo,nilo-nethelper}` and `nilo_gui/` below `cache/containers/outputs/`. |
+| `package TARGET` | Verify and prepare offline inputs, writing a preparation receipt. This is not a finished release. `package release` assembles previously built artifacts; `package verify` checks a release. |
+
+Native Ubuntu uses the same commands, with POSIX option names:
+
+```sh
+sh ./02_Tools/nilo-tools.sh setup --offline
+sh ./02_Tools/nilo-tools.sh doctor
+sh ./02_Tools/nilo-tools.sh test
+sh ./02_Tools/nilo-tools.sh build
+sh ./02_Tools/nilo-tools.sh package rpi-debian13-arm64
+sh ./02_Tools/nilo-tools.sh dev backend --data-dir /home/me/.local/state/nilo-simulation
+```
+
+Linux `dev backend` runs the simulation Core in the current terminal; it does
+not launch the Windows GUI development server. Its data directory must be an
+absolute Linux path outside `/mnt/`. The Windows development topology remains
+the normal interactive browser loop.
+
+`setup -InstallWSL` and `setup -InstallEngine -EngineArchivePath DIR` request
+host changes explicitly. `-RebuildFromPinnedInputs` selects connected acquisition
+and then an offline image build; it cannot be combined with `-Offline`. Native
+Linux uses the equivalent `--install-engine`, `--engine-archive-path` and
+`--rebuild-from-pinned-inputs` options. Automatic distribution selection ignores
+Docker Desktop utility distributions and requires one development distribution.
+Windows container commands discover the selected distribution's backing volume
+and mount its free-space evidence read-only. Both launchers provide the host's
+kernel-module inventory read-only when available. When invoking the shell launcher
+directly inside WSL, set `NILO_WSL_HOST_VOLUME` to the Windows volume containing
+that distribution's virtual disk; the checkout drive may be different.
+
+The public launchers select internal helpers below `bootstrap/`, `env/`,
+`scripts/`, `packaging/` and `tests/`. Those files stay small and focused; ordinary
+work does not require choosing among them. The shared `env/with-tools.*` helpers
+resolve only Go for Go commands, so Go-only fixtures need no Python/Node runtime.
+Container `run` preserves each argument literally, including spaces and quotes.
+Pass `run sh -c 'COMMANDS'` when explicitly requesting a shell expression.
+Ignored `tests/build-environment/evidence.local.json` stays on the host; copied
+source retains the tracked evidence template and archive control metadata.
+
+CI calls the same offline route inside its isolated canonical container through
+`nilo-tools.sh test --in-container`. That internal option checks the isolated
+source location and image lock and refuses ordinary host execution.
+
+## Specialist references
+
+The following sections document internal helper contracts and advanced
+environment/archive operations. Release assembly details are in
+[packaging/README.md](packaging/README.md), privileged acceptance in
+[tests/appliance/README.md](tests/appliance/README.md), and source/image
+provenance in [containers/build/README.md](containers/build/README.md).
+
 ## Offline delivery input foundation
 
 `packaging/` defines the exact Ubuntu 24.04 amd64 and Raspberry Pi OS/Debian 13
@@ -189,16 +263,16 @@ python3 02_Tools/scripts/build_environment.py verify-committed-source \
 ### Normal build and test
 
 ```powershell
-.\02_Tools\env\with-build-environment.ps1 test
-.\02_Tools\env\with-build-environment.ps1 build
+.\02_Tools\nilo-tools.ps1 test
+.\02_Tools\nilo-tools.ps1 build
 .\02_Tools\env\with-build-environment.ps1 shell
 ```
 
 Native Ubuntu uses the matching POSIX wrapper:
 
 ```sh
-./02_Tools/env/with-build-environment.sh test
-./02_Tools/env/with-build-environment.sh build
+sh ./02_Tools/nilo-tools.sh test
+sh ./02_Tools/nilo-tools.sh build
 ./02_Tools/env/with-build-environment.sh shell
 ```
 
@@ -299,7 +373,7 @@ For the approved Windows plus WSL2 development environment, use the combined
 bootstrap from PowerShell:
 
 ```powershell
-.\02_Tools\bootstrap\bootstrap-development.ps1
+.\02_Tools\nilo-tools.ps1 setup tools
 ```
 
 The command verifies that the selected distribution already runs as WSL2,
@@ -307,7 +381,7 @@ then bootstraps and diagnoses both Windows and Linux toolchains. It does not
 install WSL unless explicitly requested:
 
 ```powershell
-.\02_Tools\bootstrap\bootstrap-development.ps1 -Distribution Ubuntu -InstallWSL
+.\02_Tools\nilo-tools.ps1 setup tools -Distribution Ubuntu -InstallWSL
 ```
 
 WSL installation or WSL1-to-WSL2 conversion can require administrator access,
@@ -352,8 +426,7 @@ required Go version. Bootstrap scripts pin the archive version and verify its
 published checksum before extraction. They do not change the system-wide
 `PATH`; environment helpers set it only for the command they launch.
 
-The current development runtime is Go 1.27.0. The compatibility `with-go`
-helpers remain available, but normal work uses
+The current development runtime is Go 1.27.0. Internal tool invocation uses
 `env/with-tools.ps1 <command> [args...]` on Windows or
 `env/with-tools.sh <command> [args...]` on POSIX so Go, uv, and managed Python
 are all resolved from the current platform directory for that child process
@@ -422,8 +495,8 @@ under WSL2 on the simulation profile, and the browser interface development
 server on native Windows - starts from one entry point:
 
 ```powershell
-.\02_Tools\scripts\nilo-dev.ps1 start
-.\02_Tools\scripts\nilo-dev.ps1 status
+.\02_Tools\nilo-tools.ps1 dev start
+.\02_Tools\nilo-tools.ps1 dev status
 ```
 
 Each component is launched into **its own visible console window**. Its output

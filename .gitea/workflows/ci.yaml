@@ -27,7 +27,7 @@ jobs:
         shell: bash
         run: python3 .gitea/scripts/offline_ci.py
 
-      - name: Upload validation evidence and GUI build
+      - name: Upload validation evidence and application builds
         if: always()
         uses: https://github.com/actions/upload-artifact@c6a366c94c3e0affe28c06c8df20a878f24da3cf # v3.2.2 for act_runner 0.2.13
         with:
