@@ -1,4 +1,4 @@
-# Modbus client foundation
+# Modbus client foundation and supervised runner
 
 ## Routing
 
@@ -9,8 +9,9 @@ under `05_Software/integrations/modbus/`. Core services start at
 `05_Software/core/internal/bench/modbus_definitions.go`, `modbus_discovery.go`
 and `transport_lease.go`; models and storage live in `internal/modbus/definitions.go`
 and `internal/store/sqlite/modbus_repository.go`, with adjacent focused tests.
-Feasibility starts at `src/nilo_modbus/requests.py`
-and `feasibility.py`; focused tests live in `tests/` alongside independent peers.
+The Python package starts at `src/nilo_modbus/requests.py`, `feasibility.py`,
+`runner_client.py`, `scheduler.py` and `workspace.py`; focused tests live in
+`tests/` alongside independent peers.
 Managed production package lifecycle belongs to
 [Managed bench integrations](bench-integrations.md), shared runner lifecycle to
 [Integration platform](integration-platform.md), physical serial terminals to
@@ -24,9 +25,10 @@ and shared full-lifetime transport claims. Internal trusted consumers supply
 transport lifetimes and cleanup; the curated production registry and public
 session adapters compose separate runner and policy services.
 
-This isolated Python package proves client protocol behavior against loopback
-TCP and Linux PTY fixtures and supplies a strict versioned development contract.
-Its direct test interface owns simulated requests and bounded observations.
+This Python package supplies an SDK-supervised `serve` runner for one pinned
+endpoint, and proves its client protocol against loopback TCP and Linux PTY
+fixtures. The runner owns a private local control socket, fair per-endpoint
+scheduling and bounded observations. Direct simulation tests remain available.
 Bench Core owns the production integration registry, identity, policy and
 persistence; the existing curated packages use the shared supervised lifecycle.
 
@@ -50,6 +52,12 @@ persistence; the existing curated packages use the shared supervised lifecycle.
   or Linux `/dev/pts` entries. Callers explicitly connect, transact and close.
   Outcomes distinguish acknowledgement, device exception, timeout, cancellation,
   protocol error, pre-transmission rejection and unknown write delivery.
+- `ModbusIntegration.execute(serve)` verifies pinned endpoint/profile and an
+  owner-only workspace, opens one transport, and serves version-1 private
+  transactions through a mode-0600 Unix socket until stop or cancellation.
+- `EndpointScheduler.submit` admits bounded requests, coalesces queued polls,
+  rotates units fairly and returns one correlated terminal outcome. The runner
+  package manifest and schemas are loadable through Core's manifest loader.
 - `schemas/contracts.schema.json` declares strict Draft 2020-12 entities and
   private messages. The linked specification defines semantic validation,
   ownership and the baseline routes consumed by subsequent implementation.
@@ -79,6 +87,16 @@ persistence; the existing curated packages use the shared supervised lifecycle.
   `delivery_unknown`, with at most one observed request.
 - Trace retention is bounded by 256 observations and 64 KiB raw bytes;
   `library_buffer` identifies cumulative library callbacks. Overflow fails closed.
+- The runner permits one active call and 128 pending requests, at most 8 per
+  unit. TCP reads may retry at most three times inside a monotonic deadline;
+  connection startup is capped at 60 seconds and no write is replayed. RTU
+  serial recovery drains until a quiet frame gap,
+  while RTU-over-TCP discards the closed socket. A timed-out unit/function is
+  quarantined for the runner lifetime because its late reply is ambiguous.
+- The private socket has exact bounded messages, and worker crash, stop and
+  cancellation close the transport and unlink only the socket the runner bound.
+- Serial recovery rechecks the pinned USB identity before draining and before
+  reopening the tty, so a rebound tty cannot silently change adapters.
 - Serial proof uses independent Linux PTYs with exclusive descriptor ownership.
   Physical framing, RS-485 direction and native ARM64 execution require target
   observations.
@@ -95,6 +113,8 @@ persistence; the existing curated packages use the shared supervised lifecycle.
 | Claims and cleanup | Core `transport_lease.go`, `serial_session.go` | `transport_lease_test.go`, `serial_lifecycle_test.go` |
 | PDU limits or presentation addresses | `requests.py` | `test_requests.py` |
 | Transport, response validation or fencing | `feasibility.py` | `test_feasibility.py` and handwritten `peers.py` |
+| Supervised client, private socket or recovery | `runner_client.py`, `workspace.py`, `plugin.py` | `test_runner.py`, `test_workspace.py`, `test_supervised.py` |
+| Fair queue and cancellation | `scheduler.py` | `test_scheduler.py` |
 | Entity or private-message grammar | `contracts.schema.json` and specification | `test_contracts.py` |
 | Dependency pins or notices | `dependencies.json`, lock and preparation helper | `test_dependencies.py` and explicit offline acquisition verification |
 
@@ -113,6 +133,9 @@ persistence; the existing curated packages use the shared supervised lifecycle.
 - `REQ-REL-5c6b6a83` — inconsistent replies yield no successful result.
 - `REQ-REL-689b7d81` — uncertainty fences reuse and preserves bounded correlation.
 - `REQ-PLAT-81822827` — exact runtime archives and license provenance.
+- `REQ-FUNC-aa89e3ad`, `REQ-REL-2ad3bbb0` — supervised baseline functions and strict replies.
+- `REQ-REL-2d6babd5`, `REQ-REL-1878cffa` — fair bounded scheduling and conservative recovery.
+- `REQ-SEC-a3293f66`, `REQ-REL-feb1ff48` — private workspace and deterministic cleanup.
 
 ## Architecture
 
@@ -129,6 +152,12 @@ flowchart LR
     tests --> client[SimulationClient]
     client --> requests
     client --> checks[Canonical TX and validate_reply]
+    sdk[SDK supervisor] --> plugin[ModbusIntegration serve]
+    plugin --> workspace[Owner-only Unix workspace]
+    workspace --> scheduler[EndpointScheduler]
+    scheduler --> runner[RunnerClient]
+    runner --> checks
+    runner --> library
     client --> library[PyModbus async client]
     library --> peer([Handwritten TCP or PTY peer])
     library --> checks
@@ -137,8 +166,8 @@ flowchart LR
     pins[(Dependency manifest and lock)] --> library
 ```
 
-The prototype is invoked directly by tests. Its permanent failure fence
-provides the measured response boundary for the evaluated library.
+The simulation client remains directly invoked by tests. The supervised runner
+uses the same checked ADU boundary and owns its own recovery and private session.
 
 ## Files
 
@@ -155,6 +184,9 @@ provides the measured response boundary for the evaluated library.
 - `05_Software/integrations/modbus/src/nilo_modbus/__init__.py` — package namespace.
 - `05_Software/integrations/modbus/src/nilo_modbus/requests.py` — validation and PDU encoding.
 - `05_Software/integrations/modbus/src/nilo_modbus/feasibility.py` — guarded async client.
+- `05_Software/integrations/modbus/src/nilo_modbus/{runner_client,scheduler,workspace,usb,plugin,__main__}.py` — supervised endpoint, private control and lifecycle.
+- `05_Software/integrations/modbus/{manifest.json,runner,schemas/}` — SDK package declaration and typed operation boundary.
+- `05_Software/integrations/modbus/tests/{test_runner,test_scheduler,test_workspace,test_supervised,test_usb,test_package}.py` — runner behavior and package validation.
 - `05_Software/integrations/modbus/schemas/contracts.schema.json` — structural schemas.
 - `05_Software/integrations/modbus/tests/peers.py` — independent TCP/PTY fixtures.
 - `05_Software/integrations/modbus/tests/test_requests.py` — golden encoding and bounds.

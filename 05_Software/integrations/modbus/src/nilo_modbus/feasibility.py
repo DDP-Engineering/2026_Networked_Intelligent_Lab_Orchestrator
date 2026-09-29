@@ -7,8 +7,8 @@
 # SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
 # -----------------------------------------------------------------------------
 """@file feasibility.py
-@brief Guard a candidate client inside isolated simulation.
-@details Feasibility only; production plugin registration is a later package.
+@brief Validate Modbus client traffic and guard the isolated simulation entry.
+@details The private runner reuses the checked transport boundary below.
 """
 
 # IMPORTS
@@ -92,24 +92,29 @@ def validate_reply(data, sent, request, mode):
 
 
 # DATA MODELS / TYPEDEFINITIONS
-class SimulationClient:
-    """@brief Own one explicit simulation connection with serialized operations.
-    @details This prototype is never registered with Core or given real targets.
-    """
+class ValidatedClient:
+    """@brief Own one checked transport with serialized calls and no library retries."""
 
-    def __init__(self, mode, *, host="127.0.0.1", port=0, path=None, timeout=0.2, simulation=False):
-        if not simulation or mode not in ("tcp", "rtu_tcp", "rtu"):
-            raise ValueError("explicit supported simulation required")
-        if mode == "rtu":
-            if (
-                not isinstance(path, str)
-                or not path.startswith("/dev/pts/")
-                or not path[9:].isdigit()
-            ):
-                raise ValueError("Linux PTY only")
-        elif not ipaddress.ip_address(host).is_loopback or not 1 <= port <= 65535:
-            raise ValueError("loopback only")
-        if not 0.01 <= timeout <= 10:
+    def __init__(
+        self,
+        mode,
+        *,
+        host="127.0.0.1",
+        port=0,
+        path=None,
+        timeout=0.2,
+        baudrate=19200,
+        parity="N",
+        stopbits=1,
+        local_echo=False,
+    ):
+        if mode not in ("tcp", "rtu_tcp", "rtu"):
+            raise ValueError("unsupported transport")
+        if mode == "rtu" and (not isinstance(path, str) or not path.startswith("/dev/")):
+            raise ValueError("invalid serial path")
+        if mode != "rtu" and (not isinstance(host, str) or not 1 <= port <= 65535):
+            raise ValueError("invalid network target")
+        if not 0.001 <= timeout <= 2147483.647:
             raise ValueError("bounded timeout")
         self.mode = mode
         self.timeout = timeout
@@ -123,6 +128,7 @@ class SimulationClient:
         self.valid_reply = False
         self.protocol_fault = False
         self.started = time.monotonic()
+        self.target = (host, port, path, baudrate, parity, stopbits, local_echo)
         settings = {
             "timeout": timeout,
             "retries": 0,
@@ -131,7 +137,13 @@ class SimulationClient:
         }
         if mode == "rtu":
             self.client = AsyncModbusSerialClient(
-                path, baudrate=19200, parity="N", bytesize=8, stopbits=1, **settings
+                path,
+                baudrate=baudrate,
+                parity=parity,
+                bytesize=8,
+                stopbits=stopbits,
+                handle_local_echo=local_echo,
+                **settings,
             )
         else:
             self.client = AsyncModbusTcpClient(
@@ -261,6 +273,26 @@ class SimulationClient:
             finally:
                 self.request_id = None
                 self.active = None
+
+
+class SimulationClient(ValidatedClient):
+    """@brief Restrict the development client to explicit loopback or Linux PTY peers."""
+
+    def __init__(self, mode, *, host="127.0.0.1", port=0, path=None, timeout=0.2, simulation=False):
+        if not 0.01 <= timeout <= 10:
+            raise ValueError("bounded timeout")
+        if not simulation or mode not in ("tcp", "rtu_tcp", "rtu"):
+            raise ValueError("explicit supported simulation required")
+        if mode == "rtu":
+            if (
+                not isinstance(path, str)
+                or not path.startswith("/dev/pts/")
+                or not path[9:].isdigit()
+            ):
+                raise ValueError("Linux PTY only")
+        elif not ipaddress.ip_address(host).is_loopback or not 1 <= port <= 65535:
+            raise ValueError("loopback only")
+        super().__init__(mode, host=host, port=port, path=path, timeout=timeout)
 
 
 # END OF FILE

@@ -1,0 +1,20 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+id = "REQ-REL-2d6babd5"
+title = "Schedule endpoint requests fairly within bounded queues"
+status = "active"
+requirement = """While a runner owns one endpoint, its scheduler shall permit at most one transport request in flight, serve waiting units fairly within bounded per-unit/total queues, coalesce missed poll work and allow independent endpoint runners to progress concurrently."""
+verification = "Automated: Queue interleaved unit requests and repeated poll keys behind a slow peer; inspect exact service order, maximum backlog, absence of overlap and progress on a second endpoint."
+affected_paths = ["05_Software/integrations/modbus/src/nilo_modbus/scheduler.py", "05_Software/integrations/modbus/tests/test_scheduler.py"]
+linked_tests = ["05_Software/integrations/modbus/tests/test_scheduler.py::test_round_robin_units_and_single_in_flight", "05_Software/integrations/modbus/tests/test_scheduler.py::test_pending_poll_coalesces_and_queue_is_bounded", "05_Software/integrations/modbus/tests/test_scheduler.py::test_independent_endpoints_progress_and_pending_limit_is_fixed"]
+spec = "specs/REQ-REL-2d6babd5.md"
+priority = "normal"
+rationale = ""
+created = 2026-09-29
+updated = 2026-09-29

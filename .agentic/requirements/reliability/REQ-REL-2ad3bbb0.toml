@@ -1,0 +1,20 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+id = "REQ-REL-2ad3bbb0"
+title = "Reject inconsistent Modbus transport replies"
+status = "active"
+requirement = """If a peer returns an inconsistent CRC, MBAP protocol/length/transaction, unit, function, byte count or write echo, the runner shall reject that reply and fence or quarantine its transport so it cannot become a fresh successful result."""
+verification = "Automated: Use independent fragmented/coalesced and malformed peers, then attempt another request and verify no invalid or late frame becomes an acknowledged sample."
+affected_paths = ["05_Software/integrations/modbus/src/nilo_modbus/runner_client.py", "05_Software/integrations/modbus/src/nilo_modbus/feasibility.py"]
+linked_tests = ["05_Software/integrations/modbus/tests/test_runner.py::test_runner_rejects_bad_reply_and_never_publishes_values", "05_Software/integrations/modbus/tests/test_feasibility.py"]
+spec = "specs/REQ-REL-2d6babd5.md"
+priority = "normal"
+rationale = ""
+created = 2026-09-29
+updated = 2026-09-29

@@ -7,6 +7,9 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Added
 
+- A supervised Modbus runner serves validated RTU, TCP and RTU-over-TCP commands
+  through a private socket with fair scheduling and bounded recovery.
+
 - Modbus endpoints and shared profiles persist with revision checks; Serial and
   Modbus share physical-port and gateway ownership through confirmed cleanup.
 

@@ -48,7 +48,7 @@
       ]
     }
   ],
-  "closure": "Runtime Python dependencies are exactly these two universal wheels. Source archives supply redistribution license evidence. Native interpreter bundling and ARM64 import/hardware acceptance are separate target gates; the repository toolchain is the development runtime.",
+  "closure": "The Modbus-specific transport dependencies are these two universal wheels. The supervised runner also depends on the repository integration SDK and its pinned Pydantic closure in uv.lock, already shared by other integrations in the local candidate build environment. Source archives supply Modbus transport redistribution license evidence. Native interpreter bundling and ARM64 import/hardware acceptance are separate target gates; the repository toolchain is the development runtime.",
   "sources": [
     "https://pypi.org/pypi/pymodbus/3.15.0/json",
     "https://pypi.org/pypi/pyserial/3.5/json",

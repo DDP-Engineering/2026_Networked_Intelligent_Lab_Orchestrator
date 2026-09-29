@@ -11,8 +11,8 @@ Physical Camera runner behavior belongs to [Camera integration](camera-integrati
 USB serial terminal, connection and log changes route to
 [USB to Serial integration](serial-integration.md).
 
-Modbus development schemas and isolated protocol tests route to
-[Modbus client feasibility](modbus-integration.md).
+Modbus's supervised private runner, development schemas and protocol tests route to
+[Modbus client foundation](modbus-integration.md).
 
 ## Purpose and boundaries
 
@@ -20,7 +20,7 @@ The integration platform loads bounded runtime packages and supervises their ext
 
 ## Public interface
 
-Go callers use `manifest.Load`, protocol codecs and registries, and `supervisor.ProcessSupervisor` methods `Describe`, `Execute`, `Cancel`, and `Shutdown`. Each process completes a correlated versioned `configure` exchange after hello and before work. Manifests can declare a confined device configuration schema and list allowed media types for each artifact. Python integration authors implement the asynchronous SDK lifecycle interface and launch its NDJSON server. The common contract harness currently runs an install-shaped test fixture; production package coverage remains a draft requirement. `build-sigrok-bundle.py` accepts an explicit architecture-matched runtime root, requires an observed Linux namespace with loopback as its only interface and no default route, executes the fixed target interpreter/version/import and Sigrok driver-scan health checks with a confined `PATH`, and emits the runner, SDK, schemas, component/runtime inventory, before/after network observations, hashed health results and third-party notices as one bounded package.
+Go callers use `manifest.Load`, protocol codecs and registries, and `supervisor.ProcessSupervisor` methods `Describe`, `Execute`, `Cancel`, and `Shutdown`. Each process completes a correlated versioned `configure` exchange after hello and before work. Manifests can declare a confined device configuration schema and list allowed media types for each artifact. Python integration authors implement the asynchronous SDK lifecycle interface and launch its NDJSON server. Modbus has a source package manifest validated by this loader and uses the SDK for a long-lived `serve` operation with a separate owner-only Unix control socket. The common contract harness currently runs an install-shaped test fixture; production package coverage remains a draft requirement. `build-sigrok-bundle.py` accepts an explicit architecture-matched runtime root, requires an observed Linux namespace with loopback as its only interface and no default route, executes the fixed target interpreter/version/import and Sigrok driver-scan health checks with a confined `PATH`, and emits the runner, SDK, schemas, component/runtime inventory, before/after network observations, hashed health results and third-party notices as one bounded package.
 
 ## Invariants
 
@@ -62,7 +62,7 @@ flowchart LR
     codec["Go protocol codec"]
     process(["external runner process"])
     sdk["Python SDK server"]
-    plugin["Integration implementation: Sigrok or Camera"]
+    plugin["Integration implementation: Sigrok, Camera or Modbus"]
     schemas[("JSON schemas")]
     stderr[("64 KiB diagnostic ring")]
     manifest --> loader
@@ -72,6 +72,7 @@ flowchart LR
     supervisor --> codec
     process --> sdk
     sdk --> plugin
+    plugin --> modbus_socket["Modbus private control socket"]
     bundle_runtime[("bundled Python + sigrok-cli + notices")]
     bundle_health["fixed target-runtime health execution"]
     bundle_runtime --> bundle_health
@@ -95,6 +96,8 @@ Protocol stdout is reserved for NDJSON; diagnostics use bounded stderr. OS-speci
 - `05_Software/tests/fixtures/contract_runner/` - deterministic test-only Go runner, manifest, and schemas for cross-component contract and acceptance tests.
 - `05_Software/integrations/camera/` - physical USB V4L2 runner, manifest,
   configuration schemas and JPEG/PNG artifact contract.
+- `05_Software/integrations/modbus/` - supervised source runner, manifest,
+  schemas and private endpoint control, with Core session composition pending.
 - `05_Software/tests/contract/` - package-level black-box contract fixtures, documentation, and tests.
 - `02_Tools/scripts/build-sigrok-bundle.py` - validates and embeds the complete
   target runtime, SDK, schemas, runner, executed health evidence and third-party

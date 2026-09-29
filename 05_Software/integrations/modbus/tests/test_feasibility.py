@@ -17,8 +17,9 @@ import importlib.util
 import sys
 
 import pytest
-from nilo_modbus.requests import Request
 from peers import crc, peer
+
+from nilo_modbus.requests import Request
 
 
 # HELPER FUNCTIONS

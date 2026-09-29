@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "workspace_directory",
+    "endpoint",
+    "profile"
+  ],
+  "properties": {
+    "workspace_directory": {
+      "type": "string",
+      "minLength": 1
+    },
+    "endpoint": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "id",
+        "revision",
+        "transport",
+        "enabled"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "transport": {
+          "enum": [
+            "rtu",
+            "tcp",
+            "rtu_tcp"
+          ]
+        },
+        "enabled": {
+          "const": true
+        }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "id",
+        "revision",
+        "endpoint_id",
+        "settings"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "endpoint_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "settings": {
+          "type": "object"
+        }
+      }
+    },
+    "tty": {
+      "type": "string",
+      "pattern": "^tty(USB|ACM)[0-9]+$"
+    }
+  }
+}

@@ -55,6 +55,8 @@ one of three fixed roles - Administrator, Operator or Viewer.
 - **Modbus Core foundation.** Revisioned explicit USB/network endpoints and shared
   profiles use administrator mutation and reader access. Serial and trusted Modbus
   consumers share canonical claims retained through confirmed transport cleanup.
+  An SDK-supervised runner owns validated RTU, TCP and RTU-over-TCP transactions
+  through a private local socket and fair per-endpoint scheduling.
 - **Instrument transactions.** Durable transaction identities, an administrator-
   configured queue and finite-job worker capacity with per-analyzer serialization, absolute deadlines,
   ordered bounded replies, cancellation, and digest-verified retained artifacts.

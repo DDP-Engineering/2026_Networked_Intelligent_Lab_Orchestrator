@@ -1,0 +1,33 @@
+# Supervised Modbus runner and endpoint scheduler
+
+## Behavior
+
+A supervisor launches one SDK runner process per active endpoint. Its `serve` execute handler holds one configured transport and a private Unix socket until stop/cancel/shutdown. A single scheduler worker owns every library call on that client. Requests from different units rotate round-robin; a selected unit contributes one command before the next waiting unit. Separate endpoint processes/schedulers advance independently.
+
+The pinned endpoint/profile snapshots come from Core, including their revisions; the runner does not mutate definitions or decide public permission. The future Core session service owns credential, policy, canonical claim and durable write admission. The runner accepts only commands from its private workspace channel. It validates commands and responses before reporting them.
+
+## Private interface
+
+`serve` parameters are a strict object with `workspace_directory` (absolute existing directory), `endpoint` (MB-02 schema-version-1 endpoint snapshot), `profile` (matching schema-version-1 profile snapshot) and, for RTU only, `tty` (`ttyUSB*` or `ttyACM*` basename from trusted discovery). Core creates the directory mode 0700 and runner verifies owner/mode/no symlink before opening; the runner creates `control.sock` with mode 0600 and never unlinks a socket it did not bind. USB startup and each serial recovery match the supplied tty to the pinned vendor/product/serial or physical port identity in sysfs immediately before opening. Network startup uses only the pinned host and port; future Core policy validates the resolved destination before admitting live use.
+
+The private socket accepts one newline-terminated JSON object per connection, maximum 8192 bytes, and returns one JSON line. A `transaction` object has exact fields `version:1`, `kind:"transaction"`, `request_id` (1..128 safe characters), `function`, `unit`, `address`, `count`, `values` (array), `deadline_ms` (1..60000) and optional `poll_key` (safe 1..128 character name for reads). A `stop` object has only `version:1,kind:"stop"`. The response has `request_id`, `outcome`, `values`, `attempts` and optional `exception_code`; failures use a stable `error`. Outcomes include `acknowledged`, `exception`, `rejected`, `protocol_error`, `timeout`, `cancelled`, `delivery_unknown`, `queue_full`, `coalesced` and `disconnected`. Values are raw booleans or uint16 words. Request IDs cannot be outstanding twice. The runner does not accept transport addresses, policy assertions or shell commands in a transaction.
+
+At most 128 pending commands, 8 per unit, and one active command exist. A new read poll with the same nonempty `poll_key` and unit replaces the pending one, completing the old caller as `coalesced`; it does not replace an active command. Writes never carry a poll key. The scheduler removes timed-out or cancelled pending work without transmission. Deadlines use monotonic time measured at private admission; no unbounded catch-up is queued. A client disconnect cancels its waiting request; an active post-transmission write returns `delivery_unknown` to Core if observable, and is never requeued. Closing the scheduler settles all pending callers.
+
+The runner uses explicit profile response/connect timeouts, inter-request delay and serial framing; startup connection wait has a 60-second safety ceiling even if the saved profile permits longer. TCP permits unit 0..255 within endpoint range; RTU and RTU-over-TCP permit 1..247. FC01/02/03/04/05/06/15/16 limits and encoding follow `requests.py`. One library call is in flight. Library retries and reconnect are zero; the scheduler owns bounded read retries only. The first read attempt plus up to three retries may occur within `read_retries` and the command deadline. Each attempt uses a fresh correlation ID on TCP. Any post-transmission write uncertainty returns `delivery_unknown`, with one transmission maximum.
+
+After a timeout or malformed response, the current PyModbus client is closed and fenced. TCP may establish a fresh connection and retry a read after the configured gap if the deadline permits; TCP transaction IDs reject old responses. Serial RTU discards available bytes until a quiet interval at least one frame gap and the configured inter-request delay, capped by the remaining deadline. RTU-over-TCP closes its socket, discarding buffered bytes, and waits the quiet gap before reconnecting. Because neither framing has a transaction ID and read replies omit the address, the timed-out unit/function is quarantined for the remainder of this runner lifetime: no same-function request for that unit can report fresh success. Other units may proceed only after bounded recovery; malformed or stale bytes cannot be returned as another request's result. If quiet cannot be established, the endpoint is fenced and pending work settles as disconnected. This conservative boundary follows the MB-01 late-reply evidence.
+
+Successful replies must pass full CRC or MBAP protocol/length/transaction, unit/function, read count and write-echo validation. Split/coalesced network reads and partial serial reads are assembled by the library but verified against complete observed frames. An inconsistent frame yields `protocol_error`, closes the client and never produces values. Device exception frames return `exception` with code and do not trigger an automatic retry.
+
+## Examples
+
+With units 1 and 2 each holding two pending reads, the transmission order is 1,2,1,2; a second pending `(unit=1,poll_key="grid")` supersedes the first and queue depth stays bounded. A lost FC06 response after a confirmed TX gives `delivery_unknown` and one observed frame. A late RTU FC03 reply after timeout cannot satisfy another FC03 for that unit, even at a different address, during that runner lifetime.
+
+## Acceptance
+
+Use handwritten loopback and Linux PTY peers rather than a shared PyModbus server. Exercise all eight functions on all three modes, split/coalesced/partial frames, wrong CRC/MBAP/unit/function/length/echo/count, exceptions, delayed and dropped responses. Prove deterministic fair order, no overlapping client calls, bounded queue/coalescing and independent endpoint progress. Inspect mode-0700/mode-0600 ownership, hostile input refusal, SDK handshake, cancellation, stop and crash cleanup. Native ARM, physical driver direction/baud and named gateway tests remain separate.
+
+## Assumptions and open decisions
+
+Core ownership and destination-network policy are supplied by MB-02/MB-04, not asserted by this runner. The runner's private socket is trusted within the service account's 0700 workspace. Physical RS-485 and gateway behavior remain unknown until target acceptance.

@@ -1,0 +1,57 @@
+{
+  "package": {
+    "id": "modbus",
+    "version": "0.12.0",
+    "publisher": "DDP Engineering",
+    "integrity": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "protocol": "nilo.integration/1",
+  "platforms": [
+    {
+      "os": "linux",
+      "architecture": "arm64"
+    },
+    {
+      "os": "linux",
+      "architecture": "amd64"
+    }
+  ],
+  "runner": {
+    "executable": "runner",
+    "arguments": [
+      "--stdio"
+    ]
+  },
+  "app_configuration_schema": "schemas/plugin.schema.json",
+  "device_configuration_schema": "schemas/device.schema.json",
+  "operations": [
+    {
+      "id": "serve",
+      "policy": "auto_eligible",
+      "input_schema": "schemas/serve.input.schema.json",
+      "result_schema": "schemas/result.schema.json",
+      "timeout": "1h",
+      "cancellable": true,
+      "state_changing": true,
+      "resources": []
+    }
+  ],
+  "cancellation": {
+    "supported": true,
+    "safe_shutdown": "serve"
+  },
+  "events": [
+    {
+      "id": "progress",
+      "schema": "schemas/event.schema.json"
+    }
+  ],
+  "artifacts": [],
+  "health_checks": [
+    {
+      "id": "runner",
+      "timeout": "5s"
+    }
+  ],
+  "contract_fixtures": []
+}

@@ -1,0 +1,20 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+id = "REQ-SEC-a3293f66"
+title = "Confine the Modbus runner control channel"
+status = "active"
+requirement = """When the supervised runner starts from pinned Core-owned configuration, it shall accept bounded typed commands only through an owner-only Unix socket in an owner-only workspace and refuse untrusted endpoint paths, URLs or malformed control messages before transport work."""
+verification = "Automated: Start runner in a private fixture directory, inspect workspace/socket modes and ownership, submit malformed/oversized commands and hostile paths, and verify no transport request occurs."
+affected_paths = ["05_Software/integrations/modbus/src/nilo_modbus/workspace.py", "05_Software/integrations/modbus/src/nilo_modbus/plugin.py", "05_Software/integrations/modbus/src/nilo_modbus/usb.py", "05_Software/integrations/modbus/manifest.json", "05_Software/integrations/modbus/schemas/plugin.schema.json", "05_Software/integrations/modbus/schemas/device.schema.json", "05_Software/integrations/modbus/schemas/serve.input.schema.json", "05_Software/integrations/modbus/schemas/result.schema.json", "05_Software/integrations/modbus/schemas/event.schema.json", "05_Software/integrations/modbus/runner", "05_Software/integrations/modbus/tests/test_workspace.py", "05_Software/integrations/modbus/tests/test_usb.py", "05_Software/integrations/modbus/tests/test_package.py", "05_Software/core/internal/integration/manifest/loader_test.go"]
+linked_tests = ["05_Software/integrations/modbus/tests/test_workspace.py", "05_Software/integrations/modbus/tests/test_usb.py", "05_Software/integrations/modbus/tests/test_runner.py::test_serial_recovery_refuses_changed_pinned_identity", "05_Software/integrations/modbus/tests/test_package.py", "05_Software/core/internal/integration/manifest/loader_test.go::TestLoadModbusSourcePackage"]
+spec = "specs/REQ-REL-2d6babd5.md"
+priority = "normal"
+rationale = ""
+created = 2026-09-29
+updated = 2026-09-29

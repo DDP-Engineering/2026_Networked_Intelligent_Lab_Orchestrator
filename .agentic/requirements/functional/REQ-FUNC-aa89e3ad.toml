@@ -1,0 +1,20 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+id = "REQ-FUNC-aa89e3ad"
+title = "Execute the eight baseline Modbus functions on supported transports"
+status = "active"
+requirement = """When a trusted private request names FC01, FC02, FC03, FC04, FC05, FC06, FC15 or FC16 for a pinned RTU, native TCP or RTU-over-TCP endpoint, the supervised runner shall transmit exactly one validated request per attempt and return the correlated raw values, device exception or typed failure without emulating unsupported functions."""
+verification = "Automated: For each function and transport, run a supervised runner against independent loopback or Linux PTY peers; compare request bytes, returned values and exception results, including quantity and address edges."
+affected_paths = ["05_Software/integrations/modbus/src/nilo_modbus/runner_client.py", "05_Software/integrations/modbus/src/nilo_modbus/feasibility.py", "05_Software/integrations/modbus/src/nilo_modbus/plugin.py", "05_Software/integrations/modbus/pyproject.toml", "05_Software/integrations/modbus/uv.lock", "05_Software/integrations/modbus/README.md", "05_Software/integrations/modbus/evidence/dependencies.json", "05_Software/integrations/modbus/tests/test_feasibility.py", "05_Software/integrations/modbus/tests/test_runner.py"]
+linked_tests = ["05_Software/integrations/modbus/tests/test_runner.py::test_supervised_client_initial_functions", "05_Software/integrations/modbus/tests/test_runner.py::test_runner_accepts_core_canonical_response_timeout", "05_Software/integrations/modbus/tests/test_feasibility.py"]
+spec = "specs/REQ-REL-2d6babd5.md"
+priority = "normal"
+rationale = ""
+created = 2026-09-29
+updated = 2026-09-29

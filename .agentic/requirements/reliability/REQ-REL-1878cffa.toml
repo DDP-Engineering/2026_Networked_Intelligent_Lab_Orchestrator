@@ -1,0 +1,20 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+id = "REQ-REL-1878cffa"
+title = "Bound read recovery and prevent write replay"
+status = "active"
+requirement = """When a request expires, is cancelled or loses a reply, the runner shall bound read retries and quiet/drain recovery, prevent a late reply from being reported as a fresh result, and transmit a write at most once with an explicit uncertain outcome after possible transmission."""
+verification = "Automated: Delay and drop independent peer replies on all three transports; inspect request counts, late-frame handling, bounded completion/cancellation and post-TX write outcome."
+affected_paths = ["05_Software/integrations/modbus/src/nilo_modbus/scheduler.py", "05_Software/integrations/modbus/src/nilo_modbus/runner_client.py"]
+linked_tests = ["05_Software/integrations/modbus/tests/test_scheduler.py::test_rtu_timeout_quarantines_same_signature_but_other_unit_recovers", "05_Software/integrations/modbus/tests/test_scheduler.py::test_tcp_read_retry_is_bounded_and_write_is_not_replayed", "05_Software/integrations/modbus/tests/test_runner.py::test_serial_recovery_drains_until_quiet", "05_Software/integrations/modbus/tests/test_runner.py::test_runner_never_retries_uncertain_write"]
+spec = "specs/REQ-REL-2d6babd5.md"
+priority = "normal"
+rationale = ""
+created = 2026-09-29
+updated = 2026-09-29

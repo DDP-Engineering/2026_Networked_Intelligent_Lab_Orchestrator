@@ -1,0 +1,20 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+id = "REQ-REL-feb1ff48"
+title = "Close supervised Modbus resources deterministically"
+status = "active"
+requirement = """When the Modbus runner stops, is cancelled or crashes, it shall settle pending commands, close the socket and transport descriptors, and exit within the bounded supervisor cleanup path without releasing Core ownership before cleanup confirmation."""
+verification = "Automated: Supervise a real child process against a loopback peer; cancel, stop and kill it, checking private socket closure. Exercise serial descriptor closure against a Linux PTY and Core claim release/fencing through its lifecycle tests."
+affected_paths = ["05_Software/integrations/modbus/src/nilo_modbus/plugin.py", "05_Software/integrations/modbus/src/nilo_modbus/workspace.py", "05_Software/integrations/modbus/src/nilo_modbus/scheduler.py", "05_Software/integrations/modbus/src/nilo_modbus/__main__.py", "05_Software/integrations/modbus/tests/test_supervised.py"]
+linked_tests = ["05_Software/integrations/modbus/tests/test_workspace.py::test_private_socket_transacts_and_cleans_up", "05_Software/integrations/modbus/tests/test_workspace.py::test_scheduler_crash_stops_workspace_and_unlinks_socket", "05_Software/integrations/modbus/tests/test_supervised.py::test_sdk_supervised_runner_private_transaction_and_stop", "05_Software/integrations/modbus/tests/test_supervised.py::test_killed_runner_leaves_no_connectable_private_socket", "05_Software/integrations/modbus/tests/test_scheduler.py::test_close_settles_active_and_queued_commands", "05_Software/integrations/modbus/tests/test_runner.py::test_runner_caps_extreme_connect_timeout_for_cancel", "05_Software/core/internal/bench/transport_lease_test.go::TestModbusLifecycleRetainsClaimsThroughCleanup", "05_Software/core/internal/bench/transport_lease_test.go::TestModbusFailedCleanupFencesResourceAndReportsShutdownError"]
+spec = "specs/REQ-REL-2d6babd5.md"
+priority = "normal"
+rationale = ""
+created = 2026-09-29
+updated = 2026-09-29

@@ -334,7 +334,8 @@ Serial verification uses real Linux pseudo-terminals. The pinned pySerial wheel
 is prepared by `02_Tools/scripts/prepare-serial-dependency.py` and consumed
 offline from the output wheelhouse; see `06_SoftwareDocu/USB_to_Serial_Integration.md`.
 
-Modbus client feasibility uses independent loopback and Linux PTY peers.
+Modbus client and supervised-runner verification uses independent loopback and
+Linux PTY peers, including an SDK child process and private Unix socket.
 `05_Software/integrations/modbus/README.md` owns the focused command and
 `prepare-modbus-dependencies.py` verifies exact wheel/source inputs and notices.
 The build recipe consumes those inputs in its distinct local candidate generation;

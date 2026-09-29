@@ -1,9 +1,10 @@
-# Modbus client feasibility
+# Modbus supervised client runner
 
-This package supplies the transport/dependency spike and versioned contract baseline.
-It is exercised directly by tests; Core's production integration registry owns
-the existing curated packages. Production Modbus endpoint/session services, retained
-recordings, API/CLI/MCP and GUI work follow the implementation backlog.
+This package supplies a supervised Modbus client runner, the transport/dependency
+baseline, and the versioned development contract. The SDK `serve` operation opens
+one pinned endpoint in an owner-only workspace and accepts bounded private
+transactions over `control.sock`. Core's credential-bound live sessions, retained
+recordings, API/CLI/MCP, GUI and target bundle work follow the implementation backlog.
 
 The scope is master/client, serial RTU, native TCP and RTU over TCP. Named typed
 maps include scaling, units and CSV/JSON interchange. Shared definitions use
@@ -25,8 +26,8 @@ wsl -d Ubuntu -- sh ./02_Tools/env/with-tools.sh uv run --locked --project ./05_
 Windows runs request/schema/TCP checks and explicitly skips Linux PTY cases.
 The complete transport proof uses real Linux pseudo-terminals and literal loopback
 TCP peers. SimulationClient requires simulation=True and refuses real target
-addresses and serial adapters. Fixture data is generated locally and no discovery
-or lab-device operation occurs.
+addresses and serial adapters. Runner tests supply pinned loopback/PTY snapshots;
+no discovery or lab-device operation occurs.
 
 The handwritten peers use independent CRC and response encoding. Tests cover all
 eight initial functions, golden bytes and limits, stream fragmentation/coalescing,
@@ -48,15 +49,22 @@ with a request ID. PyModbus passes its cumulative receive buffer to its callback
 kind=library_buffer describes that observation precisely. It is not passive
 bus capture or a count of wire packets.
 
-RTU's missing transaction ID prevents a general fresh-reply guarantee after a
-timeout. The spike quarantines the entire object; the production runner must prove
-its device/gateway-specific quiet/drain recovery or retain quarantine.
+The supervised runner serializes one client call per endpoint, rotates queued units,
+coalesces pending polls, and bounds total and per-unit queues. It retries only TCP
+reads, at most three times within the request deadline. RTU recovery discards
+serial bytes until a frame-gap silence; RTU-over-TCP reconnects after a quiet gap.
+Connection startup is capped at 60 seconds even for a longer saved profile timeout.
+Because these modes lack a transaction ID, the timed-out unit/function remains
+quarantined for this runner lifetime. Other units may continue after recovery;
+writes are never retried.
 
 ## Dependency evidence and offline proposal
 
 [evidence/dependencies.json](evidence/dependencies.json) binds exact wheel/source
 URLs, SHA-256 checksums, and retained license member hashes to uv.lock.
-The runtime Python closure consists of two universal wheels on amd64 and arm64.
+The Modbus-specific third-party transport closure consists of two universal wheels.
+The supervised runner also uses the repository SDK and its pinned Pydantic chain
+from `uv.lock`; the candidate build environment carries those shared inputs.
 pySerial's wheel omits license text; its verified source archive supplies it.
 The reviewed build recipe consumes all four archives in local candidate generation
 `noble-20260929-01`; the existing accepted archive generation is recorded separately

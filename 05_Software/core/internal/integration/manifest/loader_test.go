@@ -29,6 +29,17 @@ func TestLoadAcceptsValidPackage(t *testing.T) {
 	}
 }
 
+func TestLoadModbusSourcePackage(t *testing.T) {
+	root := filepath.Join("..", "..", "..", "..", "integrations", "modbus")
+	loaded, err := Load(root)
+	if err != nil {
+		t.Fatalf("Load(Modbus) error = %v", err)
+	}
+	if loaded.Package.ID != "modbus" || len(loaded.Operations) != 1 || loaded.Operations[0].ID != "serve" {
+		t.Fatalf("unexpected Modbus manifest: package=%q operations=%v", loaded.Package.ID, loaded.Operations)
+	}
+}
+
 func TestLoadResolvesOptionalDeviceConfigurationSchema(t *testing.T) {
 	root := writePackage(t, func(t *testing.T, document map[string]any) {
 		document["device_configuration_schema"] = "schemas/config.json"
