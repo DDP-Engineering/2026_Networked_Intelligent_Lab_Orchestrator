@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-cfadd842"
+
+title = "Validate initial Modbus requests"
+
+status = "active"
+
+requirement = "When an initial Modbus client request is prepared, the feasibility client shall accept FC01/02/03/04/05/06/15/16 only with unicast unit, wire address, quantity and payload consistent with the transport and function-specific protocol bounds."
+
+verification = "Prepare golden requests and boundary-sized reads/writes; assert exact PDU bytes, bit packing and 125-read/123-write limits while invalid types, values, unsupported functions and address overflow fail before transmission."
+
+affected_paths = ["05_Software/integrations/modbus/src/nilo_modbus/requests.py"]
+
+linked_tests = ["05_Software/integrations/modbus/tests/test_requests.py"]
+
+
+spec = "specs/REQ-DATA-6fcda58c.md"
+
+priority = "high"
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-29
+updated = 2026-09-29

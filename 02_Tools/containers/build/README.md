@@ -3,10 +3,10 @@
 Build from the repository root with
 `../../scripts/build-build-environment.sh --engine docker` (or `podman`). The
 script validates `build-environment.lock.json` and refuses to start while its
-`reconstruction` record is incomplete. Generation `noble-20260928-01` has a
-complete 677-record Linux amd64 closure in `reconstruction-inputs.json`: 244 apt
-packages, 264 npm tarballs, 138 Go proxy objects, 23 Python wheels, one pinned
-Git source archive, three browser payloads, and one archive each for Go, uv,
+`reconstruction` record is incomplete. Candidate generation `noble-20260929-01` has a
+complete 680-record Linux amd64 closure in `reconstruction-inputs.json`: 244 apt
+packages, 264 npm tarballs, 138 Go proxy objects, 24 Python wheels, two source-license
+archives, one pinned Git source archive, three browser payloads, and one archive each for Go, uv,
 Node, and managed CPython. The
 materializer rejects missing, extra, symlinked, size-mismatched, or SHA-256-
 mismatched content before the engine starts. The Containerfile consumes the
@@ -21,6 +21,9 @@ archive hashes before creating environments, installs each project's exact
 locked wheels and local dependencies, builds the pinned Git archive offline
 with pinned setuptools/wheel, and checks the installed dependency closure.
 The image includes `iproute2` for unprivileged preflight checks.
+The Modbus feasibility environment includes PyModbus 3.15.0 and pySerial 3.5;
+their hash-verified BSD notices are retained under
+`/opt/nilo/environment/licenses/modbus/` and included in generated licence evidence.
 
 The archive's `current.json` continues to describe its existing immutable
 generation. Rebuild, offline verification, export and import must succeed before

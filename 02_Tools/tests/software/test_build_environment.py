@@ -2284,7 +2284,8 @@ class BuildEnvironmentTests(unittest.TestCase):
         definition_readme = (TOOLS_ROOT / "containers/build/README.md").read_text(
             encoding="utf-8"
         )
-        self.assertIn("677-record", definition_readme)
+        lock = json.loads(LOCK.read_text(encoding="utf-8"))
+        self.assertIn(f"{lock['reconstruction']['input_count']}-record", definition_readme)
         self.assertNotIn("deliberately incomplete", definition_readme)
         self.assertNotIn("not yet materialized", definition_readme)
 

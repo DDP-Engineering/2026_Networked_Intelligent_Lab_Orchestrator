@@ -62,12 +62,26 @@ RUN cd /build-context/nilo_gui \
 
 COPY 05_Software/ ./05_Software/
 COPY 02_Tools/scripts/build_environment.py 02_Tools/scripts/locked_build_inputs.py ./02_Tools/scripts/
+COPY 02_Tools/scripts/prepare-modbus-dependencies.py ./02_Tools/scripts/
 COPY 02_Tools/containers/build/ ./02_Tools/containers/build/
 RUN set -eu; \
     python 02_Tools/scripts/locked_build_inputs.py verify --repository-root /build-context --lock 02_Tools/containers/build/build-environment.lock.json; \
     find ./05_Software -name go.mod -print0 | while IFS= read -r -d '' module; do (cd "$(dirname "$module")" && GOPROXY=file:///opt/nilo/inputs/go-proxy GOSUMDB=off go mod download && go mod verify); done; \
     UV_PROJECT_ENVIRONMENT=.venv python 02_Tools/scripts/locked_build_inputs.py prepare-python --repository-root /build-context --lock 02_Tools/containers/build/build-environment.lock.json; \
     cd /build-context/nilo_gui && npm ci --offline --ignore-scripts
+
+RUN mkdir -p /build-context/02_Tools/cache/modbus-feasibility \
+ && cp /opt/nilo/inputs/python-packages/pymodbus-3.15.0-py3-none-any.whl \
+       /opt/nilo/inputs/python-packages/pyserial-3.5-py2.py3-none-any.whl \
+       /opt/nilo/inputs/license-sources/pymodbus-3.15.0.tar.gz \
+       /opt/nilo/inputs/license-sources/pyserial-3.5.tar.gz \
+       /build-context/02_Tools/cache/modbus-feasibility/ \
+ && python 02_Tools/scripts/prepare-modbus-dependencies.py --offline \
+ && mkdir -p /opt/nilo/environment/licenses/modbus /usr/share/doc/nilo-modbus-feasibility \
+ && cp /build-context/02_Tools/cache/modbus-feasibility/licenses/*.txt /opt/nilo/environment/licenses/modbus/ \
+ && cat /opt/nilo/environment/licenses/modbus/pymodbus-LICENSE.txt \
+        /opt/nilo/environment/licenses/modbus/pyserial-LICENSE.txt \
+       > /usr/share/doc/nilo-modbus-feasibility/copyright
 
 RUN cp -a /opt/nilo/cache /opt/nilo/cache-seed \
  && mkdir -p /workspace /work/home /work/runtime-cache /outputs /opt/nilo/outputs \

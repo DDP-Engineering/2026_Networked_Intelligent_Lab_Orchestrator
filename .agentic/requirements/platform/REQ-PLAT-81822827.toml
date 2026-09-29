@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-PLAT-81822827"
+
+title = "Record reproducible Modbus dependency closure"
+
+status = "active"
+
+requirement = "The Modbus feasibility package shall declare exact dependency versions and a checksum-verifiable offline runtime closure with upstream license evidence for Linux amd64 and arm64, consumed by the reviewed local candidate build-environment recipe."
+
+verification = "Check project and lock versions, downloaded wheel/source hashes and license member digests against the dependency manifest and build recipe; run the local candidate image's offline repository verification on Python 3.12.10 and inspect architecture-independent wheels versus outstanding target-native acceptance."
+
+affected_paths = ["05_Software/integrations/modbus/pyproject.toml","05_Software/integrations/modbus/uv.lock","05_Software/integrations/modbus/README.md","05_Software/integrations/modbus/src/nilo_modbus/__init__.py","05_Software/integrations/modbus/evidence/","02_Tools/scripts/prepare-modbus-dependencies.py","02_Tools/containers/build/"]
+
+linked_tests = ["05_Software/integrations/modbus/tests/test_dependencies.py", "02_Tools/tests/software/test_build_environment.py"]
+
+
+spec = "specs/REQ-DATA-6fcda58c.md"
+
+priority = "high"
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-29
+updated = 2026-09-29

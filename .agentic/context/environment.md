@@ -30,15 +30,16 @@ authorized host setup.
   `05_Software/integrations/sigrok/` and
   `05_Software/integrations/camera/` and `05_Software/integrations/serial/`.
 - The reproducible build and test boundary is one Linux amd64 OCI image,
-  recipe generation `noble-20260928-01`, defined by `02_Tools/containers/build/` and
+  candidate recipe generation `noble-20260929-01`, defined by `02_Tools/containers/build/` and
   run through Docker Engine or Podman. It carries the pinned language tools,
   native and ARM64 cross toolchains, offline dependency caches and headless
   Chromium. Its network-disabled suite stops at GUI component/build checks;
   browser acceptance runs separately in the privileged appliance-stage image.
-  The recipe covers 677 checksum-pinned reconstruction inputs and checks their
+  The recipe covers 680 checksum-pinned reconstruction inputs and checks their
   coverage against the current source locks. Frontend CI uses two workers with
   the established per-test deadlines. The archive manifest records import,
-  publication and backup maturity separately from the recipe definition.
+  publication and backup maturity separately from the recipe definition; its
+  accepted generation remains `noble-20260928-01` until candidate promotion.
 
 ## Setup
 
@@ -332,3 +333,10 @@ physical operation occurred.
 Serial verification uses real Linux pseudo-terminals. The pinned pySerial wheel
 is prepared by `02_Tools/scripts/prepare-serial-dependency.py` and consumed
 offline from the output wheelhouse; see `06_SoftwareDocu/USB_to_Serial_Integration.md`.
+
+Modbus client feasibility uses independent loopback and Linux PTY peers.
+`05_Software/integrations/modbus/README.md` owns the focused command and
+`prepare-modbus-dependencies.py` verifies exact wheel/source inputs and notices.
+The build recipe consumes those inputs in its distinct local candidate generation;
+the accepted archive and CI image remain governed by `current.json` and the
+normal environment publication procedures.

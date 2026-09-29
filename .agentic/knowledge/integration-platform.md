@@ -11,6 +11,9 @@ Physical Camera runner behavior belongs to [Camera integration](camera-integrati
 USB serial terminal, connection and log changes route to
 [USB to Serial integration](serial-integration.md).
 
+Modbus development schemas and isolated protocol tests route to
+[Modbus client feasibility](modbus-integration.md).
+
 ## Purpose and boundaries
 
 The integration platform loads bounded runtime packages and supervises their external processes through the language-neutral `nilo.integration/1` lifecycle. It isolates plugin faults from Bench Core; it does not grant integrations arbitrary shell or filesystem authority. The Sigrok production bundle carries its target runtime closure, including the interpreter and native backend. The Camera production builder embeds a verified interpreter, locked dependencies and notices; the current Pi bench bundle carries pinned dependencies and uses the target's Python 3.13 interpreter. The Sigrok SW-01 feasibility slice demonstrates one additional subordinate native process boundary without changing that public lifecycle.

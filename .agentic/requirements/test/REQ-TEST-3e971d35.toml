@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-TEST-3e971d35"
+
+title = "Prove three Modbus client transports"
+
+status = "active"
+
+requirement = "When the Modbus feasibility suite runs on Linux in explicit simulation, it shall exercise all initial functions against independent serial RTU, native TCP and RTU-over-TCP peers using golden CRC/MBAP vectors and fragmented or coalesced responses."
+
+verification = "Run a handwritten peer without PyModbus imports over loopback and real Linux PTYs; compare requests and results for eight functions across three transports, including split bytes and duplicate coalesced responses."
+
+affected_paths = ["05_Software/integrations/modbus/tests/"]
+
+linked_tests = ["05_Software/integrations/modbus/tests/test_feasibility.py", "05_Software/integrations/modbus/tests/peers.py"]
+
+
+spec = "specs/REQ-DATA-6fcda58c.md"
+
+priority = "high"
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-29
+updated = 2026-09-29

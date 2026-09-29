@@ -29,7 +29,7 @@ Run source contract tests first, then execute the real gates in order:
    through PowerShell and native Ubuntu 24.04 x86-64 through POSIX; explicitly
    install at most the selected engine from the shared host-bootstrap archive
    only when authorized (BE-03);
-3. materialize the 677 hash-locked upstream records, build the OCI image with
+3. materialize the recipe's hash-locked upstream records, build the OCI image with
    `--network=none`, and preserve inventory/SBOM/licence/provenance logs,
    including the candidate-tree SHA-256 and base `HEAD` (BE-04);
 4. run `with-build-environment.ps1 test`, which disables container networking

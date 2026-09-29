@@ -12,6 +12,7 @@ section to adjacent components.
 | Managed package lifecycle and jobs | [Managed bench integrations](bench-integrations.md) |
 | Physical Camera devices and capture | [Camera integration](camera-integration.md) |
 | USB serial terminals, approved connections and session logs | [USB to Serial integration](serial-integration.md) |
+| Modbus development contracts and simulated client proof | [Modbus client feasibility](modbus-integration.md) |
 | Integration manifests, protocol, SDK and supervision | [Integration platform](integration-platform.md) |
 | Browser shell, client and shared page behavior | [Browser GUI foundation](gui-foundation.md) |
 | Network browser workflows | [Network GUI](network-gui.md) |

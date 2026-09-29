@@ -184,7 +184,7 @@ the affected file/OID and stops with three paths:
 3. explicitly select the networked fallback with
    `-RebuildFromPinnedInputs`.
 
-The third path validates and materializes the complete 677-record reconstruction
+The third path validates and materializes the complete 680-record reconstruction
 manifest into the ignored `02_Tools/cache/containers/upstream` directory before
 the engine starts. The manifest covers the apt closure, Go and module proxy,
 managed CPython, locked Python wheels and the pinned Camera Git source with its

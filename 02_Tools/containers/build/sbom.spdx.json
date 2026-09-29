@@ -2,11 +2,56 @@
   "spdxVersion": "SPDX-2.3",
   "dataLicense": "CC0-1.0",
   "SPDXID": "SPDXRef-DOCUMENT",
-  "name": "nilo-build-environment-noble-20260928-01-source-inventory",
-  "documentNamespace": "https://nilo.invalid/sbom/build-environment/noble-20260928-01/source",
-  "creationInfo": {"created": "2026-09-28T00:00:00Z", "creators": ["Tool: NILO build-environment source definition"]},
+  "name": "nilo-build-environment-noble-20260929-01-source-inventory",
+  "documentNamespace": "https://nilo.invalid/sbom/build-environment/noble-20260929-01/source",
+  "creationInfo": {
+    "created": "2026-09-29T00:00:00Z",
+    "creators": [
+      "Tool: NILO build-environment source definition"
+    ]
+  },
   "packages": [
-    {"name":"ubuntu","SPDXID":"SPDXRef-Ubuntu","versionInfo":"24.04","downloadLocation":"https://hub.docker.com/_/ubuntu","filesAnalyzed":false,"licenseConcluded":"NOASSERTION","licenseDeclared":"NOASSERTION"}
+    {
+      "name": "ubuntu",
+      "SPDXID": "SPDXRef-Ubuntu",
+      "versionInfo": "24.04",
+      "downloadLocation": "https://hub.docker.com/_/ubuntu",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION"
+    },
+    {
+      "name": "pymodbus",
+      "SPDXID": "SPDXRef-pymodbus",
+      "versionInfo": "3.15.0",
+      "downloadLocation": "https://files.pythonhosted.org/packages/27/7b/fa75ca74270ad3786234c6573f3c6c524441d3eb686882e280c717ce6d04/pymodbus-3.15.0-py3-none-any.whl",
+      "filesAnalyzed": false,
+      "licenseConcluded": "BSD-3-Clause",
+      "licenseDeclared": "BSD-3-Clause",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "74d8dee961f23845f18a8481253183504dca05c4fcd102890cd28f4d7ce09267"
+        }
+      ],
+      "comment": "Runtime and license-source pins: 05_Software/integrations/modbus/evidence/dependencies.json"
+    },
+    {
+      "name": "pyserial",
+      "SPDXID": "SPDXRef-pyserial",
+      "versionInfo": "3.5",
+      "downloadLocation": "https://files.pythonhosted.org/packages/07/bc/587a445451b253b285629263eb51c2d8e9bcea4fc97826266d186f96f558/pyserial-3.5-py2.py3-none-any.whl",
+      "filesAnalyzed": false,
+      "licenseConcluded": "BSD-3-Clause",
+      "licenseDeclared": "BSD-3-Clause",
+      "checksums": [
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c4451db6ba391ca6ca299fb3ec7bae67a5c55dde170964c7a14ceefec02f2cf0"
+        }
+      ],
+      "comment": "Runtime and license-source pins: 05_Software/integrations/modbus/evidence/dependencies.json"
+    }
   ],
   "comment": "Source-definition SBOM. Replace with the generated image SBOM after the real image build; acceptance remains pending until then."
 }

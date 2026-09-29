@@ -7,6 +7,9 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Added
 
+- Modbus client feasibility package proves RTU, TCP and RTU over TCP with independent
+  peers; versioned contracts and verified dependency inputs support implementation.
+
 - Gitea CI runs the canonical offline suite on the shared Linux runner and
   retains validation evidence and the GUI production build as artifacts.
 

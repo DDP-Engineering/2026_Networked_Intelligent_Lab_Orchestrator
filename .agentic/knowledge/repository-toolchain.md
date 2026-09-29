@@ -28,6 +28,10 @@ component that implements it.
 USB serial terminal, connection and log changes route to
 [USB to Serial integration](serial-integration.md).
 
+Modbus input acquisition starts at `prepare-modbus-dependencies.py` and
+`integrations/modbus/tests/test_dependencies.py`; protocol proof belongs to
+[Modbus client feasibility](modbus-integration.md).
+
 ## Purpose and boundaries
 
 The toolchain component gives a fresh supported checkout pinned Go, uv,
@@ -179,6 +183,12 @@ replacements without an explicit override.
 
 ## Invariants
 
+- Modbus feasibility input preparation admits exact HTTPS archive pins into the
+  ignored repository cache, rehashes cached bytes in offline mode and retains
+  digest-verified BSD license members without archive extraction.
+  The reviewed image recipe consumes the wheels and source-license archives;
+  the offline build retains both BSD notices and probes the locked imports.
+
 - The shared network-system image remains free of WireGuard before the
   installer system test begins; browser-only tools belong to the appliance
   target.
@@ -267,6 +277,10 @@ replacements without an explicit override.
   packaging README together.
 
 ## Key behaviors
+
+- `REQ-PLAT-81822827` - prepares pinned Modbus candidate archives and license
+  notices through `prepare-modbus-dependencies.py`; `--offline` refuses missing
+  or corrupt inputs.
 
 - `REQ-PLAT-978855a5` - checksum-verifies pinned repository-local tools and avoids persistent PATH or system installations.
 - `REQ-PLAT-e1a2a591` - restores the locked browser frontend and emits static
@@ -464,6 +478,11 @@ component by closing its window. Bench Core's database and artifacts are the
 only durable state, and they live on the WSL Linux filesystem.
 
 ## Files
+
+- `02_Tools/scripts/prepare-modbus-dependencies.py` - bounded, checksum-verified
+  candidate archive acquisition and license retention, using the Modbus manifest.
+- `05_Software/integrations/modbus/tests/test_dependencies.py` - matching lock
+  pins, offline refusal and notice verification for that helper.
 
 - `02_Tools/toolchain.versions` - pinned versions, archive URLs, and checksums.
 - `02_Tools/bootstrap/bootstrap.ps1` and `02_Tools/bootstrap/bootstrap.sh` - checksum-gated online/offline population.

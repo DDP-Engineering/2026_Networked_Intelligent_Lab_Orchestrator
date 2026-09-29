@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "python_version": "3.12.10",
+  "uv_version": "0.11.25",
+  "architectures": [
+    "linux-amd64",
+    "linux-arm64"
+  ],
+  "packages": [
+    {
+      "name": "pymodbus",
+      "version": "3.15.0",
+      "license": "BSD-3-Clause",
+      "license_artifact": "pymodbus-3.15.0-py3-none-any.whl",
+      "license_member": "pymodbus-3.15.0.dist-info/licenses/LICENSE",
+      "license_sha256": "572a4d6fa7541553f70cc6d494fbcbee7eb7d3f2fbd16080d39b20cccda26f0b",
+      "artifacts": [
+        {
+          "filename": "pymodbus-3.15.0-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/27/7b/fa75ca74270ad3786234c6573f3c6c524441d3eb686882e280c717ce6d04/pymodbus-3.15.0-py3-none-any.whl",
+          "sha256": "74d8dee961f23845f18a8481253183504dca05c4fcd102890cd28f4d7ce09267"
+        },
+        {
+          "filename": "pymodbus-3.15.0.tar.gz",
+          "url": "https://files.pythonhosted.org/packages/e5/b8/03dace16e0e5d1c3eb16e8b9bcce9885f5e8a38db34345ec375cd70ed2e2/pymodbus-3.15.0.tar.gz",
+          "sha256": "4c5f715128bfeba59f4c9fb3542b0c32a8afd4b90081111e39c12f7af0c89aae"
+        }
+      ]
+    },
+    {
+      "name": "pyserial",
+      "version": "3.5",
+      "license": "BSD-3-Clause",
+      "license_artifact": "pyserial-3.5.tar.gz",
+      "license_member": "pyserial-3.5/LICENSE.txt",
+      "license_sha256": "f91cb9813de6a5b142b8f7f2dede630b5134160aedaeaf55f4d6a7e2593ca3f3",
+      "artifacts": [
+        {
+          "filename": "pyserial-3.5-py2.py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/07/bc/587a445451b253b285629263eb51c2d8e9bcea4fc97826266d186f96f558/pyserial-3.5-py2.py3-none-any.whl",
+          "sha256": "c4451db6ba391ca6ca299fb3ec7bae67a5c55dde170964c7a14ceefec02f2cf0"
+        },
+        {
+          "filename": "pyserial-3.5.tar.gz",
+          "url": "https://files.pythonhosted.org/packages/1e/7d/ae3f0a63f41e4d2f6cb66a5b57197850f919f59e558159a4dd3a818f5082/pyserial-3.5.tar.gz",
+          "sha256": "3c77e014170dfffbd816e6ffc205e9842efb10be9f58ec16d3e8675b4925cddb"
+        }
+      ]
+    }
+  ],
+  "closure": "Runtime Python dependencies are exactly these two universal wheels. Source archives supply redistribution license evidence. Native interpreter bundling and ARM64 import/hardware acceptance are separate target gates; the repository toolchain is the development runtime.",
+  "sources": [
+    "https://pypi.org/pypi/pymodbus/3.15.0/json",
+    "https://pypi.org/pypi/pyserial/3.5/json",
+    "https://pymodbus.readthedocs.io/en/v3.15.0/source/client.html"
+  ]
+}

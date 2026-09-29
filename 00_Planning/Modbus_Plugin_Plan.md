@@ -1,7 +1,7 @@
 # Modbus master/client plugin development plan
 
-Status: proposed implementation baseline, 2026-09-28. Planning and issue creation
-only; no Modbus implementation or deployment is included in this change.
+Status: first-delivery scope confirmed, 2026-09-29. MB-01 supplies the isolated
+feasibility package and contract baseline; production work follows MB-02 through MB-10.
 Repository evidence: `master`, commit `a89db2fa89b0fdf8a77f24833555b617122cb344`.
 
 ## 1. Scope, decisions and terminology
@@ -17,11 +17,12 @@ Codex and GPT models. Save the plan in `00_Planning` and create Gitea tickets.
 register maps are shared across the appliance, with one owner controlling a live
 session. Slave/server behavior is permitted only in isolated test fixtures.
 
-**PROPOSED, awaiting scope acceptance:** named typed register maps with scaling,
-units and CSV/JSON interchange; interpret RTU over IP initially as RTU over TCP;
-read polling receives a bounded session approval, while each write is a separate
-typed operation subject to the plugin policy. These proposals are not approvals
-to implement new behavior. If further user answers arrive, reconcile this plan.
+**Confirmed first-delivery scope:** named typed register maps with scaling,
+units and CSV/JSON interchange; RTU over IP means RTU over TCP only. Plugin policy
+enables or disables successive writes, with no individual write acceptance.
+Definitions are creator/admin editable and shared for reading; recordings are
+owner/admin visible. Session admission may require approval under the existing
+policy, while typed write validation and durable outcomes apply to every write.
 
 Terminology:
 
@@ -79,9 +80,9 @@ operations for desktop-only automation.
 | `02_Tools`, `07_Delivery/README.md` | Reproducible dependencies and one project release with all integrations, Linux amd64/arm64 targets and separate physical acceptance. |
 
 Issue [#25](http://192.168.1.15:3001/dpasare/2026_Networked_Intelligent_Lab_Orchestrator/issues/25)
-proposes configurable operating limits. Adopt its shared setting service when
-available; otherwise use one documented revisioned Modbus configuration boundary
-that can integrate with it, with no scattered magic numbers.
+has delivered configurable operating limits in the shared revisioned setting
+service. Extend that boundary for Modbus-specific settings, with no scattered
+magic numbers or duplicated platform settings.
 Issue [#26](http://192.168.1.15:3001/dpasare/2026_Networked_Intelligent_Lab_Orchestrator/issues/26)
 proposes the collapsed Instruments/System shell. Modbus does not create a new
 Bench navigation section and can be implemented against either shell baseline.
@@ -188,11 +189,14 @@ side effects. A failed probe does not prove a unit absent, and a successful read
 does not prove the address writable or reveal its engineering type.
 
 Writes use FC05/06/15/16 first, including explicit multi-register typed encoding.
-Editing a cell opens a preview/confirmation; typing never directly transmits.
+Editing a cell opens a validated payload preview; Submit performs the write when
+plugin policy enables writing. Typing never directly transmits.
 Preview shows endpoint, unit, area, wire/display address, function, raw words,
 engineering value, map revision, permitted range and optional read-back.
-Under Ask policy each canonical write job needs its own approval. Auto/Full Access
-use the existing resolver; roles and tokens cannot bypass policy. Bulk writes
+Plugin policy grants or denies successive writes for the admitted session;
+individual writes do not create approval jobs. Core rechecks current write
+permission, ownership, credentials and expiry before each transmission. Session
+admission uses the existing resolver; roles and tokens cannot bypass policy. Bulk writes
 show each planned request; discontiguous writes have per-request outcomes, not
 transactional rollback. No background repeated writes or toggle macros in v1.
 
@@ -285,7 +289,7 @@ the endpoint page can monitor multiple unit IDs. No extra top-level Bench menu.
 | Connection panel | Transport-specific validated settings; network host/port or adapter selection, unit defaults, connect/response timeout, read retry/backoff, inter-request delay; effective settings/read-back. Changes requiring reconnect are explicit. |
 | Poll groups | Add/Duplicate/Delete, enable, name, unit ID, function/area, wire address, quantity, interval, timeout override, stop-on-error choice, selected map revision. Individual pause and Read once. |
 | Register grid | Address/reference, point name, raw hex/words, decoded value, units, quality, last update and write availability. Select columns, sort/filter, Find next/previous, copy selection, bit view, change highlights; virtualized bounded rows. |
-| Write dialog | Selected point/range, engineering/raw input, exact encoded preview, write function, range validation, policy approval state, Submit/Cancel, acknowledged/unknown/read-back result. Accessible button action in addition to double-click. |
+| Write dialog | Selected point/range, engineering/raw input, exact encoded preview, write function, range validation, plugin write-permission state, Submit/Cancel, acknowledged/unknown/read-back result. Accessible button action in addition to double-click. |
 | Traffic panel | Timestamp, direction, unit, function, transaction ID, request/response pairing, raw hex and decoded summary, latency and errors. Find hex/text, direction/function/error filters, Pause display, resume tail and Clear display. Clearing never deletes logs. |
 | Counters/status | Requests, responses, exceptions, timeouts, CRC/framing faults, queue usage, missed polls, effective rates. Reset display counters is a local baseline, not deletion of durable evidence. |
 | Trend panel | Add named numeric series, legend, units/axis selection, bounded history, pause display, zoom/pan/reset, sample gaps/stale markers; export selected time range as CSV and chart as PNG. |
@@ -322,11 +326,11 @@ Choose exact tables and constraints at design. Network endpoint identity must be
 explicitly separate from USB physical identity; uniqueness uses canonical targets
 and configured shared-bus identity, not display name.
 
-Definitions are appliance-shared. Proposed editing rule: administrators manage
+Definitions are appliance-shared. Editing rule: administrators manage
 endpoints/policy; operators create/edit their own shared maps/workspaces; other
 operators duplicate to edit; administrators can manage all. Viewers can inspect
 shared definitions but cannot connect, poll or write. Session control remains
-credential-bound to its owner. Proposed retained-log visibility is owner/admin,
+credential-bound to its owner. Retained-log visibility is owner/admin,
 distinct from shared definition visibility; do not broaden it accidentally.
 
 Live data goes through bounded rings/cursors with explicit gap reporting.
@@ -421,7 +425,7 @@ it the relevant ticket, plan sections, repository instructions and acceptance.
 | MB-01 | Resolve scope proposals; protocol/dependency spike; schemas and behavior contracts | None | RTU/TCP/RTU-over-TCP read/write fixtures, fragmented stream tests, no-write-retry evidence, declared unsupported features, dependency lock/license proposal; user decisions recorded. |
 | MB-02 | Endpoint/profile persistence and shared serial-bus leases | MB-01 | Stable USB identity and TCP records; schema revisions; Serial/Modbus race yields one owner; entire live lifetime holds canonical resource; disable/crash/unplug cleanup preserves other sessions. |
 | MB-03 | Supervised Modbus runner and fair transport scheduler | MB-01, MB-02 contracts | Core functions on all three transports; CRC/MBAP/response validation, timing, unit fairness, late responses, bounded retries/cancel; independent endpoints run together. |
-| MB-04 | Core sessions, polling and durable writes, API/CLI/MCP | MB-02, MB-03 | Read approval/lease, per-write policy, request digest/idempotency, unknown delivery, no replay; role/token revocation and equivalent GUI/CLI/MCP results. |
+| MB-04 | Core sessions, polling and durable writes, API/CLI/MCP | MB-02, MB-03 | Session approval/lease, plugin permission for successive writes without individual acceptance, request digest/idempotency, unknown delivery, no replay; role/token revocation and equivalent GUI/CLI/MCP results. |
 | MB-05 | Register map/workspace schemas, codecs and definition interchange | MB-01, MB-02 | Address conversions, typed endian vectors, int64 precision, scale/inverse bounds, shared revisions and atomic CSV/JSON import; loading never sends writes. |
 | MB-06 | Modbus administration and Instruments navigation | MB-02, MB-04 | System plugin lifecycle, profiles/adapters, admin policy/retention controls and named instrument pages; configured offline TCP targets and zero-adapter state work. |
 | MB-07 | Live grid, polling/traffic/write controls and trends | MB-04, MB-05, MB-06 | Multiple units/groups, pause distinctions, typed write preview, search/copy, stale/gap states, bounded charts; accessible responsive EN/DE/RO UI. |
@@ -478,10 +482,10 @@ deployment or device writes are authorized by this planning request.
 |---|---|
 | Client versus server | CONFIRMED: master/client only. Test servers stay fixtures. |
 | Shared definitions/live owner | CONFIRMED: shared definitions, one live controller. |
-| Named typed maps in first delivery | PROPOSED: include CSV/JSON, units/scaling; pending answer/scope acceptance. |
-| Meaning of RTU over IP | PROPOSED: RTU over TCP in first delivery; ask whether UDP is needed. |
-| Write approval granularity | PROPOSED: each canonical write follows existing policy; no blanket session-write grant. |
-| Shared definition edit/log visibility | PROPOSED owner/admin edit, read-shared definitions, owner/admin recordings; confirm at MB-01. |
+| Named typed maps in first delivery | CONFIRMED: include CSV/JSON, units/scaling. |
+| Meaning of RTU over IP | CONFIRMED: RTU over TCP only. |
+| Write approval granularity | CONFIRMED: plugin policy enables/disables successive writes; no individual write acceptance. |
+| Shared definition edit/log visibility | CONFIRMED: creator/admin edit, shared definition reading, owner/admin recordings. |
 | Default limits, logging failure action and reconnect | PROPOSED values in section 9; validate on targets, coordinate #25. |
 | Broadcast, raw test frames, disruptive diagnostics | Deferred until explicit scope/policy design. |
 | Supported adapter/gateway models and real target map | UNKNOWN; hardware acceptance prerequisite, not a blocker for planning. |

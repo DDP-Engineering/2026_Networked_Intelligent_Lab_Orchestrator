@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-DATA-6fcda58c"
+
+title = "Declare Modbus contract boundaries"
+
+status = "active"
+
+requirement = "The Modbus development contract shall define strict versioned endpoint, profile, map, workspace, session, recording, command and private-runner messages with explicit ownership, revision, address, error and plugin-level successive-write permission semantics."
+
+verification = "Validate representative records and malformed extra-field, address, transport and integer-precision cases against the contract schemas; inspect every route, ownership rule and state transition against the accepted scope."
+
+affected_paths = ["05_Software/integrations/modbus/schemas/"]
+
+linked_tests = ["05_Software/integrations/modbus/tests/test_contracts.py", "05_Software/integrations/modbus/tests/test_contracts.py::test_each_private_operation_has_a_typed_reply"]
+
+
+spec = "specs/REQ-DATA-6fcda58c.md"
+
+priority = "high"
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-29
+updated = 2026-09-29

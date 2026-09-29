@@ -7699,6 +7699,39 @@
       "source": "https://github.com/astral-sh/uv/releases/download/0.11.25/uv-x86_64-unknown-linux-gnu.tar.gz",
       "license": "Apache-2.0 or MIT",
       "consumer": "tar to /opt/nilo/uv"
+    },
+    {
+      "name": "pymodbus",
+      "version": "3.15.0",
+      "kind": "license-sources",
+      "cache_name": "license-sources/pymodbus-3.15.0.tar.gz",
+      "sha256": "4c5f715128bfeba59f4c9fb3542b0c32a8afd4b90081111e39c12f7af0c89aae",
+      "size": 168238,
+      "source": "https://files.pythonhosted.org/packages/e5/b8/03dace16e0e5d1c3eb16e8b9bcce9885f5e8a38db34345ec375cd70ed2e2/pymodbus-3.15.0.tar.gz",
+      "license": "BSD-3-Clause",
+      "consumer": "prepare-modbus-dependencies.py verified license evidence"
+    },
+    {
+      "name": "pyserial",
+      "version": "3.5",
+      "kind": "license-sources",
+      "cache_name": "license-sources/pyserial-3.5.tar.gz",
+      "sha256": "3c77e014170dfffbd816e6ffc205e9842efb10be9f58ec16d3e8675b4925cddb",
+      "size": 159125,
+      "source": "https://files.pythonhosted.org/packages/1e/7d/ae3f0a63f41e4d2f6cb66a5b57197850f919f59e558159a4dd3a818f5082/pyserial-3.5.tar.gz",
+      "license": "BSD-3-Clause",
+      "consumer": "prepare-modbus-dependencies.py verified license evidence"
+    },
+    {
+      "name": "pymodbus",
+      "version": "3.15.0",
+      "kind": "python-packages",
+      "cache_name": "python-packages/pymodbus-3.15.0-py3-none-any.whl",
+      "sha256": "74d8dee961f23845f18a8481253183504dca05c4fcd102890cd28f4d7ce09267",
+      "size": 167602,
+      "source": "https://files.pythonhosted.org/packages/27/7b/fa75ca74270ad3786234c6573f3c6c524441d3eb686882e280c717ce6d04/pymodbus-3.15.0-py3-none-any.whl",
+      "license": "BSD-3-Clause",
+      "consumer": "Modbus offline environment and verified third-party notices"
     }
   ]
 }

@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-REL-689b7d81"
+
+title = "Fence uncertain Modbus transactions"
+
+status = "active"
+
+requirement = "If a Modbus feasibility transaction is interrupted after transmission or loses a response, the client shall close and fence that instance without automatic retry or reconnect, reporting writes as delivery_unknown and preserving bounded correlated trace observations."
+
+verification = "Count peer requests after lost replies, task cancellation and delayed replies; assert one write at most, no second request from a fenced instance, bounded trace IDs and release of Linux exclusive serial ownership after close."
+
+affected_paths = ["05_Software/integrations/modbus/src/nilo_modbus/feasibility.py"]
+
+linked_tests = ["05_Software/integrations/modbus/tests/test_feasibility.py::test_lost_writes_never_replay", "05_Software/integrations/modbus/tests/test_feasibility.py::test_cancellation_after_tx", "05_Software/integrations/modbus/tests/test_feasibility.py::test_late_reply_cannot_be_fresh", "05_Software/integrations/modbus/tests/test_feasibility.py::test_serial_exclusive_owner_and_release", "05_Software/integrations/modbus/tests/test_feasibility.py::test_trace_is_bounded_and_correlated"]
+
+
+spec = "specs/REQ-DATA-6fcda58c.md"
+
+priority = "high"
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-29
+updated = 2026-09-29
