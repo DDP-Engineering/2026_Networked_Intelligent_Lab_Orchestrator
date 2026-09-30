@@ -1,0 +1,10 @@
+schema = 1
+id = "REQ-FUNC-41b61ddb"
+title = "Admit a pinned Modbus session through a finite approval job"
+status = "active"
+requirement = """When an authorized actor requests Modbus connect with exact endpoint/profile revisions and a bounded read plan, Core shall bind the plan into the installed plugin's finite durable policy job and, once permitted, start one live runner under a canonical transport lease until disconnect, expiry or failure without occupying a finite job slot for the live lifetime."""
+verification = "Submit matching and stale revisions plus a read plan under Auto and Ask; approved job reaches completed with a live session ID, an altered plan needs another admission, a competing claim fails, and disconnect frees the claim after cleanup."
+affected_paths = ["05_Software/core/internal/bench/modbus_session.go", "05_Software/core/internal/bench/modbus_adapter.go", "05_Software/core/internal/bench/adapter.go", "05_Software/core/internal/bench/execution.go", "05_Software/core/internal/bench/manager.go", "05_Software/core/internal/bench/modbus_session_test.go", "05_Software/integrations/modbus/README.md", "05_Software/integrations/modbus/manifest.json", "05_Software/integrations/modbus/schemas/connect.input.schema.json", "05_Software/integrations/modbus/src/nilo_modbus/plugin.py", "05_Software/integrations/modbus/tests/test_package.py", "05_Software/integrations/modbus/tests/test_supervised.py"]
+linked_tests = ["05_Software/core/internal/bench/modbus_session_test.go", "05_Software/core/internal/bench/modbus_lifecycle_test.go", "05_Software/integrations/modbus/tests/test_package.py", "05_Software/integrations/modbus/tests/test_supervised.py"]
+created = 2026-09-29
+updated = 2026-09-29

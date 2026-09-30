@@ -1,0 +1,10 @@
+schema = 1
+id = "REQ-SEC-aed9d424"
+title = "Bind Modbus sessions to current credential authority"
+status = "active"
+requirement = """When a Modbus session is read or controlled, Core shall check the owner's current role, credential, plugin enablement, pinned endpoint/profile revisions and lease, granting control only to the originating credential and stopping an invalid session."""
+verification = "Connect with a scoped credential; revoke it, disable the plugin or alter a pinned definition and observe denial and cleanup; another credential cannot control the session."
+affected_paths = ["05_Software/core/internal/bench/modbus_session.go", "05_Software/core/internal/bench/manager.go", "05_Software/core/internal/bench/modbus_write.go", "05_Software/core/internal/bench/modbus_lifecycle_test.go"]
+linked_tests = ["05_Software/core/internal/bench/modbus_lifecycle_test.go", "05_Software/core/internal/bench/modbus_session_test.go"]
+created = 2026-09-29
+updated = 2026-09-29

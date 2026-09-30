@@ -52,11 +52,14 @@ one of three fixed roles - Administrator, Operator or Viewer.
 - **USB serial terminals.** Managed USB ports use credential-bound connection
   approvals, bounded ASCII/hex RX/TX, supported modem controls and retained
   JSONL sessions with quotas and streaming exports across GUI, CLI and MCP.
-- **Modbus Core foundation.** Revisioned explicit USB/network endpoints and shared
-  profiles use administrator mutation and reader access. Serial and trusted Modbus
-  consumers share canonical claims retained through confirmed transport cleanup.
-  An SDK-supervised runner owns validated RTU, TCP and RTU-over-TCP transactions
-  through a private local socket and fair per-endpoint scheduling.
+- **Modbus client.** Revisioned explicit USB/network endpoints and shared
+  profiles use administrator mutation and reader access. Finite policy admission
+  starts credential-bound sessions with a pinned read plan and a canonical claim
+  retained through runner cleanup. Core exposes bounded reads and polling,
+  distinct poll/display pauses, cursor events and durable idempotent writes
+  through HTTP, CLI and MCP. An SDK-supervised runner owns validated RTU, TCP
+  and RTU-over-TCP transactions through a private local socket and fair
+  per-endpoint scheduling.
 - **Instrument transactions.** Durable transaction identities, an administrator-
   configured queue and finite-job worker capacity with per-analyzer serialization, absolute deadlines,
   ordered bounded replies, cancellation, and digest-verified retained artifacts.

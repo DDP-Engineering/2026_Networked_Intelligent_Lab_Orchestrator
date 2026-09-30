@@ -31,6 +31,7 @@ func toolActor(ctx context.Context, request *sdk.CallToolRequest, options Handle
 
 func registerBenchTools(server *sdk.Server, options HandlerOptions) {
 	registerSerialTools(server, options)
+	registerModbusTools(server, options)
 	register := func(name, description string, readOnly bool, properties map[string]any, required []string, call func(context.Context, identity.Actor, json.RawMessage) (any, error)) {
 		server.AddTool(&sdk.Tool{Name: name, Description: description, Annotations: &sdk.ToolAnnotations{ReadOnlyHint: readOnly}, InputSchema: map[string]any{"type": "object", "properties": properties, "required": required, "additionalProperties": false}}, func(ctx context.Context, request *sdk.CallToolRequest) (*sdk.CallToolResult, error) {
 			actor, err := toolActor(ctx, request, options)

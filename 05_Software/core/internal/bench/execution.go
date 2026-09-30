@@ -102,6 +102,9 @@ func (r *jobRunner) Revalidate(ctx context.Context, request domain.OperationRequ
 }
 
 func (r *jobRunner) Execute(ctx context.Context, request protocol.ExecuteRequest, sink protocol.EventSink) (protocol.ExecuteResult, error) {
+	if r.plugin.ID == "modbus" && request.Operation == "connect" {
+		return r.manager.executeModbusConnect(ctx, r.job, r.plugin)
+	}
 	if r.plugin.ID == "serial" && request.Operation == "connect" {
 		return r.manager.executeSerialConnect(ctx, r.job, r.plugin)
 	}

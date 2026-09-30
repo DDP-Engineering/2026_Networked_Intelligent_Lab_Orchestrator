@@ -1,0 +1,11 @@
+schema = 1
+id = "REQ-REL-f258c750"
+title = "Reserve exact Modbus writes durably before transmission"
+status = "active"
+requirement = """When an authorized owner submits a validated Modbus write under plugin policy, Core shall persist its canonical request digest and idempotency identity before one private-runner attempt, retain the terminal or delivery_unknown result, return the original result for an identical retry, reject a changed retry, and never replay a reserved write after a lost reply or restart."""
+verification = "With the supervised private socket fixture and injected lost reply, duplicate and changed keys plus a simulated Core restart show at most one dispatch and durable unknown or acknowledged results. MB-03 independently verifies peer frames."
+affected_paths = ["05_Software/core/internal/bench/modbus_write.go", "05_Software/core/internal/bench/modbus_request.go", "05_Software/core/internal/store/sqlite/migrations/025_modbus_sessions.sql", "05_Software/core/internal/store/sqlite/migrations.go", "05_Software/core/internal/store/sqlite/db_test.go"]
+linked_tests = ["05_Software/core/internal/bench/modbus_session_test.go", "05_Software/core/internal/store/sqlite/db_test.go"]
+spec = "specs/REQ-REL-f258c750.md"
+created = 2026-09-29
+updated = 2026-09-29

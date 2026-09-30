@@ -3,13 +3,16 @@
 This package supplies a supervised Modbus client runner, the transport/dependency
 baseline, and the versioned development contract. The SDK `serve` operation opens
 one pinned endpoint in an owner-only workspace and accepts bounded private
-transactions over `control.sock`. Core's credential-bound live sessions, retained
-recordings, API/CLI/MCP, GUI and target bundle work follow the implementation backlog.
+transactions over `control.sock`. Core now owns credential-bound sessions,
+finite admission jobs, pinned read plans, bounded polling, durable raw writes
+and API/CLI/MCP methods. Retained recordings, typed maps, GUI and target bundle
+work follow the implementation backlog.
 
 The scope is master/client, serial RTU, native TCP and RTU over TCP. Named typed
 maps include scaling, units and CSV/JSON interchange. Shared definitions use
 creator/admin edits; recordings use owner/admin visibility. Plugin policy controls
-successive writes with no individual write approval. See the
+successive writes with no individual write approval. The admission job's immutable
+read plan is approved as a whole; changing it requires a new session. See the
 [contract specification](../../../.agentic/specs/REQ-DATA-6fcda58c.md) and
 [implementation plan](../../../00_Planning/Modbus_Plugin_Plan.md).
 

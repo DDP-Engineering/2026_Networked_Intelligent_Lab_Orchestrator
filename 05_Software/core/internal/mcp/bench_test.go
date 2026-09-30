@@ -79,10 +79,10 @@ func TestBenchToolsUseCurrentTokenScopes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(list.Tools) != 40 {
+	if len(list.Tools) != 55 {
 		t.Fatalf("tools: %d", len(list.Tools))
 	}
-	for _, expected := range []string{"serial_status", "serial_connect", "serial_read", "serial_send", "serial_disconnect", "serial_signals", "serial_logging", "serial_logs", "serial_log_read", "serial_export", "serial_delete", "serial_retention", "serial_retention_configure", "camera_snapshot", "camera_get_controls", "camera_set_controls", "camera_reset_controls", "plugin_devices", "plugin_configuration", "plugin_configure", "plugin_device_configure", "plugin_device_rebind", "plugin_device_forget", "plugin_device_action"} {
+	for _, expected := range []string{"modbus_endpoints", "modbus_endpoint_save", "modbus_profiles", "modbus_profile_save", "modbus_status", "modbus_connect", "modbus_read", "modbus_write", "modbus_preview", "modbus_poll", "modbus_display", "modbus_events", "modbus_disconnect", "modbus_command", "modbus_commands", "serial_status", "serial_connect", "serial_read", "serial_send", "serial_disconnect", "serial_signals", "serial_logging", "serial_logs", "serial_log_read", "serial_export", "serial_delete", "serial_retention", "serial_retention_configure", "camera_snapshot", "camera_get_controls", "camera_set_controls", "camera_reset_controls", "plugin_devices", "plugin_configuration", "plugin_configure", "plugin_device_configure", "plugin_device_rebind", "plugin_device_forget", "plugin_device_action"} {
 		found := false
 		for _, tool := range list.Tools {
 			if tool.Name == expected {

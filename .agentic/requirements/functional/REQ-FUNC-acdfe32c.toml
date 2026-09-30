@@ -1,0 +1,10 @@
+schema = 1
+id = "REQ-FUNC-acdfe32c"
+title = "Expose equivalent typed Modbus operations"
+status = "active"
+requirement = """For Modbus definition, session, polling and command actions, Core shall expose equivalent typed authenticated HTTP, CLI and MCP results through the same service, including the same errors and existing human-only approval job path."""
+verification = "Inspect typed HTTP and MCP service forwarding to the same Manager methods; exercise HTTP scope and strict-body cases, CLI authenticated routing, MCP tool scope registration, and a token actor's inability to approve an Ask admission."
+affected_paths = ["05_Software/core/internal/httpapi/modbus.go", "05_Software/core/internal/httpapi/bench.go", "05_Software/core/internal/httpapi/modbus_test.go", "05_Software/core/internal/mcp/modbus.go", "05_Software/core/internal/mcp/bench.go", "05_Software/core/internal/mcp/bench_test.go", "05_Software/core/cmd/nilo/modbus.go", "05_Software/core/cmd/nilo/modbus_test.go", "05_Software/core/cmd/nilo/bench.go", "05_Software/core/cmd/nilo/main.go"]
+linked_tests = ["05_Software/core/internal/httpapi/modbus_test.go", "05_Software/core/internal/mcp/bench_test.go", "05_Software/core/cmd/nilo/modbus_test.go"]
+created = 2026-09-29
+updated = 2026-09-29

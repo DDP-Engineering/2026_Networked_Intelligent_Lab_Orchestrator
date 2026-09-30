@@ -33,7 +33,7 @@ class ModbusIntegration:
         self.workspace: Workspace | None = None
 
     async def describe(self):
-        return DescribeResult(integration=self.name, operations=["serve"])
+        return DescribeResult(integration=self.name, operations=["connect", "serve"])
 
     async def discover(self):
         return DiscoverResult()

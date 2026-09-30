@@ -7,6 +7,9 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Added
 
+- Modbus Core now admits pinned read plans through finite approval jobs and serves
+  credential-bound live sessions, polling and durable non-replayed writes via API, CLI and MCP.
+
 - A supervised Modbus runner serves validated RTU, TCP and RTU-over-TCP commands
   through a private socket with fair scheduling and bounded recovery.
 

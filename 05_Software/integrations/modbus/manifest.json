@@ -26,6 +26,16 @@
   "device_configuration_schema": "schemas/device.schema.json",
   "operations": [
     {
+      "id": "connect",
+      "policy": "auto_eligible",
+      "input_schema": "schemas/connect.input.schema.json",
+      "result_schema": "schemas/result.schema.json",
+      "timeout": "35s",
+      "cancellable": true,
+      "state_changing": true,
+      "resources": []
+    },
+    {
       "id": "serve",
       "policy": "auto_eligible",
       "input_schema": "schemas/serve.input.schema.json",

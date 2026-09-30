@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["endpoint_revision", "profile_id", "profile_revision", "groups"],
+  "properties": {
+    "endpoint_revision": {"type": "integer", "minimum": 1, "maximum": 2147483647},
+    "profile_id": {"type": "string", "pattern": "^[A-Za-z0-9_.:-]{1,128}$"},
+    "profile_revision": {"type": "integer", "minimum": 1, "maximum": 2147483647},
+    "groups": {"type": "array", "maxItems": 32, "items": {"type": "object"}}
+  }
+}

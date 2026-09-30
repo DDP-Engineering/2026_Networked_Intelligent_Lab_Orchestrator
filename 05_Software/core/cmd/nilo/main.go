@@ -122,7 +122,7 @@ func run(ctx context.Context, arguments []string) int {
 	if len(arguments) > 0 && arguments[0] == "network" {
 		return runNetworkCommand(ctx, arguments[1:], networkIO{stdout: os.Stdout, stderr: os.Stderr, stdin: os.Stdin, interactive: networkTerminal()})
 	}
-	if len(arguments) > 0 && (arguments[0] == "plugin" || arguments[0] == "bench" || arguments[0] == "camera" || arguments[0] == "serial") {
+	if len(arguments) > 0 && (arguments[0] == "plugin" || arguments[0] == "bench" || arguments[0] == "camera" || arguments[0] == "serial" || arguments[0] == "modbus") {
 		return runBenchCommand(ctx, arguments[0], arguments[1:], networkIO{stdout: os.Stdout, stderr: os.Stderr, stdin: os.Stdin})
 	}
 	if len(arguments) > 0 && arguments[0] == "activity" {
@@ -1172,10 +1172,11 @@ const rootUsage = `usage: nilo <command> [options]
   nilo plugin ...                              manage installed integrations and discover devices
   nilo bench ...                               queue instrument jobs and retrieve replies/artifacts
   nilo serial status|connect|read|send|disconnect|signals|logging|logs|log-read|export|delete|retention [remote options]
+  nilo modbus endpoints|endpoint-save|profiles|profile-save|status|connect|read|preview|write|poll|display|events|command|commands|disconnect [remote options]
   nilo activity ...                            audit and event history: list and export
 
 Run a command group without arguments for its own usage. The remote groups
-(admin, network, activity, plugin, bench, camera, serial) take --server URL_OR_NAME and --token-file PATH;
+(admin, network, activity, plugin, bench, camera, serial, modbus) take --server URL_OR_NAME and --token-file PATH;
 the token is read from that file and never from an argument.`
 
 func writeUsage() {

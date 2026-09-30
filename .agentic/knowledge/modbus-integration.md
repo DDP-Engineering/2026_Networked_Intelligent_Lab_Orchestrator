@@ -1,4 +1,4 @@
-# Modbus client foundation and supervised runner
+# Modbus client sessions and supervised runner
 
 ## Routing
 
@@ -7,7 +7,9 @@ shared Serial/Modbus ownership, development contracts and canonical initial
 requests, simulated RTU/TCP/RTU-over-TCP transactions and dependency evidence
 under `05_Software/integrations/modbus/`. Core services start at
 `05_Software/core/internal/bench/modbus_definitions.go`, `modbus_discovery.go`
-and `transport_lease.go`; models and storage live in `internal/modbus/definitions.go`
+and `modbus_session.go`; polling and durable writes start at `modbus_poll.go`
+and `modbus_write.go`, with authenticated routes in `internal/httpapi/modbus.go`,
+`internal/mcp/modbus.go` and `cmd/nilo/modbus.go`. Models and storage live in `internal/modbus/definitions.go`
 and `internal/store/sqlite/modbus_repository.go`, with adjacent focused tests.
 The Python package starts at `src/nilo_modbus/requests.py`, `feasibility.py`,
 `runner_client.py`, `scheduler.py` and `workspace.py`; focused tests live in
@@ -20,10 +22,11 @@ Managed production package lifecycle belongs to
 
 ## Purpose and boundaries
 
-Core owns revisioned endpoint/profile definitions, trusted USB reconciliation
-and shared full-lifetime transport claims. Internal trusted consumers supply
-transport lifetimes and cleanup; the curated production registry and public
-session adapters compose separate runner and policy services.
+Core owns revisioned endpoint/profile definitions, trusted USB reconciliation,
+shared full-lifetime transport claims, finite admission policy jobs and
+credential-bound live sessions. It owns bounded polling and durable write
+commands; the supervised runner owns the transport and private transaction
+scheduler.
 
 This Python package supplies an SDK-supervised `serve` runner for one pinned
 endpoint, and proves its client protocol against loopback TCP and Linux PTY
@@ -43,6 +46,16 @@ persistence; the existing curated packages use the shared supervised lifecycle.
 - `runModbusConsumer` is an internal trusted admission seam: pinned endpoint/profile
   revisions precede canonical claims, then the supplied lifetime function owns
   transport work and confirms cleanup. Serial uses the same claim registry.
+- `ConnectModbus` submits a finite policy job with pinned revisions and an
+  immutable read plan. Its completed result carries a live session ID.
+  `ModbusSession` and `DisconnectModbus` inspect and stop that lease.
+- `ReadModbus`, `SetModbusPolling`, `SetModbusDisplayPaused` and
+  `ReadModbusEvents` expose approved raw reads and a bounded cursor stream.
+  The HTTP routes, `nilo modbus` commands and MCP tools call the same Core
+  service.
+- `PreviewModbusWrite` returns canonical PDU bytes and a digest without I/O.
+  `WriteModbus` reserves a command before one dispatch; `ModbusCommand` and
+  `ListModbusCommands` expose durable results, including unknown delivery.
 
 - `Request(function, unit, address, count, values)` is an immutable canonical
   request; `encode(request, transport)` returns its validated PDU.
@@ -77,6 +90,15 @@ persistence; the existing curated packages use the shared supervised lifecycle.
   reuse for the Manager lifetime and propagate through shutdown.
 - Live endpoint/profile edits wait for cleanup; endpoint disable cancels its own
   consumer. Reader/admin permissions and creator ownership govern shared definitions.
+- A live session belongs to its originating credential and pinned definitions.
+  Current role, credential, plugin enablement and lease validity are checked
+  for each operation; expiry and runner exit close the lease.
+- The admission job finishes after the private socket becomes ready, leaving
+  the runner and canonical claim alive outside finite job capacity. Approved
+  read requests and the poll plan cannot change during that session.
+- Polling and display pause are separate. A write reservation is committed
+  before transport dispatch, and a duplicate key returns its stored result.
+  A lost reply remains `delivery_unknown`; Core never replays that command.
 
 - Initial functions are 1/2/3/4/5/6/15/16 with function-specific quantity,
   value, unit and address checks before transmission.
@@ -117,6 +139,66 @@ persistence; the existing curated packages use the shared supervised lifecycle.
 | Fair queue and cancellation | `scheduler.py` | `test_scheduler.py` |
 | Entity or private-message grammar | `contracts.schema.json` and specification | `test_contracts.py` |
 | Dependency pins or notices | `dependencies.json`, lock and preparation helper | `test_dependencies.py` and explicit offline acquisition verification |
+| Live admission and authority | Core `modbus_adapter.go`, `modbus_session.go` | `modbus_lifecycle_test.go` |
+| Approved reads and event cursor | Core `modbus_request.go`, `modbus_poll.go` | `modbus_session_test.go`, `modbus_lifecycle_test.go` |
+| Durable raw writes | Core `modbus_write.go`, SQLite migration 025 | `modbus_session_test.go` |
+| Public routes and commands | Core `httpapi/modbus.go`, `mcp/modbus.go`, `cmd/nilo/modbus.go` | Adjacent `modbus_test.go` files |
+
+## Key behaviors
+
+- `REQ-SEC-aed9d424` — each live operation checks originating credential,
+  current authority, plugin state and pinned definitions.
+- `REQ-FUNC-41b61ddb` — finite policy admission starts a live runner under a
+  canonical claim with an approved immutable read plan.
+- `REQ-FUNC-1f21b986` — bounded reads and polling produce cursor events;
+  pause controls and gaps are explicit.
+- `REQ-REL-f258c750` — exact writes reserve a durable key and unknown default
+  before one attempt, with no replay after lost delivery or restart.
+- `REQ-FUNC-acdfe32c` — HTTP, CLI and MCP enter the same Core service.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  HTTP([HTTP routes]) --> M[bench.Manager Modbus service]
+  CLI([nilo modbus]) --> HTTP
+  MCP([MCP tools]) --> M
+  M --> J[Finite Bench connect job]
+  J --> P[Plugin policy and approval]
+  J --> L[Canonical transport claim]
+  J --> S[Live modbusSession]
+  S --> D[(SQLite sessions and commands)]
+  S --> R[Private Unix socket]
+  R --> W([SDK supervised runner])
+  W --> Peer([Modbus peer])
+```
+
+The finite job admits a live session and then releases job capacity. Core
+persists write reservations before sending one private request to the runner.
+
+## Files
+
+- `05_Software/core/internal/bench/modbus_definitions.go`,
+  `modbus_discovery.go`, `transport_lease.go`, `internal/modbus/definitions.go`
+  and `internal/store/sqlite/modbus_repository.go` — shared definitions,
+  presence and canonical ownership, with adjacent Go tests.
+- `05_Software/core/internal/bench/modbus_adapter.go`, `modbus_session.go`,
+  `modbus_request.go`, `modbus_poll.go`, `modbus_write.go` — admission,
+  credential-bound lease, canonical requests, polling and durable writes.
+- `05_Software/core/internal/httpapi/modbus.go`, `internal/mcp/modbus.go`,
+  `cmd/nilo/modbus.go` — authenticated public interfaces.
+- `05_Software/core/internal/store/sqlite/migrations/025_modbus_sessions.sql`
+  — durable live-session and command ledger tables.
+- `05_Software/integrations/modbus/src/nilo_modbus/plugin.py` — supervised
+  private serve operation; `manifest.json` and `schemas/connect.input.schema.json`
+  declare finite Core admission.
+- `05_Software/integrations/modbus/src/nilo_modbus/requests.py`,
+  `feasibility.py`, `runner_client.py`, `scheduler.py` and `workspace.py` —
+  private canonical request, transaction, queue and socket behavior, with
+  corresponding `05_Software/integrations/modbus/tests/` tests.
+- `05_Software/core/internal/bench/modbus_session_test.go`,
+  `modbus_lifecycle_test.go` and adjacent HTTP/MCP/CLI `modbus_test.go` files
+  — request, lifecycle and interface verification.
 
 ## Key behaviors
 

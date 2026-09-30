@@ -58,7 +58,7 @@ async def test_sdk_supervised_runner_private_transaction_and_stop(tmp_path, endi
             await message(process, "hello", "hello", {"type": "hello", "client": "test"})
             assert (await reply(process))["payload"]["integration"] == "modbus"
             await message(process, "describe", "describe", {"type": "describe"})
-            assert (await reply(process))["payload"]["operations"] == ["serve"]
+            assert (await reply(process))["payload"]["operations"] == ["connect", "serve"]
             execute_id = "00000000-0000-0000-0000-000000000001"
             await message(
                 process,

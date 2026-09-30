@@ -1,0 +1,10 @@
+schema = 1
+id = "REQ-FUNC-1f21b986"
+title = "Poll and read a bounded live Modbus session"
+status = "active"
+requirement = """While a credential-bound Modbus session is live, Core shall run only reads in its approved bounded poll plan through the pinned private runner, expose cursor-based results with explicit gaps and distinct display-pause and poll-pause states, and cancel polling on disconnect or authority loss."""
+verification = "Simulated peer serves two units; poll results advance a bounded cursor, pause and resume behave distinctly, invalid function/range is rejected, and revocation stops future polls."
+affected_paths = ["05_Software/core/internal/bench/modbus_session.go", "05_Software/core/internal/bench/modbus_poll.go", "05_Software/core/internal/bench/modbus_request.go"]
+linked_tests = ["05_Software/core/internal/bench/modbus_session_test.go", "05_Software/core/internal/bench/modbus_lifecycle_test.go"]
+created = 2026-09-29
+updated = 2026-09-29
