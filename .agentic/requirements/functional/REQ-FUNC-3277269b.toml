@@ -1,0 +1,10 @@
+schema = 1
+id = "REQ-FUNC-3277269b"
+title = "Validate named Modbus points and explicit addresses"
+status = "active"
+requirement = """When a named Modbus map is validated, Core shall canonicalize its bounded points and explicit zero, one or area-reference addresses to wire offsets, rejecting unsupported area/type/width combinations, duplicate IDs, malformed labels and any 16-bit address-span overflow."""
+verification = "Table-driven Go tests convert holding 40001, one-based 1 and zero-based 0 to wire 0, and extended input reference 40001 to wire 10000; reject base-1 zero, references below their area start, duplicate points, invalid width and spans past 65535."
+affected_paths = ["05_Software/core/internal/modbus/map.go", "05_Software/core/internal/modbus/map_test.go", "05_Software/integrations/modbus/schemas/contracts.schema.json", "05_Software/integrations/modbus/tests/test_contracts.py"]
+linked_tests = ["05_Software/core/internal/modbus/map_test.go", "05_Software/integrations/modbus/tests/test_contracts.py"]
+created = 2026-09-30
+updated = 2026-09-30

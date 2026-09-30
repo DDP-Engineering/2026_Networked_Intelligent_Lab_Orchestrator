@@ -2,15 +2,16 @@
 
 ## Routing
 
-Select this page for Core Modbus endpoints/profiles, trusted USB presence,
+Select this page for Core Modbus endpoints/profiles, named maps, saved workspaces, trusted USB presence,
 shared Serial/Modbus ownership, development contracts and canonical initial
 requests, simulated RTU/TCP/RTU-over-TCP transactions and dependency evidence
 under `05_Software/integrations/modbus/`. Core services start at
 `05_Software/core/internal/bench/modbus_definitions.go`, `modbus_discovery.go`
-and `modbus_session.go`; polling and durable writes start at `modbus_poll.go`
+and `modbus_session.go`; map/workspace metadata starts at `modbus_maps.go` and
+`modbus_workspaces.go`; polling and durable writes start at `modbus_poll.go`
 and `modbus_write.go`, with authenticated routes in `internal/httpapi/modbus.go`,
 `internal/mcp/modbus.go` and `cmd/nilo/modbus.go`. Models and storage live in `internal/modbus/definitions.go`
-and `internal/store/sqlite/modbus_repository.go`, with adjacent focused tests.
+and `internal/store/sqlite/modbus_repository.go` plus `modbus_definition_repository.go`, with adjacent focused tests.
 The Python package starts at `src/nilo_modbus/requests.py`, `feasibility.py`,
 `runner_client.py`, `scheduler.py` and `workspace.py`; focused tests live in
 `tests/` alongside independent peers.
@@ -23,6 +24,7 @@ Managed production package lifecycle belongs to
 ## Purpose and boundaries
 
 Core owns revisioned endpoint/profile definitions, trusted USB reconciliation,
+creator-owned named maps and inert saved workspaces with immutable revisions,
 shared full-lifetime transport claims, finite admission policy jobs and
 credential-bound live sessions. It owns bounded polling and durable write
 commands; the supervised runner owns the transport and private transaction
@@ -43,6 +45,14 @@ persistence; the existing curated packages use the shared supervised lifecycle.
 - `ModbusRepository` atomically publishes endpoint/profile definitions and trusted
   USB projections. Network records carry explicit peer/unit/bus configuration;
   USB records carry Core-owned identity and observed presence.
+- `ModbusMaps`, `ModbusMap`, `ModbusMapRevision`, and map save/duplicate/export/import
+  methods share creator-owned metadata. Import preview reports row and revision
+  conflicts before one atomic save. `ModbusWorkspaces` and save/open/duplicate
+  and JSON preview/import methods check pinned profile/map references without
+  starting a session.
+- Core `internal/modbus` validates named point coordinates and type/width/order,
+  converts explicit zero/one/reference addresses, and previews reversible typed
+  words with exact 64-bit decimal strings and tagged non-finite floats.
 - `runModbusConsumer` is an internal trusted admission seam: pinned endpoint/profile
   revisions precede canonical claims, then the supplied lifetime function owns
   transport work and confirms cleanup. Serial uses the same claim registry.
@@ -82,6 +92,11 @@ persistence; the existing curated packages use the shared supervised lifecycle.
 
 - Definition saves perform database/audit work; trusted observations establish
   USB presence and network readiness. Startup requires fresh observations.
+- Map/workspace revisions are immutable once published. Creator or administrator
+  edits require the current expected revision. Import/open never contacts the runner;
+  an active read plan is independent of saved metadata changes.
+- Migration 026 backfills current profiles into immutable profile revision history;
+  saved workspaces can resolve their pinned profile and map revisions after edits.
 - Strong USB identities survive tty/topology changes; weak duplicates remain
   port-bound. Reconciliation retains names, disabled state and profiles on unplug.
 - USB claims include physical port and strong serial identity. Network claims
@@ -131,6 +146,7 @@ persistence; the existing curated packages use the shared supervised lifecycle.
 | Change requested | Start with | Focused verification |
 |---|---|---|
 | Definitions/transport validation | Core `modbus_definitions.go`, `definitions.go`, `modbus_repository.go` | Adjacent definition/repository tests |
+| Named map and workspace metadata | Core `modbus_maps.go`, `modbus_workspaces.go`, `internal/modbus/{map,codec,interchange,workspace}.go`, SQLite migration 026 | `map_test.go`, `interchange_test.go`, `modbus_maps_mb05_test.go`, `modbus_definitions_mb05_test.go` |
 | USB identity/presence | Core `modbus_discovery.go`, repository projection | Core/store `modbus_discovery_test.go` |
 | Claims and cleanup | Core `transport_lease.go`, `serial_session.go` | `transport_lease_test.go`, `serial_lifecycle_test.go` |
 | PDU limits or presentation addresses | `requests.py` | `test_requests.py` |
@@ -155,6 +171,9 @@ persistence; the existing curated packages use the shared supervised lifecycle.
 - `REQ-REL-f258c750` — exact writes reserve a durable key and unknown default
   before one attempt, with no replay after lost delivery or restart.
 - `REQ-FUNC-acdfe32c` — HTTP, CLI and MCP enter the same Core service.
+- `REQ-FUNC-3277269b`, `REQ-FUNC-d0c39b60` — point coordinates and typed codecs.
+- `REQ-FUNC-dd8ff122`, `REQ-FUNC-e14acc2b` — immutable shared map revisions and inert saved workspaces.
+- `REQ-DATA-723c5581`, `REQ-FUNC-3584cdf3` — previewed atomic interchange and shared public definition actions.
 
 ## Architecture
 
@@ -163,6 +182,10 @@ flowchart LR
   HTTP([HTTP routes]) --> M[bench.Manager Modbus service]
   CLI([nilo modbus]) --> HTTP
   MCP([MCP tools]) --> M
+  M --> V[Named point validation and typed codec]
+  M --> I[Map import preview and export]
+  M --> H[(SQLite profile/map/workspace revisions)]
+  I --> H
   M --> J[Finite Bench connect job]
   J --> P[Plugin policy and approval]
   J --> L[Canonical transport claim]
@@ -185,6 +208,11 @@ persists write reservations before sending one private request to the runner.
 - `05_Software/core/internal/bench/modbus_adapter.go`, `modbus_session.go`,
   `modbus_request.go`, `modbus_poll.go`, `modbus_write.go` — admission,
   credential-bound lease, canonical requests, polling and durable writes.
+- `05_Software/core/internal/bench/modbus_maps.go`, `modbus_workspaces.go`,
+  `modbus_workspace_import.go`, `internal/modbus/{map,codec,workspace,interchange}.go`,
+  `internal/store/sqlite/modbus_definition_repository.go` and migration 026 —
+  named point definitions, typed values, immutable profile/map/workspace revisions and
+  inert metadata interchange, with adjacent Go tests.
 - `05_Software/core/internal/httpapi/modbus.go`, `internal/mcp/modbus.go`,
   `cmd/nilo/modbus.go` — authenticated public interfaces.
 - `05_Software/core/internal/store/sqlite/migrations/025_modbus_sessions.sql`

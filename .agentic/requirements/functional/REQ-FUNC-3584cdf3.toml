@@ -1,0 +1,10 @@
+schema = 1
+id = "REQ-FUNC-3584cdf3"
+title = "Expose Modbus definitions through shared public surfaces"
+status = "active"
+requirement = """When an authorized client lists, saves, opens, duplicates, previews/imports or exports a Modbus map or workspace, Core shall expose the same typed definition result and denial semantics through HTTP, `nilo modbus` and shared MCP operations, with no direct runner or device access."""
+verification = "Use an authenticated Core fixture to compare HTTP, CLI and MCP routing/results for representative save/open/duplicate/interchange actions; read-only tokens cannot mutate, malformed payloads are rejected, and no Modbus session is created."
+affected_paths = ["05_Software/core/internal/httpapi/modbus.go", "05_Software/core/internal/httpapi/modbus_test.go", "05_Software/core/internal/mcp/modbus.go", "05_Software/core/internal/mcp/bench_test.go", "05_Software/core/cmd/nilo/modbus.go", "05_Software/core/cmd/nilo/modbus_test.go"]
+linked_tests = ["05_Software/core/internal/httpapi/modbus_test.go", "05_Software/core/internal/mcp/bench_test.go", "05_Software/core/cmd/nilo/modbus_test.go"]
+created = 2026-09-30
+updated = 2026-09-30

@@ -1,7 +1,9 @@
 package httpapi
 
 import (
+	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"nilo.local/nilo/internal/auth"
 	"nilo.local/nilo/internal/bench"
@@ -56,6 +58,155 @@ func registerModbus(register func(string, auth.Permission, http.HandlerFunc), m 
 		}
 		a, _ := actorFrom(r.Context())
 		v, err := m.SaveModbusProfile(r.Context(), a, body.ExpectedRevision, body.Profile)
+		reply(w, v, err)
+	})
+	register("GET /api/v1/modbus/maps", auth.PermissionBenchRead, func(w http.ResponseWriter, r *http.Request) {
+		a, _ := actorFrom(r.Context())
+		v, err := m.ModbusMaps(r.Context(), a)
+		reply(w, map[string]any{"maps": v}, err)
+	})
+	register("GET /api/v1/modbus/maps/{id}", auth.PermissionBenchRead, func(w http.ResponseWriter, r *http.Request) {
+		a, _ := actorFrom(r.Context())
+		v, err := m.ModbusMap(r.Context(), a, r.PathValue("id"))
+		reply(w, v, err)
+	})
+	register("GET /api/v1/modbus/maps/{id}/revisions/{revision}", auth.PermissionBenchRead, func(w http.ResponseWriter, r *http.Request) {
+		revision, err := strconv.ParseInt(r.PathValue("revision"), 10, 64)
+		if err != nil {
+			benchError(w, bench.ErrInvalid)
+			return
+		}
+		a, _ := actorFrom(r.Context())
+		v, err := m.ModbusMapRevision(r.Context(), a, r.PathValue("id"), revision)
+		reply(w, v, err)
+	})
+	register("PUT /api/v1/modbus/maps/{id}", auth.PermissionBenchExecute, func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			ExpectedRevision int64      `json:"expected_revision"`
+			Map              modbus.Map `json:"map"`
+		}
+		if !benchBody(w, r, &body) {
+			return
+		}
+		if body.Map.ID != r.PathValue("id") {
+			benchError(w, bench.ErrInvalid)
+			return
+		}
+		a, _ := actorFrom(r.Context())
+		v, err := m.SaveModbusMap(r.Context(), a, body.ExpectedRevision, body.Map)
+		reply(w, v, err)
+	})
+	register("POST /api/v1/modbus/maps/{id}/duplicate", auth.PermissionBenchExecute, func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			NewID string `json:"new_id"`
+		}
+		if !benchBody(w, r, &body) {
+			return
+		}
+		a, _ := actorFrom(r.Context())
+		v, err := m.DuplicateModbusMap(r.Context(), a, r.PathValue("id"), body.NewID)
+		reply(w, v, err)
+	})
+	register("GET /api/v1/modbus/maps/{id}/export", auth.PermissionBenchRead, func(w http.ResponseWriter, r *http.Request) {
+		format := r.URL.Query().Get("format")
+		if format == "" {
+			format = "json"
+		}
+		a, _ := actorFrom(r.Context())
+		v, err := m.ExportModbusMap(r.Context(), a, r.PathValue("id"), format)
+		reply(w, map[string]any{"format": format, "document": v}, err)
+	})
+	register("POST /api/v1/modbus/maps/import-preview", auth.PermissionBenchExecute, func(w http.ResponseWriter, r *http.Request) {
+		var body bench.ModbusMapImport
+		if !benchBody(w, r, &body) {
+			return
+		}
+		a, _ := actorFrom(r.Context())
+		v, err := m.PreviewModbusMapImport(r.Context(), a, body)
+		reply(w, v, err)
+	})
+	register("POST /api/v1/modbus/maps/import", auth.PermissionBenchExecute, func(w http.ResponseWriter, r *http.Request) {
+		var body bench.ModbusMapImport
+		if !benchBody(w, r, &body) {
+			return
+		}
+		a, _ := actorFrom(r.Context())
+		v, err := m.ImportModbusMap(r.Context(), a, body)
+		reply(w, v, err)
+	})
+	register("GET /api/v1/modbus/workspaces", auth.PermissionBenchRead, func(w http.ResponseWriter, r *http.Request) {
+		a, _ := actorFrom(r.Context())
+		v, err := m.ModbusWorkspaces(r.Context(), a)
+		reply(w, map[string]any{"workspaces": v}, err)
+	})
+	register("GET /api/v1/modbus/workspaces/{id}", auth.PermissionBenchRead, func(w http.ResponseWriter, r *http.Request) {
+		a, _ := actorFrom(r.Context())
+		v, err := m.ModbusWorkspace(r.Context(), a, r.PathValue("id"))
+		reply(w, v, err)
+	})
+	register("GET /api/v1/modbus/workspaces/{id}/revisions/{revision}", auth.PermissionBenchRead, func(w http.ResponseWriter, r *http.Request) {
+		revision, err := strconv.ParseInt(r.PathValue("revision"), 10, 64)
+		if err != nil {
+			benchError(w, bench.ErrInvalid)
+			return
+		}
+		a, _ := actorFrom(r.Context())
+		v, err := m.ModbusWorkspaceRevision(r.Context(), a, r.PathValue("id"), revision)
+		reply(w, v, err)
+	})
+	register("PUT /api/v1/modbus/workspaces/{id}", auth.PermissionBenchExecute, func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			ExpectedRevision int64            `json:"expected_revision"`
+			Workspace        modbus.Workspace `json:"workspace"`
+		}
+		if !benchBody(w, r, &body) {
+			return
+		}
+		if body.Workspace.ID != r.PathValue("id") {
+			benchError(w, bench.ErrInvalid)
+			return
+		}
+		a, _ := actorFrom(r.Context())
+		v, err := m.SaveModbusWorkspace(r.Context(), a, body.ExpectedRevision, body.Workspace)
+		reply(w, v, err)
+	})
+	register("POST /api/v1/modbus/workspaces/{id}/duplicate", auth.PermissionBenchExecute, func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			NewID string `json:"new_id"`
+		}
+		if !benchBody(w, r, &body) {
+			return
+		}
+		a, _ := actorFrom(r.Context())
+		v, err := m.DuplicateModbusWorkspace(r.Context(), a, r.PathValue("id"), body.NewID)
+		reply(w, v, err)
+	})
+	register("GET /api/v1/modbus/workspaces/{id}/export", auth.PermissionBenchRead, func(w http.ResponseWriter, r *http.Request) {
+		a, _ := actorFrom(r.Context())
+		v, err := m.ModbusWorkspace(r.Context(), a, r.PathValue("id"))
+		if err != nil {
+			benchError(w, err)
+			return
+		}
+		raw, err := json.Marshal(v)
+		reply(w, map[string]any{"format": "json", "document": string(raw)}, err)
+	})
+	register("POST /api/v1/modbus/workspaces/import-preview", auth.PermissionBenchExecute, func(w http.ResponseWriter, r *http.Request) {
+		var body bench.ModbusWorkspaceImport
+		if !benchBody(w, r, &body) {
+			return
+		}
+		a, _ := actorFrom(r.Context())
+		v, err := m.PreviewModbusWorkspaceImport(r.Context(), a, body)
+		reply(w, v, err)
+	})
+	register("POST /api/v1/modbus/workspaces/import", auth.PermissionBenchExecute, func(w http.ResponseWriter, r *http.Request) {
+		var body bench.ModbusWorkspaceImport
+		if !benchBody(w, r, &body) {
+			return
+		}
+		a, _ := actorFrom(r.Context())
+		v, err := m.ImportModbusWorkspace(r.Context(), a, body)
 		reply(w, v, err)
 	})
 	register("GET /api/v1/modbus/endpoints/{id}/session", auth.PermissionBenchRead, func(w http.ResponseWriter, r *http.Request) {

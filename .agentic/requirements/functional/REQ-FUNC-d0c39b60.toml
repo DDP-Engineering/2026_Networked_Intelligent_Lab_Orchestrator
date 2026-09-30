@@ -1,0 +1,11 @@
+schema = 1
+id = "REQ-FUNC-d0c39b60"
+title = "Encode and decode typed Modbus point values"
+status = "active"
+requirement = """When Core decodes or previews encoding a validated point, it shall apply its explicit byte/word order and linear scale to exact raw words for Boolean, signed/unsigned 16/32/64-bit integer, float32/64, fixed ASCII, enum and bitfield values, preserving 64-bit values as decimal JSON strings and non-finite floats as tagged JSON while rejecting non-invertible or out-of-bounds writes."""
+verification = "Golden Go vectors cover all four orders, signed/unsigned extrema, float NaN/infinity tags, ASCII padding and invalid bytes, enum/bit labels, exact int64/uint64 JSON, scale inversion, zero scale, range and fractional/inexact write rejection."
+affected_paths = ["05_Software/core/internal/modbus/codec.go", "05_Software/core/internal/modbus/map.go", "05_Software/core/internal/modbus/map_test.go"]
+linked_tests = ["05_Software/core/internal/modbus/map_test.go"]
+spec = "specs/REQ-FUNC-d0c39b60.md"
+created = 2026-09-30
+updated = 2026-09-30

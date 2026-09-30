@@ -67,6 +67,141 @@ func registerModbusTools(server *sdk.Server, options HandlerOptions) {
 		}
 		return options.Bench.SaveModbusProfile(ctx, a, input.Expected, input.Profile)
 	})
+	register("modbus_maps", "List shared named register maps.", true, map[string]any{}, nil, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct{}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.ModbusMaps(ctx, a)
+	})
+	register("modbus_map_get", "Open one current or pinned named register map without device I/O.", true, map[string]any{"map_id": text, "revision": integer}, []string{"map_id"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID       string `json:"map_id"`
+			Revision int64  `json:"revision"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		if input.Revision > 0 {
+			return options.Bench.ModbusMapRevision(ctx, a, input.ID, input.Revision)
+		}
+		return options.Bench.ModbusMap(ctx, a, input.ID)
+	})
+	register("modbus_map_save", "Save one map with an expected revision.", false, map[string]any{"expected_revision": integer, "map": map[string]any{"type": "object"}}, []string{"expected_revision", "map"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			Expected int64      `json:"expected_revision"`
+			Map      modbus.Map `json:"map"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.SaveModbusMap(ctx, a, input.Expected, input.Map)
+	})
+	register("modbus_map_duplicate", "Duplicate a readable map under a new ID.", false, map[string]any{"map_id": text, "new_id": text}, []string{"map_id", "new_id"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID    string `json:"map_id"`
+			NewID string `json:"new_id"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.DuplicateModbusMap(ctx, a, input.ID, input.NewID)
+	})
+	register("modbus_map_export", "Export one map as JSON or CSV metadata.", true, map[string]any{"map_id": text, "format": text}, []string{"map_id", "format"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID     string `json:"map_id"`
+			Format string `json:"format"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		document, err := options.Bench.ExportModbusMap(ctx, a, input.ID, input.Format)
+		return map[string]any{"format": input.Format, "document": document}, err
+	})
+	importProperties := map[string]any{"format": text, "mode": text, "target_id": text, "expected_revision": integer, "accept_conflicts": boolean, "document": text}
+	register("modbus_map_import_preview", "Validate a bounded map document and report conflicts without publication.", true, importProperties, []string{"format", "mode", "document"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input bench.ModbusMapImport
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.PreviewModbusMapImport(ctx, a, input)
+	})
+	register("modbus_map_import", "Atomically publish a fully validated map document.", false, importProperties, []string{"format", "mode", "document"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input bench.ModbusMapImport
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.ImportModbusMap(ctx, a, input)
+	})
+	register("modbus_workspaces", "List shared saved workspace definitions.", true, map[string]any{}, nil, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct{}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.ModbusWorkspaces(ctx, a)
+	})
+	register("modbus_workspace_get", "Open current or pinned inert saved workspace metadata.", true, map[string]any{"workspace_id": text, "revision": integer}, []string{"workspace_id"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID       string `json:"workspace_id"`
+			Revision int64  `json:"revision"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		if input.Revision > 0 {
+			return options.Bench.ModbusWorkspaceRevision(ctx, a, input.ID, input.Revision)
+		}
+		return options.Bench.ModbusWorkspace(ctx, a, input.ID)
+	})
+	register("modbus_workspace_save", "Save a workspace using current pinned references.", false, map[string]any{"expected_revision": integer, "workspace": map[string]any{"type": "object"}}, []string{"expected_revision", "workspace"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			Expected  int64            `json:"expected_revision"`
+			Workspace modbus.Workspace `json:"workspace"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.SaveModbusWorkspace(ctx, a, input.Expected, input.Workspace)
+	})
+	register("modbus_workspace_duplicate", "Duplicate a readable workspace under a new ID.", false, map[string]any{"workspace_id": text, "new_id": text}, []string{"workspace_id", "new_id"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID    string `json:"workspace_id"`
+			NewID string `json:"new_id"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.DuplicateModbusWorkspace(ctx, a, input.ID, input.NewID)
+	})
+	register("modbus_workspace_export", "Export inert workspace JSON metadata.", true, map[string]any{"workspace_id": text}, []string{"workspace_id"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID string `json:"workspace_id"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		w, err := options.Bench.ModbusWorkspace(ctx, a, input.ID)
+		if err != nil {
+			return nil, err
+		}
+		document, err := json.Marshal(w)
+		return map[string]any{"format": "json", "document": string(document)}, err
+	})
+	workspaceImportProperties := map[string]any{"mode": text, "target_id": text, "expected_revision": integer, "document": text}
+	register("modbus_workspace_import_preview", "Validate an inert workspace JSON definition before publication.", true, workspaceImportProperties, []string{"mode", "document"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input bench.ModbusWorkspaceImport
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.PreviewModbusWorkspaceImport(ctx, a, input)
+	})
+	register("modbus_workspace_import", "Publish one validated workspace JSON definition.", false, workspaceImportProperties, []string{"mode", "document"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input bench.ModbusWorkspaceImport
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.ImportModbusWorkspace(ctx, a, input)
+	})
 	register("modbus_status", "Read the current credential-bound Modbus endpoint session.", true, map[string]any{"endpoint_id": text}, []string{"endpoint_id"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
 		var input struct {
 			ID string `json:"endpoint_id"`

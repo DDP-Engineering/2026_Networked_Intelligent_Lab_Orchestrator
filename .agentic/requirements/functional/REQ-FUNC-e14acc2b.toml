@@ -1,0 +1,10 @@
+schema = 1
+id = "REQ-FUNC-e14acc2b"
+title = "Store inert revisioned Modbus workspace definitions"
+status = "active"
+requirement = """When a Modbus workspace is saved, opened, duplicated or JSON-imported, Core shall validate its endpoint, exact profile/map revision references, bounded read-only poll groups and layout, enforce creator/admin edits with expected revisions, and return only saved metadata without connecting, polling, writing or silently altering an active session."""
+verification = "Save/open/duplicate/export and preview/import a workspace referencing pinned definitions; reject missing references, invalid read/write group and foreign/stale edit; compare live session and runner call counts before and after opening/importing."
+affected_paths = ["05_Software/core/internal/modbus/workspace.go", "05_Software/core/internal/modbus/workspace_test.go", "05_Software/core/internal/bench/modbus_workspaces.go", "05_Software/core/internal/bench/modbus_workspace_import.go", "05_Software/core/internal/bench/modbus_maps_mb05_test.go", "05_Software/core/internal/store/sqlite/modbus_definition_repository.go", "05_Software/core/internal/store/sqlite/modbus_repository.go", "05_Software/core/internal/store/sqlite/modbus_definitions_mb05_test.go", "05_Software/core/internal/store/sqlite/migrations/026_modbus_maps_workspaces.sql"]
+linked_tests = ["05_Software/core/internal/modbus/workspace_test.go", "05_Software/core/internal/bench/modbus_maps_mb05_test.go", "05_Software/core/internal/store/sqlite/modbus_definitions_mb05_test.go"]
+created = 2026-09-30
+updated = 2026-09-30

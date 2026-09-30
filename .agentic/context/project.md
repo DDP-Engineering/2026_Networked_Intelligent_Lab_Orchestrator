@@ -53,7 +53,11 @@ one of three fixed roles - Administrator, Operator or Viewer.
   approvals, bounded ASCII/hex RX/TX, supported modem controls and retained
   JSONL sessions with quotas and streaming exports across GUI, CLI and MCP.
 - **Modbus client.** Revisioned explicit USB/network endpoints and shared
-  profiles use administrator mutation and reader access. Finite policy admission
+  profiles use administrator mutation and reader access. Creator-owned named
+  maps and inert saved workspaces retain immutable revisions, including pinned
+  profile history; Core validates
+  typed point codecs and previews atomic JSON/CSV map import through HTTP, CLI
+  and MCP. Finite policy admission
   starts credential-bound sessions with a pinned read plan and a canonical claim
   retained through runner cleanup. Core exposes bounded reads and polling,
   distinct poll/display pauses, cursor events and durable idempotent writes

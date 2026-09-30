@@ -7,6 +7,8 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Added
 
+- Shared Modbus register maps and saved workspaces now have creator-owned revisions, typed codecs, and validated JSON/CSV interchange through Core interfaces.
+
 - Modbus Core now admits pinned read plans through finite approval jobs and serves
   credential-bound live sessions, polling and durable non-replayed writes via API, CLI and MCP.
 

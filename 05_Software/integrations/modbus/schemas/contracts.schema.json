@@ -325,6 +325,10 @@
           "minLength": 1,
           "maxLength": 128
         },
+        "description": {
+          "type": "string",
+          "maxLength": 512
+        },
         "area": {
           "enum": [
             "coil",
@@ -377,6 +381,11 @@
         "offset": {
           "type": "number"
         },
+        "precision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 12
+        },
         "access": {
           "enum": [
             "read",
@@ -410,6 +419,9 @@
             "type": "string",
             "maxLength": 128
           }
+        },
+        "padding": {
+          "enum": ["nul", "space"]
         }
       },
       "required": [

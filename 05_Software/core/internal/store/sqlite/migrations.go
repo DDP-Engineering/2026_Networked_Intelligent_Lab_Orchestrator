@@ -90,6 +90,9 @@ var modbusDefinitionsMigration string
 //go:embed migrations/025_modbus_sessions.sql
 var modbusSessionsMigration string
 
+//go:embed migrations/026_modbus_maps_workspaces.sql
+var modbusMapsWorkspacesMigration string
+
 var migrations = []migration{
 	{version: "001_initial", sql: initialMigration},
 	{version: "002_policy_snapshots", sql: policySnapshotsMigration},
@@ -116,6 +119,7 @@ var migrations = []migration{
 	{version: "023_operating_settings", sql: operatingSettingsMigration},
 	{version: "024_modbus_definitions", sql: modbusDefinitionsMigration},
 	{version: "025_modbus_sessions", sql: modbusSessionsMigration},
+	{version: "026_modbus_maps_workspaces", sql: modbusMapsWorkspacesMigration},
 }
 
 func applyMigrations(ctx context.Context, database *sql.DB) error {

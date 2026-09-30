@@ -1,0 +1,10 @@
+schema = 1
+id = "REQ-FUNC-dd8ff122"
+title = "Store shared revisioned Modbus maps with creator authority"
+status = "active"
+requirement = """When a Modbus map is saved or duplicated, Core shall publish one complete validated revision atomically with an expected revision, allow its creator or an administrator to edit it, permit other authorized readers to inspect and duplicate it under a new ID, and reject stale or foreign edits without changing the stored definition or a live read plan."""
+verification = "With two Operators and an Administrator, create/read/update/duplicate a map; assert retained creator, revision conflict and foreign-edit denial, stable prior data after failure, and no change to an already admitted read plan."
+affected_paths = ["05_Software/core/internal/bench/modbus_maps.go", "05_Software/core/internal/bench/modbus_maps_mb05_test.go", "05_Software/core/internal/store/sqlite/modbus_definition_repository.go", "05_Software/core/internal/store/sqlite/modbus_definitions_mb05_test.go", "05_Software/core/internal/store/sqlite/migrations/026_modbus_maps_workspaces.sql", "05_Software/core/internal/store/sqlite/migrations.go", "05_Software/core/internal/store/sqlite/db_test.go"]
+linked_tests = ["05_Software/core/internal/bench/modbus_maps_mb05_test.go", "05_Software/core/internal/store/sqlite/modbus_definitions_mb05_test.go", "05_Software/core/internal/store/sqlite/db_test.go"]
+created = 2026-09-30
+updated = 2026-09-30

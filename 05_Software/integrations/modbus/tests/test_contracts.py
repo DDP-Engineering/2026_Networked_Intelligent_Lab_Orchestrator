@@ -158,6 +158,18 @@ def test_contract_entities(name):
         validate(name, value)
 
 
+def test_optional_map_point_display_fields():
+    """@brief Keep the MB-05 optional point extensions in the strict contract."""
+    value = deepcopy(SAMPLES["map"])
+    value["points"][0].update(description="Register description", precision=2)
+    validate("map", value)
+    value["points"][0]["padding"] = "space"
+    validate("map", value)
+    value["points"][0]["padding"] = "invalid"
+    with pytest.raises(jsonschema.ValidationError):
+        validate("map", value)
+
+
 @pytest.mark.parametrize(
     "name,field,value",
     [

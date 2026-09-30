@@ -68,6 +68,20 @@ func (r *ModbusRepository) Profile(ctx context.Context, id string) (modbus.Profi
 	return readModbusProfile(ctx, r.database.SQL(), id)
 }
 
+func (r *ModbusRepository) ProfileRevision(ctx context.Context, id string, revision int64) (modbus.Profile, error) {
+	var item modbus.Profile
+	var raw string
+	err := r.database.SQL().QueryRowContext(ctx, "SELECT document FROM modbus_profile_revisions WHERE id=? AND revision=?", id, revision).Scan(&raw)
+	if errors.Is(err, sql.ErrNoRows) {
+		return item, ErrModbusNotFound
+	}
+	if err != nil {
+		return item, err
+	}
+	err = json.Unmarshal([]byte(raw), &item)
+	return item, err
+}
+
 // Endpoints returns stable ID ordering, including disabled and absent definitions.
 func (r *ModbusRepository) Endpoints(ctx context.Context) ([]modbus.Endpoint, error) {
 	rows, err := r.database.SQL().QueryContext(ctx, `SELECT document,managed_device_id,managed_revision FROM modbus_endpoints ORDER BY id`)
@@ -311,6 +325,9 @@ func (r *ModbusRepository) PutProfile(ctx context.Context, expected int64, p mod
 	}
 	_, err = tx.ExecContext(ctx, `INSERT INTO modbus_profiles(id,revision,endpoint_id,owner_id,document) VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET revision=excluded.revision,endpoint_id=excluded.endpoint_id,owner_id=excluded.owner_id,document=excluded.document`, p.ID, p.Revision, p.EndpointID, p.OwnerID, string(raw))
 	if err != nil {
+		return modbus.Profile{}, err
+	}
+	if _, err = tx.ExecContext(ctx, `INSERT INTO modbus_profile_revisions(id,revision,document) VALUES(?,?,?)`, p.ID, p.Revision, string(raw)); err != nil {
 		return modbus.Profile{}, err
 	}
 	return p, tx.Commit()

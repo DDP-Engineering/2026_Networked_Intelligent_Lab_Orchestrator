@@ -1,0 +1,11 @@
+schema = 1
+id = "REQ-DATA-723c5581"
+title = "Preview and atomically import Modbus map definitions"
+status = "active"
+requirement = """When Core previews or imports a bounded UTF-8 Modbus map JSON or CSV document, it shall report all row/field and target-revision conflicts before publication, preserve every supported point field across export/import, and publish the resulting metadata atomically only after complete validation and authorization."""
+verification = "Round-trip JSON and CSV with every field, empty maps, delimiter/quote and spreadsheet-formula-leading text; preview mixed invalid rows and existing-ID conflicts; assert import failure leaves the prior revision unchanged and never invokes a runner."
+affected_paths = ["05_Software/core/internal/modbus/interchange.go", "05_Software/core/internal/modbus/interchange_test.go", "05_Software/core/internal/bench/modbus_maps.go", "05_Software/core/internal/bench/modbus_maps_mb05_test.go"]
+linked_tests = ["05_Software/core/internal/modbus/interchange_test.go", "05_Software/core/internal/bench/modbus_maps_mb05_test.go"]
+spec = "specs/REQ-DATA-723c5581.md"
+created = 2026-09-30
+updated = 2026-09-30

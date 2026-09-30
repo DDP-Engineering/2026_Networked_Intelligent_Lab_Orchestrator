@@ -79,10 +79,10 @@ func TestBenchToolsUseCurrentTokenScopes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(list.Tools) != 55 {
+	if len(list.Tools) != 69 {
 		t.Fatalf("tools: %d", len(list.Tools))
 	}
-	for _, expected := range []string{"modbus_endpoints", "modbus_endpoint_save", "modbus_profiles", "modbus_profile_save", "modbus_status", "modbus_connect", "modbus_read", "modbus_write", "modbus_preview", "modbus_poll", "modbus_display", "modbus_events", "modbus_disconnect", "modbus_command", "modbus_commands", "serial_status", "serial_connect", "serial_read", "serial_send", "serial_disconnect", "serial_signals", "serial_logging", "serial_logs", "serial_log_read", "serial_export", "serial_delete", "serial_retention", "serial_retention_configure", "camera_snapshot", "camera_get_controls", "camera_set_controls", "camera_reset_controls", "plugin_devices", "plugin_configuration", "plugin_configure", "plugin_device_configure", "plugin_device_rebind", "plugin_device_forget", "plugin_device_action"} {
+	for _, expected := range []string{"modbus_endpoints", "modbus_endpoint_save", "modbus_profiles", "modbus_profile_save", "modbus_maps", "modbus_map_get", "modbus_map_save", "modbus_map_duplicate", "modbus_map_export", "modbus_map_import_preview", "modbus_map_import", "modbus_workspaces", "modbus_workspace_get", "modbus_workspace_save", "modbus_workspace_duplicate", "modbus_workspace_export", "modbus_workspace_import_preview", "modbus_workspace_import", "modbus_status", "modbus_connect", "modbus_read", "modbus_write", "modbus_preview", "modbus_poll", "modbus_display", "modbus_events", "modbus_disconnect", "modbus_command", "modbus_commands", "serial_status", "serial_connect", "serial_read", "serial_send", "serial_disconnect", "serial_signals", "serial_logging", "serial_logs", "serial_log_read", "serial_export", "serial_delete", "serial_retention", "serial_retention_configure", "camera_snapshot", "camera_get_controls", "camera_set_controls", "camera_reset_controls", "plugin_devices", "plugin_configuration", "plugin_configure", "plugin_device_configure", "plugin_device_rebind", "plugin_device_forget", "plugin_device_action"} {
 		found := false
 		for _, tool := range list.Tools {
 			if tool.Name == expected {
@@ -102,6 +102,9 @@ func TestBenchToolsUseCurrentTokenScopes(t *testing.T) {
 		{"plugins_list", map[string]any{}, false},
 		{"plugins_list", map[string]any{"unexpected": true}, true},
 		{"bench_list_jobs", map[string]any{}, false},
+		{"modbus_maps", map[string]any{}, false},
+		{"modbus_map_import_preview", map[string]any{"format": "json", "mode": "create", "document": "{}"}, true},
+		{"modbus_map_save", map[string]any{"expected_revision": 0, "map": map[string]any{"schema_version": 1, "id": "read-denied", "name": "Map", "points": []any{}}}, true},
 		{"plugin_lifecycle", map[string]any{"plugin_id": "sigrok", "action": "install"}, true},
 		{"network_get_status", map[string]any{}, true},
 		{"camera_workspace_stop", map[string]any{"device_id": "cam-1", "action": "record_stop"}, true},
@@ -151,6 +154,30 @@ func TestBenchToolsUseCurrentTokenScopes(t *testing.T) {
 		result, err = session.CallTool(ctx, &sdk.CallToolParams{Name: "serial_read", Arguments: input})
 		if err == nil && !result.IsError {
 			t.Fatalf("invalid bounded-read arguments accepted: %+v", input)
+		}
+	}
+	writerToken, err := identity.CreateToken(ctx, admin, "admin", "modbus definitions", []auth.Permission{auth.PermissionBenchRead, auth.PermissionBenchExecute}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writerClient := sdk.NewClient(&sdk.Implementation{Name: "modbus-definition-test", Version: "1"}, nil)
+	writerSession, err := writerClient.Connect(ctx, &sdk.StreamableClientTransport{Endpoint: server.URL, HTTPClient: &http.Client{Transport: bearerTransport{writerToken.Secret}}, DisableStandaloneSSE: true}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer writerSession.Close()
+	for _, call := range []struct {
+		name      string
+		arguments map[string]any
+	}{
+		{"modbus_map_save", map[string]any{"expected_revision": 0, "map": map[string]any{"schema_version": 1, "id": "mcp-map", "name": "MCP Map", "points": []any{}}}},
+		{"modbus_map_get", map[string]any{"map_id": "mcp-map"}},
+		{"modbus_map_duplicate", map[string]any{"map_id": "mcp-map", "new_id": "mcp-copy"}},
+		{"modbus_map_export", map[string]any{"map_id": "mcp-copy", "format": "json"}},
+	} {
+		result, callErr := writerSession.CallTool(ctx, &sdk.CallToolParams{Name: call.name, Arguments: call.arguments})
+		if callErr != nil || result.IsError {
+			t.Fatalf("%s: %v %+v", call.name, callErr, result)
 		}
 	}
 	if err = identity.RevokeToken(ctx, admin, issued.Token.ID); err != nil {
