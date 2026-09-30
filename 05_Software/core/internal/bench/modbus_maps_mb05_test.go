@@ -41,6 +41,35 @@ func TestModbusMapCreatorAndRevision(t *testing.T) {
 	}
 }
 
+func TestModbusPointCodecUsesPinnedMapRevision(t *testing.T) {
+	m, admin, _ := testManager(t, "auto")
+	point := modbus.Point{ID: "setpoint", Name: "Setpoint", Area: "holding", Address: 4, Type: "uint16", Width: 1, Order: "normal", Scale: "0.1", Offset: "0", Access: "read_write", Labels: map[string]string{}}
+	item, err := m.SaveModbusMap(t.Context(), admin, 0, modbus.Map{SchemaVersion: 1, ID: "plant", Name: "Plant", Points: []modbus.Point{point}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	decoded, err := m.DecodeModbusPoint(t.Context(), admin, item.ID, 1, point.ID, []uint16{42})
+	if err != nil || decoded.Quality != "good" || decoded.Value != 4.2 {
+		t.Fatalf("decoded: %+v %v", decoded, err)
+	}
+	encoded, err := m.EncodeModbusPoint(t.Context(), admin, item.ID, 1, point.ID, json.RawMessage(`4.2`))
+	if err != nil || len(encoded.Words) != 1 || encoded.Words[0] != 42 {
+		t.Fatalf("encoded: %+v %v", encoded, err)
+	}
+	if _, err = m.EncodeModbusPoint(t.Context(), admin, item.ID, 1, point.ID, json.RawMessage(`4.25`)); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("fractional raw accepted: %v", err)
+	}
+	point.Scale = "1"
+	item.Points[0] = point
+	if _, err = m.SaveModbusMap(t.Context(), admin, 1, item); err != nil {
+		t.Fatal(err)
+	}
+	encoded, err = m.EncodeModbusPoint(t.Context(), admin, item.ID, 1, point.ID, json.RawMessage(`4.2`))
+	if err != nil || encoded.Words[0] != 42 {
+		t.Fatalf("historic codec changed: %+v %v", encoded, err)
+	}
+}
+
 func TestModbusWorkspaceReferencesStayInert(t *testing.T) {
 	m, admin, runner := testManager(t, "auto")
 	endpoint, err := m.SaveModbusEndpoint(t.Context(), admin, 0, networkDefinition("peer", "bus"))

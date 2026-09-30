@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-04cd31fe"
+
+title = "Operate a live Modbus endpoint workspace"
+
+status = "active"
+
+requirement = """When an authorized user opens a named TCP Modbus RealTime View, the browser shall load shared saved workspace and profile revisions without I/O and require an explicit policy-admitted Connect before showing controllable live polling, Read once and Disconnect actions, with actual session state and errors visible."""
+
+verification = "UI and API tests open an offline endpoint, select a revision, observe no connect call, submit Connect, render pending/connected/failed states, and verify controls follow Core authority."
+
+affected_paths = ["05_Software/frontend/src/components/pages/ModbusWorkspacePage.tsx", "05_Software/frontend/src/components/pages/ModbusLiveView.tsx", "05_Software/frontend/src/components/pages/ModbusPluginPage.test.tsx", "05_Software/frontend/src/i18n/modbus.ts", "05_Software/frontend/src/api/client.ts", "05_Software/frontend/src/api/modbus.ts", "05_Software/frontend/src/components/pages/ModbusWorkspacePage.test.tsx", "05_Software/frontend/src/components/shell/shell.test.tsx", "05_Software/core/internal/bench/modbus_adapter.go", "05_Software/core/internal/bench/modbus_session.go", "05_Software/core/internal/bench/modbus_lifecycle_test.go", "05_Software/integrations/modbus/schemas/connect.input.schema.json"]
+
+linked_tests = ["05_Software/frontend/src/components/pages/ModbusWorkspacePage.test.tsx", "05_Software/frontend/src/components/pages/ModbusPluginPage.test.tsx", "05_Software/frontend/src/components/shell/shell.test.tsx", "05_Software/core/internal/bench/modbus_lifecycle_test.go"]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-30
+updated = 2026-09-30

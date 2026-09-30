@@ -206,7 +206,7 @@ it('saves settings against the fetched revision and reports a stale write', asyn
   const settingsSection = await screen.findByRole('region', {
     name: 'Operating settings',
   });
-  fireEvent.change(within(settingsSection).getByLabelText('Maximum sessions'), {
+  fireEvent.change(await within(settingsSection).findByLabelText('Maximum sessions'), {
     target: { value: '6' },
   });
   fireEvent.click(within(settingsSection).getByRole('button', { name: 'Save' }));

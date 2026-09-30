@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-c7473d9f"
+
+title = "Control Modbus poll groups independently"
+
+status = "active"
+
+requirement = """While a credential-bound Modbus session is live, Core shall allow its owner to pause or resume each admitted poll group independently, apply its bounded timeout and stop-on-error choice, preserve the pinned request plan, and report requested interval, observed interval, latency, missed polls and error counts without scheduling overlapping or unbounded catch-up requests."""
+
+verification = "Core fake-runner tests admit two groups, pause one while the other advances, resume it, reject unknown groups and changed plans, and inspect bounded counters after slow and failed reads through HTTP, CLI and MCP."
+
+affected_paths = ["05_Software/core/internal/bench/modbus_poll.go", "05_Software/core/internal/bench/modbus_session.go", "05_Software/core/internal/bench/modbus_adapter.go", "05_Software/core/internal/bench/modbus_lifecycle_test.go", "05_Software/core/internal/modbus/workspace.go", "05_Software/core/internal/httpapi/modbus.go", "05_Software/core/internal/httpapi/modbus_test.go", "05_Software/core/internal/mcp/modbus.go", "05_Software/core/internal/mcp/bench_test.go", "05_Software/core/cmd/nilo/modbus.go", "05_Software/core/cmd/nilo/modbus_test.go", "05_Software/integrations/modbus/schemas/contracts.schema.json"]
+
+linked_tests = ["05_Software/core/internal/bench/modbus_lifecycle_test.go", "05_Software/core/internal/httpapi/modbus_test.go", "05_Software/core/internal/mcp/bench_test.go", "05_Software/core/cmd/nilo/modbus_test.go"]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-30
+updated = 2026-09-30

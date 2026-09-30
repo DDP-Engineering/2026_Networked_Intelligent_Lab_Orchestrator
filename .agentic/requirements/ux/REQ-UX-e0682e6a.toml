@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-e0682e6a"
+
+title = "Inspect bounded Modbus traffic and trends"
+
+status = "active"
+
+requirement = """While a TCP Modbus session is live, the browser shall display a bounded, cursor-based paired request/result traffic list and bounded point trends with explicit gap, error, display-pause and Clear display states, without display controls changing acquisition or retained recordings."""
+
+verification = "Component tests stream more than the visible cap, inspect oldest eviction, TX/RX correlation, gap and error labels, pause/resume and Clear display effects, and check EN/DE/RO keyboard/reflow views."
+
+affected_paths = ["05_Software/frontend/src/components/pages/ModbusWorkspacePage.tsx", "05_Software/frontend/src/components/pages/ModbusLiveView.tsx", "05_Software/frontend/src/components/pages/modbus.css", "05_Software/frontend/src/i18n/modbus.ts", "05_Software/frontend/src/components/pages/ModbusWorkspacePage.test.tsx", "05_Software/frontend/src/test/modbus.fixture.tsx", "05_Software/frontend/e2e/modbus-layout.check.ts"]
+
+linked_tests = ["05_Software/frontend/src/components/pages/ModbusWorkspacePage.test.tsx", "05_Software/frontend/e2e/modbus-layout.check.ts"]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-30
+updated = 2026-09-30

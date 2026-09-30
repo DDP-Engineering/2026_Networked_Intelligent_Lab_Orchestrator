@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-35328cf5"
+
+title = "Preview and submit explicit Modbus writes"
+
+status = "active"
+
+requirement = """When the credential-bound owner edits a writable mapped point, the browser shall validate and display the exact Core-encoded Modbus write payload before an explicit Submit, then distinguish acknowledgement, uncertain delivery, denial and optional separate read-back without creating an individual approval job or silently replaying the command."""
+
+verification = "UI and Core contract tests preview typed and raw writes, reject invalid ranges, assert no write before Submit, submit one stable idempotency key and show acknowledgement versus delivery_unknown and read-back separately."
+
+affected_paths = ["05_Software/frontend/src/components/pages/ModbusWorkspacePage.tsx", "05_Software/frontend/src/components/pages/ModbusLiveView.tsx", "05_Software/frontend/src/api/client.ts", "05_Software/frontend/src/api/modbus.ts", "05_Software/frontend/src/components/pages/ModbusWorkspacePage.test.tsx", "05_Software/core/internal/bench/modbus_point_codec.go", "05_Software/core/internal/bench/modbus_maps_mb05_test.go", "05_Software/core/internal/httpapi/modbus.go", "05_Software/core/internal/httpapi/modbus_test.go", "05_Software/core/internal/mcp/modbus.go", "05_Software/core/cmd/nilo/modbus.go"]
+
+linked_tests = ["05_Software/frontend/src/components/pages/ModbusWorkspacePage.test.tsx", "05_Software/core/internal/bench/modbus_maps_mb05_test.go", "05_Software/core/internal/httpapi/modbus_test.go"]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-30
+updated = 2026-09-30

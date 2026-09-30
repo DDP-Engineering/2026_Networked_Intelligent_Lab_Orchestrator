@@ -66,7 +66,11 @@ one of three fixed roles - Administrator, Operator or Viewer.
   per-endpoint scheduling. Browser administrators manage TCP definitions,
   plugin lifecycle/policy and revisioned session limits; a finite policy job
   tests peer readiness and closes its temporary claim. Instruments lists named
-  offline targets and retained definitions without implicit connection.
+  offline targets and retained definitions without implicit connection. The
+  TCP RealTime View loads pinned shared workspaces inertly, then explicitly
+  admits a live session; it presents independently pausable poll groups,
+  mapped register freshness, bounded traffic/trends and exact Core write
+  previews with one deliberate Submit. Recording remains a separate service.
 - **Instrument transactions.** Durable transaction identities, an administrator-
   configured queue and finite-job worker capacity with per-analyzer serialization, absolute deadlines,
   ordered bounded replies, cancellation, and digest-verified retained artifacts.

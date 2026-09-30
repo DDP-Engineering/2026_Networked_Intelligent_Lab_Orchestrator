@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-9d7fd3a6"
+
+title = "Show fresh and stale mapped Modbus register values"
+
+status = "active"
+
+requirement = """While a TCP Modbus workspace is live, the browser shall show mapped raw and decoded register values with area, unit, wire/display address, quality, last valid time and sample age, retaining the last valid value with a non-fresh status across timeouts, disconnects and cursor gaps."""
+
+verification = "Component tests feed mapped successful, timeout, disconnect and gap events; inspect cells, age/quality labels and preserved values, then exercise Find/filter/copy and keyboard focus."
+
+affected_paths = ["05_Software/frontend/src/components/pages/ModbusWorkspacePage.tsx", "05_Software/frontend/src/components/pages/ModbusLiveView.tsx", "05_Software/frontend/src/api/modbus.ts", "05_Software/frontend/src/api/client.ts", "05_Software/frontend/src/components/pages/ModbusWorkspacePage.test.tsx", "05_Software/core/internal/bench/modbus_point_codec.go", "05_Software/core/internal/bench/modbus_maps_mb05_test.go", "05_Software/core/internal/httpapi/modbus.go", "05_Software/core/internal/httpapi/modbus_test.go", "05_Software/core/internal/mcp/modbus.go", "05_Software/core/cmd/nilo/modbus.go", "05_Software/core/cmd/nilo/modbus_test.go"]
+
+linked_tests = ["05_Software/frontend/src/components/pages/ModbusWorkspacePage.test.tsx", "05_Software/core/internal/bench/modbus_maps_mb05_test.go", "05_Software/core/internal/httpapi/modbus_test.go", "05_Software/core/cmd/nilo/modbus_test.go"]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-30
+updated = 2026-09-30

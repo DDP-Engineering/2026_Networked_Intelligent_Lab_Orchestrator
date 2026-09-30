@@ -27,12 +27,31 @@ import {
   parseModbusSettings,
   parseModbusDefinitions,
   parseModbusSession,
+  parseModbusWorkspace,
+  parseModbusMap,
+  parseModbusEvents,
+  parseModbusResult,
+  parseModbusDecodedPoint,
+  parseModbusEncodedPoint,
+  parseModbusWritePreview,
+  parseModbusCommand,
+  parseModbusAck,
   type ModbusEndpoint,
   type ModbusProfile,
   type ModbusSettingsValues,
   type ModbusSettingsState,
   type ModbusDefinitionSummary,
   type ModbusSessionStatus,
+  type ModbusWorkspace,
+  type ModbusMap,
+  type ModbusPollGroup,
+  type ModbusRequest,
+  type ModbusEventPage,
+  type ModbusResult,
+  type ModbusDecodedPoint,
+  type ModbusEncodedPoint,
+  type ModbusWritePreview,
+  type ModbusCommand,
 } from './modbus';
 import {
   WIREGUARD_PATH,
@@ -280,6 +299,100 @@ export interface BenchCoreClient {
     credential: Credential,
     endpointId: string,
   ): Promise<ModbusSessionStatus>;
+  getModbusWorkspace?(
+    credential: Credential,
+    id: string,
+    revision?: number,
+  ): Promise<ModbusWorkspace>;
+  saveModbusWorkspace?(
+    credential: Credential,
+    expectedRevision: number,
+    workspace: ModbusWorkspace,
+  ): Promise<ModbusWorkspace>;
+  getModbusMap?(
+    credential: Credential,
+    id: string,
+    revision: number,
+  ): Promise<ModbusMap>;
+  connectModbus?(
+    credential: Credential,
+    endpointId: string,
+    input: {
+      endpoint_revision: number;
+      profile_id: string;
+      profile_revision: number;
+      workspace_id?: string;
+      workspace_revision?: number;
+      groups: ModbusPollGroup[];
+      idempotency_key: string;
+      timeout_seconds: number;
+    },
+  ): Promise<InstrumentJob>;
+  disconnectModbus?(
+    credential: Credential,
+    endpointId: string,
+    sessionId: string,
+  ): Promise<void>;
+  readModbus?(
+    credential: Credential,
+    endpointId: string,
+    sessionId: string,
+    request: ModbusRequest,
+  ): Promise<ModbusResult>;
+  pollModbus?(
+    credential: Credential,
+    endpointId: string,
+    sessionId: string,
+    groups: ModbusPollGroup[],
+    paused: boolean,
+  ): Promise<ModbusSessionStatus>;
+  pauseModbusGroup?(
+    credential: Credential,
+    endpointId: string,
+    sessionId: string,
+    groupId: string,
+    paused: boolean,
+  ): Promise<ModbusSessionStatus>;
+  displayModbus?(
+    credential: Credential,
+    endpointId: string,
+    sessionId: string,
+    paused: boolean,
+  ): Promise<ModbusSessionStatus>;
+  modbusEvents?(
+    credential: Credential,
+    endpointId: string,
+    sessionId: string,
+    after: number,
+  ): Promise<ModbusEventPage>;
+  decodeModbusPoint?(
+    credential: Credential,
+    mapId: string,
+    revision: number,
+    pointId: string,
+    words: number[],
+  ): Promise<ModbusDecodedPoint>;
+  encodeModbusPoint?(
+    credential: Credential,
+    mapId: string,
+    revision: number,
+    pointId: string,
+    value: unknown,
+  ): Promise<ModbusEncodedPoint>;
+  previewModbusWrite?(
+    credential: Credential,
+    endpointId: string,
+    sessionId: string,
+    key: string,
+    request: ModbusRequest,
+  ): Promise<ModbusWritePreview>;
+  writeModbus?(
+    credential: Credential,
+    endpointId: string,
+    sessionId: string,
+    key: string,
+    request: ModbusRequest,
+  ): Promise<ModbusCommand>;
   listPlugins(credential: Credential): Promise<InstrumentPlugin[]>;
   pluginAction(
     credential: Credential,
@@ -695,6 +808,112 @@ export function createBenchCoreClient(
         path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/session`,
         credential,
         parse: parseModbusSession,
+      }),
+    getModbusWorkspace: (credential, id, revision) =>
+      exchange({
+        path: `/api/v1/modbus/workspaces/${encodeURIComponent(id)}${revision ? `/revisions/${revision}` : ''}`,
+        credential,
+        parse: parseModbusWorkspace,
+      }),
+    saveModbusWorkspace: (credential, expectedRevision, workspace) =>
+      exchange({
+        path: `/api/v1/modbus/workspaces/${encodeURIComponent(workspace.id)}`,
+        credential,
+        method: 'PUT',
+        body: { expected_revision: expectedRevision, workspace },
+        parse: parseModbusWorkspace,
+      }),
+    getModbusMap: (credential, id, revision) =>
+      exchange({
+        path: `/api/v1/modbus/maps/${encodeURIComponent(id)}/revisions/${revision}`,
+        credential,
+        parse: parseModbusMap,
+      }),
+    connectModbus: (credential, endpointId, input) =>
+      exchange({
+        path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/connect`,
+        credential,
+        method: 'POST',
+        body: input,
+        parse: parseInstrumentJob,
+      }),
+    disconnectModbus: (credential, endpointId, sessionId) =>
+      exchange({
+        path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/disconnect`,
+        credential,
+        method: 'POST',
+        body: { session_id: sessionId },
+        parse: parseModbusAck,
+      }),
+    readModbus: (credential, endpointId, sessionId, request) =>
+      exchange({
+        path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/read`,
+        credential,
+        method: 'POST',
+        body: { session_id: sessionId, request },
+        parse: parseModbusResult,
+      }),
+    pollModbus: (credential, endpointId, sessionId, groups, paused) =>
+      exchange({
+        path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/poll`,
+        credential,
+        method: 'POST',
+        body: { session_id: sessionId, groups, paused },
+        parse: parseModbusSession,
+      }),
+    pauseModbusGroup: (credential, endpointId, sessionId, groupId, paused) =>
+      exchange({
+        path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/poll-group`,
+        credential,
+        method: 'POST',
+        body: { session_id: sessionId, group_id: groupId, paused },
+        parse: parseModbusSession,
+      }),
+    displayModbus: (credential, endpointId, sessionId, paused) =>
+      exchange({
+        path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/display`,
+        credential,
+        method: 'POST',
+        body: { session_id: sessionId, paused },
+        parse: parseModbusSession,
+      }),
+    modbusEvents: (credential, endpointId, sessionId, after) =>
+      exchange({
+        path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/events?session_id=${encodeURIComponent(sessionId)}&after=${after}`,
+        credential,
+        parse: parseModbusEvents,
+      }),
+    decodeModbusPoint: (credential, mapId, revision, pointId, words) =>
+      exchange({
+        path: `/api/v1/modbus/maps/${encodeURIComponent(mapId)}/revisions/${revision}/decode`,
+        credential,
+        method: 'POST',
+        body: { point_id: pointId, words },
+        parse: parseModbusDecodedPoint,
+      }),
+    encodeModbusPoint: (credential, mapId, revision, pointId, value) =>
+      exchange({
+        path: `/api/v1/modbus/maps/${encodeURIComponent(mapId)}/revisions/${revision}/encode`,
+        credential,
+        method: 'POST',
+        body: { point_id: pointId, value },
+        parse: parseModbusEncodedPoint,
+      }),
+    previewModbusWrite: (credential, endpointId, sessionId, key, request) =>
+      exchange({
+        path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/preview`,
+        credential,
+        method: 'POST',
+        body: { session_id: sessionId, idempotency_key: key, request },
+        parse: parseModbusWritePreview,
+      }),
+    writeModbus: (credential, endpointId, sessionId, key, request) =>
+      exchange({
+        path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/write`,
+        credential,
+        method: 'POST',
+        body: { session_id: sessionId, idempotency_key: key, request },
+        parse: parseModbusCommand,
       }),
     listPlugins: (credential) =>
       exchange({ path: '/api/v1/plugins', credential, parse: parsePlugins }),

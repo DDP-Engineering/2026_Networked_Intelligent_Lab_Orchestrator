@@ -1,7 +1,12 @@
 import { createRoot } from 'react-dom/client';
 import { createBenchCoreClient, sessionCredential } from '../api/client';
 import type { InstrumentPlugin } from '../api/bench';
-import type { ModbusEndpoint, ModbusProfile } from '../api/modbus';
+import type {
+  ModbusEndpoint,
+  ModbusProfile,
+  ModbusWorkspace,
+  ModbusMap,
+} from '../api/modbus';
 import { ModbusPluginPage } from '../components/pages/ModbusPluginPage';
 import { ModbusWorkspacePage } from '../components/pages/ModbusWorkspacePage';
 import { LanguageProvider } from '../i18n/LanguageProvider';
@@ -51,17 +56,79 @@ const plugin: InstrumentPlugin = {
   error: '',
   digest: 'abc',
 };
+const workspace: ModbusWorkspace = {
+  schema_version: 1,
+  id: 'plant',
+  revision: 1,
+  owner_id: 'admin',
+  name: 'Plant',
+  endpoint_id: 'boiler',
+  profile_ref: { id: 'default', revision: 1 },
+  map_refs: [{ id: 'registers', revision: 1 }],
+  poll_groups: [
+    {
+      id: 'temperatures',
+      name: 'Temperatures',
+      enabled: true,
+      unit_id: 1,
+      function: 3,
+      address: 10,
+      quantity: 1,
+      interval_ms: 1000,
+      map_ref: { id: 'registers', revision: 1 },
+    },
+  ],
+  layout: {
+    columns: ['name', 'raw', 'value'],
+    address_base: 'reference',
+    series: ['temperature'],
+    display_paused: false,
+  },
+};
+const map: ModbusMap = {
+  id: 'registers',
+  revision: 1,
+  name: 'Registers',
+  points: [
+    {
+      id: 'temperature',
+      name: 'Temperature',
+      area: 'holding',
+      address: 10,
+      type: 'uint16',
+      width: 1,
+      access: 'read_write',
+      unit: '°C',
+      write_min: 0,
+      write_max: 100,
+    },
+  ],
+};
 const client = {
   ...createBenchCoreClient({ baseUrl: '' }),
   listPlugins: async () => [plugin],
   listModbusEndpoints: async () => [endpoint],
   listModbusProfiles: async () => [profile],
   listModbusMaps: async () => [],
-  listModbusWorkspaces: async () => [],
+  listModbusWorkspaces: async () => [
+    { id: 'plant', name: 'Plant', revision: 1, endpoint_id: 'boiler' },
+  ],
+  getModbusWorkspace: async () => workspace,
+  getModbusMap: async () => map,
+  modbusEvents: async (
+    _credential: unknown,
+    _endpointId: string,
+    _sessionId: string,
+    after: number,
+  ) => ({ events: [], next_cursor: after, gap: false }),
   getModbusSession: async () => ({
-    state: 'disconnected',
+    state: query.get('connected') === '1' ? 'connected' : 'disconnected',
     endpoint_id: 'boiler',
-    connected: false,
+    connected: query.get('connected') === '1',
+    session_id: query.get('connected') === '1' ? 'session-fixture' : '',
+    can_control: true,
+    workspace_id: 'plant',
+    workspace_revision: 1,
   }),
   getModbusSettings: async () => ({
     revision: 1,
@@ -77,15 +144,15 @@ const client = {
 };
 const credential = sessionCredential('test-csrf');
 createRoot(document.getElementById('root')!).render(
-  <ThemeProvider initial="light">
+  <ThemeProvider initial={query.get('theme') === 'dark' ? 'dark' : 'light'}>
     <LanguageProvider initial={language}>
       <main style={{ minWidth: 0, minHeight: '100dvh' }}>
-        {query.get('view') === 'workspace' ? (
+        {query.get('view') === 'workspace' || query.get('view') === 'live' ? (
           <ModbusWorkspacePage
             client={client}
             credential={credential}
             endpoint={endpoint}
-            view="maps"
+            view={query.get('view') === 'live' ? 'live' : 'maps'}
             onSessionEnded={() => {}}
           />
         ) : (

@@ -97,6 +97,40 @@ func registerModbus(register func(string, auth.Permission, http.HandlerFunc), m 
 		v, err := m.ModbusMapRevision(r.Context(), a, r.PathValue("id"), revision)
 		reply(w, v, err)
 	})
+	register("POST /api/v1/modbus/maps/{id}/revisions/{revision}/decode", auth.PermissionBenchRead, func(w http.ResponseWriter, r *http.Request) {
+		revision, err := strconv.ParseInt(r.PathValue("revision"), 10, 64)
+		if err != nil {
+			benchError(w, bench.ErrInvalid)
+			return
+		}
+		var body struct {
+			PointID string   `json:"point_id"`
+			Words   []uint16 `json:"words"`
+		}
+		if !benchBody(w, r, &body) {
+			return
+		}
+		a, _ := actorFrom(r.Context())
+		v, err := m.DecodeModbusPoint(r.Context(), a, r.PathValue("id"), revision, body.PointID, body.Words)
+		reply(w, v, err)
+	})
+	register("POST /api/v1/modbus/maps/{id}/revisions/{revision}/encode", auth.PermissionBenchExecute, func(w http.ResponseWriter, r *http.Request) {
+		revision, err := strconv.ParseInt(r.PathValue("revision"), 10, 64)
+		if err != nil {
+			benchError(w, bench.ErrInvalid)
+			return
+		}
+		var body struct {
+			PointID string          `json:"point_id"`
+			Value   json.RawMessage `json:"value"`
+		}
+		if !benchBody(w, r, &body) {
+			return
+		}
+		a, _ := actorFrom(r.Context())
+		v, err := m.EncodeModbusPoint(r.Context(), a, r.PathValue("id"), revision, body.PointID, body.Value)
+		reply(w, v, err)
+	})
 	register("PUT /api/v1/modbus/maps/{id}", auth.PermissionBenchExecute, func(w http.ResponseWriter, r *http.Request) {
 		var body struct {
 			ExpectedRevision int64      `json:"expected_revision"`
@@ -298,6 +332,19 @@ func registerModbus(register func(string, auth.Permission, http.HandlerFunc), m 
 		}
 		a, _ := actorFrom(r.Context())
 		v, err := m.SetModbusPolling(r.Context(), a, r.PathValue("id"), body.SessionID, body.Groups, body.Paused)
+		reply(w, v, err)
+	})
+	register("POST /api/v1/modbus/endpoints/{id}/poll-group", auth.PermissionBenchExecute, func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			SessionID string `json:"session_id"`
+			GroupID   string `json:"group_id"`
+			Paused    bool   `json:"paused"`
+		}
+		if !benchBody(w, r, &body) {
+			return
+		}
+		a, _ := actorFrom(r.Context())
+		v, err := m.SetModbusPollGroupPaused(r.Context(), a, r.PathValue("id"), body.SessionID, body.GroupID, body.Paused)
 		reply(w, v, err)
 	})
 	register("POST /api/v1/modbus/endpoints/{id}/display", auth.PermissionBenchExecute, func(w http.ResponseWriter, r *http.Request) {

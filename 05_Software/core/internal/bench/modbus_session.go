@@ -24,6 +24,8 @@ import (
 // modbusSession fields are guarded by Manager.mu except the command gate.
 type modbusSession struct {
 	id, endpointID, profileID, owner, kind, credential string
+	workspaceID                                        string
+	workspaceRevision                                  int64
 	endpointRevision, profileRevision                  int64
 	expires, lastAccess                                time.Time
 	idleAfter                                          time.Duration
@@ -35,6 +37,7 @@ type modbusSession struct {
 	reason                                             string
 	commandGate                                        sync.Mutex
 	groups                                             []ModbusPollGroup
+	groupStats                                         map[string]*ModbusGroupStats
 	pollPaused, displayPaused                          bool
 	events                                             []ModbusEvent
 	cursor                                             int64
@@ -42,19 +45,35 @@ type modbusSession struct {
 
 // ModbusStatus describes one credential-bound, pinned live endpoint.
 type ModbusStatus struct {
-	SessionID        string `json:"session_id"`
-	State            string `json:"state"`
-	EndpointID       string `json:"endpoint_id"`
-	ProfileID        string `json:"profile_id"`
-	OwnerID          string `json:"owner_id"`
-	EndpointRevision int64  `json:"endpoint_revision"`
-	ProfileRevision  int64  `json:"profile_revision"`
-	Connected        bool   `json:"connected"`
-	ExpiresAt        string `json:"expires_at"`
-	Reason           string `json:"reason,omitempty"`
-	PollPaused       bool   `json:"poll_paused"`
-	DisplayPaused    bool   `json:"display_paused"`
-	CanControl       bool   `json:"can_control"`
+	SessionID         string                      `json:"session_id"`
+	State             string                      `json:"state"`
+	EndpointID        string                      `json:"endpoint_id"`
+	ProfileID         string                      `json:"profile_id"`
+	OwnerID           string                      `json:"owner_id"`
+	EndpointRevision  int64                       `json:"endpoint_revision"`
+	ProfileRevision   int64                       `json:"profile_revision"`
+	WorkspaceID       string                      `json:"workspace_id,omitempty"`
+	WorkspaceRevision int64                       `json:"workspace_revision,omitempty"`
+	Connected         bool                        `json:"connected"`
+	ExpiresAt         string                      `json:"expires_at"`
+	Reason            string                      `json:"reason,omitempty"`
+	PollPaused        bool                        `json:"poll_paused"`
+	DisplayPaused     bool                        `json:"display_paused"`
+	CanControl        bool                        `json:"can_control"`
+	GroupStats        map[string]ModbusGroupStats `json:"group_stats"`
+}
+
+// ModbusGroupStats reports bounded live scheduling observations for one admitted group.
+type ModbusGroupStats struct {
+	Paused              bool   `json:"paused"`
+	RequestedIntervalMS int    `json:"requested_interval_ms"`
+	ActualIntervalMS    int64  `json:"actual_interval_ms"`
+	LatencyMS           int64  `json:"latency_ms"`
+	MissedPolls         int64  `json:"missed_polls"`
+	Errors              int64  `json:"errors"`
+	Samples             int64  `json:"samples"`
+	LastSampleAt        string `json:"last_sample_at,omitempty"`
+	lastCompleted       time.Time
 }
 
 func (m *Manager) modbusStatus(s *modbusSession, actor identity.Actor) ModbusStatus {
@@ -62,7 +81,11 @@ func (m *Manager) modbusStatus(s *modbusSession, actor identity.Actor) ModbusSta
 	if s.stopped {
 		state = "closing"
 	}
-	return ModbusStatus{SessionID: s.id, State: state, EndpointID: s.endpointID, ProfileID: s.profileID, OwnerID: s.owner, EndpointRevision: s.endpointRevision, ProfileRevision: s.profileRevision, Connected: !s.stopped, ExpiresAt: s.expires.Format(time.RFC3339Nano), Reason: s.reason, PollPaused: s.pollPaused, DisplayPaused: s.displayPaused, CanControl: !s.stopped && actor.User.ID == s.owner && string(actor.Credential) == s.kind && serialCredentialID(actor) == s.credential && actor.Has(auth.PermissionBenchExecute)}
+	stats := make(map[string]ModbusGroupStats, len(s.groupStats))
+	for id, value := range s.groupStats {
+		stats[id] = *value
+	}
+	return ModbusStatus{SessionID: s.id, State: state, EndpointID: s.endpointID, ProfileID: s.profileID, OwnerID: s.owner, EndpointRevision: s.endpointRevision, ProfileRevision: s.profileRevision, WorkspaceID: s.workspaceID, WorkspaceRevision: s.workspaceRevision, Connected: !s.stopped, ExpiresAt: s.expires.Format(time.RFC3339Nano), Reason: s.reason, PollPaused: s.pollPaused, DisplayPaused: s.displayPaused, CanControl: !s.stopped && actor.User.ID == s.owner && string(actor.Credential) == s.kind && serialCredentialID(actor) == s.credential && actor.Has(auth.PermissionBenchExecute), GroupStats: stats}
 }
 
 func (m *Manager) modbusLeaseValid(ctx context.Context, s *modbusSession) error {
@@ -108,7 +131,7 @@ func (m *Manager) modbusAuthorized(ctx context.Context, actor identity.Actor, s 
 
 // ConnectModbus creates only the finite policy job. Its completion opens the live lease.
 func (m *Manager) ConnectModbus(ctx context.Context, actor identity.Actor, endpointID string, input ModbusConnect) (Job, error) {
-	raw, _ := json.Marshal(modbusConnectParameters{EndpointRevision: input.EndpointRevision, ProfileID: input.ProfileID, ProfileRevision: input.ProfileRevision, Groups: input.Groups})
+	raw, _ := json.Marshal(modbusConnectParameters{EndpointRevision: input.EndpointRevision, ProfileID: input.ProfileID, ProfileRevision: input.ProfileRevision, WorkspaceID: input.WorkspaceID, WorkspaceRevision: input.WorkspaceRevision, Groups: input.Groups})
 	return m.Submit(ctx, actor, Submission{PluginID: "modbus", DeviceID: endpointID, Operation: "connect", Parameters: raw, IdempotencyKey: input.IdempotencyKey, TimeoutSeconds: input.TimeoutSeconds})
 }
 
@@ -209,7 +232,10 @@ func (m *Manager) executeModbusConnect(ctx context.Context, job Job, p Plugin) (
 	expires := m.now().Add(time.Duration(m.modbusSettings.SessionLeaseSeconds) * time.Second)
 	runCtx, cancel := context.WithDeadline(context.Background(), expires)
 	claim.cancel = cancel
-	s := &modbusSession{id: id, endpointID: e.ID, profileID: profile.ID, owner: job.OwnerID, kind: kind, credential: credential, endpointRevision: e.Revision, profileRevision: profile.Revision, expires: expires, idleAfter: time.Duration(m.modbusSettings.IdleSeconds) * time.Second, lastAccess: m.now(), socket: filepath.Join(root, "control.sock"), cancel: cancel, done: make(chan struct{}), claim: claim, events: []ModbusEvent{}, groups: parameters.Groups}
+	s := &modbusSession{id: id, endpointID: e.ID, profileID: profile.ID, workspaceID: parameters.WorkspaceID, workspaceRevision: parameters.WorkspaceRevision, owner: job.OwnerID, kind: kind, credential: credential, endpointRevision: e.Revision, profileRevision: profile.Revision, expires: expires, idleAfter: time.Duration(m.modbusSettings.IdleSeconds) * time.Second, lastAccess: m.now(), socket: filepath.Join(root, "control.sock"), cancel: cancel, done: make(chan struct{}), claim: claim, events: []ModbusEvent{}, groups: parameters.Groups, groupStats: map[string]*ModbusGroupStats{}}
+	for _, group := range parameters.Groups {
+		s.groupStats[group.ID] = &ModbusGroupStats{RequestedIntervalMS: group.IntervalMS}
+	}
 	_, err = m.db().ExecContext(ctx, `INSERT INTO modbus_sessions(id,endpoint_id,endpoint_revision,profile_id,profile_revision,owner_id,credential_kind,credential_id,started_at,expires_at,state) VALUES(?,?,?,?,?,?,?,?,?,?,'active')`, s.id, e.ID, e.Revision, profile.ID, profile.Revision, s.owner, kind, credential, m.now().Format(time.RFC3339Nano), expires.Format(time.RFC3339Nano))
 	if err != nil {
 		m.finishTransportLocked(claim, nil)
@@ -403,6 +429,17 @@ func (m *Manager) DisconnectModbus(ctx context.Context, actor identity.Actor, en
 }
 
 func modbusPrivateCall(ctx context.Context, s *modbusSession, request ModbusRequest, pollKey string) (ModbusResult, error) {
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		deadline = time.Now().Add(60 * time.Second)
+	}
+	deadlineMS := int(time.Until(deadline).Milliseconds())
+	if deadlineMS < 1 {
+		return ModbusResult{}, context.DeadlineExceeded
+	}
+	if deadlineMS > 60000 {
+		deadlineMS = 60000
+	}
 	requestID := uuid.NewString()
 	values := make([]any, len(request.Values))
 	for i, value := range request.Values {
@@ -412,7 +449,7 @@ func modbusPrivateCall(ctx context.Context, s *modbusSession, request ModbusRequ
 			values[i] = value
 		}
 	}
-	message := map[string]any{"version": 1, "kind": "transaction", "request_id": requestID, "function": request.Function, "unit": request.Unit, "address": request.Address, "count": request.Count, "values": values, "deadline_ms": 60000}
+	message := map[string]any{"version": 1, "kind": "transaction", "request_id": requestID, "function": request.Function, "unit": request.Unit, "address": request.Address, "count": request.Count, "values": values, "deadline_ms": deadlineMS}
 	if pollKey != "" {
 		message["poll_key"] = pollKey
 	}
@@ -422,26 +459,33 @@ func modbusPrivateCall(ctx context.Context, s *modbusSession, request ModbusRequ
 	}
 	conn, err := (&net.Dialer{}).DialContext(ctx, "unix", s.socket)
 	if err != nil {
-		return ModbusResult{}, ErrUnavailable
+		return ModbusResult{}, modbusCallError(ctx, err)
 	}
 	defer conn.Close()
-	deadline, ok := ctx.Deadline()
-	if !ok {
-		deadline = time.Now().Add(60 * time.Second)
-	}
 	_ = conn.SetDeadline(deadline)
 	if _, err = io.Copy(conn, bytes.NewReader(append(raw, '\n'))); err != nil {
-		return ModbusResult{}, ErrUnavailable
+		return ModbusResult{}, modbusCallError(ctx, err)
 	}
 	line, err := bufio.NewReader(io.LimitReader(conn, 65537)).ReadBytes('\n')
 	if err != nil || len(line) > 65536 {
-		return ModbusResult{}, ErrUnavailable
+		return ModbusResult{}, modbusCallError(ctx, err)
 	}
 	var result ModbusResult
 	if strict(line, &result) != nil || result.RequestID != requestID || !validModbusResult(request, result) {
 		return ModbusResult{}, ErrUnavailable
 	}
 	return result, nil
+}
+
+func modbusCallError(ctx context.Context, err error) error {
+	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		return context.DeadlineExceeded
+	}
+	var networkError net.Error
+	if errors.As(err, &networkError) && networkError.Timeout() {
+		return context.DeadlineExceeded
+	}
+	return ErrUnavailable
 }
 
 // ModbusResult preserves raw booleans/register values and the runner's conservative outcome.

@@ -3,6 +3,7 @@ package bench
 import (
 	"context"
 	"encoding/json"
+	"reflect"
 	"regexp"
 
 	"nilo.local/nilo/internal/auth"
@@ -14,20 +15,24 @@ var modbusID = regexp.MustCompile(`^[A-Za-z0-9_.:-]{1,128}$`)
 
 // ModbusConnect pins both shared definitions in a finite approval job.
 type ModbusConnect struct {
-	EndpointRevision int64             `json:"endpoint_revision"`
-	ProfileID        string            `json:"profile_id"`
-	ProfileRevision  int64             `json:"profile_revision"`
-	Groups           []ModbusPollGroup `json:"groups"`
-	IdempotencyKey   string            `json:"idempotency_key"`
-	TimeoutSeconds   int               `json:"timeout_seconds,omitempty"`
+	EndpointRevision  int64             `json:"endpoint_revision"`
+	ProfileID         string            `json:"profile_id"`
+	ProfileRevision   int64             `json:"profile_revision"`
+	WorkspaceID       string            `json:"workspace_id,omitempty"`
+	WorkspaceRevision int64             `json:"workspace_revision,omitempty"`
+	Groups            []ModbusPollGroup `json:"groups"`
+	IdempotencyKey    string            `json:"idempotency_key"`
+	TimeoutSeconds    int               `json:"timeout_seconds,omitempty"`
 }
 
 type modbusConnectParameters struct {
-	EndpointRevision int64             `json:"endpoint_revision"`
-	ProfileID        string            `json:"profile_id"`
-	ProfileRevision  int64             `json:"profile_revision"`
-	Groups           []ModbusPollGroup `json:"groups"`
-	TestOnly         bool              `json:"test_only,omitempty"`
+	EndpointRevision  int64             `json:"endpoint_revision"`
+	ProfileID         string            `json:"profile_id"`
+	ProfileRevision   int64             `json:"profile_revision"`
+	WorkspaceID       string            `json:"workspace_id,omitempty"`
+	WorkspaceRevision int64             `json:"workspace_revision,omitempty"`
+	Groups            []ModbusPollGroup `json:"groups"`
+	TestOnly          bool              `json:"test_only,omitempty"`
 }
 
 func modbusCanonicalSubmission(input Submission) (Submission, error) {
@@ -40,7 +45,10 @@ func modbusCanonicalSubmission(input Submission) (Submission, error) {
 	if err != nil {
 		return input, err
 	}
-	if p.TestOnly && len(p.Groups) != 0 {
+	if p.TestOnly && (len(p.Groups) != 0 || p.WorkspaceID != "" || p.WorkspaceRevision != 0) {
+		return input, ErrInvalid
+	}
+	if (p.WorkspaceID == "") != (p.WorkspaceRevision == 0) || p.WorkspaceID != "" && (!modbusID.MatchString(p.WorkspaceID) || p.WorkspaceRevision < 1) {
 		return input, ErrInvalid
 	}
 	input.Parameters, _ = json.Marshal(p)
@@ -76,6 +84,25 @@ func modbusValidateSubmission(ctx context.Context, m *Manager, actor identity.Ac
 			if validateModbusTarget(request, e) != nil {
 				return ErrInvalid
 			}
+		}
+	}
+	if p.WorkspaceID != "" {
+		workspace, err := m.ModbusWorkspaceRevision(ctx, actor, p.WorkspaceID, p.WorkspaceRevision)
+		if err != nil {
+			return err
+		}
+		if workspace.EndpointID != e.ID || workspace.ProfileRef.ID != profile.ID || workspace.ProfileRef.Revision != profile.Revision {
+			return ErrConflict
+		}
+		groups := make([]ModbusPollGroup, 0, len(workspace.PollGroups))
+		for _, saved := range workspace.PollGroups {
+			if !saved.Enabled {
+				continue
+			}
+			groups = append(groups, ModbusPollGroup{ID: saved.ID, IntervalMS: int(saved.IntervalMS), TimeoutMS: saved.TimeoutMS, StopOnError: saved.StopOnError, Requests: []ModbusRequest{{Function: saved.Function, Unit: saved.UnitID, Address: saved.Address, Count: saved.Quantity, Values: []int{}}}})
+		}
+		if !reflect.DeepEqual(groups, p.Groups) {
+			return ErrConflict
 		}
 	}
 	if m.transportBusyLocked(e.ResourceKeys()) {

@@ -12,6 +12,7 @@ import type {
 } from '../../api/modbus';
 import { useTranslate } from '../../i18n/languages';
 import { MessageBanner } from '../MessageBanner';
+import { ModbusLiveView } from './ModbusLiveView';
 import './modbus.css';
 
 interface Props {
@@ -22,7 +23,7 @@ interface Props {
   onSessionEnded: () => void;
 }
 
-/** Read-only MB-06 view of shared definitions and actual Core session state. */
+/** Shared Modbus definitions and the explicit network live workspace. */
 export function ModbusWorkspacePage({
   client,
   credential,
@@ -102,11 +103,19 @@ export function ModbusWorkspacePage({
             </p>
           </section>
         )}
-        {view === 'live' && (
-          <section className="instrument-card">
-            <h3>{t('modbus.realtime')}</h3>
-            <p>{t('modbus.liveLater')}</p>
-          </section>
+        {view === 'live' && endpoint && endpoint.transport !== 'rtu' && (
+          <ModbusLiveView
+            client={client}
+            credential={credential}
+            endpoint={endpoint}
+            profiles={profiles.filter((item) => item.endpoint_id === endpoint.id)}
+            workspaces={workspaces.filter((item) => item.endpoint_id === endpoint.id)}
+            initialStatus={status}
+            onSessionEnded={onSessionEnded}
+          />
+        )}
+        {view === 'live' && endpoint?.transport === 'rtu' && (
+          <MessageBanner tone="warning">{t('modbus.networkOnly')}</MessageBanner>
         )}
         {view === 'sessions' && (
           <section className="instrument-card">

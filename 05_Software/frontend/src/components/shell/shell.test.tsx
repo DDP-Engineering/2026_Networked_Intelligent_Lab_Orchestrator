@@ -246,11 +246,8 @@ describe('the one compact top row', () => {
     await benchPage();
     expect(await nav().findByRole('button', { name: 'Offline boiler' })).toBeVisible();
     fireEvent.click(nav().getByRole('button', { name: 'Offline boiler' }));
-    expect(
-      await screen.findByText(
-        'The live register view will be available with the live-grid feature.',
-      ),
-    ).toBeVisible();
+    expect(await screen.findByRole('heading', { name: 'RealTime View' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Connect' })).toBeDisabled();
   });
 
   it('hides stale instrument navigation while keeping open tabs until inventory recovers', async () => {

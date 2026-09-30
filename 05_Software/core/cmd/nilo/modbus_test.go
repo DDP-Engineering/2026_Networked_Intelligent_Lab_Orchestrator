@@ -81,3 +81,26 @@ func TestModbusCLIWorkspaceImportPreviewUsesCore(t *testing.T) {
 		t.Fatalf("route: code=%d calls=%+v", code, *calls)
 	}
 }
+
+func TestModbusCLILiveWorkspaceMirrorsCoreRoutes(t *testing.T) {
+	server, calls := networkStub(t, 200, map[string]any{"ok": true})
+	common := []string{"--server", server.URL, "--token-file", tokenFile(t, "test-token")}
+	for _, candidate := range []struct {
+		action     string
+		arguments  []string
+		path, body string
+	}{
+		{"poll-group", []string{"--endpoint", "gateway", "--session", "live", "--group", "temperatures", "--paused"}, "/api/v1/modbus/endpoints/gateway/poll-group", `"group_id":"temperatures"`},
+		{"connect", []string{"--endpoint", "gateway", "--endpoint-revision", "2", "--profile", "profile", "--profile-revision", "3", "--workspace", "plant", "--workspace-revision", "4", "--key", "once"}, "/api/v1/modbus/endpoints/gateway/connect", `"workspace_revision":4`},
+	} {
+		args := append([]string{candidate.action}, common...)
+		args = append(args, candidate.arguments...)
+		if code := runModbusCommand(context.Background(), args, networkIO{stdout: new(bytes.Buffer), stderr: new(bytes.Buffer)}); code != 0 {
+			t.Fatalf("%s code %d", candidate.action, code)
+		}
+		call := (*calls)[len(*calls)-1]
+		if call.path != candidate.path || !bytes.Contains([]byte(call.body), []byte(candidate.body)) {
+			t.Fatalf("%s call %+v", candidate.action, call)
+		}
+	}
+}

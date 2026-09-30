@@ -73,3 +73,119 @@
 .modbus-wide {
   grid-column: 1 / -1;
 }
+.modbus-live {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.modbus-live section {
+  min-width: 0;
+}
+.modbus-live h4 {
+  margin: 0.75rem 0 0.4rem;
+}
+.modbus-group-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+  gap: 0.6rem;
+}
+.modbus-group {
+  border: 1px solid var(--line, #aaa);
+  padding: 0.65rem;
+  border-radius: 0.45rem;
+  overflow-wrap: anywhere;
+}
+.modbus-find {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.modbus-find input {
+  min-width: min(100%, 16rem);
+}
+.modbus-grid-viewport {
+  max-height: 28rem;
+  overflow: auto;
+  width: 100%;
+}
+.modbus-grid {
+  border-collapse: collapse;
+  min-width: 45rem;
+  width: 100%;
+}
+.modbus-grid th,
+.modbus-grid td {
+  text-align: left;
+  border-bottom: 1px solid var(--line, #aaa);
+  padding: 0.35rem;
+  min-height: 3rem;
+  overflow-wrap: anywhere;
+}
+.modbus-grid small {
+  display: block;
+}
+.modbus-grid .modbus-changed {
+  box-shadow: inset 0.2rem 0 currentColor;
+}
+.modbus-grid thead {
+  position: sticky;
+  top: 0;
+  background: var(--surface, Canvas);
+  z-index: 1;
+}
+.modbus-traffic-list {
+  max-height: 18rem;
+  overflow: auto;
+}
+.modbus-traffic-pair {
+  border-bottom: 1px solid var(--line, #aaa);
+  padding: 0.5rem 0;
+  font-family: ui-monospace, monospace;
+  overflow-wrap: anywhere;
+}
+.modbus-trend {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--line, #aaa);
+}
+.modbus-write-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  background: #0009;
+  padding: 1rem;
+}
+.modbus-write-content {
+  background: var(--surface, Canvas);
+  color: var(--text, CanvasText);
+  border: 1px solid currentColor;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  max-width: min(100%, 42rem);
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  overflow-wrap: anywhere;
+}
+.modbus-write-content label {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-block: 0.5rem;
+}
+.modbus-write-preview code {
+  word-break: break-all;
+}
+@media (max-width: 36rem) {
+  .modbus-live .modbus-actions button {
+    flex: 1 1 8rem;
+  }
+  .modbus-live select,
+  .modbus-live input {
+    max-width: 100%;
+  }
+}

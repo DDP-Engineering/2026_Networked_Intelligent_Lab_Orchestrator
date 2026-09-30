@@ -15,7 +15,7 @@ func registerModbusTools(server *sdk.Server, options HandlerOptions) {
 	integer := map[string]any{"type": "integer", "minimum": 0}
 	boolean := map[string]any{"type": "boolean"}
 	request := map[string]any{"type": "object", "additionalProperties": false, "properties": map[string]any{"function": integer, "unit": integer, "address": integer, "count": integer, "values": map[string]any{"type": "array", "items": integer}}, "required": []string{"function", "unit", "address", "count"}}
-	group := map[string]any{"type": "object", "additionalProperties": false, "properties": map[string]any{"id": text, "interval_ms": integer, "requests": map[string]any{"type": "array", "items": request}}, "required": []string{"id", "interval_ms", "requests"}}
+	group := map[string]any{"type": "object", "additionalProperties": false, "properties": map[string]any{"id": text, "interval_ms": integer, "timeout_ms": integer, "stop_on_error": boolean, "requests": map[string]any{"type": "array", "items": request}}, "required": []string{"id", "interval_ms", "requests"}}
 	register := func(name, description string, readOnly bool, properties map[string]any, required []string, call func(context.Context, identity.Actor, json.RawMessage) (any, error)) {
 		server.AddTool(&sdk.Tool{Name: name, Description: description, Annotations: &sdk.ToolAnnotations{ReadOnlyHint: readOnly}, InputSchema: map[string]any{"type": "object", "properties": properties, "required": required, "additionalProperties": false}}, func(ctx context.Context, request *sdk.CallToolRequest) (*sdk.CallToolResult, error) {
 			actor, err := toolActor(ctx, request, options)
@@ -109,6 +109,30 @@ func registerModbusTools(server *sdk.Server, options HandlerOptions) {
 			return nil, bench.ErrInvalid
 		}
 		return options.Bench.SaveModbusMap(ctx, a, input.Expected, input.Map)
+	})
+	register("modbus_map_decode", "Decode exact words using one pinned map point without I/O.", true, map[string]any{"map_id": text, "revision": integer, "point_id": text, "words": map[string]any{"type": "array", "items": integer}}, []string{"map_id", "revision", "point_id", "words"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			MapID    string   `json:"map_id"`
+			Revision int64    `json:"revision"`
+			PointID  string   `json:"point_id"`
+			Words    []uint16 `json:"words"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.DecodeModbusPoint(ctx, a, input.MapID, input.Revision, input.PointID, input.Words)
+	})
+	register("modbus_map_encode", "Validate exact raw words for one pinned engineering value without I/O.", true, map[string]any{"map_id": text, "revision": integer, "point_id": text, "value": map[string]any{}}, []string{"map_id", "revision", "point_id", "value"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			MapID    string          `json:"map_id"`
+			Revision int64           `json:"revision"`
+			PointID  string          `json:"point_id"`
+			Value    json.RawMessage `json:"value"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.EncodeModbusPoint(ctx, a, input.MapID, input.Revision, input.PointID, input.Value)
 	})
 	register("modbus_map_duplicate", "Duplicate a readable map under a new ID.", false, map[string]any{"map_id": text, "new_id": text}, []string{"map_id", "new_id"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
 		var input struct {
@@ -224,7 +248,7 @@ func registerModbusTools(server *sdk.Server, options HandlerOptions) {
 		}
 		return options.Bench.ModbusSession(ctx, a, input.ID)
 	})
-	register("modbus_connect", "Queue a finite pinned read-plan admission job; use bench_get_job and the human approval surface for Ask.", false, map[string]any{"endpoint_id": text, "endpoint_revision": integer, "profile_id": text, "profile_revision": integer, "groups": map[string]any{"type": "array", "items": group}, "idempotency_key": text, "timeout_seconds": integer}, []string{"endpoint_id", "endpoint_revision", "profile_id", "profile_revision", "groups", "idempotency_key"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+	register("modbus_connect", "Queue a finite pinned read-plan admission job; use bench_get_job and the human approval surface for Ask.", false, map[string]any{"endpoint_id": text, "endpoint_revision": integer, "profile_id": text, "profile_revision": integer, "workspace_id": text, "workspace_revision": integer, "groups": map[string]any{"type": "array", "items": group}, "idempotency_key": text, "timeout_seconds": integer}, []string{"endpoint_id", "endpoint_revision", "profile_id", "profile_revision", "groups", "idempotency_key"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
 		var input struct {
 			ID string `json:"endpoint_id"`
 			bench.ModbusConnect
@@ -286,6 +310,18 @@ func registerModbusTools(server *sdk.Server, options HandlerOptions) {
 			return nil, bench.ErrInvalid
 		}
 		return options.Bench.SetModbusPolling(ctx, a, input.ID, input.Session, input.Groups, input.Paused)
+	})
+	register("modbus_poll_group", "Pause or resume one admitted poll group independently.", false, map[string]any{"endpoint_id": text, "session_id": text, "group_id": text, "paused": boolean}, []string{"endpoint_id", "session_id", "group_id", "paused"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID      string `json:"endpoint_id"`
+			Session string `json:"session_id"`
+			Group   string `json:"group_id"`
+			Paused  bool   `json:"paused"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.SetModbusPollGroupPaused(ctx, a, input.ID, input.Session, input.Group, input.Paused)
 	})
 	register("modbus_display", "Pause or resume display attachment independently of polling.", false, map[string]any{"endpoint_id": text, "session_id": text, "paused": boolean}, []string{"endpoint_id", "session_id", "paused"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
 		var input struct {

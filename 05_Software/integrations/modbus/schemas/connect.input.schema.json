@@ -7,6 +7,8 @@
     "endpoint_revision": {"type": "integer", "minimum": 1, "maximum": 2147483647},
     "profile_id": {"type": "string", "pattern": "^[A-Za-z0-9_.:-]{1,128}$"},
     "profile_revision": {"type": "integer", "minimum": 1, "maximum": 2147483647},
+    "workspace_id": {"type": "string", "pattern": "^[A-Za-z0-9_.:-]{1,128}$"},
+    "workspace_revision": {"type": "integer", "minimum": 1, "maximum": 2147483647},
     "groups": {"type": "array", "maxItems": 32, "items": {"type": "object"}}
   }
 }

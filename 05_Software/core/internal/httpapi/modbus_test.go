@@ -34,7 +34,7 @@ func TestModbusRoutesScopeAndStrictBody(t *testing.T) {
 	read := f.issueToken(t, "admin", "modbus-read", []auth.Permission{auth.PermissionBenchRead}, nil)
 	execute := f.issueToken(t, "admin", "modbus-execute", []auth.Permission{auth.PermissionBenchRead, auth.PermissionBenchExecute}, nil)
 	manage := f.issueToken(t, "admin", "modbus-manage", []auth.Permission{auth.PermissionBenchRead, auth.PermissionBenchExecute, auth.PermissionPluginsManage}, nil)
-	for _, action := range []string{"connect", "read", "write", "preview", "poll", "display", "disconnect"} {
+	for _, action := range []string{"connect", "read", "write", "preview", "poll", "poll-group", "display", "disconnect"} {
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/modbus/endpoints/gateway/"+action, strings.NewReader(`{}`))
 		req.Header.Set("Authorization", "Bearer "+read)
 		if got := f.do(req); got.Code != 403 {
@@ -82,6 +82,21 @@ func TestModbusRoutesScopeAndStrictBody(t *testing.T) {
 	mapReq.Header.Set("Authorization", "Bearer "+execute)
 	if got := f.do(mapReq); got.Code != 200 {
 		t.Fatalf("save map: %d %s", got.Code, got.Body.String())
+	}
+	for _, candidate := range []struct {
+		action, body, token string
+		want                int
+	}{
+		{"decode", `{"point_id":"missing","words":[1]}`, read, 404},
+		{"decode", `{"point_id":"missing","words":[1],"extra":true}`, read, 400},
+		{"encode", `{"point_id":"missing","value":1}`, read, 403},
+		{"encode", `{"point_id":"missing","value":1}`, execute, 404},
+	} {
+		req := httptest.NewRequest(http.MethodPost, "/api/v1/modbus/maps/motors/revisions/1/"+candidate.action, strings.NewReader(candidate.body))
+		req.Header.Set("Authorization", "Bearer "+candidate.token)
+		if got := f.do(req); got.Code != candidate.want {
+			t.Fatalf("point codec %s: %d want %d: %s", candidate.action, got.Code, candidate.want, got.Body.String())
+		}
 	}
 	workspacePreview := httptest.NewRequest(http.MethodPost, "/api/v1/modbus/workspaces/import-preview", strings.NewReader(`{"mode":"create","document":"{}"}`))
 	workspacePreview.Header.Set("Authorization", "Bearer "+execute)

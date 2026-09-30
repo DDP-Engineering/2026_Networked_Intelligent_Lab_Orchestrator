@@ -20,17 +20,19 @@ const modbusUsage = `usage: nilo modbus <command> --server URL --token-file PATH
   settings | settings-save --file settings.json --expected-revision N
   profiles | profile-save --profile ID --file profile.json [--expected-revision N]
   maps | map-get --map ID | map-save --map ID --file map.json [--expected-revision N]
+  map-decode|map-encode --map ID --revision N --file point.json
   map-duplicate --map ID --target NEW_ID | map-export --map ID [--format json|csv]
   map-import-preview|map-import --file PATH [--format json|csv --mode create|replace|merge --target ID --expected-revision N --accept-conflicts]
   workspaces | workspace-get --workspace ID | workspace-save --workspace ID --file workspace.json [--expected-revision N]
   workspace-duplicate --workspace ID --target NEW_ID | workspace-export --workspace ID
   workspace-import-preview|workspace-import --file workspace.json [--mode create|replace --target ID --expected-revision N]
   status --endpoint ID
-  connect --endpoint ID --endpoint-revision N --profile ID --profile-revision N [--file groups.json --key KEY]
+  connect --endpoint ID --endpoint-revision N --profile ID --profile-revision N [--workspace ID --workspace-revision N --file groups.json --key KEY]
   test --endpoint ID --endpoint-revision N --profile ID --profile-revision N [--key KEY --timeout-seconds N]
   read --endpoint ID --session ID --file request.json
   write|preview --endpoint ID --session ID --file request.json [--key KEY]
   poll --endpoint ID --session ID --file groups.json [--paused]
+  poll-group --endpoint ID --session ID --group ID [--paused]
   display --endpoint ID --session ID [--paused]
   events --endpoint ID --session ID [--after N]
   command --command ID | commands --endpoint ID --session ID [--offset N]
@@ -46,8 +48,8 @@ func runModbusCommand(ctx context.Context, args []string, streams networkIO) int
 		return 2
 	}
 	action := args[0]
-	var endpoint, profile, session, key, file, commandID, mapID, workspaceID, targetID, format, mode string
-	var endpointRevision, profileRevision, expectedRevision, mapRevision, after int64
+	var endpoint, profile, session, key, file, commandID, mapID, workspaceID, targetID, format, mode, groupID string
+	var endpointRevision, profileRevision, expectedRevision, mapRevision, workspaceRevision, after int64
 	var offset int
 	var paused, acceptConflicts bool
 	var timeout int
@@ -60,11 +62,13 @@ func runModbusCommand(ctx context.Context, args []string, streams networkIO) int
 		flags.StringVar(&profile, "profile", "", "configured Modbus profile ID")
 		flags.StringVar(&mapID, "map", "", "named register map ID")
 		flags.StringVar(&workspaceID, "workspace", "", "saved workspace ID")
+		flags.Int64Var(&workspaceRevision, "workspace-revision", 0, "pinned workspace revision for connect")
 		flags.StringVar(&targetID, "target", "", "new or import target ID")
 		flags.StringVar(&format, "format", "json", "map document format: json or csv")
 		flags.StringVar(&mode, "mode", "create", "map import mode")
 		flags.BoolVar(&acceptConflicts, "accept-conflicts", false, "replace conflicting point IDs in merge")
 		flags.StringVar(&session, "session", "", "live session ID")
+		flags.StringVar(&groupID, "group", "", "admitted poll group ID")
 		flags.StringVar(&key, "key", "", "idempotency key")
 		flags.StringVar(&commandID, "command", "", "durable write command ID")
 		flags.IntVar(&offset, "offset", 0, "durable command page offset")
@@ -103,6 +107,21 @@ func runModbusCommand(ctx context.Context, args []string, streams networkIO) int
 		path = base + "/profiles"
 	case "maps", "workspaces":
 		path = base + "/" + action
+	case "map-decode", "map-encode":
+		if mapID == "" || mapRevision < 1 || file == "" {
+			return invalid("--map, positive --revision and --file are required")
+		}
+		point, err := readBenchJSONObject(file)
+		if err != nil {
+			return invalid(err.Error())
+		}
+		operation := "decode"
+		if action == "map-encode" {
+			operation = "encode"
+		}
+		method = http.MethodPost
+		path = base + "/maps/" + url.PathEscape(mapID) + "/revisions/" + strconv.FormatInt(mapRevision, 10) + "/" + operation
+		body = point
 	case "map-get", "map-export", "map-duplicate", "workspace-get", "workspace-export", "workspace-duplicate":
 		kind, id := "maps", mapID
 		if action == "workspace-get" || action == "workspace-export" || action == "workspace-duplicate" {
@@ -199,7 +218,7 @@ func runModbusCommand(ctx context.Context, args []string, streams networkIO) int
 			}
 			path, body = base+"/profiles/"+url.PathEscape(profile), map[string]any{"expected_revision": expectedRevision, "profile": definition}
 		}
-	case "status", "connect", "test", "read", "write", "preview", "poll", "display", "events", "commands", "disconnect":
+	case "status", "connect", "test", "read", "write", "preview", "poll", "poll-group", "display", "events", "commands", "disconnect":
 		if endpoint == "" {
 			return invalid("--endpoint is required")
 		}
@@ -208,7 +227,7 @@ func runModbusCommand(ctx context.Context, args []string, streams networkIO) int
 		case "status":
 			path += "/session"
 		case "connect":
-			if profile == "" || endpointRevision < 1 || profileRevision < 1 {
+			if profile == "" || endpointRevision < 1 || profileRevision < 1 || (workspaceID == "") != (workspaceRevision == 0) {
 				return invalid("--profile and both pinned revisions are required")
 			}
 			if key == "" {
@@ -227,7 +246,7 @@ func runModbusCommand(ctx context.Context, args []string, streams networkIO) int
 					return invalid("--file must contain a groups array")
 				}
 			}
-			body = map[string]any{"endpoint_revision": endpointRevision, "profile_id": profile, "profile_revision": profileRevision, "groups": groups, "idempotency_key": key, "timeout_seconds": timeout}
+			body = map[string]any{"endpoint_revision": endpointRevision, "profile_id": profile, "profile_revision": profileRevision, "workspace_id": workspaceID, "workspace_revision": workspaceRevision, "groups": groups, "idempotency_key": key, "timeout_seconds": timeout}
 		case "test":
 			if profile == "" || endpointRevision < 1 || profileRevision < 1 || file != "" || timeout < 1 || timeout > 60 {
 				return invalid("--profile, both pinned revisions and a 1-60 second timeout are required; --file is not allowed")
@@ -284,6 +303,11 @@ func runModbusCommand(ctx context.Context, args []string, streams networkIO) int
 					return invalid("--file must contain a groups array")
 				}
 				body = map[string]any{"session_id": session, "groups": plan, "paused": paused}
+			case "poll-group":
+				if groupID == "" {
+					return invalid("--group is required")
+				}
+				body = map[string]any{"session_id": session, "group_id": groupID, "paused": paused}
 			case "display":
 				body = map[string]any{"session_id": session, "paused": paused}
 			case "disconnect":

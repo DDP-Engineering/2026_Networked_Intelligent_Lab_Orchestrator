@@ -12,15 +12,17 @@ func (r RevisionRef) valid() bool {
 
 // PollGroup is inert saved read-plan metadata.
 type PollGroup struct {
-	ID         string      `json:"id"`
-	Name       string      `json:"name"`
-	Enabled    bool        `json:"enabled"`
-	UnitID     int         `json:"unit_id"`
-	Function   int         `json:"function"`
-	Address    int         `json:"address"`
-	Quantity   int         `json:"quantity"`
-	IntervalMS int64       `json:"interval_ms"`
-	MapRef     RevisionRef `json:"map_ref"`
+	ID          string      `json:"id"`
+	Name        string      `json:"name"`
+	Enabled     bool        `json:"enabled"`
+	UnitID      int         `json:"unit_id"`
+	Function    int         `json:"function"`
+	Address     int         `json:"address"`
+	Quantity    int         `json:"quantity"`
+	IntervalMS  int64       `json:"interval_ms"`
+	TimeoutMS   int         `json:"timeout_ms,omitempty"`
+	StopOnError bool        `json:"stop_on_error,omitempty"`
+	MapRef      RevisionRef `json:"map_ref"`
 }
 
 // Layout records view preferences without changing polling or transport state.
@@ -59,7 +61,7 @@ func (w Workspace) Canonical() (Workspace, error) {
 	}
 	ids := map[string]bool{}
 	for _, g := range w.PollGroups {
-		if !identifier.MatchString(g.ID) || ids[g.ID] || !validName(g.Name) || !g.MapRef.valid() || refs[g.MapRef.ID] != g.MapRef.Revision || g.UnitID < 0 || g.UnitID > 255 || g.Function < 1 || g.Function > 4 || g.Address < 0 || g.Address > 65535 || g.IntervalMS < 1 || g.IntervalMS > 2147483647 {
+		if !identifier.MatchString(g.ID) || ids[g.ID] || !validName(g.Name) || !g.MapRef.valid() || refs[g.MapRef.ID] != g.MapRef.Revision || g.UnitID < 0 || g.UnitID > 255 || g.Function < 1 || g.Function > 4 || g.Address < 0 || g.Address > 65535 || g.IntervalMS < 1 || g.IntervalMS > 2147483647 || g.TimeoutMS != 0 && (g.TimeoutMS < 100 || g.TimeoutMS > 60000) {
 			return Workspace{}, ErrInvalid
 		}
 		limit := 125

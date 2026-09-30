@@ -532,6 +532,14 @@
           "minimum": 1,
           "maximum": 2147483647
         },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 60000
+        },
+        "stop_on_error": {
+          "type": "boolean"
+        },
         "map_ref": {
           "$ref": "#/$defs/revision_ref"
         }

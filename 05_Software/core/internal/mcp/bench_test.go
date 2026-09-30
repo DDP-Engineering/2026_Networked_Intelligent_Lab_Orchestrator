@@ -79,10 +79,10 @@ func TestBenchToolsUseCurrentTokenScopes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(list.Tools) != 72 {
+	if len(list.Tools) != 75 {
 		t.Fatalf("tools: %d", len(list.Tools))
 	}
-	for _, expected := range []string{"modbus_settings", "modbus_settings_save", "modbus_test", "modbus_endpoints", "modbus_endpoint_save", "modbus_profiles", "modbus_profile_save", "modbus_maps", "modbus_map_get", "modbus_map_save", "modbus_map_duplicate", "modbus_map_export", "modbus_map_import_preview", "modbus_map_import", "modbus_workspaces", "modbus_workspace_get", "modbus_workspace_save", "modbus_workspace_duplicate", "modbus_workspace_export", "modbus_workspace_import_preview", "modbus_workspace_import", "modbus_status", "modbus_connect", "modbus_read", "modbus_write", "modbus_preview", "modbus_poll", "modbus_display", "modbus_events", "modbus_disconnect", "modbus_command", "modbus_commands", "serial_status", "serial_connect", "serial_read", "serial_send", "serial_disconnect", "serial_signals", "serial_logging", "serial_logs", "serial_log_read", "serial_export", "serial_delete", "serial_retention", "serial_retention_configure", "camera_snapshot", "camera_get_controls", "camera_set_controls", "camera_reset_controls", "plugin_devices", "plugin_configuration", "plugin_configure", "plugin_device_configure", "plugin_device_rebind", "plugin_device_forget", "plugin_device_action"} {
+	for _, expected := range []string{"modbus_settings", "modbus_settings_save", "modbus_test", "modbus_endpoints", "modbus_endpoint_save", "modbus_profiles", "modbus_profile_save", "modbus_maps", "modbus_map_get", "modbus_map_decode", "modbus_map_encode", "modbus_map_save", "modbus_map_duplicate", "modbus_map_export", "modbus_map_import_preview", "modbus_map_import", "modbus_workspaces", "modbus_workspace_get", "modbus_workspace_save", "modbus_workspace_duplicate", "modbus_workspace_export", "modbus_workspace_import_preview", "modbus_workspace_import", "modbus_status", "modbus_connect", "modbus_read", "modbus_write", "modbus_preview", "modbus_poll", "modbus_poll_group", "modbus_display", "modbus_events", "modbus_disconnect", "modbus_command", "modbus_commands", "serial_status", "serial_connect", "serial_read", "serial_send", "serial_disconnect", "serial_signals", "serial_logging", "serial_logs", "serial_log_read", "serial_export", "serial_delete", "serial_retention", "serial_retention_configure", "camera_snapshot", "camera_get_controls", "camera_set_controls", "camera_reset_controls", "plugin_devices", "plugin_configuration", "plugin_configure", "plugin_device_configure", "plugin_device_rebind", "plugin_device_forget", "plugin_device_action"} {
 		found := false
 		for _, tool := range list.Tools {
 			if tool.Name == expected {
@@ -105,6 +105,8 @@ func TestBenchToolsUseCurrentTokenScopes(t *testing.T) {
 		{"modbus_maps", map[string]any{}, false},
 		{"modbus_map_import_preview", map[string]any{"format": "json", "mode": "create", "document": "{}"}, true},
 		{"modbus_map_save", map[string]any{"expected_revision": 0, "map": map[string]any{"schema_version": 1, "id": "read-denied", "name": "Map", "points": []any{}}}, true},
+		{"modbus_map_encode", map[string]any{"map_id": "mcp-map", "revision": 1, "point_id": "setpoint", "value": 1}, true},
+		{"modbus_poll_group", map[string]any{"endpoint_id": "boiler", "session_id": "missing", "group_id": "first", "paused": true}, true},
 		{"plugin_lifecycle", map[string]any{"plugin_id": "sigrok", "action": "install"}, true},
 		{"network_get_status", map[string]any{}, true},
 		{"camera_workspace_stop", map[string]any{"device_id": "cam-1", "action": "record_stop"}, true},

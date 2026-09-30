@@ -19,6 +19,7 @@ import (
 	"nilo.local/nilo/internal/identity"
 	"nilo.local/nilo/internal/integration/protocol"
 	"nilo.local/nilo/internal/integration/supervisor"
+	"nilo.local/nilo/internal/modbus"
 )
 
 type modbusLifecycleRunner struct {
@@ -27,6 +28,7 @@ type modbusLifecycleRunner struct {
 	startOnce sync.Once
 	calls     atomic.Int32
 	writes    atomic.Int32
+	failUnit  atomic.Int32
 }
 
 func (r *modbusLifecycleRunner) Execute(ctx context.Context, request protocol.ExecuteRequest, _ protocol.EventSink) (protocol.ExecuteResult, error) {
@@ -63,6 +65,7 @@ func (r *modbusLifecycleRunner) Execute(ctx context.Context, request protocol.Ex
 			var command struct {
 				RequestID string            `json:"request_id"`
 				Function  int               `json:"function"`
+				Unit      int               `json:"unit"`
 				Count     int               `json:"count"`
 				Values    []json.RawMessage `json:"values"`
 			}
@@ -74,6 +77,11 @@ func (r *modbusLifecycleRunner) Execute(ctx context.Context, request protocol.Ex
 				r.writes.Add(1)
 			}
 			values := command.Values
+			if command.Unit == int(r.failUnit.Load()) {
+				answer, _ := json.Marshal(map[string]any{"request_id": command.RequestID, "outcome": "timeout", "attempts": 1, "values": []any{}})
+				_, _ = conn.Write(append(answer, '\n'))
+				return
+			}
 			if command.Function <= 4 {
 				values = []json.RawMessage{json.RawMessage("42")}
 			}
@@ -343,6 +351,129 @@ func TestModbusFiniteApprovalAndLiveRunner(t *testing.T) {
 	if claim.held {
 		t.Fatal("claim still held after cleanup")
 	}
+}
+
+func TestModbusPollGroupsPauseIndependently(t *testing.T) {
+	m, actor, input, _ := modbusLifecycleFixture(t, "auto")
+	input.Groups = []ModbusPollGroup{
+		{ID: "first", IntervalMS: 100, Requests: []ModbusRequest{{Function: 3, Unit: 1, Address: 10, Count: 1}}},
+		{ID: "second", IntervalMS: 100, Requests: []ModbusRequest{{Function: 3, Unit: 2, Address: 10, Count: 1}}},
+	}
+	job, err := m.ConnectModbus(t.Context(), actor, "mb-live", input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	finished := awaitJob(t, m, actor, job.ID, "completed")
+	var admission struct {
+		SessionID string `json:"session_id"`
+	}
+	if json.Unmarshal(finished.Result, &admission) != nil || admission.SessionID == "" {
+		t.Fatalf("admission: %s", finished.Result)
+	}
+	status, err := m.SetModbusPollGroupPaused(t.Context(), actor, "mb-live", admission.SessionID, "first", true)
+	if err != nil || !status.GroupStats["first"].Paused || status.GroupStats["second"].Paused {
+		t.Fatalf("pause status: %+v %v", status, err)
+	}
+	if _, err := m.SetModbusPollGroupPaused(t.Context(), actor, "mb-live", admission.SessionID, "unknown", true); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("unknown group: %v", err)
+	}
+	time.Sleep(350 * time.Millisecond)
+	page, err := m.ReadModbusEvents(t.Context(), actor, "mb-live", admission.SessionID, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var first, second int
+	for _, event := range page.Events {
+		if event.GroupID == "first" {
+			first++
+		}
+		if event.GroupID == "second" {
+			second++
+		}
+	}
+	if first > 1 || second < 2 {
+		t.Fatalf("independent polling: first=%d second=%d", first, second)
+	}
+	status, err = m.ModbusSession(t.Context(), actor, "mb-live")
+	if err != nil || status.GroupStats["second"].Samples < 2 || status.GroupStats["second"].RequestedIntervalMS != 100 {
+		t.Fatalf("group metrics: %+v %v", status, err)
+	}
+	if _, err = m.SetModbusPollGroupPaused(t.Context(), actor, "mb-live", admission.SessionID, "first", false); err != nil {
+		t.Fatal(err)
+	}
+	deadline := time.Now().Add(time.Second)
+	for time.Now().Before(deadline) {
+		page, err = m.ReadModbusEvents(t.Context(), actor, "mb-live", admission.SessionID, page.NextCursor)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, event := range page.Events {
+			if event.GroupID == "first" {
+				return
+			}
+		}
+		time.Sleep(25 * time.Millisecond)
+	}
+	t.Fatal("resumed group produced no result")
+}
+
+func TestModbusConnectPinsSavedWorkspacePlan(t *testing.T) {
+	m, actor, input, _ := modbusLifecycleFixture(t, "auto")
+	input.Groups = []ModbusPollGroup{{ID: "holding", IntervalMS: 1000, Requests: []ModbusRequest{{Function: 3, Unit: 1, Address: 10, Count: 1}}}}
+	mapped, err := m.SaveModbusMap(t.Context(), actor, 0, modbus.Map{SchemaVersion: 1, ID: "registers", Name: "Registers", Points: []modbus.Point{}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	workspace, err := m.SaveModbusWorkspace(t.Context(), actor, 0, modbus.Workspace{SchemaVersion: 1, ID: "plant", Name: "Plant", EndpointID: "mb-live", ProfileRef: modbus.RevisionRef{ID: input.ProfileID, Revision: input.ProfileRevision}, MapRefs: []modbus.RevisionRef{{ID: mapped.ID, Revision: mapped.Revision}}, PollGroups: []modbus.PollGroup{{ID: "holding", Name: "Holding", Enabled: true, UnitID: 1, Function: 3, Address: 10, Quantity: 1, IntervalMS: 1000, MapRef: modbus.RevisionRef{ID: mapped.ID, Revision: mapped.Revision}}}, Layout: modbus.Layout{Columns: []string{}, AddressBase: "zero", Series: []string{}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	input.WorkspaceID, input.WorkspaceRevision = workspace.ID, workspace.Revision
+	changed := input
+	changed.Groups = []ModbusPollGroup{{ID: "holding", IntervalMS: 1000, Requests: []ModbusRequest{{Function: 3, Unit: 1, Address: 10, Count: 1}}}}
+	changed.Groups[0].Requests[0].Address = 11
+	changed.IdempotencyKey = "changed-plan"
+	if _, err = m.ConnectModbus(t.Context(), actor, "mb-live", changed); !errors.Is(err, ErrConflict) {
+		t.Fatalf("changed saved plan: %v", err)
+	}
+	job, err := m.ConnectModbus(t.Context(), actor, "mb-live", input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	awaitJob(t, m, actor, job.ID, "completed")
+	status, err := m.ModbusSession(t.Context(), actor, "mb-live")
+	if err != nil || status.WorkspaceID != "plant" || status.WorkspaceRevision != 1 {
+		t.Fatalf("pinned workspace: %+v %v", status, err)
+	}
+}
+
+func TestModbusPollGroupStopsOnErrorWithoutStoppingPeer(t *testing.T) {
+	m, actor, input, runner := modbusLifecycleFixture(t, "auto")
+	runner.failUnit.Store(1)
+	input.Groups = []ModbusPollGroup{
+		{ID: "failed", IntervalMS: 100, TimeoutMS: 200, StopOnError: true, Requests: []ModbusRequest{{Function: 3, Unit: 1, Address: 10, Count: 1}}},
+		{ID: "healthy", IntervalMS: 100, Requests: []ModbusRequest{{Function: 3, Unit: 2, Address: 10, Count: 1}}},
+	}
+	job, err := m.ConnectModbus(t.Context(), actor, "mb-live", input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	awaitJob(t, m, actor, job.ID, "completed")
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		status, err := m.ModbusSession(t.Context(), actor, "mb-live")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if status.GroupStats["failed"].Paused && status.GroupStats["healthy"].Samples > 1 {
+			if status.GroupStats["failed"].Errors != 1 {
+				t.Fatalf("failed group retried after stop: %+v", status.GroupStats["failed"])
+			}
+			return
+		}
+		time.Sleep(25 * time.Millisecond)
+	}
+	t.Fatal("failed group did not pause while peer advanced")
 }
 
 func TestModbusDisableStopsLiveLease(t *testing.T) {
