@@ -1,146 +1,158 @@
-# Networked Intelligent Lab Orchestrator (NILO Assistant) - Planning Overview
+# Networked Intelligent Lab Orchestrator (NILO) — Product Overview
 
-## Purpose
+## NILO: A Bench Companion
 
-Create an electronics bench appliance that gives AI clients, such as Codex Desktop and Claude Code, controlled access to physical instruments. The system combines electronic measurements, embedded debugging, visual inspection, and carefully gated physical control so that an AI can collect evidence, reason about it, and help perform debugging work.
+NILO is an electronics bench companion that allows people and AI agents to connect to physical equipment, inspect its behavior and carry out controlled operations. It brings measurements, embedded debugging, board programming, serial communication, visual inspection and equipment control into one system.
 
-The objective is not an autonomous robot lab. A human remains responsible for wiring, safety, and approval of consequential actions. The system should make the bench easier to inspect, operate, extend, and troubleshoot.
+NILO stays beside the bench on a home or corporate network. A user works with it from a browser or an agent application, either on the same network or remotely through a VPN. The user remains responsible for physical connections, the equipment under test and approval of operations that require human supervision.
 
-## Product Model
+NILO makes the bench accessible through a consistent interface while plugins handle the differences between instruments, adapters, protocols and vendor tools.
 
-The product has three distinct interfaces:
+## People, Agents and Equipment
 
-```text
-Human GUI ───────┐
-MCP AI clients ─┼── Bench Core ── Plugin host ── Instruments and adapters
-Admin CLI ───────┘
-```
+NILO provides three ways to interact with the bench:
 
-- **Human GUI:** A browser-based configuration and monitoring application hosted by the bench appliance. It manages device configuration, networks, plugins, safety limits, relays, and status.
-- **MCP API:** The northbound interface for AI clients. It exposes clear, typed, goal-level tools rather than arbitrary shell, SCPI, OpenOCD, or relay commands.
-- **Plugin API:** The internal, versioned contract for instrument integrations. Plugins are not separate MCP servers in the initial design; the Bench Core owns sessions, authorization, artifact storage, audit logs, and safety policy.
-
-## Primary Hosts
-
-The first product platform is Linux, with one shared application design across two supported CPU architectures:
-
-| Appliance | Architecture | Delivery approach |
-|---|---|---|
-| Raspberry Pi 4 | Linux ARM64 | Dedicated appliance image |
-| Dedicated mini PC | Linux x86_64 | Installer bundle, later an appliance ISO/image |
-
-Windows is not a primary platform in the first version. If an instrument later requires Windows-only vendor software, add a narrowly scoped Windows bridge plugin rather than creating a second complete product.
-
-## Instrument Strategy
-
-Each plugin declares a manifest, configuration schema, capabilities, health check, typed operations, artifact outputs, and a safe shutdown operation.
-
-Initial plugin families:
-
-- **Logic analysis:** sigrok/libsigrok and `sigrok-cli` for device discovery, capture, protocol decoding, analysis, and export. PulseView remains an optional human-facing viewer; it is not the MCP control layer.
-- **Embedded debug and flashing:** OpenOCD, J-Link, CMSIS-DAP, ST-Link, or other supported probe backends. Initial tools should cover target discovery, verified flashing, reset, logs, and read-only inspection before permitting write-level debug commands.
-- **RTT and SystemView:** RTT logs are a useful early integration. SystemView is a later specialist plugin because it needs target-side instrumentation and should be verified on the selected Linux ARM distribution.
-- **Programmable test equipment:** SCPI/VISA instruments, including power supplies, multimeters, oscilloscopes, and signal generators. Begin with discovery and read-only measurements.
-- **Visual evidence:** A board camera for physical inspection and an optional HDMI-to-USB capture device for instrument-screen capture. Direct waveform and instrument data is preferred over interpreting screen images.
-- **GPIO and relays:** A relay board can switch named, documented signals such as power, reset, or a UART disconnect. It must start in a defined safe state.
-
-## Evidence and Sessions
-
-Every operation should produce a durable, addressable result where appropriate:
-
-- a capture identifier;
-- raw artifacts such as `.sr`, CSV, VCD, firmware logs, or trace files;
-- structured measurements and protocol-decode events;
-- model-friendly plots, waveform images, or camera images;
-- timestamps, instrument identity, configuration, and audit information.
-
-Long-running acquisition, flashing, and debug actions need explicit session ownership, status reporting, cancellation, and cleanup. Only one conflicting hardware operation should run on an instrument at a time.
-
-## Networking and Remote Access
-
-The Raspberry Pi may be installed at a remote location using its local Wi-Fi or Ethernet uplink. It establishes an outbound WireGuard client tunnel to the DCP server, giving it a stable private VPN address.
+- **Browser GUI:** People configure the appliance, connect equipment, operate plugin workspaces, inspect results and manage access.
+- **MCP interface:** AI agents discover available tools, inspect equipment state and request authorized operations through the Model Context Protocol.
+- **Administration CLI:** Administrators configure, diagnose and automate appliance management through a command-line interface.
 
 ```text
-Codex / Claude host ── WireGuard ── DCP server ── WireGuard ── Bench appliance
+Browser GUI ────┐
+AI agent / MCP ─┼── NILO Bench Core ── Plugins ── Bench equipment
+Admin CLI ──────┘
 ```
 
-The MCP service and GUI should bind to the WireGuard interface or be protected by an authenticated proxy. They must not be exposed directly to the public internet.
+The Bench Core coordinates access, equipment ownership, operation policies and results. Plugins expose their capabilities through the shared NILO interfaces, so people and agents work with the same equipment configuration and permission rules.
 
-### PLC and Remote Ethernet Networks
+NILO supports agent applications such as Codex, Claude Code, OpenCode and Qwen Code through their MCP integration. Extensible agents such as Pi use an appropriate MCP integration, and applications such as LM Studio connect as MCP hosts when operating in that role. Client-specific setup is available from NILO's GUI.
 
-The Pi can use a USB-to-Ethernet adapter as a second, isolated network interface for a PLC or other local industrial device. This is a routed topology, not an Ethernet bridge.
+The agent and its model can run in different places. A laptop agent can use a local model through LM Studio or a cloud model endpoint such as Scaleway while communicating directly with NILO. The machine executing MCP calls has network access to NILO; the model provider does not need its own connection to the bench in this arrangement.
 
-Example:
+## Appliance and User Computers
+
+NILO runs on Linux appliances with a shared product design across ARM64 and x86_64 systems:
+
+| Appliance | Typical use |
+| --- | --- |
+| Raspberry Pi 4 / ARM64 appliance | A compact companion installed beside the bench. |
+| Dedicated x86_64 mini PC | A bench host with additional processing, storage or connectivity capacity. |
+
+Users access NILO from Windows, macOS or Linux computers using a browser or a compatible agent application. Equipment that depends on vendor software on another host connects through an appropriate integration bridge.
+
+NILO runs the bench services and equipment integrations. The user chooses where the agent and AI inference run, independently of the appliance.
+
+## Equipment and Plugin Capabilities
+
+Plugins connect NILO to different equipment families. Each plugin describes its devices, configuration, available operations and operating limits. The GUI presents an equipment workspace, while the MCP interface exposes the corresponding agent tools.
+
+NILO's plugin capabilities include:
+
+- **Logic analysis:** Discover logic analyzers, capture digital signals, decode protocols such as UART, I2C and SPI, inspect waveforms and export captures. Integrations use backends such as sigrok/libsigrok; users can also inspect compatible captures in tools such as PulseView.
+- **Board programming and embedded debugging:** Discover targets, flash and verify firmware, reset boards, inspect memory and registers, and collect debug output through supported OpenOCD, J-Link, CMSIS-DAP, ST-Link and other probe integrations.
+- **Serial communication:** Connect USB-to-serial adapters, configure communication parameters, exchange data, inspect terminal output and retain communication logs.
+- **Modbus communication:** Configure endpoints and register maps, read values, poll equipment and issue controlled writes over supported serial and TCP/IP transports.
+- **Programmable instruments:** Discover and operate power supplies, multimeters, oscilloscopes, signal generators and other equipment through SCPI/VISA and device-specific integrations.
+- **Runtime tracing:** Collect and inspect embedded runtime information through RTT, SystemView and compatible tracing integrations, with the required instrumentation on the target.
+- **Cameras and visual inspection:** View boards and bench setups, capture images, adjust camera controls, record activity and inspect instrument displays through cameras or HDMI-to-USB capture devices.
+- **GPIO, switching and relays:** Control named signals such as power, reset and communication-line connections, with configured operating limits and defined safe states.
+
+Supported operations depend on the selected plugin, connected hardware and device capabilities. Plugins provide measurements, images, waveforms, logs and other results through the same NILO workspace used by people and agents.
+
+## Local and Remote Connections
+
+### On the Home or Corporate Network
+
+NILO connects to the local network through Ethernet or Wi-Fi. People open its browser interface, and agents connect to its MCP endpoint using a scoped access token.
 
 ```text
-Home LAN:       192.168.1.0/24
-WireGuard VPN:  10.205.148.0/24
-PLC segment:    192.168.0.0/24
-PLC:            192.168.0.130
-Pi PLC adapter: 192.168.0.10/24, with no default gateway
+Laptop: browser / agent ── Home or corporate LAN ── NILO ── Bench equipment
 ```
 
-The DCP WireGuard peer for the Pi advertises the approved PLC destination, preferably `192.168.0.130/32` before expanding to a whole subnet. The Pi forwards VPN traffic to its PLC adapter and source-NATs that specific traffic, so the PLC does not need a new gateway route. For normal home-LAN access, the home router or a selected home computer needs a route for the PLC destination through the DCP server.
+A stable private address or internal DNS name identifies the appliance. The same saved endpoint and access token work locally and remotely when the VPN provides the corresponding route and name resolution.
 
-Only explicitly allowed PLC ports and destinations should be reachable. Do not provide an AI with unrestricted access to an industrial subnet.
+### Away from the Bench
 
-## Safety Model
+NILO supports remote access through WireGuard, OpenVPN and compatible home, corporate or provider-managed VPN services. The VPN can terminate at the network's router or gateway, or NILO can participate directly as a VPN client using a supported connection profile.
 
-Physical operations are higher risk than data collection. Safety must be enforced by the Bench Core and hardware policy, not by trusting the AI model or its client UI.
+```text
+Laptop away from home/work
+    │
+Existing VPN
+    │
+Home router / corporate gateway
+    │
+Private LAN ── NILO ── Bench equipment
+```
 
-- Read-only actions are the default.
-- Power, relay, erase, flashing, reset, memory write, and signal switching actions require an approval gate.
-- Tools enforce allowlisted devices, firmware paths, voltage/current limits, timeouts, channel limits, and target identities.
-- Risky actions require both a human approval flow and an armed appliance state or physical interlock where practical.
-- Relay defaults must be safe after boot, service failure, or loss of network connectivity.
-- Every state-changing action is recorded with the request, applied limits, result, and returned evidence.
+For example, a user on holiday connects their laptop to the home VPN, opens NILO and uses an agent to work with the equipment left on the bench. NILO continues operating on its ordinary home-network address. It does not need to host the VPN itself.
+
+Corporate deployments use the organization's VPN, routing, DNS and access policy. Direct appliance VPN connections provide another option for benches at remote sites. Access remains within the approved local networks and VPN routes, without requiring a public NILO endpoint or a cloud relay.
+
+### Connecting an Agent
+
+The **Connect an agent** flow in NILO's GUI lets the user select a client, choose a reachable endpoint, assign an access profile and generate a token. It provides the client's supported setup or import instructions, connection status and access-revocation controls.
+
+Agents connect directly to NILO. A separate NILO desktop application is not required for clients that support the selected MCP connection. A remotely hosted agent connects from its own execution environment through the appropriate private network route.
+
+NILO provides these connection modes:
+
+| Interface | Connection |
+| --- | --- |
+| Browser GUI and administration | HTTPS for login, configuration, token management and human approvals. |
+| MCP over HTTPS | Encrypted access using a certificate trusted by the client and a matching hostname. |
+| MCP over HTTP on an approved LAN | An explicitly enabled MCP-only endpoint with token authentication, accessible locally or through the network's VPN gateway. |
+| MCP over HTTP on a direct VPN interface | An explicitly enabled endpoint restricted to the selected VPN interface. |
+
+HTTP MCP requires no certificate installation in the agent. Its traffic is unencrypted on ordinary LAN segments. A VPN protects the traffic between its tunnel endpoints; when the VPN ends at a router, the router-to-NILO segment follows the LAN's HTTP/HTTPS policy. The network administrator selects the appropriate mode. The browser GUI retains HTTPS independently of the MCP mode.
+
+## Network-Connected Equipment
+
+NILO connects to equipment that communicates over TCP/IP, including oscilloscopes, power supplies, cameras, embedded boards, controllers, development systems and other network-enabled devices.
+
+Equipment can share an approved network with NILO or occupy a separate equipment network connected through an additional Ethernet interface or USB-to-Ethernet adapter. NILO manages the interface addresses, routes and permitted connections for that network.
+
+```text
+User / agent ── Management LAN or VPN ── NILO
+                                        │
+                               Equipment Ethernet network
+                                        │
+                       Instruments, boards and other devices
+```
+
+NILO provides two complementary forms of access:
+
+- **Plugin access:** People and agents use NILO's GUI or MCP tools. The integration communicates with the equipment, so the user's computer needs access only to NILO.
+- **Direct network access:** Authorized computers reach selected equipment addresses and ports through NILO's routing and forwarding facilities. This supports vendor applications, device web interfaces, TCP/IP debugging and other tools that communicate directly with the equipment.
+
+Routing and, where appropriate, address translation allow access to equipment with fixed addresses or limited gateway configuration. Access rules restrict forwarding to the intended devices and services. The equipment network remains separate from the appliance's management access unless an explicit configuration permits communication between them.
+
+## Access and Operation Control
+
+NILO manages human accounts, roles and scoped agent tokens. Users grant access to inspect the bench, operate equipment or administer integrations according to their responsibilities. Tokens can be named, limited, expired, replaced and revoked from the GUI.
+
+The Bench Core enforces permissions and equipment policies for both human and agent requests. Operations follow the configured approval mode, operating limits and device ownership rules. Actions requiring human approval remain pending until an authorized person approves them.
+
+Plugins enforce relevant limits such as voltage, current, duration, target identity, firmware selection and allowed signal connections. Switching equipment has defined safe states, and physical interlocks are supported where the hardware provides them. NILO records operational activity and makes failures and recovery actions visible to the user.
 
 ## Human Configuration GUI
 
-The GUI should make the appliance usable by an electronics professional without requiring routine Linux administration. It should provide:
+NILO's browser interface makes the appliance usable by an electronics professional without routine Linux administration. It provides:
 
-- network-interface and WireGuard enrollment status;
-- PLC subnet/address configuration and reachability tests;
-- instrument discovery, enable/disable controls, and plugin configuration;
-- a visual relay/signal map with safe-state definitions;
-- safety policy, permissions, and required-approval settings;
-- capture/artifact browsing, live status, logs, diagnostics, updates, and backup/restore.
+- appliance discovery, identity and initial setup;
+- Ethernet, Wi-Fi, VPN profiles, network status and connection diagnostics;
+- management and equipment-network configuration, routes and access rules;
+- agent setup, endpoint selection, access profiles and token management;
+- instrument discovery, plugin installation, device configuration and health status;
+- workspaces for measurements, waveforms, cameras, serial communication and other plugin capabilities;
+- relay and signal maps, operating limits and approval controls;
+- result browsing, logs, activity history, updates and backup/restore.
 
-The GUI writes validated, versioned configuration through the Bench Core. It does not directly edit firewall rules or invoke instrument commands.
+The interface presents device capabilities and connection problems in terms that help the user operate the bench. Configuration changes pass through the Bench Core for validation and controlled application.
 
-## Installation and Updates
+## Installation and Maintenance
 
-The user experience should be one product, even though installation and runtime have separate security responsibilities.
+NILO is distributed as an appliance image for Raspberry Pi and as an installer bundle for supported Linux hosts. Packages include the Bench Core, browser GUI, service configuration and the supported integration dependencies.
 
-### Initial delivery: installer bundle
+The setup flow establishes the appliance identity, network connections, administrator access and equipment configuration. Each appliance has its own credentials and private keys. Installations support offline package delivery as well as the configured update source.
 
-Provide a release ZIP or USB package for supported Linux hosts. A single launcher performs prerequisite checks, installs required packages, configures services, starts the setup wizard, and can repair an existing installation. It should clearly report each action and offer actionable recovery guidance.
-
-### Appliance delivery: Raspberry Pi image
-
-Provide a custom ARM64 Raspberry Pi OS image once the installer is stable. The image includes the Bench Core, GUI, service definitions, WireGuard tooling, firewall templates, and supported dependencies. Raspberry Pi Imager handles first Wi-Fi, hostname, account, and SSH configuration; the Bench Setup wizard completes device-specific enrollment.
-
-Do not place shared secrets in an image: Wi-Fi credentials, WireGuard private keys, SSH credentials, PLC credentials, and API tokens are generated or supplied during first-boot enrollment. Each appliance has its own identity.
-
-Updates must use versioned, integrity-checked release packages with a visible rollback/recovery path. Do not use opaque `curl | shell` installation flows.
-
-## Recommended Delivery Sequence
-
-1. Build the Bench Core, configuration model, artifact/session model, and browser GUI.
-2. Add one sigrok logic-analyzer plugin with capture, UART/I2C/SPI decode, export, and rendering.
-3. Add one verified debug/flashing backend with strict target and firmware allowlists.
-4. Add WireGuard enrollment and the narrow PLC routed/NAT topology.
-5. Add a read-only SCPI/VISA integration.
-6. Add controlled power and relay operations after safety and interlock validation.
-7. Add camera and SystemView integrations.
-8. Turn the proven installer into reproducible Raspberry Pi and mini-PC appliance deliveries.
-
-## Decisions Recorded
-
-- The product is Linux-first: ARM64 Raspberry Pi and x86_64 mini PC share one core design.
-- MCP is the AI-facing API; the GUI and plugin API are separate concerns.
-- The Pi is a controlled hardware gateway, not the primary AI/vision inference host.
-- PulseView is optional for people; sigrok/libsigrok is the programmable acquisition foundation.
-- The platform uses WireGuard for remote reachability and isolated Ethernet routing for PLC access.
-- Extensibility is based on a strict plugin contract, not a generic unrestricted command channel.
-- Safety, authorization, and evidence retention are core features from the beginning.
+Updates use versioned, integrity-checked packages with visible progress and a recovery or rollback path. Backup, restore and diagnostic tools support maintenance of the appliance and its bench configuration through the product's administration interfaces.
