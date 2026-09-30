@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-PLAT-ca19fbda"
+
+title = "Store bounded administrator Modbus operating settings"
+
+status = "active"
+
+requirement = """
+When an administrator updates appliance-wide Modbus operating settings with the current revision, Core shall persist validated session and retention limits with audit and conflict reporting, applying session limits to new admissions while preserving already active sessions.
+"""
+
+verification = "Save bounded values and stale/unauthorized updates against SQLite; restart the Manager and check retained values, audit, conflict and rejection; lower/raise session capacity around an active fake session and verify existing work persists while new admission follows the current limit."
+
+affected_paths = ["05_Software/core/internal/bench/modbus_settings.go", "05_Software/core/internal/bench/manager.go", "05_Software/core/internal/bench/modbus_session.go", "05_Software/core/internal/store/sqlite/migrations/027_modbus_settings.sql", "05_Software/core/internal/store/sqlite/migrations.go", "05_Software/core/internal/store/sqlite/db_test.go", "05_Software/core/internal/store/sqlite/modbus_definitions_mb05_test.go", "05_Software/core/internal/httpapi/modbus.go", "05_Software/core/internal/mcp/modbus.go", "05_Software/core/cmd/nilo/modbus.go", "05_Software/frontend/src/api/modbus.ts", "05_Software/frontend/src/api/client.ts", "05_Software/frontend/src/components/pages/ModbusPluginPage.tsx", "05_Software/core/internal/bench/modbus_settings_test.go", "05_Software/core/internal/httpapi/modbus_test.go", "05_Software/core/internal/store/sqlite/db_test.go", "05_Software/core/internal/store/sqlite/modbus_definitions_mb05_test.go", "05_Software/frontend/src/api/modbus.test.ts", "05_Software/frontend/src/components/pages/ModbusPluginPage.test.tsx"]
+
+linked_tests = ["05_Software/core/internal/bench/modbus_settings_test.go", "05_Software/core/internal/httpapi/modbus_test.go", "05_Software/core/internal/store/sqlite/db_test.go", "05_Software/core/internal/store/sqlite/modbus_definitions_mb05_test.go", "05_Software/frontend/src/api/modbus.test.ts", "05_Software/frontend/src/components/pages/ModbusPluginPage.test.tsx"]
+
+
+spec = "specs/REQ-PLAT-ca19fbda.md"
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-30
+updated = 2026-09-30

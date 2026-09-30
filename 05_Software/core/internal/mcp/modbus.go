@@ -33,6 +33,19 @@ func registerModbusTools(server *sdk.Server, options HandlerOptions) {
 			return &sdk.CallToolResult{Content: []sdk.Content{&sdk.TextContent{Text: string(encoded)}}}, nil
 		})
 	}
+	register("modbus_settings", "Read revisioned Modbus admission and future retention limits.", true, map[string]any{}, nil, func(ctx context.Context, a identity.Actor, _ json.RawMessage) (any, error) {
+		return options.Bench.ModbusSettings(ctx, a)
+	})
+	register("modbus_settings_save", "Replace administrator-owned Modbus settings using an expected revision.", false, map[string]any{"expected_revision": integer, "settings": map[string]any{"type": "object"}}, []string{"expected_revision", "settings"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ExpectedRevision int64                      `json:"expected_revision"`
+			Settings         bench.ModbusSettingsValues `json:"settings"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.ReplaceModbusSettings(ctx, a, input.ExpectedRevision, input.Settings)
+	})
 	register("modbus_endpoints", "List shared configured Modbus endpoints and revisions.", true, map[string]any{}, nil, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
 		var empty struct{}
 		if decodeBenchArguments(raw, &empty) != nil {
@@ -220,6 +233,16 @@ func registerModbusTools(server *sdk.Server, options HandlerOptions) {
 			return nil, bench.ErrInvalid
 		}
 		return options.Bench.ConnectModbus(ctx, a, input.ID, input.ModbusConnect)
+	})
+	register("modbus_test", "Queue a finite policy-controlled connection check with no Modbus PDU or retained session.", false, map[string]any{"endpoint_id": text, "endpoint_revision": integer, "profile_id": text, "profile_revision": integer, "idempotency_key": text, "timeout_seconds": integer}, []string{"endpoint_id", "endpoint_revision", "profile_id", "profile_revision", "idempotency_key"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID string `json:"endpoint_id"`
+			bench.ModbusConnect
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.TestModbusConnection(ctx, a, input.ID, input.ModbusConnect)
 	})
 	register("modbus_read", "Execute one bounded raw Modbus read in an owned live session.", false, map[string]any{"endpoint_id": text, "session_id": text, "request": request}, []string{"endpoint_id", "session_id", "request"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
 		var input struct {

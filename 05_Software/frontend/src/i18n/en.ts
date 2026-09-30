@@ -1,6 +1,7 @@
 import { serialEn } from './serial';
 import { platformEn } from './platform';
 import { cameraEn } from './camera';
+import { modbusEn } from './modbus';
 /**
  * The English catalogue, and the key set every other language must satisfy.
  *
@@ -13,6 +14,7 @@ export const en = {
   ...cameraEn,
   ...serialEn,
   ...platformEn,
+  ...modbusEn,
   'message.info': 'Info',
   'message.warning': 'Warning',
   'message.error': 'Error',

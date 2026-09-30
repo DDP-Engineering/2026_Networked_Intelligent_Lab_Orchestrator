@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-3f615e7d"
+
+title = "Navigate named Modbus endpoints and offline definitions"
+
+status = "active"
+
+requirement = """
+When Modbus definitions are available, Instruments shall list each configured enabled endpoint by name with RealTime View, Sessions and Register Maps destinations, preserve offline targets in that navigation, and open definitions without starting a live connection; shared definitions remain reachable after plugin disable or uninstall.
+"""
+
+verification = "Build navigation from installed, disabled and absent-plugin inventories plus online, offline and unplugged endpoints; assert named three-child entries where enabled, inert page opening, no implicit connect, and a retained definition path after disable/uninstall."
+
+affected_paths = ["05_Software/frontend/src/components/shell/pages.ts", "05_Software/frontend/src/components/shell/AppShell.tsx", "05_Software/frontend/src/components/pages/ModbusWorkspacePage.tsx", "05_Software/frontend/src/api/modbus.ts", "05_Software/frontend/src/api/client.ts", "05_Software/frontend/src/components/shell/pages.test.ts", "05_Software/frontend/src/components/shell/shell.test.tsx", "05_Software/frontend/src/api/modbus.test.ts"]
+
+linked_tests = ["05_Software/frontend/src/components/shell/pages.test.ts", "05_Software/frontend/src/components/shell/shell.test.tsx", "05_Software/frontend/src/api/modbus.test.ts"]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-30
+updated = 2026-09-30

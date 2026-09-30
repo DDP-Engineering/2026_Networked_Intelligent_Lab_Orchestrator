@@ -1,0 +1,75 @@
+.modbus-admin,
+.modbus-workspace {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+.modbus-admin .instrument-card,
+.modbus-workspace .instrument-card {
+  min-width: 0;
+}
+.modbus-admin .page-title-actions,
+.modbus-workspace .page-title-actions {
+  flex-wrap: wrap;
+}
+.modbus-admin button,
+.modbus-workspace button,
+.modbus-admin input:not([type='checkbox']),
+.modbus-admin select,
+.modbus-admin .modbus-check {
+  min-height: 44px;
+}
+.modbus-admin :focus-visible,
+.modbus-workspace :focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.modbus-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block: 0.75rem;
+}
+.modbus-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 0.75rem;
+  align-items: end;
+  margin-top: 0.75rem;
+}
+.modbus-form label {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+.modbus-form input,
+.modbus-form select {
+  width: 100%;
+  min-width: 0;
+}
+.modbus-form .modbus-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.modbus-form .modbus-check input {
+  width: auto;
+}
+.modbus-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0;
+}
+.modbus-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--line, #ddd);
+  overflow-wrap: anywhere;
+}
+.modbus-wide {
+  grid-column: 1 / -1;
+}

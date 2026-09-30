@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-d2db4ee3"
+
+title = "Manage named Modbus endpoints and profiles"
+
+status = "active"
+
+requirement = """
+When an administrator creates or revises a named Modbus TCP endpoint and connection profile, the browser shall submit explicit network fields and expected revisions to Core, show validation and revision conflicts beside the edit, and retain configured offline targets for later inspection. Existing RTU definitions remain visible but are not edited by this TCP-only interface.
+"""
+
+verification = "Edit TCP definitions using mocked Core responses; assert exact revisioned payloads, field/conflict feedback, offline list state, read-only existing RTU records, and no action for non-admin sessions."
+
+affected_paths = ["05_Software/frontend/src/api/modbus.ts", "05_Software/frontend/src/api/client.ts", "05_Software/frontend/src/components/pages/ModbusPluginPage.tsx", "05_Software/frontend/src/api/modbus.test.ts", "05_Software/frontend/src/components/pages/ModbusPluginPage.test.tsx"]
+
+linked_tests = ["05_Software/frontend/src/api/modbus.test.ts", "05_Software/frontend/src/components/pages/ModbusPluginPage.test.tsx"]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-30
+updated = 2026-09-30

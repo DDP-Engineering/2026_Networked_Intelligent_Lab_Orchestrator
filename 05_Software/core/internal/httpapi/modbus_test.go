@@ -33,6 +33,7 @@ func TestModbusRoutesScopeAndStrictBody(t *testing.T) {
 	}
 	read := f.issueToken(t, "admin", "modbus-read", []auth.Permission{auth.PermissionBenchRead}, nil)
 	execute := f.issueToken(t, "admin", "modbus-execute", []auth.Permission{auth.PermissionBenchRead, auth.PermissionBenchExecute}, nil)
+	manage := f.issueToken(t, "admin", "modbus-manage", []auth.Permission{auth.PermissionBenchRead, auth.PermissionBenchExecute, auth.PermissionPluginsManage}, nil)
 	for _, action := range []string{"connect", "read", "write", "preview", "poll", "display", "disconnect"} {
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/modbus/endpoints/gateway/"+action, strings.NewReader(`{}`))
 		req.Header.Set("Authorization", "Bearer "+read)
@@ -47,6 +48,26 @@ func TestModbusRoutesScopeAndStrictBody(t *testing.T) {
 	}
 	if got := f.get("/api/v1/modbus/endpoints", read); got.Code != 200 {
 		t.Fatalf("list endpoints: %d", got.Code)
+	}
+	if got := f.get("/api/v1/modbus/settings", read); got.Code != 200 {
+		t.Fatalf("read settings: %d", got.Code)
+	}
+	settingsBody := `{"expected_revision":1,"settings":{"max_sessions":4,"session_lease_seconds":3600,"idle_seconds":300,"retention_count":100,"retention_bytes":2147483648,"part_bytes":104857600}}`
+	for _, candidate := range []struct {
+		path, method, body, token string
+		want                      int
+	}{
+		{"/api/v1/modbus/settings", http.MethodPut, settingsBody, read, 403},
+		{"/api/v1/modbus/settings", http.MethodPut, settingsBody + ` `, manage, 200},
+		{"/api/v1/modbus/settings", http.MethodPut, `{"expected_revision":2,"settings":{"max_sessions":4},"extra":true}`, manage, 400},
+		{"/api/v1/modbus/endpoints/peer/test", http.MethodPost, `{}`, execute, 403},
+		{"/api/v1/modbus/endpoints/peer/test", http.MethodPost, `{"unknown":1}`, manage, 400},
+	} {
+		req := httptest.NewRequest(candidate.method, candidate.path, strings.NewReader(candidate.body))
+		req.Header.Set("Authorization", "Bearer "+candidate.token)
+		if got := f.do(req); got.Code != candidate.want {
+			t.Fatalf("%s %s: %d, want %d: %s", candidate.method, candidate.path, got.Code, candidate.want, got.Body.String())
+		}
 	}
 	if got := f.get("/api/v1/modbus/maps", read); got.Code != 200 {
 		t.Fatalf("list maps: %d", got.Code)

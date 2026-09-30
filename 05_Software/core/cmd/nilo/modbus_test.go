@@ -20,6 +20,18 @@ func TestModbusCLIUsesAuthenticatedCoreRoute(t *testing.T) {
 	}
 }
 
+func TestModbusCLITestUsesFiniteReadFreeCoreRoute(t *testing.T) {
+	server, calls := networkStub(t, 202, map[string]any{"transaction_id": "test-job", "state": "queued"})
+	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
+	code := runModbusCommand(context.Background(), []string{"test", "--server", server.URL, "--token-file", tokenFile(t, "test-token"), "--endpoint", "gateway", "--endpoint-revision", "2", "--profile", "profile-1", "--profile-revision", "4", "--key", "modbus-test-key", "--json"}, networkIO{stdout: stdout, stderr: stderr})
+	if code != 0 || len(*calls) != 1 || (*calls)[0].method != "POST" || (*calls)[0].path != "/api/v1/modbus/endpoints/gateway/test" || (*calls)[0].authorized != "Bearer test-token" {
+		t.Fatalf("test route: code=%d calls=%+v stderr=%s", code, *calls, stderr)
+	}
+	if bytes.Contains([]byte((*calls)[0].body), []byte(`"groups"`)) || !bytes.Contains([]byte((*calls)[0].body), []byte(`"timeout_seconds":30`)) {
+		t.Fatalf("test sent a read plan or wrong deadline: %s", (*calls)[0].body)
+	}
+}
+
 func TestModbusCLIPollRequiresGroupsArray(t *testing.T) {
 	file := filepath.Join(t.TempDir(), "plan.json")
 	if err := os.WriteFile(file, []byte(`{"not_groups":[]}`), 0600); err != nil {

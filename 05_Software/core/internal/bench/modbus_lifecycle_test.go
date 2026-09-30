@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -22,9 +23,10 @@ import (
 
 type modbusLifecycleRunner struct {
 	controlledRunner
-	started chan struct{}
-	calls   atomic.Int32
-	writes  atomic.Int32
+	started   chan struct{}
+	startOnce sync.Once
+	calls     atomic.Int32
+	writes    atomic.Int32
 }
 
 func (r *modbusLifecycleRunner) Execute(ctx context.Context, request protocol.ExecuteRequest, _ protocol.EventSink) (protocol.ExecuteResult, error) {
@@ -45,7 +47,7 @@ func (r *modbusLifecycleRunner) Execute(ctx context.Context, request protocol.Ex
 	if err = os.Chmod(filepath.Join(params.Directory, "control.sock"), 0600); err != nil {
 		return protocol.ExecuteResult{}, err
 	}
-	close(r.started)
+	r.startOnce.Do(func() { close(r.started) })
 	go func() { <-ctx.Done(); _ = listener.Close() }()
 	for {
 		conn, err := listener.Accept()
@@ -127,6 +129,127 @@ func modbusLifecycleFixture(t *testing.T, mode string) (*Manager, identity.Actor
 	e, p := saveConsumerDefinitions(t, m, actor, networkDefinition("mb-live", "mb-live-bus"))
 	input := ModbusConnect{EndpointRevision: e.Revision, ProfileID: p.ID, ProfileRevision: p.Revision, IdempotencyKey: "modbus-live-connect", TimeoutSeconds: 10, Groups: []ModbusPollGroup{{ID: "holding", IntervalMS: 1000, Requests: []ModbusRequest{{Function: 3, Unit: 1, Address: 10, Count: 1}, {Function: 3, Unit: 2, Address: 10, Count: 1}}}}}
 	return m, actor, input, runner
+}
+
+func TestModbusConnectionTestClosesTemporaryRunnerWithoutPDU(t *testing.T) {
+	m, actor, input, runner := modbusLifecycleFixture(t, "auto")
+	input.Groups = nil
+	input.IdempotencyKey = "modbus-test-connection"
+	job, err := m.TestModbusConnection(t.Context(), actor, "mb-live", input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	finished := awaitJob(t, m, actor, job.ID, "completed")
+	if !json.Valid(finished.Result) || runner.calls.Load() != 0 || runner.writes.Load() != 0 {
+		t.Fatalf("test result %s; PDU calls %d/%d", finished.Result, runner.calls.Load(), runner.writes.Load())
+	}
+	status, err := m.ModbusSession(t.Context(), actor, "mb-live")
+	if err != nil || status.Connected || status.State == "connected" {
+		t.Fatalf("temporary session retained: %+v, %v", status, err)
+	}
+	m.mu.Lock()
+	remaining := len(m.modbusSessions) + len(m.transports)
+	m.mu.Unlock()
+	if remaining != 0 {
+		t.Fatalf("temporary resources retained: %d", remaining)
+	}
+}
+
+func TestModbusConnectionTestWaitsForAskApproval(t *testing.T) {
+	m, actor, input, runner := modbusLifecycleFixture(t, "ask")
+	input.Groups = nil
+	input.IdempotencyKey = "modbus-test-ask"
+	job, err := m.TestModbusConnection(t.Context(), actor, "mb-live", input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	awaitJob(t, m, actor, job.ID, "pending_approval")
+	select {
+	case <-runner.started:
+		t.Fatal("test runner opened before policy approval")
+	default:
+	}
+	if _, err := m.Action(t.Context(), actor, job.ID, "approve"); err != nil {
+		t.Fatal(err)
+	}
+	awaitJob(t, m, actor, job.ID, "completed")
+	if runner.calls.Load() != 0 {
+		t.Fatal("test issued Modbus command")
+	}
+	status, err := m.ModbusSession(t.Context(), actor, "mb-live")
+	if err != nil || status.Connected {
+		t.Fatalf("test left session: %+v %v", status, err)
+	}
+}
+
+func TestModbusSettingsChangeOnlyNewSessionAdmissions(t *testing.T) {
+	m, actor, firstInput, _ := modbusLifecycleFixture(t, "auto")
+	ctx := t.Context()
+	other := networkDefinition("mb-other", "mb-other-bus")
+	other.Network.Host = "other.local"
+	other, err := m.SaveModbusEndpoint(ctx, actor, 0, other)
+	if err != nil {
+		t.Fatal(err)
+	}
+	otherProfile, err := m.SaveModbusProfile(ctx, actor, 0, profileDefinition("mb-other-profile", other.ID))
+	if err != nil {
+		t.Fatal(err)
+	}
+	settings, err := m.ModbusSettings(ctx, actor)
+	if err != nil {
+		t.Fatal(err)
+	}
+	short := settings.Settings
+	short.MaxSessions, short.SessionLeaseSeconds, short.IdleSeconds = 1, 60, 30
+	settings, err = m.ReplaceModbusSettings(ctx, actor, settings.Revision, short)
+	if err != nil {
+		t.Fatal(err)
+	}
+	firstInput.Groups = nil
+	first, err := m.ConnectModbus(ctx, actor, "mb-live", firstInput)
+	if err != nil {
+		t.Fatal(err)
+	}
+	awaitJob(t, m, actor, first.ID, "completed")
+	m.mu.Lock()
+	firstSession := m.modbusSessions["mb-live"]
+	if firstSession == nil {
+		m.mu.Unlock()
+		t.Fatal("first session missing")
+	}
+	originalExpiry, originalIdle := firstSession.expires, firstSession.idleAfter
+	m.mu.Unlock()
+	if originalIdle != 30*time.Second || time.Until(originalExpiry) > 60*time.Second || time.Until(originalExpiry) < 50*time.Second {
+		t.Fatalf("new-session lifetime = %v / %v", originalExpiry, originalIdle)
+	}
+	secondInput := ModbusConnect{EndpointRevision: other.Revision, ProfileID: otherProfile.ID, ProfileRevision: otherProfile.Revision, IdempotencyKey: "mb-other-first", TimeoutSeconds: 10}
+	second, err := m.ConnectModbus(ctx, actor, other.ID, secondInput)
+	if err != nil {
+		t.Fatal(err)
+	}
+	awaitJob(t, m, actor, second.ID, "incomplete")
+	short.MaxSessions, short.SessionLeaseSeconds, short.IdleSeconds = 2, 120, 60
+	if _, err := m.ReplaceModbusSettings(ctx, actor, settings.Revision, short); err != nil {
+		t.Fatal(err)
+	}
+	m.mu.Lock()
+	if firstSession.expires != originalExpiry || firstSession.idleAfter != originalIdle || firstSession.stopped {
+		m.mu.Unlock()
+		t.Fatal("settings change altered active session")
+	}
+	m.mu.Unlock()
+	secondInput.IdempotencyKey = "mb-other-second"
+	second, err = m.ConnectModbus(ctx, actor, other.ID, secondInput)
+	if err != nil {
+		t.Fatal(err)
+	}
+	awaitJob(t, m, actor, second.ID, "completed")
+	m.mu.Lock()
+	secondSession := m.modbusSessions[other.ID]
+	m.mu.Unlock()
+	if secondSession == nil || secondSession.idleAfter != 60*time.Second || time.Until(secondSession.expires) < 110*time.Second {
+		t.Fatalf("new admission ignored raised limits: %+v", secondSession)
+	}
 }
 
 func TestModbusFiniteApprovalAndLiveRunner(t *testing.T) {

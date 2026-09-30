@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-5843b688"
+
+title = "Administer Modbus plugin lifecycle and policy"
+
+status = "active"
+
+requirement = """
+When an administrator opens System Plugins Modbus, the interface shall present the installed or available plugin's version, verified local update, lifecycle, policy, current state, View activity and confirmed destructive actions with actionable busy or unavailable feedback; other roles cannot reach those controls.
+"""
+
+verification = "Render the page with administrator, operator and viewer sessions and ready, absent and busy plugin responses; exercise lifecycle and policy controls through the client mock, assert admin-only actions and confirmation, version/update and activity affordances, and verify error feedback."
+
+affected_paths = ["05_Software/frontend/src/components/pages/ModbusPluginPage.tsx", "05_Software/frontend/src/components/shell/AppShell.tsx", "05_Software/frontend/src/components/shell/pages.ts", "05_Software/frontend/src/api/client.ts", "05_Software/frontend/src/components/pages/ModbusPluginPage.test.tsx", "05_Software/frontend/src/components/shell/pages.test.ts"]
+
+linked_tests = ["05_Software/frontend/src/components/pages/ModbusPluginPage.test.tsx", "05_Software/frontend/src/components/shell/pages.test.ts"]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-30
+updated = 2026-09-30

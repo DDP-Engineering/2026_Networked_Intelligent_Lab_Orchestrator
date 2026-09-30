@@ -17,6 +17,7 @@ import (
 
 const modbusUsage = `usage: nilo modbus <command> --server URL --token-file PATH [--ca-file PATH] [--json]
   endpoints | endpoint-save --endpoint ID --file endpoint.json [--expected-revision N]
+  settings | settings-save --file settings.json --expected-revision N
   profiles | profile-save --profile ID --file profile.json [--expected-revision N]
   maps | map-get --map ID | map-save --map ID --file map.json [--expected-revision N]
   map-duplicate --map ID --target NEW_ID | map-export --map ID [--format json|csv]
@@ -26,6 +27,7 @@ const modbusUsage = `usage: nilo modbus <command> --server URL --token-file PATH
   workspace-import-preview|workspace-import --file workspace.json [--mode create|replace --target ID --expected-revision N]
   status --endpoint ID
   connect --endpoint ID --endpoint-revision N --profile ID --profile-revision N [--file groups.json --key KEY]
+  test --endpoint ID --endpoint-revision N --profile ID --profile-revision N [--key KEY --timeout-seconds N]
   read --endpoint ID --session ID --file request.json
   write|preview --endpoint ID --session ID --file request.json [--key KEY]
   poll --endpoint ID --session ID --file groups.json [--paused]
@@ -49,6 +51,10 @@ func runModbusCommand(ctx context.Context, args []string, streams networkIO) int
 	var offset int
 	var paused, acceptConflicts bool
 	var timeout int
+	timeoutDefault := 60
+	if action == "test" {
+		timeoutDefault = 30
+	}
 	options, rest, ok := parseNetworkFlags("modbus "+action, args[1:], streams, func(flags *flag.FlagSet) {
 		flags.StringVar(&endpoint, "endpoint", "", "configured Modbus endpoint ID")
 		flags.StringVar(&profile, "profile", "", "configured Modbus profile ID")
@@ -68,7 +74,7 @@ func runModbusCommand(ctx context.Context, args []string, streams networkIO) int
 		flags.Int64Var(&expectedRevision, "expected-revision", 0, "revision for definition save")
 		flags.Int64Var(&mapRevision, "revision", 0, "pinned map or workspace revision to open")
 		flags.Int64Var(&after, "after", 0, "last live event sequence")
-		flags.IntVar(&timeout, "timeout-seconds", 60, "finite admission deadline")
+		flags.IntVar(&timeout, "timeout-seconds", timeoutDefault, "finite admission deadline")
 		flags.BoolVar(&paused, "paused", false, "pause polling or display")
 	})
 	if !ok || len(rest) > 0 {
@@ -81,6 +87,18 @@ func runModbusCommand(ctx context.Context, args []string, streams networkIO) int
 	switch action {
 	case "endpoints":
 		path = base + "/endpoints"
+	case "settings":
+		path = base + "/settings"
+	case "settings-save":
+		if file == "" || expectedRevision < 1 {
+			return invalid("--file and a positive --expected-revision are required")
+		}
+		settings, err := readBenchJSONObject(file)
+		if err != nil {
+			return invalid(err.Error())
+		}
+		method, path = http.MethodPut, base+"/settings"
+		body = map[string]any{"expected_revision": expectedRevision, "settings": settings}
 	case "profiles":
 		path = base + "/profiles"
 	case "maps", "workspaces":
@@ -181,7 +199,7 @@ func runModbusCommand(ctx context.Context, args []string, streams networkIO) int
 			}
 			path, body = base+"/profiles/"+url.PathEscape(profile), map[string]any{"expected_revision": expectedRevision, "profile": definition}
 		}
-	case "status", "connect", "read", "write", "preview", "poll", "display", "events", "commands", "disconnect":
+	case "status", "connect", "test", "read", "write", "preview", "poll", "display", "events", "commands", "disconnect":
 		if endpoint == "" {
 			return invalid("--endpoint is required")
 		}
@@ -210,6 +228,16 @@ func runModbusCommand(ctx context.Context, args []string, streams networkIO) int
 				}
 			}
 			body = map[string]any{"endpoint_revision": endpointRevision, "profile_id": profile, "profile_revision": profileRevision, "groups": groups, "idempotency_key": key, "timeout_seconds": timeout}
+		case "test":
+			if profile == "" || endpointRevision < 1 || profileRevision < 1 || file != "" || timeout < 1 || timeout > 60 {
+				return invalid("--profile, both pinned revisions and a 1-60 second timeout are required; --file is not allowed")
+			}
+			if key == "" {
+				key = uuid.NewString()
+				fmt.Fprintln(streams.stderr, "Idempotency key:", key)
+			}
+			method, path = http.MethodPost, path+"/test"
+			body = map[string]any{"endpoint_revision": endpointRevision, "profile_id": profile, "profile_revision": profileRevision, "idempotency_key": key, "timeout_seconds": timeout}
 		case "events":
 			if session == "" || after < 0 {
 				return invalid("--session and a nonnegative --after are required")

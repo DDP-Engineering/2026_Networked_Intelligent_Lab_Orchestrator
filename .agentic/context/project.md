@@ -63,7 +63,10 @@ one of three fixed roles - Administrator, Operator or Viewer.
   distinct poll/display pauses, cursor events and durable idempotent writes
   through HTTP, CLI and MCP. An SDK-supervised runner owns validated RTU, TCP
   and RTU-over-TCP transactions through a private local socket and fair
-  per-endpoint scheduling.
+  per-endpoint scheduling. Browser administrators manage TCP definitions,
+  plugin lifecycle/policy and revisioned session limits; a finite policy job
+  tests peer readiness and closes its temporary claim. Instruments lists named
+  offline targets and retained definitions without implicit connection.
 - **Instrument transactions.** Durable transaction identities, an administrator-
   configured queue and finite-job worker capacity with per-analyzer serialization, absolute deadlines,
   ordered bounded replies, cancellation, and digest-verified retained artifacts.

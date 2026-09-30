@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-aa51d4be"
+
+title = "Present Modbus administration accessibly across supported displays"
+
+status = "active"
+
+requirement = """
+While Modbus administration or endpoint pages are shown, the browser shall provide localized English, German and Romanian labels and errors with keyboard-operable controls, visible focus, at least 44-pixel targets and reflow without horizontal document overflow from 320 pixels through the supported field and desktop viewports.
+"""
+
+verification = "Render representative admin and offline endpoint states in all three languages, exercise controls by keyboard, inspect target and text geometry at 320, 800x480, 1024x600 and desktop viewports, and assert no document overflow or missing messages."
+
+affected_paths = ["05_Software/frontend/e2e/modbus.fixture.html", "05_Software/frontend/e2e/modbus-layout.check.ts", "05_Software/frontend/playwright.modbus.config.ts", "05_Software/frontend/src/test/modbus.fixture.tsx", "05_Software/frontend/src/components/pages/ModbusPluginPage.tsx", "05_Software/frontend/src/components/pages/ModbusWorkspacePage.tsx", "05_Software/frontend/src/components/pages/modbus.css", "05_Software/frontend/src/i18n/modbus.ts", "05_Software/frontend/src/i18n/en.ts", "05_Software/frontend/src/i18n/de.ts", "05_Software/frontend/src/i18n/ro.ts", "05_Software/frontend/src/components/pages/ModbusPluginPage.test.tsx", "05_Software/frontend/src/components/shell/pages.test.ts", "05_Software/frontend/src/components/shell/shell.test.tsx"]
+
+linked_tests = ["05_Software/frontend/e2e/modbus-layout.check.ts", "05_Software/frontend/src/components/pages/ModbusPluginPage.test.tsx", "05_Software/frontend/src/components/shell/pages.test.ts", "05_Software/frontend/src/components/shell/shell.test.tsx"]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-30
+updated = 2026-09-30

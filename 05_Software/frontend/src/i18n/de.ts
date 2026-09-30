@@ -1,5 +1,6 @@
 import { serialDe } from './serial';
 import { cameraDe } from './camera';
+import { modbusDe } from './modbus';
 import { platformDe } from './platform';
 import type { Catalogue } from './en';
 
@@ -14,6 +15,7 @@ import type { Catalogue } from './en';
 export const de: Catalogue = {
   ...cameraDe,
   ...platformDe,
+  ...modbusDe,
   ...serialDe,
   'message.info': 'Information',
   'message.warning': 'Warnung',

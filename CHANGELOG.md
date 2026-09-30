@@ -7,6 +7,9 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Added
 
+- Modbus administrators can manage TCP endpoints, profiles, plugin policy and bounded settings in the browser; named offline endpoints and saved definitions appear under Instruments.
+- A policy-controlled Modbus connection test closes its temporary session and transport claim after checking readiness, with HTTP, CLI and MCP access.
+
 - Shared Modbus register maps and saved workspaces now have creator-owned revisions, typed codecs, and validated JSON/CSV interchange through Core interfaces.
 
 - Modbus Core now admits pinned read plans through finite approval jobs and serves

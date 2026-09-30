@@ -18,6 +18,23 @@ func registerModbus(register func(string, auth.Permission, http.HandlerFunc), m 
 		}
 		writeJSON(w, http.StatusOK, value)
 	}
+	register("GET /api/v1/modbus/settings", auth.PermissionBenchRead, func(w http.ResponseWriter, r *http.Request) {
+		a, _ := actorFrom(r.Context())
+		v, err := m.ModbusSettings(r.Context(), a)
+		reply(w, v, err)
+	})
+	register("PUT /api/v1/modbus/settings", auth.PermissionPluginsManage, func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			ExpectedRevision int64                      `json:"expected_revision"`
+			Settings         bench.ModbusSettingsValues `json:"settings"`
+		}
+		if !benchBody(w, r, &body) {
+			return
+		}
+		a, _ := actorFrom(r.Context())
+		v, err := m.ReplaceModbusSettings(r.Context(), a, body.ExpectedRevision, body.Settings)
+		reply(w, v, err)
+	})
 	register("GET /api/v1/modbus/endpoints", auth.PermissionBenchRead, func(w http.ResponseWriter, r *http.Request) {
 		a, _ := actorFrom(r.Context())
 		v, err := m.ModbusEndpoints(r.Context(), a)
@@ -221,6 +238,19 @@ func registerModbus(register func(string, auth.Permission, http.HandlerFunc), m 
 		}
 		a, _ := actorFrom(r.Context())
 		v, err := m.ConnectModbus(r.Context(), a, r.PathValue("id"), body)
+		if err != nil {
+			benchError(w, err)
+			return
+		}
+		writeJSON(w, http.StatusAccepted, v)
+	})
+	register("POST /api/v1/modbus/endpoints/{id}/test", auth.PermissionPluginsManage, func(w http.ResponseWriter, r *http.Request) {
+		var body bench.ModbusConnect
+		if !benchBody(w, r, &body) {
+			return
+		}
+		a, _ := actorFrom(r.Context())
+		v, err := m.TestModbusConnection(r.Context(), a, r.PathValue("id"), body)
 		if err != nil {
 			benchError(w, err)
 			return

@@ -26,6 +26,7 @@ type modbusSession struct {
 	id, endpointID, profileID, owner, kind, credential string
 	endpointRevision, profileRevision                  int64
 	expires, lastAccess                                time.Time
+	idleAfter                                          time.Duration
 	socket                                             string
 	cancel                                             context.CancelFunc
 	done                                               chan struct{}
@@ -107,7 +108,25 @@ func (m *Manager) modbusAuthorized(ctx context.Context, actor identity.Actor, s 
 
 // ConnectModbus creates only the finite policy job. Its completion opens the live lease.
 func (m *Manager) ConnectModbus(ctx context.Context, actor identity.Actor, endpointID string, input ModbusConnect) (Job, error) {
-	raw, _ := json.Marshal(modbusConnectParameters{input.EndpointRevision, input.ProfileID, input.ProfileRevision, input.Groups})
+	raw, _ := json.Marshal(modbusConnectParameters{EndpointRevision: input.EndpointRevision, ProfileID: input.ProfileID, ProfileRevision: input.ProfileRevision, Groups: input.Groups})
+	return m.Submit(ctx, actor, Submission{PluginID: "modbus", DeviceID: endpointID, Operation: "connect", Parameters: raw, IdempotencyKey: input.IdempotencyKey, TimeoutSeconds: input.TimeoutSeconds})
+}
+
+// TestModbusConnection submits a finite, read-free connect job through the normal policy.
+func (m *Manager) TestModbusConnection(ctx context.Context, actor identity.Actor, endpointID string, input ModbusConnect) (Job, error) {
+	if err := require(actor, auth.PermissionPluginsManage); err != nil {
+		return Job{}, err
+	}
+	if err := require(actor, auth.PermissionBenchExecute); err != nil {
+		return Job{}, err
+	}
+	if len(input.Groups) != 0 || input.TimeoutSeconds > 60 || input.TimeoutSeconds < 0 {
+		return Job{}, ErrInvalid
+	}
+	if input.TimeoutSeconds == 0 {
+		input.TimeoutSeconds = 30
+	}
+	raw, _ := json.Marshal(modbusConnectParameters{EndpointRevision: input.EndpointRevision, ProfileID: input.ProfileID, ProfileRevision: input.ProfileRevision, TestOnly: true})
 	return m.Submit(ctx, actor, Submission{PluginID: "modbus", DeviceID: endpointID, Operation: "connect", Parameters: raw, IdempotencyKey: input.IdempotencyKey, TimeoutSeconds: input.TimeoutSeconds})
 }
 
@@ -150,7 +169,7 @@ func (m *Manager) executeModbusConnect(ctx context.Context, job Job, p Plugin) (
 		}
 		tty = record.EndpointID
 	}
-	if len(m.modbusSessions) >= 4 {
+	if len(m.modbusSessions) >= m.modbusSettings.MaxSessions {
 		m.mu.Unlock()
 		return protocol.ExecuteResult{}, ErrBusy
 	}
@@ -187,10 +206,10 @@ func (m *Manager) executeModbusConnect(ctx context.Context, job Job, p Plugin) (
 		_ = runner.Shutdown(context.Background())
 		return protocol.ExecuteResult{}, err
 	}
-	expires := m.now().Add(60 * time.Minute)
+	expires := m.now().Add(time.Duration(m.modbusSettings.SessionLeaseSeconds) * time.Second)
 	runCtx, cancel := context.WithDeadline(context.Background(), expires)
 	claim.cancel = cancel
-	s := &modbusSession{id: id, endpointID: e.ID, profileID: profile.ID, owner: job.OwnerID, kind: kind, credential: credential, endpointRevision: e.Revision, profileRevision: profile.Revision, expires: expires, lastAccess: m.now(), socket: filepath.Join(root, "control.sock"), cancel: cancel, done: make(chan struct{}), claim: claim, events: []ModbusEvent{}, groups: parameters.Groups}
+	s := &modbusSession{id: id, endpointID: e.ID, profileID: profile.ID, owner: job.OwnerID, kind: kind, credential: credential, endpointRevision: e.Revision, profileRevision: profile.Revision, expires: expires, idleAfter: time.Duration(m.modbusSettings.IdleSeconds) * time.Second, lastAccess: m.now(), socket: filepath.Join(root, "control.sock"), cancel: cancel, done: make(chan struct{}), claim: claim, events: []ModbusEvent{}, groups: parameters.Groups}
 	_, err = m.db().ExecContext(ctx, `INSERT INTO modbus_sessions(id,endpoint_id,endpoint_revision,profile_id,profile_revision,owner_id,credential_kind,credential_id,started_at,expires_at,state) VALUES(?,?,?,?,?,?,?,?,?,?,'active')`, s.id, e.ID, e.Revision, profile.ID, profile.Revision, s.owner, kind, credential, m.now().Format(time.RFC3339Nano), expires.Format(time.RFC3339Nano))
 	if err != nil {
 		m.finishTransportLocked(claim, nil)
@@ -237,6 +256,17 @@ func (m *Manager) executeModbusConnect(ctx context.Context, job Job, p Plugin) (
 			return protocol.ExecuteResult{}, readyErr
 		}
 		return protocol.ExecuteResult{}, ErrUnavailable
+	}
+	if parameters.TestOnly {
+		m.stopModbusLocked(s, "test_completed")
+		m.mu.Unlock()
+		select {
+		case <-s.done:
+			value, _ := json.Marshal(map[string]any{"connection_test": "ready"})
+			return protocol.ExecuteResult{Status: "completed", Data: value}, nil
+		case <-ctx.Done():
+			return protocol.ExecuteResult{}, ctx.Err()
+		}
 	}
 	m.modbusWorkers.Add(1)
 	go m.monitorModbus(s)
@@ -306,7 +336,7 @@ func (m *Manager) monitorModbus(s *modbusSession) {
 			m.mu.Unlock()
 			return
 		}
-		if m.now().Sub(s.lastAccess) >= 5*time.Minute {
+		if m.now().Sub(s.lastAccess) >= s.idleAfter {
 			m.stopModbusLocked(s, "idle_timeout")
 			m.mu.Unlock()
 			return

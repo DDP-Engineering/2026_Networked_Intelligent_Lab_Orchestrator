@@ -35,7 +35,7 @@ func TestLoadModbusSourcePackage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load(Modbus) error = %v", err)
 	}
-	if loaded.Package.ID != "modbus" || len(loaded.Operations) != 1 || loaded.Operations[0].ID != "serve" {
+	if loaded.Package.ID != "modbus" || len(loaded.Operations) != 2 || loaded.Operations[0].ID != "connect" || loaded.Operations[1].ID != "serve" {
 		t.Fatalf("unexpected Modbus manifest: package=%q operations=%v", loaded.Package.ID, loaded.Operations)
 	}
 }

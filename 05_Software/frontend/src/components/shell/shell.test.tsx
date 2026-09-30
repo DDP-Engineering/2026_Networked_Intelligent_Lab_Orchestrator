@@ -205,6 +205,54 @@ afterEach(() => {
 });
 
 describe('the one compact top row', () => {
+  it('loads Core Modbus endpoints into named instrument navigation', async () => {
+    const admin = {
+      ...administrator,
+      permissions: [...administrator.permissions, 'bench.read', 'plugins.manage'],
+    };
+    const api = client(admin);
+    api.listPlugins = async () => [
+      {
+        id: 'modbus',
+        display_name: 'Modbus',
+        version: '0.12.0',
+        installed: true,
+        enabled: true,
+        mode: 'ask',
+        status: 'ready',
+        simulation: false,
+        operations: ['connect'],
+        devices: [],
+        error: '',
+        digest: '',
+      },
+    ];
+    api.listModbusEndpoints = async () => [
+      {
+        schema_version: 1,
+        id: 'tcp-a',
+        revision: 1,
+        name: 'Offline boiler',
+        transport: 'tcp',
+        resource_id: 'bus-a',
+        enabled: true,
+        presence: 'configured',
+        readiness: 'offline',
+        network: { host: '192.0.2.9', port: 502, unit_min: 1, unit_max: 4 },
+      },
+    ];
+    document.cookie = 'nilo_csrf=csrf-token-fixture';
+    renderInShell(<App client={api} apiMode="live" endpoint="http://127.0.0.1:8090" />);
+    await benchPage();
+    expect(await nav().findByRole('button', { name: 'Offline boiler' })).toBeVisible();
+    fireEvent.click(nav().getByRole('button', { name: 'Offline boiler' }));
+    expect(
+      await screen.findByText(
+        'The live register view will be available with the live-grid feature.',
+      ),
+    ).toBeVisible();
+  });
+
   it('hides stale instrument navigation while keeping open tabs until inventory recovers', async () => {
     const intervals: (() => void)[] = [];
     vi.spyOn(window, 'setInterval').mockImplementation((handler) => {

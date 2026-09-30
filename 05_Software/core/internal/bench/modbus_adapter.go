@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"regexp"
 
+	"nilo.local/nilo/internal/auth"
 	"nilo.local/nilo/internal/identity"
 	"nilo.local/nilo/internal/store/sqlite"
 )
@@ -26,6 +27,7 @@ type modbusConnectParameters struct {
 	ProfileID        string            `json:"profile_id"`
 	ProfileRevision  int64             `json:"profile_revision"`
 	Groups           []ModbusPollGroup `json:"groups"`
+	TestOnly         bool              `json:"test_only,omitempty"`
 }
 
 func modbusCanonicalSubmission(input Submission) (Submission, error) {
@@ -38,6 +40,9 @@ func modbusCanonicalSubmission(input Submission) (Submission, error) {
 	if err != nil {
 		return input, err
 	}
+	if p.TestOnly && len(p.Groups) != 0 {
+		return input, ErrInvalid
+	}
 	input.Parameters, _ = json.Marshal(p)
 	return input, nil
 }
@@ -48,6 +53,9 @@ func modbusValidateSubmission(ctx context.Context, m *Manager, actor identity.Ac
 	}
 	var p modbusConnectParameters
 	_ = json.Unmarshal(input.Parameters, &p)
+	if p.TestOnly && !actor.Has(auth.PermissionPluginsManage) {
+		return ErrForbidden
+	}
 	r := sqlite.NewModbusRepository(m.options.Database)
 	e, err := r.Endpoint(ctx, input.DeviceID)
 	if err != nil {

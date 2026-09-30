@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-df8cf7c1"
+
+title = "Refresh trusted Modbus adapter discovery"
+
+status = "retired"
+
+requirement = """
+When an administrator refreshes Modbus physical adapters, Core shall run bounded trusted metadata discovery without opening a serial descriptor and return reconciled named endpoint presence, retaining configured unplugged adapters and reporting discovery failures.
+"""
+
+verification = "Use a fake discovery runner and saved USB endpoints, request refresh as administrator and operator, and assert no transport open, bounded invocation, present/absent reconciliation, retained configuration, explicit failure and 403 for unauthorized callers."
+
+affected_paths = ["05_Software/core/internal/bench/modbus_discovery.go", "05_Software/core/internal/httpapi/modbus.go", "05_Software/frontend/src/api/modbus.ts", "05_Software/frontend/src/components/pages/ModbusPluginPage.tsx"]
+
+linked_tests = []
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = "Retired during MB-06 build: the user's only-TCP direction excludes USB adapter controls. Existing Core periodic RTU discovery remains untouched; this task adds no explicit RTU/USB refresh action."
+
+created = 2026-09-30
+updated = 2026-09-30

@@ -34,6 +34,7 @@ import type { WireGuardStatus, WireGuardChange } from '../../api/wireguard';
 import { APPLIANCE_PATH, type ApplianceMetadata } from '../../api/appliance';
 import type { Resource } from '../../api/resource';
 import type { InstrumentPlugin } from '../../api/bench';
+import type { ModbusEndpoint } from '../../api/modbus';
 import {
   mayManageTokens,
   mayManageUsers,
@@ -43,6 +44,8 @@ import { useTranslate } from '../../i18n/languages';
 import { AuthenticationPage } from '../AuthenticationPage';
 import { PowerConfirmation } from '../PowerConfirmation';
 import { CameraPluginPage } from '../pages/CameraPluginPage';
+import { ModbusPluginPage } from '../pages/ModbusPluginPage';
+import { ModbusWorkspacePage } from '../pages/ModbusWorkspacePage';
 import { SerialWorkspacePage } from '../pages/SerialWorkspacePage';
 import { CameraWorkspacePage } from '../pages/CameraWorkspacePage';
 import { PluginsPage } from '../pages/PluginsPage';
@@ -124,6 +127,7 @@ export function AppShell({
     null,
   );
   const [pluginInventoryFresh, setPluginInventoryFresh] = useState(false);
+  const [modbusEndpoints, setModbusEndpoints] = useState<ModbusEndpoint[]>([]);
   const refreshPluginInventory = useCallback(async () => {
     try {
       setPluginInventory(await client.listPlugins(credential));
@@ -141,6 +145,25 @@ export function AppShell({
       window.clearInterval(timer);
     };
   }, [refreshPluginInventory]);
+  useEffect(() => {
+    if (!session.permissions.includes('bench.read') || !client.listModbusEndpoints)
+      return;
+    let abandoned = false;
+    const refresh = async () => {
+      try {
+        const endpoints = await client.listModbusEndpoints!(credential);
+        if (!abandoned) setModbusEndpoints(endpoints);
+      } catch {
+        // Preserve the last known definitions across a transient Core failure.
+      }
+    };
+    void refresh();
+    const timer = window.setInterval(() => void refresh(), 5000);
+    return () => {
+      abandoned = true;
+      window.clearInterval(timer);
+    };
+  }, [client, credential, session.permissions]);
   useEffect(() => {
     let abandoned = false;
     const refresh = async () => {
@@ -194,8 +217,14 @@ export function AppShell({
   );
   const pages = useMemo(
     () =>
-      buildPages(session, reportedIntegrations, reportedDevices, pluginInventory ?? []),
-    [session, reportedIntegrations, reportedDevices, pluginInventory],
+      buildPages(
+        session,
+        reportedIntegrations,
+        reportedDevices,
+        pluginInventory ?? [],
+        modbusEndpoints,
+      ),
+    [session, reportedIntegrations, reportedDevices, pluginInventory, modbusEndpoints],
   );
   const pageIds = useMemo(
     () =>
@@ -480,6 +509,21 @@ export function AppShell({
   );
 
   function renderPage(page: PageDescriptor) {
+    if (page.modbusView) {
+      const endpoint = modbusEndpoints.find(
+        (item) => item.id === page.modbusEndpointID,
+      );
+      return (
+        <ModbusWorkspacePage
+          key={page.id}
+          client={client}
+          credential={credential}
+          endpoint={endpoint}
+          view={page.modbusView}
+          onSessionEnded={onSessionEnded}
+        />
+      );
+    }
     if (page.serialDeviceID && page.serialView) {
       const device = pluginInventory
         ?.find((plugin) => plugin.id === 'serial')
@@ -640,6 +684,22 @@ export function AppShell({
           onOpenActivity={
             mayReadActivity(session)
               ? () => openActivity({ component: 'bench', target: page.pluginId })
+              : undefined
+          }
+        />
+      );
+    }
+    if (page.pluginId === 'modbus') {
+      return (
+        <ModbusPluginPage
+          client={client}
+          credential={credential}
+          session={session}
+          onSessionEnded={onSessionEnded}
+          onPluginsChanged={refreshPluginInventory}
+          onOpenActivity={
+            mayReadActivity(session)
+              ? () => openActivity({ component: 'bench', target: 'modbus' })
               : undefined
           }
         />

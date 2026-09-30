@@ -44,30 +44,32 @@ type execution struct {
 
 // Manager serializes admission and lifecycle changes while scheduling independent jobs.
 type Manager struct {
-	options          Options
-	mu               sync.Mutex
-	active           map[string]execution
-	cancel           context.CancelFunc
-	wake             chan struct{}
-	done             chan struct{}
-	hardwareDone     chan struct{}
-	workers          sync.WaitGroup
-	artifacts        artifact.Store
-	closed           bool
-	settings         OperatingSettingsValues
-	settingsRevision int64
-	cameras          map[string]*cameraSession
-	cameraWorkers    sync.WaitGroup
-	cameraGates      sync.Map // device ID to *sync.Mutex; same-camera commands serialize outside Manager.mu
-	serials          map[string]*serialSession
-	serialWorkers    sync.WaitGroup
-	modbusSessions   map[string]*modbusSession
-	modbusWorkers    sync.WaitGroup
-	transports       map[string]*transportLease
-	transportWorkers sync.WaitGroup
-	serialReads      map[string]int
-	cameraReads      map[string]int
-	cameraSpace      func(string) (int64, int64, error)
+	options                Options
+	mu                     sync.Mutex
+	active                 map[string]execution
+	cancel                 context.CancelFunc
+	wake                   chan struct{}
+	done                   chan struct{}
+	hardwareDone           chan struct{}
+	workers                sync.WaitGroup
+	artifacts              artifact.Store
+	closed                 bool
+	settings               OperatingSettingsValues
+	settingsRevision       int64
+	cameras                map[string]*cameraSession
+	cameraWorkers          sync.WaitGroup
+	cameraGates            sync.Map // device ID to *sync.Mutex; same-camera commands serialize outside Manager.mu
+	serials                map[string]*serialSession
+	serialWorkers          sync.WaitGroup
+	modbusSessions         map[string]*modbusSession
+	modbusSettings         ModbusSettingsValues
+	modbusSettingsRevision int64
+	modbusWorkers          sync.WaitGroup
+	transports             map[string]*transportLease
+	transportWorkers       sync.WaitGroup
+	serialReads            map[string]int
+	cameraReads            map[string]int
+	cameraSpace            func(string) (int64, int64, error)
 }
 
 // New starts one manager after app startup reconciliation; never share its data directory with another server.
@@ -106,6 +108,10 @@ func New(options Options) (*Manager, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	m := &Manager{options: options, active: make(map[string]execution), cancel: cancel, wake: make(chan struct{}, 1), done: make(chan struct{}), artifacts: storage}
 	if err := m.loadOperatingSettings(ctx); err != nil {
+		cancel()
+		return nil, err
+	}
+	if err := m.loadModbusSettings(ctx); err != nil {
 		cancel()
 		return nil, err
 	}

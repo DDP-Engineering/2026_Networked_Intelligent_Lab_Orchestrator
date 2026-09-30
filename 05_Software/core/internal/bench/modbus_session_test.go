@@ -52,6 +52,18 @@ func TestModbusConnectValidation(t *testing.T) {
 	}
 }
 
+func TestModbusConnectionTestUsesCanonicalReadFreeIntent(t *testing.T) {
+	input := Submission{PluginID: "modbus", Operation: "connect", DeviceID: "gateway", IdempotencyKey: "modbus-test-one", Parameters: json.RawMessage(`{"endpoint_revision":1,"profile_id":"profile-gateway","profile_revision":2,"test_only":true}`)}
+	canonical, err := modbusCanonicalSubmission(input)
+	if err != nil || !json.Valid(canonical.Parameters) {
+		t.Fatalf("test intent: %s %v", canonical.Parameters, err)
+	}
+	input.Parameters = json.RawMessage(`{"endpoint_revision":1,"profile_id":"profile-gateway","profile_revision":2,"test_only":true,"groups":[{"id":"holding","interval_ms":1000,"requests":[{"function":3,"unit":1,"address":10,"count":1}]}]}`)
+	if _, err := modbusCanonicalSubmission(input); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("test with polling admitted: %v", err)
+	}
+}
+
 func TestModbusConnectPinsReadPlanForApproval(t *testing.T) {
 	input := Submission{PluginID: "modbus", Operation: "connect", DeviceID: "gateway", IdempotencyKey: "modbus-plan-key", Parameters: json.RawMessage(`{"endpoint_revision":1,"profile_id":"profile-gateway","profile_revision":2,"groups":[{"id":"holding","interval_ms":1000,"requests":[{"function":3,"unit":1,"address":10,"count":2,"values":[]}]}]}`)}
 	canonical, err := modbusCanonicalSubmission(input)

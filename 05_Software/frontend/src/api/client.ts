@@ -20,6 +20,21 @@ import {
   type PluginAction,
 } from './bench';
 import {
+  parseModbusEndpoints,
+  parseModbusEndpoint,
+  parseModbusProfiles,
+  parseModbusProfile,
+  parseModbusSettings,
+  parseModbusDefinitions,
+  parseModbusSession,
+  type ModbusEndpoint,
+  type ModbusProfile,
+  type ModbusSettingsValues,
+  type ModbusSettingsState,
+  type ModbusDefinitionSummary,
+  type ModbusSessionStatus,
+} from './modbus';
+import {
   WIREGUARD_PATH,
   parseWireGuardStatus,
   type WireGuardStatus,
@@ -233,6 +248,38 @@ export interface NewToken {
 /** The authenticated Bench Core operations the GUI can perform. */
 export interface BenchCoreClient {
   readonly baseUrl: string;
+  listModbusEndpoints?(credential: Credential): Promise<ModbusEndpoint[]>;
+  saveModbusEndpoint?(
+    credential: Credential,
+    expectedRevision: number,
+    endpoint: ModbusEndpoint,
+  ): Promise<ModbusEndpoint>;
+  listModbusProfiles?(credential: Credential): Promise<ModbusProfile[]>;
+  saveModbusProfile?(
+    credential: Credential,
+    expectedRevision: number,
+    profile: ModbusProfile,
+  ): Promise<ModbusProfile>;
+  getModbusSettings?(credential: Credential): Promise<ModbusSettingsState>;
+  saveModbusSettings?(
+    credential: Credential,
+    expectedRevision: number,
+    settings: ModbusSettingsValues,
+  ): Promise<ModbusSettingsState>;
+  testModbusConnection?(
+    credential: Credential,
+    endpointId: string,
+    endpointRevision: number,
+    profileId: string,
+    profileRevision: number,
+    key: string,
+  ): Promise<InstrumentJob>;
+  listModbusMaps?(credential: Credential): Promise<ModbusDefinitionSummary[]>;
+  listModbusWorkspaces?(credential: Credential): Promise<ModbusDefinitionSummary[]>;
+  getModbusSession?(
+    credential: Credential,
+    endpointId: string,
+  ): Promise<ModbusSessionStatus>;
   listPlugins(credential: Credential): Promise<InstrumentPlugin[]>;
   pluginAction(
     credential: Credential,
@@ -568,6 +615,87 @@ export function createBenchCoreClient(
 
   return {
     baseUrl,
+    listModbusEndpoints: (credential) =>
+      exchange({
+        path: '/api/v1/modbus/endpoints',
+        credential,
+        parse: parseModbusEndpoints,
+      }),
+    saveModbusEndpoint: (credential, expectedRevision, endpoint) =>
+      exchange({
+        path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpoint.id)}`,
+        credential,
+        method: 'PUT',
+        body: { expected_revision: expectedRevision, endpoint },
+        parse: parseModbusEndpoint,
+      }),
+    listModbusProfiles: (credential) =>
+      exchange({
+        path: '/api/v1/modbus/profiles',
+        credential,
+        parse: parseModbusProfiles,
+      }),
+    saveModbusProfile: (credential, expectedRevision, profile) =>
+      exchange({
+        path: `/api/v1/modbus/profiles/${encodeURIComponent(profile.id)}`,
+        credential,
+        method: 'PUT',
+        body: { expected_revision: expectedRevision, profile },
+        parse: parseModbusProfile,
+      }),
+    getModbusSettings: (credential) =>
+      exchange({
+        path: '/api/v1/modbus/settings',
+        credential,
+        parse: parseModbusSettings,
+      }),
+    saveModbusSettings: (credential, expectedRevision, settings) =>
+      exchange({
+        path: '/api/v1/modbus/settings',
+        credential,
+        method: 'PUT',
+        body: { expected_revision: expectedRevision, settings },
+        parse: parseModbusSettings,
+      }),
+    testModbusConnection: (
+      credential,
+      endpointId,
+      endpointRevision,
+      profileId,
+      profileRevision,
+      key,
+    ) =>
+      exchange({
+        path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/test`,
+        credential,
+        method: 'POST',
+        body: {
+          endpoint_revision: endpointRevision,
+          profile_id: profileId,
+          profile_revision: profileRevision,
+          idempotency_key: key,
+          timeout_seconds: 30,
+        },
+        parse: parseInstrumentJob,
+      }),
+    listModbusMaps: (credential) =>
+      exchange({
+        path: '/api/v1/modbus/maps',
+        credential,
+        parse: parseModbusDefinitions('maps'),
+      }),
+    listModbusWorkspaces: (credential) =>
+      exchange({
+        path: '/api/v1/modbus/workspaces',
+        credential,
+        parse: parseModbusDefinitions('workspaces'),
+      }),
+    getModbusSession: (credential, endpointId) =>
+      exchange({
+        path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/session`,
+        credential,
+        parse: parseModbusSession,
+      }),
     listPlugins: (credential) =>
       exchange({ path: '/api/v1/plugins', credential, parse: parsePlugins }),
     pluginAction: (credential, id, action, mode) =>

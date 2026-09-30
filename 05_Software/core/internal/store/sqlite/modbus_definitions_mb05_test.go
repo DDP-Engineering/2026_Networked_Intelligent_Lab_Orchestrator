@@ -45,7 +45,7 @@ func TestModbusMigrationBackfillsExistingProfileRevision(t *testing.T) {
 	if err = configureConnection(t.Context(), earlier); err != nil {
 		t.Fatal(err)
 	}
-	if err = applyMigrationSet(t.Context(), earlier, migrations[:len(migrations)-1]); err != nil {
+	if err = applyMigrationSet(t.Context(), earlier, migrationsUpToAndIncluding(t, "025_modbus_sessions")); err != nil {
 		t.Fatal(err)
 	}
 	endpoint := modbus.Endpoint{SchemaVersion: 1, ID: "peer", Revision: 1, Name: "Peer", Transport: "tcp", ResourceID: "bus", Presence: "configured", Readiness: "offline", Network: &modbus.Network{Host: "peer.local", Port: 502, UnitMax: 255}}

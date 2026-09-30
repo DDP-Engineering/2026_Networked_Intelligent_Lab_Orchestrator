@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-7bed9136"
+
+title = "Test a Modbus connection through finite policy admission"
+
+status = "active"
+
+requirement = """
+When an administrator tests a saved Modbus endpoint/profile revision, Core shall submit a finite policy-controlled connection probe that reports its terminal outcome and releases its transport claim without creating a persistent live session, reading registers or writing values.
+"""
+
+verification = "With a fake supervised runner and Ask/Auto policies, submit a revision-pinned probe, assert pending approval or bounded completion, no read/write calls, no retained live session, released claim after success/failure/cancel, and stale-revision or unauthorized rejection."
+
+affected_paths = ["05_Software/core/internal/integration/manifest/loader_test.go", "05_Software/core/internal/bench/modbus_adapter.go", "05_Software/core/internal/bench/modbus_session.go", "05_Software/core/internal/httpapi/modbus.go", "05_Software/core/internal/mcp/modbus.go", "05_Software/core/cmd/nilo/modbus.go", "05_Software/frontend/src/api/client.ts", "05_Software/frontend/src/components/pages/ModbusPluginPage.tsx", "05_Software/core/internal/bench/modbus_session_test.go", "05_Software/core/internal/bench/modbus_lifecycle_test.go", "05_Software/core/internal/httpapi/modbus_test.go", "05_Software/core/internal/mcp/bench_test.go", "05_Software/core/cmd/nilo/modbus_test.go", "05_Software/frontend/src/components/pages/ModbusPluginPage.test.tsx"]
+
+linked_tests = ["05_Software/core/internal/integration/manifest/loader_test.go", "05_Software/core/internal/bench/modbus_session_test.go", "05_Software/core/internal/bench/modbus_lifecycle_test.go", "05_Software/core/internal/httpapi/modbus_test.go", "05_Software/core/internal/mcp/bench_test.go", "05_Software/core/cmd/nilo/modbus_test.go", "05_Software/frontend/src/components/pages/ModbusPluginPage.test.tsx"]
+
+
+spec = "specs/REQ-FUNC-7bed9136.md"
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-30
+updated = 2026-09-30

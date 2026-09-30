@@ -48,6 +48,8 @@ export interface PageDescriptor {
   cameraDeviceID?: string;
   serialDeviceID?: string;
   serialView?: 'live' | 'sessions';
+  modbusEndpointID?: string;
+  modbusView?: 'live' | 'sessions' | 'maps' | 'definitions';
   /** Camera workspace owned by this destination. */
   cameraView?:
     'overview' | 'snapshot' | 'live' | 'recordings' | 'settings' | 'administration';
@@ -181,6 +183,15 @@ function readyManagedDevices(plugin: InstrumentPlugin | undefined): InstrumentDe
   );
 }
 
+/** The Core-owned fields needed to route a saved Modbus endpoint. */
+export interface ModbusNavEndpoint {
+  id: string;
+  name: string;
+  enabled: boolean;
+  presence: string;
+  readiness: string;
+}
+
 /**
  * Build the navigation for one session and one reported inventory.
  *
@@ -195,9 +206,10 @@ export function buildPages(
   integrations: readonly BenchCoreIntegration[],
   devices: readonly BenchCoreDevice[] = [],
   plugins: readonly InstrumentPlugin[] = [],
+  modbusEndpoints: readonly ModbusNavEndpoint[] = [],
 ): PageDescriptor[] {
   const instruments: PageDescriptor[] = integrations
-    .filter((integration) => !['camera', 'serial'].includes(integration.id))
+    .filter((integration) => !['camera', 'serial', 'modbus'].includes(integration.id))
     .filter((integration) => {
       const plugin = plugins.find((item) => item.id === integration.id);
       return (
@@ -297,6 +309,67 @@ export function buildPages(
           ]),
         ];
 
+  const modbus = plugins.find((plugin) => plugin.id === 'modbus');
+  const canReadModbus = session?.permissions.includes('bench.read') ?? false;
+  const modbusPages: PageDescriptor[] =
+    !canReadModbus || (!modbus && modbusEndpoints.length === 0)
+      ? []
+      : [
+          {
+            id: integrationPageId('modbus'),
+            cluster: 'instruments',
+            icon: 'instrument',
+            title: modbus?.display_name ?? 'Modbus',
+            navigationOnly: true,
+            available: true,
+          },
+          ...(modbus?.installed && modbus.enabled
+            ? modbusEndpoints.filter((endpoint) => endpoint.enabled)
+            : []
+          ).flatMap((endpoint): PageDescriptor[] => [
+            {
+              id: `modbus:${endpoint.id}`,
+              parentId: integrationPageId('modbus'),
+              cluster: 'instruments',
+              icon: 'instrument',
+              title: endpoint.name,
+              overviewTitleKey: 'modbus.realtime',
+              modbusEndpointID: endpoint.id,
+              modbusView: 'live',
+              available: true,
+            },
+            {
+              id: `modbus:${endpoint.id}:sessions`,
+              parentId: `modbus:${endpoint.id}`,
+              cluster: 'instruments',
+              icon: 'instrument',
+              titleKey: 'modbus.sessions',
+              modbusEndpointID: endpoint.id,
+              modbusView: 'sessions',
+              available: true,
+            },
+            {
+              id: `modbus:${endpoint.id}:maps`,
+              parentId: `modbus:${endpoint.id}`,
+              cluster: 'instruments',
+              icon: 'instrument',
+              titleKey: 'modbus.maps',
+              modbusEndpointID: endpoint.id,
+              modbusView: 'maps',
+              available: true,
+            },
+          ]),
+          {
+            id: 'modbus:definitions',
+            parentId: integrationPageId('modbus'),
+            cluster: 'instruments',
+            icon: 'instrument',
+            titleKey: 'modbus.definitions',
+            modbusView: 'definitions',
+            available: true,
+          },
+        ];
+
   const canReadUsers = mayReadUsers(session);
   const canReadTokens = mayReadTokens(session);
   const core = CORE_PAGES.filter((page) => {
@@ -325,8 +398,8 @@ export function buildPages(
           ...plugins
             .filter(
               (plugin) =>
-                plugin.installed &&
-                (!['camera', 'serial'].includes(plugin.id) ||
+                (plugin.installed || plugin.id === 'modbus') &&
+                (!['camera', 'serial', 'modbus'].includes(plugin.id) ||
                   (session?.role === 'administrator' &&
                     session.permissions.includes('plugins.manage'))),
             )
@@ -342,7 +415,14 @@ export function buildPages(
         ]
       : [page],
   );
-  return [BENCH_PAGE, ...cameraPages, ...serialPages, ...instruments, ...corePages];
+  return [
+    BENCH_PAGE,
+    ...cameraPages,
+    ...serialPages,
+    ...modbusPages,
+    ...instruments,
+    ...corePages,
+  ];
 }
 
 /** Find one page in a built navigation. */

@@ -202,3 +202,88 @@ describe('physical Camera navigation', () => {
     ]);
   });
 });
+
+describe('Modbus endpoint navigation', () => {
+  const admin: BenchCoreSession = {
+    apiVersion: 'nilo.http/1',
+    username: 'admin',
+    role: 'administrator',
+    permissions: ['plugins.manage', 'bench.read'],
+    credential: 'session',
+    csrfToken: 'csrf',
+  };
+  const plugin = {
+    id: 'modbus',
+    display_name: 'Modbus',
+    version: '0.12.0',
+    installed: true,
+    enabled: true,
+    mode: 'ask' as const,
+    status: 'ready',
+    simulation: false,
+    operations: ['connect'],
+    devices: [],
+    error: '',
+    digest: '',
+  };
+  const endpoint = {
+    schema_version: 1,
+    id: 'tcp-a',
+    revision: 1,
+    name: 'Boiler controller',
+    transport: 'tcp',
+    resource_id: 'bus-a',
+    enabled: true,
+    presence: 'configured',
+    readiness: 'offline',
+    network: { host: '192.0.2.9', port: 502, unit_min: 1, unit_max: 4 },
+  };
+
+  it('keeps a configured offline target and its three named pages visible', () => {
+    const pages = buildPages(admin, [], [], [plugin], [endpoint]);
+    expect(pages.find((page) => page.id === integrationPageId('modbus'))).toMatchObject(
+      {
+        navigationOnly: true,
+        cluster: 'instruments',
+      },
+    );
+    expect(pages.find((page) => page.id === 'modbus:tcp-a')).toMatchObject({
+      title: 'Boiler controller',
+      modbusEndpointID: 'tcp-a',
+      modbusView: 'live',
+    });
+    expect(pages.find((page) => page.id === 'modbus:tcp-a:sessions')).toMatchObject({
+      modbusView: 'sessions',
+    });
+    expect(pages.find((page) => page.id === 'modbus:tcp-a:maps')).toMatchObject({
+      modbusView: 'maps',
+    });
+  });
+
+  it('retains definition access without an installed plugin and hides administration from readers', () => {
+    const operator = {
+      ...admin,
+      role: 'operator' as const,
+      permissions: ['bench.read'],
+    };
+    const pages = buildPages(
+      operator,
+      [],
+      [],
+      [{ ...plugin, installed: false, enabled: false }],
+      [endpoint],
+    );
+    expect(pages.some((page) => page.id === 'modbus:tcp-a')).toBe(false);
+    expect(pages.some((page) => page.id === 'modbus:definitions')).toBe(true);
+    expect(pages.some((page) => page.id === 'plugins:modbus')).toBe(false);
+    expect(
+      buildPages(
+        admin,
+        [],
+        [],
+        [{ ...plugin, installed: false, enabled: false }],
+        [endpoint],
+      ).some((page) => page.id === 'plugins:modbus'),
+    ).toBe(true);
+  });
+});
