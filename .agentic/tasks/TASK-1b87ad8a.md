@@ -159,6 +159,8 @@ Expected files (frontend prefix `05_Software/frontend/`): `src/App.tsx`, `src/Ap
 - 2026-10-01 validate continuation at clean `fb4a38c`: Re-read all 13 active linked requirements, disclosure spec, GUI knowledge and shell browser journey; no new ticket-owned candidate change identified. Evolution refreshed: same 120 integrated paths (31 added, 85 modified, 4 removed), including incoming unrelated CI/tooling/settings. Appliance prerequisite exit 2: no Docker/Podman executable; browser and viewport observations still unavailable. Advisory `check --task TASK-1b87ad8a --strict` without `--run` exit 1: zero errors, 30 warnings and four notes, with the same three incoming `.gitea` outside-layout warnings promoted. No browser substitute or product edit; full final `--strict --run` remains owed. Stay blocked in validate.
 - 2026-10-01 validate continuation at clean `34a2db9`: Re-read all 13 active requirement files, disclosure spec, GUI knowledge and shell browser journey; browser-specific clauses remain unobserved. Refreshed evolution: 120 integrated paths (31 added, 85 modified, 4 removed), including unrelated CI/tooling/settings; no new ticket-owned path or product edit. Appliance prerequisite exit 2 without Docker/Podman; real-browser and layout proof unavailable. Advisory `check --task TASK-1b87ad8a --strict` without `--run` exit 1: zero errors, 30 warnings, four unrelated manual notes and three promoted incoming `.gitea` outside-layout findings. Other findings are unrelated stale path, sidecars, deliver checklists and incoming uncovered sources. Full final `--strict --run` remains owed on the final tree after policy reconciliation. Stay blocked in validate.
 
+- 2026-10-01 validate continuation at clean `47364c8`: Re-read all 13 active linked requirements, disclosure spec, GUI knowledge and shell browser journey; no new ticket-owned candidate change. Evolution refreshed: 120 integrated paths (31 added, 85 modified, 4 removed), including unrelated tooling/settings/CI. Appliance prerequisite exit 2 (Docker/Podman absent), so browser and viewport observations remain outstanding. Advisory strict check without `--run` exit 1: zero errors, 30 warnings, four unrelated manual notes and three promoted incoming `.gitea` outside-layout findings. No browser substitute or product edit; final full `--strict --run` remains owed on final tree after layout-policy reconciliation. Remain blocked in validate.
+
 ## Rulings
 
 
@@ -166,7 +168,7 @@ Expected files (frontend prefix `05_Software/frontend/`): `src/App.tsx`, `src/Ap
 
 current: validate
 status: blocked
-next: On a Docker/Podman-capable host run appliance-browser/layout proof; coordinate unrelated .gitea layout-policy reconciliation and rerun final strict gate on the final tree.
+next: On a Docker/Podman-capable host run appliance-browser/layout proof; coordinate unrelated .gitea layout-policy reconciliation and rerun final strict --run on the final tree.
 must_read: .agentic/steps/5_validate.md; .agentic/tasks/TASK-1b87ad8a.md; .agentic/context/environment.md; 05_Software/frontend/e2e/shell.spec.ts; .agentic/knowledge/gui-foundation.md
 blockers: No Docker/Podman for browser/layout observation. Advisory strict exit 1 on three incoming .gitea outside-layout warnings; final full gate remains owed on current tree.
 
@@ -175,7 +177,7 @@ blockers: No Docker/Podman for browser/layout observation. Advisory strict exit 
 stage: validate
 result: blocked
 current: validate
-changed: No product edits; clean 34a2db9 tree; evolution refreshed for integrated candidate.
+changed: No product edits; clean 47364c8 tree; evolution refreshed for integrated candidate.
 evidence: All 13 linked requirements and disclosure spec re-read; appliance prerequisite exit 2 (no engine); strict without run exit 1 (zero errors, 30 warnings, four notes; three promoted .gitea warnings). Earlier full tests predate this tree.
 issues: Browser/layout observation unavailable here; incoming .gitea layout warnings prevent strict success. Earlier static reviews approved; final full proof outstanding on current tree.
 next: Obtain appliance-browser observation on capable host, coordinate .gitea policy owner, then run final strict --run on final tree.
