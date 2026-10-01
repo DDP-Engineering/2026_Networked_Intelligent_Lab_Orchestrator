@@ -48,6 +48,7 @@ import { CameraWorkspacePage } from '../pages/CameraWorkspacePage';
 import { PluginsPage } from '../pages/PluginsPage';
 import { BenchPage } from '../pages/BenchPage';
 import { ActivityPage } from '../pages/ActivityPage';
+import { OperatingSettingsPage } from '../pages/OperatingSettingsPage';
 import { NetworkPage } from '../pages/NetworkPage';
 import { AboutPage, IntegrationPage } from '../pages/SimplePages';
 import { Icon } from './Icon';
@@ -367,6 +368,15 @@ export function AppShell({
       client.setActivityRetention(credential, settings),
     [client, credential],
   );
+  const readOperatingSettings = useCallback(
+    () => client.getOperatingSettings(credential),
+    [client, credential],
+  );
+  const saveOperatingSettings = useCallback(
+    (revision: number, settings: Parameters<typeof client.setOperatingSettings>[2]) =>
+      client.setOperatingSettings(credential, revision, settings),
+    [client, credential],
+  );
 
   /** A fixed page's name is translated; an integration's is what it reported. */
   const nameOf = (page: PageDescriptor): string =>
@@ -615,6 +625,24 @@ export function AppShell({
           )}
           readRetention={readRetention}
           saveRetention={saveRetention}
+        />
+      );
+    }
+    if (page.id === 'operating-settings') {
+      return (
+        <OperatingSettingsPage
+          read={readOperatingSettings}
+          save={saveOperatingSettings}
+          onOpenActivity={
+            mayReadActivity(session)
+              ? () =>
+                  openActivity({
+                    category: 'audit',
+                    component: 'platform',
+                    action: 'operating_settings.changed',
+                  })
+              : undefined
+          }
         />
       );
     }

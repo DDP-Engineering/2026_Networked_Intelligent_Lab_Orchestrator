@@ -2,6 +2,15 @@
 
 Project goals, architecture decisions, milestones, and implementation plans.
 
+- [Repository tools simplification](Tools_Simplification_Plan.md): six public
+  commands implemented, duplicate launchers consolidated and local gates passed;
+  retains the current stack and offline/acceptance boundaries. No AEGIS workflow.
+- [Go to Python backend migration](Go_to_Python_Migration_Plan.md): Python/FastAPI
+  Core, CLI and helper with uv and Ruff; staged parity, offline packaging and
+  cutover gates. Retains React; Camera and Serial are in scope, Sigrok is excluded.
+- [Modbus master/client plugin](Modbus_Plugin_Plan.md): RTU, TCP and RTU over TCP,
+  shared connection/workspace definitions and register maps, polling/write controls,
+  saved logs/search/exports, and ten implementation work packages for Codex.
 - [USB to Serial plugin](USB_to_Serial_Plugin_Plan.md): terminal, session
   approval, bounded RX/TX, saved logs and retention; implementation uses AEGIS,
   with physical Pi acceptance after the user supplies an adapter and requests deployment.

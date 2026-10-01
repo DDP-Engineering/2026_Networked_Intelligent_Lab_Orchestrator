@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"nilo.local/nilo/internal/auth"
@@ -99,6 +100,39 @@ func cameraCall(ctx context.Context, session *cameraSession, method, path string
 	return value, nil
 }
 
+func (m *Manager) cameraGate(id string) *sync.Mutex {
+	gate, _ := m.cameraGates.LoadOrStore(id, &sync.Mutex{})
+	return gate.(*sync.Mutex)
+}
+
+// cameraCallUnlocked releases the shared admission lock during runner I/O.
+// The caller must hold Manager.mu and the camera's gate on both sides.
+func (m *Manager) cameraCallUnlocked(ctx context.Context, session *cameraSession, method, path string, body any) ([]byte, error) {
+	m.mu.Unlock()
+	result, err := cameraCall(ctx, session, method, path, body)
+	m.mu.Lock()
+	return result, err
+}
+
+func (m *Manager) waitCameraReadyUnlocked(ctx context.Context, session *cameraSession) error {
+	m.mu.Unlock()
+	defer m.mu.Lock()
+	ready := time.NewTicker(100 * time.Millisecond)
+	defer ready.Stop()
+	for {
+		if _, err := cameraCall(ctx, session, "GET", "/status", nil); err == nil {
+			return nil
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-session.done:
+			return ErrUnavailable
+		case <-ready.C:
+		}
+	}
+}
+
 func (m *Manager) cameraSettings(ctx context.Context, id string) (int64, json.RawMessage, CameraRetention, error) {
 	_, err := m.db().ExecContext(ctx, `INSERT OR IGNORE INTO camera_workspace_settings(camera_id) VALUES(?)`, id)
 	if err != nil {
@@ -120,12 +154,15 @@ func (m *Manager) executeCameraCommand(ctx context.Context, job Job, p Plugin) (
 	if err != nil {
 		return protocol.ExecuteResult{}, err
 	}
+	id := job.Submission.DeviceID
+	gate := m.cameraGate(id)
+	gate.Lock()
+	defer gate.Unlock()
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if m.closed {
 		return protocol.ExecuteResult{}, ErrUnavailable
 	}
-	id := job.Submission.DeviceID
 	record, err := cameraRecord(ctx, m, id)
 	if err != nil || !record.Enabled || !record.Configured || record.Readiness != "ready" {
 		return protocol.ExecuteResult{}, ErrUnavailable
@@ -156,7 +193,7 @@ func (m *Manager) executeCameraCommand(ctx context.Context, job Job, p Plugin) (
 				activeStreams++
 			}
 		}
-		if activeStreams >= 2 {
+		if activeStreams >= m.settings.CameraStreams {
 			return protocol.ExecuteResult{}, ErrBusy
 		}
 		runner, err := m.processConfigured(p, id, 12*time.Second)
@@ -167,14 +204,15 @@ func (m *Manager) executeCameraCommand(ctx context.Context, job Job, p Plugin) (
 		if err = os.MkdirAll(root, 0700); err != nil {
 			return protocol.ExecuteResult{}, err
 		}
-		runCtx, cancel := context.WithTimeout(context.Background(), 56*time.Minute)
+		lifetime := time.Duration(m.settings.CameraLifetimeMinutes) * time.Minute
+		runCtx, cancel := context.WithTimeout(context.Background(), lifetime+time.Minute)
 		socket := filepath.Join(root, "control.sock")
 		transport := &http.Transport{DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
 			return (&net.Dialer{}).DialContext(ctx, "unix", socket)
 		}, MaxConnsPerHost: 2}
-		session = &cameraSession{owner: job.OwnerID, expires: time.Now().Add(55 * time.Minute), cancel: cancel, client: &http.Client{Transport: transport, Timeout: 12 * time.Second}, done: make(chan struct{})}
+		session = &cameraSession{owner: job.OwnerID, expires: m.now().Add(lifetime), cancel: cancel, client: &http.Client{Transport: transport, Timeout: 12 * time.Second}, done: make(chan struct{})}
 		m.cameras[id] = session
-		parameters, _ := json.Marshal(map[string]any{"workspace_directory": root, "hardware_identity": map[string]string{"vendor": record.Vendor, "product": record.Product, "serial": record.Serial, "port_path": record.PortPath}, "endpoint_id": record.EndpointID, "device_id": id, "display_name": record.DisplayName, "settings": settings})
+		parameters, _ := json.Marshal(map[string]any{"workspace_directory": root, "hardware_identity": map[string]string{"vendor": record.Vendor, "product": record.Product, "serial": record.Serial, "port_path": record.PortPath}, "endpoint_id": record.EndpointID, "device_id": id, "display_name": record.DisplayName, "settings": settings, "session_lifetime_seconds": int(lifetime.Seconds())})
 		m.cameraWorkers.Add(1)
 		go func(s *cameraSession) {
 			defer m.cameraWorkers.Done()
@@ -196,20 +234,9 @@ func (m *Manager) executeCameraCommand(ctx context.Context, job Job, p Plugin) (
 				m.mu.Unlock()
 			}
 		}(session)
-		ready := time.NewTicker(100 * time.Millisecond)
-		defer ready.Stop()
-		for {
-			if _, err = cameraCall(ctx, session, "GET", "/status", nil); err == nil {
-				break
-			}
-			select {
-			case <-ctx.Done():
-				cancel()
-				return protocol.ExecuteResult{}, ctx.Err()
-			case <-session.done:
-				return protocol.ExecuteResult{}, ErrUnavailable
-			case <-ready.C:
-			}
+		if err := m.waitCameraReadyUnlocked(ctx, session); err != nil {
+			cancel()
+			return protocol.ExecuteResult{}, err
 		}
 	}
 	if session == nil {
@@ -224,12 +251,12 @@ func (m *Manager) executeCameraCommand(ctx context.Context, job Job, p Plugin) (
 	var result []byte
 	switch command.Action {
 	case "start":
-		result, err = cameraCall(ctx, session, "GET", "/status", nil)
+		result, err = m.cameraCallUnlocked(ctx, session, "GET", "/status", nil)
 	case "settings":
 		if command.Revision != revision {
 			return protocol.ExecuteResult{}, ErrConflict
 		}
-		result, err = cameraCall(ctx, session, "POST", "/command", command)
+		result, err = m.cameraCallUnlocked(ctx, session, "POST", "/command", command)
 		if err == nil {
 			_, err = m.db().ExecContext(ctx, `UPDATE camera_workspace_settings SET revision=revision+1,settings_json=? WHERE camera_id=? AND revision=?`, string(command.Settings), id, revision)
 			if err != nil {
@@ -242,7 +269,7 @@ func (m *Manager) executeCameraCommand(ctx context.Context, job Job, p Plugin) (
 			return protocol.ExecuteResult{}, ErrConflict
 		}
 		if command.Action == "record_start" {
-			raw, readErr := cameraCall(ctx, session, "GET", "/status", nil)
+			raw, readErr := m.cameraCallUnlocked(ctx, session, "GET", "/status", nil)
 			if readErr != nil {
 				return protocol.ExecuteResult{}, readErr
 			}
@@ -268,12 +295,12 @@ func (m *Manager) executeCameraCommand(ctx context.Context, job Job, p Plugin) (
 		if err = m.reserveCameraMedia(ctx, id, job.OwnerID, job.ID, kind, reservation, limits); err != nil {
 			return protocol.ExecuteResult{}, err
 		}
-		result, err = cameraCall(ctx, session, "POST", "/command", map[string]any{"action": command.Action, "id": job.ID, "max_bytes": limits.VideoBytes, "max_seconds": limits.VideoSeconds})
+		result, err = m.cameraCallUnlocked(ctx, session, "POST", "/command", map[string]any{"action": command.Action, "id": job.ID, "max_bytes": limits.VideoBytes, "max_seconds": limits.VideoSeconds})
 		if err != nil {
 			_, _ = m.db().ExecContext(ctx, `UPDATE camera_media SET state='incomplete' WHERE id=?`, job.ID)
 		}
 	default:
-		result, err = cameraCall(ctx, session, "POST", "/command", command)
+		result, err = m.cameraCallUnlocked(ctx, session, "POST", "/command", command)
 		if err == nil && (command.Action == "controls" || command.Action == "reset_controls") {
 			_, err = m.db().ExecContext(ctx, `UPDATE camera_workspace_settings SET revision=revision+1 WHERE camera_id=?`, id)
 		}
@@ -281,10 +308,13 @@ func (m *Manager) executeCameraCommand(ctx context.Context, job Job, p Plugin) (
 			if err != nil {
 				session.cancel()
 			}
+			m.mu.Unlock()
 			select {
 			case <-session.done:
+				m.mu.Lock()
 				delete(m.cameras, id)
 			case <-ctx.Done():
+				m.mu.Lock()
 				session.cancel()
 				return protocol.ExecuteResult{}, ctx.Err()
 			}
@@ -304,6 +334,9 @@ func (m *Manager) CameraWorkspace(ctx context.Context, actor identity.Actor, id 
 	if !actor.Has(auth.PermissionBenchRead) || !cameraIDPattern.MatchString(id) {
 		return nil, ErrForbidden
 	}
+	gate := m.cameraGate(id)
+	gate.Lock()
+	defer gate.Unlock()
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if _, err := cameraRecord(ctx, m, id); err != nil {
@@ -327,7 +360,7 @@ func (m *Manager) CameraWorkspace(ctx context.Context, actor identity.Actor, id 
 			if session.owner != actor.User.ID {
 				result["state"] = "busy"
 			} else {
-				raw, callErr := cameraCall(ctx, session, "GET", "/status", nil)
+				raw, callErr := m.cameraCallUnlocked(ctx, session, "GET", "/status", nil)
 				if callErr == nil {
 					var live map[string]any
 					if json.Unmarshal(raw, &live) == nil {
@@ -407,6 +440,9 @@ func (m *Manager) StopCamera(ctx context.Context, actor identity.Actor, id, acti
 	if !cameraIDPattern.MatchString(id) || action != "stop" && action != "record_stop" {
 		return ErrInvalid
 	}
+	gate := m.cameraGate(id)
+	gate.Lock()
+	defer gate.Unlock()
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	session := m.cameras[id]
@@ -425,17 +461,20 @@ func (m *Manager) StopCamera(ctx context.Context, actor identity.Actor, id, acti
 	if err := m.record(ctx, actor, "camera."+action+"_requested", id, nil); err != nil {
 		return err
 	}
-	_, err := cameraCall(ctx, session, "POST", "/command", map[string]string{"action": action})
+	_, err := m.cameraCallUnlocked(ctx, session, "POST", "/command", map[string]string{"action": action})
 	if action == "stop" {
 		// A successful stop command lets Execute finish and flush its reply.
 		// Cancelling it here races that reply and incurs the supervisor grace wait.
 		if err != nil {
 			session.cancel()
 		}
+		m.mu.Unlock()
 		select {
 		case <-session.done:
+			m.mu.Lock()
 			delete(m.cameras, id)
 		case <-ctx.Done():
+			m.mu.Lock()
 			session.cancel()
 			return ctx.Err()
 		}

@@ -105,6 +105,7 @@ test('anchors Network in the lower cluster, not among the instruments', async ()
     'Network',
     'Authentication',
     'Activity',
+    'Nilo Settings',
     'About',
     'Inventory',
   ]);
@@ -234,7 +235,7 @@ test('narrows the navigation to a labeled rail on a small viewport without clipp
     page.locator(
       '.nav-lower > .nav-list > li > .nav-entry, .nav-lower > .nav-list > li > .nav-group-row > .nav-entry',
     ),
-  ).toHaveCount(6);
+  ).toHaveCount(7);
   await expect(
     page.locator('.nav-lower').getByRole('button', { name: 'Network', exact: true }),
   ).toBeVisible();

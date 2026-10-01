@@ -19,6 +19,12 @@ if [ "$#" -lt 1 ]; then
     printf '%s\n' "pass a command, for example: ./02_Tools/env/with-tools.sh go version" >&2
     exit 2
 fi
+case "$1" in
+    go)
+        [ -x "$go_bin/go" ] || { printf '%s\n' "repository-local Go is missing; run nilo-tools.sh setup tools" >&2; exit 1; }
+        shift
+        exec "$go_bin/go" "$@" ;;
+esac
 if [ ! -x "$go_bin/go" ] || [ ! -x "$uv_bin/uv" ]; then
     printf '%s\n' "repository-local tools are missing; run ./02_Tools/bootstrap/bootstrap.sh" >&2
     exit 1

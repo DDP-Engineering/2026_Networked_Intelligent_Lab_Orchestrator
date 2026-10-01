@@ -1,4 +1,10 @@
 import {
+  OPERATING_SETTINGS_PATH,
+  parseOperatingSettingsBody,
+  type OperatingSettingsState,
+  type OperatingSettingsValues,
+} from './operating-settings';
+import {
   parsePlugins,
   parsePlugin,
   parseInstrumentDevices,
@@ -400,6 +406,13 @@ export interface BenchCoreClient {
     credential: Credential,
     policy: PasswordPolicy,
   ): Promise<PasswordPolicy>;
+
+  getOperatingSettings(credential: Credential): Promise<OperatingSettingsState>;
+  setOperatingSettings(
+    credential: Credential,
+    revision: number,
+    settings: OperatingSettingsValues,
+  ): Promise<OperatingSettingsState>;
 
   signIn(username: string, password: string): Promise<BenchCoreSession>;
   currentSession(credential: Credential): Promise<BenchCoreSession>;
@@ -925,6 +938,21 @@ export function createBenchCoreClient(
           require_special: policy.requireSpecial,
         },
         parse: parsePasswordPolicyBody,
+      }),
+
+    getOperatingSettings: (credential) =>
+      exchange({
+        path: OPERATING_SETTINGS_PATH,
+        credential,
+        parse: parseOperatingSettingsBody,
+      }),
+    setOperatingSettings: (credential, revision, settings) =>
+      exchange({
+        path: OPERATING_SETTINGS_PATH,
+        credential,
+        method: 'PUT',
+        body: { revision, settings },
+        parse: parseOperatingSettingsBody,
       }),
 
     signIn: (username, password) =>

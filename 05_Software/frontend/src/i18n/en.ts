@@ -1,4 +1,5 @@
 import { serialEn } from './serial';
+import { platformEn } from './platform';
 import { cameraEn } from './camera';
 /**
  * The English catalogue, and the key set every other language must satisfy.
@@ -11,6 +12,7 @@ import { cameraEn } from './camera';
 export const en = {
   ...cameraEn,
   ...serialEn,
+  ...platformEn,
   'message.info': 'Info',
   'message.warning': 'Warning',
   'message.error': 'Error',

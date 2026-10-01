@@ -21,14 +21,14 @@ opened: 2026-09-28
 
 ## Done checklist (current stage)
 
-- [x] diff reviewed against scope, requirements, design, error paths,
-      portability, security, and unrequested work
+- [ ] diff reviewed against scope, requirements, design, error paths,
+      portability, security, and unrequested work (integrated tree review outstanding)
 - [x] knowledge pages updated for every materially changed component
 - [ ] requirements re-read: status, prose, verification, paths, and links true (appliance-browser observations outstanding)
 - [ ] manual or inspection verification completed and recorded where applicable (browser inspection outstanding)
-- [x] final evolution report refreshed after the last candidate edit
-- [x] final `check --strict --run` result recorded truthfully after all edits
-- [x] remaining warnings and pre-existing failures explained
+- [ ] final evolution report refreshed after the last candidate edit
+- [ ] final `check --strict --run` result recorded truthfully after all edits
+- [ ] remaining warnings and pre-existing failures explained
 - [ ] `stage: deliver`
 
 ## Frame
@@ -144,6 +144,8 @@ Expected files (frontend prefix `05_Software/frontend/`): `src/App.tsx`, `src/Ap
 - 2026-09-28 validate round 2: Reviewed corrected Network Overview browser oracle and navigation/session/inventory implementation against frame, design and 13 linked active requirements, including permission filtering, failures, responsive disclosure, translations and security boundary. Both static verdicts approved for current candidate. Knowledge page already reconciled; requirement statuses/prose/paths/links inspected and consistent with source and component tests, but browser clauses in verification cannot yet be observed. No linked requirement declares a Manual:/Inspection: method; appliance-browser inspection specified by the verification prose remains outstanding. Evolution report refreshed: four expected modified paths since build anchor, no added/removed files; merge-base diff includes unrelated 02_Tools executable modes and integration runners, excluded. No ticket code changed in validation.
 - 2026-09-28 validate final local gate: `PATH=/tmp/nilo-git-isolated:$PATH python .agentic/aegis.py check --task TASK-1b87ad8a --strict --run` exit 0 (`test` and `lint` both ok; strict ok). The temporary Git wrapper leaves checkout commands in the conductor-provided worktree and clears its Git environment only for temporary fixture repositories; without it the Git fixture tests target the wrong repository. Linux configured suite does not execute frontend/browser tests; focused frontend 42 tests, lint/format and browser test listing passed in build. No Docker, Podman or Chromium executable on host: appliance-browser run and browser-specific layout observation cannot be claimed. Gate warnings: stale data requirement path, tracked fingerprint sidecars, other tasks' deliver checklists and uncovered serial/sigrok runners are unrelated; review-state warning reflects the as-yet-unrecorded verdict at gate time. Four unrelated manual notes. No candidate warning accepted. Validation remains blocked on required appliance-browser execution; no transition to deliver.
 - 2026-09-28 validate continuation: Re-read all 13 linked requirements, disclosure spec and GUI knowledge; source/browser verification clauses remain outstanding, with no declared Manual:/Inspection: method. `NILO_APPLIANCE_PREREQUISITE_ONLY=1 sh 02_Tools/tests/appliance/check.sh` exit 2: no Docker or Podman executable. Evolution refreshed after the unchanged candidate: four expected modified files, zero added/removed. No appliance browser run or layout observation possible here; retained prior strict result for unchanged candidate. Remain blocked in validate, without advancing or weakening required proof.
+- 2026-09-28 validate resume: On the same clean branch, appliance prerequisite still exits 2 (Docker/Podman absent); browser/layout acceptance remains unobserved. No candidate edits or new proof; validation stays blocked rather than substituting browser test listing or the earlier Linux strict gate.
+- 2026-09-29 validate integration reconciliation: Resolved ticket-owned working-tree conflict hunks in `e2e/shell.spec.ts`, `.agentic/knowledge/gui-foundation.md` and `CHANGELOG.md` by retaining the About/Inventory navigation changes alongside incoming administrator-only Nilo Settings and the 0.12.0 changelog release boundary. Updated the compact-rail administrator destination count to seven. Focused frontend pages/shell/SideNav tests 60/60, ESLint, Prettier and Playwright discovery (7 browser tests, listing only) passed; conflict-marker and scoped whitespace checks clean. Git index still reports these three paths unmerged: staging is forbidden without a Git instruction, so the conductor must reconcile index state. Two unrelated unmerged toolchain scripts are outside ticket scope. Appliance prerequisite again exits 2 without Docker/Podman; browser/layout observations remain unavailable. Earlier strict proof predates this integration, so final evolution and strict proof for this tree remain owed. Static verdicts from round 2 do not cover this integrated candidate; both reviews must be renewed after index reconciliation. Validation stays blocked.
 
 ## Rulings
 
@@ -152,20 +154,20 @@ Expected files (frontend prefix `05_Software/frontend/`): `src/App.tsx`, `src/Ap
 
 current: validate
 status: blocked
-next: On a host with Docker/Podman, execute 02_Tools/tests/appliance/check.sh for the current candidate and record browser/layout observations; resolve failures before finishing validate.
-must_read: .agentic/steps/5_validate.md; .agentic/tasks/TASK-1b87ad8a.md; .agentic/context/environment.md; 05_Software/frontend/e2e/shell.spec.ts
-blockers: Appliance prerequisite exit 2: no Docker/Podman on this host; browser proof and layout observations remain outstanding. Prior isolated strict Linux suite passed.
+next: Reconcile unmerged index outside executor Git authority, review integrated candidate and run browser proof on a host with Docker/Podman before final evolution and strict gate.
+must_read: .agentic/steps/5_validate.md; .agentic/tasks/TASK-1b87ad8a.md; .agentic/context/environment.md; 05_Software/frontend/e2e/shell.spec.ts; .agentic/knowledge/gui-foundation.md; CHANGELOG.md
+blockers: Three ticket-owned files have resolved working trees but unmerged index entries; two unrelated scripts also unmerged. No Docker/Podman for required browser/layout proof. Prior strict Linux suite predates integration.
 
 ## Stage report
 
 stage: validate
 result: blocked
 current: validate
-changed: No candidate changes; static round-2 review reconciled requirements and existing GUI knowledge.
-evidence: Evolution refreshed: 4 expected modified paths; appliance prerequisite exit 2 (no engine); prior isolated strict gate test and lint exit 0; focused frontend 42 tests, format and lint exit 0 from build; browser tests only listed.
-issues: Appliance browser/layout proof outstanding (no Docker/Podman on this host). Eight prior gate warnings: unrelated catalog/repository items plus review-state recorded after gate; four unrelated manual notes. See Log.
-next: Run appliance-stage browser proof on capable host, resolve failures, repeat final strict gate if candidate changes, then complete validate.
+changed: Resolved ticket-owned conflict markers in shell browser test, GUI knowledge and changelog working trees; integrated administrator settings in System navigation oracle.
+evidence: Focused frontend 60 tests, lint and format passed; 7 Playwright tests listed only; appliance prerequisite exit 2 (no engine). Prior strict gate predates integration.
+issues: Index unmerged (Git staging unauthorized); unrelated toolchain conflicts; no Docker/Podman browser proof. Review verdicts invalidated by integration; evolution and strict proof owed.
+next: Reconcile index under Git authority; review integrated tree, run appliance browser stage on capable host, then final evolution and strict gate.
 needs_user: yes
-spec_compliance: approved
-implementation_quality: approved
+spec_compliance: changes_required
+implementation_quality: changes_required
 review_round: 2

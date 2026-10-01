@@ -29,11 +29,12 @@ Run source contract tests first, then execute the real gates in order:
    through PowerShell and native Ubuntu 24.04 x86-64 through POSIX; explicitly
    install at most the selected engine from the shared host-bootstrap archive
    only when authorized (BE-03);
-3. materialize the 650 hash-locked upstream records, build the OCI image with
+3. materialize the 677 hash-locked upstream records, build the OCI image with
    `--network=none`, and preserve inventory/SBOM/licence/provenance logs,
    including the candidate-tree SHA-256 and base `HEAD` (BE-04);
 4. run `with-build-environment.ps1 test`, which disables container networking
-   and runs the headless browser gate (BE-05);
+   and runs the unprivileged offline suite; privileged appliance/browser
+   acceptance runs separately through `tests/appliance/check.sh` (BE-05);
 5. build the Sigrok worker for ARM64 and run `verify-arm64-abi.sh` against the
    authorized appliance (BE-06);
 6. export, run `verify-archive-failures.sh`, then run
@@ -67,3 +68,28 @@ already equal `HEAD`.
 The setup entry point never acquires repository content. Clone/LFS acquisition
 from a forge is deliberately a human prerequisite performed before these
 commands, and clean-clone verification accepts only an existing local path.
+
+The offline container mounts the checkout and Git metadata read-only, its
+isolated runtime cache and declared outputs writable, and optional kernel
+evidence read-only. On a Linux executor whose preflight tests require the host
+module inventory, explicitly set `NILO_KERNEL_MODULES_PATH=/lib/modules` for
+`with-build-environment.sh`, `verify-build-environment.sh` or the archive
+round-trip command. Record `uname -r` and the evidence path with the run log.
+An absent explicit directory is refused; ordinary runs add no kernel mount.
+This evidence mount grants no capabilities and does not run privileged
+appliance or browser acceptance.
+
+On WSL2, also set `NILO_WSL_HOST_VOLUME` to an existing directory on the
+observed Windows volume backing the distribution. An empty directory is enough:
+container checks receive it read-only at `/work/host-volume` and measure its
+filesystem free space. The same setting supports host-side restore preflight.
+Record the backing-volume observation and chosen evidence directory with the log.
+
+The isolated source copy retains archive control metadata (including the host
+bootstrap lock and current image manifest), excludes multipart payloads and
+joined runtime archives, and removes empty directories left by excluded
+runtime trees. No host directory is removed or changed by this copy step.
+
+The offline frontend suite uses two Vitest workers. It runs every component test
+with the normal five-second per-test deadline; bounded concurrency avoids CPU
+contention on the supported Windows/WSL2 development host.

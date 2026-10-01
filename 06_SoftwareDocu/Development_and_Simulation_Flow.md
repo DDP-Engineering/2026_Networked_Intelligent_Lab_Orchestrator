@@ -252,7 +252,7 @@ environment from already-acquired local Git/LFS content:
 
 ```powershell
 .\02_Tools\bootstrap\bootstrap-build-environment.ps1 -Distribution Ubuntu
-.\02_Tools\env\with-build-environment.ps1 test
+.\02_Tools\nilo-tools.ps1 test
 ```
 
 `-Distribution` uses the WSL registration name shown by
@@ -263,7 +263,7 @@ On native Ubuntu 24.04 x86-64, the equivalent direct path is:
 
 ```sh
 ./02_Tools/bootstrap/bootstrap-build-environment.sh
-./02_Tools/env/with-build-environment.sh test
+sh ./02_Tools/nilo-tools.sh test
 ```
 
 Setup never contacts a repository forge. Missing archive content requires a
@@ -279,7 +279,7 @@ One command starts the real Go backend under WSL2 and the browser interface on
 Windows:
 
 ```powershell
-.\02_Tools\scripts\nilo-dev.ps1 start
+.\02_Tools\nilo-tools.ps1 dev start
 ```
 
 Sign in with the fixed development administrator:
@@ -321,7 +321,7 @@ The intended daily flow, once the GUI and long-running server exist, is:
 1. Bootstrap or verify the pinned Windows and WSL2 tools from PowerShell:
 
    ```powershell
-   .\02_Tools\bootstrap\bootstrap-development.ps1
+   .\02_Tools\nilo-tools.ps1 setup tools
    ```
 
 2. If WSL or the selected distribution is not ready, review the reported host
@@ -352,7 +352,7 @@ manual: each component gets its own window, and you close it or press Ctrl+C
 there. The entry point never signals a process, so there is no `stop` command:
 
 ```powershell
-.\02_Tools\scripts\nilo-dev.ps1 start
+.\02_Tools\nilo-tools.ps1 dev start
 ```
 
 Each component is launched into **its own visible console window**. Its output
@@ -367,13 +367,13 @@ Bench Core answers on its loopback endpoint and the interface answers on its
 port. Select the topology explicitly when the defaults do not suit:
 
 ```powershell
-.\02_Tools\scripts\nilo-dev.ps1 start -Distribution Ubuntu-24.04 -Scenario unavailable -BackendPort 9090 -FrontendPort 5200
+.\02_Tools\nilo-tools.ps1 dev start -Distribution Ubuntu-24.04 -Scenario unavailable -BackendPort 9090 -FrontendPort 5200
 ```
 
 Check it again at any time:
 
 ```powershell
-.\02_Tools\scripts\nilo-dev.ps1 status
+.\02_Tools\nilo-tools.ps1 dev status
 ```
 
 `status` reports one of stopped, healthy, partially running, or port conflict,

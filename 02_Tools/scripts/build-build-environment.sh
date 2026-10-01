@@ -22,6 +22,7 @@ containerfile="$repo_root/02_Tools/containers/build/Containerfile"
 inputs="$repo_root/02_Tools/cache/containers/upstream"
 python3 "$repo_root/02_Tools/scripts/build_environment.py" validate-lock --lock "$lock"
 python3 "$repo_root/02_Tools/scripts/build_environment.py" validate-reconstruction --lock "$lock"
+python3 "$repo_root/02_Tools/scripts/locked_build_inputs.py" verify --repository-root "$repo_root" --lock "$lock"
 source_identity=$(python3 "$repo_root/02_Tools/scripts/build_environment.py" verify-source-state --repository-root "$repo_root")
 source_base_commit=$(printf '%s' "$source_identity" | python3 -c 'import json,sys; print(json.load(sys.stdin)["base_commit"])')
 source_tree_sha256=$(printf '%s' "$source_identity" | python3 -c 'import json,sys; print(json.load(sys.stdin)["tree_sha256"])')

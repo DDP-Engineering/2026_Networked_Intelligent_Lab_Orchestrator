@@ -25,7 +25,7 @@ select it by the stable identity recorded for that device. At present the mini
 PC is the available target and temporarily substitutes for the Raspberry Pi in
 tests that do not require ARM64 or Raspberry Pi-specific hardware.
 
-## 2. `ddp-remote` — Raspberry Pi ARM64 test device
+## 2. `ddp-remote` â€” Raspberry Pi ARM64 test device
 
 ### 2.1 Identity
 
@@ -76,8 +76,8 @@ Address it by name and the address change costs nothing:
 ssh dpasare@ddp-remote.local
 ```
 
-If multicast DNS does not resolve — some Windows configurations and most managed
-networks do not carry it — find the device by its hardware address instead. A
+If multicast DNS does not resolve â€” some Windows configurations and most managed
+networks do not carry it â€” find the device by its hardware address instead. A
 neighbour table only holds addresses recently spoken to, so sweep the bench
 subnet first, then match the prefix:
 
@@ -91,7 +91,7 @@ entirely.
 
 Two addresses mean both interfaces are up, and either will serve. One means only
 one is connected. None means the device is powered off, is on another subnet, or
-has had its interfaces replaced — check the third possibility before assuming
+has had its interfaces replaced â€” check the third possibility before assuming
 the first, because a replaced board keeps the hostname and loses these addresses.
 
 ### 2.3 What it is for
@@ -110,7 +110,7 @@ It is a personal bench device, not the certified hardware acceptance
 environment. A result observed here is a useful early signal and is **not**
 release evidence: its configuration is not recorded, version-controlled, or
 reproducible from this repository, so no one can rebuild the machine the
-observation was made on — including whoever made it. The hardware-in-the-loop
+observation was made on â€” including whoever made it. The hardware-in-the-loop
 level in section 9 of the development flow still requires a controlled device
 and real equipment. Recording an observation from this device in a task journal
 is fine; presenting one as a passed gate is not.
@@ -253,20 +253,34 @@ sudo rm /etc/sudoers.d/90-dpasare-automation
 Remove it when the board stops being a personal test device. It is recorded here
 and nowhere else, like the rest of this section.
 
-`nilo0` is set to `autoconnect yes` on its NetworkManager profile. It was
-`no`, which meant the tunnel existed only while NILO's startup selection held it
-up — and the tunnel is the only route to this board from outside its local
-networks. Anything that restarted NILO on a data directory without that
-selection would have stranded the board until somebody reached it physically.
+On 2026-09-29, the active `nilo0` WireGuard profile
+`166025ee-3e46-4e1f-bae8-c92565d2a085` reports `autoconnect no`; the DDP
+Wi-Fi profile reports `yes`. NILO's retained startup selection brings up the
+tunnel. The current-source deployment verified service restart through that
+route and did not attempt a full reboot or change these profiles.
 
 ### 2.8 Current NILO deployment
 
-The board runs NILO 0.11.0 with runtime state in `/var/lib/nilo`. `nilo.service`,
+The board runs NILO 0.12.0 with runtime state in `/var/lib/nilo`. `nilo.service`,
 `nilo-nethelper.service` and the independent recovery timer are active and
 enabled. The core service uses the helper-managed TLS identity and has no
 file-backed certificate or private-key argument. Its served certificate covers
-`nilo-n0hzmysj9v.local` and the provisioning-only `nilo.local`; the helper's
+`ddp-nilo.local`, `nilo-n0hzmysj9v.local` and the provisioning-only `nilo.local`; the helper's
 private key remains root-owned and unreadable by the Core service account.
+
+The 2026-09-29 current-source deployment rebuilt Core, helper and GUI from
+merge commit `0d18497`, preserving all configuration and media/log files.
+Service health, authenticated read-only APIs and certificate-verified GUI assets
+passed. Helper restart renewed the leaf certificate while retaining its public
+key and configured names. See the
+[current-source deployment record](../07_Delivery/NILO_0.12.0_RPi_Current_20260929.md)
+for the final fingerprint, startup ordering, checksums and rollback.
+
+The 2026-09-28 issue #25 update installed NILO 0.12.0 Core and GUI, including
+Nilo Settings and its audited View activity action. Certificate-verified HTTPS
+assets and the Core version match the build, and persistent settings were
+retained. See the [0.12.0 live-test record](../07_Delivery/NILO_0.12.0_RPi_Live_Test.md)
+for checksums and rollback.
 
 The 2026-09-27 live-test deployment installed NILO 0.11.0 Core, GUI and the
 USB to Serial plugin. Both connected serial adapters are configured and ready
@@ -276,8 +290,10 @@ checksums, serial discovery/configuration and retained capture checksums passed.
 See the [deployment record](../07_Delivery/NILO_0.11.0_RPi_Live_Test.md).
 
 The persisted management allowlist is `wlan0` and `nilo0`. The DDP Wi-Fi and
-NILO-owned WireGuard profiles remain installed, while `eth0` remains the
-device-side adapter at `192.168.0.1/24`. The enabled ILC151 forwarding plan maps
+NILO-owned WireGuard profiles remain installed, while `eth0` retains its
+stored device-side configuration. On 2026-09-29, `eth0` was down with no
+assigned address; `wlan0` held `192.168.0.10/24` and `nilo0` held
+`10.205.148.11/32`. The enabled ILC151 forwarding plan maps
 the exposed `10.71.1.0/24` range to the physical `192.168.0.0/24` segment and
 permits its configured local and WireGuard sources. The current nftables table
 contains that plan.

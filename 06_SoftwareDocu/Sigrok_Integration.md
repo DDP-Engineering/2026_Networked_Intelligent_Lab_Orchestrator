@@ -40,9 +40,9 @@ restart does not silently reinstall or re-enable anything.
 |---|---|
 | Command admission | Durable UUID transaction, request and session IDs before acknowledgment |
 | Idempotency | Same owner + same key + identical normalized input returns the original job; changed input returns `transaction_conflict` |
-| Queue | At most 32 nonterminal commands, including pending approvals; overflow returns `queue_full` |
-| Execution | At most two workers; commands for the same analyzer serialize |
-| Deadline | Default 60 seconds, configurable 1–300; includes approval and queue time |
+| Queue | Configured nonterminal-job capacity (default 32), including pending approvals; overflow returns `queue_full` |
+| Execution | Configured worker capacity (default two); commands for the same analyzer serialize |
+| Deadline | Configured default 60 seconds and maximum 300 seconds until changed in Nilo Settings; includes approval and queue time |
 | Runner | CLI execution bounded to 30 seconds; timeout/cancel kills and awaits the child before releasing ownership |
 | Replies | Up to 100 retained ordered replies of at most 4 KiB each; overflow fails the transaction |
 | Results | At most 1 MiB; list endpoints return summaries and the transaction endpoint returns details |

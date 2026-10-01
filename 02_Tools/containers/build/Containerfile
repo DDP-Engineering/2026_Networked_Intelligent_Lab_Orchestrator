@@ -61,9 +61,12 @@ RUN cd /build-context/nilo_gui \
  && npm cache verify
 
 COPY 05_Software/ ./05_Software/
+COPY 02_Tools/scripts/build_environment.py 02_Tools/scripts/locked_build_inputs.py ./02_Tools/scripts/
+COPY 02_Tools/containers/build/ ./02_Tools/containers/build/
 RUN set -eu; \
-    find ./05_Software -name go.mod -print0 | while IFS= read -r -d '' module; do (cd "$(dirname "$module")" && GOPROXY=file:///opt/nilo/inputs/go-proxy GOSUMDB=off go mod download); done; \
-    find ./05_Software -name uv.lock -print0 | while IFS= read -r -d '' lock; do (cd "$(dirname "$lock")" && uv venv --python /opt/nilo/python-bin/python3 .venv && uv pip install --offline --no-index --python .venv/bin/python /opt/nilo/inputs/python-packages/*.whl); done; \
+    python 02_Tools/scripts/locked_build_inputs.py verify --repository-root /build-context --lock 02_Tools/containers/build/build-environment.lock.json; \
+    find ./05_Software -name go.mod -print0 | while IFS= read -r -d '' module; do (cd "$(dirname "$module")" && GOPROXY=file:///opt/nilo/inputs/go-proxy GOSUMDB=off go mod download && go mod verify); done; \
+    UV_PROJECT_ENVIRONMENT=.venv python 02_Tools/scripts/locked_build_inputs.py prepare-python --repository-root /build-context --lock 02_Tools/containers/build/build-environment.lock.json; \
     cd /build-context/nilo_gui && npm ci --offline --ignore-scripts
 
 RUN cp -a /opt/nilo/cache /opt/nilo/cache-seed \

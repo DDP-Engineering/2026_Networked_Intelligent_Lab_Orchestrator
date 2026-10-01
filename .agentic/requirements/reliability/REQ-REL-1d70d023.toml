@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-REL-1d70d023"
+
+title = "Keep camera control independent of shared admission"
+
+status = "active"
+
+requirement = """
+While a camera runner startup or control call waits, Core shall keep unrelated serial control and event ingestion responsive while retaining per-camera exclusive admission and cleanup.
+"""
+
+verification = "Automated: block a camera runner call and concurrently exercise serial control and Core event handling; verify they complete before the camera call resumes and a second same-camera controller remains refused."
+
+affected_paths = ["05_Software/core/internal/bench/camera_workspace.go", "05_Software/core/internal/bench/manager.go"]
+
+linked_tests = ["05_Software/core/internal/bench/operating_settings_test.go"]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-28
+updated = 2026-09-28

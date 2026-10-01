@@ -1,4 +1,5 @@
 import { mayReadActivity, mayReadTokens, mayReadUsers } from '../../api/permissions';
+import { PERMISSION_PLATFORM_SETTINGS_MANAGE } from '../../api/contract';
 import type {
   BenchCoreDevice,
   BenchCoreIntegration,
@@ -135,6 +136,13 @@ const CORE_PAGES: PageDescriptor[] = [
     cluster: 'core',
     icon: 'about',
     titleKey: 'nav.activity',
+    available: true,
+  },
+  {
+    id: 'operating-settings',
+    cluster: 'core',
+    icon: 'network',
+    titleKey: 'platform.title',
     available: true,
   },
   {
@@ -294,6 +302,10 @@ export function buildPages(
     if (page.id === 'authentication') return canReadUsers || canReadTokens;
     if (page.id === 'authentication:tokens') return canReadUsers && canReadTokens;
     if (page.id === 'activity') return mayReadActivity(session);
+    if (page.id === 'operating-settings')
+      return (
+        session?.permissions.includes(PERMISSION_PLATFORM_SETTINGS_MANAGE) ?? false
+      );
     return true;
   }).map((page) => {
     if (page.id !== 'authentication' || canReadUsers) return page;

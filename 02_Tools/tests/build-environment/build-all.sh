@@ -3,10 +3,22 @@ set -eu
 
 repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/../../.." && pwd)
 cd "$repo_root"
-find 05_Software -name go.mod -print0 | xargs -0 -n1 sh -c 'root=$(dirname "$0"); (cd "$root" && CGO_ENABLED=0 go build ./...)'
+python 02_Tools/scripts/locked_build_inputs.py verify --repository-root "$repo_root" \
+    --lock "$repo_root/02_Tools/containers/build/build-environment.lock.json"
 ./02_Tools/tests/build-environment/prepare-python-environments.sh
+find 05_Software -name go.mod -print0 | xargs -0 -n1 sh -c 'root=$(dirname "$0"); (cd "$root" && GOPROXY=file:///opt/nilo/inputs/go-proxy GOSUMDB=off go mod download && go mod verify && CGO_ENABLED=0 GOPROXY=off go build ./...)'
 npm --prefix 05_Software/frontend ci --offline --ignore-scripts
 npm --prefix 05_Software/frontend run build
+if [ -n "${NILO_OUTPUT_DIR:-}" ]; then
+    for architecture in amd64 arm64; do
+        mkdir -p "$NILO_OUTPUT_DIR/core/linux-$architecture"
+        (cd 05_Software/core && CGO_ENABLED=0 GOOS=linux GOARCH="$architecture" GOPROXY=off \
+            go build -trimpath -mod=readonly -o "$NILO_OUTPUT_DIR/core/linux-$architecture/nilo" ./cmd/nilo)
+        (cd 05_Software/core && CGO_ENABLED=0 GOOS=linux GOARCH="$architecture" GOPROXY=off \
+            go build -trimpath -mod=readonly -o "$NILO_OUTPUT_DIR/core/linux-$architecture/nilo-nethelper" ./cmd/nilo-nethelper)
+    done
+    printf '%s\n' "published appliance binaries to $NILO_OUTPUT_DIR/core"
+fi
 if [ -n "${NILO_OUTPUT_DIR:-}" ] && [ -d 05_Software/frontend/dist ]; then
     mkdir -p "$NILO_OUTPUT_DIR/nilo_gui"
     cp -R 05_Software/frontend/dist/. "$NILO_OUTPUT_DIR/nilo_gui/"

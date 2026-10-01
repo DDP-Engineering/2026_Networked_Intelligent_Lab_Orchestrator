@@ -84,4 +84,4 @@ verification level; this stage does not replace it.
 `02_Tools/tests/appliance/inventory.json` lists what the image must carry and
 how to probe each component. The Go toolchain is deliberately absent from that
 list: it comes from the repository's pinned Linux runtime through the read-only
-mount, via `02_Tools/env/with-go.sh`.
+mount, via `02_Tools/env/with-tools.sh`.

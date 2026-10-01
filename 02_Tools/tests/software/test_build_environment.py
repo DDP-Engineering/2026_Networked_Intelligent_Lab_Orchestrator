@@ -319,8 +319,7 @@ class BuildEnvironmentTests(unittest.TestCase):
             "npm ci --offline",
             "GOPROXY=file:///opt/nilo/inputs/go-proxy",
             "GOSUMDB=off",
-            "uv pip install --offline --no-index",
-            "/opt/nilo/inputs/python-packages/*.whl",
+            "locked_build_inputs.py prepare-python",
         ):
             self.assertIn(offline_contract, containerfile)
 
@@ -433,13 +432,9 @@ class BuildEnvironmentTests(unittest.TestCase):
         )
         self.assertIn("UV_PROJECT_ENVIRONMENT=.venv-linux-x86_64", containerfile)
         self.assertIn("prepare-python-environments.sh", build_all)
-        for contract in (
-            "uv venv --clear",
-            "uv pip install --offline --no-index",
-            "/opt/nilo/inputs/python-packages/*.whl",
-            "--no-deps",
-        ):
-            self.assertIn(contract, preparer)
+        self.assertIn("locked_build_inputs.py prepare-python", preparer)
+        self.assertNotIn("prepare-serial-dependency.py", preparer)
+        self.assertIn("locked_build_inputs.py verify", build_all)
         self.assertNotIn("uv sync", build_all)
 
     def test_archive_round_trip_and_corruption_fail_closed(self) -> None:
@@ -803,7 +798,7 @@ class BuildEnvironmentTests(unittest.TestCase):
         self.assertIn("preserving existing selected engine", installer)
 
     def test_host_archive_uses_apts_selected_dependency_closure(self) -> None:
-        generator = (TOOLS_ROOT / "scripts/build-wsl-host-bootstrap.sh").read_text(
+        generator = (TOOLS_ROOT / "scripts/build-host-bootstrap.sh").read_text(
             encoding="utf-8"
         )
         self.assertNotIn("apt_cache depends", generator)
@@ -816,7 +811,7 @@ class BuildEnvironmentTests(unittest.TestCase):
         self.assertIn("Dir::Cache::archives=$staging/packages/$group", generator)
 
     def test_host_archive_reads_raw_deb_control_field_values(self) -> None:
-        generator = (TOOLS_ROOT / "scripts/build-wsl-host-bootstrap.sh").read_text(
+        generator = (TOOLS_ROOT / "scripts/build-host-bootstrap.sh").read_text(
             encoding="utf-8"
         )
         self.assertIn("def control_field(path, field):", generator)
@@ -959,7 +954,8 @@ class BuildEnvironmentTests(unittest.TestCase):
         generator = (TOOLS_ROOT / "scripts/build-host-bootstrap.sh").read_text(
             encoding="utf-8"
         )
-        self.assertIn("build-wsl-host-bootstrap.sh", generator)
+        self.assertIn("apt_get", generator)
+        self.assertIn("host-bootstrap.lock.json", generator)
 
     def test_pending_archive_reports_recovery_before_missing_tool_errors(self) -> None:
         result = self._run_linux_bootstrap("--engine", "podman", "--offline")
@@ -1378,7 +1374,7 @@ class BuildEnvironmentTests(unittest.TestCase):
             report["BE-02"]["detail"],
         )
         self.assertEqual(report["BE-04"]["status"], "pending")
-        self.assertIn("closure-test", report["BE-04"]["detail"])
+        self.assertIn(lock["generation"], report["BE-04"]["detail"])
         for gate in (
             "BE-02",
             "BE-03",
@@ -1556,6 +1552,58 @@ class BuildEnvironmentTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn("NILO_OUTPUT_DIR", builder)
+
+    @unittest.skipIf(os.name == "nt", "requires POSIX tar")
+    def test_source_copy_preserves_control_metadata_without_runtime_payloads(self) -> None:
+        """Exercise local, verification and CI copies against a cache fixture."""
+        retained = [
+            "02_Tools/archives/wsl-host-bootstrap/host-bootstrap.lock.json",
+            "02_Tools/archives/build-environment/current.json",
+            "05_Software/frontend/package.json",
+        ]
+        excluded = [
+            "02_Tools/archives/build-environment/nilo-build-env-test.oci.tar.gz.part000",
+            "02_Tools/archives/build-environment/nilo-build-env-test.oci.tar.gz",
+            "02_Tools/archives/wsl-host-bootstrap/nilo-wsl-host-bootstrap-test.tar.gz",
+            "02_Tools/cache/runtime.bin",
+            "02_Tools/tests/build-environment/evidence.local.json",
+            "05_Software/integrations/fake_python/.venv/dependency.py",
+            "05_Software/integrations/fake_python/.venv-windows-x86_64/dependency.py",
+            "05_Software/integrations/fake_python/.pytest_cache/CACHEDIR.TAG",
+            "05_Software/integrations/fake_python/.ruff_cache/CACHEDIR.TAG",
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            workspace = root / "workspace"
+            for name in retained + excluded:
+                path = workspace / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("fixture", encoding="utf-8")
+            for index, name in enumerate([
+                "env/with-build-environment.sh", "scripts/verify-build-environment.sh",
+                "../.gitea/scripts/offline_ci.py",
+            ]):
+                with self.subTest(wrapper=name):
+                    output = root / f"isolated-{index}"
+                    output.mkdir()
+                    wrapper = (TOOLS_ROOT / name).read_text(encoding="utf-8")
+                    finish = 'find "$NILO_ISOLATED_SOURCE" -depth -type d -empty -delete'
+                    if name.endswith("offline_ci.py"):
+                        finish = 'find /work/source -depth -type d -empty -delete'
+                    command = wrapper[wrapper.index("tar -C /workspace"):wrapper.index(finish) + len(finish)]
+                    command = command.replace("/workspace", '"$NILO_TEST_WORKSPACE"')
+                    command = command.replace("/work/source", '"$NILO_ISOLATED_SOURCE"')
+                    result = subprocess.run(
+                        ["sh", "-eu", "-c", command], text=True, capture_output=True,
+                        env={**os.environ, "NILO_TEST_WORKSPACE": str(workspace),
+                             "NILO_ISOLATED_SOURCE": str(output)},
+                    )
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    for path in retained:
+                        self.assertEqual((output / path).read_text(), "fixture")
+                    for path in excluded:
+                        self.assertFalse((output / path).exists(), path)
+                    self.assertFalse((output / "05_Software/integrations/fake_python").exists())
 
     def test_host_isolation_gate_proves_dependencies_are_untouched(self) -> None:
         gate = TOOLS_ROOT / "tests/build-environment/verify-host-isolation.sh"
@@ -1945,8 +1993,9 @@ class BuildEnvironmentTests(unittest.TestCase):
         root_readme = (REPOSITORY_ROOT / "README.md").read_text(encoding="utf-8")
         # A new developer must be told which path serves which purpose.
         self.assertIn("Build environment", root_readme)
-        self.assertIn("bootstrap-build-environment", root_readme)
-        self.assertIn("nilo-dev.ps1", root_readme)
+        self.assertIn("nilo-tools.ps1 setup container", root_readme)
+        self.assertIn("nilo-tools.ps1 dev start", root_readme)
+        self.assertIn("nilo-tools.ps1 test", root_readme)
         self.assertIn("02_Tools/README.md", root_readme)
 
         readme = (TOOLS_ROOT / "README.md").read_text(encoding="utf-8")
@@ -2161,7 +2210,9 @@ class BuildEnvironmentTests(unittest.TestCase):
         windows = (TOOLS_ROOT / "bootstrap/bootstrap-build-environment.ps1").read_text(
             encoding="utf-8"
         )
-        self.assertIn("DistributionName", windows)
+        shared = (TOOLS_ROOT / "lib/Wsl.ps1").read_text(encoding="utf-8")
+        self.assertIn("Get-NiloWslHostVolume", windows)
+        self.assertIn("DistributionName", shared)
         self.assertIn("NILO_WSL_HOST_VOLUME", windows)
 
     def test_host_isolation_sentinel_cleanup_is_interruption_safe(self) -> None:
@@ -2233,7 +2284,7 @@ class BuildEnvironmentTests(unittest.TestCase):
         definition_readme = (TOOLS_ROOT / "containers/build/README.md").read_text(
             encoding="utf-8"
         )
-        self.assertIn("650-record", definition_readme)
+        self.assertIn("677-record", definition_readme)
         self.assertNotIn("deliberately incomplete", definition_readme)
         self.assertNotIn("not yet materialized", definition_readme)
 

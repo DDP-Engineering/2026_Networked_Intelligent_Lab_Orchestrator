@@ -45,6 +45,21 @@ publication, signing-key custody, or physical hardware acceptance results.
 
 ## Public interface
 
+Developers use `02_Tools/nilo-tools.ps1` on Windows or `nilo-tools.sh` on Linux
+for setup, development, diagnosis, tests, builds and packaging. Setup selects
+both host tools and the container by default; tools/container modes select one
+boundary. Test defaults to the canonical offline suite, with explicit focused
+and privileged fixture modes. Build publishes amd64/arm64 Core/helper binaries
+and the GUI under the ignored container output root. Target packaging prepares
+inputs; release assembly and verification are separate actions. The existing
+bootstrap, environment and fixture files below implement these commands.
+
+CI and local offline test/build commands use the current checkout's source
+locks without requiring equality with the image's build-time lockfile. Project
+version and file-hash updates can reuse the existing build environment. The
+outer controller verifies the pinned image independently; offline preparation
+checks dependency coverage and package integrity against its verified inputs.
+
 Developers run `bootstrap.ps1` or `bootstrap.sh` for one host, or
 `bootstrap-development.ps1` to prepare both Windows and a selected WSL2
 distribution from one checkout. `setup-wsl.ps1` keeps host installation and
@@ -469,7 +484,9 @@ only durable state, and they live on the WSL Linux filesystem.
   repository-local browser installation directory.
 - `02_Tools/env/with-tools.sh` - Linux child-process environment for Go, uv,
   and managed Python.
-- `02_Tools/env/with-go.ps1` and `02_Tools/env/with-go.sh` - Go-only compatibility wrappers.
+- `02_Tools/nilo-tools.ps1` and `02_Tools/nilo-tools.sh` - public setup, dev,
+  doctor, test, build and package commands. Go-only calls use the shared tool
+  wrapper without requiring Python or Node.
 - `02_Tools/containers/build/` - locked OCI definition, expected inventory,
   source metadata, licence seed, SBOM seed, and provenance seed.
 - `02_Tools/tests/network/Dockerfile` - the one capability-carrying image

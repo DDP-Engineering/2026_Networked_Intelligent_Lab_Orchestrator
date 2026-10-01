@@ -25,13 +25,17 @@ type decodeInput struct {
 // canonicalSubmission rejects unexposed capabilities before policy, queuing or
 // subprocess creation. Only the core can supply paths and USB connections.
 func canonicalSubmission(input Submission) (Submission, error) {
+	return canonicalSubmissionWithLimits(input, 60, 300)
+}
+
+func canonicalSubmissionWithLimits(input Submission, defaultSeconds, maximumSeconds int) (Submission, error) {
 	if !keyPattern.MatchString(input.IdempotencyKey) {
 		return input, ErrInvalid
 	}
 	if input.TimeoutSeconds == 0 {
-		input.TimeoutSeconds = 60
+		input.TimeoutSeconds = defaultSeconds
 	}
-	if input.TimeoutSeconds < 1 || input.TimeoutSeconds > 300 {
+	if input.TimeoutSeconds < 1 || input.TimeoutSeconds > maximumSeconds {
 		return input, ErrInvalid
 	}
 	adapter, err := adapterFor(input.PluginID)

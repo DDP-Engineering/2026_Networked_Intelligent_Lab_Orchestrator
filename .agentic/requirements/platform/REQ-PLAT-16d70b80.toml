@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-PLAT-16d70b80"
+
+title = "Persist bounded operating settings"
+
+status = "active"
+
+requirement = """
+When an administrator replaces operating settings with a current revision and values within the documented ranges, Core shall persist the complete settings record with an incremented revision, return it on subsequent reads and restart, and reject out-of-range or stale replacements without changing the record.
+"""
+
+verification = "Automated: open a fresh data directory, read defaults, replace at a current revision, reopen it, and compare settings/revision; submit an invalid field and stale revision and confirm unchanged data."
+
+affected_paths = ["05_Software/core/internal/bench/operating_settings.go", "05_Software/core/internal/bench/manager.go", "05_Software/core/internal/store/sqlite/migrations.go", "05_Software/core/internal/store/sqlite/migrations/023_operating_settings.sql", "05_Software/core/internal/bench/operating_settings_test.go", "05_Software/core/internal/store/sqlite/db_test.go"]
+
+linked_tests = ["05_Software/core/internal/bench/operating_settings_test.go", "05_Software/core/internal/store/sqlite/db_test.go"]
+
+
+spec = "specs/REQ-PLAT-16d70b80.md"
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-28
+updated = 2026-09-28

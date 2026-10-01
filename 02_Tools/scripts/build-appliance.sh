@@ -8,8 +8,8 @@ out=${1:-$repo/05_Software/core/dist}
 cd "$repo/05_Software/core"
 for arch in arm64 amd64; do
  mkdir -p "$out/linux-$arch"
- GOOS=linux GOARCH=$arch CGO_ENABLED=0 ../../02_Tools/env/with-go.sh go build -trimpath -mod=readonly -o "$out/linux-$arch/nilo" ./cmd/nilo
- GOOS=linux GOARCH=$arch CGO_ENABLED=0 ../../02_Tools/env/with-go.sh go build -trimpath -mod=readonly -o "$out/linux-$arch/nilo-nethelper" ./cmd/nilo-nethelper
+ GOOS=linux GOARCH=$arch CGO_ENABLED=0 ../../02_Tools/env/with-tools.sh go build -trimpath -mod=readonly -o "$out/linux-$arch/nilo" ./cmd/nilo
+ GOOS=linux GOARCH=$arch CGO_ENABLED=0 ../../02_Tools/env/with-tools.sh go build -trimpath -mod=readonly -o "$out/linux-$arch/nilo-nethelper" ./cmd/nilo-nethelper
  # Opt-in edition payload. The same bundle can be delivered separately later.
  if [ "${NILO_BUNDLE_SIGROK:-0}" = "1" ]; then
   runtime_root=${NILO_SIGROK_RUNTIME_ROOT:-}

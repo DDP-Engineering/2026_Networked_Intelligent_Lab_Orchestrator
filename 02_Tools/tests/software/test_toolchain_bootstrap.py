@@ -185,13 +185,11 @@ class ToolchainBootstrapTests(unittest.TestCase):
         windows_scripts = self._read_scripts(
             "bootstrap/bootstrap.ps1",
             "env/with-tools.ps1",
-            "env/with-go.ps1",
             "scripts/doctor.ps1",
         )
         linux_scripts = self._read_scripts(
             "bootstrap/bootstrap.sh",
             "env/with-tools.sh",
-            "env/with-go.sh",
             "scripts/doctor.sh",
         )
 

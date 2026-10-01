@@ -30,9 +30,9 @@ cd /repo/05_Software/core
 
 # Finish compilation and any module reads while the container still has its
 # original link, exactly as the helper system run does.
-../../02_Tools/env/with-go.sh go build -mod=readonly -o /tmp/nilo ./cmd/nilo
-../../02_Tools/env/with-go.sh go build -mod=readonly -o /tmp/nilo-nethelper ./cmd/nilo-nethelper
-../../02_Tools/env/with-go.sh go test -mod=readonly -c -o /tmp/appliance-stage.test ./cmd/nilo
+../../02_Tools/env/with-tools.sh go build -mod=readonly -o /tmp/nilo ./cmd/nilo
+../../02_Tools/env/with-tools.sh go build -mod=readonly -o /tmp/nilo-nethelper ./cmd/nilo-nethelper
+../../02_Tools/env/with-tools.sh go test -mod=readonly -c -o /tmp/appliance-stage.test ./cmd/nilo
 
 . /repo/02_Tools/tests/network/network-up.sh
 nilo_network_up

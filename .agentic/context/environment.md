@@ -11,9 +11,12 @@ SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
 
 ## Toolchain
 
-Nothing is installed system-wide. Pinned runtimes are extracted below the
+Pinned language runtimes are extracted below the
 ignored `02_Tools/runtime/<platform>/`, with caches under `02_Tools/cache/`,
 and the environment wrappers change `PATH` only for their child process.
+Native Linux container engines and their operating-system dependencies are
+explicit host packages, installed by the build-environment bootstrap or an
+authorized host setup.
 
 - `02_Tools/toolchain.versions` is the authority for the host toolchain: Go,
   uv, the uv-managed CPython, Node.js, npm, and the Playwright and Chromium
@@ -27,11 +30,15 @@ and the environment wrappers change `PATH` only for their child process.
   `05_Software/integrations/sigrok/` and
   `05_Software/integrations/camera/` and `05_Software/integrations/serial/`.
 - The reproducible build and test boundary is one Linux amd64 OCI image,
-  generation `noble-20260905-01`, defined by `02_Tools/containers/build/` and
+  recipe generation `noble-20260928-01`, defined by `02_Tools/containers/build/` and
   run through Docker Engine or Podman. It carries the pinned language tools,
   native and ARM64 cross toolchains, offline dependency caches and headless
   Chromium. Its network-disabled suite stops at GUI component/build checks;
   browser acceptance runs separately in the privileged appliance-stage image.
+  The recipe covers 677 checksum-pinned reconstruction inputs and checks their
+  coverage against the current source locks. Frontend CI uses two workers with
+  the established per-test deadlines. The archive manifest records import,
+  publication and backup maturity separately from the recipe definition.
 
 ## Setup
 
@@ -40,7 +47,7 @@ Two paths, described in full in `02_Tools/README.md`.
 Host-local interactive development:
 
 ```powershell
-.\02_Tools\bootstrap\bootstrap-development.ps1
+.\02_Tools\nilo-tools.ps1 setup tools
 ```
 
 It verifies the selected WSL2 distribution, bootstraps the Windows and Linux
@@ -181,12 +188,12 @@ Iterate on the interface from the development host against that appliance, with
 Build inside the locked container, which is the result that counts:
 
 ```powershell
-.\02_Tools\env\with-build-environment.ps1 build
+.\02_Tools\nilo-tools.ps1 build
 .\02_Tools\env\with-build-environment.ps1 shell
 ```
 
 ```sh
-./02_Tools/env/with-build-environment.sh build
+sh ./02_Tools/nilo-tools.sh build
 ```
 
 The container runs with no network, no privileges, no engine socket and the
@@ -212,7 +219,7 @@ After adoption, fetch, verify and prepare each exact target:
 ```powershell
 .\02_Tools\packaging\fetch\fetch-all.ps1 ubuntu-24.04-amd64
 .\02_Tools\packaging\verify\verify-cache.ps1 ubuntu-24.04-amd64
-.\02_Tools\env\with-build-environment.ps1 package ubuntu-24.04-amd64
+.\02_Tools\nilo-tools.ps1 package ubuntu-24.04-amd64
 ```
 
 The equivalent POSIX entry points live under `02_Tools/packaging/{fetch,verify}`
@@ -227,6 +234,12 @@ evidence closure. These tools never record physical hardware acceptance as
 passed; those rows remain `not_run` until executed on the named target.
 
 ## Verification
+
+Gitea CI selects the shared instance runner's `linux-amd64` label and runs
+the canonical network-disabled suite inside a bounded test container. The
+connected controller handles checkout, digest verification and artifact upload.
+`.gitea/README.md` describes the Docker access boundary, image provisioning,
+evidence and the separate privileged appliance acceptance stage.
 
 `.agentic/aegis.toml` declares the command keys, with `workdir = 05_Software`:
 

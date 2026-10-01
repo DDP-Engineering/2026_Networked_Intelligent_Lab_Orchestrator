@@ -5,9 +5,37 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ## [Unreleased]
 
+### Added
+
+- Gitea CI runs the canonical offline suite on the shared Linux runner and
+  retains validation evidence and the GUI production build as artifacts.
+
 ### Changed
 
 - Authenticated navigation opens About alone with collapsed Instruments and System sections; detailed backend status and inventories remain available under System > Inventory.
+- Repository tooling has six discoverable public commands; shared tool wrappers
+  replace Go-only launchers, and container builds publish CLI/helper binaries and GUI.
+
+### Fixed
+
+- CI and local offline tests reuse the provisioned build image after project
+  version bumps while retaining dependency coverage and integrity checks.
+- Offline build preparation checks locked Go/Python input coverage and checksums;
+  the recipe includes Camera/Serial dependencies, iproute2 and executable Linux entry points.
+- Isolated offline checks retain archive control metadata and exclude runtime
+  payloads; frontend CI limits concurrency to two workers under its existing deadlines.
+
+## [0.12.0] - 2026-09-28
+
+### Added
+
+- Administrators can tune appliance job, serial and camera capacity and lifetimes through revisioned, audited operating settings.
+
+### Changed
+
+- Nilo Settings now lists platform job controls in an editable table; Camera and
+  Serial limits appear on their plugin pages with contextual help.
+- Nilo Settings links directly to its filtered Activity audit events.
 - Plugin and system feedback uses shared dismissible callouts; realtime action
   headers align right and serial connection details collapse to save display space.
 

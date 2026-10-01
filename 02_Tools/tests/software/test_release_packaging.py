@@ -2327,7 +2327,7 @@ class OperatorScriptTests(unittest.TestCase):
         self.assertIn('$($go_command version)', source)
         self.assertIn('$($node_command --version)', source)
         self.assertIn('$($npm_command --version)', source)
-        self.assertNotIn('$source_root/02_Tools/env/with-go.sh', source)
+        self.assertNotIn('$source_root/02_Tools/env/with-tools.sh', source)
         self.assertIn('build-camera-bundle.py', source)
         self.assertIn('--runtime-root "$ubuntu_sigrok_runtime"', source)
         self.assertIn('--runtime-root "$pi_sigrok_runtime"', source)

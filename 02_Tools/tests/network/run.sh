@@ -6,10 +6,10 @@ cd /repo/05_Software/core
 race_flag=
 if [ "${NILO_NETWORK_RACE:-0}" = 1 ]; then race_flag=-race; fi
 # Finish compilation/downloads while the container still has its original link.
-../../02_Tools/env/with-go.sh go test $race_flag -mod=readonly -c -o /tmp/nethelper.test ./internal/nethelper
-../../02_Tools/env/with-go.sh go build -mod=readonly -o /tmp/nilo ./cmd/nilo
-../../02_Tools/env/with-go.sh go build -mod=readonly -o /tmp/nilo-nethelper ./cmd/nilo-nethelper
-../../02_Tools/env/with-go.sh go test $race_flag -mod=readonly -c -o /tmp/appliance.test ./cmd/nilo
+../../02_Tools/env/with-tools.sh go test $race_flag -mod=readonly -c -o /tmp/nethelper.test ./internal/nethelper
+../../02_Tools/env/with-tools.sh go build -mod=readonly -o /tmp/nilo ./cmd/nilo
+../../02_Tools/env/with-tools.sh go build -mod=readonly -o /tmp/nilo-nethelper ./cmd/nilo-nethelper
+../../02_Tools/env/with-tools.sh go test $race_flag -mod=readonly -c -o /tmp/appliance.test ./cmd/nilo
 # The bring-up is shared with the appliance verification stage so one apt list
 # and one NetworkManager sequence stay in one place.
 . /repo/02_Tools/tests/network/network-up.sh

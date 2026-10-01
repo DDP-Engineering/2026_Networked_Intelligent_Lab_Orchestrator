@@ -17,6 +17,17 @@ $nodeBin = Join-Path $runtimeRoot "node\$($values['NODE_VERSION'])"
 if ($args.Count -lt 1) {
     throw 'Pass a command to run, for example: .\02_Tools\env\with-tools.ps1 go version'
 }
+# Go-only fixtures need no Python or frontend runtime. Keep this selection in
+# the shared wrapper instead of maintaining another pair of Go wrappers.
+if ($args[0] -in @('go', 'go.exe')) {
+    $goExecutable = Join-Path $goBin 'go.exe'
+    if (-not (Test-Path -LiteralPath $goExecutable -PathType Leaf)) {
+        throw "Repository-local Go is missing: $goExecutable; run nilo-tools.ps1 setup tools"
+    }
+    $env:PATH = "$goBin;$env:PATH"
+    & $goExecutable @($args | Select-Object -Skip 1)
+    exit $LASTEXITCODE
+}
 foreach ($required in @(
     (Join-Path $goBin 'go.exe'),
     (Join-Path $uvBin 'uv.exe'),

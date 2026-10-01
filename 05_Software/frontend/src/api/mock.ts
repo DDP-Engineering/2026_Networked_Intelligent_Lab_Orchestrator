@@ -1,6 +1,13 @@
 import type { BenchCoreTransport, TransportRequest, TransportResponse } from './client';
 import { COMMISSIONING_PATH, MANAGEMENT_ACCESS_PATH } from './management-access';
 import {
+  OPERATING_BOUNDS,
+  OPERATING_FIELDS,
+  OPERATING_SETTINGS_PATH,
+  type OperatingSettingsState,
+  type OperatingSettingsValues,
+} from './operating-settings';
+import {
   BENCH_CORE_API_VERSION,
   CSRF_HEADER_NAME,
   DEVICES_PATH,
@@ -299,6 +306,26 @@ class MockAdministration {
     require_uppercase: false,
     require_digit: false,
     require_special: false,
+  };
+  operatingSettings: OperatingSettingsState = {
+    revision: 1,
+    settings: {
+      executing_jobs: 2,
+      outstanding_jobs: 32,
+      serial_connections: 4,
+      camera_streams: 2,
+      default_job_timeout_seconds: 60,
+      max_job_timeout_seconds: 300,
+      serial_lifetime_minutes: 60,
+      serial_idle_minutes: 1,
+      camera_lifetime_minutes: 55,
+    },
+    usage: {
+      executing_jobs: 0,
+      outstanding_jobs: 0,
+      serial_connections: 0,
+      camera_streams: 0,
+    },
   };
   /** The device-network draft a preview proposed, applied on acknowledgement. */
   pendingDrafts = new Map<
@@ -1440,6 +1467,16 @@ function administer(
       replacePasswordPolicy(store, body),
     );
   }
+  if (path === OPERATING_SETTINGS_PATH && request.method === 'GET') {
+    return gated(actor, 'platform.settings.manage', () =>
+      jsonResponse(200, store.operatingSettings),
+    );
+  }
+  if (path === OPERATING_SETTINGS_PATH && request.method === 'PUT') {
+    return gated(actor, 'platform.settings.manage', () =>
+      replaceOperatingSettings(store, body),
+    );
+  }
   if (path === TOKENS_PATH && request.method === 'GET') {
     return gated(actor, 'tokens.read.all', () =>
       jsonResponse(200, {
@@ -1630,6 +1667,47 @@ function refusePasswordAgainstPolicy(
 }
 
 /** A replacement carries the whole policy: a partial one is refused, not merged. */
+function replaceOperatingSettings(
+  store: MockAdministration,
+  body: Record<string, unknown>,
+): TransportResponse {
+  if (body.revision !== store.operatingSettings.revision) {
+    return refusal(409, 'operating_settings_conflict', 'settings revision changed');
+  }
+  const supplied = body.settings;
+  if (supplied === null || typeof supplied !== 'object' || Array.isArray(supplied)) {
+    return refusal(400, 'operating_settings_invalid', 'settings must be an object');
+  }
+  const record = supplied as Record<string, unknown>;
+  if (
+    Object.keys(record).length !== OPERATING_FIELDS.length ||
+    OPERATING_FIELDS.some((field) => {
+      const value = record[field];
+      const bounds = OPERATING_BOUNDS[field];
+      return (
+        !Number.isInteger(value) ||
+        Number(value) < bounds.min ||
+        Number(value) > bounds.max
+      );
+    }) ||
+    Number(record.default_job_timeout_seconds) >
+      Number(record.max_job_timeout_seconds) ||
+    Number(record.serial_idle_minutes) > Number(record.serial_lifetime_minutes)
+  ) {
+    return refusal(
+      400,
+      'operating_settings_invalid',
+      'settings are outside the allowed ranges',
+    );
+  }
+  store.operatingSettings = {
+    ...store.operatingSettings,
+    revision: store.operatingSettings.revision + 1,
+    settings: record as OperatingSettingsValues,
+  };
+  return jsonResponse(200, store.operatingSettings);
+}
+
 function replacePasswordPolicy(
   store: MockAdministration,
   body: Record<string, unknown>,

@@ -1,0 +1,33 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-5d897991"
+
+title = "Apply configured lifetimes to new work"
+
+status = "active"
+
+requirement = """
+When a finite job, serial connection, or camera stream starts, Core shall apply the current configured default/maximum job timeout or session and idle lifetimes to that new work while preserving the previously assigned deadlines of active work.
+"""
+
+verification = "Automated: create work before and after each setting change, inspect deadlines and expiry, reject over-maximum job timeouts, and verify runner termination follows the new session lifetime."
+
+affected_paths = ["05_Software/core/internal/bench/parameters.go", "05_Software/core/internal/bench/jobs.go", "05_Software/core/internal/bench/serial_session.go", "05_Software/core/internal/bench/camera_workspace.go", "05_Software/integrations/camera/src/nilo_camera/workspace.py", "05_Software/integrations/camera/schemas/stream.input.schema.json", "05_Software/core/internal/bench/serial_lifecycle_test.go", "05_Software/integrations/camera/tests/test_workspace.py"]
+
+linked_tests = ["05_Software/core/internal/bench/operating_settings_test.go", "05_Software/core/internal/bench/serial_lifecycle_test.go", "05_Software/integrations/camera/tests/test_workspace.py"]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-28
+updated = 2026-09-28

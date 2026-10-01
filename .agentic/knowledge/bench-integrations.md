@@ -63,7 +63,7 @@ and `06_SoftwareDocu/Camera_Integration.md`. Human approval requires a browser s
 ## Invariants
 
 - A durable job/session/request and canonical owner/idempotency key precede ack.
-- At most 32 nonterminal jobs and two executing workers; one analyzer at a time.
+- Configured appliance-wide limits bound nonterminal jobs and executing workers (defaults 32 and two); one analyzer at a time.
 - Approval and queue time count toward the absolute deadline; cleanup completes
   before resource reuse. Disconnect does not cancel or duplicate admitted work.
 - Replies carry transaction IDs and monotonic sequence, with 100 records of at
@@ -98,6 +98,9 @@ and `06_SoftwareDocu/Camera_Integration.md`. Human approval requires a browser s
 
 ## Key behaviors
 
+- `REQ-PLAT-16d70b80`, `REQ-FUNC-46dd5987`, `REQ-FUNC-5d897991`,
+  `REQ-SEC-aa791b1e`: administrator-managed, audited operating settings bound
+  job/session admission and new-work timeouts while live usage remains visible.
 - `REQ-UX-74d4256e`: appliance Core refreshes Camera/Serial hardware inventory
   on a five-second timer with bounded discovery calls. Metadata reads run outside
   the admission lock; results from replaced/disabled packages are discarded.
@@ -137,7 +140,10 @@ flowchart TD
     manager --> monitor[hardware_monitor: bounded Camera and Serial presence polling]
     monitor --> supervisor
     monitor --> db
-    manager --> queue[scheduler: two workers and device serialization]
+    manager --> limits[(SQLite operating settings)]
+    limits --> queue[scheduler: configured workers and device serialization]
+    manager --> audit[(audit events)]
+    manager --> queue
     manager --> db[(SQLite plugins/jobs/sessions)]
     queue --> operation[operation.Service Prepare/Run and policy]
     operation --> leases[(session leases and audit)]
@@ -165,6 +171,11 @@ curated typed adapter and resource claims; transport handlers remain shared.
 - `05_Software/core/internal/bench/`: model, manager, packages,
   parameters, jobs, execution and scheduler; `jobs_test.go` covers state/concurrency,
   `bundle_test.go` validates assembled target runner interoperability.
+- `05_Software/core/internal/bench/operating_settings.go` and
+  `operating_settings_test.go`: revisioned limits, usage and admission regressions.
+- `05_Software/core/internal/store/sqlite/migrations/023_operating_settings.sql`:
+  default settings row; `05_Software/core/internal/httpapi/operating_settings.go`
+  and its test expose the authorized API.
 - `05_Software/core/internal/bench/upgrade_recovery.go` and
   `package_sync_*.go`: durable activation journal, directory sync and startup
   reconciliation for interrupted package upgrades.

@@ -1,0 +1,906 @@
+space check passed for joined OCI archive staging in /tmp: required 5636498432, available 998327906304, backing host volume /mnt/c/Users/pasar/.codex/cache/issue38-volume-evidence free 38172155904
+space check passed for docker image storage in /var/lib/docker: required 5636498432, available 998327898112, backing host volume /mnt/c/Users/pasar/.codex/cache/issue38-volume-evidence free 38172069888
+Getting image source signatures
+Copying blob sha256:b9a65b3c65ab22d490085bd0bf5490e2409da8748b406870f2463bdc41cd6795
+Copying blob sha256:29f5b97a9989a91c7a2528a3a2abf5932bfcbf9cabdf7cb902a03f540a85f033
+Copying blob sha256:a5016111bee5ebf2b8fc22f4daf271ff03c37d0f1c7e13f7e93c8564e794f9ff
+Copying blob sha256:eaa14f02789fe4631eca97b7ff2d20ce00bfe507aeb7feb8d89f5ff3984087fc
+Copying blob sha256:5cf742d854cda1e49c0f891ee4f324c7eb21b89c039af7095a5400817e250442
+Copying blob sha256:e545af12c80d70a3abc0b7b553ea639919daca088e8bc6e5709792d1ea03bc92
+Copying blob sha256:b9a28caa979c73f8c522c9277465e49247efecdfa6c2c018759da6e9e67c1dba
+Copying blob sha256:6774740d56f4b766b9410facc8068544829b859a8cf390f615c66f96ea16e8be
+Copying blob sha256:795e64a452746a84aa1e6d4e401bb2a4f9df30c4c644931358a8dce19a1da005
+Copying blob sha256:b6edbd0a36f299aefd312e28ecc0cb10484478354d31fe905c7f204b4a79f800
+Copying blob sha256:0cc132913dcefcd0a6050778a1ab5a14fa760d159bbe005d776cd1e2c17091ca
+Copying blob sha256:eefeef94809812fcf26195a1ce6fb3dcd3d24e66aa7980fed83fa80b1bcd1536
+Copying blob sha256:198eebe40ea2888456080bc08fe40730e05eab33d516e887fb19710830aac3ba
+Copying blob sha256:1a7d53db6acb57fcc1574cc8fff6ec9a34dd828c6a976fdc32f95947cd59d2ad
+Copying blob sha256:3d86148b708a4394e242e8ce1dd85d206e6535d08d152be966947e65c676a9fa
+Copying blob sha256:8c48cd3a77a7c06db80496d55feb2a28de8415d1c1946334e66d370becd723d6
+Copying blob sha256:ebf30db8bef973099cdac7e16bc3c5d2fd57a33145639dbf2c4c062d0e95454c
+Copying blob sha256:19b3a9a8c975306ddb4aa2308135339d28400cb9a7e7c4d728b32c8719073127
+Copying blob sha256:5351c1833f0f0fab8bbd4b8f5088811f0e4e9db6e3be1b324866a13c89314bb0
+Copying blob sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef
+Copying config sha256:c29ce5d5062959e3f0c917a6cae5b9f2756a56c960371715224c215ac31ec746
+Writing manifest to image destination
+go: go version go1.27.0 linux/amd64
+python: Python 3.12.10
+uv: uv 0.11.25 (x86_64-unknown-linux-gnu)
+node: v24.20.0
+npm: 11.19.0
+gcc: 13.3.0
+ld: GNU ld (GNU Binutils for Ubuntu) 2.42
+aarch64-gcc: 13.3.0
+aarch64-ld: GNU ld (GNU Binutils for Ubuntu) 2.42
+chromium: /opt/nilo/playwright/chromium-1234/chrome-linux64/chrome
+iproute2: ip utility, iproute2-6.1.0, libbpf 1.3.0
+restored and verified image digest=sha256:84578c0371424ee15cf43bb78083cadd45e9bda2ba2bdd6926f0c00b1d0f0568
+go: go version go1.27.0 linux/amd64
+python: Python 3.12.10
+uv: uv 0.11.25 (x86_64-unknown-linux-gnu)
+node: v24.20.0
+npm: 11.19.0
+gcc: 13.3.0
+ld: GNU ld (GNU Binutils for Ubuntu) 2.42
+aarch64-gcc: 13.3.0
+aarch64-ld: GNU ld (GNU Binutils for Ubuntu) 2.42
+chromium: /opt/nilo/playwright/chromium-1234/chrome-linux64/chrome
+iproute2: ip utility, iproute2-6.1.0, libbpf 1.3.0
+/tmp/tmp.sgerBDoZSz/native: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=73df1acfa345b3ce5d415c7c14f9b7bc2c54d063, for GNU/Linux 3.2.0, not stripped
+/tmp/tmp.sgerBDoZSz/arm64: ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=8fee463ea8c7fbc78ba57f39530e0d08d02d67e2, for GNU/Linux 3.7.0, not stripped
+source-lock input coverage verified
+Using CPython 3.12.10 interpreter at: /opt/nilo/python-bin/python3
+Creating virtual environment at: 05_Software/integrations/camera/.venv-linux-x86_64
+Using Python 3.12.10 environment at: 05_Software/integrations/camera/.venv-linux-x86_64
+Resolved 17 packages in 91ms
+Prepared 17 packages in 747ms
+Installed 17 packages in 141ms
+ + annotated-types==0.8.0 (from file:///opt/nilo/inputs/python-packages/annotated_types-0.8.0-py3-none-any.whl)
+ + colorama==0.4.6 (from file:///opt/nilo/inputs/python-packages/colorama-0.4.6-py2.py3-none-any.whl)
+ + iniconfig==2.3.0 (from file:///opt/nilo/inputs/python-packages/iniconfig-2.3.0-py3-none-any.whl)
+ + packaging==26.3 (from file:///opt/nilo/inputs/python-packages/packaging-26.3-py3-none-any.whl)
+ + pillow==11.3.0 (from file:///opt/nilo/inputs/python-packages/pillow-11.3.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl)
+ + pluggy==1.6.0 (from file:///opt/nilo/inputs/python-packages/pluggy-1.6.0-py3-none-any.whl)
+ + pydantic==2.13.5 (from file:///opt/nilo/inputs/python-packages/pydantic-2.13.5-py3-none-any.whl)
+ + pydantic-core==2.46.5 (from file:///opt/nilo/inputs/python-packages/pydantic_core-2.46.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+ + pygments==2.21.0 (from file:///opt/nilo/inputs/python-packages/pygments-2.21.0-py3-none-any.whl)
+ + pytest==9.1.1 (from file:///opt/nilo/inputs/python-packages/pytest-9.1.1-py3-none-any.whl)
+ + pytest-asyncio==1.4.0 (from file:///opt/nilo/inputs/python-packages/pytest_asyncio-1.4.0-py3-none-any.whl)
+ + ruff==0.16.5 (from file:///opt/nilo/inputs/python-packages/ruff-0.16.5-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+ + setuptools==80.9.0 (from file:///opt/nilo/inputs/python-packages/setuptools-80.9.0-py3-none-any.whl)
+ + typing-extensions==4.16.0 (from file:///opt/nilo/inputs/python-packages/typing_extensions-4.16.0-py3-none-any.whl)
+ + typing-inspection==0.4.4 (from file:///opt/nilo/inputs/python-packages/typing_inspection-0.4.4-py3-none-any.whl)
+ + uv-build==0.11.25 (from file:///opt/nilo/inputs/python-packages/uv_build-0.11.25-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+ + wheel==0.45.1 (from file:///opt/nilo/inputs/python-packages/wheel-0.45.1-py3-none-any.whl)
+Using Python 3.12.10 environment at: 05_Software/integrations/camera/.venv-linux-x86_64
+Resolved 1 package in 874ms
+   Building pyrav4l2 @ file:///tmp/nilo-locked-source-6_qd67n3/pyrav4l2-9c0beeb9a8a6941e8e0dbc6f65830b8d713e0bdf
+      Built pyrav4l2 @ file:///tmp/nilo-locked-source-6_qd67n3/pyrav4l2-9c0beeb9a8a6941e8e0dbc6f65830b8d713e0bdf
+Prepared 1 package in 617ms
+Installed 1 package in 4ms
+ + pyrav4l2==1.0 (from file:///tmp/nilo-locked-source-6_qd67n3/pyrav4l2-9c0beeb9a8a6941e8e0dbc6f65830b8d713e0bdf)
+Using Python 3.12.10 environment at: 05_Software/integrations/camera/.venv-linux-x86_64
+Resolved 1 package in 7ms
+   Building nilo-camera-integration @ file:///work/source/05_Software/integrations/camera
+      Built nilo-camera-integration @ file:///work/source/05_Software/integrations/camera
+Prepared 1 package in 19ms
+Installed 1 package in 5ms
+ + nilo-camera-integration==0.1.0 (from file:///work/source/05_Software/integrations/camera)
+Using Python 3.12.10 environment at: 05_Software/integrations/camera/.venv-linux-x86_64
+Resolved 1 package in 4ms
+   Building nilo-integration-sdk @ file:///work/source/05_Software/integrations/sdk/python
+      Built nilo-integration-sdk @ file:///work/source/05_Software/integrations/sdk/python
+Prepared 1 package in 17ms
+Installed 1 package in 3ms
+ + nilo-integration-sdk==0.1.0 (from file:///work/source/05_Software/integrations/sdk/python)
+Using Python 3.12.10 environment at: 05_Software/integrations/camera/.venv-linux-x86_64
+Checked 20 packages in 2ms
+All installed packages are compatible
+Using CPython 3.12.10 interpreter at: /opt/nilo/python-bin/python3
+Creating virtual environment at: 05_Software/integrations/sdk/python/.venv-linux-x86_64
+Using Python 3.12.10 environment at: 05_Software/integrations/sdk/python/.venv-linux-x86_64
+Resolved 19 packages in 27ms
+Installed 14 packages in 60ms
+Prepared 5 packages without build isolation in 50ms
+Installed 5 packages in 18ms
+ + annotated-types==0.8.0 (from file:///opt/nilo/inputs/python-packages/annotated_types-0.8.0-py3-none-any.whl)
+ + attrs==26.1.0 (from file:///opt/nilo/inputs/python-packages/attrs-26.1.0-py3-none-any.whl)
+ + colorama==0.4.6 (from file:///opt/nilo/inputs/python-packages/colorama-0.4.6-py2.py3-none-any.whl)
+ + iniconfig==2.3.0 (from file:///opt/nilo/inputs/python-packages/iniconfig-2.3.0-py3-none-any.whl)
+ + jsonschema==4.26.0 (from file:///opt/nilo/inputs/python-packages/jsonschema-4.26.0-py3-none-any.whl)
+ + jsonschema-specifications==2025.9.1 (from file:///opt/nilo/inputs/python-packages/jsonschema_specifications-2025.9.1-py3-none-any.whl)
+ + packaging==26.3 (from file:///opt/nilo/inputs/python-packages/packaging-26.3-py3-none-any.whl)
+ + pluggy==1.6.0 (from file:///opt/nilo/inputs/python-packages/pluggy-1.6.0-py3-none-any.whl)
+ + pydantic==2.13.5 (from file:///opt/nilo/inputs/python-packages/pydantic-2.13.5-py3-none-any.whl)
+ + pydantic-core==2.46.5 (from file:///opt/nilo/inputs/python-packages/pydantic_core-2.46.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+ + pygments==2.21.0 (from file:///opt/nilo/inputs/python-packages/pygments-2.21.0-py3-none-any.whl)
+ + pytest==9.1.1 (from file:///opt/nilo/inputs/python-packages/pytest-9.1.1-py3-none-any.whl)
+ + pytest-asyncio==1.4.0 (from file:///opt/nilo/inputs/python-packages/pytest_asyncio-1.4.0-py3-none-any.whl)
+ + referencing==0.37.0 (from file:///opt/nilo/inputs/python-packages/referencing-0.37.0-py3-none-any.whl)
+ + rpds-py==2026.6.3 (from file:///opt/nilo/inputs/python-packages/rpds_py-2026.6.3-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+ + ruff==0.16.5 (from file:///opt/nilo/inputs/python-packages/ruff-0.16.5-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+ + typing-extensions==4.16.0 (from file:///opt/nilo/inputs/python-packages/typing_extensions-4.16.0-py3-none-any.whl)
+ + typing-inspection==0.4.4 (from file:///opt/nilo/inputs/python-packages/typing_inspection-0.4.4-py3-none-any.whl)
+ + uv-build==0.11.25 (from file:///opt/nilo/inputs/python-packages/uv_build-0.11.25-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+Using Python 3.12.10 environment at: 05_Software/integrations/sdk/python/.venv-linux-x86_64
+Resolved 1 package in 4ms
+   Building nilo-integration-sdk @ file:///work/source/05_Software/integrations/sdk/python
+      Built nilo-integration-sdk @ file:///work/source/05_Software/integrations/sdk/python
+Prepared 1 package in 17ms
+Installed 1 package in 3ms
+ + nilo-integration-sdk==0.1.0 (from file:///work/source/05_Software/integrations/sdk/python)
+Using Python 3.12.10 environment at: 05_Software/integrations/sdk/python/.venv-linux-x86_64
+Checked 20 packages in 2ms
+All installed packages are compatible
+Using CPython 3.12.10 interpreter at: /opt/nilo/python-bin/python3
+Creating virtual environment at: 05_Software/integrations/serial/.venv-linux-x86_64
+Using Python 3.12.10 environment at: 05_Software/integrations/serial/.venv-linux-x86_64
+Resolved 15 packages in 26ms
+Installed 14 packages in 42ms
+Prepared 1 package without build isolation in 16ms
+Installed 1 package in 8ms
+ + annotated-types==0.8.0 (from file:///opt/nilo/inputs/python-packages/annotated_types-0.8.0-py3-none-any.whl)
+ + colorama==0.4.6 (from file:///opt/nilo/inputs/python-packages/colorama-0.4.6-py2.py3-none-any.whl)
+ + iniconfig==2.3.0 (from file:///opt/nilo/inputs/python-packages/iniconfig-2.3.0-py3-none-any.whl)
+ + packaging==26.3 (from file:///opt/nilo/inputs/python-packages/packaging-26.3-py3-none-any.whl)
+ + pluggy==1.6.0 (from file:///opt/nilo/inputs/python-packages/pluggy-1.6.0-py3-none-any.whl)
+ + pydantic==2.13.5 (from file:///opt/nilo/inputs/python-packages/pydantic-2.13.5-py3-none-any.whl)
+ + pydantic-core==2.46.5 (from file:///opt/nilo/inputs/python-packages/pydantic_core-2.46.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+ + pygments==2.21.0 (from file:///opt/nilo/inputs/python-packages/pygments-2.21.0-py3-none-any.whl)
+ + pyserial==3.5 (from file:///opt/nilo/inputs/python-packages/pyserial-3.5-py2.py3-none-any.whl)
+ + pytest==9.1.1 (from file:///opt/nilo/inputs/python-packages/pytest-9.1.1-py3-none-any.whl)
+ + pytest-asyncio==1.4.0 (from file:///opt/nilo/inputs/python-packages/pytest_asyncio-1.4.0-py3-none-any.whl)
+ + ruff==0.16.5 (from file:///opt/nilo/inputs/python-packages/ruff-0.16.5-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+ + typing-extensions==4.16.0 (from file:///opt/nilo/inputs/python-packages/typing_extensions-4.16.0-py3-none-any.whl)
+ + typing-inspection==0.4.4 (from file:///opt/nilo/inputs/python-packages/typing_inspection-0.4.4-py3-none-any.whl)
+ + uv-build==0.11.25 (from file:///opt/nilo/inputs/python-packages/uv_build-0.11.25-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+Using Python 3.12.10 environment at: 05_Software/integrations/serial/.venv-linux-x86_64
+Resolved 1 package in 5ms
+   Building nilo-serial-integration @ file:///work/source/05_Software/integrations/serial
+      Built nilo-serial-integration @ file:///work/source/05_Software/integrations/serial
+Prepared 1 package in 22ms
+Installed 1 package in 7ms
+ + nilo-serial-integration==0.11.0 (from file:///work/source/05_Software/integrations/serial)
+Using Python 3.12.10 environment at: 05_Software/integrations/serial/.venv-linux-x86_64
+Resolved 1 package in 3ms
+   Building nilo-integration-sdk @ file:///work/source/05_Software/integrations/sdk/python
+      Built nilo-integration-sdk @ file:///work/source/05_Software/integrations/sdk/python
+Prepared 1 package in 14ms
+Installed 1 package in 2ms
+ + nilo-integration-sdk==0.1.0 (from file:///work/source/05_Software/integrations/sdk/python)
+Using Python 3.12.10 environment at: 05_Software/integrations/serial/.venv-linux-x86_64
+Checked 17 packages in 2ms
+All installed packages are compatible
+Using CPython 3.12.10 interpreter at: /opt/nilo/python-bin/python3
+Creating virtual environment at: 05_Software/integrations/sigrok/.venv-linux-x86_64
+Using Python 3.12.10 environment at: 05_Software/integrations/sigrok/.venv-linux-x86_64
+Resolved 14 packages in 21ms
+Installed 14 packages in 47ms
+ + annotated-types==0.8.0 (from file:///opt/nilo/inputs/python-packages/annotated_types-0.8.0-py3-none-any.whl)
+ + colorama==0.4.6 (from file:///opt/nilo/inputs/python-packages/colorama-0.4.6-py2.py3-none-any.whl)
+ + iniconfig==2.3.0 (from file:///opt/nilo/inputs/python-packages/iniconfig-2.3.0-py3-none-any.whl)
+ + packaging==26.3 (from file:///opt/nilo/inputs/python-packages/packaging-26.3-py3-none-any.whl)
+ + pluggy==1.6.0 (from file:///opt/nilo/inputs/python-packages/pluggy-1.6.0-py3-none-any.whl)
+ + pydantic==2.13.5 (from file:///opt/nilo/inputs/python-packages/pydantic-2.13.5-py3-none-any.whl)
+ + pydantic-core==2.46.5 (from file:///opt/nilo/inputs/python-packages/pydantic_core-2.46.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+ + pygments==2.21.0 (from file:///opt/nilo/inputs/python-packages/pygments-2.21.0-py3-none-any.whl)
+ + pytest==9.1.1 (from file:///opt/nilo/inputs/python-packages/pytest-9.1.1-py3-none-any.whl)
+ + pytest-asyncio==1.4.0 (from file:///opt/nilo/inputs/python-packages/pytest_asyncio-1.4.0-py3-none-any.whl)
+ + ruff==0.16.5 (from file:///opt/nilo/inputs/python-packages/ruff-0.16.5-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+ + typing-extensions==4.16.0 (from file:///opt/nilo/inputs/python-packages/typing_extensions-4.16.0-py3-none-any.whl)
+ + typing-inspection==0.4.4 (from file:///opt/nilo/inputs/python-packages/typing_inspection-0.4.4-py3-none-any.whl)
+ + uv-build==0.11.25 (from file:///opt/nilo/inputs/python-packages/uv_build-0.11.25-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+Using Python 3.12.10 environment at: 05_Software/integrations/sigrok/.venv-linux-x86_64
+Resolved 1 package in 4ms
+   Building nilo-integration-sdk @ file:///work/source/05_Software/integrations/sdk/python
+      Built nilo-integration-sdk @ file:///work/source/05_Software/integrations/sdk/python
+Prepared 1 package in 16ms
+Installed 1 package in 3ms
+ + nilo-integration-sdk==0.1.0 (from file:///work/source/05_Software/integrations/sdk/python)
+Using Python 3.12.10 environment at: 05_Software/integrations/sigrok/.venv-linux-x86_64
+Resolved 1 package in 3ms
+   Building nilo-sigrok-integration @ file:///work/source/05_Software/integrations/sigrok
+      Built nilo-sigrok-integration @ file:///work/source/05_Software/integrations/sigrok
+Prepared 1 package in 21ms
+Installed 1 package in 6ms
+ + nilo-sigrok-integration==0.1.0 (from file:///work/source/05_Software/integrations/sigrok)
+Using Python 3.12.10 environment at: 05_Software/integrations/sigrok/.venv-linux-x86_64
+Checked 16 packages in 1ms
+All installed packages are compatible
+source-lock input coverage verified
+all modules verified
+
+added 240 packages, and audited 241 packages in 15s
+
+61 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+
+> nilo-gui@0.11.0 build
+> tsc -b && vite build
+
+vite v8.2.2 building client environment for production...
+transforming...
+✓ 104 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.52 kB │ gzip:   0.32 kB
+dist/assets/index-BQ4cp2BL.css   51.58 kB │ gzip:   9.21 kB
+dist/assets/index-8kHlQ5Zp.js   737.88 kB │ gzip: 199.73 kB
+
+✓ built in 503ms
+[plugin builtin:vite-reporter]
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+published GUI production build to /outputs/nilo_gui
+[/work/source/05_Software/core] go vet ./...
+[/work/source/05_Software/integrations/camera] /opt/nilo/python-bin/python -m compileall -q .
+[/work/source/05_Software/integrations/sdk/python] /opt/nilo/python-bin/python -m compileall -q .
+[/work/source/05_Software/integrations/serial] /opt/nilo/python-bin/python -m compileall -q .
+[/work/source/05_Software/integrations/sigrok] /opt/nilo/python-bin/python -m compileall -q .
+[/work/source/05_Software] /opt/nilo/python-bin/python -m compileall -q ../02_Tools/scripts
+test_a_failing_browser_end_to_end_run_fails_the_whole_command (test_aegis_test.AegisTestRouterTests.test_a_failing_browser_end_to_end_run_fails_the_whole_command)
+A skipped or failed browser run must never be reported as a pass. ... ok
+test_camera_probe_tests_are_part_of_full_gate (test_aegis_test.AegisTestRouterTests.test_camera_probe_tests_are_part_of_full_gate)
+A probe regression must fail the repository's full test command. ... ok
+test_discover_suites_finds_go_module_and_each_python_integration (test_aegis_test.AegisTestRouterTests.test_discover_suites_finds_go_module_and_each_python_integration)
+A future integration must not be silently omitted from AEGIS runs. ... ok
+test_discover_suites_finds_windows_frontend_and_ignores_generated_packages (test_aegis_test.AegisTestRouterTests.test_discover_suites_finds_windows_frontend_and_ignores_generated_packages) ... ok
+test_missing_project_runner_returns_shell_not_found_status (test_aegis_test.AegisTestRouterTests.test_missing_project_runner_returns_shell_not_found_status)
+A missing declared runner must fail cleanly instead of crashing AEGIS. ... error: required command not found: uv
+ok
+test_run_full_uses_uv_pytest_for_uv_build_project (test_aegis_test.AegisTestRouterTests.test_run_full_uses_uv_pytest_for_uv_build_project)
+uv-managed projects must not inherit the host Python environment. ... [/work/source] uv run pytest -q
+ok
+test_windows_appliance_stage_fails_when_no_distribution_is_installed (test_aegis_test.AegisTestRouterTests.test_windows_appliance_stage_fails_when_no_distribution_is_installed) ... error: no WSL distribution is installed; prepare one with 02_Tools/bootstrap/bootstrap-development.ps1
+ok
+test_windows_appliance_stage_invokes_the_translated_script_without_shell_code (test_aegis_test.AegisTestRouterTests.test_windows_appliance_stage_invokes_the_translated_script_without_shell_code) ... ok
+test_windows_appliance_stage_rejects_an_uninstalled_selected_distribution (test_aegis_test.AegisTestRouterTests.test_windows_appliance_stage_rejects_an_uninstalled_selected_distribution) ... error: WSL distribution 'Missing Linux' is not installed; set NILO_WSL_DISTRIBUTION to an installed distribution
+ok
+test_windows_appliance_stage_requires_selection_for_multiple_distributions (test_aegis_test.AegisTestRouterTests.test_windows_appliance_stage_requires_selection_for_multiple_distributions) ... error: several WSL distributions are installed (Ubuntu, Ubuntu-24.04); set NILO_WSL_DISTRIBUTION to choose one
+ok
+test_windows_appliance_stage_selects_the_only_installed_distribution (test_aegis_test.AegisTestRouterTests.test_windows_appliance_stage_selects_the_only_installed_distribution) ... ok
+test_windows_frontend_runs_test_build_format_and_lint_commands (test_aegis_test.AegisTestRouterTests.test_windows_frontend_runs_test_build_format_and_lint_commands) ... ok
+test_fixture_pins_route_metrics_for_repeatable_restore_verification (test_appliance_stage.ApplianceBrowserSuiteTests.test_fixture_pins_route_metrics_for_repeatable_restore_verification) ... ok
+test_image_carries_the_interface_projects_locked_dependencies (test_appliance_stage.ApplianceBrowserSuiteTests.test_image_carries_the_interface_projects_locked_dependencies) ... ok
+test_locked_container_no_longer_runs_the_browser_suite (test_appliance_stage.ApplianceBrowserSuiteTests.test_locked_container_no_longer_runs_the_browser_suite) ... ok
+test_repository_gate_routes_the_browser_suite_to_the_stage (test_appliance_stage.ApplianceBrowserSuiteTests.test_repository_gate_routes_the_browser_suite_to_the_stage) ... ok
+test_stage_builds_the_interface_and_runs_the_browser_suite (test_appliance_stage.ApplianceBrowserSuiteTests.test_stage_builds_the_interface_and_runs_the_browser_suite) ... ok
+test_stage_serves_the_built_interface_rather_than_a_development_server (test_appliance_stage.ApplianceBrowserSuiteTests.test_stage_serves_the_built_interface_rather_than_a_development_server) ... ok
+test_cleanup_does_not_remove_a_container_that_create_never_created (test_appliance_stage.ApplianceHostIsolationTests.test_cleanup_does_not_remove_a_container_that_create_never_created) ... ok
+test_container_side_refuses_to_run_outside_its_container (test_appliance_stage.ApplianceHostIsolationTests.test_container_side_refuses_to_run_outside_its_container) ... ok
+test_container_side_touches_no_host_interface (test_appliance_stage.ApplianceHostIsolationTests.test_container_side_touches_no_host_interface) ... ok
+test_entry_point_compares_host_interfaces_and_route_around_the_run (test_appliance_stage.ApplianceHostIsolationTests.test_entry_point_compares_host_interfaces_and_route_around_the_run) ... ok
+test_entry_point_creates_and_removes_its_own_engine_network (test_appliance_stage.ApplianceHostIsolationTests.test_entry_point_creates_and_removes_its_own_engine_network) ... ok
+test_base_image_is_named_by_digest_and_packages_are_explicit (test_appliance_stage.ApplianceImageDefinitionTests.test_base_image_is_named_by_digest_and_packages_are_explicit) ... ok
+test_every_inventory_probe_is_actually_run_inside_the_image (test_appliance_stage.ApplianceImageDefinitionTests.test_every_inventory_probe_is_actually_run_inside_the_image) ... ok
+test_inventory_names_every_tool_the_stage_depends_on (test_appliance_stage.ApplianceImageDefinitionTests.test_inventory_names_every_tool_the_stage_depends_on) ... ok
+test_inventory_probe_preserves_a_failed_commands_status (test_appliance_stage.ApplianceImageDefinitionTests.test_inventory_probe_preserves_a_failed_commands_status) ... ok
+test_node_and_browser_engine_are_pinned_from_the_toolchain_manifest (test_appliance_stage.ApplianceImageDefinitionTests.test_node_and_browser_engine_are_pinned_from_the_toolchain_manifest) ... ok
+test_shared_image_keeps_network_install_and_appliance_targets_distinct (test_appliance_stage.ApplianceImageDefinitionTests.test_shared_image_keeps_network_install_and_appliance_targets_distinct) ... ok
+test_absent_container_engine_is_named_and_the_run_fails (test_appliance_stage.AppliancePrerequisiteTests.test_absent_container_engine_is_named_and_the_run_fails) ... ok
+test_unreachable_engine_daemon_is_named_and_the_run_fails (test_appliance_stage.AppliancePrerequisiteTests.test_unreachable_engine_daemon_is_named_and_the_run_fails) ... ok
+test_a_windows_host_is_refused_rather_than_passing (test_appliance_stage.ApplianceUnsupportedHostTests.test_a_windows_host_is_refused_rather_than_passing) ... skipped 'this case observes the refusal a Windows host receives'
+test_entry_point_refuses_an_unsupported_host_by_name (test_appliance_stage.ApplianceUnsupportedHostTests.test_entry_point_refuses_an_unsupported_host_by_name) ... ok
+test_acceptance_evidence_commands_include_required_arguments (test_build_environment.BuildEnvironmentTests.test_acceptance_evidence_commands_include_required_arguments) ... ok
+test_acceptance_evidence_distinguishes_maturity_states (test_build_environment.BuildEnvironmentTests.test_acceptance_evidence_distinguishes_maturity_states) ... ok
+test_acceptance_reports_pending_external_gates_and_never_infers_pass (test_build_environment.BuildEnvironmentTests.test_acceptance_reports_pending_external_gates_and_never_infers_pass) ... ok
+test_archive_round_trip_and_corruption_fail_closed (test_build_environment.BuildEnvironmentTests.test_archive_round_trip_and_corruption_fail_closed) ... ok
+test_candidate_identity_can_be_confirmed_after_approval_commit (test_build_environment.BuildEnvironmentTests.test_candidate_identity_can_be_confirmed_after_approval_commit) ... ok
+test_container_execution_isolates_the_host_checkout (test_build_environment.BuildEnvironmentTests.test_container_execution_isolates_the_host_checkout) ... ok
+test_definition_and_lock_are_complete_and_digest_pinned (test_build_environment.BuildEnvironmentTests.test_definition_and_lock_are_complete_and_digest_pinned) ... ok
+test_documentation_states_the_exact_supported_boundary (test_build_environment.BuildEnvironmentTests.test_documentation_states_the_exact_supported_boundary) ... ok
+test_downgrade_override_is_explicit_in_supported_entry_points (test_build_environment.BuildEnvironmentTests.test_downgrade_override_is_explicit_in_supported_entry_points) ... ok
+test_engine_installer_plans_before_it_mutates_the_host (test_build_environment.BuildEnvironmentTests.test_engine_installer_plans_before_it_mutates_the_host) ... ok
+test_engine_store_space_check_warns_rather_than_blocking_deduplicated_imports (test_build_environment.BuildEnvironmentTests.test_engine_store_space_check_warns_rather_than_blocking_deduplicated_imports)
+A vhdx with internal free space need not grow, so the engine-store ... ok
+test_engine_store_space_probe_does_not_require_user_write_access (test_build_environment.BuildEnvironmentTests.test_engine_store_space_probe_does_not_require_user_write_access) ... ok
+test_evidence_detail_names_every_pending_gate (test_build_environment.BuildEnvironmentTests.test_evidence_detail_names_every_pending_gate) ... ok
+test_explicit_rebuild_reports_selected_action_then_missing_tool (test_build_environment.BuildEnvironmentTests.test_explicit_rebuild_reports_selected_action_then_missing_tool) ... ok
+test_full_verification_seeds_the_offline_runtime_cache (test_build_environment.BuildEnvironmentTests.test_full_verification_seeds_the_offline_runtime_cache) ... ok
+test_full_verification_uses_the_canonical_offline_suite (test_build_environment.BuildEnvironmentTests.test_full_verification_uses_the_canonical_offline_suite) ... ok
+test_generated_builder_identity_is_host_neutral_and_consistent (test_build_environment.BuildEnvironmentTests.test_generated_builder_identity_is_host_neutral_and_consistent) ... ok
+test_host_archive_reads_raw_deb_control_field_values (test_build_environment.BuildEnvironmentTests.test_host_archive_reads_raw_deb_control_field_values) ... ok
+test_host_archive_uses_apts_selected_dependency_closure (test_build_environment.BuildEnvironmentTests.test_host_archive_uses_apts_selected_dependency_closure) ... ok
+test_host_bootstrap_preserves_an_existing_selected_engine (test_build_environment.BuildEnvironmentTests.test_host_bootstrap_preserves_an_existing_selected_engine) ... ok
+test_host_installation_fails_closed_on_downgrades_and_architecture_changes (test_build_environment.BuildEnvironmentTests.test_host_installation_fails_closed_on_downgrades_and_architecture_changes) ... ok
+test_host_installation_plans_the_transaction_before_changing_anything (test_build_environment.BuildEnvironmentTests.test_host_installation_plans_the_transaction_before_changing_anything) ... ok
+test_host_isolation_gate_proves_dependencies_are_untouched (test_build_environment.BuildEnvironmentTests.test_host_isolation_gate_proves_dependencies_are_untouched) ... ok
+test_host_isolation_sentinel_cleanup_is_interruption_safe (test_build_environment.BuildEnvironmentTests.test_host_isolation_sentinel_cleanup_is_interruption_safe) ... ok
+test_host_transaction_rejects_unresolved_dependencies_before_install (test_build_environment.BuildEnvironmentTests.test_host_transaction_rejects_unresolved_dependencies_before_install) ... ok
+test_inventory_only_verification_does_not_require_skopeo (test_build_environment.BuildEnvironmentTests.test_inventory_only_verification_does_not_require_skopeo) ... ok
+test_materialized_input_directory_rejects_missing_and_tampered_payloads (test_build_environment.BuildEnvironmentTests.test_materialized_input_directory_rejects_missing_and_tampered_payloads) ... ok
+test_native_ubuntu_entry_point_uses_shared_boundaries (test_build_environment.BuildEnvironmentTests.test_native_ubuntu_entry_point_uses_shared_boundaries) ... ok
+test_native_ubuntu_rejects_unsupported_hosts_before_engine (test_build_environment.BuildEnvironmentTests.test_native_ubuntu_rejects_unsupported_hosts_before_engine) ... ok
+test_normal_wrapper_is_offline_unprivileged_and_digest_checked (test_build_environment.BuildEnvironmentTests.test_normal_wrapper_is_offline_unprivileged_and_digest_checked) ... ok
+test_oci_image_acquisition_verifies_digest_and_never_uses_a_mutable_tag (test_build_environment.BuildEnvironmentTests.test_oci_image_acquisition_verifies_digest_and_never_uses_a_mutable_tag) ... ok
+test_offline_python_environments_install_only_locked_local_inputs (test_build_environment.BuildEnvironmentTests.test_offline_python_environments_install_only_locked_local_inputs) ... ok
+test_pending_archive_reports_recovery_before_missing_tool_errors (test_build_environment.BuildEnvironmentTests.test_pending_archive_reports_recovery_before_missing_tool_errors) ... ok
+test_pointer_missing_extra_and_reordered_parts_are_rejected (test_build_environment.BuildEnvironmentTests.test_pointer_missing_extra_and_reordered_parts_are_rejected) ... ok
+test_policy_lfs_and_documented_commands_match_the_plan (test_build_environment.BuildEnvironmentTests.test_policy_lfs_and_documented_commands_match_the_plan) ... ok
+test_publication_preflight_delegates_to_local_part_integrity_check (test_build_environment.BuildEnvironmentTests.test_publication_preflight_delegates_to_local_part_integrity_check) ... ok
+test_publication_preflight_rejects_bad_local_parts_and_accepts_complete_set (test_build_environment.BuildEnvironmentTests.test_publication_preflight_rejects_bad_local_parts_and_accepts_complete_set) ... skipped 'PowerShell publication wrapper runs on Windows'
+test_reconstruction_acquires_base_and_frontend_images_by_digest (test_build_environment.BuildEnvironmentTests.test_reconstruction_acquires_base_and_frontend_images_by_digest) ... ok
+test_reconstruction_lock_is_complete_and_consumed_offline (test_build_environment.BuildEnvironmentTests.test_reconstruction_lock_is_complete_and_consumed_offline) ... ok
+test_replica_preflight_rejects_partial_github_and_missing_gitea_evidence (test_build_environment.BuildEnvironmentTests.test_replica_preflight_rejects_partial_github_and_missing_gitea_evidence) ... ok
+test_restore_checks_space_and_avoids_duplicate_full_size_temporaries (test_build_environment.BuildEnvironmentTests.test_restore_checks_space_and_avoids_duplicate_full_size_temporaries) ... ok
+test_round_trip_status_requires_an_explicit_successful_transition (test_build_environment.BuildEnvironmentTests.test_round_trip_status_requires_an_explicit_successful_transition) ... ok
+test_setup_has_no_forge_acquisition_or_persistent_environment_change (test_build_environment.BuildEnvironmentTests.test_setup_has_no_forge_acquisition_or_persistent_environment_change) ... ok
+test_source_copy_preserves_control_metadata_without_runtime_payloads (test_build_environment.BuildEnvironmentTests.test_source_copy_preserves_control_metadata_without_runtime_payloads)
+Exercise both real copy commands against an archive/runtime fixture. ... ok
+test_source_identity_accepts_dirty_content_and_ignores_outputs (test_build_environment.BuildEnvironmentTests.test_source_identity_accepts_dirty_content_and_ignores_outputs) ... ok
+test_space_check_accounts_for_the_wsl_host_volume (test_build_environment.BuildEnvironmentTests.test_space_check_accounts_for_the_wsl_host_volume)
+A WSL ext4 virtual disk can only grow while its Windows volume has room. ... ok
+test_space_check_reports_required_and_available_and_fails_closed (test_build_environment.BuildEnvironmentTests.test_space_check_reports_required_and_available_and_fails_closed) ... ok
+test_stale_image_source_identity_is_rejected (test_build_environment.BuildEnvironmentTests.test_stale_image_source_identity_is_rejected) ... ok
+test_streamed_join_verifies_the_complete_archive_digest (test_build_environment.BuildEnvironmentTests.test_streamed_join_verifies_the_complete_archive_digest) ... ok
+test_untracked_shell_identity_matches_later_executable_index_mode (test_build_environment.BuildEnvironmentTests.test_untracked_shell_identity_matches_later_executable_index_mode) ... ok
+test_windows_and_native_entry_points_share_linux_helpers (test_build_environment.BuildEnvironmentTests.test_windows_and_native_entry_points_share_linux_helpers) ... ok
+test_wsl_space_check_requires_the_actual_backing_volume (test_build_environment.BuildEnvironmentTests.test_wsl_space_check_requires_the_actual_backing_volume) ... ok
+test_a_backend_that_answers_something_else_is_not_accepted (test_development_lifecycle.DevelopmentLifecycleTests.test_a_backend_that_answers_something_else_is_not_accepted)
+Only 401 proves the port is Bench Core rather than another server. ... skipped 'the development lifecycle is a Windows entry point'
+test_a_diagnostic_line_from_wsl_does_not_corrupt_the_data_directory (test_development_lifecycle.DevelopmentLifecycleTests.test_a_diagnostic_line_from_wsl_does_not_corrupt_the_data_directory)
+The WSL helper merges stderr into its output; only the path counts. ... skipped 'the development lifecycle is a Windows entry point'
+test_a_listening_socket_is_read_as_an_identifier_and_a_name (test_development_lifecycle.DevelopmentLifecycleTests.test_a_listening_socket_is_read_as_an_identifier_and_a_name)
+`-match` overwrites $Matches, so the order of the two reads matters. ... skipped 'the development lifecycle is a Windows entry point'
+test_a_windows_mounted_home_is_refused (test_development_lifecycle.DevelopmentLifecycleTests.test_a_windows_mounted_home_is_refused) ... skipped 'the development lifecycle is a Windows entry point'
+test_an_already_answering_start_still_prints_the_token_command (test_development_lifecycle.DevelopmentLifecycleTests.test_an_already_answering_start_still_prints_the_token_command)
+Every successful start prints it, including the one that starts nothing. ... skipped 'the development lifecycle is a Windows entry point'
+test_backend_data_directory_is_linux_native (test_development_lifecycle.DevelopmentLifecycleTests.test_backend_data_directory_is_linux_native) ... skipped 'the development lifecycle is a Windows entry point'
+test_boundaries_are_injectable_and_this_suite_uses_them (test_development_lifecycle.DevelopmentLifecycleTests.test_boundaries_are_injectable_and_this_suite_uses_them) ... skipped 'the development lifecycle is a Windows entry point'
+test_browser_opens_only_when_requested (test_development_lifecycle.DevelopmentLifecycleTests.test_browser_opens_only_when_requested) ... skipped 'the development lifecycle is a Windows entry point'
+test_browser_opens_when_requested_against_an_already_healthy_topology (test_development_lifecycle.DevelopmentLifecycleTests.test_browser_opens_when_requested_against_an_already_healthy_topology)
+Showing the interface does not depend on having started it. ... skipped 'the development lifecycle is a Windows entry point'
+test_entry_point_accepts_its_commands_and_rejects_bad_input (test_development_lifecycle.DevelopmentLifecycleTests.test_entry_point_accepts_its_commands_and_rejects_bad_input) ... skipped 'the development lifecycle is a Windows entry point'
+test_entry_point_and_library_exist (test_development_lifecycle.DevelopmentLifecycleTests.test_entry_point_and_library_exist) ... skipped 'the development lifecycle is a Windows entry point'
+test_existing_bootstrap_entry_points_are_unchanged_in_shape (test_development_lifecycle.DevelopmentLifecycleTests.test_existing_bootstrap_entry_points_are_unchanged_in_shape) ... skipped 'the development lifecycle is a Windows entry point'
+test_exit_codes_are_distinct_and_documented (test_development_lifecycle.DevelopmentLifecycleTests.test_exit_codes_are_distinct_and_documented) ... skipped 'the development lifecycle is a Windows entry point'
+test_options_default_to_the_documented_values (test_development_lifecycle.DevelopmentLifecycleTests.test_options_default_to_the_documented_values) ... skipped 'the development lifecycle is a Windows entry point'
+test_port_conflict_stops_the_start_and_leaves_the_holder_alone (test_development_lifecycle.DevelopmentLifecycleTests.test_port_conflict_stops_the_start_and_leaves_the_holder_alone) ... skipped 'the development lifecycle is a Windows entry point'
+test_printed_commands_are_portable_and_quoted (test_development_lifecycle.DevelopmentLifecycleTests.test_printed_commands_are_portable_and_quoted) ... skipped 'the development lifecycle is a Windows entry point'
+test_shell_paths_are_quoted_against_apostrophes (test_development_lifecycle.DevelopmentLifecycleTests.test_shell_paths_are_quoted_against_apostrophes) ... skipped 'the development lifecycle is a Windows entry point'
+test_start_completes_a_half_up_topology_without_duplicating_it (test_development_lifecycle.DevelopmentLifecycleTests.test_start_completes_a_half_up_topology_without_duplicating_it) ... skipped 'the development lifecycle is a Windows entry point'
+test_start_leaves_an_already_answering_topology_alone (test_development_lifecycle.DevelopmentLifecycleTests.test_start_leaves_an_already_answering_topology_alone) ... skipped 'the development lifecycle is a Windows entry point'
+test_start_reports_a_timeout_naming_the_silent_component (test_development_lifecycle.DevelopmentLifecycleTests.test_start_reports_a_timeout_naming_the_silent_component) ... skipped 'the development lifecycle is a Windows entry point'
+test_start_reports_success_only_after_both_endpoints_answer (test_development_lifecycle.DevelopmentLifecycleTests.test_start_reports_success_only_after_both_endpoints_answer) ... skipped 'the development lifecycle is a Windows entry point'
+test_status_classifies_from_what_the_endpoints_answer (test_development_lifecycle.DevelopmentLifecycleTests.test_status_classifies_from_what_the_endpoints_answer) ... skipped 'the development lifecycle is a Windows entry point'
+test_successful_start_prints_endpoints_selection_and_follow_ups (test_development_lifecycle.DevelopmentLifecycleTests.test_successful_start_prints_endpoints_selection_and_follow_ups) ... skipped 'the development lifecycle is a Windows entry point'
+test_the_launcher_preserves_argument_boundaries (test_development_lifecycle.DevelopmentLifecycleTests.test_the_launcher_preserves_argument_boundaries)
+`Start-Process -ArgumentList` joins an array without quoting anything. ... skipped 'the development lifecycle is a Windows entry point'
+test_the_lifecycle_never_signals_or_tracks_a_process (test_development_lifecycle.DevelopmentLifecycleTests.test_the_lifecycle_never_signals_or_tracks_a_process)
+The safety property is structural: there is no code that can kill. ... skipped 'the development lifecycle is a Windows entry point'
+test_the_lifecycle_writes_no_files_into_the_repository (test_development_lifecycle.DevelopmentLifecycleTests.test_the_lifecycle_writes_no_files_into_the_repository) ... skipped 'the development lifecycle is a Windows entry point'
+test_token_command_uses_the_translated_checkout_path (test_development_lifecycle.DevelopmentLifecycleTests.test_token_command_uses_the_translated_checkout_path) ... skipped 'the development lifecycle is a Windows entry point'
+test_current_inventory_covers_every_source_lock (test_locked_build_inputs.LockedBuildInputTests.test_current_inventory_covers_every_source_lock) ... ok
+test_declared_build_dependency_is_required_before_installation (test_locked_build_inputs.LockedBuildInputTests.test_declared_build_dependency_is_required_before_installation) ... ok
+test_generated_dependency_trees_are_excluded (test_locked_build_inputs.LockedBuildInputTests.test_generated_dependency_trees_are_excluded) ... ok
+test_git_source_requires_exact_revision_and_build_tool_closure (test_locked_build_inputs.LockedBuildInputTests.test_git_source_requires_exact_revision_and_build_tool_closure) ... ok
+test_linux_entry_points_have_executable_index_modes (test_locked_build_inputs.LockedBuildInputTests.test_linux_entry_points_have_executable_index_modes) ... ok
+test_missing_go_object_or_checksum_refuses_preparation (test_locked_build_inputs.LockedBuildInputTests.test_missing_go_object_or_checksum_refuses_preparation) ... ok
+test_missing_or_corrupt_wheel_fails_before_environment_creation (test_locked_build_inputs.LockedBuildInputTests.test_missing_or_corrupt_wheel_fails_before_environment_creation) ... ok
+test_npm_lock_requires_the_exact_tarball_source_and_version (test_locked_build_inputs.LockedBuildInputTests.test_npm_lock_requires_the_exact_tarball_source_and_version) ... ok
+test_registry_wheel_requires_lock_hash_version_and_source (test_locked_build_inputs.LockedBuildInputTests.test_registry_wheel_requires_lock_hash_version_and_source) ... ok
+test_target_wheel_selection_accepts_abi3_and_rejects_other_platforms (test_locked_build_inputs.LockedBuildInputTests.test_target_wheel_selection_accepts_abi3_and_rejects_other_platforms) ... ok
+test_checked_in_lock_is_explicitly_incomplete (test_packaging_inputs.PackagingInputTests.test_checked_in_lock_is_explicitly_incomplete) ... ok
+test_cli_and_wrappers_keep_fetch_and_offline_paths_separate (test_packaging_inputs.PackagingInputTests.test_cli_and_wrappers_keep_fetch_and_offline_paths_separate) ... ok
+test_connected_resolver_creates_a_complete_reviewable_lock_and_cache (test_packaging_inputs.PackagingInputTests.test_connected_resolver_creates_a_complete_reviewable_lock_and_cache) ... ok
+test_connected_resolver_names_missing_classes_and_rejects_unsafe_metadata (test_packaging_inputs.PackagingInputTests.test_connected_resolver_names_missing_classes_and_rejects_unsafe_metadata) ... ok
+test_connected_resolver_rejects_unsatisfied_debian_version_relationships (test_packaging_inputs.PackagingInputTests.test_connected_resolver_rejects_unsatisfied_debian_version_relationships) ... ok
+test_connected_resolver_rejects_untrusted_signatures_and_incomplete_apt_closure (test_packaging_inputs.PackagingInputTests.test_connected_resolver_rejects_untrusted_signatures_and_incomplete_apt_closure) ... ok
+test_debian_closure_honours_architecture_alternatives_and_virtual_providers (test_packaging_inputs.PackagingInputTests.test_debian_closure_honours_architecture_alternatives_and_virtual_providers) ... ok
+test_fetch_caches_only_verified_https_bytes_atomically (test_packaging_inputs.PackagingInputTests.test_fetch_caches_only_verified_https_bytes_atomically) ... ok
+test_fetch_rejects_redirect_size_digest_and_interruption_without_residue (test_packaging_inputs.PackagingInputTests.test_fetch_rejects_redirect_size_digest_and_interruption_without_residue) ... ok
+test_fetch_removes_a_corrupt_object_before_a_failed_retry (test_packaging_inputs.PackagingInputTests.test_fetch_removes_a_corrupt_object_before_a_failed_retry) ... ok
+test_ipv6_reject_route_does_not_imply_connectivity (test_packaging_inputs.PackagingInputTests.test_ipv6_reject_route_does_not_imply_connectivity) ... ok
+test_list_targets_cli_is_canonical_and_rejects_unknown_target (test_packaging_inputs.PackagingInputTests.test_list_targets_cli_is_canonical_and_rejects_unknown_target) ... error: unknown delivery target: ubuntu-25-amd64
+ok
+test_lock_rejects_unsafe_sources_duplicates_and_incomplete_state (test_packaging_inputs.PackagingInputTests.test_lock_rejects_unsafe_sources_duplicates_and_incomplete_state) ... ok
+test_prepare_receipts_never_infer_hardware_acceptance (test_packaging_inputs.PackagingInputTests.test_prepare_receipts_never_infer_hardware_acceptance) ... ok
+test_prepare_requires_linux_loopback_only_and_preserves_prior_output (test_packaging_inputs.PackagingInputTests.test_prepare_requires_linux_loopback_only_and_preserves_prior_output) ... ok
+test_prepare_uses_one_configuration_snapshot (test_packaging_inputs.PackagingInputTests.test_prepare_uses_one_configuration_snapshot) ... ok
+test_shipped_target_registry_is_exact (test_packaging_inputs.PackagingInputTests.test_shipped_target_registry_is_exact) ... ok
+test_target_registry_rejects_ambiguous_or_inconsistent_metadata (test_packaging_inputs.PackagingInputTests.test_target_registry_rejects_ambiguous_or_inconsistent_metadata) ... ok
+test_verify_cache_rejects_fifo_without_blocking (test_packaging_inputs.PackagingInputTests.test_verify_cache_rejects_fifo_without_blocking) ... ok
+test_verify_cache_rejects_symlinked_cache_objects (test_packaging_inputs.PackagingInputTests.test_verify_cache_rejects_symlinked_cache_objects) ... ok
+test_verify_cache_reports_all_object_defects (test_packaging_inputs.PackagingInputTests.test_verify_cache_reports_all_object_defects) ... ok
+test_debian_package_is_deterministic_and_policy_safe (test_release_packaging.DebianPackageTests.test_debian_package_is_deterministic_and_policy_safe) ... ok
+test_debian_package_refuses_payload_bytes_not_bound_by_the_manifest (test_release_packaging.DebianPackageTests.test_debian_package_refuses_payload_bytes_not_bound_by_the_manifest) ... ok
+test_debian_package_refuses_target_or_payload_mismatch (test_release_packaging.DebianPackageTests.test_debian_package_refuses_target_or_payload_mismatch) ... ok
+test_release_verifier_rejects_replaced_debian_maintainer_logic (test_release_packaging.DebianPackageTests.test_release_verifier_rejects_replaced_debian_maintainer_logic) ... ok
+test_offline_receipt_revalidates_admitted_cache_bytes (test_release_packaging.DeterministicPayloadTests.test_offline_receipt_revalidates_admitted_cache_bytes) ... ok
+test_payload_is_byte_reproducible_and_manifested (test_release_packaging.DeterministicPayloadTests.test_payload_is_byte_reproducible_and_manifested) ... ok
+test_payload_refuses_links_special_files_and_mutable_state (test_release_packaging.DeterministicPayloadTests.test_payload_refuses_links_special_files_and_mutable_state) ... ok
+test_release_scanner_checks_large_and_binary_files (test_release_packaging.DeterministicPayloadTests.test_release_scanner_checks_large_and_binary_files) ... ok
+test_release_scanner_names_forbidden_production_content (test_release_packaging.DeterministicPayloadTests.test_release_scanner_names_forbidden_production_content) ... ok
+test_generated_installer_launcher_rejects_duplicate_members_before_extraction (test_release_packaging.OfflineInstallerTests.test_generated_installer_launcher_rejects_duplicate_members_before_extraction) ... ok
+test_installer_archive_rejects_duplicate_members (test_release_packaging.OfflineInstallerTests.test_installer_archive_rejects_duplicate_members) ... ok
+test_installer_structure_rejects_a_replaced_root_driver (test_release_packaging.OfflineInstallerTests.test_installer_structure_rejects_a_replaced_root_driver) ... ok
+test_offline_installer_is_self_verifying_and_deterministic (test_release_packaging.OfflineInstallerTests.test_offline_installer_is_self_verifying_and_deterministic) ... ok
+test_offline_installer_refuses_dependency_outside_admitted_cache (test_release_packaging.OfflineInstallerTests.test_offline_installer_refuses_dependency_outside_admitted_cache) ... ok
+test_offline_installer_refuses_mismatched_or_unsafe_inputs (test_release_packaging.OfflineInstallerTests.test_offline_installer_refuses_mismatched_or_unsafe_inputs) ... ok
+test_offline_installer_refuses_shell_active_package_names (test_release_packaging.OfflineInstallerTests.test_offline_installer_refuses_shell_active_package_names) ... ok
+test_recovery_helper_executes_underscore_and_clean_terminal_phases (test_release_packaging.OfflineInstallerTests.test_recovery_helper_executes_underscore_and_clean_terminal_phases) ... ok
+test_artifact_builders_require_a_trusted_input_lock (test_release_packaging.OperatorScriptTests.test_artifact_builders_require_a_trusted_input_lock) ... ok
+test_candidate_builder_uses_archived_revision_and_pinned_tools (test_release_packaging.OperatorScriptTests.test_candidate_builder_uses_archived_revision_and_pinned_tools) ... ok
+test_fixed_acceptance_executes_distinct_package_and_integration_lifecycles (test_release_packaging.OperatorScriptTests.test_fixed_acceptance_executes_distinct_package_and_integration_lifecycles) ... ok
+test_packaging_entrypoints_cover_each_delivery_artifact (test_release_packaging.OperatorScriptTests.test_packaging_entrypoints_cover_each_delivery_artifact) ... ok
+test_readme_describes_connected_acquisition_and_offline_build (test_release_packaging.OperatorScriptTests.test_readme_describes_connected_acquisition_and_offline_build) ... ok
+test_target_acceptance_harness_constructs_isolated_exact_target_command (test_release_packaging.OperatorScriptTests.test_target_acceptance_harness_constructs_isolated_exact_target_command) ... ok
+test_sigrok_bundle_embeds_its_runtime_without_package_resolution (test_release_packaging.ProductionIntegrationTests.test_sigrok_bundle_embeds_its_runtime_without_package_resolution) ... ok
+test_sigrok_bundle_refuses_incomplete_or_fixture_runtimes (test_release_packaging.ProductionIntegrationTests.test_sigrok_bundle_refuses_incomplete_or_fixture_runtimes) ... ok
+test_sigrok_bundle_rejects_failed_executed_health_check (test_release_packaging.ProductionIntegrationTests.test_sigrok_bundle_rejects_failed_executed_health_check) ... ok
+test_sigrok_bundle_rejects_health_checks_in_a_routed_namespace (test_release_packaging.ProductionIntegrationTests.test_sigrok_bundle_rejects_health_checks_in_a_routed_namespace) ... ok
+test_image_builder_authenticates_package_before_privileged_execution (test_release_packaging.RaspberryPiImageTests.test_image_builder_authenticates_package_before_privileged_execution) ... ok
+test_image_builder_delegates_only_validated_inputs_and_keeps_hardware_not_run (test_release_packaging.RaspberryPiImageTests.test_image_builder_delegates_only_validated_inputs_and_keeps_hardware_not_run) ... ok
+test_image_builder_refuses_non_pi_targets_and_symlinked_inputs (test_release_packaging.RaspberryPiImageTests.test_image_builder_refuses_non_pi_targets_and_symlinked_inputs) ... ok
+test_image_credential_remains_root_only_until_narrow_handoff (test_release_packaging.RaspberryPiImageTests.test_image_credential_remains_root_only_until_narrow_handoff) ... ok
+test_privileged_recovery_state_is_outside_the_service_writable_data_root (test_release_packaging.RaspberryPiImageTests.test_privileged_recovery_state_is_outside_the_service_writable_data_root) ... ok
+test_acceptance_retains_exact_target_image_and_kernel_identity (test_release_packaging.ReleaseEvidenceTests.test_acceptance_retains_exact_target_image_and_kernel_identity) ... ok
+test_build_set_receipts_are_emitted_from_artifact_builder_receipts (test_release_packaging.ReleaseEvidenceTests.test_build_set_receipts_are_emitted_from_artifact_builder_receipts) ... ok
+test_build_set_receipts_reject_malformed_embedded_builder_metadata (test_release_packaging.ReleaseEvidenceTests.test_build_set_receipts_reject_malformed_embedded_builder_metadata) ... ok
+test_build_set_receipts_reject_post_hoc_receipts_for_copied_artifacts (test_release_packaging.ReleaseEvidenceTests.test_build_set_receipts_reject_post_hoc_receipts_for_copied_artifacts) ... ok
+test_offline_receipt_must_match_the_selected_input_lock (test_release_packaging.ReleaseEvidenceTests.test_offline_receipt_must_match_the_selected_input_lock) ... ok
+test_release_evidence_closes_every_artifact_and_keeps_physical_checks_not_run (test_release_packaging.ReleaseEvidenceTests.test_release_evidence_closes_every_artifact_and_keeps_physical_checks_not_run) ... ok
+test_release_evidence_derives_failure_from_the_executed_command (test_release_packaging.ReleaseEvidenceTests.test_release_evidence_derives_failure_from_the_executed_command) ... ok
+test_release_evidence_refuses_an_incomplete_lock (test_release_packaging.ReleaseEvidenceTests.test_release_evidence_refuses_an_incomplete_lock) ... ok
+test_release_evidence_refuses_missing_executed_software_acceptance (test_release_packaging.ReleaseEvidenceTests.test_release_evidence_refuses_missing_executed_software_acceptance) ... ok
+test_release_evidence_rejects_malformed_artifacts_and_weakened_apt_provenance (test_release_packaging.ReleaseEvidenceTests.test_release_evidence_rejects_malformed_artifacts_and_weakened_apt_provenance) ... ok
+test_release_evidence_rejects_non_reproducible_artifact_bytes (test_release_packaging.ReleaseEvidenceTests.test_release_evidence_rejects_non_reproducible_artifact_bytes) ... ok
+test_release_evidence_rejects_self_attested_passes_without_executing_checks (test_release_packaging.ReleaseEvidenceTests.test_release_evidence_rejects_self_attested_passes_without_executing_checks) ... ok
+test_release_evidence_rejects_substitute_acceptance_commands (test_release_packaging.ReleaseEvidenceTests.test_release_evidence_rejects_substitute_acceptance_commands) ... ok
+test_release_rejects_source_offer_bytes_not_bound_to_the_admitted_lock (test_release_packaging.ReleaseEvidenceTests.test_release_rejects_source_offer_bytes_not_bound_to_the_admitted_lock) ... ok
+test_release_sbom_requires_artifact_dependency_relationships (test_release_packaging.ReleaseEvidenceTests.test_release_sbom_requires_artifact_dependency_relationships) ... ok
+test_reproducibility_runs_two_fixed_builds_in_fresh_roots (test_release_packaging.ReleaseEvidenceTests.test_reproducibility_runs_two_fixed_builds_in_fresh_roots) ... ok
+test_bundle_refuses_missing_inputs_and_unknown_target (test_serial_bundle.SerialBundleTests.test_bundle_refuses_missing_inputs_and_unknown_target) ... ok
+test_nonroot_service_receives_usb_only_group_access (test_serial_bundle.SerialBundleTests.test_nonroot_service_receives_usb_only_group_access) ... ok
+test_offline_dependency_refuses_missing_or_changed_wheel (test_serial_bundle.SerialBundleTests.test_offline_dependency_refuses_missing_or_changed_wheel) ... ok
+test_bootstrap_and_environment_scripts_are_checksum_gated_and_process_local (test_toolchain_bootstrap.ToolchainBootstrapTests.test_bootstrap_and_environment_scripts_are_checksum_gated_and_process_local) ... ok
+test_browser_runtime_is_pinned_and_stays_below_the_repository (test_toolchain_bootstrap.ToolchainBootstrapTests.test_browser_runtime_is_pinned_and_stays_below_the_repository)
+A browser downloaded into a user-wide cache is an unpinned prerequisite. ... ok
+test_combined_bootstrap_orchestrates_windows_and_wsl_tools (test_toolchain_bootstrap.ToolchainBootstrapTests.test_combined_bootstrap_orchestrates_windows_and_wsl_tools) ... ok
+test_frontend_project_is_locked_static_build (test_toolchain_bootstrap.ToolchainBootstrapTests.test_frontend_project_is_locked_static_build) ... ok
+test_manifest_pins_supported_tool_archives (test_toolchain_bootstrap.ToolchainBootstrapTests.test_manifest_pins_supported_tool_archives) ... ok
+test_platform_dependent_tools_use_distinct_host_roots (test_toolchain_bootstrap.ToolchainBootstrapTests.test_platform_dependent_tools_use_distinct_host_roots) ... ok
+test_wsl_doctor_checks_kernel_checkout_and_linux_tools (test_toolchain_bootstrap.ToolchainBootstrapTests.test_wsl_doctor_checks_kernel_checkout_and_linux_tools) ... ok
+test_wsl_setup_requires_opt_in_before_host_changes (test_toolchain_bootstrap.ToolchainBootstrapTests.test_wsl_setup_requires_opt_in_before_host_changes) ... ok
+
+----------------------------------------------------------------------
+space check passed for daemon-owned engine storage in /tmp/tmpeo0di9nl: required 1, available 996958806016, backing host volume /work/host-volume free 37120942080
+Ran 202 tests in 48.648s
+
+OK (skipped=29)
+ok  	nilo.local/nilo/cmd/nilo	176.179s
+?   	nilo.local/nilo/cmd/nilo-nethelper	[no test files]
+ok  	nilo.local/nilo/internal/acceptance	6.440s
+ok  	nilo.local/nilo/internal/activity	0.027s
+?   	nilo.local/nilo/internal/apiclient	[no test files]
+ok  	nilo.local/nilo/internal/app	19.629s
+ok  	nilo.local/nilo/internal/appliance	0.783s
+ok  	nilo.local/nilo/internal/artifact	0.643s
+ok  	nilo.local/nilo/internal/audit	0.508s
+ok  	nilo.local/nilo/internal/auth	7.528s
+ok  	nilo.local/nilo/internal/bench	68.457s
+ok  	nilo.local/nilo/internal/buildinfo	0.008s
+ok  	nilo.local/nilo/internal/config	0.030s
+ok  	nilo.local/nilo/internal/discovery	0.019s
+ok  	nilo.local/nilo/internal/domain	0.039s
+ok  	nilo.local/nilo/internal/httpapi	107.735s
+ok  	nilo.local/nilo/internal/identity	50.153s
+ok  	nilo.local/nilo/internal/integration/manifest	1.875s
+ok  	nilo.local/nilo/internal/integration/protocol	0.521s
+ok  	nilo.local/nilo/internal/integration/supervisor	95.584s
+?   	nilo.local/nilo/internal/integration/supervisor/testhelper	[no test files]
+ok  	nilo.local/nilo/internal/maintenance	0.123s
+ok  	nilo.local/nilo/internal/mcp	9.485s
+ok  	nilo.local/nilo/internal/nethelper	3.931s
+ok  	nilo.local/nilo/internal/network	0.508s
+ok  	nilo.local/nilo/internal/operation	0.073s
+ok  	nilo.local/nilo/internal/policy	0.066s
+?   	nilo.local/nilo/internal/power	[no test files]
+ok  	nilo.local/nilo/internal/session	0.033s
+ok  	nilo.local/nilo/internal/simulation	0.035s
+ok  	nilo.local/nilo/internal/store/sqlite	44.167s
+ok  	nilo.local/nilo/internal/systeminfo	0.020s
+ok  	nilo.local/nilo/cmd/nilo	0.008s
+?   	nilo.local/nilo/cmd/nilo-nethelper	[no test files]
+ok  	nilo.local/nilo/internal/acceptance	0.005s
+ok  	nilo.local/nilo/internal/activity	0.006s
+?   	nilo.local/nilo/internal/apiclient	[no test files]
+ok  	nilo.local/nilo/internal/app	0.007s
+ok  	nilo.local/nilo/internal/appliance	0.003s
+ok  	nilo.local/nilo/internal/artifact	0.002s
+ok  	nilo.local/nilo/internal/audit	0.002s
+ok  	nilo.local/nilo/internal/auth	0.012s
+ok  	nilo.local/nilo/internal/bench	0.027s
+ok  	nilo.local/nilo/internal/buildinfo	0.004s
+ok  	nilo.local/nilo/internal/config	0.002s
+ok  	nilo.local/nilo/internal/discovery	0.015s
+ok  	nilo.local/nilo/internal/domain	0.015s
+ok  	nilo.local/nilo/internal/httpapi	0.003s
+ok  	nilo.local/nilo/internal/identity	0.003s
+ok  	nilo.local/nilo/internal/integration/manifest	0.010s
+ok  	nilo.local/nilo/internal/integration/protocol	0.002s
+ok  	nilo.local/nilo/internal/integration/supervisor	0.002s
+?   	nilo.local/nilo/internal/integration/supervisor/testhelper	[no test files]
+ok  	nilo.local/nilo/internal/maintenance	0.002s
+ok  	nilo.local/nilo/internal/mcp	0.002s
+ok  	nilo.local/nilo/internal/nethelper	0.006s
+ok  	nilo.local/nilo/internal/network	0.002s
+ok  	nilo.local/nilo/internal/operation	0.001s
+ok  	nilo.local/nilo/internal/policy	0.002s
+?   	nilo.local/nilo/internal/power	[no test files]
+ok  	nilo.local/nilo/internal/session	0.002s
+ok  	nilo.local/nilo/internal/simulation	0.004s
+ok  	nilo.local/nilo/internal/store/sqlite	0.004s
+ok  	nilo.local/nilo/internal/systeminfo	0.002s
+................................                                         [100%]
+32 passed in 3.84s
+............                                                             [100%]
+12 passed in 3.53s
+............................                                             [100%]
+28 passed in 0.83s
+............................                                             [100%]
+28 passed in 0.79s
+...........                                                              [100%]
+11 passed in 1.13s
+
+> nilo-gui@0.11.0 test:ci
+> vitest run --maxWorkers=2
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90m/work/source/05_Software/frontend[39m
+
+ [32m✓[39m src/components/pages/NetworkPage.test.tsx [2m([22m[2m41 tests[22m[2m)[22m[33m 6461[2mms[22m[39m
+     [33m[2m✓[22m[39m shares one management-role observation with the device selector [33m 737[2mms[22m[39m
+     [33m[2m✓[22m[39m fails the device editor closed while management roles are reading [33m 388[2mms[22m[39m
+     [33m[2m✓[22m[39m reattaches a rollback failure after reload and reports its verified recovery [33m 1043[2mms[22m[39m
+     [33m[2m✓[22m[39m replaces an older terminal notice with the acknowledged operation recovery [33m 386[2mms[22m[39m
+ [32m✓[39m src/components/AuthenticationPage.test.tsx [2m([22m[2m45 tests[22m[2m)[22m[33m 7018[2mms[22m[39m
+     [33m[2m✓[22m[39m groups users activity beside its title [33m 473[2mms[22m[39m
+     [33m[2m✓[22m[39m creates an identity and reports what changed [33m 361[2mms[22m[39m
+     [33m[2m✓[22m[39m asks before it applies disable, and applies it exactly once when confirmed [33m 377[2mms[22m[39m
+     [33m[2m✓[22m[39m asks before it applies reset password, and applies it exactly once when confirmed [33m 426[2mms[22m[39m
+     [33m[2m✓[22m[39m holds the deletion back until the exact username is typed [33m 369[2mms[22m[39m
+     [33m[2m✓[22m[39m sends the selected owner, name, scopes and explicit expiry [33m 310[2mms[22m[39m
+Not implemented: navigation to another Document
+[90mstderr[2m | src/components/shell/shell.test.tsx[2m > [22m[2mthe tabs[2m > [22m[2mmoves the selection with the arrow, Home and End keys
+[22m[39mEncountered two children with the same key, `about`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+Encountered two children with the same key, `about`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+
+ [32m✓[39m src/components/pages/ActivityPage.test.tsx [2m([22m[2m23 tests[22m[2m)[22m[33m 5457[2mms[22m[39m
+     [33m[2m✓[22m[39m opens with the given filters, changes pages and discloses the gap [33m 991[2mms[22m[39m
+     [33m[2m✓[22m[39m sends the local From and To as UTC RFC 3339 and reports the active count [33m 508[2mms[22m[39m
+     [33m[2m✓[22m[39m exports the applied filter rather than the unapplied draft [33m 318[2mms[22m[39m
+     [33m[2m✓[22m[39m forgets a page still in flight when the filter changes [33m 322[2mms[22m[39m
+     [33m[2m✓[22m[39m sorts the complete server listing from its column headers [33m 329[2mms[22m[39m
+     [33m[2m✓[22m[39m selects component families, page sizes and numbered pages [33m 368[2mms[22m[39m
+[90mstderr[2m | src/components/shell/shell.test.tsx[2m > [22m[2mthe tabs[2m > [22m[2mfalls back to the left neighbour when the active tab closes
+[22m[39mEncountered two children with the same key, `about`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+
+[90mstderr[2m | src/components/shell/shell.test.tsx[2m > [22m[2mcore pages[2m > [22m[2mshows the build the backend actually reported on About
+[22m[39mEncountered two children with the same key, `about`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.
+
+ [32m✓[39m src/components/shell/shell.test.tsx [2m([22m[2m38 tests[22m[2m)[22m[33m 10489[2mms[22m[39m
+     [33m[2m✓[22m[39m hides stale instrument navigation while keeping open tabs until inventory recovers [33m 1448[2mms[22m[39m
+     [33m[2m✓[22m[39m offers appliance power actions only to permitted browser sessions [33m 328[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps the open tabs when the bench is re-read [33m 481[2mms[22m[39m
+     [33m[2m✓[22m[39m moves the selection with the arrow, Home and End keys [33m 442[2mms[22m[39m
+     [33m[2m✓[22m[39m falls back to the left neighbour when the active tab closes [33m 303[2mms[22m[39m
+     [33m[2m✓[22m[39m expands Authentication into distinct Users and API tokens workspaces [33m 558[2mms[22m[39m
+     [33m[2m✓[22m[39m opens Activity from Authentication with the identity component applied [33m 303[2mms[22m[39m
+     [33m[2m✓[22m[39m expands Network into four focused pages without duplicating their tabs [33m 481[2mms[22m[39m
+     [33m[2m✓[22m[39m shows only the Authentication destination that the session may read [33m 645[2mms[22m[39m
+     [33m[2m✓[22m[39m opens an integration page showing what the backend reported [33m 319[2mms[22m[39m
+ [32m✓[39m src/App.test.tsx [2m([22m[2m33 tests[22m[2m)[22m[33m 5380[2mms[22m[39m
+     [33m[2m✓[22m[39m presents the final product login and canonical version as the only credential path [33m 639[2mms[22m[39m
+     [33m[2m✓[22m[39m signs in with a username and password and shows who is signed in [33m 339[2mms[22m[39m
+     [33m[2m✓[22m[39m shows the unavailable scenario states rather than the ready ones [33m 308[2mms[22m[39m
+     [33m[2m✓[22m[39m states that an inventory is empty instead of treating it as a failure [33m 344[2mms[22m[39m
+ [32m✓[39m src/api/client.test.ts [2m([22m[2m37 tests[22m[2m)[22m[32m 58[2mms[22m[39m
+ [32m✓[39m src/components/pages/PluginsPage.test.tsx [2m([22m[2m13 tests[22m[2m)[22m[33m 3793[2mms[22m[39m
+   [33m[2m✓[22m[39m shows only the selected plugin in its management view [33m 429[2mms[22m[39m
+   [33m[2m✓[22m[39m submits only digital channels and retains the key across an uncertain retry [33m 427[2mms[22m[39m
+   [33m[2m✓[22m[39m reattaches to a pending transaction and hides mutation controls from viewers [33m 306[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps UART decode actions off a completed camera image [33m 323[2mms[22m[39m
+   [33m[2m✓[22m[39m submits physical camera composition and encoding options [33m 385[2mms[22m[39m
+   [33m[2m✓[22m[39m projects a placed image marker into the next physical snapshot request [33m 394[2mms[22m[39m
+   [33m[2m✓[22m[39m submits line, rectangle and calibrated scale overlays [33m 576[2mms[22m[39m
+ [32m✓[39m src/components/network/ManagementAccessPanel.test.tsx [2m([22m[2m14 tests[22m[2m)[22m[33m 2130[2mms[22m[39m
+     [33m[2m✓[22m[39m distinguishes an absent saved adapter from its same-name replacement [33m 847[2mms[22m[39m
+ [32m✓[39m src/api/mock.test.ts [2m([22m[2m35 tests[22m[2m)[22m[32m 86[2mms[22m[39m
+ [32m✓[39m src/components/network/DeviceNetworksPanel.test.tsx [2m([22m[2m12 tests[22m[2m)[22m[33m 5533[2mms[22m[39m
+     [33m[2m✓[22m[39m separates the operator intent from the observed state and links to activity [33m 699[2mms[22m[39m
+     [33m[2m✓[22m[39m disables a management adapter only for the device-facing selection [33m 890[2mms[22m[39m
+     [33m[2m✓[22m[39m blocks preview when a refreshed management claim owns the edited adapter [33m 567[2mms[22m[39m
+     [33m[2m✓[22m[39m fails closed while management adapter roles are reading [33m 376[2mms[22m[39m
+     [33m[2m✓[22m[39m shows the essential columns, keeps the rest in Details and every action in one dialog [33m 347[2mms[22m[39m
+     [33m[2m✓[22m[39m previews a new device network from the editor and refuses an incomplete one [33m 588[2mms[22m[39m
+     [33m[2m✓[22m[39m groups the editor by task, validates beside the field and reviews in plain language [33m 880[2mms[22m[39m
+     [33m[2m✓[22m[39m shows the separate facts of a connection check and the access steps [33m 331[2mms[22m[39m
+ [32m✓[39m src/layout.test.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 57[2mms[22m[39m
+ [32m✓[39m src/api/network.test.ts [2m([22m[2m21 tests[22m[2m)[22m[32m 49[2mms[22m[39m
+ [32m✓[39m src/components/pages/SerialWorkspacePage.test.tsx [2m([22m[2m12 tests[22m[2m)[22m[33m 2576[2mms[22m[39m
+   [33m[2m✓[22m[39m shows live bytes and submits selected hex and line ending once [33m 927[2mms[22m[39m
+   [33m[2m✓[22m[39m retains the send key after a lost response so retry cannot replay TX [33m 317[2mms[22m[39m
+ [32m✓[39m src/components/activity/ActivityEventTable.test.tsx [2m([22m[2m13 tests[22m[2m)[22m[33m 2059[2mms[22m[39m
+     [33m[2m✓[22m[39m offers sorting on data columns and reports the active direction [33m 489[2mms[22m[39m
+ [32m✓[39m e2e/topology.test.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 61[2mms[22m[39m
+ [32m✓[39m src/components/pages/CameraPluginPage.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 1360[2mms[22m[39m
+   [33m[2m✓[22m[39m enables with the selected approval policy and updates control states [33m 666[2mms[22m[39m
+ [32m✓[39m src/components/network/WireGuardPanel.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 1454[2mms[22m[39m
+   [33m[2m✓[22m[39m keeps the essential profile data in the row and the rest behind Details [33m 833[2mms[22m[39m
+ [32m✓[39m src/api/contract.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m src/components/pages/CameraWorkspacePage.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 1358[2mms[22m[39m
+   [33m[2m✓[22m[39m retains hardware controls and a combined resolution selector [33m 654[2mms[22m[39m
+ [32m✓[39m src/components/network/CommissioningPanel.test.tsx [2m([22m[2m11 tests[22m[2m)[22m[33m 873[2mms[22m[39m
+     [33m[2m✓[22m[39m warns that every eligible adapter is a temporary management path [33m 333[2mms[22m[39m
+ [32m✓[39m src/components/shell/pages.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 116[2mms[22m[39m
+ [32m✓[39m src/components/MessageBanner.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 587[2mms[22m[39m
+     [33m[2m✓[22m[39m offers a labelled left-side dismiss action for general feedback [33m 303[2mms[22m[39m
+ [32m✓[39m src/config/environment.test.ts [2m([22m[2m21 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+ [32m✓[39m e2e/commands.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m e2e/prerequisites.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m src/components/shell/NavigationSplitter.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 394[2mms[22m[39m
+     [33m[2m✓[22m[39m resizes with the keyboard, persists across remounts and resets [33m 322[2mms[22m[39m
+ [32m✓[39m src/i18n/messages.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 216[2mms[22m[39m
+ [32m✓[39m src/components/network/TrafficChart.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 720[2mms[22m[39m
+     [33m[2m✓[22m[39m labels the traffic directions, time and byte scale and exposes each minute [33m 417[2mms[22m[39m
+     [33m[2m✓[22m[39m selects adjacent dense samples by unambiguous pointer coordinates [33m 301[2mms[22m[39m
+ [32m✓[39m src/components/pages/AboutPage.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 546[2mms[22m[39m
+     [33m[2m✓[22m[39m leads with controls and shows software, system, identity, and an inline label [33m 542[2mms[22m[39m
+ [32m✓[39m src/api/management-access.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/components/network/InterfaceSettingsDialog.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1096[2mms[22m[39m
+     [33m[2m✓[22m[39m groups addressing, DNS and protection, with help beside the settings [33m 652[2mms[22m[39m
+ [32m✓[39m src/components/help/HelpPopover.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 598[2mms[22m[39m
+     [33m[2m✓[22m[39m opens on click with an accessible name, and Escape returns focus [33m 377[2mms[22m[39m
+ [32m✓[39m src/components/Modal.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 431[2mms[22m[39m
+     [33m[2m✓[22m[39m shows a title, a labeled close control and the actions, and returns focus on Escape [33m 373[2mms[22m[39m
+ [32m✓[39m src/components/activity/filters.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m src/components/shell/NetworkSummary.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 444[2mms[22m[39m
+     [33m[2m✓[22m[39m states all four facts separately, even when they disagree [33m 316[2mms[22m[39m
+ [32m✓[39m src/components/shell/SideNav.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 516[2mms[22m[39m
+     [33m[2m✓[22m[39m opens a device view nested below its named physical camera [33m 424[2mms[22m[39m
+ [32m✓[39m src/components/activity/ActivityOutcomeBadge.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 430[2mms[22m[39m
+ [32m✓[39m src/api/wireguard.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/components/shell/serialNavigation.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/components/RowActions.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 484[2mms[22m[39m
+     [33m[2m✓[22m[39m opens a compact dialog outside the scrolling table and keeps every action clear [33m 481[2mms[22m[39m
+ [32m✓[39m src/components/PowerConfirmation.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 551[2mms[22m[39m
+     [33m[2m✓[22m[39m sends nothing when cancelled [33m 309[2mms[22m[39m
+ [32m✓[39m src/components/pages/serialBuffer.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 1692[2mms[22m[39m
+   [33m[2m✓[22m[39m bounds long unterminated output and reports dropped history [33m 1677[2mms[22m[39m
+ [32m✓[39m src/api/bench.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m src/api/serial.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m src/components/pages/cameraGeometry.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/api/appliance.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/config/devServer.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/components/network/InstallationProgress.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 242[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m48 passed[39m[22m[90m (48)[39m
+[2m      Tests [22m [1m[32m589 passed[39m[22m[90m (589)[39m
+[2m   Start at [22m 16:20:47
+[2m   Duration [22m 92.18s[2m (transform 3.64s, setup 13.12s, import 8.16s, tests 65.54s, environment 80.44s)[22m
+
+
+> nilo-gui@0.11.0 build
+> tsc -b && vite build
+
+vite v8.2.2 building client environment for production...
+transforming...
+✓ 104 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.52 kB │ gzip:   0.32 kB
+dist/assets/index-BQ4cp2BL.css   51.58 kB │ gzip:   9.21 kB
+dist/assets/index-8kHlQ5Zp.js   737.88 kB │ gzip: 199.73 kB
+
+✓ built in 418ms
+[plugin builtin:vite-reporter]
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+verifying an explicit candidate image, not the accepted current generation
+NILO build environment generation=noble-20260928-01 image digest=sha256:84578c0371424ee15cf43bb78083cadd45e9bda2ba2bdd6926f0c00b1d0f0568
+
+added 240 packages, and audited 241 packages in 10s
+
+61 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+Using CPython 3.12.10 interpreter at: /opt/nilo/python-bin/python3
+Creating virtual environment at: 05_Software/integrations/camera/.venv-linux-x86_64
+Using Python 3.12.10 environment at: 05_Software/integrations/camera/.venv-linux-x86_64
+Resolved 17 packages in 18ms
+warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.
+         If the cache and target directories are on different filesystems, hardlinking may not be supported.
+         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.
+Installed 17 packages in 609ms
+ + annotated-types==0.8.0 (from file:///opt/nilo/inputs/python-packages/annotated_types-0.8.0-py3-none-any.whl)
+ + colorama==0.4.6 (from file:///opt/nilo/inputs/python-packages/colorama-0.4.6-py2.py3-none-any.whl)
+ + iniconfig==2.3.0 (from file:///opt/nilo/inputs/python-packages/iniconfig-2.3.0-py3-none-any.whl)
+ + packaging==26.3 (from file:///opt/nilo/inputs/python-packages/packaging-26.3-py3-none-any.whl)
+ + pillow==11.3.0 (from file:///opt/nilo/inputs/python-packages/pillow-11.3.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl)
+ + pluggy==1.6.0 (from file:///opt/nilo/inputs/python-packages/pluggy-1.6.0-py3-none-any.whl)
+ + pydantic==2.13.5 (from file:///opt/nilo/inputs/python-packages/pydantic-2.13.5-py3-none-any.whl)
+ + pydantic-core==2.46.5 (from file:///opt/nilo/inputs/python-packages/pydantic_core-2.46.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+ + pygments==2.21.0 (from file:///opt/nilo/inputs/python-packages/pygments-2.21.0-py3-none-any.whl)
+ + pytest==9.1.1 (from file:///opt/nilo/inputs/python-packages/pytest-9.1.1-py3-none-any.whl)
+ + pytest-asyncio==1.4.0 (from file:///opt/nilo/inputs/python-packages/pytest_asyncio-1.4.0-py3-none-any.whl)
+ + ruff==0.16.5 (from file:///opt/nilo/inputs/python-packages/ruff-0.16.5-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+ + setuptools==80.9.0 (from file:///opt/nilo/inputs/python-packages/setuptools-80.9.0-py3-none-any.whl)
+ + typing-extensions==4.16.0 (from file:///opt/nilo/inputs/python-packages/typing_extensions-4.16.0-py3-none-any.whl)
+ + typing-inspection==0.4.4 (from file:///opt/nilo/inputs/python-packages/typing_inspection-0.4.4-py3-none-any.whl)
+ + uv-build==0.11.25 (from file:///opt/nilo/inputs/python-packages/uv_build-0.11.25-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+ + wheel==0.45.1 (from file:///opt/nilo/inputs/python-packages/wheel-0.45.1-py3-none-any.whl)
+Using Python 3.12.10 environment at: 05_Software/integrations/camera/.venv-linux-x86_64
+Resolved 1 package in 683ms
+   Building pyrav4l2 @ file:///tmp/nilo-locked-source-u4n_dtl4/pyrav4l2-9c0beeb9a8a6941e8e0dbc6f65830b8d713e0bdf
+      Built pyrav4l2 @ file:///tmp/nilo-locked-source-u4n_dtl4/pyrav4l2-9c0beeb9a8a6941e8e0dbc6f65830b8d713e0bdf
+Prepared 1 package in 415ms
+warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.
+         If the cache and target directories are on different filesystems, hardlinking may not be supported.
+         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.
+Installed 1 package in 7ms
+ + pyrav4l2==1.0 (from file:///tmp/nilo-locked-source-u4n_dtl4/pyrav4l2-9c0beeb9a8a6941e8e0dbc6f65830b8d713e0bdf)
+Using Python 3.12.10 environment at: 05_Software/integrations/camera/.venv-linux-x86_64
+Resolved 1 package in 3ms
+   Building nilo-camera-integration @ file:///work/source/05_Software/integrations/camera
+      Built nilo-camera-integration @ file:///work/source/05_Software/integrations/camera
+Prepared 1 package in 12ms
+warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.
+         If the cache and target directories are on different filesystems, hardlinking may not be supported.
+         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.
+Installed 1 package in 7ms
+ + nilo-camera-integration==0.1.0 (from file:///work/source/05_Software/integrations/camera)
+Using Python 3.12.10 environment at: 05_Software/integrations/camera/.venv-linux-x86_64
+Resolved 1 package in 3ms
+   Building nilo-integration-sdk @ file:///work/source/05_Software/integrations/sdk/python
+      Built nilo-integration-sdk @ file:///work/source/05_Software/integrations/sdk/python
+Prepared 1 package in 12ms
+warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.
+         If the cache and target directories are on different filesystems, hardlinking may not be supported.
+         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.
+Installed 1 package in 3ms
+ + nilo-integration-sdk==0.1.0 (from file:///work/source/05_Software/integrations/sdk/python)
+Using Python 3.12.10 environment at: 05_Software/integrations/camera/.venv-linux-x86_64
+Checked 20 packages in 1ms
+All installed packages are compatible
+Using CPython 3.12.10 interpreter at: /opt/nilo/python-bin/python3
+Creating virtual environment at: 05_Software/integrations/sdk/python/.venv-linux-x86_64
+Using Python 3.12.10 environment at: 05_Software/integrations/sdk/python/.venv-linux-x86_64
+Resolved 19 packages in 24ms
+warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.
+         If the cache and target directories are on different filesystems, hardlinking may not be supported.
+         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.
+Installed 19 packages in 243ms
+ + annotated-types==0.8.0 (from file:///opt/nilo/inputs/python-packages/annotated_types-0.8.0-py3-none-any.whl)
+ + attrs==26.1.0 (from file:///opt/nilo/inputs/python-packages/attrs-26.1.0-py3-none-any.whl)
+ + colorama==0.4.6 (from file:///opt/nilo/inputs/python-packages/colorama-0.4.6-py2.py3-none-any.whl)
+ + iniconfig==2.3.0 (from file:///opt/nilo/inputs/python-packages/iniconfig-2.3.0-py3-none-any.whl)
+ + jsonschema==4.26.0 (from file:///opt/nilo/inputs/python-packages/jsonschema-4.26.0-py3-none-any.whl)
+ + jsonschema-specifications==2025.9.1 (from file:///opt/nilo/inputs/python-packages/jsonschema_specifications-2025.9.1-py3-none-any.whl)
+ + packaging==26.3 (from file:///opt/nilo/inputs/python-packages/packaging-26.3-py3-none-any.whl)
+ + pluggy==1.6.0 (from file:///opt/nilo/inputs/python-packages/pluggy-1.6.0-py3-none-any.whl)
+ + pydantic==2.13.5 (from file:///opt/nilo/inputs/python-packages/pydantic-2.13.5-py3-none-any.whl)
+ + pydantic-core==2.46.5 (from file:///opt/nilo/inputs/python-packages/pydantic_core-2.46.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+ + pygments==2.21.0 (from file:///opt/nilo/inputs/python-packages/pygments-2.21.0-py3-none-any.whl)
+ + pytest==9.1.1 (from file:///opt/nilo/inputs/python-packages/pytest-9.1.1-py3-none-any.whl)
+ + pytest-asyncio==1.4.0 (from file:///opt/nilo/inputs/python-packages/pytest_asyncio-1.4.0-py3-none-any.whl)
+ + referencing==0.37.0 (from file:///opt/nilo/inputs/python-packages/referencing-0.37.0-py3-none-any.whl)
+ + rpds-py==2026.6.3 (from file:///opt/nilo/inputs/python-packages/rpds_py-2026.6.3-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+ + ruff==0.16.5 (from file:///opt/nilo/inputs/python-packages/ruff-0.16.5-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+ + typing-extensions==4.16.0 (from file:///opt/nilo/inputs/python-packages/typing_extensions-4.16.0-py3-none-any.whl)
+ + typing-inspection==0.4.4 (from file:///opt/nilo/inputs/python-packages/typing_inspection-0.4.4-py3-none-any.whl)
+ + uv-build==0.11.25 (from file:///opt/nilo/inputs/python-packages/uv_build-0.11.25-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+Using Python 3.12.10 environment at: 05_Software/integrations/sdk/python/.venv-linux-x86_64
+Resolved 1 package in 3ms
+   Building nilo-integration-sdk @ file:///work/source/05_Software/integrations/sdk/python
+      Built nilo-integration-sdk @ file:///work/source/05_Software/integrations/sdk/python
+Prepared 1 package in 13ms
+warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.
+         If the cache and target directories are on different filesystems, hardlinking may not be supported.
+         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.
+Installed 1 package in 4ms
+ + nilo-integration-sdk==0.1.0 (from file:///work/source/05_Software/integrations/sdk/python)
+Using Python 3.12.10 environment at: 05_Software/integrations/sdk/python/.venv-linux-x86_64
+Checked 20 packages in 2ms
+All installed packages are compatible
+Using CPython 3.12.10 interpreter at: /opt/nilo/python-bin/python3
+Creating virtual environment at: 05_Software/integrations/serial/.venv-linux-x86_64
+Using Python 3.12.10 environment at: 05_Software/integrations/serial/.venv-linux-x86_64
+Resolved 15 packages in 19ms
+warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.
+         If the cache and target directories are on different filesystems, hardlinking may not be supported.
+         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.
+Installed 15 packages in 207ms
+ + annotated-types==0.8.0 (from file:///opt/nilo/inputs/python-packages/annotated_types-0.8.0-py3-none-any.whl)
+ + colorama==0.4.6 (from file:///opt/nilo/inputs/python-packages/colorama-0.4.6-py2.py3-none-any.whl)
+ + iniconfig==2.3.0 (from file:///opt/nilo/inputs/python-packages/iniconfig-2.3.0-py3-none-any.whl)
+ + packaging==26.3 (from file:///opt/nilo/inputs/python-packages/packaging-26.3-py3-none-any.whl)
+ + pluggy==1.6.0 (from file:///opt/nilo/inputs/python-packages/pluggy-1.6.0-py3-none-any.whl)
+ + pydantic==2.13.5 (from file:///opt/nilo/inputs/python-packages/pydantic-2.13.5-py3-none-any.whl)
+ + pydantic-core==2.46.5 (from file:///opt/nilo/inputs/python-packages/pydantic_core-2.46.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+ + pygments==2.21.0 (from file:///opt/nilo/inputs/python-packages/pygments-2.21.0-py3-none-any.whl)
+ + pyserial==3.5 (from file:///opt/nilo/inputs/python-packages/pyserial-3.5-py2.py3-none-any.whl)
+ + pytest==9.1.1 (from file:///opt/nilo/inputs/python-packages/pytest-9.1.1-py3-none-any.whl)
+ + pytest-asyncio==1.4.0 (from file:///opt/nilo/inputs/python-packages/pytest_asyncio-1.4.0-py3-none-any.whl)
+ + ruff==0.16.5 (from file:///opt/nilo/inputs/python-packages/ruff-0.16.5-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+ + typing-extensions==4.16.0 (from file:///opt/nilo/inputs/python-packages/typing_extensions-4.16.0-py3-none-any.whl)
+ + typing-inspection==0.4.4 (from file:///opt/nilo/inputs/python-packages/typing_inspection-0.4.4-py3-none-any.whl)
+ + uv-build==0.11.25 (from file:///opt/nilo/inputs/python-packages/uv_build-0.11.25-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+Using Python 3.12.10 environment at: 05_Software/integrations/serial/.venv-linux-x86_64
+Resolved 1 package in 3ms
+   Building nilo-serial-integration @ file:///work/source/05_Software/integrations/serial
+      Built nilo-serial-integration @ file:///work/source/05_Software/integrations/serial
+Prepared 1 package in 12ms
+warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.
+         If the cache and target directories are on different filesystems, hardlinking may not be supported.
+         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.
+Installed 1 package in 6ms
+ + nilo-serial-integration==0.11.0 (from file:///work/source/05_Software/integrations/serial)
+Using Python 3.12.10 environment at: 05_Software/integrations/serial/.venv-linux-x86_64
+Resolved 1 package in 3ms
+   Building nilo-integration-sdk @ file:///work/source/05_Software/integrations/sdk/python
+      Built nilo-integration-sdk @ file:///work/source/05_Software/integrations/sdk/python
+Prepared 1 package in 10ms
+warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.
+         If the cache and target directories are on different filesystems, hardlinking may not be supported.
+         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.
+Installed 1 package in 4ms
+ + nilo-integration-sdk==0.1.0 (from file:///work/source/05_Software/integrations/sdk/python)
+Using Python 3.12.10 environment at: 05_Software/integrations/serial/.venv-linux-x86_64
+Checked 17 packages in 1ms
+All installed packages are compatible
+Using CPython 3.12.10 interpreter at: /opt/nilo/python-bin/python3
+Creating virtual environment at: 05_Software/integrations/sigrok/.venv-linux-x86_64
+Using Python 3.12.10 environment at: 05_Software/integrations/sigrok/.venv-linux-x86_64
+Resolved 14 packages in 18ms
+warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.
+         If the cache and target directories are on different filesystems, hardlinking may not be supported.
+         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.
+Installed 14 packages in 186ms
+ + annotated-types==0.8.0 (from file:///opt/nilo/inputs/python-packages/annotated_types-0.8.0-py3-none-any.whl)
+ + colorama==0.4.6 (from file:///opt/nilo/inputs/python-packages/colorama-0.4.6-py2.py3-none-any.whl)
+ + iniconfig==2.3.0 (from file:///opt/nilo/inputs/python-packages/iniconfig-2.3.0-py3-none-any.whl)
+ + packaging==26.3 (from file:///opt/nilo/inputs/python-packages/packaging-26.3-py3-none-any.whl)
+ + pluggy==1.6.0 (from file:///opt/nilo/inputs/python-packages/pluggy-1.6.0-py3-none-any.whl)
+ + pydantic==2.13.5 (from file:///opt/nilo/inputs/python-packages/pydantic-2.13.5-py3-none-any.whl)
+ + pydantic-core==2.46.5 (from file:///opt/nilo/inputs/python-packages/pydantic_core-2.46.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+ + pygments==2.21.0 (from file:///opt/nilo/inputs/python-packages/pygments-2.21.0-py3-none-any.whl)
+ + pytest==9.1.1 (from file:///opt/nilo/inputs/python-packages/pytest-9.1.1-py3-none-any.whl)
+ + pytest-asyncio==1.4.0 (from file:///opt/nilo/inputs/python-packages/pytest_asyncio-1.4.0-py3-none-any.whl)
+ + ruff==0.16.5 (from file:///opt/nilo/inputs/python-packages/ruff-0.16.5-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+ + typing-extensions==4.16.0 (from file:///opt/nilo/inputs/python-packages/typing_extensions-4.16.0-py3-none-any.whl)
+ + typing-inspection==0.4.4 (from file:///opt/nilo/inputs/python-packages/typing_inspection-0.4.4-py3-none-any.whl)
+ + uv-build==0.11.25 (from file:///opt/nilo/inputs/python-packages/uv_build-0.11.25-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl)
+Using Python 3.12.10 environment at: 05_Software/integrations/sigrok/.venv-linux-x86_64
+Resolved 1 package in 3ms
+   Building nilo-integration-sdk @ file:///work/source/05_Software/integrations/sdk/python
+      Built nilo-integration-sdk @ file:///work/source/05_Software/integrations/sdk/python
+Prepared 1 package in 9ms
+warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.
+         If the cache and target directories are on different filesystems, hardlinking may not be supported.
+         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.
+Installed 1 package in 3ms
+ + nilo-integration-sdk==0.1.0 (from file:///work/source/05_Software/integrations/sdk/python)
+Using Python 3.12.10 environment at: 05_Software/integrations/sigrok/.venv-linux-x86_64
+Resolved 1 package in 3ms
+   Building nilo-sigrok-integration @ file:///work/source/05_Software/integrations/sigrok
+      Built nilo-sigrok-integration @ file:///work/source/05_Software/integrations/sigrok
+Prepared 1 package in 11ms
+warning: Failed to hardlink files; falling back to full copy. This may lead to degraded performance.
+         If the cache and target directories are on different filesystems, hardlinking may not be supported.
+         If this is intentional, set `export UV_LINK_MODE=copy` or use `--link-mode=copy` to suppress this warning.
+Installed 1 package in 6ms
+ + nilo-sigrok-integration==0.1.0 (from file:///work/source/05_Software/integrations/sigrok)
+Using Python 3.12.10 environment at: 05_Software/integrations/sigrok/.venv-linux-x86_64
+Checked 16 packages in 4ms
+All installed packages are compatible
+source-lock input coverage verified
+host isolation verified: node_modules and platform virtual environments are unchanged
+build environment verification passed: image digest=sha256:84578c0371424ee15cf43bb78083cadd45e9bda2ba2bdd6926f0c00b1d0f0568

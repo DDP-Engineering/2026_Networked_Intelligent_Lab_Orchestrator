@@ -42,20 +42,7 @@ if ($identity.ExitCode -ne 0 -or -not $isUbuntu -or -not $isAmd64 -or -not $hasS
     throw "Distribution '$Distribution' must be Ubuntu 24.04 x86_64 with systemd support; OS='$($identity.Output.Trim())', architecture='$($architecture.Output.Trim())', systemd='$($systemd.Output.Trim())'."
 }
 $wslRepository = ConvertTo-NiloWslPath -WslExecutable $WslExecutable -Distribution $Distribution -WindowsPath $repositoryRoot
-$distributionRecord = @(
-    Get-ChildItem -LiteralPath 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss' |
-        ForEach-Object { Get-ItemProperty -LiteralPath $_.PSPath } |
-        Where-Object { $_.DistributionName -eq $Distribution }
-) | Select-Object -First 1
-if ($null -eq $distributionRecord -or -not $distributionRecord.BasePath) {
-    throw "Cannot locate the backing virtual disk for WSL distribution '$Distribution'."
-}
-$expandedBasePath = (Resolve-Path -LiteralPath $distributionRecord.BasePath).Path
-if ($expandedBasePath -notmatch '(?<Drive>[A-Za-z]:)\\') {
-    throw "Cannot determine the Windows volume backing WSL distribution '$Distribution' from '$expandedBasePath'."
-}
-$backingDrive = "$($Matches.Drive)\"
-$wslHostVolume = ConvertTo-NiloWslPath -WslExecutable $WslExecutable -Distribution $Distribution -WindowsPath $backingDrive
+$wslHostVolume = Get-NiloWslHostVolume -WslExecutable $WslExecutable -Distribution $Distribution
 $wslHostVolumeArgument = "NILO_WSL_HOST_VOLUME=$wslHostVolume"
 $wslHomeDirectory = (Invoke-NiloWsl -WslExecutable $WslExecutable -Arguments @('-d', $Distribution, '--exec', 'printenv', 'HOME')).Output.Trim()
 if ($wslHomeDirectory.StartsWith('/mnt/')) { throw "WSL home and engine state must stay on the Linux filesystem; observed $wslHomeDirectory." }
