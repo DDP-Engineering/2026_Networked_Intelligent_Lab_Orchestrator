@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-REL-e1048fd2"
+
+title = "Report interrupted Modbus recordings honestly"
+
+status = "active"
+
+requirement = """If a Modbus recording is interrupted by Core restart, append or sync failure, rotation failure, or storage exhaustion, Core shall expose it as incomplete with an explicit failure reason and last durable sequence, never claiming complete evidence across a lost span."""
+
+verification = "Inject append, sync, rotation and quota failures and restart with an active recording; assert incomplete metadata, preserved durable prefix and cursor, explicit live warning when applicable, and no silent completion or replay."
+
+affected_paths = ["05_Software/core/internal/bench/modbus_recording.go", "05_Software/core/internal/bench/modbus_recording_recovery.go", "05_Software/core/internal/bench/manager.go", "05_Software/core/internal/bench/modbus_session.go", "05_Software/core/internal/store/sqlite/migrations/028_modbus_recordings.sql"]
+
+linked_tests = ["05_Software/core/internal/bench/modbus_recording_test.go::TestModbusRecordingRecoveryIndexesSyncedUnindexedLine", "05_Software/core/internal/bench/modbus_recording_test.go::TestModbusRecordingRotationReservesNewHeader"]
+
+
+spec = "specs/REQ-REL-e1048fd2.md"
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-30
+updated = 2026-10-01

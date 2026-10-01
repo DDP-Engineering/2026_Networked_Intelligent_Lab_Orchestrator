@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
@@ -41,6 +42,8 @@ type modbusSession struct {
 	pollPaused, displayPaused                          bool
 	events                                             []ModbusEvent
 	cursor                                             int64
+	recording                                          *modbusRecorder
+	lastRecordingID, recordingWarning                  string
 }
 
 // ModbusStatus describes one credential-bound, pinned live endpoint.
@@ -61,6 +64,11 @@ type ModbusStatus struct {
 	DisplayPaused     bool                        `json:"display_paused"`
 	CanControl        bool                        `json:"can_control"`
 	GroupStats        map[string]ModbusGroupStats `json:"group_stats"`
+	RecordingID       string                      `json:"recording_id,omitempty"`
+	Logging           bool                        `json:"logging"`
+	LoggingMode       string                      `json:"logging_mode,omitempty"`
+	LoggingSampling   string                      `json:"logging_sampling,omitempty"`
+	RecordingWarning  string                      `json:"recording_warning,omitempty"`
 }
 
 // ModbusGroupStats reports bounded live scheduling observations for one admitted group.
@@ -85,7 +93,12 @@ func (m *Manager) modbusStatus(s *modbusSession, actor identity.Actor) ModbusSta
 	for id, value := range s.groupStats {
 		stats[id] = *value
 	}
-	return ModbusStatus{SessionID: s.id, State: state, EndpointID: s.endpointID, ProfileID: s.profileID, OwnerID: s.owner, EndpointRevision: s.endpointRevision, ProfileRevision: s.profileRevision, WorkspaceID: s.workspaceID, WorkspaceRevision: s.workspaceRevision, Connected: !s.stopped, ExpiresAt: s.expires.Format(time.RFC3339Nano), Reason: s.reason, PollPaused: s.pollPaused, DisplayPaused: s.displayPaused, CanControl: !s.stopped && actor.User.ID == s.owner && string(actor.Credential) == s.kind && serialCredentialID(actor) == s.credential && actor.Has(auth.PermissionBenchExecute), GroupStats: stats}
+	status := ModbusStatus{SessionID: s.id, State: state, EndpointID: s.endpointID, ProfileID: s.profileID, OwnerID: s.owner, EndpointRevision: s.endpointRevision, ProfileRevision: s.profileRevision, WorkspaceID: s.workspaceID, WorkspaceRevision: s.workspaceRevision, Connected: !s.stopped, ExpiresAt: s.expires.Format(time.RFC3339Nano), Reason: s.reason, PollPaused: s.pollPaused, DisplayPaused: s.displayPaused, CanControl: !s.stopped && actor.User.ID == s.owner && string(actor.Credential) == s.kind && serialCredentialID(actor) == s.credential && actor.Has(auth.PermissionBenchExecute), GroupStats: stats, RecordingID: s.lastRecordingID, RecordingWarning: s.recordingWarning}
+	if s.recording != nil {
+		status.RecordingID, status.Logging = s.recording.meta.ID, true
+		status.LoggingMode, status.LoggingSampling = s.recording.meta.Mode, s.recording.meta.Sampling
+	}
+	return status
 }
 
 func (m *Manager) modbusLeaseValid(ctx context.Context, s *modbusSession) error {
@@ -328,6 +341,14 @@ func (m *Manager) stopModbusLocked(s *modbusSession, reason string) {
 		return
 	}
 	s.stopped, s.reason = true, reason
+	if s.recording != nil {
+		recordingReason := ""
+		if reason != "disconnected" {
+			recordingReason = "session_" + reason
+		}
+		_, recordingErr := m.stopModbusRecordingLocked(s, recordingReason)
+		m.report(recordingErr)
+	}
 	s.cancel()
 	_, err := m.db().ExecContext(context.Background(), `UPDATE modbus_sessions SET state='closed',reason=? WHERE id=?`, reason, s.id)
 	m.report(err)
@@ -490,11 +511,22 @@ func modbusCallError(ctx context.Context, err error) error {
 
 // ModbusResult preserves raw booleans/register values and the runner's conservative outcome.
 type ModbusResult struct {
-	RequestID     string            `json:"request_id"`
-	Outcome       string            `json:"outcome"`
-	Values        []json.RawMessage `json:"values"`
-	Attempts      int               `json:"attempts"`
-	ExceptionCode int               `json:"exception_code,omitempty"`
+	RequestID     string             `json:"request_id"`
+	Outcome       string             `json:"outcome"`
+	Values        []json.RawMessage  `json:"values"`
+	Attempts      int                `json:"attempts"`
+	ExceptionCode int                `json:"exception_code,omitempty"`
+	Frames        []ModbusTraceFrame `json:"frames,omitempty"`
+}
+
+// ModbusTraceFrame is a bounded byte buffer captured by the runner's transport hook.
+type ModbusTraceFrame struct {
+	RequestID string  `json:"request_id"`
+	Direction string  `json:"direction"`
+	Sequence  int     `json:"sequence"`
+	Kind      string  `json:"kind"`
+	DataHex   string  `json:"data_hex"`
+	ElapsedMS float64 `json:"elapsed_ms"`
 }
 
 func validModbusOutcome(outcome string) bool {
@@ -511,6 +543,22 @@ func validModbusOutcome(outcome string) bool {
 func validModbusResult(request ModbusRequest, result ModbusResult) bool {
 	if !validModbusOutcome(result.Outcome) || result.Attempts < 0 || result.Attempts > 4 || request.Function >= 5 && result.Attempts > 1 {
 		return false
+	}
+	if len(result.Frames) > 64*4 {
+		return false
+	}
+	traceBytes := 0
+	for _, frame := range result.Frames {
+		if frame.RequestID != result.RequestID || frame.Direction != "tx" && frame.Direction != "rx" || len(frame.DataHex)%2 != 0 || len(frame.DataHex) > 49152 {
+			return false
+		}
+		if _, err := hex.DecodeString(frame.DataHex); err != nil {
+			return false
+		}
+		traceBytes += len(frame.DataHex) / 2
+		if traceBytes > 4*6000 {
+			return false
+		}
 	}
 	if result.Outcome != "acknowledged" {
 		return len(result.Values) == 0 && (result.Outcome != "exception" || result.ExceptionCode >= 1 && result.ExceptionCode <= 255)
@@ -556,5 +604,13 @@ func (m *Manager) ReadModbus(ctx context.Context, actor identity.Actor, endpoint
 	if err != nil {
 		return ModbusResult{}, err
 	}
-	return modbusPrivateCall(ctx, s, request, "")
+	result, callErr := modbusPrivateCall(ctx, s, request, "")
+	if callErr == nil {
+		m.mu.Lock()
+		if m.modbusSessions[endpointID] == s && !s.stopped {
+			m.report(m.recordModbusObservationLocked(context.Background(), s, "manual", request, result))
+		}
+		m.mu.Unlock()
+	}
+	return result, callErr
 }

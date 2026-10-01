@@ -7,6 +7,8 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Added
 
+- Modbus recordings now retain searchable, owner-scoped evidence across restarts, with offline Sessions review, integrity-checked exports, and quota-aware deletion.
+
 - Modbus RealTime View now loads saved workspaces without connecting, controls live poll groups, shows mapped values and traffic, and previews explicit writes with bounded trends.
 
 - Modbus administrators can manage TCP endpoints, profiles, plugin policy and bounded settings in the browser; named offline endpoints and saved definitions appear under Instruments.

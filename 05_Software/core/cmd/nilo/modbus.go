@@ -36,6 +36,11 @@ const modbusUsage = `usage: nilo modbus <command> --server URL --token-file PATH
   display --endpoint ID --session ID [--paused]
   events --endpoint ID --session ID [--after N]
   command --command ID | commands --endpoint ID --session ID [--offset N]
+  recording-start --endpoint ID --session ID --mode values|traffic|both --sampling every|interval|change [--interval-ms N --name TEXT]
+  recording-stop|recording-status --endpoint ID --session ID
+  recordings [--name TEXT --tag TEXT --endpoint ID --started-from RFC3339 --started-through RFC3339 --before UUID]
+  recording-get|recording-find|recording-delete --recording UUID
+  recording-export --recording UUID --format jsonl|csv|text|bundle --out FILE
   disconnect --endpoint ID --session ID
 
 Connect returns a finite admission job; inspect it with nilo bench get. Ask
@@ -49,8 +54,11 @@ func runModbusCommand(ctx context.Context, args []string, streams networkIO) int
 	}
 	action := args[0]
 	var endpoint, profile, session, key, file, commandID, mapID, workspaceID, targetID, format, mode, groupID string
-	var endpointRevision, profileRevision, expectedRevision, mapRevision, workspaceRevision, after int64
+	var recordingID, sampling, name, tag, startedFrom, startedThrough, out, textQuery, hexQuery, before, kind, outcome, pointID, utcFrom, utcThrough string
+	var endpointRevision, profileRevision, expectedRevision, mapRevision, workspaceRevision, after, through int64
 	var offset int
+	var intervalMS int
+	var findUnit, findFunction, findAddress int
 	var paused, acceptConflicts bool
 	var timeout int
 	timeoutDefault := 60
@@ -69,6 +77,25 @@ func runModbusCommand(ctx context.Context, args []string, streams networkIO) int
 		flags.BoolVar(&acceptConflicts, "accept-conflicts", false, "replace conflicting point IDs in merge")
 		flags.StringVar(&session, "session", "", "live session ID")
 		flags.StringVar(&groupID, "group", "", "admitted poll group ID")
+		flags.StringVar(&recordingID, "recording", "", "saved Modbus recording ID")
+		flags.StringVar(&sampling, "sampling", "every", "recording sample mode")
+		flags.IntVar(&intervalMS, "interval-ms", 0, "sample interval in milliseconds")
+		flags.StringVar(&name, "name", "", "recording name")
+		flags.StringVar(&tag, "tag", "", "recording tag to find")
+		flags.StringVar(&startedFrom, "started-from", "", "recording start lower bound (RFC3339)")
+		flags.StringVar(&startedThrough, "started-through", "", "recording start upper bound (RFC3339)")
+		flags.StringVar(&out, "out", "", "export destination path")
+		flags.StringVar(&textQuery, "text", "", "literal Find text")
+		flags.StringVar(&hexQuery, "hex", "", "even-length hex Find text")
+		flags.StringVar(&kind, "kind", "", "recording event kind")
+		flags.StringVar(&outcome, "outcome", "", "recording event outcome")
+		flags.StringVar(&pointID, "point", "", "recording point ID")
+		flags.StringVar(&utcFrom, "utc-from", "", "event UTC lower bound (RFC3339)")
+		flags.StringVar(&utcThrough, "utc-through", "", "event UTC upper bound (RFC3339)")
+		flags.IntVar(&findUnit, "unit", 0, "event unit filter")
+		flags.IntVar(&findFunction, "function", 0, "event function filter")
+		flags.IntVar(&findAddress, "address", -1, "event address filter")
+		flags.StringVar(&before, "before", "", "recording metadata cursor")
 		flags.StringVar(&key, "key", "", "idempotency key")
 		flags.StringVar(&commandID, "command", "", "durable write command ID")
 		flags.IntVar(&offset, "offset", 0, "durable command page offset")
@@ -78,6 +105,7 @@ func runModbusCommand(ctx context.Context, args []string, streams networkIO) int
 		flags.Int64Var(&expectedRevision, "expected-revision", 0, "revision for definition save")
 		flags.Int64Var(&mapRevision, "revision", 0, "pinned map or workspace revision to open")
 		flags.Int64Var(&after, "after", 0, "last live event sequence")
+		flags.Int64Var(&through, "through", 0, "last sequence to export")
 		flags.IntVar(&timeout, "timeout-seconds", timeoutDefault, "finite admission deadline")
 		flags.BoolVar(&paused, "paused", false, "pause polling or display")
 	})
@@ -89,6 +117,61 @@ func runModbusCommand(ctx context.Context, args []string, streams networkIO) int
 	method, path := http.MethodGet, ""
 	var body any
 	switch action {
+	case "recordings":
+		path = base + "/recordings"
+		query := url.Values{}
+		for key, value := range map[string]string{"before": before, "name": name, "tag": tag, "endpoint_id": endpoint, "started_from": startedFrom, "started_through": startedThrough} {
+			if value != "" {
+				query.Set(key, value)
+			}
+		}
+		if len(query) != 0 {
+			path += "?" + query.Encode()
+		}
+	case "recording-get", "recording-find", "recording-export", "recording-delete":
+		if recordingID == "" {
+			return invalid("--recording is required")
+		}
+		path = base + "/recordings/" + url.PathEscape(recordingID)
+		switch action {
+		case "recording-find":
+			if after < 0 {
+				return invalid("--after must be nonnegative")
+			}
+			query := url.Values{"after": {strconv.FormatInt(after, 10)}}
+			if textQuery != "" {
+				query.Set("text", textQuery)
+			}
+			if hexQuery != "" {
+				query.Set("hex", hexQuery)
+			}
+			for key, value := range map[string]string{"kind": kind, "outcome": outcome, "point_id": pointID, "utc_from": utcFrom, "utc_through": utcThrough} {
+				if value != "" {
+					query.Set(key, value)
+				}
+			}
+			if findUnit != 0 {
+				query.Set("unit", strconv.Itoa(findUnit))
+			}
+			if findFunction != 0 {
+				query.Set("function", strconv.Itoa(findFunction))
+			}
+			if findAddress >= 0 {
+				query.Set("address", strconv.Itoa(findAddress))
+			}
+			path += "/find?" + query.Encode()
+		case "recording-export":
+			if out == "" || after < 0 || through < 0 {
+				return invalid("--out and nonnegative sequence bounds are required")
+			}
+			if format != "jsonl" && format != "csv" && format != "text" && format != "bundle" {
+				return invalid("--format must be jsonl, csv, text, or bundle")
+			}
+			query := url.Values{"format": {format}, "after": {strconv.FormatInt(after, 10)}, "through": {strconv.FormatInt(through, 10)}}
+			return downloadBenchArtifact(ctx, options, streams, path+"/export?"+query.Encode(), out, 16<<30)
+		case "recording-delete":
+			method = http.MethodDelete
+		}
 	case "endpoints":
 		path = base + "/endpoints"
 	case "settings":
@@ -218,7 +301,7 @@ func runModbusCommand(ctx context.Context, args []string, streams networkIO) int
 			}
 			path, body = base+"/profiles/"+url.PathEscape(profile), map[string]any{"expected_revision": expectedRevision, "profile": definition}
 		}
-	case "status", "connect", "test", "read", "write", "preview", "poll", "poll-group", "display", "events", "commands", "disconnect":
+	case "status", "connect", "test", "read", "write", "preview", "poll", "poll-group", "display", "events", "commands", "disconnect", "recording-start", "recording-stop", "recording-status":
 		if endpoint == "" {
 			return invalid("--endpoint is required")
 		}
@@ -226,6 +309,23 @@ func runModbusCommand(ctx context.Context, args []string, streams networkIO) int
 		switch action {
 		case "status":
 			path += "/session"
+		case "recording-status":
+			path += "/session"
+		case "recording-start":
+			if session == "" {
+				return invalid("--session is required")
+			}
+			if mode == "create" {
+				mode = "both"
+			}
+			method, path = http.MethodPost, path+"/recording"
+			body = map[string]any{"session_id": session, "mode": mode, "sampling": sampling, "interval_ms": intervalMS, "name": name}
+		case "recording-stop":
+			if session == "" {
+				return invalid("--session is required")
+			}
+			method, path = http.MethodDelete, path+"/recording"
+			body = map[string]any{"session_id": session}
 		case "connect":
 			if profile == "" || endpointRevision < 1 || profileRevision < 1 || (workspaceID == "") != (workspaceRevision == 0) {
 				return invalid("--profile and both pinned revisions are required")

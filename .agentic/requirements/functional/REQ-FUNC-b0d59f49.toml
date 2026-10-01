@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-b0d59f49"
+
+title = "Control Modbus logging modes and sampling"
+
+status = "active"
+
+requirement = """When the credential-bound owner starts or stops Modbus logging, Core shall apply an explicit values-only, traffic-only, or combined mode with every-poll, interval, or change-only sampling semantics, report the effective recording state, and keep logging independent of polling and browser display controls."""
+
+verification = "Exercise start, stop, repeated start, pause polling, pause display, interval sampling, and a value-quality transition with a fake session; assert the returned state and stored evidence match the selected mode without a hidden connect or dropped quality change."
+
+affected_paths = ["05_Software/core/internal/bench/modbus_recording.go", "05_Software/core/internal/bench/modbus_session.go", "05_Software/core/internal/bench/modbus_poll.go", "05_Software/core/internal/httpapi/modbus.go", "05_Software/core/internal/httpapi/modbus_test.go", "05_Software/core/cmd/nilo/modbus.go", "05_Software/core/cmd/nilo/modbus_test.go", "05_Software/core/internal/mcp/modbus.go", "05_Software/core/internal/mcp/bench_test.go", "05_Software/frontend/src/components/pages/ModbusLiveView.tsx", "05_Software/frontend/src/components/pages/ModbusWorkspacePage.test.tsx"]
+
+linked_tests = ["05_Software/core/internal/bench/modbus_recording_test.go::TestModbusRecordingRetainsRotatedEvidence", "05_Software/core/internal/bench/modbus_recording_test.go::TestModbusRecordingSamplingKeepsQualityTransitions", "05_Software/core/internal/bench/modbus_recording_test.go::TestModbusRecordingWriteEvidenceHonorsMode", "05_Software/core/internal/httpapi/modbus_test.go::TestModbusRoutesScopeAndStrictBody", "05_Software/core/cmd/nilo/modbus_test.go::TestModbusCLIRecordingControlsUseCore", "05_Software/frontend/src/components/pages/ModbusWorkspacePage.test.tsx::starts explicit logging from an owned live session"]
+
+
+spec = "specs/REQ-FUNC-b0d59f49.md"
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-30
+updated = 2026-10-01

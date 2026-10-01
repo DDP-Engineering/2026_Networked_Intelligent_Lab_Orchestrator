@@ -101,3 +101,22 @@ for (const [width, height, theme] of [
     ).toBe(true);
   });
 }
+
+for (const [language, width, height] of [
+  ['en', 320, 640],
+  ['de', 800, 480],
+  ['ro', 1024, 600],
+  ['en', 1920, 1080],
+] as const) {
+  test(`Modbus saved sessions stay usable offline in ${language} at ${width}x${height}`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await page.goto(`/e2e/modbus.fixture.html?view=sessions&lang=${language}`);
+    await expect(page.getByText('October run')).toBeVisible();
+    const open = page.locator('.modbus-sessions .modbus-list button');
+    await open.focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.modbus-grid-viewport').getByText('temperature').first()).toBeVisible();
+    await expect(page.locator('.modbus-trend')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+  });
+}

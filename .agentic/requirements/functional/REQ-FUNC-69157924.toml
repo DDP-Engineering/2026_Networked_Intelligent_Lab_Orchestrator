@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-69157924"
+
+title = "Find retained Modbus evidence with bounded pages"
+
+status = "active"
+
+requirement = """When an authorized client searches retained Modbus recordings, Core shall return bounded indexed pages across recording metadata and stored unit, function, error, hex, point-address, raw and typed sample fields, with explicit cursor, count, no-match and truncation states without reading whole logs into memory."""
+
+verification = "Persist many records and rotated parts, search each supported field with filters and cursors, then assert stable page order and count, bounded byte/row work, no-match and truncation indicators, and owner-only results."
+
+affected_paths = ["05_Software/core/internal/bench/modbus_recording_find.go", "05_Software/core/internal/store/sqlite/migrations/028_modbus_recordings.sql", "05_Software/core/internal/httpapi/modbus.go", "05_Software/core/cmd/nilo/modbus.go", "05_Software/core/internal/mcp/modbus.go"]
+
+linked_tests = ["05_Software/core/internal/bench/modbus_recording_test.go::TestModbusRecordingRetainsRotatedEvidence", "05_Software/core/internal/httpapi/modbus_test.go::TestModbusRoutesScopeAndStrictBody", "05_Software/core/cmd/nilo/modbus_test.go::TestModbusCLIRecordingControlsUseCore", "05_Software/core/internal/mcp/bench_test.go::TestBenchToolsUseCurrentTokenScopes"]
+
+
+spec = "specs/REQ-FUNC-69157924.md"
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-30
+updated = 2026-10-01

@@ -225,6 +225,18 @@ func TestModbusResultRejectsWrongWriteEcho(t *testing.T) {
 	}
 }
 
+func TestModbusResultAcceptsBoundedCapturedFrame(t *testing.T) {
+	request := ModbusRequest{Function: 3, Unit: 1, Address: 10, Count: 1}
+	result := ModbusResult{RequestID: "one", Outcome: "acknowledged", Attempts: 1, Values: []json.RawMessage{json.RawMessage("42")}, Frames: []ModbusTraceFrame{{RequestID: "one", Direction: "tx", DataHex: "000102"}}}
+	if !validModbusResult(request, result) {
+		t.Fatal("bounded actual frame rejected")
+	}
+	result.Frames[0].DataHex = "not-hex"
+	if validModbusResult(request, result) {
+		t.Fatal("invalid frame accepted")
+	}
+}
+
 func TestModbusWritePreviewPDUAndDigest(t *testing.T) {
 	request := ModbusRequest{Function: 6, Unit: 1, Address: 10, Count: 1, Values: []int{42}}
 	pdu, err := modbusPDU(request)

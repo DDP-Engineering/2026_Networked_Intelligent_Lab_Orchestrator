@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-DATA-2490acc3"
+
+title = "Retain immutable Modbus recording parts"
+
+status = "active"
+
+requirement = """When logging starts for a live Modbus session, Core shall retain one logical recording with immutable pinned definitions and append-only, sequence-ordered parts containing UTC and relative timing, raw request/reply evidence, raw and decoded samples, quality, and write outcomes, rotating parts at the configured limit without splitting the logical identity."""
+
+verification = "Start logging against a fake TCP runner with a pinned map, emit read and write outcomes until a small part limit rotates, then reopen the recording and assert one logical ID, immutable snapshots, ordered timestamps, exact raw/typed evidence, part digests, and no duplicate or missing sequence."
+
+affected_paths = ["05_Software/core/internal/bench/modbus_recording.go", "05_Software/core/internal/bench/modbus_recording_test.go", "05_Software/core/internal/bench/modbus_poll.go", "05_Software/core/internal/bench/modbus_write.go", "05_Software/core/internal/bench/modbus_session.go", "05_Software/core/internal/bench/modbus_session_test.go", "05_Software/core/internal/store/sqlite/migrations/028_modbus_recordings.sql", "05_Software/core/internal/store/sqlite/migrations.go", "05_Software/core/internal/store/sqlite/db_test.go", "05_Software/integrations/modbus/src/nilo_modbus/feasibility.py", "05_Software/integrations/modbus/src/nilo_modbus/scheduler.py", "05_Software/integrations/modbus/tests/test_scheduler.py"]
+
+linked_tests = ["05_Software/core/internal/bench/modbus_recording_test.go::TestModbusRecordingRetainsRotatedEvidence", "05_Software/core/internal/store/sqlite/db_test.go::TestModbusRecordingMigrationCreatesLogicalPartsAndEventIndex", "05_Software/integrations/modbus/tests/test_scheduler.py::test_transaction_carries_exact_trace_frames"]
+
+
+spec = "specs/REQ-DATA-2490acc3.md"
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-30
+updated = 2026-10-01

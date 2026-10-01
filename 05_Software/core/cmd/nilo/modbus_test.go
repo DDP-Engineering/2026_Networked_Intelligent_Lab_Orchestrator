@@ -104,3 +104,27 @@ func TestModbusCLILiveWorkspaceMirrorsCoreRoutes(t *testing.T) {
 		}
 	}
 }
+
+func TestModbusCLIRecordingControlsUseCore(t *testing.T) {
+	server, calls := networkStub(t, 200, map[string]any{"id": "recording-1", "status": "active"})
+	common := []string{"--server", server.URL, "--token-file", tokenFile(t, "test-token")}
+	for _, candidate := range []struct {
+		action       string
+		args         []string
+		method, path string
+	}{
+		{"recording-start", []string{"--endpoint", "gateway", "--session", "live", "--mode", "both", "--sampling", "every"}, "POST", "/api/v1/modbus/endpoints/gateway/recording"},
+		{"recording-stop", []string{"--endpoint", "gateway", "--session", "live"}, "DELETE", "/api/v1/modbus/endpoints/gateway/recording"},
+		{"recordings", nil, "GET", "/api/v1/modbus/recordings"},
+	} {
+		args := append([]string{candidate.action}, common...)
+		args = append(args, candidate.args...)
+		if code := runModbusCommand(context.Background(), args, networkIO{stdout: new(bytes.Buffer), stderr: new(bytes.Buffer)}); code != 0 {
+			t.Fatalf("%s exit %d", candidate.action, code)
+		}
+		call := (*calls)[len(*calls)-1]
+		if call.method != candidate.method || call.path != candidate.path {
+			t.Fatalf("%s call %+v", candidate.action, call)
+		}
+	}
+}

@@ -78,6 +78,26 @@
   gap: 0.75rem;
   min-width: 0;
 }
+.modbus-sessions,
+.modbus-recording-controls {
+  display: grid;
+  gap: 0.65rem;
+  min-width: 0;
+}
+.modbus-sessions .modbus-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-wrap: anywhere;
+}
+.modbus-sessions .modbus-grid-viewport {
+  max-height: 24rem;
+}
+.modbus-sessions .modbus-find input,
+.modbus-recording-controls .modbus-find input {
+  max-width: 100%;
+}
 .modbus-live section {
   min-width: 0;
 }

@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-e978db15"
+
+title = "Inspect Modbus recordings offline"
+
+status = "active"
+
+requirement = """When an authorized user opens a saved Modbus Sessions recording, the browser shall provide paginated metadata, offline register samples, traffic, trends, Find, export and protected delete controls without connecting hardware, with keyboard-accessible localized states from narrow field viewports through desktop."""
+
+verification = "Use a browser fixture with a disconnected endpoint and saved recording; assert no connect call, paginated metadata and offline panels, Find/export/delete actions and denials, then check EN/DE/RO keyboard and 320/800x480/1024x600/desktop reflow."
+
+affected_paths = ["05_Software/frontend/src/components/pages/ModbusSessionsPage.tsx", "05_Software/frontend/src/components/pages/ModbusWorkspacePage.tsx", "05_Software/frontend/src/components/pages/ModbusLiveView.tsx", "05_Software/frontend/src/components/pages/modbus.css", "05_Software/frontend/src/api/modbus.ts", "05_Software/frontend/src/api/client.ts", "05_Software/frontend/src/i18n/modbus.ts", "05_Software/frontend/e2e/modbus-layout.check.ts", "05_Software/frontend/src/test/modbus.fixture.tsx"]
+
+linked_tests = ["05_Software/frontend/src/components/pages/ModbusWorkspacePage.test.tsx::opens saved recording evidence offline without connecting hardware", "05_Software/frontend/src/components/pages/ModbusWorkspacePage.test.tsx::finds saved evidence, updates tags, and keeps protected recordings after deletion is denied", "05_Software/frontend/e2e/modbus-layout.check.ts"]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-30
+updated = 2026-10-01

@@ -6,7 +6,7 @@ import {
   sessionCredential,
 } from '../../api/client';
 import type { InstrumentJob } from '../../api/bench';
-import type { ModbusEndpoint, ModbusWorkspace, ModbusMap } from '../../api/modbus';
+import type { ModbusEndpoint, ModbusWorkspace, ModbusMap, ModbusRecordingPage, ModbusRecordingEventPage } from '../../api/modbus';
 import {
   renderInShell,
   installColorScheme,
@@ -88,6 +88,93 @@ it('keeps the new live workflow on network endpoints', async () => {
     await screen.findByText(/supports TCP and RTU-over-TCP endpoints/),
   ).toBeTruthy();
   expect(screen.queryByRole('button', { name: 'Connect' })).toBeNull();
+});
+
+it('opens saved recording evidence offline without connecting hardware', async () => {
+  installColorScheme('light');
+  const connect = vi.fn();
+  const listModbusRecordings = vi.fn(async (): Promise<ModbusRecordingPage> => ({
+    recordings: [{ id: 'record-1', session_id: 'old-session', endpoint_id: 'boiler', owner_id: 'admin', name: 'October run', tags: [], mode: 'both', sampling: 'every', interval_ms: 0, status: 'completed', started_at: '2026-10-01T10:00:00Z', last_sequence: 2, size_bytes: 200, part_count: 1 }],
+    next_cursor: '',
+  }));
+  const findModbusRecording = vi.fn(async (): Promise<ModbusRecordingEventPage> => ({ events: [{ sequence: 1, timestamp: '2026-10-01T10:00:01Z', elapsed_ns: 1, kind: 'sample', group_id: 'temperatures', request: { function: 3, unit: 1, address: 10, count: 1, values: [] }, result: { request_id: 'read', outcome: 'acknowledged', values: [42], attempts: 1 }, point_id: 'temperature', quality: 'good', raw: [42], typed: { value: 42 } }], next_cursor: 1, count: 1, scanned: 1, no_match: false, truncated: false }));
+  const client = {
+    ...createBenchCoreClient({ baseUrl: '' }),
+    listModbusEndpoints: vi.fn(async () => [endpoint]),
+    listModbusProfiles: vi.fn(async () => []),
+    listModbusMaps: vi.fn(async () => []),
+    listModbusWorkspaces: vi.fn(async () => []),
+    getModbusSession: vi.fn(async () => ({ state: 'disconnected', endpoint_id: 'boiler', connected: false })),
+    listModbusRecordings,
+    findModbusRecording,
+    connectModbus: connect,
+  };
+  renderInShell(<ModbusWorkspacePage client={client} credential={sessionCredential('csrf')} endpoint={endpoint} view="sessions" onSessionEnded={vi.fn()} />);
+  expect(await screen.findByText('October run')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Open recording' }));
+  expect(await screen.findByText('temperature')).toBeTruthy();
+  expect(connect).not.toHaveBeenCalled();
+});
+
+it('finds saved evidence, updates tags, and keeps protected recordings after deletion is denied', async () => {
+  installColorScheme('light');
+  const recording: ModbusRecordingPage['recordings'][number] = {
+    id: 'protected-1', session_id: 'old-session', endpoint_id: 'boiler', owner_id: 'admin',
+    name: 'October run', tags: [], mode: 'both', sampling: 'every', interval_ms: 0,
+    status: 'completed', started_at: '2026-10-01T10:00:00Z', last_sequence: 2,
+    size_bytes: 200, part_count: 1,
+  };
+  const findModbusRecording = vi.fn(async (): Promise<ModbusRecordingEventPage> => ({
+    events: [], next_cursor: 0, count: 0, scanned: 0, no_match: true, truncated: false,
+  }));
+  const updateModbusRecording = vi.fn(async () => ({ ...recording, tags: ['baseline'] }));
+  const deleteModbusRecording = vi.fn(async () => {
+    throw new BenchCoreError('forbidden', 'protected recording', 'recording_protected');
+  });
+  const client = {
+    ...createBenchCoreClient({ baseUrl: '' }),
+    listModbusEndpoints: vi.fn(async () => [endpoint]),
+    listModbusProfiles: vi.fn(async () => []),
+    listModbusMaps: vi.fn(async () => []),
+    listModbusWorkspaces: vi.fn(async () => []),
+    getModbusSession: vi.fn(async () => ({ state: 'disconnected', endpoint_id: 'boiler', connected: false })),
+    listModbusRecordings: vi.fn(async (): Promise<ModbusRecordingPage> => ({ recordings: [recording], next_cursor: '' })),
+    findModbusRecording,
+    updateModbusRecording,
+    deleteModbusRecording,
+  };
+  vi.spyOn(window, 'confirm').mockReturnValue(true);
+  renderInShell(<ModbusWorkspacePage client={client} credential={sessionCredential('csrf')} endpoint={endpoint} view="sessions" onSessionEnded={vi.fn()} />);
+  await screen.findByText('October run');
+  fireEvent.click(screen.getByRole('button', { name: 'Open recording' }));
+  await waitFor(() => expect(findModbusRecording).toHaveBeenCalledTimes(1));
+  fireEvent.change(screen.getByLabelText('Frame hex'), { target: { value: '01 03' } });
+  fireEvent.click(screen.getAllByRole('button', { name: 'Find' })[1]);
+  await waitFor(() => expect(findModbusRecording).toHaveBeenLastCalledWith(expect.anything(), 'protected-1', 0, expect.objectContaining({ hex: '01 03' })));
+  fireEvent.change(screen.getByLabelText('Tags (comma separated)'), { target: { value: 'baseline' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+  await waitFor(() => expect(updateModbusRecording).toHaveBeenCalledWith(expect.anything(), 'protected-1', 'October run', ['baseline']));
+  fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+  await waitFor(() => expect(screen.getByText('recording_protected')).toBeTruthy());
+  expect(deleteModbusRecording).toHaveBeenCalledWith(expect.anything(), 'protected-1');
+  expect(screen.getAllByText('October run')).toHaveLength(2);
+});
+
+it('starts explicit logging from an owned live session', async () => {
+  installColorScheme('light');
+  const startModbusRecording = vi.fn(async () => ({ id: 'record-1', status: 'active' }));
+  const client = {
+    ...createBenchCoreClient({ baseUrl: '' }),
+    listModbusEndpoints: vi.fn(async () => [endpoint]),
+    listModbusProfiles: vi.fn(async () => []),
+    listModbusMaps: vi.fn(async () => []),
+    listModbusWorkspaces: vi.fn(async () => []),
+    getModbusSession: vi.fn(async () => ({ state: 'connected', endpoint_id: 'boiler', session_id: 'live', connected: true, can_control: true, poll_paused: false, display_paused: false, group_stats: {} })),
+    startModbusRecording,
+  };
+  renderInShell(<ModbusWorkspacePage client={client as unknown as ReturnType<typeof createBenchCoreClient>} credential={sessionCredential('csrf')} endpoint={endpoint} view="live" onSessionEnded={vi.fn()} />);
+  fireEvent.click(await screen.findByRole('button', { name: 'Start logging' }));
+  await waitFor(() => expect(startModbusRecording).toHaveBeenCalledWith(expect.anything(), 'boiler', 'live', expect.objectContaining({ mode: 'both', sampling: 'every' })));
 });
 
 it('loads a saved workspace inertly and connects only after the operator acts', async () => {

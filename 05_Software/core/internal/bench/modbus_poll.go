@@ -259,6 +259,7 @@ func (m *Manager) pollModbus(s *modbusSession) {
 				}
 				s.cursor++
 				s.events = append(s.events, ModbusEvent{Sequence: s.cursor, Timestamp: m.now().Format(time.RFC3339Nano), GroupID: group.ID, Request: request, Result: result})
+				m.report(m.recordModbusObservationLocked(context.Background(), s, group.ID, request, result))
 				if len(s.events) > 256 {
 					s.events = append([]ModbusEvent(nil), s.events[len(s.events)-256:]...)
 				}

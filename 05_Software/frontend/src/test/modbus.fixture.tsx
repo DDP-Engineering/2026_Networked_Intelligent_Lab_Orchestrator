@@ -115,6 +115,8 @@ const client = {
   ],
   getModbusWorkspace: async () => workspace,
   getModbusMap: async () => map,
+  listModbusRecordings: async () => ({ recordings: [{ id: '00000000-0000-4000-8000-000000000001', session_id: 'old-session', endpoint_id: 'boiler', owner_id: 'admin', name: 'October run', tags: ['commissioning'], mode: 'both' as const, sampling: 'every' as const, interval_ms: 0, status: 'completed' as const, started_at: '2026-10-01T10:00:00Z', last_sequence: 2, size_bytes: 200, part_count: 1 }], next_cursor: '', count: 1, no_match: false }),
+  findModbusRecording: async () => ({ events: [{ sequence: 1, timestamp: '2026-10-01T10:00:01Z', elapsed_ns: 1000000000, kind: 'sample' as const, group_id: 'temperatures', request: { function: 3, unit: 1, address: 10, count: 1, values: [] }, result: { request_id: 'read', outcome: 'acknowledged', values: [42], attempts: 1 }, point_id: 'temperature', quality: 'good', raw: [42], typed: { value: 42 } }, { sequence: 2, timestamp: '2026-10-01T10:00:02Z', elapsed_ns: 2000000000, kind: 'sample' as const, group_id: 'temperatures', request: { function: 3, unit: 1, address: 10, count: 1, values: [] }, result: { request_id: 'read', outcome: 'acknowledged', values: [43], attempts: 1 }, point_id: 'temperature', quality: 'good', raw: [43], typed: { value: 43 } }], next_cursor: 2, count: 2, scanned: 2, no_match: false, truncated: false }),
   modbusEvents: async (
     _credential: unknown,
     _endpointId: string,
@@ -147,12 +149,12 @@ createRoot(document.getElementById('root')!).render(
   <ThemeProvider initial={query.get('theme') === 'dark' ? 'dark' : 'light'}>
     <LanguageProvider initial={language}>
       <main style={{ minWidth: 0, minHeight: '100dvh' }}>
-        {query.get('view') === 'workspace' || query.get('view') === 'live' ? (
+        {query.get('view') === 'workspace' || query.get('view') === 'live' || query.get('view') === 'sessions' ? (
           <ModbusWorkspacePage
             client={client}
             credential={credential}
             endpoint={endpoint}
-            view={query.get('view') === 'live' ? 'live' : 'maps'}
+            view={query.get('view') === 'live' ? 'live' : query.get('view') === 'sessions' ? 'sessions' : 'maps'}
             onSessionEnded={() => {}}
           />
         ) : (

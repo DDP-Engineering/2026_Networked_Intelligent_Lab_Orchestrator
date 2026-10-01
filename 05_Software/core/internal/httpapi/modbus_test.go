@@ -34,7 +34,7 @@ func TestModbusRoutesScopeAndStrictBody(t *testing.T) {
 	read := f.issueToken(t, "admin", "modbus-read", []auth.Permission{auth.PermissionBenchRead}, nil)
 	execute := f.issueToken(t, "admin", "modbus-execute", []auth.Permission{auth.PermissionBenchRead, auth.PermissionBenchExecute}, nil)
 	manage := f.issueToken(t, "admin", "modbus-manage", []auth.Permission{auth.PermissionBenchRead, auth.PermissionBenchExecute, auth.PermissionPluginsManage}, nil)
-	for _, action := range []string{"connect", "read", "write", "preview", "poll", "poll-group", "display", "disconnect"} {
+	for _, action := range []string{"connect", "read", "write", "preview", "poll", "poll-group", "display", "disconnect", "recording"} {
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/modbus/endpoints/gateway/"+action, strings.NewReader(`{}`))
 		req.Header.Set("Authorization", "Bearer "+read)
 		if got := f.do(req); got.Code != 403 {
@@ -51,6 +51,9 @@ func TestModbusRoutesScopeAndStrictBody(t *testing.T) {
 	}
 	if got := f.get("/api/v1/modbus/settings", read); got.Code != 200 {
 		t.Fatalf("read settings: %d", got.Code)
+	}
+	if got := f.get("/api/v1/modbus/recordings", read); got.Code != 200 {
+		t.Fatalf("list recordings: %d", got.Code)
 	}
 	settingsBody := `{"expected_revision":1,"settings":{"max_sessions":4,"session_lease_seconds":3600,"idle_seconds":300,"retention_count":100,"retention_bytes":2147483648,"part_bytes":104857600}}`
 	for _, candidate := range []struct {

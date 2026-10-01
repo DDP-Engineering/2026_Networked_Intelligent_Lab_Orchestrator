@@ -2,7 +2,9 @@ package httpapi
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"nilo.local/nilo/internal/auth"
@@ -264,6 +266,120 @@ func registerModbus(register func(string, auth.Permission, http.HandlerFunc), m 
 		a, _ := actorFrom(r.Context())
 		v, err := m.ModbusSession(r.Context(), a, r.PathValue("id"))
 		reply(w, v, err)
+	})
+	register("POST /api/v1/modbus/endpoints/{id}/recording", auth.PermissionBenchExecute, func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			SessionID string `json:"session_id"`
+			bench.ModbusRecordingOptions
+		}
+		if !benchBody(w, r, &body) {
+			return
+		}
+		a, _ := actorFrom(r.Context())
+		value, err := m.StartModbusRecording(r.Context(), a, r.PathValue("id"), body.SessionID, body.ModbusRecordingOptions)
+		reply(w, value, err)
+	})
+	register("DELETE /api/v1/modbus/endpoints/{id}/recording", auth.PermissionBenchExecute, func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			SessionID string `json:"session_id"`
+		}
+		if !benchBody(w, r, &body) {
+			return
+		}
+		a, _ := actorFrom(r.Context())
+		value, err := m.StopModbusRecording(r.Context(), a, r.PathValue("id"), body.SessionID)
+		reply(w, value, err)
+	})
+	register("GET /api/v1/modbus/recordings", auth.PermissionBenchRead, func(w http.ResponseWriter, r *http.Request) {
+		a, _ := actorFrom(r.Context())
+		query := r.URL.Query()
+		value, err := m.FindModbusRecordings(r.Context(), a, bench.ModbusRecordingSearch{
+			Before: query.Get("before"), Name: query.Get("name"), Tag: query.Get("tag"), EndpointID: query.Get("endpoint_id"),
+			StartedFrom: query.Get("started_from"), StartedThrough: query.Get("started_through"),
+		})
+		reply(w, value, err)
+	})
+	register("GET /api/v1/modbus/recordings/{id}", auth.PermissionBenchRead, func(w http.ResponseWriter, r *http.Request) {
+		a, _ := actorFrom(r.Context())
+		value, err := m.ModbusRecordingByID(r.Context(), a, r.PathValue("id"))
+		reply(w, value, err)
+	})
+	register("PATCH /api/v1/modbus/recordings/{id}", auth.PermissionBenchExecute, func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			Name string   `json:"name"`
+			Tags []string `json:"tags"`
+		}
+		if !benchBody(w, r, &body) {
+			return
+		}
+		a, _ := actorFrom(r.Context())
+		value, err := m.UpdateModbusRecordingMetadata(r.Context(), a, r.PathValue("id"), body.Name, body.Tags)
+		reply(w, value, err)
+	})
+	findRecording := func(w http.ResponseWriter, r *http.Request) {
+		a, _ := actorFrom(r.Context())
+		after, err := serialQuery(r, "after", 0)
+		if err != nil {
+			benchError(w, bench.ErrInvalid)
+			return
+		}
+		unit, err := serialQuery(r, "unit", 0)
+		if err != nil {
+			benchError(w, bench.ErrInvalid)
+			return
+		}
+		function, err := serialQuery(r, "function", 0)
+		if err != nil {
+			benchError(w, bench.ErrInvalid)
+			return
+		}
+		limit, err := serialQuery(r, "limit", 0)
+		if err != nil {
+			benchError(w, bench.ErrInvalid)
+			return
+		}
+		filter := bench.ModbusRecordingFind{After: after, Unit: int(unit), Function: int(function), Limit: int(limit), Kind: r.URL.Query().Get("kind"), Outcome: r.URL.Query().Get("outcome"), PointID: r.URL.Query().Get("point_id"), Text: r.URL.Query().Get("text"), Hex: r.URL.Query().Get("hex"), UTCFrom: r.URL.Query().Get("utc_from"), UTCThrough: r.URL.Query().Get("utc_through")}
+		if r.URL.Query().Has("address") {
+			address, err := serialQuery(r, "address", 0)
+			if err != nil {
+				benchError(w, bench.ErrInvalid)
+				return
+			}
+			coordinate := int(address)
+			filter.Address = &coordinate
+		}
+		value, err := m.FindModbusRecordingEvents(r.Context(), a, r.PathValue("id"), filter)
+		reply(w, value, err)
+	}
+	register("GET /api/v1/modbus/recordings/{id}/events", auth.PermissionBenchRead, findRecording)
+	register("GET /api/v1/modbus/recordings/{id}/find", auth.PermissionBenchRead, findRecording)
+	register("GET /api/v1/modbus/recordings/{id}/export", auth.PermissionBenchRead, func(w http.ResponseWriter, r *http.Request) {
+		after, err := serialQuery(r, "after", 0)
+		if err != nil {
+			benchError(w, bench.ErrInvalid)
+			return
+		}
+		through, err := serialQuery(r, "through", 0)
+		if err != nil {
+			benchError(w, bench.ErrInvalid)
+			return
+		}
+		a, _ := actorFrom(r.Context())
+		format := r.URL.Query().Get("format")
+		reader, media, err := m.ExportModbusRecording(r.Context(), a, r.PathValue("id"), format, after, through)
+		if err != nil {
+			benchError(w, err)
+			return
+		}
+		defer reader.Close()
+		w.Header().Set("Content-Type", media)
+		w.Header().Set("Content-Disposition", "attachment; filename*=UTF-8''"+url.PathEscape(r.PathValue("id")+"."+format))
+		_, _ = io.Copy(w, reader)
+	})
+	register("DELETE /api/v1/modbus/recordings/{id}", auth.PermissionBenchExecute, func(w http.ResponseWriter, r *http.Request) {
+		a, _ := actorFrom(r.Context())
+		err := m.DeleteModbusRecording(r.Context(), a, r.PathValue("id"))
+		reply(w, map[string]bool{"ok": err == nil}, err)
 	})
 	register("POST /api/v1/modbus/endpoints/{id}/connect", auth.PermissionBenchExecute, func(w http.ResponseWriter, r *http.Request) {
 		var body bench.ModbusConnect

@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-SEC-025e6e99"
+
+title = "Authorize Modbus recording access"
+
+status = "active"
+
+requirement = """When a client lists, reads, searches, exports, edits metadata, or deletes a Modbus recording, Core shall allow its owner or an administrator with the required permission and reject other users or insufficiently scoped credentials without exposing retained content."""
+
+verification = "Create recordings for two owners, then exercise owner, other operator, viewer, administrator, narrow token, revoked token and expired credentials across metadata, search, export and delete routes; assert only authorized data and denial responses."
+
+affected_paths = ["05_Software/core/internal/bench/modbus_recording.go", "05_Software/core/internal/bench/modbus_recording_find.go", "05_Software/core/internal/bench/modbus_recording_export.go", "05_Software/core/internal/httpapi/modbus.go", "05_Software/core/cmd/nilo/modbus.go", "05_Software/core/internal/mcp/modbus.go"]
+
+linked_tests = ["05_Software/core/internal/bench/modbus_recording_test.go::TestModbusRecordingRetainsRotatedEvidence", "05_Software/core/internal/httpapi/modbus_test.go::TestModbusRoutesScopeAndStrictBody", "05_Software/core/internal/mcp/bench_test.go::TestBenchToolsUseCurrentTokenScopes"]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-30
+updated = 2026-10-01

@@ -36,6 +36,9 @@ import {
   parseModbusWritePreview,
   parseModbusCommand,
   parseModbusAck,
+  parseModbusRecording,
+  parseModbusRecordingPage,
+  parseModbusRecordingEvents,
   type ModbusEndpoint,
   type ModbusProfile,
   type ModbusSettingsValues,
@@ -52,6 +55,11 @@ import {
   type ModbusEncodedPoint,
   type ModbusWritePreview,
   type ModbusCommand,
+  type ModbusRecording,
+  type ModbusRecordingOptions,
+  type ModbusRecordingPage,
+  type ModbusRecordingSearch,
+  type ModbusRecordingEventPage,
 } from './modbus';
 import {
   WIREGUARD_PATH,
@@ -365,6 +373,14 @@ export interface BenchCoreClient {
     sessionId: string,
     after: number,
   ): Promise<ModbusEventPage>;
+  startModbusRecording?(credential: Credential, endpointId: string, sessionId: string, options: ModbusRecordingOptions): Promise<ModbusRecording>;
+  stopModbusRecording?(credential: Credential, endpointId: string, sessionId: string): Promise<ModbusRecording>;
+  listModbusRecordings?(credential: Credential, search?: ModbusRecordingSearch): Promise<ModbusRecordingPage>;
+  getModbusRecording?(credential: Credential, id: string): Promise<ModbusRecording>;
+  findModbusRecording?(credential: Credential, id: string, after: number, filter?: { kind?: string; text?: string; hex?: string; unit?: string; function?: string; address?: string; outcome?: string; point_id?: string; utc_from?: string; utc_through?: string }): Promise<ModbusRecordingEventPage>;
+  updateModbusRecording?(credential: Credential, id: string, name: string, tags: string[]): Promise<ModbusRecording>;
+  deleteModbusRecording?(credential: Credential, id: string): Promise<void>;
+  downloadModbusRecording?(credential: Credential, id: string, format: 'jsonl' | 'csv' | 'text' | 'bundle'): Promise<Blob>;
   decodeModbusPoint?(
     credential: Credential,
     mapId: string,
@@ -883,6 +899,34 @@ export function createBenchCoreClient(
         credential,
         parse: parseModbusEvents,
       }),
+    startModbusRecording: (credential, endpointId, sessionId, options) =>
+      exchange({ path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/recording`, credential, method: 'POST', body: { session_id: sessionId, ...options }, parse: parseModbusRecording }),
+    stopModbusRecording: (credential, endpointId, sessionId) =>
+      exchange({ path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/recording`, credential, method: 'DELETE', body: { session_id: sessionId }, parse: parseModbusRecording }),
+    listModbusRecordings: (credential, search = {}) => {
+      const query = new URLSearchParams();
+      for (const [key, value] of Object.entries(search)) if (value) query.set(key, value);
+      return exchange({ path: `/api/v1/modbus/recordings${query.size ? `?${query}` : ''}`, credential, parse: parseModbusRecordingPage });
+    },
+    getModbusRecording: (credential, id) =>
+      exchange({ path: `/api/v1/modbus/recordings/${encodeURIComponent(id)}`, credential, parse: parseModbusRecording }),
+    findModbusRecording: (credential, id, after, filter = {}) => {
+      const query = new URLSearchParams({ after: String(after) });
+      for (const [key, value] of Object.entries(filter)) if (value) query.set(key, value);
+      return exchange({ path: `/api/v1/modbus/recordings/${encodeURIComponent(id)}/find?${query}`, credential, parse: parseModbusRecordingEvents });
+    },
+    updateModbusRecording: (credential, id, name, tags) =>
+      exchange({ path: `/api/v1/modbus/recordings/${encodeURIComponent(id)}`, credential, method: 'PATCH', body: { name, tags }, parse: parseModbusRecording }),
+    deleteModbusRecording: (credential, id) =>
+      exchange({ path: `/api/v1/modbus/recordings/${encodeURIComponent(id)}`, credential, method: 'DELETE', parse: parseModbusAck }),
+    downloadModbusRecording: async (credential, id, format) => {
+      const headers: Record<string, string> = {};
+      if (credential.kind === 'bearer') headers.Authorization = `Bearer ${credential.token}`;
+      const response = await transport(resourceUrl(baseUrl, `/api/v1/modbus/recordings/${encodeURIComponent(id)}/export?format=${format}`), { method: 'GET', headers, credentials: 'same-origin' });
+      if (!response.ok) throw await refusalOf(response);
+      if (!response.blob) throw new BenchCoreError('unavailable', 'Binary download is unavailable');
+      return response.blob();
+    },
     decodeModbusPoint: (credential, mapId, revision, pointId, words) =>
       exchange({
         path: `/api/v1/modbus/maps/${encodeURIComponent(mapId)}/revisions/${revision}/decode`,

@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-DATA-6c52a683"
+
+title = "Enforce Modbus retention and deletion leases"
+
+status = "active"
+
+requirement = """When Modbus recording storage reaches configured count or byte limits, Core shall reclaim only the oldest eligible completed recordings while protecting active and download-leased records, and shall refuse deletion of an active or leased recording with an audited outcome."""
+
+verification = "Fill a small retention quota with completed, active, incomplete and leased recordings; assert deterministic oldest-eligible reclamation, refusal when no eligible record exists, preserved active/leased bytes, and authorized deletion audit."
+
+affected_paths = ["05_Software/core/internal/bench/modbus_recording.go", "05_Software/core/internal/bench/modbus_recording_export.go", "05_Software/core/internal/bench/modbus_recording_recovery.go", "05_Software/core/internal/store/sqlite/migrations/028_modbus_recordings.sql"]
+
+linked_tests = ["05_Software/core/internal/bench/modbus_recording_test.go::TestModbusRecordingRetainsRotatedEvidence", "05_Software/core/internal/bench/modbus_recording_test.go::TestModbusRecordingRotationReservesNewHeader"]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-30
+updated = 2026-10-01

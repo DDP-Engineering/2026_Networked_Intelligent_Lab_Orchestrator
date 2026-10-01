@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-DATA-797a97da"
+
+title = "Stream faithful Modbus recording exports"
+
+status = "active"
+
+requirement = """When an authorized client exports a Modbus recording or selected sample range, Core shall stream bounded JSONL, CSV, readable text, or a bundle with immutable definition snapshots and SHA-256 part manifest, preserving raw values and incomplete status while escaping spreadsheet-leading CSV text safely."""
+
+verification = "Export a rotated recording with integer-width, tagged non-finite, error and formula-leading labels through each format; round-trip JSONL and bundle digests, assert CSV-safe text without changing register data, and bound download memory, size and time."
+
+affected_paths = ["05_Software/core/internal/bench/modbus_recording_export.go", "05_Software/core/internal/httpapi/modbus.go", "05_Software/core/cmd/nilo/modbus.go", "05_Software/core/internal/mcp/modbus.go"]
+
+linked_tests = ["05_Software/core/internal/bench/modbus_recording_test.go::TestModbusRecordingRetainsRotatedEvidence", "05_Software/core/internal/httpapi/modbus_test.go::TestModbusRoutesScopeAndStrictBody", "05_Software/core/cmd/nilo/modbus_test.go::TestModbusCLIRecordingControlsUseCore", "05_Software/core/internal/mcp/bench_test.go::TestBenchToolsUseCurrentTokenScopes"]
+
+
+spec = "specs/REQ-DATA-797a97da.md"
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-09-30
+updated = 2026-10-01

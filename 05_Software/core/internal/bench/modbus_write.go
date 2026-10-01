@@ -284,5 +284,12 @@ func (m *Manager) writeModbus(ctx context.Context, actor identity.Actor, endpoin
 		return ModbusCommand{ID: command.ID, SessionID: s.id, IdempotencyKey: input.IdempotencyKey, Digest: digest, Outcome: "delivery_unknown"}, err
 	}
 	_ = m.record(context.WithoutCancel(ctx), actor, "modbus.write_finished", s.id, map[string]any{"command_id": command.ID, "outcome": command.Outcome})
+	m.mu.Lock()
+	if m.modbusSessions[endpointID] == s && !s.stopped {
+		if s.recording != nil {
+			m.report(m.appendModbusRecordingLocked(context.Background(), s, modbusWriteRecordedEvent(s.recording.meta.Mode, request, command)))
+		}
+	}
+	m.mu.Unlock()
 	return command, nil
 }

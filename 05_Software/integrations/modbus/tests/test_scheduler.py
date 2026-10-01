@@ -59,6 +59,29 @@ async def test_round_robin_units_and_single_in_flight():
     await scheduler.close()
 
 
+async def test_transaction_carries_exact_trace_frames():
+    class TracedClient:
+        fenced = False
+
+        def __init__(self):
+            self.events = []
+
+        async def transact(self, request_id, _request):
+            self.events = [
+                {"request_id": request_id, "direction": "tx", "data_hex": "000102"},
+                {"request_id": request_id, "direction": "rx", "data_hex": "010203"},
+            ]
+            return {"outcome": "acknowledged", "values": (100,)}
+
+        def close(self):
+            self.fenced = True
+
+    scheduler = EndpointScheduler(TracedClient(), "tcp", {"read_retries": 0, "inter_request_ms": 0})
+    result = await scheduler.submit("trace-one", Request(3, 1, 0), 1000)
+    assert [frame["data_hex"] for frame in result["frames"]] == ["000102", "010203"]
+    await scheduler.close()
+
+
 async def test_pending_poll_coalesces_and_queue_is_bounded():
     client = FakeClient()
     scheduler = EndpointScheduler(client, "tcp", {"read_retries": 0, "inter_request_ms": 0})

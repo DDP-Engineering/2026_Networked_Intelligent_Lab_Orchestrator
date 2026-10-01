@@ -43,7 +43,7 @@ func TestOpenConfiguresDurableDatabaseAndMigratesAllFoundationTables(t *testing.
 	wantTables := []string{
 		"activity_policy", "app_policies", "appliance_identity", "approval_records", "artifacts",
 		"audit_events", "audit_sequence", "bench_device_sequences", "bench_devices", "bench_jobs", "bench_plugin_configuration", "bench_plugins", "bench_weak_serials", "camera_legacy_deletions", "camera_media", "camera_workspace_settings", "commissioning",
-		"config_versions", "device_networks", "device_policies", "identify_operations", "management_access", "mcp_tokens", "modbus_commands", "modbus_endpoints", "modbus_map_revisions", "modbus_maps", "modbus_profile_revisions", "modbus_profiles", "modbus_sessions", "modbus_settings", "modbus_workspace_revisions", "modbus_workspaces", "network_interface_settings", "network_operations", "network_recovery",
+		"config_versions", "device_networks", "device_policies", "identify_operations", "management_access", "mcp_tokens", "modbus_commands", "modbus_endpoints", "modbus_map_revisions", "modbus_maps", "modbus_profile_revisions", "modbus_profiles", "modbus_recording_events", "modbus_recording_parts", "modbus_recording_tags", "modbus_recordings", "modbus_sessions", "modbus_settings", "modbus_workspace_revisions", "modbus_workspaces", "network_interface_settings", "network_operations", "network_recovery",
 		"network_traffic_minute",
 		"operating_settings", "operation_policy_overrides",
 		"operation_requests", "password_policy", "policy_snapshots", "resource_leases", "retention_watermarks", "schema_migrations", "serial_connections", "serial_logs", "serial_retention", "serial_sends", "sessions",
@@ -75,6 +75,20 @@ func TestOpenIsIdempotentForAnAlreadyMigratedDatabase(t *testing.T) {
 	})
 	if got := queryInt(t, second.SQL(), "SELECT COUNT(*) FROM schema_migrations"); got != len(migrations) {
 		t.Fatalf("schema_migrations count = %d, want %d after reopen", got, len(migrations))
+	}
+}
+
+func TestModbusRecordingMigrationCreatesLogicalPartsAndEventIndex(t *testing.T) {
+	db := openTemporaryDatabase(t)
+	for _, table := range []string{"modbus_recordings", "modbus_recording_parts", "modbus_recording_events"} {
+		var name string
+		if err := db.SQL().QueryRow(`SELECT name FROM sqlite_master WHERE type='table' AND name=?`, table).Scan(&name); err != nil || name != table {
+			t.Fatalf("recording table %s: %q %v", table, name, err)
+		}
+	}
+	var count int
+	if err := db.SQL().QueryRow(`SELECT count(*) FROM pragma_index_list('modbus_recording_events') WHERE name='modbus_recording_events_recording_sequence'`).Scan(&count); err != nil || count != 1 {
+		t.Fatalf("recording sequence index: %d %v", count, err)
 	}
 }
 

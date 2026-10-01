@@ -3,6 +3,8 @@ package mcp
 import (
 	"context"
 	"encoding/json"
+	"net/url"
+	"strconv"
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 	"nilo.local/nilo/internal/bench"
@@ -247,6 +249,93 @@ func registerModbusTools(server *sdk.Server, options HandlerOptions) {
 			return nil, bench.ErrInvalid
 		}
 		return options.Bench.ModbusSession(ctx, a, input.ID)
+	})
+	register("modbus_recording_start", "Start explicit retained logging for an owned live session.", false, map[string]any{"endpoint_id": text, "session_id": text, "mode": text, "sampling": text, "interval_ms": integer, "name": map[string]any{"type": "string"}, "tags": map[string]any{"type": "array", "items": text}}, []string{"endpoint_id", "session_id", "mode", "sampling"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID      string `json:"endpoint_id"`
+			Session string `json:"session_id"`
+			bench.ModbusRecordingOptions
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.StartModbusRecording(ctx, a, input.ID, input.Session, input.ModbusRecordingOptions)
+	})
+	register("modbus_recording_stop", "Stop and finalize owned Modbus logging without stopping polling.", false, map[string]any{"endpoint_id": text, "session_id": text}, []string{"endpoint_id", "session_id"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID      string `json:"endpoint_id"`
+			Session string `json:"session_id"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.StopModbusRecording(ctx, a, input.ID, input.Session)
+	})
+	register("modbus_recordings", "Find authorized saved Modbus recording metadata by name, tag, endpoint, and date.", true, map[string]any{"before": text, "name": text, "tag": text, "endpoint_id": text, "started_from": text, "started_through": text}, nil, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input bench.ModbusRecordingSearch
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.FindModbusRecordings(ctx, a, input)
+	})
+	register("modbus_recording_get", "Read one authorized saved Modbus recording's metadata.", true, map[string]any{"recording_id": text}, []string{"recording_id"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID string `json:"recording_id"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.ModbusRecordingByID(ctx, a, input.ID)
+	})
+	register("modbus_recording_find", "Read an indexed bounded page of authorized retained events.", true, map[string]any{"recording_id": text, "after": integer, "kind": text, "unit": integer, "function": integer, "address": integer, "outcome": text, "point_id": text, "text": text, "hex": text, "utc_from": text, "utc_through": text}, []string{"recording_id"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID string `json:"recording_id"`
+			bench.ModbusRecordingFind
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.FindModbusRecordingEvents(ctx, a, input.ID, input.ModbusRecordingFind)
+	})
+	register("modbus_recording_metadata", "Rename or tag an authorized Modbus recording without changing evidence.", false, map[string]any{"recording_id": text, "name": map[string]any{"type": "string"}, "tags": map[string]any{"type": "array", "items": text}}, []string{"recording_id", "name", "tags"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID   string   `json:"recording_id"`
+			Name string   `json:"name"`
+			Tags []string `json:"tags"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.UpdateModbusRecordingMetadata(ctx, a, input.ID, input.Name, input.Tags)
+	})
+	register("modbus_recording_export", "Authorize a streamed export and return its relative authenticated download URL.", true, map[string]any{"recording_id": text, "format": text, "after": integer, "through": integer}, []string{"recording_id", "format"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID      string `json:"recording_id"`
+			Format  string `json:"format"`
+			After   int64  `json:"after"`
+			Through int64  `json:"through"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		if input.Format != "jsonl" && input.Format != "csv" && input.Format != "text" && input.Format != "bundle" || input.After < 0 || input.Through < 0 {
+			return nil, bench.ErrInvalid
+		}
+		if _, err := options.Bench.ModbusRecordingByID(ctx, a, input.ID); err != nil {
+			return nil, err
+		}
+		query := url.Values{"format": {input.Format}, "after": {strconv.FormatInt(input.After, 10)}, "through": {strconv.FormatInt(input.Through, 10)}}
+		return map[string]any{"recording_id": input.ID, "download_url": "/api/v1/modbus/recordings/" + url.PathEscape(input.ID) + "/export?" + query.Encode(), "authentication": "Use the same authorized API token; download authorization is checked again."}, nil
+	})
+	register("modbus_recording_delete", "Delete a stopped non-leased authorized Modbus recording.", false, map[string]any{"recording_id": text}, []string{"recording_id"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID string `json:"recording_id"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		err := options.Bench.DeleteModbusRecording(ctx, a, input.ID)
+		return map[string]bool{"ok": err == nil}, err
 	})
 	register("modbus_connect", "Queue a finite pinned read-plan admission job; use bench_get_job and the human approval surface for Ask.", false, map[string]any{"endpoint_id": text, "endpoint_revision": integer, "profile_id": text, "profile_revision": integer, "workspace_id": text, "workspace_revision": integer, "groups": map[string]any{"type": "array", "items": group}, "idempotency_key": text, "timeout_seconds": integer}, []string{"endpoint_id", "endpoint_revision", "profile_id", "profile_revision", "groups", "idempotency_key"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
 		var input struct {

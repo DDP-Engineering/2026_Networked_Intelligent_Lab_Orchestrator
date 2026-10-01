@@ -72,6 +72,11 @@ export interface ModbusSessionStatus {
   display_paused?: boolean;
   can_control?: boolean;
   group_stats?: Record<string, ModbusGroupStats>;
+  recording_id?: string;
+  logging?: boolean;
+  logging_mode?: string;
+  logging_sampling?: string;
+  recording_warning?: string;
 }
 
 export interface ModbusGroupStats {
@@ -157,6 +162,111 @@ export interface ModbusResult {
   values: (number | boolean)[];
   attempts: number;
   exception_code?: number;
+  frames?: { direction: 'tx' | 'rx'; data_hex: string }[];
+}
+
+export interface ModbusRecordingOptions {
+  mode: 'values' | 'traffic' | 'both';
+  sampling: 'every' | 'interval' | 'change';
+  interval_ms?: number;
+  name?: string;
+  tags?: string[];
+}
+
+export interface ModbusRecording {
+  id: string;
+  session_id: string;
+  endpoint_id: string;
+  owner_id: string;
+  name: string;
+  tags: string[];
+  mode: ModbusRecordingOptions['mode'];
+  sampling: ModbusRecordingOptions['sampling'];
+  interval_ms: number;
+  status: 'active' | 'completed' | 'incomplete';
+  reason?: string;
+  started_at: string;
+  ended_at?: string;
+  last_sequence: number;
+  size_bytes: number;
+  part_count: number;
+}
+
+export interface ModbusRecordingPage {
+  recordings: ModbusRecording[];
+  next_cursor?: string;
+  count?: number;
+  no_match?: boolean;
+}
+
+export interface ModbusRecordingSearch {
+  before?: string;
+  name?: string;
+  tag?: string;
+  endpoint_id?: string;
+  started_from?: string;
+  started_through?: string;
+}
+
+export interface ModbusRecordedEvent {
+  sequence: number;
+  timestamp: string;
+  elapsed_ns: number;
+  kind: 'sample' | 'traffic' | 'write';
+  group_id?: string;
+  request: ModbusRequest;
+  result: ModbusResult;
+  point_id?: string;
+  quality?: string;
+  raw?: unknown;
+  typed?: unknown;
+  request_hex?: string;
+  reply_hex?: string;
+  command_id?: string;
+}
+
+export interface ModbusRecordingEventPage {
+  events: ModbusRecordedEvent[];
+  next_cursor: number;
+  count: number;
+  scanned: number;
+  no_match: boolean;
+  truncated: boolean;
+}
+
+export function parseModbusRecording(value: unknown): ParseResult<ModbusRecording> {
+  return record(value) &&
+    typeof value.id === 'string' &&
+    typeof value.session_id === 'string' &&
+    typeof value.endpoint_id === 'string' &&
+    typeof value.owner_id === 'string' &&
+    typeof value.name === 'string' &&
+    Array.isArray(value.tags) && value.tags.every((tag) => typeof tag === 'string') &&
+    ['active', 'completed', 'incomplete'].includes(String(value.status)) &&
+    typeof value.started_at === 'string' &&
+    integer(value.last_sequence) && integer(value.size_bytes) && integer(value.part_count)
+    ? { ok: true, value: value as unknown as ModbusRecording }
+    : { ok: false, violation: 'Invalid Modbus recording' };
+}
+
+export function parseModbusRecordingPage(value: unknown): ParseResult<ModbusRecordingPage> {
+  if (!record(value) || !Array.isArray(value.recordings) ||
+      value.recordings.some((entry) => !parseModbusRecording(entry).ok) ||
+      (value.next_cursor !== undefined && typeof value.next_cursor !== 'string'))
+    return { ok: false, violation: 'Invalid Modbus recording page' };
+  return { ok: true, value: value as unknown as ModbusRecordingPage };
+}
+
+export function parseModbusRecordingEvents(value: unknown): ParseResult<ModbusRecordingEventPage> {
+  if (!record(value) || !Array.isArray(value.events) || !integer(value.next_cursor) ||
+      !integer(value.count) || !integer(value.scanned) ||
+      typeof value.no_match !== 'boolean' || typeof value.truncated !== 'boolean' ||
+      value.events.some((event) => !record(event) || !integer(event.sequence) ||
+        typeof event.timestamp !== 'string' || !integer(event.elapsed_ns) ||
+        !['sample', 'traffic', 'write'].includes(String(event.kind)) ||
+        !validRequest(event.request) || !validResult(event.result)))
+    return { ok: false, violation: 'Invalid Modbus recording event page' };
+  return { ok: true, value: value as unknown as ModbusRecordingEventPage };
 }
 
 export interface ModbusEvent {

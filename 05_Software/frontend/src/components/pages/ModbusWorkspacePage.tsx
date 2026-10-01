@@ -13,6 +13,7 @@ import type {
 import { useTranslate } from '../../i18n/languages';
 import { MessageBanner } from '../MessageBanner';
 import { ModbusLiveView } from './ModbusLiveView';
+import { ModbusSessionsPage } from './ModbusSessionsPage';
 import './modbus.css';
 
 interface Props {
@@ -118,10 +119,7 @@ export function ModbusWorkspacePage({
           <MessageBanner tone="warning">{t('modbus.networkOnly')}</MessageBanner>
         )}
         {view === 'sessions' && (
-          <section className="instrument-card">
-            <h3>{t('modbus.sessions')}</h3>
-            <p>{t('modbus.sessionsLater')}</p>
-          </section>
+          <ModbusSessionsPage client={client} credential={credential} endpointId={endpoint?.id} onSessionEnded={onSessionEnded} />
         )}
         {(view === 'maps' || view === 'definitions') && (
           <section className="instrument-card">

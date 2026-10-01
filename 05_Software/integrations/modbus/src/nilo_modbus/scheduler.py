@@ -148,6 +148,7 @@ class EndpointScheduler:
 
     async def _execute(self, item: _Pending) -> dict:
         attempts = 0
+        frames: list[dict] = []
         signature = (item.request.unit, item.request.function)
         if signature in self.quarantined:
             return self._outcome(item, "disconnected")
@@ -177,6 +178,10 @@ class EndpointScheduler:
                     "delivery_unknown" if item.request.function in WRITES else "cancelled",
                     attempts,
                 )
+            captured = getattr(self.client, "events", ())
+            frames.extend(dict(frame) for frame in captured if frame.get("request_id") == item.request_id)
+            if frames:
+                result["frames"] = frames
             result = {**result, "request_id": item.request_id, "attempts": attempts}
             if self.mode != "tcp" and result["outcome"] in {"timeout", "protocol_error"}:
                 self.quarantined.add(signature)

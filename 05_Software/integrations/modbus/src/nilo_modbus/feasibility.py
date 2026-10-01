@@ -157,7 +157,7 @@ class ValidatedClient:
         """@brief Observe library buffers under the current request identity."""
         if self.request_id is None:
             return b""
-        if len(self.events) >= 256 or self.trace_bytes + len(data) > 65536:
+        if len(self.events) >= 64 or self.trace_bytes + len(data) > 6000:
             self.protocol_fault = True
             return b""
         if sending:
@@ -219,6 +219,8 @@ class ValidatedClient:
         async with self.lock:
             if self.fenced or not self.client.connected:
                 return {"outcome": "disconnected", "values": ()}
+            self.events = []
+            self.trace_bytes = 0
             self.request_id = request_id
             self.active = request
             self.sent = b""

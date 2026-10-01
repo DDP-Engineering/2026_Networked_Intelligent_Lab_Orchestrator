@@ -23,7 +23,8 @@ Bench Core owns shared Modbus definitions, authority, policy admission, canonica
 - `POST /api/v1/modbus/endpoints/{id}/test`, `nilo modbus test`, and MCP `modbus_test` submit a revision-pinned finite `connect` policy job. The terminal result reports readiness after the temporary claim and runner are cleaned up; it creates no controllable live session and sends no Modbus PDU.
 - `ConnectModbus` submits a policy job whose successful result opens a credential-bound live session. `ModbusSession`, `ReadModbus`, polling/display controls, `PreviewModbusWrite`, `WriteModbus`, command queries, and `DisconnectModbus` use that session under the existing HTTP, CLI, and MCP surfaces.
 - Live Connect may pin a saved workspace revision; Core verifies its endpoint, profile and exact enabled poll plan. Per-group pause, timeout, stop-on-error and requested/observed polling metrics are exposed across HTTP, CLI and MCP. The point decode/encode routes use pinned map revisions and do no device I/O.
-- `ModbusLiveView` runs for TCP and RTU-over-TCP endpoints. It loads a workspace and its exact map revisions inertly, then requires explicit Connect. It renders bounded event-derived traffic and trends, mapped raw/typed values with freshness, and an owner-only Core preview/Submit write flow. Display pause and Clear display affect browser buffers only. Recording controls and persistence belong to MB-08.
+- `ModbusLiveView` runs for TCP and RTU-over-TCP endpoints. It loads a workspace and its exact map revisions inertly, then requires explicit Connect. It renders bounded event-derived traffic and trends, mapped raw/typed values with freshness, and an owner-only Core preview/Submit write flow. Display pause and Clear display affect browser buffers only. Start/Stop recording controls operate independently from display and polling.
+- `ModbusSessionsPage` opens saved recordings without a live session. Each numbered JSONL part carries the pinned definition snapshot; Core also indexes sample/traffic/write events and owner/admin metadata. It exposes bounded Find, CSV/JSONL/text/ZIP exports, retention and deletion under reader leases through HTTP, CLI, and MCP. Startup recovers interrupted writers as incomplete without reconnecting hardware.
 - `ModbusPluginPage` provides lifecycle, policy, activity, version/update, TCP definition/profile, test, and settings controls for administrators. `buildPages` creates named Instruments destinations for enabled endpoints and a Saved definitions destination that remains available after plugin disable or uninstall.
 - `internal/modbus` validates point coordinates, explicit address bases, typed conversions, and exact write previews. The runner's private version-1 socket protocol and integration manifest are its supervised execution boundary.
 
@@ -35,6 +36,7 @@ Bench Core owns shared Modbus definitions, authority, policy admission, canonica
 - Test-only admission uses the existing Ask/Auto policy, requires administrator management and Bench execute permissions, has a finite deadline, and closes the runner and claim before reporting success. It neither reads nor writes registers.
 - The current session ceiling applies to new admissions. Each admitted session snapshots its lease and idle durations; lowering settings never terminates an existing session. Recording retention values are persisted for the recording service.
 - A write reservation is durable before one transport dispatch. Lost acknowledgement remains delivery-unknown and is never replayed. The client rejects inconsistent framing/identity and fences uncertain transport state.
+- Recording parts sync before their event index commits. Closed parts carry size and SHA-256; export refuses mismatches. Recording failure stops logging, leaves polling running, and marks the saved record incomplete with a visible reason. Retention reclaims only completed, unleased records.
 - Trusted USB observations maintain stable endpoint identity and unplugged definitions; this browser editor creates and changes only TCP targets. Physical RS-485 behavior and native ARM64 execution require target observations.
 
 ## Change map
@@ -48,6 +50,7 @@ Bench Core owns shared Modbus definitions, authority, policy admission, canonica
 | Public commands and permission gates | `httpapi/modbus.go`, `mcp/modbus.go`, `cmd/nilo/modbus.go` | Adjacent `modbus_test.go` and `bench_test.go` |
 | Browser administration and navigation | `frontend/src/components/pages/ModbusPluginPage.tsx`, `shell/pages.ts`, `AppShell.tsx` | Page, shell, API and `e2e/modbus-layout.check.ts` tests |
 | Live register workspace and write controls | `frontend/src/components/pages/ModbusLiveView.tsx`, `bench/modbus_poll.go`, `bench/modbus_point_codec.go` | `ModbusWorkspacePage.test.tsx`, adjacent Core Modbus tests |
+| Retained recording, search, recovery and export | `bench/modbus_recording*.go`, migration 028, `frontend/src/components/pages/ModbusSessionsPage.tsx` | `modbus_recording_test.go`, adjacent API/CLI/MCP and frontend page tests |
 | Supervised transactions and recovery | `integrations/modbus/src/nilo_modbus/{plugin,runner_client,scheduler,workspace}.py` | `tests/{test_supervised,test_runner,test_scheduler,test_workspace}.py` |
 | PDU bounds, transport, schemas and pins | `requests.py`, `feasibility.py`, `schemas/contracts.schema.json`, `evidence/dependencies.json` | `test_requests.py`, `test_feasibility.py`, `test_contracts.py`, `test_dependencies.py` |
 
@@ -63,6 +66,8 @@ Bench Core owns shared Modbus definitions, authority, policy admission, canonica
 - `REQ-REL-4e21290d`, `REQ-REL-f258c750` — cleanup-confirmed claim release and durable one-attempt writes.
 - `REQ-REL-2d6babd5`, `REQ-REL-1878cffa` — bounded fair runner scheduling and conservative recovery.
 - `REQ-UX-04cd31fe`, `REQ-UX-9d7fd3a6`, `REQ-UX-35328cf5`, `REQ-UX-e0682e6a`, `REQ-FUNC-c7473d9f` — inert live workspace selection, mapped freshness, explicit writes, bounded displays and independent poll groups.
+- `REQ-DATA-2490acc3`, `REQ-FUNC-b0d59f49`, `REQ-REL-e1048fd2` — logical recording parts, independent controls and honest incomplete recovery.
+- `REQ-SEC-025e6e99`, `REQ-FUNC-69157924`, `REQ-DATA-797a97da`, `REQ-DATA-6c52a683`, `REQ-UX-e978db15` — owner/admin access, bounded search, exports, retention leases and offline inspection.
 
 ## Architecture
 
@@ -72,13 +77,16 @@ flowchart LR
     CLI([nilo modbus]) --> API
     MCP([MCP modbus tools]) --> Manager[bench.Manager]
     API --> Manager
-    Manager --> DB[(SQLite definitions, settings, sessions)]
+    Manager --> DB[(SQLite definitions, settings, sessions, recording index)]
     Manager --> Codec["Pinned map codec"]
     Manager --> Job[Finite connect policy job]
     Job --> Policy[Plugin Ask/Auto policy]
     Job --> Claim[Canonical transport claim]
     Claim --> Session[modbusSession]
     Session --> Poll["Independent poll groups and live events"]
+    Session --> Recorder["Session-owned recording"]
+    Recorder --> Parts[(Numbered JSONL parts)]
+    Recorder --> DB
     Poll --> UI
     Session --> Socket[Private Unix socket]
     Socket --> Runner([Supervised Python runner])
@@ -90,11 +98,11 @@ The test-only job uses the same policy and claim path, then closes `modbusSessio
 ## Files
 
 - `05_Software/core/internal/bench/modbus_definitions.go`, `modbus_discovery.go`, `modbus_maps.go`, `modbus_workspaces.go`, `modbus_workspace_import.go` — shared definitions, discovery, map and workspace services.
-- `05_Software/core/internal/bench/modbus_adapter.go`, `modbus_session.go`, `modbus_request.go`, `modbus_poll.go`, `modbus_write.go`, `modbus_settings.go`, `transport_lease.go` — admission, settings, session I/O and cleanup.
-- `05_Software/core/internal/store/sqlite/modbus_repository.go`, `modbus_definition_repository.go`, `migrations/{024_modbus_definitions,025_modbus_sessions,026_modbus_maps_workspaces,027_modbus_settings}.sql` — durable records and migrations.
+- `05_Software/core/internal/bench/modbus_adapter.go`, `modbus_session.go`, `modbus_request.go`, `modbus_poll.go`, `modbus_write.go`, `modbus_settings.go`, `modbus_recording*.go`, `transport_lease.go` — admission, settings, session I/O, retained evidence and cleanup.
+- `05_Software/core/internal/store/sqlite/modbus_repository.go`, `modbus_definition_repository.go`, `migrations/{024_modbus_definitions,025_modbus_sessions,026_modbus_maps_workspaces,027_modbus_settings,028_modbus_recordings}.sql` — durable records and migrations.
 - `05_Software/core/internal/modbus/` — typed definitions, validation, addressing, codecs and interchange.
 - `05_Software/core/internal/httpapi/modbus.go`, `internal/mcp/modbus.go`, `cmd/nilo/modbus.go` — authenticated public interfaces.
-- `05_Software/frontend/src/api/modbus.ts`, `api/client.ts`, `components/pages/{ModbusPluginPage,ModbusWorkspacePage,ModbusLiveView}.tsx`, `components/pages/modbus.css`, `components/shell/{pages,AppShell}.tsx`, `i18n/modbus.ts` — browser API, administration, live workspace, navigation, localization and layout.
+- `05_Software/frontend/src/api/modbus.ts`, `api/client.ts`, `components/pages/{ModbusPluginPage,ModbusWorkspacePage,ModbusLiveView,ModbusSessionsPage}.tsx`, `components/pages/modbus.css`, `components/shell/{pages,AppShell}.tsx`, `i18n/modbus.ts` — browser API, administration, live and offline workspaces, navigation, localization and layout.
 - `05_Software/integrations/modbus/src/nilo_modbus/{requests,feasibility,plugin,runner_client,scheduler,workspace,usb}.py`, `manifest.json`, `schemas/` — supervised runner, protocol validation and contracts.
 - `05_Software/integrations/modbus/{pyproject.toml,uv.lock,evidence/dependencies.json,README.md}` and `02_Tools/scripts/prepare-modbus-dependencies.py` — pinned candidate environment and preparation.
 - Focused verification: adjacent Core `modbus*_test.go`, frontend `modbus.test.ts`, `ModbusPluginPage.test.tsx`, shell tests, `e2e/modbus-layout.check.ts`, and integration `tests/test_*.py`.

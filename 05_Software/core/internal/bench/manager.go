@@ -65,6 +65,7 @@ type Manager struct {
 	modbusSettings         ModbusSettingsValues
 	modbusSettingsRevision int64
 	modbusWorkers          sync.WaitGroup
+	modbusReads            map[string]int
 	transports             map[string]*transportLease
 	transportWorkers       sync.WaitGroup
 	serialReads            map[string]int
@@ -120,7 +121,16 @@ func New(options Options) (*Manager, error) {
 	m.cameraSpace = cameraDiskSpace
 	m.serials = make(map[string]*serialSession)
 	m.modbusSessions = make(map[string]*modbusSession)
+	m.modbusReads = make(map[string]int)
 	if _, err := m.db().ExecContext(ctx, `UPDATE modbus_sessions SET state='closed',reason='core_restarted' WHERE state='active'`); err != nil {
+		cancel()
+		return nil, err
+	}
+	if err := m.reconcileModbusDeletes(ctx); err != nil {
+		cancel()
+		return nil, err
+	}
+	if err := m.recoverModbusRecordings(ctx); err != nil {
 		cancel()
 		return nil, err
 	}
