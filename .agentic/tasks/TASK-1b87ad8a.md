@@ -151,6 +151,7 @@ Expected files (frontend prefix `05_Software/frontend/`): `src/App.tsx`, `src/Ap
 - 2026-10-01 validate continuation at clean `1f0bfb2`: Rechecked all 13 linked active requirement statuses and verification clauses; browser reload, wide/drawer inspection and constrained viewport evidence remain outstanding. Appliance prerequisite-only check exit 2 (no Docker/Podman); advisory strict check without `--run` exit 1 with zero errors, 30 warnings and the same three promoted incoming `.gitea` outside-layout findings. No candidate edits or executable browser observation; the earlier full gate predates this integration commit. Stay blocked in validate pending container-capable host, layout-policy reconciliation by its owner and fresh final strict run.
 
 - 2026-10-01 validate continuation at clean `588ef54`: Re-read all 13 active requirements and the disclosure spec; browser and viewport observations remain required. Appliance prerequisite-only check exit 2: neither Docker nor Podman is available. Advisory `check --task TASK-1b87ad8a --strict` without `--run` exit 1: zero errors, 30 warnings, four notes, including three promoted incoming `.gitea` outside-layout warnings. No ticket edits or browser proof; full final `--strict --run` is still owed on the current tree. Do not advance while these blockers remain.
+- 2026-10-01 validate continuation at clean `f926e87`: Re-read all 13 active requirements and disclosure spec, GUI knowledge and current shell browser journey; no changed ticket behavior found in this integration. Evolution refreshed: 120 non-.agentic paths, including ticket shell/UI files and unrelated tooling/settings/CI; no new ticket-scope path. Appliance prerequisite exit 2 (no Docker/Podman), so required real-browser and field-viewport observations remain unperformed. `check --task TASK-1b87ad8a --strict` without `--run` exit 1: zero errors, 30 warnings, four notes; three promoted incoming `.gitea` outside-layout findings persist. Other warnings concern unrelated stale requirement path, tracked sidecars, deliver tasks and uncovered incoming source. No candidate edits or manual substitute; full strict `--run` remains owed after the policy owner fixes layout and browser evidence is available. Validation stays blocked.
 
 ## Rulings
 
@@ -159,7 +160,7 @@ Expected files (frontend prefix `05_Software/frontend/`): `src/App.tsx`, `src/Ap
 
 current: validate
 status: blocked
-next: On a Docker/Podman-capable host run appliance-browser/layout proof; coordinate unrelated .gitea layout-policy reconciliation and rerun final strict gate for current tree.
+next: On a Docker/Podman-capable host run appliance-browser/layout proof; coordinate unrelated .gitea layout-policy reconciliation and rerun final strict gate on the final tree.
 must_read: .agentic/steps/5_validate.md; .agentic/tasks/TASK-1b87ad8a.md; .agentic/context/environment.md; 05_Software/frontend/e2e/shell.spec.ts; .agentic/knowledge/gui-foundation.md
 blockers: No Docker/Podman for browser/layout observation. Advisory strict exit 1 on three incoming .gitea outside-layout warnings; final full gate remains owed on current tree.
 
@@ -168,10 +169,10 @@ blockers: No Docker/Podman for browser/layout observation. Advisory strict exit 
 stage: validate
 result: blocked
 current: validate
-changed: No ticket candidate changes; clean current tree at 588ef54, all 13 requirements re-read.
-evidence: Appliance prerequisite exit 2 (no engine); strict without run exit 1 (zero errors, 30 warnings, four notes; three promoted .gitea warnings). Earlier tests predate this commit.
+changed: No ticket edits; clean f926e87 tree, all 13 active requirements and disclosure spec re-read; evolution refreshed (120 integrated paths).
+evidence: Appliance prerequisite exit 2 (no engine); strict without run exit 1 (zero errors, 30 warnings, four notes; three promoted .gitea warnings). Earlier full tests predate current integration.
 issues: Browser/layout observation unavailable here; incoming .gitea layout warnings prevent strict success. Earlier static reviews approved; final full proof outstanding on current tree.
-next: Obtain appliance-browser observation on capable host, coordinate .gitea policy owner, refresh evolution if candidate changes, then run final strict --run.
+next: Obtain appliance-browser observation on capable host, coordinate .gitea policy owner, then run final strict --run on final tree.
 needs_user: yes
 spec_compliance: approved
 implementation_quality: approved
