@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-104739e7"
+
+title = "Read typed Modbus identity and serial diagnostics"
+
+status = "active"
+
+requirement = """When an authorized live owner requests device identification or a selected read-only serial diagnostic, Core and the runner shall send only a typed, capability-appropriate FC43/14, FC11 or FC17 request, validate its bounded response and return structured data or explicit unsupported/error status without raw-frame or disruptive diagnostic access."""
+
+verification = "Use independent identity and serial-diagnostic response fixtures on supported and unsupported transports; assert typed object/counter/ID decoding, exception and malformed-response rejection, bounded lengths, and refusal of FC08, raw and broadcast forms."
+
+affected_paths = ["05_Software/core/internal/bench/modbus_diagnostic.go", "05_Software/core/internal/bench/modbus_diagnostic_test.go", "05_Software/core/internal/bench/modbus_session.go", "05_Software/core/internal/httpapi/modbus.go", "05_Software/core/internal/httpapi/modbus_test.go", "05_Software/core/cmd/nilo/modbus.go", "05_Software/core/cmd/nilo/modbus_test.go", "05_Software/core/internal/mcp/modbus.go", "05_Software/core/internal/mcp/bench_test.go", "05_Software/integrations/modbus/src/nilo_modbus/requests.py", "05_Software/integrations/modbus/src/nilo_modbus/feasibility.py", "05_Software/integrations/modbus/tests/test_requests.py", "05_Software/integrations/modbus/tests/test_feasibility.py", "05_Software/integrations/modbus/tests/peers.py"]
+
+linked_tests = ["05_Software/core/internal/bench/modbus_diagnostic_test.go::TestModbusDiagnosticTransportAndTypedResult", "05_Software/core/internal/httpapi/modbus_test.go::TestModbusRoutesScopeAndStrictBody", "05_Software/core/cmd/nilo/modbus_test.go::TestModbusCLIToolsUseCoreRoutes", "05_Software/core/internal/mcp/bench_test.go::TestBenchToolsUseCurrentTokenScopes", "05_Software/integrations/modbus/tests/test_requests.py::test_typed_diagnostic_vectors_and_native_tcp_restriction", "05_Software/integrations/modbus/tests/test_feasibility.py::test_typed_diagnostics"]
+
+
+spec = "specs/REQ-FUNC-104739e7.md"
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-10-01
+updated = 2026-10-01

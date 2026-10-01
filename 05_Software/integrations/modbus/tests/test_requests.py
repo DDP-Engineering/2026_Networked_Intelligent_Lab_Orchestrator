@@ -89,6 +89,39 @@ def test_tcp_unit_zero_and_end_address():
     assert m.encode(m.Request(3, 0, 65535), "tcp") == bytes.fromhex("03ffff0001")
 
 
+def test_advanced_write_vectors_and_limits():
+    m = subject()
+    mask = m.Request(22, 1, 1, 1, (), and_mask=0xF2F2, or_mask=0x2525)
+    assert m.encode(mask, "tcp").hex() == "160001f2f22525"
+    combined = m.Request(23, 1, 4, 1, (0x1234,), read_address=2, read_count=1)
+    assert m.encode(combined, "tcp").hex() == "170002000100040001021234"
+    for bad in (
+        m.Request(22, 1, 1, 1, (), and_mask=0x10000, or_mask=0),
+        m.Request(23, 1, 4, 122, (0,) * 122, read_address=2, read_count=1),
+        m.Request(23, 1, 4, 1, (0,), read_address=2, read_count=126),
+        m.Request(23, 1, 4, 1, (0,), read_address=65535, read_count=2),
+        m.Request(3, 1, 4, 1, (), and_mask=1),
+    ):
+        with pytest.raises(ValueError):
+            m.encode(bad, "tcp")
+
+
+def test_typed_diagnostic_vectors_and_native_tcp_restriction():
+    m = subject()
+    assert m.encode(m.Request(43, 1, 0), "tcp").hex() == "2b0e0100"
+    assert m.encode(m.Request(11, 1, 0), "rtu_tcp").hex() == "0b"
+    assert m.encode(m.Request(17, 1, 0), "rtu").hex() == "11"
+    for bad, mode in (
+        (m.Request(11, 1, 0), "tcp"),
+        (m.Request(17, 1, 0), "tcp"),
+        (m.Request(43, 1, 1), "tcp"),
+        (m.Request(43, 1, 0, 2), "tcp"),
+        (m.Request(11, 1, 0, 1, (1,)), "rtu"),
+    ):
+        with pytest.raises(ValueError):
+            m.encode(bad, mode)
+
+
 def test_display_reference_conversion():
     m = subject()
     assert m.wire_address("holding", 40001, "reference") == 0

@@ -133,8 +133,9 @@ def _request(value: dict, endpoint: dict) -> tuple[str, Request, int, str | None
         "values",
         "deadline_ms",
     }
+    optional = {22: {"and_mask", "or_mask"}, 23: {"read_address", "read_count"}}.get(value.get("function"), set())
     if (
-        set(value) not in (required, required | {"poll_key"})
+        set(value) not in (required | optional, required | optional | {"poll_key"})
         or value.get("version") != 1
         or value.get("kind") != "transaction"
         or not isinstance(value.get("request_id"), str)
@@ -144,7 +145,8 @@ def _request(value: dict, endpoint: dict) -> tuple[str, Request, int, str | None
     if not isinstance(value["values"], list):
         raise ValueError("invalid_parameters")  # noqa: TRY004 - stable private error
     request = Request(
-        value["function"], value["unit"], value["address"], value["count"], tuple(value["values"])
+        value["function"], value["unit"], value["address"], value["count"], tuple(value["values"]),
+        value.get("and_mask"), value.get("or_mask"), value.get("read_address"), value.get("read_count")
     )
     encode(request, endpoint["transport"])
     if (

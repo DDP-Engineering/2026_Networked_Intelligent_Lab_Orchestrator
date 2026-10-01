@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-REL-b7570e66"
+
+title = "Keep Modbus scans fair and cancellable"
+
+status = "active"
+
+requirement = """While an explicit Modbus scan runs, Core and the endpoint runner shall provide monotonic per-probe progress, bounded cancellation and deadline outcomes, and interleave scan probes through the existing fair scheduler so regular polling remains serviceable without overlapping transport requests."""
+
+verification = "Run a paced multi-unit scan alongside poll groups against a deterministic fake runner, cancel during queued and in-flight probes, and assert progress never regresses, poll requests execute between probes, no second transport call overlaps, and terminal state is truthful."
+
+affected_paths = ["05_Software/core/internal/bench/modbus_scan.go", "05_Software/core/internal/bench/modbus_scan_test.go", "05_Software/core/internal/bench/modbus_session.go", "05_Software/integrations/modbus/src/nilo_modbus/scheduler.py", "05_Software/integrations/modbus/tests/test_scheduler.py"]
+
+linked_tests = ["05_Software/core/internal/bench/modbus_scan_test.go::TestModbusScanSettlesFiniteMixedProbes", "05_Software/core/internal/bench/modbus_scan_test.go::TestModbusScanCancelStopsFutureProbes", "05_Software/integrations/modbus/tests/test_scheduler.py::test_round_robin_units_and_single_in_flight"]
+
+
+spec = "specs/REQ-REL-b7570e66.md"
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-10-01
+updated = 2026-10-01

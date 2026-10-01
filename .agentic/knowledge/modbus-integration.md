@@ -36,6 +36,8 @@ Bench Core owns shared Modbus definitions, authority, policy admission, canonica
 - Test-only admission uses the existing Ask/Auto policy, requires administrator management and Bench execute permissions, has a finite deadline, and closes the runner and claim before reporting success. It neither reads nor writes registers.
 - The current session ceiling applies to new admissions. Each admitted session snapshots its lease and idle durations; lowering settings never terminates an existing session. Recording retention values are persisted for the recording service.
 - A write reservation is durable before one transport dispatch. Lost acknowledgement remains delivery-unknown and is never replayed. The client rejects inconsistent framing/identity and fences uncertain transport state.
+- Explicit scans run only on a live credential-bound lease. Core validates one finite FC01–04 unit/address plan (at most 512 probes, 1–10 probes/s, 1–60 seconds), submits one probe at a time through the runner scheduler, and retains settled progress until the session ends or another scan starts. Cancellation and deadline stop future probes. CSV/JSONL exports include plan metadata and observed outcomes; failed reads do not imply absent devices or writable/typed addresses.
+- FC22 mask and FC23 combined read/write use the existing durable one-attempt write reservation. FC23 returns its read-side words separately from the submitted write words. FC43/14 basic identification and FC11/17 read-only serial diagnostics have typed bounded replies; native TCP refuses FC11/17 before I/O, and raw frames, FC08 and broadcast diagnostics remain unsupported.
 - Recording parts sync before their event index commits. Closed parts carry size and SHA-256; export refuses mismatches. Recording failure stops logging, leaves polling running, and marks the saved record incomplete with a visible reason. Retention reclaims only completed, unleased records.
 - Trusted USB observations maintain stable endpoint identity and unplugged definitions; this browser editor creates and changes only TCP targets. Physical RS-485 behavior and native ARM64 execution require target observations.
 
@@ -51,6 +53,7 @@ Bench Core owns shared Modbus definitions, authority, policy admission, canonica
 | Browser administration and navigation | `frontend/src/components/pages/ModbusPluginPage.tsx`, `shell/pages.ts`, `AppShell.tsx` | Page, shell, API and `e2e/modbus-layout.check.ts` tests |
 | Live register workspace and write controls | `frontend/src/components/pages/ModbusLiveView.tsx`, `bench/modbus_poll.go`, `bench/modbus_point_codec.go` | `ModbusWorkspacePage.test.tsx`, adjacent Core Modbus tests |
 | Retained recording, search, recovery and export | `bench/modbus_recording*.go`, migration 028, `frontend/src/components/pages/ModbusSessionsPage.tsx` | `modbus_recording_test.go`, adjacent API/CLI/MCP and frontend page tests |
+| Bounded scans, advanced writes and typed diagnostics | `bench/modbus_scan.go`, `modbus_write.go`, `modbus_diagnostic.go`, `frontend/src/components/pages/ModbusToolsPanel.tsx` | Adjacent scan, diagnostic, request, feasibility and Tools tests |
 | Supervised transactions and recovery | `integrations/modbus/src/nilo_modbus/{plugin,runner_client,scheduler,workspace}.py` | `tests/{test_supervised,test_runner,test_scheduler,test_workspace}.py` |
 | PDU bounds, transport, schemas and pins | `requests.py`, `feasibility.py`, `schemas/contracts.schema.json`, `evidence/dependencies.json` | `test_requests.py`, `test_feasibility.py`, `test_contracts.py`, `test_dependencies.py` |
 
@@ -68,6 +71,8 @@ Bench Core owns shared Modbus definitions, authority, policy admission, canonica
 - `REQ-UX-04cd31fe`, `REQ-UX-9d7fd3a6`, `REQ-UX-35328cf5`, `REQ-UX-e0682e6a`, `REQ-FUNC-c7473d9f` — inert live workspace selection, mapped freshness, explicit writes, bounded displays and independent poll groups.
 - `REQ-DATA-2490acc3`, `REQ-FUNC-b0d59f49`, `REQ-REL-e1048fd2` — logical recording parts, independent controls and honest incomplete recovery.
 - `REQ-SEC-025e6e99`, `REQ-FUNC-69157924`, `REQ-DATA-797a97da`, `REQ-DATA-6c52a683`, `REQ-UX-e978db15` — owner/admin access, bounded search, exports, retention leases and offline inspection.
+- `REQ-FUNC-28ad4c7d`, `REQ-REL-b7570e66`, `REQ-DATA-5084f2d5` — finite explicit scans, paced cancellation and truthful bounded evidence.
+- `REQ-FUNC-90e44759`, `REQ-FUNC-104739e7`, `REQ-SEC-4932de81`, `REQ-UX-1845d724` — advanced typed writes, read-only diagnostics, live authority and browser Tools controls.
 
 ## Architecture
 
@@ -84,10 +89,16 @@ flowchart LR
     Job --> Claim[Canonical transport claim]
     Claim --> Session[modbusSession]
     Session --> Poll["Independent poll groups and live events"]
+    Session --> Scan["Finite paced scan worker"]
+    Session --> Diagnostic["Typed diagnostic service"]
+    Session --> Write["Durable write reservation"]
     Session --> Recorder["Session-owned recording"]
     Recorder --> Parts[(Numbered JSONL parts)]
     Recorder --> DB
     Poll --> UI
+    Scan --> Socket
+    Diagnostic --> Socket
+    Write --> Socket
     Session --> Socket[Private Unix socket]
     Socket --> Runner([Supervised Python runner])
     Runner --> Peer([Modbus peer])
@@ -98,11 +109,11 @@ The test-only job uses the same policy and claim path, then closes `modbusSessio
 ## Files
 
 - `05_Software/core/internal/bench/modbus_definitions.go`, `modbus_discovery.go`, `modbus_maps.go`, `modbus_workspaces.go`, `modbus_workspace_import.go` — shared definitions, discovery, map and workspace services.
-- `05_Software/core/internal/bench/modbus_adapter.go`, `modbus_session.go`, `modbus_request.go`, `modbus_poll.go`, `modbus_write.go`, `modbus_settings.go`, `modbus_recording*.go`, `transport_lease.go` — admission, settings, session I/O, retained evidence and cleanup.
+- `05_Software/core/internal/bench/modbus_adapter.go`, `modbus_session.go`, `modbus_request.go`, `modbus_poll.go`, `modbus_write.go`, `modbus_scan.go`, `modbus_diagnostic.go`, `modbus_settings.go`, `modbus_recording*.go`, `transport_lease.go` — admission, settings, session I/O, retained evidence and cleanup.
 - `05_Software/core/internal/store/sqlite/modbus_repository.go`, `modbus_definition_repository.go`, `migrations/{024_modbus_definitions,025_modbus_sessions,026_modbus_maps_workspaces,027_modbus_settings,028_modbus_recordings}.sql` — durable records and migrations.
 - `05_Software/core/internal/modbus/` — typed definitions, validation, addressing, codecs and interchange.
 - `05_Software/core/internal/httpapi/modbus.go`, `internal/mcp/modbus.go`, `cmd/nilo/modbus.go` — authenticated public interfaces.
-- `05_Software/frontend/src/api/modbus.ts`, `api/client.ts`, `components/pages/{ModbusPluginPage,ModbusWorkspacePage,ModbusLiveView,ModbusSessionsPage}.tsx`, `components/pages/modbus.css`, `components/shell/{pages,AppShell}.tsx`, `i18n/modbus.ts` — browser API, administration, live and offline workspaces, navigation, localization and layout.
+- `05_Software/frontend/src/api/modbus.ts`, `api/client.ts`, `components/pages/{ModbusPluginPage,ModbusWorkspacePage,ModbusLiveView,ModbusToolsPanel,ModbusSessionsPage}.tsx`, `components/pages/modbus.css`, `components/shell/{pages,AppShell}.tsx`, `i18n/modbus.ts` — browser API, administration, live and offline workspaces, navigation, localization and layout.
 - `05_Software/integrations/modbus/src/nilo_modbus/{requests,feasibility,plugin,runner_client,scheduler,workspace,usb}.py`, `manifest.json`, `schemas/` — supervised runner, protocol validation and contracts.
 - `05_Software/integrations/modbus/{pyproject.toml,uv.lock,evidence/dependencies.json,README.md}` and `02_Tools/scripts/prepare-modbus-dependencies.py` — pinned candidate environment and preparation.
 - Focused verification: adjacent Core `modbus*_test.go`, frontend `modbus.test.ts`, `ModbusPluginPage.test.tsx`, shell tests, `e2e/modbus-layout.check.ts`, and integration `tests/test_*.py`.

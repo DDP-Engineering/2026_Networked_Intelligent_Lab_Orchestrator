@@ -16,8 +16,8 @@ import struct
 from dataclasses import dataclass
 
 # CONSTANTS
-LIMITS = {1: 2000, 2: 2000, 3: 125, 4: 125, 5: 1, 6: 1, 15: 1968, 16: 123}
-WRITES = frozenset((5, 6, 15, 16))
+LIMITS = {1: 2000, 2: 2000, 3: 125, 4: 125, 5: 1, 6: 1, 11: 1, 15: 1968, 16: 123, 17: 1, 22: 1, 23: 121, 43: 1}
+WRITES = frozenset((5, 6, 15, 16, 22, 23))
 
 
 # DATA MODELS / TYPEDEFINITIONS
@@ -30,6 +30,10 @@ class Request:
     address: int
     count: int = 1
     values: tuple = ()
+    and_mask: int | None = None
+    or_mask: int | None = None
+    read_address: int | None = None
+    read_count: int | None = None
 
 
 # PUBLIC API
@@ -54,6 +58,45 @@ def encode(request: Request, transport: str) -> bytes:
     values = request.values
     if not isinstance(values, tuple):
         raise ValueError("immutable values required")  # noqa: TRY004 - one validation error contract
+    if fc in (11, 17, 43):
+        if (
+            address != 0
+            or count != 1
+            or values
+            or unit == 0
+            or fc in (11, 17) and transport == "tcp"
+            or any(field is not None for field in (
+                request.and_mask, request.or_mask, request.read_address, request.read_count
+            ))
+        ):
+            raise ValueError("diagnostic fields/transport")
+        return b"\x2b\x0e\x01\x00" if fc == 43 else bytes((fc,))
+    if fc == 22:
+        if (
+            values
+            or count != 1
+            or any(type(mask) is not int or not 0 <= mask <= 65535 for mask in (request.and_mask, request.or_mask))
+            or request.read_address is not None
+            or request.read_count is not None
+        ):
+            raise ValueError("mask write fields")
+        return struct.pack(">BHHH", fc, address, request.and_mask, request.or_mask)
+    if fc == 23:
+        if (
+            type(request.read_address) is not int
+            or type(request.read_count) is not int
+            or not 0 <= request.read_address <= 65535
+            or not 1 <= request.read_count <= 125
+            or request.read_address + request.read_count > 65536
+            or request.and_mask is not None
+            or request.or_mask is not None
+        ):
+            raise ValueError("read/write fields")
+    elif any(
+        field is not None
+        for field in (request.and_mask, request.or_mask, request.read_address, request.read_count)
+    ):
+        raise ValueError("irrelevant fields")
     if fc not in WRITES:
         if values:
             raise ValueError("read values")
@@ -74,6 +117,8 @@ def encode(request: Request, transport: str) -> bytes:
     if fc == 6:
         return struct.pack(">BHH", fc, address, values[0])
     payload = struct.pack(">" + "H" * count, *values)
+    if fc == 23:
+        return struct.pack(">BHHHHB", fc, request.read_address, request.read_count, address, count, len(payload)) + payload
     return struct.pack(">BHHB", fc, address, count, len(payload)) + payload
 
 

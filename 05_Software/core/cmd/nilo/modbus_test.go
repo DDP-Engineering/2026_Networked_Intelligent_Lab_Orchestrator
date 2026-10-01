@@ -128,3 +128,27 @@ func TestModbusCLIRecordingControlsUseCore(t *testing.T) {
 		}
 	}
 }
+
+func TestModbusCLIToolsUseCoreRoutes(t *testing.T) {
+	server, calls := networkStub(t, 200, map[string]any{"state": "running"})
+	common := []string{"--server", server.URL, "--token-file", tokenFile(t, "test-token"), "--endpoint", "gateway", "--session", "live"}
+	for _, candidate := range []struct {
+		action              string
+		args                []string
+		method, path, query string
+	}{
+		{"scan-status", nil, "GET", "/api/v1/modbus/endpoints/gateway/scans", "session_id=live"},
+		{"scan-cancel", nil, "DELETE", "/api/v1/modbus/endpoints/gateway/scans", ""},
+		{"diagnostic", []string{"--kind", "device_information", "--unit", "1"}, "POST", "/api/v1/modbus/endpoints/gateway/diagnostic", ""},
+	} {
+		args := append([]string{candidate.action}, common...)
+		args = append(args, candidate.args...)
+		if code := runModbusCommand(context.Background(), args, networkIO{stdout: new(bytes.Buffer), stderr: new(bytes.Buffer)}); code != 0 {
+			t.Fatalf("%s exit %d", candidate.action, code)
+		}
+		call := (*calls)[len(*calls)-1]
+		if call.method != candidate.method || call.path != candidate.path || call.rawQuery != candidate.query {
+			t.Fatalf("%s call %+v", candidate.action, call)
+		}
+	}
+}

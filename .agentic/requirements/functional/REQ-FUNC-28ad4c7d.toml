@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-28ad4c7d"
+
+title = "Bound explicit Modbus read scans"
+
+status = "active"
+
+requirement = """When an authorized live Modbus owner explicitly starts a read scan, Core shall accept only a finite, validated function, unit range, wire-address range, probe rate and deadline within the pinned endpoint, and reject automatic discovery, unsupported functions or oversized plans before device I/O."""
+
+verification = "With a fake connected endpoint, submit a small FC03 unit/address scan and invalid, oversized, out-of-endpoint and unsupported plans; assert only the valid explicit plan dispatches probes and returns its normalized finite bounds."
+
+affected_paths = ["05_Software/core/internal/bench/modbus_scan.go", "05_Software/core/internal/bench/modbus_request.go", "05_Software/core/internal/bench/modbus_scan_test.go", "05_Software/core/internal/httpapi/modbus.go", "05_Software/core/internal/httpapi/modbus_test.go", "05_Software/core/cmd/nilo/modbus.go", "05_Software/core/cmd/nilo/modbus_test.go", "05_Software/core/internal/mcp/modbus.go", "05_Software/core/internal/mcp/bench_test.go"]
+
+linked_tests = ["05_Software/core/internal/bench/modbus_scan_test.go::TestModbusScanPlanBounds", "05_Software/core/internal/bench/modbus_scan_test.go::TestModbusScanSettlesFiniteMixedProbes", "05_Software/core/internal/httpapi/modbus_test.go::TestModbusRoutesScopeAndStrictBody", "05_Software/core/cmd/nilo/modbus_test.go::TestModbusCLIToolsUseCoreRoutes", "05_Software/core/internal/mcp/bench_test.go::TestBenchToolsUseCurrentTokenScopes"]
+
+
+spec = "specs/REQ-FUNC-28ad4c7d.md"
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-10-01
+updated = 2026-10-01

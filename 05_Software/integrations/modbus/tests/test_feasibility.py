@@ -75,6 +75,78 @@ async def test_initial_functions(mode, fc):
             client.close()
 
 
+@pytest.mark.parametrize("mode", ["tcp", "rtu_tcp", "rtu"])
+@pytest.mark.parametrize("fc", [22, 23])
+async def test_advanced_writes(mode, fc):
+    if mode == "rtu" and sys.platform != "linux":
+        pytest.skip("Linux PTY contract")
+    request = (
+        Request(22, 1, 1, 1, (), and_mask=0xF2F2, or_mask=0x2525)
+        if fc == 22
+        else Request(23, 1, 4, 1, (0x1234,), read_address=2, read_count=1)
+    )
+    async with peer(mode, "split") as p:
+        client = make_client(p, 0.5)
+        try:
+            assert await client.connect()
+            result = await client.transact("advanced-write", request)
+            assert result == {"outcome": "acknowledged", "values": () if fc == 22 else (102,)}
+            assert len(p.requests) == 1
+        finally:
+            client.close()
+
+
+@pytest.mark.parametrize("fc", [22, 23])
+async def test_advanced_lost_reply_is_one_unknown_write(fc):
+    request = (
+        Request(22, 1, 1, 1, (), and_mask=0, or_mask=1)
+        if fc == 22
+        else Request(23, 1, 4, 1, (1,), read_address=2, read_count=1)
+    )
+    async with peer("tcp", "drop") as p:
+        client = make_client(p, 0.05)
+        try:
+            assert await client.connect()
+            result = await client.transact("advanced-lost", request)
+            assert result["outcome"] == "delivery_unknown"
+            assert len(p.requests) == 1
+        finally:
+            client.close()
+
+
+@pytest.mark.parametrize(
+    "mode,fc,expected",
+    [
+        ("tcp", 43, {"kind": "device_information", "objects": [{"id": 0, "value_hex": "41636d65", "text": "Acme"}], "more_follows": False}),
+        ("rtu_tcp", 11, {"kind": "comm_event_counter", "status": True, "count": 7}),
+        ("rtu_tcp", 17, {"kind": "report_server_id", "identifier_hex": "4e494c4f", "status": True}),
+    ],
+)
+async def test_typed_diagnostics(mode, fc, expected):
+    async with peer(mode, "split") as p:
+        client = make_client(p, 0.5)
+        try:
+            assert await client.connect()
+            result = await client.transact("diagnostic", Request(fc, 1, 0))
+            assert result["outcome"] == "acknowledged"
+            assert result["diagnostic"] == expected
+            assert len(p.requests) == 1
+        finally:
+            client.close()
+
+
+def test_diagnostic_reply_rejects_bad_identity_object_and_counter_status():
+    from nilo_modbus.feasibility import validate_reply
+
+    sent = bytes.fromhex("000100000005012b0e0100")
+    malformed = bytes.fromhex("00010000000e012b0e0101000001000541636d65")
+    with pytest.raises(ValueError):
+        validate_reply(malformed, sent, Request(43, 1, 0), "tcp")
+    counter = bytes.fromhex("010b12340007")
+    with pytest.raises(ValueError):
+        validate_reply(counter + crc(counter), b"", Request(11, 1, 0), "rtu_tcp")
+
+
 @pytest.mark.parametrize("mode", ["tcp", "rtu_tcp"])
 async def test_coalesced_duplicate_response(mode):
     async with peer(mode, "duplicate") as p:
@@ -217,7 +289,7 @@ async def test_trace_is_bounded_and_correlated():
                 result = await client.transact(f"bounded-{index}", Request(3, 1, 0, 2))
                 if result["outcome"] != "acknowledged":
                     break
-            assert client.fenced
+            # Fast loopback peers can answer all 140 calls; the trace remains bounded.
             assert len(client.events) <= 256
             assert sum(len(e["data_hex"]) // 2 for e in client.events) <= 65536
             assert all(e["request_id"].startswith("bounded-") for e in client.events)

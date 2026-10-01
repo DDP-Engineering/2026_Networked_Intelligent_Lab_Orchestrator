@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-UX-1845d724"
+
+title = "Operate Modbus scans and diagnostics in the live workspace"
+
+status = "active"
+
+requirement = """When an authorized user opens a connected Modbus workspace Tools view, the browser shall provide explicit bounded scan and typed diagnostic controls with visible progress, cancel, per-probe errors and export, while preventing automatic scans and keeping keyboard-accessible localized states usable on narrow and desktop layouts."""
+
+verification = "Use a disconnected and then connected browser fixture to assert no mount-time scan, valid-plan submission, progress/cancel/export and diagnostic refusal states; check keyboard and EN/DE/RO narrow/desktop layout without page overflow."
+
+affected_paths = ["05_Software/frontend/src/components/pages/ModbusLiveView.tsx", "05_Software/frontend/src/components/pages/ModbusToolsPanel.tsx", "05_Software/frontend/src/components/pages/ModbusToolsPanel.test.tsx", "05_Software/frontend/src/api/client.ts", "05_Software/frontend/src/api/modbus.ts", "05_Software/frontend/src/api/modbus.test.ts", "05_Software/frontend/src/i18n/modbus.ts", "05_Software/frontend/src/components/pages/modbus.css", "05_Software/frontend/e2e/modbus-layout.check.ts"]
+
+linked_tests = ["05_Software/frontend/src/components/pages/ModbusToolsPanel.test.tsx::starts a bounded scan only after an explicit action and shows failed probes", "05_Software/frontend/src/components/pages/ModbusToolsPanel.test.tsx::previews one FC22 write and submits the exact previewed request only once", "05_Software/frontend/src/api/modbus.test.ts::keeps failed scan probes distinct from absent results", "05_Software/frontend/e2e/modbus-layout.check.ts::Modbus Tools are keyboard usable"]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-10-01
+updated = 2026-10-01

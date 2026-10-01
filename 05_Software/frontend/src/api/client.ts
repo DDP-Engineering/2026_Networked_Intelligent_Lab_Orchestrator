@@ -31,6 +31,8 @@ import {
   parseModbusMap,
   parseModbusEvents,
   parseModbusResult,
+  parseModbusScan,
+  parseModbusScanPage,
   parseModbusDecodedPoint,
   parseModbusEncodedPoint,
   parseModbusWritePreview,
@@ -51,6 +53,9 @@ import {
   type ModbusRequest,
   type ModbusEventPage,
   type ModbusResult,
+  type ModbusScanPlan,
+  type ModbusScanStatus,
+  type ModbusScanPage,
   type ModbusDecodedPoint,
   type ModbusEncodedPoint,
   type ModbusWritePreview,
@@ -347,6 +352,40 @@ export interface BenchCoreClient {
     sessionId: string,
     request: ModbusRequest,
   ): Promise<ModbusResult>;
+  startModbusScan?(
+    credential: Credential,
+    endpointId: string,
+    plan: ModbusScanPlan,
+  ): Promise<ModbusScanStatus>;
+  getModbusScan?(
+    credential: Credential,
+    endpointId: string,
+    sessionId: string,
+  ): Promise<ModbusScanStatus>;
+  cancelModbusScan?(
+    credential: Credential,
+    endpointId: string,
+    sessionId: string,
+  ): Promise<ModbusScanStatus>;
+  getModbusScanResults?(
+    credential: Credential,
+    endpointId: string,
+    sessionId: string,
+    offset: number,
+  ): Promise<ModbusScanPage>;
+  downloadModbusScan?(
+    credential: Credential,
+    endpointId: string,
+    sessionId: string,
+    format: 'csv' | 'jsonl',
+  ): Promise<Blob>;
+  readModbusDiagnostic?(
+    credential: Credential,
+    endpointId: string,
+    sessionId: string,
+    kind: 'device_information' | 'comm_event_counter' | 'report_server_id',
+    unit: number,
+  ): Promise<ModbusResult>;
   pollModbus?(
     credential: Credential,
     endpointId: string,
@@ -373,14 +412,51 @@ export interface BenchCoreClient {
     sessionId: string,
     after: number,
   ): Promise<ModbusEventPage>;
-  startModbusRecording?(credential: Credential, endpointId: string, sessionId: string, options: ModbusRecordingOptions): Promise<ModbusRecording>;
-  stopModbusRecording?(credential: Credential, endpointId: string, sessionId: string): Promise<ModbusRecording>;
-  listModbusRecordings?(credential: Credential, search?: ModbusRecordingSearch): Promise<ModbusRecordingPage>;
+  startModbusRecording?(
+    credential: Credential,
+    endpointId: string,
+    sessionId: string,
+    options: ModbusRecordingOptions,
+  ): Promise<ModbusRecording>;
+  stopModbusRecording?(
+    credential: Credential,
+    endpointId: string,
+    sessionId: string,
+  ): Promise<ModbusRecording>;
+  listModbusRecordings?(
+    credential: Credential,
+    search?: ModbusRecordingSearch,
+  ): Promise<ModbusRecordingPage>;
   getModbusRecording?(credential: Credential, id: string): Promise<ModbusRecording>;
-  findModbusRecording?(credential: Credential, id: string, after: number, filter?: { kind?: string; text?: string; hex?: string; unit?: string; function?: string; address?: string; outcome?: string; point_id?: string; utc_from?: string; utc_through?: string }): Promise<ModbusRecordingEventPage>;
-  updateModbusRecording?(credential: Credential, id: string, name: string, tags: string[]): Promise<ModbusRecording>;
+  findModbusRecording?(
+    credential: Credential,
+    id: string,
+    after: number,
+    filter?: {
+      kind?: string;
+      text?: string;
+      hex?: string;
+      unit?: string;
+      function?: string;
+      address?: string;
+      outcome?: string;
+      point_id?: string;
+      utc_from?: string;
+      utc_through?: string;
+    },
+  ): Promise<ModbusRecordingEventPage>;
+  updateModbusRecording?(
+    credential: Credential,
+    id: string,
+    name: string,
+    tags: string[],
+  ): Promise<ModbusRecording>;
   deleteModbusRecording?(credential: Credential, id: string): Promise<void>;
-  downloadModbusRecording?(credential: Credential, id: string, format: 'jsonl' | 'csv' | 'text' | 'bundle'): Promise<Blob>;
+  downloadModbusRecording?(
+    credential: Credential,
+    id: string,
+    format: 'jsonl' | 'csv' | 'text' | 'bundle',
+  ): Promise<Blob>;
   decodeModbusPoint?(
     credential: Credential,
     mapId: string,
@@ -869,6 +945,57 @@ export function createBenchCoreClient(
         body: { session_id: sessionId, request },
         parse: parseModbusResult,
       }),
+    startModbusScan: (credential, endpointId, plan) =>
+      exchange({
+        path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/scans`,
+        credential,
+        method: 'POST',
+        body: plan,
+        parse: parseModbusScan,
+      }),
+    getModbusScan: (credential, endpointId, sessionId) =>
+      exchange({
+        path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/scans?session_id=${encodeURIComponent(sessionId)}`,
+        credential,
+        parse: parseModbusScan,
+      }),
+    cancelModbusScan: (credential, endpointId, sessionId) =>
+      exchange({
+        path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/scans`,
+        credential,
+        method: 'DELETE',
+        body: { session_id: sessionId },
+        parse: parseModbusScan,
+      }),
+    getModbusScanResults: (credential, endpointId, sessionId, offset) =>
+      exchange({
+        path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/scans/results?session_id=${encodeURIComponent(sessionId)}&offset=${offset}`,
+        credential,
+        parse: parseModbusScanPage,
+      }),
+    downloadModbusScan: async (credential, endpointId, sessionId, format) => {
+      const headers: Record<string, string> = {};
+      if (credential.kind === 'bearer')
+        headers.Authorization = `Bearer ${credential.token}`;
+      const path = `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/scans/export?session_id=${encodeURIComponent(sessionId)}&format=${format}`;
+      const response = await transport(resourceUrl(baseUrl, path), {
+        method: 'GET',
+        headers,
+        credentials: 'same-origin',
+      });
+      if (!response.ok) throw await refusalOf(response);
+      if (!response.blob)
+        throw new BenchCoreError('unavailable', 'Scan download is unavailable');
+      return response.blob();
+    },
+    readModbusDiagnostic: (credential, endpointId, sessionId, kind, unit) =>
+      exchange({
+        path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/diagnostic`,
+        credential,
+        method: 'POST',
+        body: { session_id: sessionId, kind, unit },
+        parse: parseModbusResult,
+      }),
     pollModbus: (credential, endpointId, sessionId, groups, paused) =>
       exchange({
         path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/poll`,
@@ -900,31 +1027,76 @@ export function createBenchCoreClient(
         parse: parseModbusEvents,
       }),
     startModbusRecording: (credential, endpointId, sessionId, options) =>
-      exchange({ path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/recording`, credential, method: 'POST', body: { session_id: sessionId, ...options }, parse: parseModbusRecording }),
+      exchange({
+        path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/recording`,
+        credential,
+        method: 'POST',
+        body: { session_id: sessionId, ...options },
+        parse: parseModbusRecording,
+      }),
     stopModbusRecording: (credential, endpointId, sessionId) =>
-      exchange({ path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/recording`, credential, method: 'DELETE', body: { session_id: sessionId }, parse: parseModbusRecording }),
+      exchange({
+        path: `/api/v1/modbus/endpoints/${encodeURIComponent(endpointId)}/recording`,
+        credential,
+        method: 'DELETE',
+        body: { session_id: sessionId },
+        parse: parseModbusRecording,
+      }),
     listModbusRecordings: (credential, search = {}) => {
       const query = new URLSearchParams();
-      for (const [key, value] of Object.entries(search)) if (value) query.set(key, value);
-      return exchange({ path: `/api/v1/modbus/recordings${query.size ? `?${query}` : ''}`, credential, parse: parseModbusRecordingPage });
+      for (const [key, value] of Object.entries(search))
+        if (value) query.set(key, value);
+      return exchange({
+        path: `/api/v1/modbus/recordings${query.size ? `?${query}` : ''}`,
+        credential,
+        parse: parseModbusRecordingPage,
+      });
     },
     getModbusRecording: (credential, id) =>
-      exchange({ path: `/api/v1/modbus/recordings/${encodeURIComponent(id)}`, credential, parse: parseModbusRecording }),
+      exchange({
+        path: `/api/v1/modbus/recordings/${encodeURIComponent(id)}`,
+        credential,
+        parse: parseModbusRecording,
+      }),
     findModbusRecording: (credential, id, after, filter = {}) => {
       const query = new URLSearchParams({ after: String(after) });
-      for (const [key, value] of Object.entries(filter)) if (value) query.set(key, value);
-      return exchange({ path: `/api/v1/modbus/recordings/${encodeURIComponent(id)}/find?${query}`, credential, parse: parseModbusRecordingEvents });
+      for (const [key, value] of Object.entries(filter))
+        if (value) query.set(key, value);
+      return exchange({
+        path: `/api/v1/modbus/recordings/${encodeURIComponent(id)}/find?${query}`,
+        credential,
+        parse: parseModbusRecordingEvents,
+      });
     },
     updateModbusRecording: (credential, id, name, tags) =>
-      exchange({ path: `/api/v1/modbus/recordings/${encodeURIComponent(id)}`, credential, method: 'PATCH', body: { name, tags }, parse: parseModbusRecording }),
+      exchange({
+        path: `/api/v1/modbus/recordings/${encodeURIComponent(id)}`,
+        credential,
+        method: 'PATCH',
+        body: { name, tags },
+        parse: parseModbusRecording,
+      }),
     deleteModbusRecording: (credential, id) =>
-      exchange({ path: `/api/v1/modbus/recordings/${encodeURIComponent(id)}`, credential, method: 'DELETE', parse: parseModbusAck }),
+      exchange({
+        path: `/api/v1/modbus/recordings/${encodeURIComponent(id)}`,
+        credential,
+        method: 'DELETE',
+        parse: parseModbusAck,
+      }),
     downloadModbusRecording: async (credential, id, format) => {
       const headers: Record<string, string> = {};
-      if (credential.kind === 'bearer') headers.Authorization = `Bearer ${credential.token}`;
-      const response = await transport(resourceUrl(baseUrl, `/api/v1/modbus/recordings/${encodeURIComponent(id)}/export?format=${format}`), { method: 'GET', headers, credentials: 'same-origin' });
+      if (credential.kind === 'bearer')
+        headers.Authorization = `Bearer ${credential.token}`;
+      const response = await transport(
+        resourceUrl(
+          baseUrl,
+          `/api/v1/modbus/recordings/${encodeURIComponent(id)}/export?format=${format}`,
+        ),
+        { method: 'GET', headers, credentials: 'same-origin' },
+      );
       if (!response.ok) throw await refusalOf(response);
-      if (!response.blob) throw new BenchCoreError('unavailable', 'Binary download is unavailable');
+      if (!response.blob)
+        throw new BenchCoreError('unavailable', 'Binary download is unavailable');
       return response.blob();
     },
     decodeModbusPoint: (credential, mapId, revision, pointId, words) =>

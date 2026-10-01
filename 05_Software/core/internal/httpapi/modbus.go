@@ -419,6 +419,65 @@ func registerModbus(register func(string, auth.Permission, http.HandlerFunc), m 
 		v, err := m.ReadModbus(r.Context(), a, r.PathValue("id"), body.SessionID, body.Request)
 		reply(w, v, err)
 	})
+	register("POST /api/v1/modbus/endpoints/{id}/scans", auth.PermissionBenchExecute, func(w http.ResponseWriter, r *http.Request) {
+		var body bench.ModbusScanPlan
+		if !benchBody(w, r, &body) {
+			return
+		}
+		a, _ := actorFrom(r.Context())
+		v, err := m.StartModbusScan(r.Context(), a, r.PathValue("id"), body)
+		reply(w, v, err)
+	})
+	register("POST /api/v1/modbus/endpoints/{id}/diagnostic", auth.PermissionBenchExecute, func(w http.ResponseWriter, r *http.Request) {
+		var body bench.ModbusDiagnosticRequest
+		if !benchBody(w, r, &body) {
+			return
+		}
+		a, _ := actorFrom(r.Context())
+		v, err := m.ReadModbusDiagnostic(r.Context(), a, r.PathValue("id"), body)
+		reply(w, v, err)
+	})
+	register("GET /api/v1/modbus/endpoints/{id}/scans", auth.PermissionBenchRead, func(w http.ResponseWriter, r *http.Request) {
+		a, _ := actorFrom(r.Context())
+		v, err := m.ModbusScan(r.Context(), a, r.PathValue("id"), r.URL.Query().Get("session_id"))
+		reply(w, v, err)
+	})
+	register("DELETE /api/v1/modbus/endpoints/{id}/scans", auth.PermissionBenchExecute, func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			SessionID string `json:"session_id"`
+		}
+		if !benchBody(w, r, &body) {
+			return
+		}
+		a, _ := actorFrom(r.Context())
+		v, err := m.CancelModbusScan(r.Context(), a, r.PathValue("id"), body.SessionID)
+		reply(w, v, err)
+	})
+	register("GET /api/v1/modbus/endpoints/{id}/scans/results", auth.PermissionBenchRead, func(w http.ResponseWriter, r *http.Request) {
+		offset, err := serialQuery(r, "offset", 0)
+		if err != nil || offset < 0 || offset > 512 {
+			benchError(w, bench.ErrInvalid)
+			return
+		}
+		a, _ := actorFrom(r.Context())
+		v, err := m.ModbusScanResults(r.Context(), a, r.PathValue("id"), r.URL.Query().Get("session_id"), int(offset))
+		reply(w, v, err)
+	})
+	register("GET /api/v1/modbus/endpoints/{id}/scans/export", auth.PermissionBenchRead, func(w http.ResponseWriter, r *http.Request) {
+		a, _ := actorFrom(r.Context())
+		format := r.URL.Query().Get("format")
+		v, err := m.ExportModbusScan(r.Context(), a, r.PathValue("id"), r.URL.Query().Get("session_id"), format)
+		if err != nil {
+			benchError(w, err)
+			return
+		}
+		if format == "csv" {
+			w.Header().Set("Content-Type", "text/csv; charset=utf-8")
+		} else {
+			w.Header().Set("Content-Type", "application/x-ndjson")
+		}
+		_, _ = w.Write(v)
+	})
 	register("POST /api/v1/modbus/endpoints/{id}/write", auth.PermissionBenchExecute, func(w http.ResponseWriter, r *http.Request) {
 		var body bench.ModbusWrite
 		if !benchBody(w, r, &body) {

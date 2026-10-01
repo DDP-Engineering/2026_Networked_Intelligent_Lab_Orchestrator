@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-DATA-5084f2d5"
+
+title = "Retain and export truthful Modbus scan outcomes"
+
+status = "active"
+
+requirement = """When a Modbus scan probes a unit and address, Core shall expose a bounded structured result and export of the explicit plan and each per-probe response, exception, timeout or cancellation without treating a failed probe as proof of absence or a successful read as proof of writability or engineering type."""
+
+verification = "Run a mixed success/exception/timeout scan on a fake endpoint, page its results and export CSV/JSONL; assert plan, exact raw read evidence, failure categories, cursor/count and cancellation status survive projection, with no invented absent/writable/type labels."
+
+affected_paths = ["05_Software/core/internal/bench/modbus_scan.go", "05_Software/core/internal/bench/modbus_scan_test.go", "05_Software/core/internal/httpapi/modbus.go", "05_Software/core/cmd/nilo/modbus.go", "05_Software/core/internal/mcp/modbus.go", "05_Software/frontend/src/api/modbus.ts", "05_Software/frontend/src/api/modbus.test.ts"]
+
+linked_tests = ["05_Software/core/internal/bench/modbus_scan_test.go::TestModbusScanExportPreservesFailedProbes", "05_Software/core/internal/bench/modbus_scan_test.go::TestModbusScanSettlesFiniteMixedProbes", "05_Software/core/internal/bench/modbus_scan_test.go::TestModbusScanResultsPageKeepsFailedProbe", "05_Software/frontend/src/api/modbus.test.ts::keeps failed scan probes distinct from absent results"]
+
+
+spec = "specs/REQ-DATA-5084f2d5.md"
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-10-01
+updated = 2026-10-01

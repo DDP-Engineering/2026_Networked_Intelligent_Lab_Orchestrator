@@ -30,6 +30,9 @@ const modbusUsage = `usage: nilo modbus <command> --server URL --token-file PATH
   connect --endpoint ID --endpoint-revision N --profile ID --profile-revision N [--workspace ID --workspace-revision N --file groups.json --key KEY]
   test --endpoint ID --endpoint-revision N --profile ID --profile-revision N [--key KEY --timeout-seconds N]
   read --endpoint ID --session ID --file request.json
+  scan-start --endpoint ID --session ID --file plan.json | scan-status|scan-results|scan-cancel --endpoint ID --session ID
+  scan-export --endpoint ID --session ID --format csv|jsonl --out FILE
+  diagnostic --endpoint ID --session ID --kind device_information|comm_event_counter|report_server_id --unit N
   write|preview --endpoint ID --session ID --file request.json [--key KEY]
   poll --endpoint ID --session ID --file groups.json [--paused]
   poll-group --endpoint ID --session ID --group ID [--paused]
@@ -301,7 +304,7 @@ func runModbusCommand(ctx context.Context, args []string, streams networkIO) int
 			}
 			path, body = base+"/profiles/"+url.PathEscape(profile), map[string]any{"expected_revision": expectedRevision, "profile": definition}
 		}
-	case "status", "connect", "test", "read", "write", "preview", "poll", "poll-group", "display", "events", "commands", "disconnect", "recording-start", "recording-stop", "recording-status":
+	case "status", "connect", "test", "read", "write", "preview", "poll", "poll-group", "display", "events", "commands", "disconnect", "recording-start", "recording-stop", "recording-status", "scan-start", "scan-status", "scan-results", "scan-cancel", "scan-export", "diagnostic":
 		if endpoint == "" {
 			return invalid("--endpoint is required")
 		}
@@ -367,12 +370,49 @@ func runModbusCommand(ctx context.Context, args []string, streams networkIO) int
 				return invalid("--session and a nonnegative --offset are required")
 			}
 			path += "/commands?session_id=" + url.QueryEscape(session) + "&offset=" + strconv.Itoa(offset)
+		case "scan-status", "scan-results", "scan-export":
+			if session == "" || offset < 0 || offset > 512 {
+				return invalid("--session and an offset from 0 to 512 are required")
+			}
+			path += "/scans"
+			if action == "scan-results" {
+				path += "/results"
+			}
+			query := url.Values{"session_id": {session}}
+			if action == "scan-results" {
+				query.Set("offset", strconv.Itoa(offset))
+			}
+			if action == "scan-export" {
+				if out == "" || format != "csv" && format != "jsonl" {
+					return invalid("--out and --format csv|jsonl are required")
+				}
+				query.Set("format", format)
+				return downloadBenchArtifact(ctx, options, streams, path+"/export?"+query.Encode(), out, 1<<20)
+			}
+			path += "?" + query.Encode()
 		default:
 			if session == "" {
 				return invalid("--session is required")
 			}
 			method, path = http.MethodPost, path+"/"+action
 			switch action {
+			case "scan-start":
+				if file == "" {
+					return invalid("--file is required")
+				}
+				plan, err := readBenchJSONObject(file)
+				if err != nil {
+					return invalid(err.Error())
+				}
+				plan["session_id"] = session
+				method, path, body = http.MethodPost, base+"/endpoints/"+url.PathEscape(endpoint)+"/scans", plan
+			case "scan-cancel":
+				method, path, body = http.MethodDelete, base+"/endpoints/"+url.PathEscape(endpoint)+"/scans", map[string]any{"session_id": session}
+			case "diagnostic":
+				if kind != "device_information" && kind != "comm_event_counter" && kind != "report_server_id" || findUnit < 1 || findUnit > 247 {
+					return invalid("--kind and --unit 1..247 are required")
+				}
+				body = map[string]any{"session_id": session, "kind": kind, "unit": findUnit}
 			case "read", "write", "preview":
 				if file == "" {
 					return invalid("--file is required")

@@ -71,6 +71,9 @@ one of three fixed roles - Administrator, Operator or Viewer.
   admits a live session; it presents independently pausable poll groups,
   mapped register freshness, bounded traffic/trends and exact Core write
   previews with one deliberate Submit. Recording remains a separate service.
+  Live Tools offer explicit finite read scans with paced per-probe evidence and
+  export, durable typed FC22/FC23 writes, and bounded read-only identification
+  diagnostics through the same authenticated Core interfaces.
 - **Instrument transactions.** Durable transaction identities, an administrator-
   configured queue and finite-job worker capacity with per-analyzer serialization, absolute deadlines,
   ordered bounded replies, cancellation, and digest-verified retained artifacts.

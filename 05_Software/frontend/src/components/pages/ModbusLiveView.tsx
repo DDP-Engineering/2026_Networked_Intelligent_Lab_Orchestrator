@@ -21,6 +21,7 @@ import type {
 } from '../../api/modbus';
 import { useTranslate } from '../../i18n/languages';
 import { MessageBanner } from '../MessageBanner';
+import { ModbusToolsPanel } from './ModbusToolsPanel';
 
 interface Props {
   client: BenchCoreClient;
@@ -135,10 +136,13 @@ export function ModbusLiveView({
   const [readBack, setReadBack] = useState(false);
   const [readBackResult, setReadBackResult] = useState('');
   const [loggingMode, setLoggingMode] = useState<'values' | 'traffic' | 'both'>('both');
-  const [loggingSampling, setLoggingSampling] = useState<'every' | 'interval' | 'change'>('every');
+  const [loggingSampling, setLoggingSampling] = useState<
+    'every' | 'interval' | 'change'
+  >('every');
   const [loggingInterval, setLoggingInterval] = useState(1000);
   const [loggingName, setLoggingName] = useState('');
   const [loggingBusy, setLoggingBusy] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const writeTriggerRef = useRef<HTMLButtonElement>(null);
   const matchingWorkspace =
@@ -833,43 +837,169 @@ export function ModbusLiveView({
           {t('modbus.clearDisplay')}
         </button>
       </div>
-      {status?.connected && <div className="modbus-recording-controls">
-        <h4>{t('modbus.logging')}</h4>
-        <div className="modbus-find">
-          <label>{t('modbus.name')} <input value={loggingName} disabled={Boolean(status.logging)} onChange={(event) => setLoggingName(event.target.value)} /></label>
-          <label>{t('modbus.loggingMode')} <select value={loggingMode} disabled={Boolean(status.logging)} onChange={(event) => setLoggingMode(event.target.value as typeof loggingMode)}>
-            <option value="both">{t('modbus.loggingBoth')}</option><option value="values">{t('modbus.loggingValues')}</option><option value="traffic">{t('modbus.loggingTraffic')}</option>
-          </select></label>
-          <label>{t('modbus.sampling')} <select value={loggingSampling} disabled={Boolean(status.logging)} onChange={(event) => setLoggingSampling(event.target.value as typeof loggingSampling)}>
-            <option value="every">{t('modbus.samplingEvery')}</option><option value="interval">{t('modbus.samplingInterval')}</option><option value="change">{t('modbus.samplingChange')}</option>
-          </select></label>
-          {loggingSampling === 'interval' && <label>{t('modbus.sampleInterval')} <input type="number" min={100} max={60000} value={loggingInterval} disabled={Boolean(status.logging)} onChange={(event) => setLoggingInterval(Number(event.target.value))} /></label>}
-          {status.logging ? <button type="button" disabled={loggingBusy || !status.can_control || !client.stopModbusRecording} onClick={async () => {
-            if (!status.session_id || !client.stopModbusRecording) return;
-            setLoggingBusy(true);
-            try { const ended = await client.stopModbusRecording(credential, endpoint.id, status.session_id); setStatus({ ...status, logging: false, recording_id: ended.id }); setError(''); }
-            catch (cause) { report(cause); }
-            finally { setLoggingBusy(false); }
-          }}>{t('modbus.stopLogging')}</button> : <button type="button" disabled={loggingBusy || !status.can_control || !client.startModbusRecording || loggingSampling === 'interval' && (loggingInterval < 100 || loggingInterval > 60000)} onClick={async () => {
-            if (!status.session_id || !client.startModbusRecording) return;
-            setLoggingBusy(true);
-            try {
-              const started = await client.startModbusRecording(credential, endpoint.id, status.session_id, { mode: loggingMode, sampling: loggingSampling, interval_ms: loggingSampling === 'interval' ? loggingInterval : 0, name: loggingName });
-              setStatus({ ...status, logging: true, recording_id: started.id, logging_mode: loggingMode, logging_sampling: loggingSampling });
-              setError('');
-            } catch (cause) { report(cause); }
-            finally { setLoggingBusy(false); }
-          }}>{t('modbus.startLogging')}</button>}
+      {status?.connected && (
+        <div className="modbus-recording-controls">
+          <h4>{t('modbus.logging')}</h4>
+          <div className="modbus-find">
+            <label>
+              {t('modbus.name')}{' '}
+              <input
+                value={loggingName}
+                disabled={Boolean(status.logging)}
+                onChange={(event) => setLoggingName(event.target.value)}
+              />
+            </label>
+            <label>
+              {t('modbus.loggingMode')}{' '}
+              <select
+                value={loggingMode}
+                disabled={Boolean(status.logging)}
+                onChange={(event) =>
+                  setLoggingMode(event.target.value as typeof loggingMode)
+                }
+              >
+                <option value="both">{t('modbus.loggingBoth')}</option>
+                <option value="values">{t('modbus.loggingValues')}</option>
+                <option value="traffic">{t('modbus.loggingTraffic')}</option>
+              </select>
+            </label>
+            <label>
+              {t('modbus.sampling')}{' '}
+              <select
+                value={loggingSampling}
+                disabled={Boolean(status.logging)}
+                onChange={(event) =>
+                  setLoggingSampling(event.target.value as typeof loggingSampling)
+                }
+              >
+                <option value="every">{t('modbus.samplingEvery')}</option>
+                <option value="interval">{t('modbus.samplingInterval')}</option>
+                <option value="change">{t('modbus.samplingChange')}</option>
+              </select>
+            </label>
+            {loggingSampling === 'interval' && (
+              <label>
+                {t('modbus.sampleInterval')}{' '}
+                <input
+                  type="number"
+                  min={100}
+                  max={60000}
+                  value={loggingInterval}
+                  disabled={Boolean(status.logging)}
+                  onChange={(event) => setLoggingInterval(Number(event.target.value))}
+                />
+              </label>
+            )}
+            {status.logging ? (
+              <button
+                type="button"
+                disabled={
+                  loggingBusy || !status.can_control || !client.stopModbusRecording
+                }
+                onClick={async () => {
+                  if (!status.session_id || !client.stopModbusRecording) return;
+                  setLoggingBusy(true);
+                  try {
+                    const ended = await client.stopModbusRecording(
+                      credential,
+                      endpoint.id,
+                      status.session_id,
+                    );
+                    setStatus({ ...status, logging: false, recording_id: ended.id });
+                    setError('');
+                  } catch (cause) {
+                    report(cause);
+                  } finally {
+                    setLoggingBusy(false);
+                  }
+                }}
+              >
+                {t('modbus.stopLogging')}
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={
+                  loggingBusy ||
+                  !status.can_control ||
+                  !client.startModbusRecording ||
+                  (loggingSampling === 'interval' &&
+                    (loggingInterval < 100 || loggingInterval > 60000))
+                }
+                onClick={async () => {
+                  if (!status.session_id || !client.startModbusRecording) return;
+                  setLoggingBusy(true);
+                  try {
+                    const started = await client.startModbusRecording(
+                      credential,
+                      endpoint.id,
+                      status.session_id,
+                      {
+                        mode: loggingMode,
+                        sampling: loggingSampling,
+                        interval_ms:
+                          loggingSampling === 'interval' ? loggingInterval : 0,
+                        name: loggingName,
+                      },
+                    );
+                    setStatus({
+                      ...status,
+                      logging: true,
+                      recording_id: started.id,
+                      logging_mode: loggingMode,
+                      logging_sampling: loggingSampling,
+                    });
+                    setError('');
+                  } catch (cause) {
+                    report(cause);
+                  } finally {
+                    setLoggingBusy(false);
+                  }
+                }}
+              >
+                {t('modbus.startLogging')}
+              </button>
+            )}
+          </div>
+          {status.logging && (
+            <p role="status">
+              {t('modbus.loggingActive')} · {status.recording_id}
+            </p>
+          )}
+          {status.recording_warning && (
+            <MessageBanner tone="warning">
+              {t('modbus.incomplete')}: {status.recording_warning}
+            </MessageBanner>
+          )}
         </div>
-        {status.logging && <p role="status">{t('modbus.loggingActive')} · {status.recording_id}</p>}
-        {status.recording_warning && <MessageBanner tone="warning">{t('modbus.incomplete')}: {status.recording_warning}</MessageBanner>}
-      </div>}
+      )}
       {jobState && (
         <p role="status">
           {t('modbus.connectionJob')}: {jobState}
         </p>
       )}
       {workspaceDirty && <p role="status">{t('modbus.saveBeforeConnect')}</p>}
+      {status?.connected && endpoint.transport !== 'rtu' && (
+        <>
+          <button
+            type="button"
+            aria-expanded={toolsOpen}
+            onClick={() => setToolsOpen((open) => !open)}
+          >
+            {t('modbus.tools')}
+          </button>
+          {toolsOpen && (
+            <ModbusToolsPanel
+              client={client}
+              credential={credential}
+              endpointId={endpoint.id}
+              transport={endpoint.transport}
+              sessionId={status.session_id ?? ''}
+              canControl={Boolean(status.can_control)}
+            />
+          )}
+        </>
+      )}
       {status?.connected && workspace && (
         <p>
           {t('modbus.status')}: {status.state}

@@ -44,6 +44,7 @@ type modbusSession struct {
 	cursor                                             int64
 	recording                                          *modbusRecorder
 	lastRecordingID, recordingWarning                  string
+	scan                                               *modbusScanState
 }
 
 // ModbusStatus describes one credential-bound, pinned live endpoint.
@@ -341,6 +342,10 @@ func (m *Manager) stopModbusLocked(s *modbusSession, reason string) {
 		return
 	}
 	s.stopped, s.reason = true, reason
+	if s.scan != nil && s.scan.status.State == "running" {
+		s.scan.status.State = "session_ended"
+		s.scan.cancel()
+	}
 	if s.recording != nil {
 		recordingReason := ""
 		if reason != "disconnected" {
@@ -471,6 +476,14 @@ func modbusPrivateCall(ctx context.Context, s *modbusSession, request ModbusRequ
 		}
 	}
 	message := map[string]any{"version": 1, "kind": "transaction", "request_id": requestID, "function": request.Function, "unit": request.Unit, "address": request.Address, "count": request.Count, "values": values, "deadline_ms": deadlineMS}
+	if request.Function == 22 {
+		message["and_mask"] = *request.AndMask
+		message["or_mask"] = *request.OrMask
+	}
+	if request.Function == 23 {
+		message["read_address"] = *request.ReadAddress
+		message["read_count"] = request.ReadCount
+	}
 	if pollKey != "" {
 		message["poll_key"] = pollKey
 	}
@@ -511,12 +524,13 @@ func modbusCallError(ctx context.Context, err error) error {
 
 // ModbusResult preserves raw booleans/register values and the runner's conservative outcome.
 type ModbusResult struct {
-	RequestID     string             `json:"request_id"`
-	Outcome       string             `json:"outcome"`
-	Values        []json.RawMessage  `json:"values"`
-	Attempts      int                `json:"attempts"`
-	ExceptionCode int                `json:"exception_code,omitempty"`
-	Frames        []ModbusTraceFrame `json:"frames,omitempty"`
+	RequestID     string                `json:"request_id"`
+	Outcome       string                `json:"outcome"`
+	Values        []json.RawMessage     `json:"values"`
+	Attempts      int                   `json:"attempts"`
+	ExceptionCode int                   `json:"exception_code,omitempty"`
+	Frames        []ModbusTraceFrame    `json:"frames,omitempty"`
+	Diagnostic    *ModbusDiagnosticData `json:"diagnostic,omitempty"`
 }
 
 // ModbusTraceFrame is a bounded byte buffer captured by the runner's transport hook.
@@ -561,9 +575,21 @@ func validModbusResult(request ModbusRequest, result ModbusResult) bool {
 		}
 	}
 	if result.Outcome != "acknowledged" {
-		return len(result.Values) == 0 && (result.Outcome != "exception" || result.ExceptionCode >= 1 && result.ExceptionCode <= 255)
+		return len(result.Values) == 0 && result.Diagnostic == nil && (result.Outcome != "exception" || result.ExceptionCode >= 1 && result.ExceptionCode <= 255)
 	}
-	if result.Attempts < 1 || len(result.Values) != request.Count || result.ExceptionCode != 0 {
+	if request.Function == 11 || request.Function == 17 || request.Function == 43 {
+		return result.Attempts >= 1 && result.Attempts <= 4 && result.ExceptionCode == 0 && len(result.Values) == 0 && validModbusDiagnosticData(request.Function, result.Diagnostic)
+	}
+	if result.Diagnostic != nil {
+		return false
+	}
+	expectedCount := request.Count
+	if request.Function == 22 {
+		expectedCount = 0
+	} else if request.Function == 23 {
+		expectedCount = request.ReadCount
+	}
+	if result.Attempts < 1 || len(result.Values) != expectedCount || result.ExceptionCode != 0 {
 		return false
 	}
 	for i, raw := range result.Values {
@@ -574,7 +600,7 @@ func validModbusResult(request ModbusRequest, result ModbusResult) bool {
 			}
 		} else {
 			var value int
-			if json.Unmarshal(raw, &value) != nil || value < 0 || value > 65535 || request.Function >= 5 && value != request.Values[i] {
+			if json.Unmarshal(raw, &value) != nil || value < 0 || value > 65535 || request.Function >= 5 && request.Function != 23 && value != request.Values[i] {
 				return false
 			}
 		}

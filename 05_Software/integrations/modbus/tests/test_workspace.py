@@ -72,7 +72,7 @@ async def test_private_socket_transacts_and_cleans_up(tmp_path: Path):
             reader, writer = await asyncio.open_unix_connection(str(socket))
             writer.write(json.dumps(value).encode() + b"\n")
             await writer.drain()
-            response = json.loads(await reader.readline())
+            response = json.loads(await asyncio.wait_for(reader.readline(), 3))
             writer.close()
             await writer.wait_closed()
             return response

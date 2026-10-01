@@ -82,6 +82,36 @@ for (const [language, workspaceLabel] of [
   });
 }
 
+for (const [language, toolsLabel, startLabel, addressLabel] of [
+  ['en', 'Tools', 'Start scan', 'Address from'],
+  ['de', 'Werkzeuge', 'Scan starten', 'Adresse von'],
+  ['ro', 'Instrumente', 'Pornește scanarea', 'Adresă de la'],
+] as const) {
+  for (const width of [320, 1024]) {
+    test(`Modbus Tools are keyboard usable in ${language} at ${width}px`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 640 });
+      await page.goto(
+        `/e2e/modbus.fixture.html?view=live&connected=1&lang=${language}`,
+      );
+      const toggle = page.getByRole('button', { name: toolsLabel });
+      await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+      await toggle.focus();
+      await page.keyboard.press('Enter');
+      await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+      const tools = page.getByRole('region', { name: toolsLabel });
+      await expect(tools.getByLabel(addressLabel)).toBeVisible();
+      await expect(tools.getByRole('button', { name: startLabel })).toBeVisible();
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth + 1,
+        ),
+      ).toBe(true);
+    });
+  }
+}
+
 for (const [width, height, theme] of [
   [800, 480, 'light'],
   [1024, 600, 'dark'],
@@ -108,15 +138,21 @@ for (const [language, width, height] of [
   ['ro', 1024, 600],
   ['en', 1920, 1080],
 ] as const) {
-  test(`Modbus saved sessions stay usable offline in ${language} at ${width}x${height}`, async ({ page }) => {
+  test(`Modbus saved sessions stay usable offline in ${language} at ${width}x${height}`, async ({
+    page,
+  }) => {
     await page.setViewportSize({ width, height });
     await page.goto(`/e2e/modbus.fixture.html?view=sessions&lang=${language}`);
     await expect(page.getByText('October run')).toBeVisible();
     const open = page.locator('.modbus-sessions .modbus-list button');
     await open.focus();
     await page.keyboard.press('Enter');
-    await expect(page.locator('.modbus-grid-viewport').getByText('temperature').first()).toBeVisible();
+    await expect(
+      page.locator('.modbus-grid-viewport').getByText('temperature').first(),
+    ).toBeVisible();
     await expect(page.locator('.modbus-trend')).toBeVisible();
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+    ).toBe(true);
   });
 }

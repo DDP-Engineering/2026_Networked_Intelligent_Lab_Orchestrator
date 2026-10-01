@@ -7,6 +7,8 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Added
 
+- Modbus live Tools now provide explicit bounded scans with truthful exports, typed FC22/FC23 writes, and read-only identity diagnostics.
+
 - Modbus recordings now retain searchable, owner-scoped evidence across restarts, with offline Sessions review, integrity-checked exports, and quota-aware deletion.
 
 - Modbus RealTime View now loads saved workspaces without connecting, controls live poll groups, shows mapped values and traffic, and previews explicit writes with bounded trends.

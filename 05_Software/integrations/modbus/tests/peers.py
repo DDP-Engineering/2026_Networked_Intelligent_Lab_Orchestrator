@@ -32,7 +32,8 @@ def crc(payload: bytes) -> bytes:
 def reply(frame, mode, fault):
     """@brief Encode a reference response without library response classes."""
     unit, pdu = (frame[6], frame[7:]) if mode == "tcp" else (frame[0], frame[1:-2])
-    fc, address, count = struct.unpack(">BHH", pdu[:5])
+    fc = pdu[0]
+    address, count = struct.unpack(">HH", pdu[1:5]) if len(pdu) >= 5 else (0, 1)
     if fc in (1, 2):
         values = bytearray((count + 7) // 8)
         for index in range(count):
@@ -42,6 +43,18 @@ def reply(frame, mode, fault):
         response = bytes((fc, count * 2)) + struct.pack(
             ">" + "H" * count, *range(address + 100, address + 100 + count)
         )
+    elif fc == 22:
+        response = pdu[:7]
+    elif fc == 23:
+        response = bytes((fc, count * 2)) + struct.pack(
+            ">" + "H" * count, *range(address + 100, address + 100 + count)
+        )
+    elif fc == 43:
+        response = bytes.fromhex("2b0e0101000001000441636d65")
+    elif fc == 11:
+        response = bytes.fromhex("0b00000007")
+    elif fc == 17:
+        response = bytes.fromhex("11054e494c4fff")
     else:
         response = pdu[:5]
     if fault == "exception":
@@ -89,12 +102,21 @@ class Peer:
                     head = await reader.readexactly(7)
                     frame = head + await reader.readexactly(int.from_bytes(head[4:6], "big") - 1)
                 else:
-                    head = await reader.readexactly(6)
-                    extra = 2
-                    if head[1] in (15, 16):
-                        byte_count = await reader.readexactly(1)
-                        head += byte_count
-                        extra += byte_count[0]
+                    head = await reader.readexactly(2)
+                    if head[1] in (11, 17):
+                        extra = 2
+                    elif head[1] == 43:
+                        extra = 5
+                    elif head[1] == 22:
+                        extra = 8
+                    elif head[1] == 23:
+                        head += await reader.readexactly(9)
+                        extra = head[-1] + 2
+                    elif head[1] in (15, 16):
+                        head += await reader.readexactly(5)
+                        extra = head[-1] + 2
+                    else:
+                        extra = 6
                     frame = head + await reader.readexactly(extra)
                     assert crc(frame[:-2]) == frame[-2:]
                 self.requests.append(frame)

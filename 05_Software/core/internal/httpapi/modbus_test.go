@@ -34,7 +34,7 @@ func TestModbusRoutesScopeAndStrictBody(t *testing.T) {
 	read := f.issueToken(t, "admin", "modbus-read", []auth.Permission{auth.PermissionBenchRead}, nil)
 	execute := f.issueToken(t, "admin", "modbus-execute", []auth.Permission{auth.PermissionBenchRead, auth.PermissionBenchExecute}, nil)
 	manage := f.issueToken(t, "admin", "modbus-manage", []auth.Permission{auth.PermissionBenchRead, auth.PermissionBenchExecute, auth.PermissionPluginsManage}, nil)
-	for _, action := range []string{"connect", "read", "write", "preview", "poll", "poll-group", "display", "disconnect", "recording"} {
+	for _, action := range []string{"connect", "read", "write", "preview", "poll", "poll-group", "display", "disconnect", "recording", "scans", "diagnostic"} {
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/modbus/endpoints/gateway/"+action, strings.NewReader(`{}`))
 		req.Header.Set("Authorization", "Bearer "+read)
 		if got := f.do(req); got.Code != 403 {
@@ -45,6 +45,16 @@ func TestModbusRoutesScopeAndStrictBody(t *testing.T) {
 	req.Header.Set("Authorization", "Bearer "+execute)
 	if got := f.do(req); got.Code != 400 {
 		t.Fatalf("strict write body: %d", got.Code)
+	}
+	req = httptest.NewRequest(http.MethodPost, "/api/v1/modbus/endpoints/gateway/scans", strings.NewReader(`{"shell":"unsafe"}`))
+	req.Header.Set("Authorization", "Bearer "+execute)
+	if got := f.do(req); got.Code != 400 {
+		t.Fatalf("strict scan body: %d", got.Code)
+	}
+	req = httptest.NewRequest(http.MethodPost, "/api/v1/modbus/endpoints/gateway/diagnostic", strings.NewReader(`{"shell":"unsafe"}`))
+	req.Header.Set("Authorization", "Bearer "+execute)
+	if got := f.do(req); got.Code != 400 {
+		t.Fatalf("strict diagnostic body: %d", got.Code)
 	}
 	if got := f.get("/api/v1/modbus/endpoints", read); got.Code != 200 {
 		t.Fatalf("list endpoints: %d", got.Code)

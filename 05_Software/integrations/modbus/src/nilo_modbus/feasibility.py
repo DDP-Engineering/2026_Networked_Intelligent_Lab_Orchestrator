@@ -32,6 +32,11 @@ METHODS = {
     6: "write_register",
     15: "write_coils",
     16: "write_registers",
+    22: "mask_write_register",
+    23: "readwrite_registers",
+    11: "diag_get_comm_event_counter",
+    17: "report_device_id",
+    43: "read_device_information",
 }
 
 
@@ -67,7 +72,19 @@ def validate_reply(data, sent, request, mode):
         if len(data) < 3:
             return False
         fc = data[1]
-        total = 5 if fc & 0x80 else data[2] + 5 if fc in (1, 2, 3, 4) else 8
+        if fc == 43 and not fc & 0x80:
+            if len(data) < 8:
+                return False
+            cursor = 8
+            for _ in range(data[7]):
+                if len(data) < cursor + 2:
+                    return False
+                cursor += 2 + data[cursor + 1]
+                if cursor > 254:
+                    raise ValueError("identity length")
+            total = cursor + 2
+        else:
+            total = 5 if fc & 0x80 else data[2] + 5 if fc in (1, 2, 3, 4, 17, 23) else 10 if fc == 22 else 8
         if not 5 <= total <= 256:
             raise ValueError("RTU length")
         if len(data) < total:
@@ -81,14 +98,50 @@ def validate_reply(data, sent, request, mode):
         if len(pdu) != 2 or pdu[1] == 0:
             raise ValueError("exception length/code")
         return True
-    if request.function in WRITES:
-        if pdu != encode(request, mode)[:5]:
+    if request.function == 43:
+        if len(pdu) < 7 or pdu[1:3] != b"\x0e\x01" or pdu[3] not in (1, 2, 3) or pdu[4] not in (0, 255) or pdu[6] > 3:
+            raise ValueError("identity header")
+        cursor, seen = 7, set()
+        for _ in range(pdu[6]):
+            if cursor + 2 > len(pdu):
+                raise ValueError("identity object header")
+            object_id, length = pdu[cursor:cursor + 2]
+            cursor += 2 + length
+            if object_id > 2 or object_id in seen or length > 64 or cursor > len(pdu):
+                raise ValueError("identity object")
+            seen.add(object_id)
+        if cursor != len(pdu):
+            raise ValueError("identity tail")
+    elif request.function == 11:
+        if len(pdu) != 5 or pdu[1:3] not in (b"\x00\x00", b"\xff\xff"):
+            raise ValueError("event counter")
+    elif request.function == 17:
+        if len(pdu) < 3 or len(pdu) != pdu[1] + 2 or pdu[1] > 65 or pdu[-1] not in (0, 255):
+            raise ValueError("server id")
+    elif request.function in WRITES and request.function != 23:
+        if pdu != encode(request, mode)[:7 if request.function == 22 else 5]:
             raise ValueError("write echo")
     else:
-        expected = (request.count + 7) // 8 if request.function in (1, 2) else request.count * 2
+        expected = (request.count + 7) // 8 if request.function in (1, 2) else (request.read_count if request.function == 23 else request.count) * 2
         if len(pdu) != expected + 2 or pdu[1] != expected:
             raise ValueError("read count")
     return True
+
+
+def diagnostic_data(pdu):
+    """@brief Project only typed, validated read-only diagnostic fields."""
+    if pdu[0] == 43:
+        objects = []
+        cursor = 7
+        for _ in range(pdu[6]):
+            object_id, length = pdu[cursor:cursor + 2]
+            raw = pdu[cursor + 2:cursor + 2 + length]
+            objects.append({"id": object_id, "value_hex": raw.hex(), "text": raw.decode("utf-8", "replace")})
+            cursor += 2 + length
+        return {"kind": "device_information", "objects": objects, "more_follows": pdu[4] == 255}
+    if pdu[0] == 11:
+        return {"kind": "comm_event_counter", "status": pdu[1:3] == b"\x00\x00", "count": int.from_bytes(pdu[3:5], "big")}
+    return {"kind": "report_server_id", "identifier_hex": pdu[2:-1].hex(), "status": pdu[-1] == 255}
 
 
 # DATA MODELS / TYPEDEFINITIONS
@@ -125,6 +178,7 @@ class ValidatedClient:
         self.trace_bytes = 0
         self.active = None
         self.sent = b""
+        self.received = b""
         self.valid_reply = False
         self.protocol_fault = False
         self.started = time.monotonic()
@@ -195,6 +249,8 @@ class ValidatedClient:
         elif self.active and self.sent:
             try:
                 self.valid_reply = validate_reply(data, self.sent, self.active, self.mode)
+                if self.valid_reply:
+                    self.received = data
             except (ValueError, IndexError):
                 self.protocol_fault = True
                 return b""
@@ -224,6 +280,7 @@ class ValidatedClient:
             self.request_id = request_id
             self.active = request
             self.sent = b""
+            self.received = b""
             self.valid_reply = self.protocol_fault = False
             try:
                 method = getattr(self.client, METHODS[request.function])
@@ -231,6 +288,25 @@ class ValidatedClient:
                     result = await method(
                         request.address, count=request.count, device_id=request.unit
                     )
+                elif request.function == 22:
+                    result = await method(
+                        address=request.address,
+                        and_mask=request.and_mask,
+                        or_mask=request.or_mask,
+                        device_id=request.unit,
+                    )
+                elif request.function == 23:
+                    result = await method(
+                        read_address=request.read_address,
+                        read_count=request.read_count,
+                        write_address=request.address,
+                        values=list(request.values),
+                        device_id=request.unit,
+                    )
+                elif request.function == 43:
+                    result = await method(read_code=1, object_id=0, device_id=request.unit)
+                elif request.function in (11, 17):
+                    result = await method(device_id=request.unit)
                 else:
                     values = (
                         request.values[0] if request.function in (5, 6) else list(request.values)
@@ -244,11 +320,14 @@ class ValidatedClient:
                         "values": (),
                         "exception_code": result.exception_code,
                     }
+                if request.function in (11, 17, 43):
+                    pdu = self.received[7:] if self.mode == "tcp" else self.received[1:-2]
+                    return {"outcome": "acknowledged", "values": (), "diagnostic": diagnostic_data(pdu)}
                 values = (
                     request.values
-                    if request.function in WRITES
+                    if request.function in WRITES and request.function not in (22, 23)
                     else tuple(
-                        result.bits[: request.count]
+                        () if request.function == 22 else result.bits[: request.count]
                         if request.function in (1, 2)
                         else result.registers
                     )

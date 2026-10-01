@@ -16,7 +16,7 @@ func registerModbusTools(server *sdk.Server, options HandlerOptions) {
 	text := map[string]any{"type": "string", "minLength": 1}
 	integer := map[string]any{"type": "integer", "minimum": 0}
 	boolean := map[string]any{"type": "boolean"}
-	request := map[string]any{"type": "object", "additionalProperties": false, "properties": map[string]any{"function": integer, "unit": integer, "address": integer, "count": integer, "values": map[string]any{"type": "array", "items": integer}}, "required": []string{"function", "unit", "address", "count"}}
+	request := map[string]any{"type": "object", "additionalProperties": false, "properties": map[string]any{"function": integer, "unit": integer, "address": integer, "count": integer, "values": map[string]any{"type": "array", "items": integer}, "and_mask": integer, "or_mask": integer, "read_address": integer, "read_count": integer}, "required": []string{"function", "unit", "address", "count"}}
 	group := map[string]any{"type": "object", "additionalProperties": false, "properties": map[string]any{"id": text, "interval_ms": integer, "timeout_ms": integer, "stop_on_error": boolean, "requests": map[string]any{"type": "array", "items": request}}, "required": []string{"id", "interval_ms", "requests"}}
 	register := func(name, description string, readOnly bool, properties map[string]any, required []string, call func(context.Context, identity.Actor, json.RawMessage) (any, error)) {
 		server.AddTool(&sdk.Tool{Name: name, Description: description, Annotations: &sdk.ToolAnnotations{ReadOnlyHint: readOnly}, InputSchema: map[string]any{"type": "object", "properties": properties, "required": required, "additionalProperties": false}}, func(ctx context.Context, request *sdk.CallToolRequest) (*sdk.CallToolResult, error) {
@@ -367,6 +367,73 @@ func registerModbusTools(server *sdk.Server, options HandlerOptions) {
 			return nil, bench.ErrInvalid
 		}
 		return options.Bench.ReadModbus(ctx, a, input.ID, input.Session, input.Request)
+	})
+	scanFields := map[string]any{"endpoint_id": text, "session_id": text, "function": integer, "unit_from": integer, "unit_to": integer, "address_from": integer, "address_to": integer, "rate_per_second": integer, "deadline_seconds": integer}
+	register("modbus_scan_start", "Start one explicit finite paced read scan on an owned live session.", false, scanFields, []string{"endpoint_id", "session_id", "function", "unit_from", "unit_to", "address_from", "address_to", "rate_per_second", "deadline_seconds"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID string `json:"endpoint_id"`
+			bench.ModbusScanPlan
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.StartModbusScan(ctx, a, input.ID, input.ModbusScanPlan)
+	})
+	register("modbus_scan_status", "Read current scan progress and settled probes.", true, map[string]any{"endpoint_id": text, "session_id": text}, []string{"endpoint_id", "session_id"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID      string `json:"endpoint_id"`
+			Session string `json:"session_id"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.ModbusScan(ctx, a, input.ID, input.Session)
+	})
+	register("modbus_scan_cancel", "Cancel future probes and the in-flight read of an owned scan.", false, map[string]any{"endpoint_id": text, "session_id": text}, []string{"endpoint_id", "session_id"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID      string `json:"endpoint_id"`
+			Session string `json:"session_id"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.CancelModbusScan(ctx, a, input.ID, input.Session)
+	})
+	register("modbus_scan_results", "Read a bounded page of settled scan probes, including failures.", true, map[string]any{"endpoint_id": text, "session_id": text, "offset": integer}, []string{"endpoint_id", "session_id"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID      string `json:"endpoint_id"`
+			Session string `json:"session_id"`
+			Offset  int    `json:"offset"`
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.ModbusScanResults(ctx, a, input.ID, input.Session, input.Offset)
+	})
+	register("modbus_scan_export", "Authorize a CSV or JSONL scan export and return its authenticated download URL.", true, map[string]any{"endpoint_id": text, "session_id": text, "format": text}, []string{"endpoint_id", "session_id", "format"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID      string `json:"endpoint_id"`
+			Session string `json:"session_id"`
+			Format  string `json:"format"`
+		}
+		if decodeBenchArguments(raw, &input) != nil || input.Format != "csv" && input.Format != "jsonl" {
+			return nil, bench.ErrInvalid
+		}
+		if _, err := options.Bench.ModbusScan(ctx, a, input.ID, input.Session); err != nil {
+			return nil, err
+		}
+		query := url.Values{"session_id": {input.Session}, "format": {input.Format}}
+		return map[string]any{"download_url": "/api/v1/modbus/endpoints/" + url.PathEscape(input.ID) + "/scans/export?" + query.Encode(), "authentication": "Use the same authorized API token; download authorization is checked again."}, nil
+	})
+	register("modbus_diagnostic", "Execute one typed read-only Modbus identity or serial diagnostic.", false, map[string]any{"endpoint_id": text, "session_id": text, "kind": text, "unit": integer}, []string{"endpoint_id", "session_id", "kind", "unit"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
+		var input struct {
+			ID string `json:"endpoint_id"`
+			bench.ModbusDiagnosticRequest
+		}
+		if decodeBenchArguments(raw, &input) != nil {
+			return nil, bench.ErrInvalid
+		}
+		return options.Bench.ReadModbusDiagnostic(ctx, a, input.ID, input.ModbusDiagnosticRequest)
 	})
 	register("modbus_write", "Reserve one exact raw write before transmission; delivery_unknown is terminal and never replayed.", false, map[string]any{"endpoint_id": text, "session_id": text, "idempotency_key": text, "request": request}, []string{"endpoint_id", "session_id", "idempotency_key", "request"}, func(ctx context.Context, a identity.Actor, raw json.RawMessage) (any, error) {
 		var input struct {

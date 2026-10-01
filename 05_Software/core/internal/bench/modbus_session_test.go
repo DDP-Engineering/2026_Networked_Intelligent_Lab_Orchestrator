@@ -249,3 +249,24 @@ func TestModbusWritePreviewPDUAndDigest(t *testing.T) {
 		t.Fatal("write value absent from digest")
 	}
 }
+
+func TestModbusAdvancedWritePDUAndReadResult(t *testing.T) {
+	andMask, orMask, readAddress := 0xf2f2, 0x2525, 2
+	mask := ModbusRequest{Function: 22, Unit: 1, Address: 1, Count: 1, AndMask: &andMask, OrMask: &orMask}
+	pdu, err := modbusPDU(mask)
+	if err != nil || string(pdu) != string([]byte{22, 0, 1, 0xf2, 0xf2, 0x25, 0x25}) {
+		t.Fatalf("FC22 PDU %x %v", pdu, err)
+	}
+	combined := ModbusRequest{Function: 23, Unit: 1, Address: 4, Count: 1, Values: []int{0x1234}, ReadAddress: &readAddress, ReadCount: 1}
+	pdu, err = modbusPDU(combined)
+	if err != nil || string(pdu) != string([]byte{23, 0, 2, 0, 1, 0, 4, 0, 1, 2, 0x12, 0x34}) {
+		t.Fatalf("FC23 PDU %x %v", pdu, err)
+	}
+	if !validModbusResult(combined, ModbusResult{Outcome: "acknowledged", Attempts: 1, Values: []json.RawMessage{json.RawMessage("77")}}) {
+		t.Fatal("FC23 read-side value rejected")
+	}
+	combined.ReadCount = 126
+	if _, err = canonicalModbusRequest(combined); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("oversized FC23 read accepted: %v", err)
+	}
+}

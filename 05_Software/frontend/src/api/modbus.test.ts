@@ -3,9 +3,40 @@ import {
   parseModbusEndpoints,
   parseModbusProfiles,
   parseModbusSettings,
+  parseModbusScan,
 } from './modbus';
 
 describe('Modbus Core response contracts', () => {
+  it('keeps failed scan probes distinct from absent results', () => {
+    const scan = {
+      scan_id: 'scan-1',
+      session_id: 'live',
+      plan: {
+        session_id: 'live',
+        function: 3,
+        unit_from: 1,
+        unit_to: 1,
+        address_from: 10,
+        address_to: 11,
+        rate_per_second: 2,
+        deadline_seconds: 5,
+      },
+      state: 'completed',
+      total: 2,
+      completed: 2,
+      results: [
+        { function: 3, unit: 1, address: 10, outcome: 'acknowledged', values: [42] },
+        { function: 3, unit: 1, address: 11, outcome: 'timeout', values: [] },
+      ],
+    };
+    expect(parseModbusScan(scan)).toEqual({ ok: true, value: scan });
+    expect(
+      parseModbusScan({
+        ...scan,
+        results: [{ function: 3, unit: 1, address: 11, values: [] }],
+      }).ok,
+    ).toBe(false);
+  });
   it('keeps configured offline TCP endpoints visible and rejects malformed inventory', () => {
     const endpoint = {
       schema_version: 1,

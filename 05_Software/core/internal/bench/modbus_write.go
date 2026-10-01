@@ -130,6 +130,25 @@ func modbusPDU(request ModbusRequest) ([]byte, error) {
 		binary.BigEndian.PutUint16(pdu[3:5], uint16(request.Values[0]))
 		return pdu, nil
 	}
+	if request.Function == 22 {
+		pdu = append(pdu, 0, 0)
+		binary.BigEndian.PutUint16(pdu[3:5], uint16(*request.AndMask))
+		binary.BigEndian.PutUint16(pdu[5:7], uint16(*request.OrMask))
+		return pdu, nil
+	}
+	if request.Function == 23 {
+		pdu = make([]byte, 10, 10+request.Count*2)
+		pdu[0] = 23
+		binary.BigEndian.PutUint16(pdu[1:3], uint16(*request.ReadAddress))
+		binary.BigEndian.PutUint16(pdu[3:5], uint16(request.ReadCount))
+		binary.BigEndian.PutUint16(pdu[5:7], uint16(request.Address))
+		binary.BigEndian.PutUint16(pdu[7:9], uint16(request.Count))
+		pdu[9] = byte(request.Count * 2)
+		for _, value := range request.Values {
+			pdu = binary.BigEndian.AppendUint16(pdu, uint16(value))
+		}
+		return pdu, nil
+	}
 	binary.BigEndian.PutUint16(pdu[3:5], uint16(request.Count))
 	if request.Function == 15 {
 		payload := make([]byte, (request.Count+7)/8)

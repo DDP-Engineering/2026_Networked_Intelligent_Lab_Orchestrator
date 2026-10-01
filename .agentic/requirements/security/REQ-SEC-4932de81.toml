@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-SEC-4932de81"
+
+title = "Authorize Modbus tools within the live lease"
+
+status = "active"
+
+requirement = """When a client starts, reads, cancels or exports a Modbus scan or invokes an advanced write or diagnostic, Core shall recheck current credential, session ownership, plugin state, pinned target and required role/scope, denying foreign, stale or disabled access without dispatching device I/O or disclosing another owner's results."""
+
+verification = "Exercise owner, administrator, other operator, viewer, narrow and revoked credentials on every new HTTP/CLI/MCP operation against a fake session; assert consistent denials, no foreign scan contents and zero runner calls after invalid authority."
+
+affected_paths = ["05_Software/core/internal/bench/modbus_scan.go", "05_Software/core/internal/bench/modbus_diagnostic.go", "05_Software/core/internal/bench/modbus_write.go", "05_Software/core/internal/httpapi/modbus.go", "05_Software/core/internal/mcp/modbus.go", "05_Software/core/cmd/nilo/modbus.go", "05_Software/core/internal/httpapi/modbus_test.go"]
+
+linked_tests = ["05_Software/core/internal/httpapi/modbus_test.go::TestModbusRoutesScopeAndStrictBody", "05_Software/core/internal/bench/modbus_diagnostic_test.go::TestModbusDiagnosticTransportAndTypedResult", "05_Software/core/internal/bench/modbus_scan_test.go::TestModbusScanCancelStopsFutureProbes", "05_Software/core/internal/bench/modbus_scan_test.go::TestModbusScanResultsStayWithOpeningCredential", "05_Software/core/internal/mcp/bench_test.go::TestBenchToolsUseCurrentTokenScopes"]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-10-01
+updated = 2026-10-01

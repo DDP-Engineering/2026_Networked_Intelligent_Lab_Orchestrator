@@ -96,6 +96,56 @@ export interface ModbusRequest {
   address: number;
   count: number;
   values: number[];
+  and_mask?: number;
+  or_mask?: number;
+  read_address?: number;
+  read_count?: number;
+}
+
+export interface ModbusScanPlan {
+  session_id: string;
+  function: number;
+  unit_from: number;
+  unit_to: number;
+  address_from: number;
+  address_to: number;
+  rate_per_second: number;
+  deadline_seconds: number;
+}
+
+export interface ModbusScanProbe {
+  function: number;
+  unit: number;
+  address: number;
+  outcome: string;
+  values: (number | boolean)[];
+  exception_code?: number;
+  frames?: { direction: 'tx' | 'rx'; data_hex: string }[];
+}
+
+export interface ModbusScanStatus {
+  scan_id: string;
+  session_id: string;
+  plan: ModbusScanPlan;
+  state: string;
+  total: number;
+  completed: number;
+  results: ModbusScanProbe[];
+}
+
+export interface ModbusScanPage {
+  results: ModbusScanProbe[];
+  next_offset: number;
+  total: number;
+}
+
+export interface ModbusDiagnosticData {
+  kind: 'device_information' | 'comm_event_counter' | 'report_server_id';
+  objects?: { id: number; value_hex: string; text: string }[];
+  more_follows?: boolean;
+  status?: boolean;
+  count?: number;
+  identifier_hex?: string;
 }
 
 export interface ModbusPollGroup {
@@ -163,6 +213,7 @@ export interface ModbusResult {
   attempts: number;
   exception_code?: number;
   frames?: { direction: 'tx' | 'rx'; data_hex: string }[];
+  diagnostic?: ModbusDiagnosticData;
 }
 
 export interface ModbusRecordingOptions {
@@ -241,30 +292,52 @@ export function parseModbusRecording(value: unknown): ParseResult<ModbusRecordin
     typeof value.endpoint_id === 'string' &&
     typeof value.owner_id === 'string' &&
     typeof value.name === 'string' &&
-    Array.isArray(value.tags) && value.tags.every((tag) => typeof tag === 'string') &&
+    Array.isArray(value.tags) &&
+    value.tags.every((tag) => typeof tag === 'string') &&
     ['active', 'completed', 'incomplete'].includes(String(value.status)) &&
     typeof value.started_at === 'string' &&
-    integer(value.last_sequence) && integer(value.size_bytes) && integer(value.part_count)
+    integer(value.last_sequence) &&
+    integer(value.size_bytes) &&
+    integer(value.part_count)
     ? { ok: true, value: value as unknown as ModbusRecording }
     : { ok: false, violation: 'Invalid Modbus recording' };
 }
 
-export function parseModbusRecordingPage(value: unknown): ParseResult<ModbusRecordingPage> {
-  if (!record(value) || !Array.isArray(value.recordings) ||
-      value.recordings.some((entry) => !parseModbusRecording(entry).ok) ||
-      (value.next_cursor !== undefined && typeof value.next_cursor !== 'string'))
+export function parseModbusRecordingPage(
+  value: unknown,
+): ParseResult<ModbusRecordingPage> {
+  if (
+    !record(value) ||
+    !Array.isArray(value.recordings) ||
+    value.recordings.some((entry) => !parseModbusRecording(entry).ok) ||
+    (value.next_cursor !== undefined && typeof value.next_cursor !== 'string')
+  )
     return { ok: false, violation: 'Invalid Modbus recording page' };
   return { ok: true, value: value as unknown as ModbusRecordingPage };
 }
 
-export function parseModbusRecordingEvents(value: unknown): ParseResult<ModbusRecordingEventPage> {
-  if (!record(value) || !Array.isArray(value.events) || !integer(value.next_cursor) ||
-      !integer(value.count) || !integer(value.scanned) ||
-      typeof value.no_match !== 'boolean' || typeof value.truncated !== 'boolean' ||
-      value.events.some((event) => !record(event) || !integer(event.sequence) ||
-        typeof event.timestamp !== 'string' || !integer(event.elapsed_ns) ||
+export function parseModbusRecordingEvents(
+  value: unknown,
+): ParseResult<ModbusRecordingEventPage> {
+  if (
+    !record(value) ||
+    !Array.isArray(value.events) ||
+    !integer(value.next_cursor) ||
+    !integer(value.count) ||
+    !integer(value.scanned) ||
+    typeof value.no_match !== 'boolean' ||
+    typeof value.truncated !== 'boolean' ||
+    value.events.some(
+      (event) =>
+        !record(event) ||
+        !integer(event.sequence) ||
+        typeof event.timestamp !== 'string' ||
+        !integer(event.elapsed_ns) ||
         !['sample', 'traffic', 'write'].includes(String(event.kind)) ||
-        !validRequest(event.request) || !validResult(event.result)))
+        !validRequest(event.request) ||
+        !validResult(event.result),
+    )
+  )
     return { ok: false, violation: 'Invalid Modbus recording event page' };
   return { ok: true, value: value as unknown as ModbusRecordingEventPage };
 }
@@ -536,6 +609,65 @@ export function parseModbusResult(value: unknown): ParseResult<ModbusResult> {
   return validResult(value)
     ? { ok: true, value }
     : { ok: false, violation: 'Invalid Modbus result' };
+}
+
+const validScanProbe = (value: unknown): value is ModbusScanProbe =>
+  record(value) &&
+  integer(value.function) &&
+  integer(value.unit) &&
+  integer(value.address) &&
+  typeof value.outcome === 'string' &&
+  Array.isArray(value.values) &&
+  value.values.every((item) => typeof item === 'boolean' || integer(item)) &&
+  (value.frames === undefined ||
+    (Array.isArray(value.frames) &&
+      value.frames.length <= 2 &&
+      value.frames.every(
+        (frame) =>
+          record(frame) &&
+          ['tx', 'rx'].includes(String(frame.direction)) &&
+          typeof frame.data_hex === 'string' &&
+          frame.data_hex.length <= 1024,
+      )));
+
+export function parseModbusScan(value: unknown): ParseResult<ModbusScanStatus> {
+  if (!record(value) || !record(value.plan))
+    return { ok: false, violation: 'Invalid Modbus scan' };
+  const plan = value.plan;
+  return typeof value.scan_id === 'string' &&
+    typeof value.session_id === 'string' &&
+    typeof value.state === 'string' &&
+    integer(value.total) &&
+    value.total <= 512 &&
+    integer(value.completed) &&
+    value.completed <= value.total &&
+    typeof plan.session_id === 'string' &&
+    [
+      plan.function,
+      plan.unit_from,
+      plan.unit_to,
+      plan.address_from,
+      plan.address_to,
+      plan.rate_per_second,
+      plan.deadline_seconds,
+    ].every(integer) &&
+    Array.isArray(value.results) &&
+    value.results.length <= 512 &&
+    value.results.length === value.completed &&
+    value.results.every(validScanProbe)
+    ? { ok: true, value: value as unknown as ModbusScanStatus }
+    : { ok: false, violation: 'Invalid Modbus scan' };
+}
+
+export function parseModbusScanPage(value: unknown): ParseResult<ModbusScanPage> {
+  return record(value) &&
+    integer(value.next_offset) &&
+    integer(value.total) &&
+    Array.isArray(value.results) &&
+    value.results.length <= 100 &&
+    value.results.every(validScanProbe)
+    ? { ok: true, value: value as unknown as ModbusScanPage }
+    : { ok: false, violation: 'Invalid Modbus scan page' };
 }
 
 export function parseModbusDecodedPoint(

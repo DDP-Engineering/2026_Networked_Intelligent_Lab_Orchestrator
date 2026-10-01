@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-FUNC-90e44759"
+
+title = "Execute typed FC22 and FC23 writes"
+
+status = "active"
+
+requirement = """When a credential-bound owner previews and submits an FC22 mask write or FC23 combined read/write, Core and the runner shall validate exact function-specific address, quantity and raw-word limits, expose the encoded PDU, reserve the canonical write before one dispatch under existing plugin policy, and report acknowledged, rejected or delivery-unknown outcomes without retry or replay."""
+
+verification = "Use independent FC22/23 protocol vectors and fake live-session dispatch: assert exact preview/request/reply bytes, FC23 125-read/121-write limits, mask fields, digest/idempotency, one attempt after lost reply, policy denial and a separate read result."
+
+affected_paths = ["05_Software/core/internal/bench/modbus_request.go", "05_Software/core/internal/bench/modbus_write.go", "05_Software/core/internal/bench/modbus_session.go", "05_Software/core/internal/bench/modbus_session_test.go", "05_Software/integrations/modbus/src/nilo_modbus/requests.py", "05_Software/integrations/modbus/src/nilo_modbus/feasibility.py", "05_Software/integrations/modbus/src/nilo_modbus/workspace.py", "05_Software/integrations/modbus/tests/test_requests.py", "05_Software/integrations/modbus/tests/test_feasibility.py", "05_Software/integrations/modbus/tests/test_workspace.py", "05_Software/integrations/modbus/tests/peers.py"]
+
+linked_tests = ["05_Software/core/internal/bench/modbus_session_test.go::TestModbusAdvancedWritePDUAndReadResult", "05_Software/integrations/modbus/tests/test_requests.py::test_advanced_write_vectors_and_limits", "05_Software/integrations/modbus/tests/test_feasibility.py::test_advanced_writes", "05_Software/integrations/modbus/tests/test_feasibility.py::test_advanced_lost_reply_is_one_unknown_write", "05_Software/integrations/modbus/tests/test_workspace.py::test_private_socket_transacts_and_cleans_up"]
+
+
+spec = "specs/REQ-FUNC-90e44759.md"
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-10-01
+updated = 2026-10-01
