@@ -152,6 +152,7 @@ Expected files (frontend prefix `05_Software/frontend/`): `src/App.tsx`, `src/Ap
 
 - 2026-10-01 validate continuation at clean `588ef54`: Re-read all 13 active requirements and the disclosure spec; browser and viewport observations remain required. Appliance prerequisite-only check exit 2: neither Docker nor Podman is available. Advisory `check --task TASK-1b87ad8a --strict` without `--run` exit 1: zero errors, 30 warnings, four notes, including three promoted incoming `.gitea` outside-layout warnings. No ticket edits or browser proof; full final `--strict --run` is still owed on the current tree. Do not advance while these blockers remain.
 - 2026-10-01 validate continuation at clean `f926e87`: Re-read all 13 active requirements and disclosure spec, GUI knowledge and current shell browser journey; no changed ticket behavior found in this integration. Evolution refreshed: 120 non-.agentic paths, including ticket shell/UI files and unrelated tooling/settings/CI; no new ticket-scope path. Appliance prerequisite exit 2 (no Docker/Podman), so required real-browser and field-viewport observations remain unperformed. `check --task TASK-1b87ad8a --strict` without `--run` exit 1: zero errors, 30 warnings, four notes; three promoted incoming `.gitea` outside-layout findings persist. Other warnings concern unrelated stale requirement path, tracked sidecars, deliver tasks and uncovered incoming source. No candidate edits or manual substitute; full strict `--run` remains owed after the policy owner fixes layout and browser evidence is available. Validation stays blocked.
+- 2026-10-01 validate continuation at clean `68e3230`: Evolution refreshed, still 120 integrated paths and no new ticket-owned path. Checked all 13 linked requirements' active statuses and verification clauses, disclosure spec, GUI knowledge and shell browser journey; browser/viewport clauses remain unobserved. Appliance stage exit 2 (no Docker/Podman). Advisory strict without `--run` reports zero errors, 30 warnings, four notes and exit 1 due to the same three incoming `.gitea` outside-layout paths; other warnings remain unrelated. No candidate edits, browser substitute or successful final full gate; remain blocked in validate.
 
 ## Rulings
 
@@ -169,8 +170,8 @@ blockers: No Docker/Podman for browser/layout observation. Advisory strict exit 
 stage: validate
 result: blocked
 current: validate
-changed: No ticket edits; clean f926e87 tree, all 13 active requirements and disclosure spec re-read; evolution refreshed (120 integrated paths).
-evidence: Appliance prerequisite exit 2 (no engine); strict without run exit 1 (zero errors, 30 warnings, four notes; three promoted .gitea warnings). Earlier full tests predate current integration.
+changed: No ticket edits; clean 68e3230 tree; evolution refreshed (120 integrated paths).
+evidence: All 13 linked statuses and verification clauses checked; appliance stage exit 2 (no engine); strict without run exit 1 (zero errors, 30 warnings, four notes; three promoted .gitea warnings). Earlier full tests predate this tree.
 issues: Browser/layout observation unavailable here; incoming .gitea layout warnings prevent strict success. Earlier static reviews approved; final full proof outstanding on current tree.
 next: Obtain appliance-browser observation on capable host, coordinate .gitea policy owner, then run final strict --run on final tree.
 needs_user: yes
