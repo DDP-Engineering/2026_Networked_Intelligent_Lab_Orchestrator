@@ -148,6 +148,7 @@ Expected files (frontend prefix `05_Software/frontend/`): `src/App.tsx`, `src/Ap
 - 2026-09-29 validate integration reconciliation: Resolved ticket-owned working-tree conflict hunks in `e2e/shell.spec.ts`, `.agentic/knowledge/gui-foundation.md` and `CHANGELOG.md` by retaining the About/Inventory navigation changes alongside incoming administrator-only Nilo Settings and the 0.12.0 changelog release boundary. Updated the compact-rail administrator destination count to seven. Focused frontend pages/shell/SideNav tests 60/60, ESLint, Prettier and Playwright discovery (7 browser tests, listing only) passed; conflict-marker and scoped whitespace checks clean. Git index still reports these three paths unmerged: staging is forbidden without a Git instruction, so the conductor must reconcile index state. Two unrelated unmerged toolchain scripts are outside ticket scope. Appliance prerequisite again exits 2 without Docker/Podman; browser/layout observations remain unavailable. Earlier strict proof predates this integration, so final evolution and strict proof for this tree remain owed. Static verdicts from round 2 do not cover this integrated candidate; both reviews must be renewed after index reconciliation. Validation stays blocked.
 
 - 2026-10-01 validate integrated tree: Conductor reconciled index before this session; branch `adore/pi-26` clean at `764c33b`, no unmerged paths. Re-read all 13 active linked requirements and disclosure spec; component knowledge and System Nilo Settings/Inventory ordering match source. Reviewed navigation/session/permission/refresh hunks and browser serial journey against design; incoming operating-settings and tooling changes are independent of this task. Round-3 static specification-compliance and implementation-quality verdicts approved for ticket-owned code; browser verification remains unobserved, so this is not completion approval. Frontend `npm run test:ci` 49 files/602 tests, build, lint and format all exit 0; build emits pre-existing >500kB chunk advisory. Evolution refreshed: 120 non-.agentic paths, predominantly unrelated integrated changes; ticket-owned modified paths include shell browser oracle, App test, AppShell/pages, shell test and catalogue/CSS; no new ticket-scope files. Final Linux `PATH=/tmp/nilo-git-isolated:$PATH python .agentic/aegis.py check --task TASK-1b87ad8a --strict --run` exit 1: configured `test` (252.2s) and `lint` (12.1s) both passed; zero errors, 30 warnings, four unrelated manual notes, three promoted `outside-layout` warnings for incoming `.gitea/{README.md,scripts/offline_ci.py,workflows/ci.yaml}`. These CI files are outside ticket scope and arrived on the integrated base; strict cannot pass until their owner reconciles `[layout]` or strict policy. Remaining warnings concern unrelated stale path, tracked sidecars, deliver checklists and uncovered incoming source; no ticket-owned defect found. Appliance-browser/layout proof still unavailable without a container engine (earlier prerequisite exit 2); do not advance to deliver or treat static/browser discovery as browser observation.
+- 2026-10-01 validate continuation at clean `1f0bfb2`: Rechecked all 13 linked active requirement statuses and verification clauses; browser reload, wide/drawer inspection and constrained viewport evidence remain outstanding. Appliance prerequisite-only check exit 2 (no Docker/Podman); advisory strict check without `--run` exit 1 with zero errors, 30 warnings and the same three promoted incoming `.gitea` outside-layout findings. No candidate edits or executable browser observation; the earlier full gate predates this integration commit. Stay blocked in validate pending container-capable host, layout-policy reconciliation by its owner and fresh final strict run.
 
 ## Rulings
 
@@ -156,19 +157,19 @@ Expected files (frontend prefix `05_Software/frontend/`): `src/App.tsx`, `src/Ap
 
 current: validate
 status: blocked
-next: Run required appliance-browser/layout proof on a Docker/Podman-capable host; reconcile unrelated .gitea layout warnings with their owner and rerun final strict gate before deliver.
+next: On a Docker/Podman-capable host run appliance-browser/layout proof; coordinate unrelated .gitea layout-policy reconciliation and rerun final strict gate for current tree.
 must_read: .agentic/steps/5_validate.md; .agentic/tasks/TASK-1b87ad8a.md; .agentic/context/environment.md; 05_Software/frontend/e2e/shell.spec.ts; .agentic/knowledge/gui-foundation.md
-blockers: No Docker/Podman for required browser/layout observation. Strict gate exit 1 on three unrelated incoming .gitea outside-layout warnings despite passing Linux test and lint. No unmerged index paths remain.
+blockers: No Docker/Podman for browser/layout observation. Advisory strict exit 1 on three incoming .gitea outside-layout warnings; prior full test/lint proof predates current integration commit.
 
 ## Stage report
 
 stage: validate
 result: blocked
 current: validate
-changed: Reviewed clean integrated tree, requirements and GUI knowledge; refreshed evolution; no ticket candidate changes.
-evidence: Frontend 602/602 tests, build, lint, format passed. Linux strict run: test and lint passed, overall exit 1 on three unrelated promoted .gitea outside-layout warnings; browser proof unavailable.
-issues: No Docker/Podman for appliance browser/layout proof; three incoming CI files outside declared layout prevent strict success. Static reviews approved, not browser validation.
-next: On a capable host run appliance browser proof, reconcile unrelated .gitea policy warnings with their owner, then refresh evolution if needed and pass final strict gate.
+changed: No ticket candidate changes; clean current tree at 1f0bfb2, requirements rechecked.
+evidence: Appliance prerequisite exit 2 (no engine); advisory strict check without run exit 1 (zero errors, three promoted .gitea layout warnings). Prior integrated frontend 602/602 and Linux test/lint passed at earlier commit, not final proof.
+issues: Browser/layout observation unavailable here; incoming .gitea layout warnings prevent strict success. Earlier static reviews approved; final proof outstanding on current tree.
+next: Obtain appliance-browser observation on capable host, coordinate .gitea policy owner, refresh evolution if candidate changes, then run final strict --run.
 needs_user: yes
 spec_compliance: approved
 implementation_quality: approved
