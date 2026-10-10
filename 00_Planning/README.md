@@ -2,6 +2,10 @@
 
 Project goals, architecture decisions, milestones, and implementation plans.
 
+- [Agent and MCP connection setup](Agent_MCP_Onboarding_Plan.md): direct client setup
+  from a bench companion on a home/corporate LAN or through the network's VPN;
+  optional MCP-only HTTP, retained HTTPS management, client qualification and a
+  deferred companion fallback. No AEGIS workflow.
 - [Repository tools simplification](Tools_Simplification_Plan.md): six public
   commands implemented, duplicate launchers consolidated and local gates passed;
   retains the current stack and offline/acceptance boundaries. No AEGIS workflow.

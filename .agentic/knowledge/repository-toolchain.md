@@ -31,6 +31,9 @@ USB serial terminal, connection and log changes route to
 Modbus input acquisition starts at `prepare-modbus-dependencies.py` and
 `integrations/modbus/tests/test_dependencies.py`; protocol proof belongs to
 [Modbus client feasibility](modbus-integration.md).
+The Modbus offline target bundle is assembled by `build-modbus-bundle.py` from
+verified transport archives, shared SDK/Pydantic inputs and notices; the
+`NILO_BUNDLE_MODBUS` appliance-build option requires a verified target runtime.
 
 ## Purpose and boundaries
 
@@ -481,6 +484,11 @@ only durable state, and they live on the WSL Linux filesystem.
 
 - `02_Tools/scripts/prepare-modbus-dependencies.py` - bounded, checksum-verified
   candidate archive acquisition and license retention, using the Modbus manifest.
+- `02_Tools/scripts/build-modbus-bundle.py` and `build-appliance.sh` - indexed
+  target package assembly from verified offline inputs and the explicit
+  two-architecture appliance build switch.
+- `02_Tools/tests/software/test_modbus_bundle.py` - bundle inventory,
+  corruption and linked-input refusal checks.
 - `05_Software/integrations/modbus/tests/test_dependencies.py` - matching lock
   pins, offline refusal and notice verification for that helper.
 

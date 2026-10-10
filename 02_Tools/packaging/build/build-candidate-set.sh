@@ -96,6 +96,25 @@ python3 "$work/source/02_Tools/scripts/build-serial-bundle.py" \
   --project "$work/source/05_Software/integrations/serial" \
   --dependency-root "$pi_camera_build_input/dependencies" --wheelhouse "$serial_wheels" \
   --out "$work/bundles/arm64/serial" --architecture arm64 --runtime-root "$pi_sigrok_runtime"
+modbus_wheels=${NILO_MODBUS_WHEELHOUSE:-$work/modbus-wheelhouse}
+if [ -z "${NILO_MODBUS_WHEELHOUSE:-}" ]; then
+  modbus_inputs=${NILO_MODBUS_INPUT_ROOT:-/opt/nilo/inputs}
+  mkdir -p "$modbus_wheels"
+  for name in pymodbus-3.15.0-py3-none-any.whl pyserial-3.5-py2.py3-none-any.whl; do
+    cp "$modbus_inputs/python-packages/$name" "$modbus_wheels/$name"
+  done
+  for name in pymodbus-3.15.0.tar.gz pyserial-3.5.tar.gz; do
+    cp "$modbus_inputs/license-sources/$name" "$modbus_wheels/$name"
+  done
+fi
+python3 "$work/source/02_Tools/scripts/build-modbus-bundle.py" \
+  --project "$work/source/05_Software/integrations/modbus" \
+  --dependency-root "$ubuntu_camera_build_input/dependencies" --wheelhouse "$modbus_wheels" \
+  --out "$work/bundles/amd64/modbus" --architecture amd64 --runtime-root "$ubuntu_sigrok_runtime"
+python3 "$work/source/02_Tools/scripts/build-modbus-bundle.py" \
+  --project "$work/source/05_Software/integrations/modbus" \
+  --dependency-root "$pi_camera_build_input/dependencies" --wheelhouse "$modbus_wheels" \
+  --out "$work/bundles/arm64/modbus" --architecture arm64 --runtime-root "$pi_sigrok_runtime"
 sh "$work/source/02_Tools/packaging/build/stage-payload.sh" ubuntu-24.04-amd64 \
   "$work/bin/amd64" "$work/gui" "$work/bundles/amd64" "$work/stage-amd64"
 sh "$work/source/02_Tools/packaging/build/stage-payload.sh" rpi-debian13-arm64 \

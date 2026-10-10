@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-TEST-93b22e9a"
+
+title = "Record distinct Modbus physical acceptance"
+
+status = "active"
+
+requirement = "When Modbus target acceptance is reported, the evidence shall distinguish simulated and appliance-profile results from named Raspberry Pi ARM64 execution and named physical USB-RS485/gateway read-only checks, marking every unperformed physical check as pending rather than passed."
+
+verification = "Inspection: compare the acceptance record against target commands, named peer and adapter identities, observed read-only results, and explicit pending entries for checks lacking hardware."
+
+affected_paths = ["07_Delivery/NILO_MB10_Modbus_Pi_Preview_20261001.md", "05_Software/integrations/modbus/README.md"]
+
+linked_tests = []
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-10-01
+updated = 2026-10-01

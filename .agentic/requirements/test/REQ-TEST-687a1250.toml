@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-TEST-687a1250"
+
+title = "Prove Modbus package in deterministic and appliance gates"
+
+status = "draft"
+
+requirement = "When Modbus release acceptance runs, the test harness shall exercise independent deterministic TCP, RTU-over-TCP and PTY peers with bounded fault cases, cross-plugin resource contention and browser/Core/runner operation in an appliance-profile environment, reporting each gate independently."
+
+verification = "Run focused independent peer and cross-plugin tests, then the repository/container/contract/browser gates and inspect the gate report for actual results and failure propagation."
+
+affected_paths = ["02_Tools/tests/appliance/", "02_Tools/tests/build-environment/", "05_Software/integrations/modbus/tests/", "05_Software/core/internal/bench/", "05_Software/frontend/e2e/"]
+
+linked_tests = ["05_Software/integrations/modbus/tests/test_supervised.py", "05_Software/integrations/modbus/tests/test_runner.py", "05_Software/integrations/modbus/tests/test_scheduler.py", "05_Software/core/internal/bench/modbus_session_test.go", "05_Software/core/internal/bench/transport_lease_test.go", "05_Software/frontend/e2e/modbus-layout.check.ts"]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-10-01
+updated = 2026-10-01

@@ -1,0 +1,31 @@
+# Copyright (c) 2026 DDP Engineering
+# This software is licensed under the PolyForm Noncommercial License 1.0.0.
+# Commercial use requires a separate commercial license.
+# See the LICENSE.txt in the .agentic folder for full license details.
+# SPDX-License-Identifier: LicenseRef-PolyForm-Noncommercial-1.0.0
+
+
+schema = 1
+
+id = "REQ-PLAT-ffa360cd"
+
+title = "Build verified offline Modbus bundles"
+
+status = "draft"
+
+requirement = "When a Modbus bundle is selected for Linux amd64 or arm64, the appliance build shall assemble an indexed, immutable, non-root-readable runner from checksum-verified offline PyModbus and pySerial inputs, the repository SDK and native dependency closure, matching target Python runtime, schemas and license notices, refusing missing, changed, linked or wrong-architecture inputs before publication."
+
+verification = "Build both targets from verified local inputs, inspect manifest and file inventory, run the target interpreter and runner handshake without network, then modify or omit each class of input and observe refusal with no published bundle."
+
+affected_paths = ["02_Tools/scripts/build-modbus-bundle.py", "02_Tools/scripts/build-appliance.sh", "02_Tools/scripts/prepare-modbus-dependencies.py", "02_Tools/packaging/build/build-candidate-set.sh", "05_Software/integrations/modbus/evidence/dependencies.json", "05_Software/integrations/modbus/README.md"]
+
+linked_tests = ["02_Tools/tests/software/test_modbus_bundle.py", "02_Tools/tests/software/test_release_packaging.py::OperatorScriptTests.test_candidate_builder_uses_archived_revision_and_pinned_tools", "05_Software/integrations/modbus/tests/test_dependencies.py"]
+
+
+spec = ""
+
+priority = "normal"   # low | normal | high
+rationale = ""        # why this behavior exists, if not obvious
+
+created = 2026-10-01
+updated = 2026-10-01

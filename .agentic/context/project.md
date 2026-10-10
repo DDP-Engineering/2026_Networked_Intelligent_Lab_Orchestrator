@@ -202,9 +202,10 @@ one of three fixed roles - Administrator, Operator or Viewer.
   surface; `05_Software/integrations/sigrok/` and
   `05_Software/integrations/camera/` and `05_Software/integrations/serial/` are
   the current curated packages.
-  `05_Software/integrations/modbus/` supplies isolated client feasibility tests
-  and a versioned development contract; [Modbus client foundation](../knowledge/modbus-integration.md)
-  owns that direct test interface and the Core definition/ownership services.
+  `05_Software/integrations/modbus/` supplies the supervised client, isolated
+  protocol peers, a versioned contract, and an indexed offline bundle;
+  [Modbus integration](../knowledge/modbus-integration.md) maps its Core,
+  runner, browser and packaging seams.
   `05_Software/contracts/integration/v1/` is the public, language-neutral
   package contract mirrored by the Go loader. The test-only Go runner in
   `05_Software/tests/fixtures/contract_runner/` exercises the shared boundary.

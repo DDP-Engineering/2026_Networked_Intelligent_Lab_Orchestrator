@@ -8,7 +8,7 @@
 # -----------------------------------------------------------------------------
 """@file test_dependencies.py
 @brief Verify pinned inputs and offline preparation behavior.
-@details Feasibility only; production plugin registration is a later package.
+@details The same pins supply development and offline target bundle assembly.
 """
 
 # IMPORTS

@@ -7,6 +7,8 @@ one project-level Semantic Version, declared in the root `VERSION` file.
 
 ### Added
 
+- Modbus now has an indexed offline Linux bundle builder with pinned transport inputs, license notices, and an appliance-build opt-in.
+
 - Modbus live Tools now provide explicit bounded scans with truthful exports, typed FC22/FC23 writes, and read-only identity diagnostics.
 
 - Modbus recordings now retain searchable, owner-scoped evidence across restarts, with offline Sessions review, integrity-checked exports, and quota-aware deletion.

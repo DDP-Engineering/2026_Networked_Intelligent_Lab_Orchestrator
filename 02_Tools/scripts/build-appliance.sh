@@ -44,6 +44,20 @@ for arch in arm64 amd64; do
    --out "$out/linux-$arch/integration-bundles/serial" --architecture "$arch" \
    --runtime-root "$serial_runtime/$arch"
  fi
+ if [ "${NILO_BUNDLE_MODBUS:-0}" = "1" ]; then
+  modbus_runtime=${NILO_MODBUS_RUNTIME_ROOT:-}
+  modbus_wheels=${NILO_MODBUS_WHEELHOUSE:-}
+  modbus_dependencies=${NILO_MODBUS_DEPENDENCY_ROOT:-}
+  [ -n "$modbus_runtime" ] && [ -n "$modbus_wheels" ] && [ -n "$modbus_dependencies" ] || {
+   echo "Modbus bundle requires NILO_MODBUS_RUNTIME_ROOT, NILO_MODBUS_WHEELHOUSE and NILO_MODBUS_DEPENDENCY_ROOT" >&2
+   exit 2
+  }
+  ../../02_Tools/env/with-tools.sh python ../../02_Tools/scripts/build-modbus-bundle.py \
+   --project "$repo/05_Software/integrations/modbus" \
+   --dependency-root "$modbus_dependencies/$arch" --wheelhouse "$modbus_wheels" \
+   --out "$out/linux-$arch/integration-bundles/modbus" --architecture "$arch" \
+   --runtime-root "$modbus_runtime/$arch"
+ fi
 done
 echo "built:"
 find "$out" -type f -name 'nilo*' -exec ls -l {} \;

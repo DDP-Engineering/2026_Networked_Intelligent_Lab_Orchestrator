@@ -2329,6 +2329,9 @@ class OperatorScriptTests(unittest.TestCase):
         self.assertIn('$($npm_command --version)', source)
         self.assertNotIn('$source_root/02_Tools/env/with-tools.sh', source)
         self.assertIn('build-camera-bundle.py', source)
+        self.assertEqual(source.count('build-modbus-bundle.py'), 2)
+        self.assertIn('--out "$work/bundles/amd64/modbus"', source)
+        self.assertIn('--out "$work/bundles/arm64/modbus"', source)
         self.assertIn('--runtime-root "$ubuntu_sigrok_runtime"', source)
         self.assertIn('--runtime-root "$pi_sigrok_runtime"', source)
 

@@ -8,7 +8,7 @@
 # -----------------------------------------------------------------------------
 """@file prepare-modbus-dependencies.py
 @brief Prepare exact Modbus candidate inputs and license notices.
-@details Feasibility only; production plugin registration is a later package.
+@details Verify the transport wheel/source closure before offline bundle assembly.
 """
 
 # IMPORTS

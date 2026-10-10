@@ -6,7 +6,7 @@ one pinned endpoint in an owner-only workspace and accepts bounded private
 transactions over `control.sock`. Core now owns credential-bound sessions,
 finite admission jobs, pinned read plans, bounded polling, durable raw writes
 and API/CLI/MCP methods. Retained recordings, typed maps, GUI and target bundle
-work follow the implementation backlog.
+construction are implemented in this checkout.
 
 The scope is master/client, serial RTU, native TCP and RTU over TCP. Named typed
 maps include scaling, units and CSV/JSON interchange. Shared definitions use
@@ -61,7 +61,7 @@ Because these modes lack a transaction ID, the timed-out unit/function remains
 quarantined for this runner lifetime. Other units may continue after recovery;
 writes are never retried.
 
-## Dependency evidence and offline proposal
+## Dependency evidence and offline bundle
 
 [evidence/dependencies.json](evidence/dependencies.json) binds exact wheel/source
 URLs, SHA-256 checksums, and retained license member hashes to uv.lock.
@@ -80,15 +80,26 @@ in `02_Tools/archives/build-environment/current.json`. Candidate verification us
 ```
 
 Inputs and extracted notices stay under the ignored 02_Tools/cache/modbus-feasibility.
-Production bundle work must carry these complete notices, the SDK and an
-architecture-matched verified interpreter. The development run uses pinned
-Python 3.12.10 and uv 0.11.25; a universal wheel does not prove a native ARM64
-runtime import or appliance acceptance.
+`02_Tools/scripts/build-modbus-bundle.py` assembles indexed amd64 and arm64
+bundles from the four verified local archives, a target SDK/Pydantic dependency
+tree and its third-party notices. It rejects altered inputs and mismatched
+native extensions. An optional `--runtime-root` must contain an
+architecture-matched Python ELF, notices and a matching file-hash manifest;
+that mode produces a self-contained bundle. Without it, `runtime.json` marks
+the bundle as a bench build that uses the target's Python interpreter.
+`NILO_BUNDLE_MODBUS=1` selects the self-contained mode in
+`02_Tools/scripts/build-appliance.sh` and requires
+`NILO_MODBUS_RUNTIME_ROOT`, `NILO_MODBUS_WHEELHOUSE` and
+`NILO_MODBUS_DEPENDENCY_ROOT` inputs for both architectures. No resolver runs
+when building or installing the bundle. The fixed release candidate build uses
+the same verified Sigrok Python runtime and Camera SDK/Pydantic closure for
+each target. The development run uses pinned Python 3.12.10 and uv 0.11.25.
 
 Physical parity/baud read-back, RS-485 direction and silence timing, USB identity
-and unplug behavior, a named gateway/device, Raspberry Pi throughput, and
-native ARM64 import remain distinct target gates. PTYs coerce framing and cannot
-settle those properties. Proposed administrator defaults remain in the plan.
+and unplug behavior, a named gateway/device and Raspberry Pi throughput remain
+distinct physical gates. ARM64 import and runner handshake have passed on the
+bench Pi with its system Python; a self-contained release runtime has not been
+executed there. PTYs coerce framing and cannot settle physical properties.
 
 ## Contracts
 
@@ -96,5 +107,5 @@ schemas/contracts.schema.json uses JSON Schema draft 2020-12. Named definitions
 cover endpoint, profile, map/point, workspace/poll group, session, command,
 recording, error, private request/reply and trace messages. Semantic cross-field
 constraints and ownership/state rules are defined in the contract specification;
-later services enforce them as well as the structural grammar. Schema version
+Core and the runner enforce them as well as the structural grammar. Schema version
 is independent of the project's single release version.

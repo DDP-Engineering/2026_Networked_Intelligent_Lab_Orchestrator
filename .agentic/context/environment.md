@@ -155,12 +155,13 @@ physical camera acceptance requires observations on the named target hardware.
 Produce what an appliance installs. `02_Tools/scripts/build-appliance.sh` emits
 binaries under `05_Software/core/dist/linux-<arch>/`, the GUI `build`
 script emits the static assets for `--gui-dir`.
-`02_Tools/scripts/build-sigrok-bundle.py` and
-`02_Tools/scripts/build-camera-bundle.py` prepare target-specific integration
-catalogs from verified runtime inputs. The Sigrok bundle needs its Python
-entrypoint, backend and third-party notices; Camera also needs its pinned
-wheelhouse and dependency closure. `build-appliance.sh` includes these bundles
-only when their respective bundle switches and inputs are supplied.
+`02_Tools/scripts/build-sigrok-bundle.py`, `build-camera-bundle.py`, and
+`build-modbus-bundle.py` prepare target-specific integration catalogs from
+verified offline inputs. The Sigrok bundle needs its Python entrypoint,
+backend and third-party notices; Camera and Modbus also need pinned transport
+archives and target native dependency closure. `build-appliance.sh` includes
+these bundles when their respective switches and inputs are supplied. The
+Modbus switch requires a verified target Python runtime for each architecture.
 
 Install the privileged helper on the target explicitly, substituting the staged
 binary and the service account:
@@ -338,6 +339,8 @@ Modbus client and supervised-runner verification uses independent loopback and
 Linux PTY peers, including an SDK child process and private Unix socket.
 `05_Software/integrations/modbus/README.md` owns the focused command and
 `prepare-modbus-dependencies.py` verifies exact wheel/source inputs and notices.
+`build-modbus-bundle.py` assembles the indexed offline amd64/arm64 package,
+and the fixed candidate builder stages it for both targets.
 The build recipe consumes those inputs in its distinct local candidate generation;
 the accepted archive and CI image remain governed by `current.json` and the
 normal environment publication procedures.
