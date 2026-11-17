@@ -153,3 +153,6 @@ strict_promote = ["config", "outside-layout", "ticket-ref"]
 # skipped as side-effecting. Naming such a command here is the only way to
 # include it.
 run = []
+
+[context]
+page_kb = 24
